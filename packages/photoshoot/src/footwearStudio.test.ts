@@ -1,6 +1,7 @@
 // S24 · PR 465 — pure tests for the footwear / product-only studio engine's angle planner (no database).
+// S24 · PR 466 pure tests (below PR 465's own): the "ask for the missing angle" message and request list.
 import { describe, expect, it } from 'vitest';
-import { FOOTWEAR_ANGLES, footwearAngleRole, missingFootwearAngles, planFootwearAngles } from './footwearStudio';
+import { FOOTWEAR_ANGLES, footwearAngleRole, footwearMissingAngleMessage, footwearMissingAngleRequests, missingFootwearAngles, planFootwearAngles } from './footwearStudio';
 
 describe('FOOTWEAR_ANGLES', () => {
   it('is C7.12’s own six angles, in the blueprint’s own order, with no duplicates', () => {
@@ -79,5 +80,36 @@ describe('missingFootwearAngles', () => {
 
   it('with no real references at all, every angle is missing', () => {
     expect(missingFootwearAngles([])).toEqual([...FOOTWEAR_ANGLES]);
+  });
+});
+
+describe('PR 466 · footwearMissingAngleMessage', () => {
+  it('turns an angle’s own name into C7.12’s own "ask for the missing angle" wording', () => {
+    expect(footwearMissingAngleMessage('sole')).toBe('There is no real sole photo of this product yet — please add one sole photo before the product-only studio can produce that angle.');
+    expect(footwearMissingAngleMessage('three_quarter')).toBe('There is no real three-quarter photo of this product yet — please add one three-quarter photo before the product-only studio can produce that angle.');
+  });
+});
+
+describe('PR 466 · footwearMissingAngleRequests', () => {
+  it('asks for every missing angle, and only those, in the blueprint’s own order', () => {
+    const assets = [
+      { role: 'side_reference', isOriginal: true, archivedAt: null },
+      { role: 'detail_reference', isOriginal: true, archivedAt: null },
+    ];
+    const requests = footwearMissingAngleRequests(assets);
+    expect(requests.map((r) => r.angle)).toEqual(['three_quarter', 'top', 'back', 'sole']);
+    expect(requests[0]).toEqual({ angle: 'three_quarter', message: footwearMissingAngleMessage('three_quarter') });
+  });
+
+  it('is empty once every wanted angle has a real reference on file', () => {
+    const assets = FOOTWEAR_ANGLES.map((angle) => ({ role: footwearAngleRole(angle), isOriginal: true, archivedAt: null }));
+    expect(footwearMissingAngleRequests(assets)).toEqual([]);
+  });
+
+  it('asks again for an angle whose only reference is generated (not real) or archived', () => {
+    const generated = [{ role: 'sole_reference', isOriginal: false, archivedAt: null }];
+    expect(footwearMissingAngleRequests(generated, ['sole'])).toEqual([{ angle: 'sole', message: footwearMissingAngleMessage('sole') }]);
+    const archived = [{ role: 'sole_reference', isOriginal: true, archivedAt: new Date() }];
+    expect(footwearMissingAngleRequests(archived, ['sole'])).toEqual([{ angle: 'sole', message: footwearMissingAngleMessage('sole') }]);
   });
 });
