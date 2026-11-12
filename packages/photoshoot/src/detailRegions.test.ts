@@ -106,7 +106,7 @@ describe('PR 454 · reprojectedCandidateId', () => {
 
 describe('PR 463 · DETAIL_FINDER_CHECKLIST', () => {
   it('is C7.10’s own fixed list, one entry per named garment type', () => {
-    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi']);
+    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear']);
     expect(DETAIL_FINDER_CHECKLIST.polo).toEqual(['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo']);
     expect(DETAIL_FINDER_CHECKLIST.panjabi).toEqual(['neck_embroidery', 'button_placket', 'side_slit']);
   });
@@ -115,6 +115,25 @@ describe('PR 463 · DETAIL_FINDER_CHECKLIST', () => {
     expect(isDetailFinderPoint('polo', 'chest_logo')).toBe(true);
     expect(isDetailFinderPoint('polo', 'rivets')).toBe(false);
     expect(isDetailFinderPoint('denim_chino', 'rivets')).toBe(true);
+  });
+});
+
+describe('PR 465 · DETAIL_FINDER_CHECKLIST.footwear (C7.12)', () => {
+  it('is C7.12’s own recipe-table checklist, verbatim', () => {
+    expect(DETAIL_FINDER_CHECKLIST.footwear).toEqual(['sole_pattern', 'stitching', 'logo', 'eyelets']);
+  });
+
+  it('isDetailFinderPoint keeps footwear’s own points separate from every garment type’s', () => {
+    expect(isDetailFinderPoint('footwear', 'sole_pattern')).toBe(true);
+    expect(isDetailFinderPoint('footwear', 'eyelets')).toBe(true);
+    expect(isDetailFinderPoint('footwear', 'chest_logo')).toBe(false);
+    expect(isDetailFinderPoint('polo', 'sole_pattern')).toBe(false);
+  });
+
+  it('detailFinderKind/parseDetailFinderKind round-trips footwear the same as any garment type', () => {
+    const kind = detailFinderKind('footwear', 'eyelets');
+    expect(kind).toBe('finder:footwear:eyelets');
+    expect(parseDetailFinderKind(kind)).toEqual({ garmentType: 'footwear', point: 'eyelets' });
   });
 });
 
