@@ -4,7 +4,19 @@
 // a missing field, an empty body) is a `BAD_ANSWER`-shaped `AdapterError`, never a guess dressed up as a draft.
 import { z } from 'zod';
 import { AdapterError } from '../define';
-import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiSupportReplyDraft, type AiSupportReplyInput } from './shared';
+import {
+  cutTo,
+  type AiArticleDraft,
+  type AiArticleInput,
+  type AiCampaignDraft,
+  type AiCampaignInput,
+  type AiProductDescriptionDraft,
+  type AiProductDescriptionInput,
+  type AiSeoDraft,
+  type AiSeoInput,
+  type AiSupportReplyDraft,
+  type AiSupportReplyInput,
+} from './shared';
 
 export interface Prompt {
   system: string;
@@ -149,5 +161,33 @@ const supportReplyAnswer = z.object({ body: z.string() });
 export function parseSupportReplyJson(text: string, input: AiSupportReplyInput, usage?: { inputTokens: number; outputTokens: number }): AiSupportReplyDraft {
   const parsed = supportReplyAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a reply');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 326 — the product content agent's own job: a shop-facing description from a product's own attributes
+// ---------------------------------------------------------------------------------------------------------------------
+
+const ATTRS_RULE = 'Write only from the attributes given. Never invent a size, colour, material, fit, feature, price or claim that is not listed; never promise a discount, shipping time or policy.';
+
+export function productDescriptionPrompt(input: AiProductDescriptionInput): Prompt {
+  const f = input.facts;
+  const facts = Object.entries({ name: f.name, brand: f.brand, category: f.category, colours: f.colours?.join(', '), sizes: f.sizes?.join(', '), fabric: f.fabric, care: f.care, shop: f.shop })
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${ATTRS_RULE}`,
+    user: `Write a shop-facing description for this menswear product, in ${lang}, that a customer would read on its page.\n\nAttributes:\n${facts}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 500,
+  };
+}
+
+const productDescriptionAnswer = z.object({ body: z.string() });
+
+export function parseProductDescriptionJson(text: string, input: AiProductDescriptionInput, usage?: { inputTokens: number; outputTokens: number }): AiProductDescriptionDraft {
+  const parsed = productDescriptionAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a description');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

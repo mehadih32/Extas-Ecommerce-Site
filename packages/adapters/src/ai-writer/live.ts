@@ -8,8 +8,8 @@
 // reaches `complete`, the one call in this whole package that actually leaves the server over HTTP. See masking.ts's
 // own header for why this is a safety net on top of PR 310's provider routing, not a replacement for it.
 import type { TestResult } from '../define';
-import { articlePrompt, campaignPrompt, parseArticleJson, parseCampaignJson, parseSeoJson, parseSupportReplyJson, seoPrompt, supportReplyPrompt } from './prompts';
-import type { AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiSeoDraft, AiSeoInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
+import { articlePrompt, campaignPrompt, parseArticleJson, parseCampaignJson, parseProductDescriptionJson, parseSeoJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, supportReplyPrompt } from './prompts';
+import type { AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
 export interface CompleteInput {
   system: string;
@@ -59,6 +59,11 @@ export function liveAiWriter(complete: Completer): AiWriter {
       const { system, user, maxTokens } = supportReplyPrompt(input);
       const { text, usage } = await complete({ system, user, maxTokens });
       return parseSupportReplyJson(text, input, usage);
+    },
+    async draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft> {
+      const { system, user, maxTokens } = productDescriptionPrompt(input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseProductDescriptionJson(text, input, usage);
     },
   };
 }
