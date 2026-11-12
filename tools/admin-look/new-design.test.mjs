@@ -9,16 +9,16 @@ const real = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.
 
 describe('pnpm admin:design (PR 12, CN-025)', () => {
   it('adds one module and one registry line for a new Dashboard design', () => {
-    const plan = planDesign({ registry: real, page: 'dashboard', key: 'D', en: 'Focus', bn: 'ফোকাস' });
-    expect(plan.file.path).toBe(`${LOOK_DIR}/dashboard/D.tsx`);
+    const plan = planDesign({ registry: real, page: 'dashboard', key: 'E', en: 'Focus', bn: 'ফোকাস' });
+    expect(plan.file.path).toBe(`${LOOK_DIR}/dashboard/E.tsx`);
     const added = plan.registry.split('\n').filter((l) => !real.split('\n').includes(l));
-    expect(added).toEqual(["import { dashboardD } from './dashboard/D';", '      dashboardD,']);
+    expect(added).toEqual(["import { dashboardE } from './dashboard/E';", '      dashboardE,']);
     // The line sits in the Dashboard's list, right before its marker.
     const lines = plan.registry.split('\n');
-    expect(lines[lines.indexOf('      // admin:design dashboard') - 1]).toBe('      dashboardD,');
-    expect(plan.file.text).toContain("key: 'D'");
+    expect(lines[lines.indexOf('      // admin:design dashboard') - 1]).toBe('      dashboardE,');
+    expect(plan.file.text).toContain("key: 'E'");
     expect(plan.file.text).toContain('name: { en: "Focus", bn: "ফোকাস" }');
-    expect(plan.file.text).toContain('export const dashboardD: LookDesign<DashProps, DashPart>');
+    expect(plan.file.text).toContain('export const dashboardE: LookDesign<DashProps, DashPart>');
     // The start keeps the page's contract: the one KPI pair, the shared header.
     expect(plan.file.text).toContain('testId="dash-kpi-sales"');
     expect(plan.file.text).toContain('testId="dash-kpi-ordered"');
@@ -31,7 +31,7 @@ describe('pnpm admin:design (PR 12, CN-025)', () => {
     expect(() => planDesign({ registry: real, page: 'Dash', key: 'D' })).toThrow(/not a page id/);
     expect(() => planDesign({ registry: real, page: 'nowhere', key: 'D' })).toThrow(/no page "nowhere"/);
     expect(() => planDesign({ registry: real, page: 'orders', key: 'B' })).toThrow(/does not draw its designs through the registry yet/);
-    expect(() => planDesign({ registry: real, page: 'dashboard', key: 'D', has: () => true })).toThrow(/exists already/);
+    expect(() => planDesign({ registry: real, page: 'dashboard', key: 'E', has: () => true })).toThrow(/exists already/);
   });
 
   it('writes both files, and a second run for the same key is refused', () => {
