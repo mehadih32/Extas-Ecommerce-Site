@@ -1,5 +1,6 @@
 // S24 · PR 471 — pure tests for the worn-accessory engine's family/view vocabulary and its "never invent" view
 // planner (no database).
+// S24 · PR 472 pure tests (below PR 471's own): the "ask for the missing view" message and request list.
 import { describe, expect, it } from 'vitest';
 import {
   isWornAccessoryFamily,
@@ -8,6 +9,8 @@ import {
   WORN_ACCESSORY_FAMILIES,
   WORN_ACCESSORY_MANDATORY_REPROJECTION_FAMILIES,
   WORN_ACCESSORY_VIEWS,
+  wornAccessoryMissingViewMessage,
+  wornAccessoryMissingViewRequests,
   wornAccessoryRequiresDetailReprojection,
   wornAccessoryViewRole,
 } from './wornAccessoryStudio';
@@ -99,5 +102,38 @@ describe('WORN_ACCESSORY_MANDATORY_REPROJECTION_FAMILIES / wornAccessoryRequires
     expect(wornAccessoryRequiresDetailReprojection('watches')).toBe(true);
     expect(wornAccessoryRequiresDetailReprojection('bags')).toBe(true);
     expect(wornAccessoryRequiresDetailReprojection('caps')).toBe(false);
+  });
+});
+
+describe('PR 472 · wornAccessoryMissingViewMessage / wornAccessoryMissingViewRequests', () => {
+  it('names the family and the missing view in plain words, never the raw snake_case role', () => {
+    const msg = wornAccessoryMissingViewMessage('watches', 'worn');
+    expect(msg).toContain('watch');
+    expect(msg).toContain('worn');
+    expect(msg).not.toContain('worn_reference');
+  });
+
+  it('every missing view gets its own request, in the order views were asked for', () => {
+    const reqs = wornAccessoryMissingViewRequests('caps', []);
+    expect(reqs.map((r) => r.view)).toEqual(['worn', 'flat']);
+    for (const r of reqs) expect(r.message.length).toBeGreaterThan(0);
+  });
+
+  it('a view already on file is never asked for again', () => {
+    const reqs = wornAccessoryMissingViewRequests('bags', [{ role: 'worn_reference', isOriginal: true, archivedAt: null }]);
+    expect(reqs.map((r) => r.view)).toEqual(['flat']);
+  });
+
+  it('a generated or archived reference never counts, so the view is still asked for', () => {
+    const generated = wornAccessoryMissingViewRequests('sunglasses', [{ role: 'worn_reference', isOriginal: false, archivedAt: null }]);
+    expect(generated.map((r) => r.view)).toEqual(['worn', 'flat']);
+    const archived = wornAccessoryMissingViewRequests('sunglasses', [{ role: 'worn_reference', isOriginal: true, archivedAt: new Date() }]);
+    expect(archived.map((r) => r.view)).toEqual(['worn', 'flat']);
+  });
+
+  it('every family gets its own plain label, never the raw plural recipe key', () => {
+    expect(wornAccessoryMissingViewMessage('caps', 'flat')).toContain('cap');
+    expect(wornAccessoryMissingViewMessage('bags', 'flat')).toContain('bag');
+    expect(wornAccessoryMissingViewMessage('sunglasses', 'flat')).toContain('sunglasses');
   });
 });
