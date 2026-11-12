@@ -536,6 +536,20 @@ rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=success SMOKE_JSON="$T
 check "report: a failed smoke test rolled back, in words" "$(grep -c 'FAILED, ROLLED BACK' "$T/out/deploy-latest.md"):$(grep -c 'previous version was put back' "$T/out/deploy-latest.md"):$(grep -c 'owner@example' "$T/out/deploy-latest.md")" "1:1:0"
 rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json"
 check "report: a failed rollback says so" "$(grep -c 'FAILED, ROLLBACK FAILED' "$T/out/deploy-latest.md")" "1"
+# CN-046 (12 Nov 2026, deploy run 43227644499): "putting the previous version back failed too" used to stop there —
+# never saying which version a reader on new.extas.com.bd was actually looking at. Now it always says, in bold, on
+# its own: by deploy.sh's own guarantee (a failed rollback never changes what was live) when there is no fresh check,
+# or from the fresh check itself (POST_ROLLBACK_JSON, taken again right after the failed rollback step) when there is.
+check "report (CN-046): no fresh check — says plainly the NEW version is still live, by name" \
+  "$(grep -c 'the NEW version just deployed, commit `999988887777`, is the one still live' "$T/out/deploy-latest.md")" "1"
+echo '{"url":"u","code":200,"ok":true,"commit":"999988887777aaaa","color":"blue"}' > "$T/post.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json" POST_ROLLBACK_JSON="$T/post.json"
+check "report (CN-046): a fresh check confirming the new version — says so, checked just now" \
+  "$(grep -c 'the NEW version just deployed, commit `999988887777`, is the one still live' "$T/out/deploy-latest.md"):$(grep -c 'checked again right after the failed rollback step' "$T/out/deploy-latest.md")" "1:1"
+echo '{"url":"u","code":200,"ok":true,"commit":"111122223333dddd","color":"green"}' > "$T/post.json"
+rep RUN_ID=44 DEPLOY=success SMOKE=failure SMOKE_ROLLBACK=failure SMOKE_JSON="$T/smoke.json" POST_ROLLBACK_JSON="$T/post.json"
+check "report (CN-046): a fresh check answering as the OLD version — says the old one is live, not the new" \
+  "$(grep -c 'the OLD version, commit `111122223333`, is the one live' "$T/out/deploy-latest.md"):$(grep -c 'NEW version just deployed' "$T/out/deploy-latest.md")" "1:0"
 check "report: the history keeps seven columns" "$(tr -cd '|' < "$T/out/deploy-history.line" | wc -c)" "8"
 rep RUN_ID=44 DEPLOY=success
 check "report: no smoke line when it did not run" "$(grep -c 'Smoke test' "$T/out/deploy-latest.md")" "0"
@@ -573,6 +587,11 @@ if grep -q check-account <<<"$*"; then
 fi
 # PR 419: the run history import (and its probe) in the migrate image
 grep -q run-history-cli <<<"$*" && exit 0
+# CN-046 (12 Nov 2026, deploy run 43227644499): the browser crashing partway through — exiting nonzero with no
+# result.json at all, not a clean "found a problem" — is exactly what happened in the real incident (an uncaught
+# exception in tools/smoke.mjs, since fixed there too). Proves smoke.sh's own fallback still turns that into a
+# normal, exit-1 failure that says so, never a silent pass and never an unexplained crash of smoke.sh itself.
+[ "${FAKE_CRASH:-}" != 1 ] || exit 1
 cp "$envf" "$FAKE_SEEN"
 printf '{"at":"x","sha":"s","ok":%s,"pages":4,"failed":%s,"problems":%s}\n' "$FAKE_OK" "$FAKE_FAILED" "$FAKE_PROBLEMS" > "$out/result.json"
 echo "# r" > "$out/README.md"
@@ -630,6 +649,12 @@ check "smoke (M7): the first-week watch asks for the main domain; a run by hand 
 echo '{"migrate":"extas-migrate:gone"}' > "$T/root/state/last-good-deploy.json"; : > "$T/docker.log"
 sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null
 check "smoke: a missing migrate image falls back to the newest" "$(grep -c 'run .*extas-migrate:newest sh -c .*check-account' "$T/docker.log")" "1"
+echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
+rc=0; sm FAKE_CRASH=1 >/dev/null 2>&1 || rc=$?
+check "smoke (CN-046): a crash with no result.json is still a clean exit-1 failure that says so, never a silent pass" \
+  "$rc:$(jq -c '{ok,problems}' "$T/root/state/smoke.json")" '1:{"ok":false,"problems":["the smoke test did not finish (exit 1)"]}'
+check "smoke (CN-046): deploy.yml's rollback, live-check and fail-build steps all key off this step's own outcome, never result.json existing" \
+  "$(grep -c "steps.smoke.outcome == 'failure'" ../../.github/workflows/deploy.yml)" "3"
 rm -rf "$T"
 
 # Monthly speed lab (S11 · PR 234): vitals-lab.sh makes the check account the same way as smoke.sh, hands the browser
@@ -1273,6 +1298,31 @@ check "rollback: no image a record needs is removed" "$(grep -c '^RMI' "$T/docke
 rc=0; FAKE_IMAGES="extas-web:new extas-web:old extas-migrate:new" dep rollback || rc=$?
 check "rollback: a worker image that is gone runs 0 copies and says why" "$rc:$(jq -r .worker "$T/root/state/last-deploy.json"):$(jq -r .worker_image "$T/root/state/last-deploy.json")" \
   "0:off: image extas-migrate:oldw is not on this server:"
+# CN-046 (12 Nov 2026, deploy run 43227644499): a real incident — the ERP-shaped crash, "smoke crashes" below — ended
+# with the automatic rollback dying because the ONE image it ever tries (the immediately-previous one) was no longer
+# on the server, leaving the untested new version live with nothing restored. A rollback now keeps trying older good
+# versions it still has a record of (images.sh rollback_history, deploy.sh's own per-attempt history under
+# state/deploys/) before it gives up — proven here with a history three versions deep and the newest two missing.
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+mkdir -p "$T/root/state/deploys"; rm -f "$T/root/state/deploys"/*.json
+echo '{"result":"ok","kind":"deploy","image":"extas-web:ancient","worker_image":"extas-migrate:ancientw"}' > "$T/root/state/deploys/20261101-000000.json"
+echo '{"result":"fail","kind":"deploy","image":"extas-web:badbuild"}' > "$T/root/state/deploys/20261103-000000.json"
+echo '{"result":"ok","kind":"deploy","image":"extas-web:old","worker_image":"extas-migrate:oldw"}' > "$T/root/state/deploys/20261105-000000.json"
+echo '{"result":"ok","kind":"deploy","image":"extas-web:new","worker_image":"extas-migrate:new"}' > "$T/root/state/deploys/20261110-000000.json"
+depout() { PATH="$T/bin:$PATH" FAKE_LOG="$T/docker.log" EXTAS_CONFIG_FILE="$T/conf" DEPLOY_DRAIN_SECONDS=0 bash ../deploy/deploy.sh "$@" 2>&1; }
+rc=0; out="$(FAKE_IMAGES="extas-web:new extas-web:ancient extas-migrate:new extas-migrate:ancientw" depout rollback)" || rc=$?
+check "rollback (CN-046): the usual target is gone, so it falls back two generations to one still on the server" \
+  "$rc:$(jq -r '.result, .image, .worker_image, .kind' "$T/root/state/last-deploy.json" | paste -sd'|')" "0:ok|extas-web:ancient|extas-migrate:ancientw|rollback"
+check "rollback (CN-046): it says in the log that it had to go further back, and how far" \
+  "$(grep -c 'usual rollback target.*is not on this server any more' <<<"$out"):$(grep -c '1 newer good version(s) were no longer on this server' <<<"$out")" "1:1"
+check "rollback (CN-046): a failed build in the history is never offered as a target" "$(grep -c 'extas-web:badbuild' "$T/docker.log")" "0"
+: > "$T/docker.log"; cp "$T/good.json" "$T/root/state/last-good-deploy.json"
+rc=0; out="$(FAKE_IMAGES="extas-web:new extas-migrate:new" depout rollback)" || rc=$?
+check "rollback (CN-046): the usual target AND every earlier good version are gone — dies clearly, touches nothing" \
+  "$rc:$(jq -r .result "$T/root/state/last-deploy.json"):$(grep -c '^COMPOSE' "$T/docker.log" || true):$(grep -c '^RMI' "$T/docker.log" || true)" "1:fail:0:0"
+check "rollback (CN-046): the record says plainly the live, untested version was never touched" \
+  "$(jq -r .detail "$T/root/state/last-deploy.json" | grep -c 'every earlier good version'):$(jq -r .detail "$T/root/state/last-deploy.json" | grep -c 'live version unchanged')" "1:1"
+rm -f "$T/root/state/deploys"/*.json
 # PR 602: after the switch the deploy asks the new colour to clear every cache layer once — inside the Docker network,
 # with the server's own token, and never failing the deploy. Without the token (setup not re-run) it only says so.
 check "cache hook: no token, no call" "$(grep -c 'cache/deployed' "$T/docker.log" || true)" "0"

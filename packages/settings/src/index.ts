@@ -250,4 +250,6 @@ export * from './eye-toggles';
 export * from './placeholder';
 // S23 · PR 437 — the social studio's cadence, voice and AI-caption switches, off as it ships (registry-studio.ts, version 281).
 export * from './registry-studio';
+// S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
+export * from './registry-photoshoot';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

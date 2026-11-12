@@ -21,6 +21,8 @@ export interface AssetRow {
   isAiGenerated: boolean;
   sourceAssetId: string | null;
   archivedAt: Date | null;
+  /** S24 · PR 446: the pipeline-step labels on this row (e.g. `ghost_mannequin`), empty on a plain upload. */
+  tags: string[];
 }
 
 /** Refuses a patch that would touch any field the immutability guarantee protects (PR 444's whole point). */
@@ -63,6 +65,12 @@ export interface RecordGeneratedAssetInput {
   checksumSha256: string;
   width?: number;
   height?: number;
+  /**
+   * S24 · PR 446: free labels for which pipeline step produced this row (e.g. `ghost_mannequin`), so a later step
+   * can find and reuse it (C7.9 "the best input for the on-model step … produces it first and reuses it") without
+   * widening the fixed C7.6 role taxonomy. Purely informational — never checked by this function.
+   */
+  tags?: string[];
 }
 
 const recordInput = z
@@ -76,6 +84,7 @@ const recordInput = z
     checksumSha256: z.string().min(32),
     width: z.number().int().min(1).optional(),
     height: z.number().int().min(1).optional(),
+    tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   })
   .strict();
 
@@ -107,15 +116,15 @@ export async function recordGeneratedAsset(deps: PhotoshootDeps, who: Who, input
       isAiGenerated: true,
       sourceAssetId: source.id,
       role: d.role,
-      tags: [],
+      tags: d.tags,
     },
   });
   await logChange(deps.db, who, { action: 'photoshoot.asset.recordGenerated', entityType: 'MediaAsset', entityId: row.id, before: null, after: { sourceAssetId: source.id, role: d.role } });
   return toRow(row);
 }
 
-function toRow(r: { id: string; storeId: number; isOriginal: boolean; role: string | null; isAiGenerated: boolean; sourceAssetId: string | null; archivedAt: Date | null }): AssetRow {
-  return { id: r.id, storeId: r.storeId, isOriginal: r.isOriginal, role: r.role, isAiGenerated: r.isAiGenerated, sourceAssetId: r.sourceAssetId, archivedAt: r.archivedAt };
+function toRow(r: { id: string; storeId: number; isOriginal: boolean; role: string | null; isAiGenerated: boolean; sourceAssetId: string | null; archivedAt: Date | null; tags?: string[] }): AssetRow {
+  return { id: r.id, storeId: r.storeId, isOriginal: r.isOriginal, role: r.role, isAiGenerated: r.isAiGenerated, sourceAssetId: r.sourceAssetId, archivedAt: r.archivedAt, tags: r.tags ?? [] };
 }
 
 /** The role-tagged references on file for a set of assets, for PR 448's "what is missing" check. */
