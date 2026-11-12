@@ -118,6 +118,18 @@
         "business": { "name": "Business", "rule": "The shop's own sales, cost, stock or report figures. Paid connections only — a free one is not recommended." },
         "publicDraft": { "name": "Public / draft", "rule": "Content a person reviews before it goes out (blog, SEO, social copy). A free-capable connection is allowed, with an automatic paid fallback." }
       }
+    },
+    "offTest": {
+      "title": "AI-off test",
+      "sub": "Proves the shop runs with AI off: a static check of the code (never a live run) for a first set of features, each with its own rule or template fallback.",
+      "lastChecked": "Last checked {when} (automatically, by CI, on every change to the code)",
+      "passed": "{ok}/{n} checks passed",
+      "covers": "covering {covered} of {total} AI jobs so far",
+      "fallback": "Fallback",
+      "pass": "Pass",
+      "fail": "Fail",
+      "notAvailable": "Not available yet — no deploy has copied a result here.",
+      "note": "This is a static scan of the source code, the same method as the hardcode guard, so it has no \"Run\" button: it runs by itself in CI on every change, never live on this page."
     }
   },
   "aiCostBook": {
