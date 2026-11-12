@@ -15,6 +15,10 @@ describe('ASSET_ROLES', () => {
     // S24 · PR 471: the one role the worn-accessory engine's own "worn" view needed (its "flat" view reuses
     // front_reference instead of adding a second one).
     expect((ASSET_ROLES as readonly string[]).includes('worn_reference')).toBe(true);
+    // S24 · PR 473: the one role the reflective/transparent engine needs — a real, unedited phone photo of a
+    // perfume bottle, watch glass or sunglass lens; C7.12's own "these are not generated" rule accepts no other
+    // source.
+    expect((ASSET_ROLES as readonly string[]).includes('reflective_reference')).toBe(true);
   });
 
   it('REFERENCE_ROLES excludes primary_garment only', () => {

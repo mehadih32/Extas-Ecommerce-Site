@@ -30,6 +30,12 @@ export const ASSET_ROLES = [
    * folded or standing, C7.12's "product-only" column) reuses `front_reference` rather than adding a second new
    * role, the same "reuse what already fits" choice PR 465 already made for three of footwear's own six angles. */
   'worn_reference',
+  /** S24 · PR 473: a real, unedited phone photo of a reflective or transparent surface — a perfume bottle, a
+   * watch glass, a sunglass lens (C7.12's own "Reflective and transparent goods — honest handling": "these are
+   * not generated … the pipeline keeps the owner's real photo"). The only role `reflectiveTransparentStudio.ts`'s
+   * own "never invent" gate ever accepts as a source — a genuinely new photographic need, the same reasoning that
+   * justified `worn_reference` above rather than reusing `front_reference` for it. */
+  'reflective_reference',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 

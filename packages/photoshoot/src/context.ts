@@ -63,6 +63,10 @@ export const PHOTOSHOOT_ERROR_CODES = [
   // output for one of those three families is refused until an approved detail region (PR 454) exists on its own
   // source reference photo; caps are deliberately not gated by this code.
   'DETAIL_REPROJECTION_REQUIRED',
+  // PR 473 / C7.12 "Reflective and transparent goods — honest handling": recording a reflective/transparent
+  // studio output (perfume, watch glass, sunglass lens) with no real, on-file reflective_reference phone photo
+  // — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE and NO_WORN_ACCESSORY_REFERENCE do.
+  'NO_REFLECTIVE_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -79,7 +83,15 @@ export class PhotoshootError extends Error {
   get status(): number {
     if (this.code === 'NOT_FOUND') return 404;
     if (this.code === 'STALE') return 409;
-    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE' || this.code === 'NO_FOOTWEAR_REFERENCE' || this.code === 'NO_WORN_ACCESSORY_REFERENCE' || this.code === 'DETAIL_REPROJECTION_REQUIRED') return 403;
+    if (
+      this.code === 'ORIGINAL_IMMUTABLE' ||
+      this.code === 'NO_BACK_REFERENCE' ||
+      this.code === 'NO_FOOTWEAR_REFERENCE' ||
+      this.code === 'NO_WORN_ACCESSORY_REFERENCE' ||
+      this.code === 'DETAIL_REPROJECTION_REQUIRED' ||
+      this.code === 'NO_REFLECTIVE_REFERENCE'
+    )
+      return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;
     return 400;
   }
