@@ -1,0 +1,34 @@
+name: diag-weblog
+# Read-only, throwaway diagnostic for the CN-045 live incident (12 Nov 2026): the smoke test shows admin sign-in
+# answering "server-error" (apps/web/src/lib/admin-auth.ts's generic catch-all), which only logs the real cause with
+# console.warn inside the app container itself -- never into this workflow's own log. This dumps that container's
+# own stdout so the real error is visible. Changes nothing on the server. Lives only on this throwaway branch; never
+# merges to main.
+on:
+  push:
+    branches: [diag/live-weblog-20261112]
+
+jobs:
+  dump:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dump the live web container's own log (read-only)
+        run: |
+          set -euo pipefail
+          CONF="/etc/extas/server.conf"
+          . "$CONF"
+          R="$EXTAS_ROOT"
+          color="$(sudo cat "$R/state/app.color" 2>/dev/null || echo unknown)"
+          echo "live color: $color"
+          sudo env EXTAS_COLOR="$color" APP_IMAGE="diag-readonly" EXTAS_ROOT="$R" \
+            EXTAS_NVME_MOUNT="${EXTAS_NVME_MOUNT:-}" CADDY_UPLOAD_MAX_MB="${CADDY_UPLOAD_MAX_MB:-25}" \
+            docker compose -p "extas-app-$color" -f "$GITHUB_WORKSPACE/infra/stack/app.yml" \
+              --env-file "$R/config/profile.env" logs web --no-color --since 4h \
+            > /tmp/diag-weblog.txt 2>&1 || true
+          echo "--- total lines: $(wc -l < /tmp/diag-weblog.txt) ---"
+          echo "--- filtered: admin api / error / exception ---"
+          grep -iE "admin api:|unhandled|exception|prismaclient|TypeError|ReferenceError|at Object|server-error" /tmp/diag-weblog.txt | tail -200 || true
+          echo "--- raw tail (last 120 lines) ---"
+          tail -n 120 /tmp/diag-weblog.txt
