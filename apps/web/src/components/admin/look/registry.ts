@@ -4,16 +4,16 @@
 // (docs/admin-guide/HOW-TO-ADD-A-DESIGN.md). Nothing else changes: Settings → Admin look, the "…" menu, the API's
 // checks and the page's data loader all read this list.
 //
-// `standard` is the design a team sees until the owner picks one in Settings → Admin look (`admin.look.pages`). For launch
-// (CN-027) every page has one design: the Dashboard its V12.4 default (A, "Calm overview"), Orders and Products their
-// built page. The other V12.4 designs come after launch (PROGRESS.md follow-ups 380–389).
-// After launch (CN-044, the ERP lane's third task, PR 655): Dashboard's "Classic cards" (the demo's own letter for it
-// is A, the V12.3 page; here it is C, our next free key, since B is Lumen's "Today", PR 631/CN-036). The demo's
-// command-center design (Dashboard), and Orders'/Products' own B and C, stay open (follow-ups 380–382).
+// (CN-027) every page had one design: the Dashboard its V12.4 default (A, "Calm overview"), Orders and Products their
+// built page. The other V12.4 designs are after-launch follow-ups (PROGRESS.md 380–382, CN-044 ERP lane): the Dashboard's
+// "Classic cards" (PR 655, key C — B was already taken by the Lumen "Today", PR 631) and command centre; Orders' B
+// "Focus view" and C "Command view" (PR 656); Products' designs still to come (follow-up 382).
 import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
 import { dashboardB } from './dashboard/B';
 import { dashboardC } from './dashboard/C';
+import { ordersB } from './orders/B';
+import { ordersC } from './orders/C';
 import { productsB } from './products/B';
 import { productsC } from './products/C';
 import type { LookPage } from './types';
@@ -41,6 +41,8 @@ export const LOOK_PAGES: readonly LookPage[] = [
     standard: 'A',
     designs: [
       classicDesign('orders'),
+      ordersB,
+      ordersC,
       // admin:design orders
     ],
   },
