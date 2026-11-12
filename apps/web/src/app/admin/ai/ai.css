@@ -173,3 +173,13 @@
 .adm2 .ai-routing-row span.a2-xs {
   overflow-wrap: anywhere;
 }
+/* S15 · PR 321 — AI › Skills: the on/off switch and "roll back" button share one action cell, each on its own
+   line at phone width (the shared .a2-tbl's own responsive card layout already stacks the row; this only stacks
+   the two controls inside that one cell so neither gets squeezed beside the other — CLAUDE.md's "step down, never
+   wrap" rule, applied here by giving each control the full cell width instead of fighting for one row). */
+.adm2 .ai-sk-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
