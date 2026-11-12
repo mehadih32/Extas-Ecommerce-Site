@@ -12,6 +12,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiCompetitorComparisonDraft,
+  type AiCompetitorComparisonInput,
   type AiCompetitorStepDraft,
   type AiCompetitorStepInput,
   type AiFraudReviewDraft,
@@ -448,4 +450,58 @@ export function parseCompetitorStepJson(text: string, input: AiCompetitorStepInp
   const parsed = competitorStepAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not describe this step');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 336 — the Competitor Teardown agent's second job: judges one already-walked competitor journey against
+// our own matching pages, step by step (Blueprint B8.3), never inventing a step that was not walked
+// ---------------------------------------------------------------------------------------------------------------------
+
+const COMPETITOR_COMPARISON_RULE =
+  "You are given one already-walked step, for each step: what the competitor's own page showed and (when a matching page of ours was given) what our own page showed. Judge ONLY the steps listed below — never add a step, never judge one that is not listed. For each listed step give a verdict (they_better / we_better / neither_matters) and a recommendation (pick / pick_with_changes / skip) with one short, plain reason grounded only in what was given — never invent a detail neither side's own note mentioned. A step with no matching page of ours ('ours' is null) can still be judged on the competitor's side alone, but say plainly that nothing of ours was compared. Never decide a price, a discount or any policy — only a UI/content pattern. If, taken together, neither side's approach is actually good for this step, you may say so plainly in claudesView (it is fine to say none of it is worth taking) — leave claudesView empty if there is nothing worth adding beyond the rows. In extasAdvantages, list only things OUR OWN notes actually show we already do well — never credit us with something neither side's note mentioned.";
+
+export function competitorComparisonPrompt(input: AiCompetitorComparisonInput): Prompt {
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  const sideText = (s: { blocked: boolean; title: string | null; note: string | null } | null): string => {
+    if (!s) return 'nothing of ours was compared for this step';
+    if (s.blocked) return 'this page could not be read';
+    return s.note?.trim() || s.title?.trim() || 'this page was read but gave nothing to describe';
+  };
+  const steps = input.facts.steps.map((s) => `- "${s.label}" — competitor: ${sideText(s.theirs)} | ours: ${sideText(s.ours)}`).join('\n');
+  return {
+    system: `${SYSTEM_RULE} ${COMPETITOR_COMPARISON_RULE}`,
+    user: `Steps already walked (judge exactly these, in this order, and no others):\n${steps}\n\nAnswer in ${lang}. Each reason at most ${input.max.reason} characters; claudesView at most ${input.max.claudesView} characters; at most ${input.max.advantageItems} items in extasAdvantages, each at most ${input.max.advantageLength} characters.\n\nReply as {"rows": [{"label": "...", "verdict": "they_better|we_better|neither_matters", "recommendation": "pick|pick_with_changes|skip", "reason": "..."}], "claudesView": "...", "extasAdvantages": ["...", ...]}.`,
+    maxTokens: 1400,
+  };
+}
+
+const competitorComparisonAnswer = z.object({
+  rows: z.array(
+    z.object({
+      label: z.string(),
+      verdict: z.enum(['they_better', 'we_better', 'neither_matters']),
+      recommendation: z.enum(['pick', 'pick_with_changes', 'skip']),
+      reason: z.string(),
+    }),
+  ),
+  claudesView: z.string().optional(),
+  extasAdvantages: z.array(z.string()).optional(),
+});
+
+export function parseCompetitorComparisonJson(text: string, input: AiCompetitorComparisonInput, usage?: { inputTokens: number; outputTokens: number }): AiCompetitorComparisonDraft {
+  const parsed = competitorComparisonAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success) throw new AdapterError('the model did not answer with any judged step');
+  // Never trust the model to have judged only the steps it was given — keep only rows whose label matches one of
+  // ours, in our own order, and drop a row for any step it did not judge (an honest gap for that row, not a thrown
+  // error, since the other rows are still usable).
+  const knownLabels = new Set(input.facts.steps.map((s) => s.label));
+  const byLabel = new Map(parsed.data.rows.filter((r) => knownLabels.has(r.label)).map((r) => [r.label, r]));
+  const rows = input.facts.steps
+    .map((s) => byLabel.get(s.label))
+    .filter((r): r is NonNullable<typeof r> => Boolean(r))
+    .map((r) => ({ label: r.label, verdict: r.verdict, recommendation: r.recommendation, reason: cutTo(r.reason, input.max.reason) }));
+  if (!rows.length) throw new AdapterError('the model did not judge any of the given steps');
+  const claudesView = parsed.data.claudesView?.trim() ? cutTo(parsed.data.claudesView, input.max.claudesView) : null;
+  const extasAdvantages = (parsed.data.extasAdvantages ?? []).filter((a) => a.trim()).slice(0, input.max.advantageItems).map((a) => cutTo(a, input.max.advantageLength));
+  return { rows, claudesView, extasAdvantages, practice: false, ...(usage ? { usage } : {}) };
 }

@@ -402,6 +402,46 @@ export interface AiCompetitorStepDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 336 — the Competitor Teardown agent's second job (the comparison/report engine; the journey walker is
+ * PR 335, saved/scheduled competitors are PR 337): judges one already-walked competitor journey against our own
+ * matching pages, step by step (Blueprint B8.3). `steps` is the deterministic side-by-side pairing the dispatcher
+ * already built from two already-walked journeys (PR 335's own `walkCompetitorJourney`, run once for the
+ * competitor and once for our own site) — each side is only that step's own title/blocked flag/already-written
+ * grounded note, never raw page text, never a price. The model may only judge what these already-grounded facts
+ * show; it must never invent a step that was not walked, and must never decide anything that moves money (it
+ * recommends Pick / Pick with changes / Skip for a UI pattern, never a price or a policy — Blueprint B8.3.4).
+ */
+export interface AiCompetitorComparisonInput {
+  locale: 'en' | 'bn';
+  facts: {
+    steps: Array<{
+      label: string;
+      theirs: { blocked: boolean; title: string | null; note: string | null };
+      /** `null` when no matching page of ours was given for this step — reported honestly, never invented. */
+      ours: { blocked: boolean; title: string | null; note: string | null } | null;
+    }>;
+  };
+  max: { reason: number; claudesView: number; advantageItems: number; advantageLength: number };
+}
+
+export interface AiCompetitorComparisonDraft {
+  rows: Array<{
+    label: string;
+    verdict: 'they_better' | 'we_better' | 'neither_matters';
+    recommendation: 'pick' | 'pick_with_changes' | 'skip';
+    reason: string;
+  }>;
+  /** Blueprint B8.3.5 — "Claude's own view where neither approach is good", may honestly be absent. */
+  claudesView: string | null;
+  /** Blueprint B8.3.6 — a short list of what EXTAS already does better, so nothing good gets traded away. */
+  extasAdvantages: string[];
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them. */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -428,6 +468,8 @@ export interface AiWriter {
   draftGuideQaAnswer(input: AiGuideQaInput): Promise<AiGuideQaDraft>;
   /** PR 335 — the Competitor Teardown agent's own job: one grounded observation on one already-read step of a competitor's own page, never a price or a decision, never the page's own wording copied. */
   draftCompetitorStep(input: AiCompetitorStepInput): Promise<AiCompetitorStepDraft>;
+  /** PR 336 — the Competitor Teardown agent's second job: judges one already-walked competitor journey against our own matching pages, step by step, never inventing a step that was not walked. */
+  draftCompetitorComparison(input: AiCompetitorComparisonInput): Promise<AiCompetitorComparisonDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */
