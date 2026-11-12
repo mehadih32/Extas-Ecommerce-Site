@@ -170,9 +170,21 @@ describe('the look registry', () => {
       expect(x.Render).toBeTypeOf('function');
       for (const part of x.parts) expect(DASH_PARTS).toContain(part);
     }
-    expect(lookCatalog()).toMatchObject({ dashboard: ['A', 'B', 'D'], orders: ['A'], products: ['A'] });
+    expect(lookCatalog()).toMatchObject({ dashboard: ['A', 'B', 'D'], orders: ['A'], products: ['A', 'B', 'C'] });
     expect(previewHref(d, 'A')).toBe('/admin?home=1&design=A');
     expect(previewHref(lookPage('orders')!, 'A')).toBe('/admin/orders?design=A');
+  });
+  it('has Products B "Focus view" and C "Command view" beside the classic list A (PR 657, follow-up 382)', () => {
+    const p = lookPage('products')!;
+    expect(p.designs.map((x) => x.key)).toEqual(['A', 'B', 'C']);
+    expect(p.standard).toBe('A');
+    const [a, b, c] = p.designs;
+    expect(a!.Render).toBeUndefined();
+    expect(b!.Render).toBeTypeOf('function');
+    expect(c!.Render).toBeTypeOf('function');
+    for (const x of p.designs) expect(x.parts).toEqual(x.key === 'A' ? [] : ['list']);
+    expect(previewHref(p, 'B')).toBe('/admin/products?design=B');
+    expect(previewHref(p, 'C')).toBe('/admin/products?design=C');
   });
   it('reads a part only for someone holding one of its keys', () => {
     const v = (perms: string[]) => ({ perms: new Set(perms), owner: false });

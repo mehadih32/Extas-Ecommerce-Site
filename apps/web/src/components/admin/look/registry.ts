@@ -11,6 +11,8 @@ import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
 import { dashboardB } from './dashboard/B';
 import { dashboardD } from './dashboard/D';
+import { productsB } from './products/B';
+import { productsC } from './products/C';
 import type { LookPage } from './types';
 
 export const LOOK_PAGES: readonly LookPage[] = [
@@ -47,6 +49,8 @@ export const LOOK_PAGES: readonly LookPage[] = [
     standard: 'A',
     designs: [
       classicDesign('products'),
+      productsB,
+      productsC,
       // admin:design products
     ],
   },
