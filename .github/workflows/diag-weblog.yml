@@ -1,9 +1,9 @@
 name: diag-weblog
-# CN-045: pgbouncer logs show continuous "connect failed" to 172.18.0.3:5432 -- postgres itself is healthy and has
-# no errors, so this looks like pgbouncer holding a stale resolved IP for postgres after postgres was recreated at
-# some point today. A plain restart fixed it for ~6 minutes then it broke again, meaning postgres's IP likely moved
-# again since. This checks postgres's current IP + restart history, then force-recreates (not just restarts)
-# pgbouncer so it starts clean and re-resolves. Throwaway branch; never merges to main.
+# CN-045: ruled out DNS/IP staleness -- postgres's IP (172.18.0.3) never changed, 0 restarts all day. Pgbouncer's
+# "connect failed" to that exact, correct IP, with nothing in postgres's own log, points at the network path itself:
+# today had an extreme number of short-lived connections (CI's own db jobs + many deploy/migrate attempts + pgbouncer's
+# own rapid retry loop), which can exhaust the kernel's connection-tracking table (conntrack) and start silently
+# dropping new connections between containers on the same bridge. This checks that. Throwaway branch; never merges.
 on:
   push:
     branches: [diag/live-weblog-20261112]
@@ -14,31 +14,17 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Diagnose the IP mismatch, then force-recreate pgbouncer
+      - name: Check kernel conntrack table usage
         run: |
           set -euo pipefail
-          CONF="/etc/extas/server.conf"
-          . "$CONF"
-          R="$EXTAS_ROOT"
-          compose() {
-            sudo docker compose -p extas --project-directory "$R/stack" -f "$R/stack/compose.yml" \
-              --env-file "$R/config/profile.env" --env-file "$R/config/stack.env" "$@"
-          }
-          echo "--- postgres: restart history + current IP ---"
-          sudo docker inspect -f 'restarts={{.RestartCount}} started={{.State.StartedAt}} id={{.Id}}' extas-postgres
-          sudo docker inspect -f 'postgres current IP: {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' extas-postgres
-          echo "--- pgbouncer: restart history + current IP + networks ---"
-          sudo docker inspect -f 'restarts={{.RestartCount}} started={{.State.StartedAt}}' extas-pgbouncer
-          sudo docker inspect -f 'pgbouncer networks: {{range $k,$v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}} {{end}}' extas-pgbouncer
-          echo "--- what pgbouncer is actually trying to reach (its own log says 172.18.0.3:5432) ---"
-          echo "--- docker network ls (any duplicate/overlapping subnets from today's CI churn) ---"
-          sudo docker network ls
-          echo "--- force-recreating pgbouncer (stateless; postgres untouched; a fresh container, fresh DNS) ---"
-          compose up -d --force-recreate --no-deps pgbouncer
-          sleep 3
-          sudo docker inspect -f 'after recreate: restarts={{.RestartCount}} started={{.State.StartedAt}} health={{.State.Health.Status}}' extas-pgbouncer
-          sudo docker inspect -f 'pgbouncer new IP: {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' extas-pgbouncer
-          echo "--- verify: real query through pgbouncer right after recreate ---"
-          sudo docker exec extas-postgres psql -U extas -d extas -tAc "select 1 as postgres_direct_ok;"
-          sleep 2
-          sudo docker logs extas-pgbouncer --since 10s 2>&1 | tail -20
+          echo "--- conntrack: current count vs max ---"
+          cat /proc/sys/net/netfilter/nf_conntrack_count 2>/dev/null || sudo sysctl net.netfilter.nf_conntrack_count || true
+          cat /proc/sys/net/netfilter/nf_conntrack_max 2>/dev/null || sudo sysctl net.netfilter.nf_conntrack_max || true
+          echo "--- conntrack table, entries touching the extas bridge (172.18.0.x) ---"
+          sudo conntrack -L 2>/dev/null | grep -c '172.18.0.' || echo "conntrack cli not installed"
+          echo "--- dmesg: any 'nf_conntrack: table full' drops ---"
+          sudo dmesg -T 2>/dev/null | grep -i "conntrack" | tail -20 || echo "no dmesg access or no matches"
+          echo "--- docker daemon: total containers ever created today (churn indicator) ---"
+          sudo docker ps -a --format '{{.CreatedAt}}' | grep "2026-11-12" | wc -l
+          echo "--- current established connections count on the extas bridge interface ---"
+          ip -s link show 2>/dev/null | grep -A5 'br-' | head -40 || true
