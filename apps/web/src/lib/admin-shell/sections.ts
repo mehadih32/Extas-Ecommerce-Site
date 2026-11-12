@@ -283,6 +283,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
           { href: '/admin/marketing/studio/models', perm: 'photoshoot.read', keys: ['marketingStudioModels'] },
           { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
+          // S25 · PR 485/486: reel assembly — builds a reel's own recipe from approved clips, then assembles it
+          // (the honest-preview compositor, one output per chosen shape).
+          { href: '/admin/marketing/studio/reels', perm: 'marketing.studio.read', keys: ['marketingStudioReels'] },
+          // S25 · PR 487: campaign creative export, part 1 — requests an export from a real product, SKU or
+          // category that already has an approved image/video; producing the sized files is PR 488.
+          { href: '/admin/marketing/studio/export', perm: 'marketing.studio.read', keys: ['marketingStudioExport'] },
           // S25 · PR 490: the creative brief — a few short questions, then three proposed directions to pick from.
           { href: '/admin/marketing/studio/briefs', perm: 'marketing.studio.read', keys: ['marketingStudioBriefs'] },
           { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
