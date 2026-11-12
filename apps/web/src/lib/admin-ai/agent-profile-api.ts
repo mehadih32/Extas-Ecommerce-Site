@@ -1,11 +1,14 @@
-// S15 · PR 577 — /api/admin/agents: GET the team (every fixed agent's identity and assignment counts; `ai.read`).
-// /api/admin/agents/[key]: GET one agent's full 360° profile (`ai.read`); PATCH {bio?, photoUrl?, joinedOn?,
-// verified?} edits the owner's own identity fields (`ai.control`, audited, a no-op patch writes once); POST
-// {action: 'reward', label, note?} | {action: 'assign', title, description?, dueAt?} |
-// {action: 'complete', assignmentId} does the matching write (`ai.control`) and hands back the fresh profile, the
-// same "never a second GET after a tap" shape `control-room-api.ts` already uses.
+// S15 · PR 577, 579 — /api/admin/agents: GET the team (every fixed agent's identity and assignment counts;
+// `ai.read`). /api/admin/agents/[key]: GET one agent's full 360° profile (`ai.read`); PATCH {bio?, photoUrl?,
+// joinedOn?, verified?} edits the owner's own identity fields (`ai.control`, audited, a no-op patch writes once);
+// POST {action: 'reward', label, note?} | {action: 'assign', title, description?, dueAt?} |
+// {action: 'complete', assignmentId} | {action: 'curriculum', level, status, score?} (PR 579: the owner's own hand
+// on one curriculum level, until the sandbox exam runner, PR 322, can set it itself) does the matching write
+// (`ai.control`) and hands back the fresh profile (or, for `curriculum`, the fresh curriculum), the same "never a
+// second GET after a tap" shape `control-room-api.ts` already uses.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { agentCurriculumView, setCurriculumStatus } from './agent-curriculum';
 import { isAiAgentKey } from './agents';
 import {
   agentProfileList,
@@ -71,6 +74,11 @@ export async function agentProfileHandler(request: Request, deps: AdminDeps | nu
       if (typeof input.assignmentId !== 'string') return json({ ok: false, error: 'INVALID_INPUT', details: ['assignmentId'] }, { status: 400 });
       await completeAgentAssignment(d, who, key, input.assignmentId);
       return withProfile();
+    }
+    if (input.action === 'curriculum') {
+      if (typeof input.level !== 'string' || typeof input.status !== 'string') return json({ ok: false, error: 'INVALID_INPUT', details: ['level'] }, { status: 400 });
+      await setCurriculumStatus(d, who, key, { level: input.level, status: input.status, score: typeof input.score === 'number' ? input.score : null });
+      return json({ ok: true, curriculum: await agentCurriculumView(d, key) });
     }
     return json({ ok: false, error: 'INVALID_INPUT', details: ['action'] }, { status: 400 });
   } catch (e) {
