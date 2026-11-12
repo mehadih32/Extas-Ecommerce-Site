@@ -161,6 +161,17 @@ describe('PR 311 masking covers the support reply (PR 325)', () => {
   });
 });
 
+// PR 311 applies to the PR 326 product-description draft too: it goes through the same masking `send`, so a
+// phone number folded into a product note never leaves the server.
+describe('PR 311 masking covers the product description (PR 326)', () => {
+  it('draftProductDescription never hands a phone number to the Completer', async () => {
+    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"body": "Hello, we are on it."}' }));
+    const w = liveAiWriter(complete);
+    await w.draftProductDescription({ locale: 'en', facts: { name: 'Sample Tee', fabric: 'ask 01712345678' }, max: { body: 300 } });
+    for (const call of complete.mock.calls) expect((call[0] as { user: string }).user).not.toContain('01712345678');
+  });
+});
+
 describe('Anthropic (PR 306)', () => {
   it('sends the Messages API shape and reads its text content back', async () => {
     const calls: { url: string; init: RequestInit }[] = [];

@@ -63,7 +63,7 @@ export function liveAiWriter(complete: Completer): AiWriter {
     },
     async draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft> {
       const { system, user, maxTokens } = productDescriptionPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseProductDescriptionJson(text, input, usage);
     },
   };
