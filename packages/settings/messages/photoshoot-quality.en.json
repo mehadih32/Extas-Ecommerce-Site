@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "qualityThresholdPercent": {
+        "label": "Photoshoot — quality cut-off",
+        "help": "The combined quality score (garment shape, print legibility, colour match, hand/finger cleanliness, edge quality, seam continuity) a generated candidate must reach before it may enter your review queue at all. 0, as it ships: every candidate reaches you, however it scores — nothing is ever auto-rejected until you set a number."
+      }
+    }
+  }
+}
