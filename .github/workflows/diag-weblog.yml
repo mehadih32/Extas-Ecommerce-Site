@@ -1,9 +1,7 @@
 name: diag-weblog
-# Read-only, throwaway diagnostic for the CN-045 live incident (12 Nov 2026): the smoke test shows admin sign-in
-# answering "server-error" (apps/web/src/lib/admin-auth.ts's generic catch-all), which only logs the real cause with
-# console.warn inside the app container itself -- never into this workflow's own log. This dumps that container's
-# own stdout so the real error is visible. Changes nothing on the server. Lives only on this throwaway branch; never
-# merges to main.
+# CN-045 live incident (12 Nov 2026): read-only checks plus one safe, reversible restart of the stateless pgbouncer
+# connection pooler (no data touched; PostgreSQL itself is never restarted here). Throwaway branch; never merges to
+# main.
 on:
   push:
     branches: [diag/live-weblog-20261112]
@@ -14,22 +12,31 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Dump the live web container's own log (read-only)
+      - name: Check PostgreSQL connections, restart pgbouncer (stateless), verify
         run: |
           set -euo pipefail
           CONF="/etc/extas/server.conf"
           . "$CONF"
           R="$EXTAS_ROOT"
-          color="$(sudo cat "$R/state/app.color" 2>/dev/null || echo unknown)"
-          echo "live color: $color"
-          sudo env EXTAS_COLOR="$color" APP_IMAGE="diag-readonly" EXTAS_ROOT="$R" \
-            EXTAS_NVME_MOUNT="${EXTAS_NVME_MOUNT:-}" CADDY_UPLOAD_MAX_MB="${CADDY_UPLOAD_MAX_MB:-25}" \
-            EXTAS_TIMEZONE="${EXTAS_TIMEZONE:-UTC}" WORKER_IMAGE="diag-readonly" WORKER_REPLICAS="0" \
-            docker compose -p "extas-app-$color" -f "$GITHUB_WORKSPACE/infra/stack/app.yml" \
-              --env-file "$R/config/profile.env" logs web --no-color --since 4h \
-            > /tmp/diag-weblog.txt 2>&1 || true
-          echo "--- total lines: $(wc -l < /tmp/diag-weblog.txt) ---"
-          echo "--- filtered: admin api / error / exception ---"
-          grep -iE "admin api:|unhandled|exception|prismaclient|TypeError|ReferenceError|at Object|server-error" /tmp/diag-weblog.txt | tail -200 || true
-          echo "--- raw tail (last 150 lines) ---"
-          tail -n 150 /tmp/diag-weblog.txt
+          compose() {
+            sudo docker compose -p extas --project-directory "$R/stack" -f "$R/stack/compose.yml" \
+              --env-file "$R/config/profile.env" --env-file "$R/config/stack.env" "$@"
+          }
+          echo "--- postgres: connection count vs max_connections ---"
+          sudo docker exec extas-postgres psql -U extas -d extas -tAc \
+            "select count(*) as connections, (select setting from pg_settings where name='max_connections') as max_connections from pg_stat_activity;" || true
+          echo "--- postgres: connections by state ---"
+          sudo docker exec extas-postgres psql -U extas -d extas -tAc \
+            "select state, count(*) from pg_stat_activity group by state order by 2 desc;" || true
+          echo "--- pgbouncer: container health before restart ---"
+          sudo docker inspect -f '{{.State.Health.Status}}' extas-pgbouncer || true
+          echo "--- restarting pgbouncer (stateless pooler; no data, no postgres restart) ---"
+          compose restart pgbouncer
+          sleep 3
+          echo "--- pgbouncer: container health after restart ---"
+          sudo docker inspect -f '{{.State.Health.Status}}' extas-pgbouncer || true
+          echo "--- verify: a real query through pgbouncer now (via the app's own connector env, same path web uses) ---"
+          sudo docker exec extas-postgres psql -U extas -d extas -tAc "select 1 as postgres_direct_ok;" || true
+          sudo timeout 10 sudo docker run --rm --network container:extas-pgbouncer postgres:16-alpine \
+            psql "postgresql://extas:$(sudo grep -m1 '^POSTGRES_PASSWORD=' "$R/config/secrets/postgres.env" | cut -d= -f2-)@127.0.0.1:6432/extas" \
+            -tAc "select 1 as through_pgbouncer_ok;" 2>&1 || true
