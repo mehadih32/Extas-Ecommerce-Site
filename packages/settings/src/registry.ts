@@ -139,6 +139,7 @@ import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
 import { photoshootSettings } from './registry-photoshoot';
 import { studioVideoSettings } from './registry-creative-studio-video';
+import { photoshootCostSettings } from './registry-photoshoot-cost';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
 import { outreachSettings } from './registry-outreach';
@@ -1548,6 +1549,8 @@ export const registry = {
   ...photoshootSettings,
   // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0 (registry-creative-studio-video.ts, version 282). ----
   ...studioVideoSettings,
+  // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
+  ...photoshootCostSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
