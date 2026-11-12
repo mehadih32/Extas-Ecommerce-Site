@@ -5,10 +5,10 @@ import { registry } from '../src/registry';
 import { PHOTOSHOOT_OCCASION_SCENE_ENABLED_DEFAULT, photoshootOccasionSceneSettings } from '../src/registry-photoshoot-occasion-scene';
 
 describe('photoshoot occasion-scene suggester settings (v298)', () => {
-  it('are in the registry at version 298, store-scoped, labelled in English and Bengali, their default valid', () => {
+  it('are in the registry at version 308, store-scoped, labelled in English and Bengali, their default valid', () => {
     for (const [key, s] of Object.entries(photoshootOccasionSceneSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(298);
+      expect(s.version, key).toBe(308);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

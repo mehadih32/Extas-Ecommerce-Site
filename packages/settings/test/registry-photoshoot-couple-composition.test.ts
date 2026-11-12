@@ -5,10 +5,10 @@ import { registry } from '../src/registry';
 import { PHOTOSHOOT_COUPLE_COMPOSITION_ENABLED_DEFAULT, photoshootCoupleCompositionSettings } from '../src/registry-photoshoot-couple-composition';
 
 describe('photoshoot unisex/couple composition settings (v297)', () => {
-  it('are in the registry at version 297, store-scoped, labelled in English and Bengali, their default valid', () => {
+  it('are in the registry at version 307, store-scoped, labelled in English and Bengali, their default valid', () => {
     for (const [key, s] of Object.entries(photoshootCoupleCompositionSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(297);
+      expect(s.version, key).toBe(307);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

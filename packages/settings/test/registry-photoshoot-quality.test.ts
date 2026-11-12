@@ -5,10 +5,10 @@ import { registry } from '../src/registry';
 import { photoshootQualityThresholdSchema, photoshootQualitySettings, PHOTOSHOOT_QUALITY_THRESHOLD_DEFAULT } from '../src/registry-photoshoot-quality';
 
 describe('photoshoot quality cut-off setting (v291)', () => {
-  it('is in the registry at version 291, store-scoped, labelled in English and Bengali, its default valid', () => {
+  it('is in the registry at version 301, store-scoped, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(photoshootQualitySettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(291);
+      expect(s.version, key).toBe(301);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

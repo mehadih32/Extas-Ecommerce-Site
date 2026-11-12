@@ -12,10 +12,10 @@ import {
 } from '../src/registry-photoshoot-model-library';
 
 describe('photoshoot model library settings (v294)', () => {
-  it('are in the registry at version 294, store-scoped, labelled in English and Bengali, their default valid', () => {
+  it('are in the registry at version 304, store-scoped, labelled in English and Bengali, their default valid', () => {
     for (const [key, s] of Object.entries(photoshootModelLibrarySettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(294);
+      expect(s.version, key).toBe(304);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

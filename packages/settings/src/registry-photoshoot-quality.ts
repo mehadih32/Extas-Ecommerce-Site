@@ -1,4 +1,4 @@
-// S24 · PR 453 (Blueprint C7.5 step 9, C7.6; registry version 291) — "anything below threshold never reaches a
+// S24 · PR 453 (Blueprint C7.5 step 9, C7.6; registry version 301) — "anything below threshold never reaches a
 // human": the owner's own quality cut-off a generated candidate's combined score must clear before it may enter
 // the review queue at all. 0, as it ships, means nothing is ever auto-rejected — CN-018: every number is a backend
 // setting, off by default, and this one ships at its safest default (every candidate reaches the owner) rather than
@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 291;
+const V = 301;
 
 /** 0–100, whole percent. 0 (as it ships) means every candidate, however it scores, reaches the review queue. */
 export const photoshootQualityThresholdSchema = z.number().int().min(0).max(100);

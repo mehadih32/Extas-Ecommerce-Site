@@ -1,11 +1,11 @@
-// S24 · PR 476 (Blueprint C7.13 "Scene library", C7.22 item 33; registry version 296) — the scene library's own
+// S24 · PR 476 (Blueprint C7.13 "Scene library", C7.22 item 33; registry version 306) — the scene library's own
 // feature switch (CN-018, off by default, the same shape `kidsModelEnabled`/`comboGiftSetEnabled` already set) and
 // which of `@extas/photoshoot`'s own `SCENE_LIBRARY_PRESETS` a new scene starts from. Neither is owner data (no
 // price, no person, no real photo) — both are plain system choices.
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 296;
+const V = 306;
 
 /** The same four preset keys `@extas/photoshoot`'s own `sceneLibrary.ts` names, verbatim and in the same order —
  * `@extas/settings` cannot import `@extas/photoshoot` (the dependency runs the other way, the same "named as its

@@ -1,4 +1,4 @@
-// S24 · PR 452 (Blueprint C7.5 step 7, C7.20; registry version 290) — the photoshoot queue's own concurrency limit:
+// S24 · PR 452 (Blueprint C7.5 step 7, C7.20; registry version 300) — the photoshoot queue's own concurrency limit:
 // how many jobs this store may have `PROCESSING` (a provider actually running, actually spending) at once. 0, as
 // it ships, means unlimited — CN-018: every number is a backend setting, off by default, never a question the
 // owner is asked up front.
@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 290;
+const V = 300;
 
 /** 0 (unlimited, as it ships) or a whole number of jobs, 1–100 — enough headroom for any real provider's own rate
  * limit while still being a number the owner can read and change. */

@@ -6,10 +6,10 @@ import { registry } from '../src/registry';
 import { PHOTOSHOOT_RECIPE_KEYS, PHOTOSHOOT_RECIPE_OVERRIDES_DEFAULT, photoshootRecipeOverridesSchema, photoshootRecipeSettings } from '../src/registry-photoshoot-recipes';
 
 describe('photoshoot category recipe override setting (v293)', () => {
-  it('is in the registry at version 293, store-scoped, labelled in English and Bengali, its default valid', () => {
+  it('is in the registry at version 303, store-scoped, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(photoshootRecipeSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(293);
+      expect(s.version, key).toBe(303);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

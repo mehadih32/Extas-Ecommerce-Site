@@ -5,10 +5,10 @@ import { registry } from '../src/registry';
 import { photoshootMaxConcurrentJobsSchema, photoshootQueueSettings, PHOTOSHOOT_MAX_CONCURRENT_JOBS_DEFAULT } from '../src/registry-photoshoot-queue';
 
 describe('photoshoot queue concurrency setting (v290)', () => {
-  it('is in the registry at version 290, store-scoped, labelled in English and Bengali, its default valid', () => {
+  it('is in the registry at version 300, store-scoped, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(photoshootQueueSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(290);
+      expect(s.version, key).toBe(300);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

@@ -2,7 +2,7 @@
 // guideline the owner sets (how the model is dressed and posed) so the result matches what sells in this
 // market. His call, set once per profile", "Kids — added, but the default for kidswear is ghost mannequin or
 // flat-lay, not a child model … A kids model profile can be enabled later if the owner wants it", C7.22 item 31;
-// registry version 294) — the three library-level pieces PR 445's own model library (`StudioModel`) and PR
+// registry version 304) — the three library-level pieces PR 445's own model library (`StudioModel`) and PR
 // 469/470's own `RECIPE_MODEL_LIBRARIES` (`men`/`ladies`/`kids`/`hand_wrist_face`) left open.
 //
 // `studio.photoshoot.modelLibraryAssignments` and `studio.photoshoot.modelStylingGuideline` are both keyed by a
@@ -15,7 +15,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 294;
+const V = 304;
 
 /** The three libraries the owner ever explicitly assigns a full-body model to. `hand_wrist_face` is never one of
  * them: `@extas/photoshoot`'s own `models.ts` already names that case structurally (`kind: 'part'`), never an

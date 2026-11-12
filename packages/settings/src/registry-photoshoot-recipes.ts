@@ -1,4 +1,4 @@
-// S24 · PR 470 (Blueprint C7.12 "Category recipes (defaults, all editable)", C7.22 item 27; registry version 293)
+// S24 · PR 470 (Blueprint C7.12 "Category recipes (defaults, all editable)", C7.22 item 27; registry version 303)
 // — the owner's own edit of PR 469's own 13 defaults (`@extas/photoshoot`'s `recipes.ts`, `CATEGORY_RECIPES`).
 // `@extas/settings` cannot import `@extas/photoshoot` (the dependency runs the other way — `@extas/photoshoot`
 // already depends on `@extas/settings` for every other studio setting, e.g. `registry-photoshoot-queue.ts`), so
@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 293;
+const V = 303;
 
 /** The same 13 keys `@extas/photoshoot`'s own `CATEGORY_RECIPES` names, verbatim and in the same order. */
 export const PHOTOSHOOT_RECIPE_KEYS = [

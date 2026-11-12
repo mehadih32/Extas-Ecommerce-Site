@@ -5,10 +5,10 @@ import { registry } from '../src/registry';
 import { photoshootPilotSettings, photoshootStyleAbTestSchema, PHOTOSHOOT_STYLE_AB_TEST_DEFAULT } from '../src/registry-photoshoot-pilot';
 
 describe('photoshoot on-model-vs-flat-lay pilot setting (v292)', () => {
-  it('is in the registry at version 292, store-scoped, labelled in English and Bengali, its default valid', () => {
+  it('is in the registry at version 302, store-scoped, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(photoshootPilotSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(292);
+      expect(s.version, key).toBe(302);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

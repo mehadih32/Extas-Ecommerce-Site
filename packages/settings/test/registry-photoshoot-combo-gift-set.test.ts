@@ -6,10 +6,10 @@ import { registry } from '../src/registry';
 import { PHOTOSHOOT_COMBO_GIFT_SET_ENABLED_DEFAULT, PHOTOSHOOT_COMBO_GIFT_SET_LAYOUTS, photoshootComboGiftSetSettings } from '../src/registry-photoshoot-combo-gift-set';
 
 describe('photoshoot combo/gift-set composition settings (v295)', () => {
-  it('are in the registry at version 295, store-scoped, labelled in English and Bengali, their default valid', () => {
+  it('are in the registry at version 305, store-scoped, labelled in English and Bengali, their default valid', () => {
     for (const [key, s] of Object.entries(photoshootComboGiftSetSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(295);
+      expect(s.version, key).toBe(305);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

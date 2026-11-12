@@ -1,5 +1,5 @@
 // S24 · PR 462 (Blueprint C7.19 "run 20–30 real EXTAS products through two providers … A/B test on-model vs
-// flat-lay on the live site, measuring add-to-bag, conversion and return rate"; registry version 292) — the
+// flat-lay on the live site, measuring add-to-bag, conversion and return rate"; registry version 302) — the
 // pilot's own cohort: which products are actually in the live on-model-vs-flat-lay test, and what share of their
 // visitors see the on-model style. CN-018: a pilot run on zero products, as it ships — the owner must actually
 // pick the 20–30 real products C7.19 names before anything is ever bucketed; `@extas/photoshoot`'s
@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 292;
+const V = 302;
 
 export const photoshootStyleAbTestSchema = z
   .object({
