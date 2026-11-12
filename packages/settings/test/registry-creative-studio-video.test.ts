@@ -1,16 +1,17 @@
 // S25 · PR 482 (registry v282): the image-to-video engine's master switch and its cost-per-second rate — off / 0
 // as shipped, never owner data, labelled in both languages, every value bounded.
-// S25 · PR 484 (registry v288) adds `bestOfTwo`: off as shipped (CN-018 — an off-by-default yes/no perk).
+// S25 · PR 484 (registry v289 — 288 was taken by registry-photoshoot.ts's PR 447, merged first) adds `bestOfTwo`:
+// off as shipped (CN-018 — an off-by-default yes/no perk).
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { studioVideoSchema, studioVideoSettings, VIDEO_RATE_MAX_MINOR } from '../src/registry-creative-studio-video';
 
-describe('studio.video (v288)', () => {
-  it('is in the registry at version 288 (since 282), store-level, labelled in English and Bengali', () => {
+describe('studio.video (v289)', () => {
+  it('is in the registry at version 289 (since 282), store-level, labelled in English and Bengali', () => {
     const spec = studioVideoSettings['studio.video'];
     expect(registry['studio.video']).toBe(spec);
-    expect(spec.version).toBe(288);
+    expect(spec.version).toBe(289);
     expect(spec.since).toBe(282);
     expect(spec.isOwnerData).toBe(false);
     expect(spec.scope).toBe('store');

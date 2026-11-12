@@ -4,11 +4,11 @@
 // lists requested exports (`marketing.studio.read`); POST {action: 'request', input} requests one, or
 // {action: 'cancel', exportId} cancels a still-DRAFT one (`marketing.studio.write`).
 //
-// S25 · PR 488 — producing the actual sized files (and, later, sending them to a connected ad account) adds its own
-// {action: 'produce', exportId} here without touching this file's `request`/`cancel` handling.
+// S25 · PR 488 — {action: 'produce', exportId} (`marketing.studio.write`) produces a DRAFT/FAILED export: the
+// honest-preview producer, never a real crop — see `@extas/creative-studio`'s `export.ts` header comment.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { Actor, RequestContext } from '@extas/auth';
-import { cancelCreativeExport, listCreativeExports, requestCreativeExport, StudioError, type CreativeExportView, type StudioDeps } from '@extas/creative-studio';
+import { cancelCreativeExport, listCreativeExports, produceCreativeExport, requestCreativeExport, StudioError, type CreativeExportView, type StudioDeps } from '@extas/creative-studio';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 
 const S = MOTHER_STORE_ID;
@@ -40,6 +40,10 @@ export async function exportsHandler(request: Request, deps: AdminDeps | null): 
   try {
     if (method === 'GET') return json({ ok: true, ...(await exportsOverview(sd)) });
     if (b.action === 'request') return json({ ok: true, export: await requestCreativeExport(sd, who, b.input) });
+    if (b.action === 'produce') {
+      if (!isUuidLike(b.exportId)) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
+      return json({ ok: true, export: await produceCreativeExport(sd, who, b.exportId) });
+    }
     if (b.action === 'cancel') {
       if (!isUuidLike(b.exportId)) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
       return json({ ok: true, export: await cancelCreativeExport(sd, who, b.exportId) });

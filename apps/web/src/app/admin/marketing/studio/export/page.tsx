@@ -1,15 +1,15 @@
-// S25 · PR 487 (Blueprint C8.1, C8.5) — Marketing › Studio › Export at /admin/marketing/studio/export, on
+// S25 · PR 487/488 (Blueprint C8.1, C8.5) — Marketing › Studio › Export at /admin/marketing/studio/export, on
 // /api/admin/marketing/studio/export (lib/studio/export-admin.ts). Seeing needs `marketing.studio.read`;
-// requesting or cancelling an export needs `marketing.studio.write`. The whole Studio tab stays hidden by
+// requesting, producing or cancelling an export needs `marketing.studio.write`. The whole Studio tab stays hidden by
 // `stages.closedShown.S25` until the stage is finished (CN-036/CN-039). Guide:
-// docs/admin-guide/pages/marketing/studio-export.md. Producing the actual sized files (PR 488) adds its own button
-// here without touching this page's request/cancel flow — nothing is composited yet.
+// docs/admin-guide/pages/marketing/studio-export.md. Producing (PR 488) fills a preview output, one per chosen
+// platform size — no real crop engine exists yet, so nothing is actually cropped, overlaid or sent anywhere.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { CREATIVE_EXPORT_SIZES, type CreativeExportSize } from '@extas/creative-studio';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { ExportCancel, ExportRequestForm, type ExportTexts } from '@/components/admin/studio/ExportBuilder';
+import { ExportCancel, ExportProduce, ExportRequestForm, type ExportTexts } from '@/components/admin/studio/ExportBuilder';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -52,6 +52,7 @@ export default async function ExportPage() {
   const g = (k: string) => t(d, `studio.export.${k}`);
   const canWrite = access.guard.permissions?.has('marketing.studio.write') ?? false;
   const errs = Object.fromEntries(['INVALID_INPUT', 'NOT_FOUND', 'SELECTION_EMPTY', 'SOURCE_INVALID', 'WRONG_STATE', 'network', 'other'].map((k) => [k, g(`err.${k}`)]));
+  const outputNote = g('outputNote');
   const sizeName = Object.fromEntries(CREATIVE_EXPORT_SIZES.map((s) => [s, g(`size.${s.replace(/[.-]/g, '')}`)])) as Record<CreativeExportSize, string>;
   const { exports } = await exportsOverview({ db: access.deps.db });
   const texts: ExportTexts = {
@@ -71,6 +72,9 @@ export default async function ExportPage() {
     request: g('request'),
     requesting: g('requesting'),
     requested: g('requested'),
+    produce: g('produce'),
+    producing: g('producing'),
+    produced: g('produced'),
     cancel: g('cancel'),
     cancelling: g('cancelling'),
     err: errs,
@@ -96,7 +100,17 @@ export default async function ExportPage() {
                   {selectionWord(e.selection)} <span className="a2-pill">{statusWord(e.status)}</span>
                 </p>
                 <p className="a2-sm a2-mute">{e.sizes.map((s) => sizeName[s]).join(', ')}</p>
-                {canWrite && e.status === 'DRAFT' ? <ExportCancel url={API} exportId={e.id} texts={texts} /> : null}
+                {e.status === 'READY' ? (
+                  <p className="a2-sm a2-mute" data-testid="export-outputs">
+                    {outputNote}
+                  </p>
+                ) : null}
+                {canWrite && (e.status === 'DRAFT' || e.status === 'FAILED') ? (
+                  <>
+                    <ExportProduce url={API} exportId={e.id} texts={texts} />
+                    {e.status === 'DRAFT' ? <ExportCancel url={API} exportId={e.id} texts={texts} /> : null}
+                  </>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -4,6 +4,9 @@
 // campaign. POST {action: 'request', input} on /api/admin/marketing/studio/export. The API checks the permission
 // and every rule again; the page is read again after a request. Cancelling a still-DRAFT export is
 // {action: 'cancel', exportId}.
+//
+// S25 · PR 488 — {action: 'produce', exportId} fills in the honest-preview output, one per size; `ExportProduce` is
+// the button for an export still waiting (or one that failed and can be tried again).
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CREATIVE_EXPORT_SIZES, type CreativeExportSize } from '@extas/creative-studio';
@@ -35,6 +38,9 @@ export interface ExportTexts {
   request: string;
   requesting: string;
   requested: string;
+  produce: string;
+  producing: string;
+  produced: string;
   cancel: string;
   cancelling: string;
   err: Record<string, string>;
@@ -133,6 +139,35 @@ export function ExportRequestForm({ url, texts: x }: { url: string; texts: Expor
         ) : null}
       </div>
     </div>
+  );
+}
+
+/** Produces a DRAFT (or previously FAILED) export — the honest-preview producer, one output per size, never a
+ * real crop yet (no crop engine in the stack). */
+export function ExportProduce({ url, exportId, texts: x }: { url: string; exportId: string; texts: ExportTexts }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [out, setOut] = useState<Out>(null);
+  async function go() {
+    setBusy(true);
+    setOut(null);
+    const a = await call('POST', url, { action: 'produce', exportId });
+    setBusy(false);
+    if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
+    showToast({ text: x.produced, tone: 'ok' });
+    router.refresh();
+  }
+  return (
+    <span className="adp-read">
+      <button type="button" className="a2-btn pri sm" disabled={busy} onClick={() => void go()} data-testid="export-produce">
+        {busy ? x.producing : x.produce}
+      </button>
+      {out ? (
+        <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite" data-testid="export-produce-out">
+          {out.text}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
