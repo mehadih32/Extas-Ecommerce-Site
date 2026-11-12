@@ -55,8 +55,12 @@ export function openHref(route: string, viewer: ShellViewer): string | null {
   return viewer.owner || viewer.perms.has(place.page.perm) ? route : null;
 }
 
-/** The sections the person sees, in the sidebar's order. */
-export const manualSections = (viewer: ShellViewer) => SHELL_SECTIONS.filter((s) => sectionVisible(s, viewer)).map((s) => s.id);
+/**
+ * The sections the person sees, in the table's order. A folded section (PR 659: Messages, now Marketing › Message
+ * campaigns) has no menu entry but keeps its chapter: it shows when the person may open one of its fixed pages.
+ */
+export const manualSections = (viewer: ShellViewer) =>
+  SHELL_SECTIONS.filter((s) => (s.folded ? !viewer.hidden?.has('marketing') && sectionPages(s.id).some((r) => openHref(r.route, viewer) !== null) : sectionVisible(s, viewer))).map((s) => s.id);
 
 /** The book's contents: one chapter per visible section, with its pages' titles. Guides that are missing are left out. */
 export async function manualOutline(viewer: ShellViewer, dir: string | null = guideDir()): Promise<ManualOutlineChapter[]> {

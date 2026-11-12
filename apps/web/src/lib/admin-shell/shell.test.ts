@@ -53,10 +53,10 @@ describe('shell words (Bengali and English side by side)', () => {
   });
 });
 
-describe('the 14 sections', () => {
+describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded into Marketing)', () => {
   it('match the settings list of sections, in order, in 3 groups plus the bottom', () => {
     expect(SHELL_SECTIONS.map((s) => s.id)).toEqual([...ADMIN_SECTIONS]);
-    expect(SHELL_SECTIONS).toHaveLength(14);
+    expect(SHELL_SECTIONS).toHaveLength(15);
     expect(new Set(SHELL_SECTIONS.map((s) => s.group))).toEqual(new Set(['daily', 'grow', 'business', 'bottom']));
   });
 
@@ -114,7 +114,8 @@ describe('the 14 sections', () => {
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
     // PR 342: /admin/money is Money → Overview now, so Money has no placeholder left.
     // PR 304: /admin/ai (Control room) is now a real page, so AI Center has no placeholder left either.
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'reports', 'settings']);
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'marketing', 'website', 'reports', 'settings']);
+    // PR 659: Messages is folded into Marketing, so it has no placeholder either
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 
