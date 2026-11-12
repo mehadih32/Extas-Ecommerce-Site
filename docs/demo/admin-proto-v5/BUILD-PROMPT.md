@@ -33,6 +33,17 @@ Where the prototype and an older doc disagree, the prototype + `DECISIONS.md` wi
   Rows marked "Waiting — admin prototype (CN-046)" become buildable and are rebuilt to the prototype.
 
 ## 3. Phase A — register first (CLAUDE.md hard rule 8), one agent, no code yet
+**Owner rule (13 Nov, 04:16): check the blueprint AND the code before anything is called new. Never rebuild what
+already exists.** For every prototype item: (1) find it in `docs/BLUEPRINT.md`, `docs/MASTER-REGISTER.md` and the real
+code/routes (`apps/`, `packages/`; grep the route, the label, the table); (2) built and working = mark "built", build
+nothing (at most a small wording/layout/nav follow-up on that same PR); (3) built but differs = a small delta
+follow-up on that PR, not a new feature; (4) only what exists nowhere gets a new PR number. Backend that is already
+built (courier booking and stickers, duplicate/merge rules, incomplete-order capture, coupons, claims, size charts,
+video, exchanges, Customer 360, refunds and wallet, Calls to make, Delivery & RTO, Rider issues, Pop-ups/notices
+engine) is re-used: the work is mostly re-arranging screens to the prototype's menu and wiring them together.
+Prefer one new stage "S28 — Admin v5 (prototype alignment)" so the owner can count it; do not reopen closed stages.
+When GAP-MAP.md is done, send the owner one short Bengali message with the exact numbers (how many already built,
+how many deltas, how many new PRs, how many stages added, expected number of batches), then carry on.
 Create `docs/demo/admin-proto-v5/GAP-MAP.md`: every prototype section/tab/screen (read `A.NAV` in `js/core.js`) →
 (a) already built and matches, (b) built but must change (list the changes), (c) new. For (b) and (c): a dated
 update on the existing register PR, or the next free PR number (the register's highest is 658 at the time of writing,
