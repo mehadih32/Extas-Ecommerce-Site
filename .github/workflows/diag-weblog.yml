@@ -1,7 +1,7 @@
 name: diag-weblog
-# CN-045 live incident (12 Nov 2026): read-only checks plus one safe, reversible restart of the stateless pgbouncer
-# connection pooler (no data touched; PostgreSQL itself is never restarted here). Throwaway branch; never merges to
-# main.
+# CN-045 live incident (12 Nov 2026): the pgbouncer restart fixed sign-in briefly, then the same cached auth-failure
+# came back ~6 minutes later. Read-only checks to find what is actually breaking pgbouncer's connection to Postgres
+# repeatedly. Throwaway branch; never merges to main.
 on:
   push:
     branches: [diag/live-weblog-20261112]
@@ -12,31 +12,27 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Check PostgreSQL connections, restart pgbouncer (stateless), verify
+      - name: Check container stability, restarts, host resources, postgres' own log
         run: |
           set -euo pipefail
-          CONF="/etc/extas/server.conf"
-          . "$CONF"
-          R="$EXTAS_ROOT"
-          compose() {
-            sudo docker compose -p extas --project-directory "$R/stack" -f "$R/stack/compose.yml" \
-              --env-file "$R/config/profile.env" --env-file "$R/config/stack.env" "$@"
-          }
-          echo "--- postgres: connection count vs max_connections ---"
-          sudo docker exec extas-postgres psql -U extas -d extas -tAc \
-            "select count(*) as connections, (select setting from pg_settings where name='max_connections') as max_connections from pg_stat_activity;" || true
-          echo "--- postgres: connections by state ---"
-          sudo docker exec extas-postgres psql -U extas -d extas -tAc \
-            "select state, count(*) from pg_stat_activity group by state order by 2 desc;" || true
-          echo "--- pgbouncer: container health before restart ---"
-          sudo docker inspect -f '{{.State.Health.Status}}' extas-pgbouncer || true
-          echo "--- restarting pgbouncer (stateless pooler; no data, no postgres restart) ---"
-          compose restart pgbouncer
-          sleep 3
-          echo "--- pgbouncer: container health after restart ---"
-          sudo docker inspect -f '{{.State.Health.Status}}' extas-pgbouncer || true
-          echo "--- verify: a real query through pgbouncer now (via the app's own connector env, same path web uses) ---"
-          sudo docker exec extas-postgres psql -U extas -d extas -tAc "select 1 as postgres_direct_ok;" || true
-          sudo timeout 10 sudo docker run --rm --network container:extas-pgbouncer postgres:16-alpine \
-            psql "postgresql://extas:$(sudo grep -m1 '^POSTGRES_PASSWORD=' "$R/config/secrets/postgres.env" | cut -d= -f2-)@127.0.0.1:6432/extas" \
-            -tAc "select 1 as through_pgbouncer_ok;" 2>&1 || true
+          echo "--- docker ps: postgres, pgbouncer, web, worker (status + restart count + started-at) ---"
+          for c in extas-postgres extas-pgbouncer; do
+            echo "== $c =="
+            sudo docker inspect -f 'status={{.State.Status}} restarts={{.RestartCount}} started={{.State.StartedAt}} oom={{.State.OOMKilled}} exitcode={{.State.ExitCode}} health={{.State.Health.Status}}' "$c" 2>&1 || true
+          done
+          echo "--- host memory ---"
+          free -h
+          echo "--- host load / cpu ---"
+          uptime
+          nproc
+          echo "--- docker stats (one shot) ---"
+          sudo docker stats --no-stream --format '{{.Name}}: cpu={{.CPUPerc}} mem={{.MemUsage}} ({{.MemPerc}})' | grep -E 'extas-postgres|extas-pgbouncer|extas-app' || true
+          echo "--- postgres' own log, last 10 min, errors/fatal/restart/checkpoint-warnings ---"
+          sudo docker logs extas-postgres --since 15m 2>&1 | grep -iE "FATAL|ERROR|PANIC|could not|terminat|restart|out of memory|too many connections" | tail -100 || true
+          echo "--- pgbouncer's own log, last 15 min ---"
+          sudo docker logs extas-pgbouncer --since 15m 2>&1 | tail -150 || true
+          echo "--- disk on the data volumes ---"
+          df -h / /var/lib/docker 2>/dev/null || true
+          echo "--- how many web/worker containers running right now (today's deploy churn can leave old ones) ---"
+          sudo docker ps --format '{{.Names}} {{.Status}}' | grep -E 'extas-app|web-|worker-' || true
+          sudo docker ps -a --format '{{.Names}} {{.Status}}' | wc -l
