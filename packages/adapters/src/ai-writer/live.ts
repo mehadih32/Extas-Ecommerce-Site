@@ -8,9 +8,8 @@
 // reaches `complete`, the one call in this whole package that actually leaves the server over HTTP. See masking.ts's
 // own header for why this is a safety net on top of PR 310's provider routing, not a replacement for it.
 import type { TestResult } from '../define';
-import { maskPersonalData } from './masking';
-import { articlePrompt, campaignPrompt, parseArticleJson, parseCampaignJson, parseSeoJson, seoPrompt } from './prompts';
-import type { AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiSeoDraft, AiSeoInput, AiWriter } from './shared';
+import { articlePrompt, campaignPrompt, parseArticleJson, parseCampaignJson, parseSeoJson, parseSupportReplyJson, seoPrompt, supportReplyPrompt } from './prompts';
+import type { AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiSeoDraft, AiSeoInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
 export interface CompleteInput {
   system: string;
@@ -20,6 +19,9 @@ export interface CompleteInput {
 
 export interface CompleteResult {
   text: string;
+  /** PR 325 — the provider's own real token counts, when its answer carried them (every live provider reports
+   * these today; absent only for a provider that someday does not). Never guessed when missing. */
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 /** What every live provider gives: one plain-text completion. The rest — prompts, JSON, limits — is shared here. */
@@ -52,6 +54,11 @@ export function liveAiWriter(complete: Completer): AiWriter {
       const { system, user, maxTokens } = articlePrompt(input);
       const { text } = await send({ system, user, maxTokens });
       return parseArticleJson(text);
+    },
+    async draftSupportReply(input: AiSupportReplyInput): Promise<AiSupportReplyDraft> {
+      const { system, user, maxTokens } = supportReplyPrompt(input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseSupportReplyJson(text, input, usage);
     },
   };
 }

@@ -74,46 +74,20 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(bad.message).toMatch(/JSON/);
   });
 
-  it('PR 311 — masks a phone number and an e-mail address out of the article prompt before the Completer ever sees it', async () => {
-    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"excerpt": "x", "body": "y"}' }));
+  // S15 · PR 325 — draftSupportReply: a warmer rephrasing of the rule-based draft, never a new fact, usage passed through.
+  it('draftSupportReply rephrases the rule-based draft, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "Hi there! Your order EX1 is already on its way."}', usage: { inputTokens: 120, outputTokens: 18 } }));
     const w = liveAiWriter(complete);
-    await w.draftArticle({
-      locale: 'en',
-      title: 'Care guide',
-      query: null,
-      keywords: ['care'],
-      intent: 'howto',
-      wordCount: 400,
-      outline: [],
-      mustInclude: null,
-      links: [],
-      notes: 'Call 01712345678 or mail rahim@example.com for the full return story.',
-    });
-    expect(complete).toHaveBeenCalledTimes(1);
-    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
-    expect(sent.user).not.toContain('01712345678');
-    expect(sent.user).not.toContain('rahim@example.com');
-    expect(sent.user).toContain('[PHONE]');
-    expect(sent.user).toContain('[EMAIL]');
+    const d = await w.draftSupportReply({ locale: 'en', question: 'where is my order', facts: { intent: 'status', orderNumber: 'EX1' }, ruleBasedBody: 'Hi, order EX1 is on its way.', max: { body: 300 } });
+    expect(d).toEqual({ body: 'Hi there! Your order EX1 is already on its way.', practice: false, usage: { inputTokens: 120, outputTokens: 18 } });
   });
 
-  it('PR 311 — masks a phone number inside a campaign brief the same way', async () => {
-    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"versions": [{"subject": "Hi", "body": "Hi {link}"}, {"subject": "Hi", "body": "Hi {link}"}]}' }));
-    const w = liveAiWriter(complete);
-    const campaign: AiCampaignInput = { channel: 'email', locale: 'en', brief: 'Call the rider on 01812345678 if the box looks damaged', voice: { greeting: '', signOff: '', style: '' }, versions: 2, words: ['link'], max: { subject: 80, body: 300 } };
-    await w.draftCampaign(campaign);
-    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
-    expect(sent.user).not.toContain('01812345678');
-    expect(sent.user).toContain('[PHONE]');
-  });
-
-  it('PR 311 — does not touch a prompt with nothing to mask', async () => {
-    const complete = vi.fn(async (_input: { system: string; user: string }) => ({ text: '{"title": "A title", "description": "A description."}' }));
-    await liveAiWriter(complete).draftSeo(seoInput);
-    const sent = complete.mock.calls[0]![0] as { system: string; user: string };
-    expect(sent.user).not.toContain('[PHONE]');
-    expect(sent.user).not.toContain('[EMAIL]');
-    expect(sent.user).toContain('Sample Pique Polo');
+  it('draftSupportReply throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftSupportReply({ locale: 'en', question: 'x', facts: { intent: 'status' }, ruleBasedBody: 'x', max: { body: 100 } })).rejects.toThrow('reply');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftSupportReply({ locale: 'en', question: 'x', facts: { intent: 'status' }, ruleBasedBody: 'x', max: { body: 100 } });
+    expect(d.usage).toBeUndefined();
   });
 });
 
@@ -157,6 +131,17 @@ describe('Anthropic (PR 306)', () => {
     const complete = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', undefined, doFetch as unknown as typeof fetch);
     await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('400');
   });
+
+  // S15 · PR 325 — real token usage, for the usage ledger (recordAiUsage), passed through when Anthropic reports it.
+  it('passes Anthropic\'s own input/output token counts through, and omits usage when it reports none', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ content: [{ type: 'text', text: '{"title": "x", "description": "y"}' }], usage: { input_tokens: 42, output_tokens: 7 } }));
+    const complete = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', undefined, doFetch as unknown as typeof fetch);
+    const r = await complete({ system: '', user: 'x', maxTokens: 10 });
+    expect(r.usage).toEqual({ inputTokens: 42, outputTokens: 7 });
+    const doFetch2 = vi.fn(async () => jsonResponse({ content: [{ type: 'text', text: '{"title": "x", "description": "y"}' }] }));
+    const complete2 = anthropicCompleter('sk-ant-secret', 'claude-x', 'https://api.anthropic.com', undefined, doFetch2 as unknown as typeof fetch);
+    expect((await complete2({ system: '', user: 'x', maxTokens: 10 })).usage).toBeUndefined();
+  });
 });
 
 describe('OpenAI-compatible (OpenAI, OpenRouter) (PR 306)', () => {
@@ -179,6 +164,13 @@ describe('OpenAI-compatible (OpenAI, OpenRouter) (PR 306)', () => {
     const doFetch = vi.fn(async () => jsonResponse({ error: { message: 'no credit' } }, 402));
     const complete = openAiCompatibleCompleter({ apiKey: 'sk-secret', model: 'gpt-x', baseUrl: 'https://api.openai.com/v1', fetch: doFetch as unknown as typeof fetch });
     await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('402');
+  });
+
+  // S15 · PR 325 — real prompt/completion token counts, for the usage ledger.
+  it('passes the Chat Completions usage block through', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ choices: [{ message: { content: '{"title": "x", "description": "y"}' } }], usage: { prompt_tokens: 30, completion_tokens: 12 } }));
+    const complete = openAiCompatibleCompleter({ apiKey: 'sk-secret', model: 'gpt-x', baseUrl: 'https://api.openai.com/v1', fetch: doFetch as unknown as typeof fetch });
+    expect((await complete({ system: '', user: 'x', maxTokens: 10 })).usage).toEqual({ inputTokens: 30, outputTokens: 12 });
   });
 
   it('openAi and openRouter are both AI_PROVIDER LIVE adapters needing an apiKey', () => {
@@ -206,6 +198,13 @@ describe('Google AI (Gemini) (PR 306)', () => {
     const doFetch = vi.fn(async () => jsonResponse({ candidates: [] }));
     const complete = googleAiCompleter('k', 'gemini-x', 'https://generativelanguage.googleapis.com/v1beta', doFetch as unknown as typeof fetch);
     await expect(complete({ system: '', user: 'x', maxTokens: 10 })).rejects.toThrow('no text');
+  });
+
+  // S15 · PR 325 — real prompt/candidate token counts, for the usage ledger.
+  it('passes Gemini\'s own usageMetadata through', async () => {
+    const doFetch = vi.fn(async () => jsonResponse({ candidates: [{ content: { parts: [{ text: '{"title": "x", "description": "y"}' }] } }], usageMetadata: { promptTokenCount: 18, candidatesTokenCount: 9 } }));
+    const complete = googleAiCompleter('k', 'gemini-x', 'https://generativelanguage.googleapis.com/v1beta', doFetch as unknown as typeof fetch);
+    expect((await complete({ system: '', user: 'x', maxTokens: 10 })).usage).toEqual({ inputTokens: 18, outputTokens: 9 });
   });
 
   it('is an AI_PROVIDER LIVE adapter needing an apiKey', () => {

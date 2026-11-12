@@ -112,4 +112,28 @@ describe.skipIf(!HAS_TEST_DB)('PR 432 · draft answers (PostgreSQL)', () => {
     expect(d!.body).toContain('L সাইজ');
     expect(asked).toEqual([[productId, { heightIn: 66, weightKg: 65 }]]);
   });
+
+  // S15 · PR 325 — EXTAS AI's own rephrasing: additive only, never the facts' own source.
+  it('aiReply can rephrase the rule-based body, but any failure or empty answer leaves it exactly as it was', async () => {
+    const r = await say('aichat', 'amar order kothay?');
+    await t.prisma.conversation.update({ where: { id: r.conversationId }, data: { customerId } });
+    const ruleBased = await supportDraft(deps(), who.agent, r.conversationId);
+    expect(ruleBased!.aiUsed).toBe(false);
+
+    const seen: unknown[] = [];
+    const ok = await supportDraft(deps(), who.agent, r.conversationId, {
+      aiReply: async (facts) => {
+        seen.push(facts);
+        return 'A warmer answer, same facts.';
+      },
+    });
+    expect(ok).toMatchObject({ aiUsed: true, body: 'A warmer answer, same facts.' });
+    expect(seen).toEqual([{ intent: 'status', complaint: null, question: 'amar order kothay?', lang: 'en', ruleBasedBody: ruleBased!.body, order: { number: 'EX4320', status: 'IN_TRANSIT', late: true }, size: null, customerName: 'Rahim (sample)' }]);
+
+    const thrown = await supportDraft(deps(), who.agent, r.conversationId, { aiReply: async () => { throw new Error('provider down'); } });
+    expect(thrown).toMatchObject({ aiUsed: false, body: ruleBased!.body });
+
+    const empty = await supportDraft(deps(), who.agent, r.conversationId, { aiReply: async () => null });
+    expect(empty).toMatchObject({ aiUsed: false, body: ruleBased!.body });
+  });
 });
