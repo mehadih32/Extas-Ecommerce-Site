@@ -19,7 +19,7 @@ import { t, type Dict } from '@/lib/i18n';
 import { sourceWriterView } from '@/lib/journal/source-link';
 import bn from '../../../../../../messages/admin-blog.bn.json';
 import en from '../../../../../../messages/admin-blog.en.json';
-import '../../settings-cards.css';
+import '../../../settings-cards.css';
 import '../blog.css';
 
 export const dynamic = 'force-dynamic';
