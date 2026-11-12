@@ -124,6 +124,24 @@ export function ProductForm(props: Props) {
     }
   };
 
+  // S15 · PR 326 — "Write with AI": one deliberate press, Doot's own product content agent drafts a description
+  // from this product's own already-saved attributes (server-side; nothing typed here is sent). The draft only
+  // fills the textarea — "Save changes" still has to be pressed, same as typing it by hand.
+  const writeDescriptionWithAi = async () => {
+    if (draft.descriptionEn.trim() && !window.confirm(t(d, 'products.aiDescription.confirmOverwrite'))) return;
+    setBusy('ai-desc');
+    try {
+      const a = await call('POST', `/api/admin/products/${product.id}/ai-description`, { locale: 'en' });
+      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
+      const result = a.data.result as { ok: boolean; body?: string; reason?: string };
+      if (!result.ok) return sayBad(t(d, `products.aiDescription.reason.${result.reason}`));
+      set('descriptionEn', result.body ?? '');
+      say(t(d, 'products.aiDescription.done'));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   // ---------------------------------------------------------------- publish, take off, archive
   const act = async (url: string, body: unknown, done: string) => {
     setBusy(url);
@@ -375,7 +393,17 @@ export function ProductForm(props: Props) {
                 </div>
               </div>
             </div>
-            <Field label={t(d, 'products.fields.descriptionEn')} id="f-den">
+            <Field
+              label={t(d, 'products.fields.descriptionEn')}
+              id="f-den"
+              extra={
+                can.write ? (
+                  <button type="button" className="pa-link" disabled={busy === 'ai-desc'} onClick={writeDescriptionWithAi}>
+                    {busy === 'ai-desc' ? t(d, 'products.aiDescription.writing') : t(d, 'products.aiDescription.write')}
+                  </button>
+                ) : null
+              }
+            >
               <textarea id="f-den" className="ad-input pa-ta" rows={3} maxLength={10000} {...text('descriptionEn')} />
             </Field>
             <Field label={t(d, 'products.fields.descriptionBn')} id="f-dbn" extra={opt}>

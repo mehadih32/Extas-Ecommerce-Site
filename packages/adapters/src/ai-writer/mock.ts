@@ -4,7 +4,20 @@
 // (`practice: true`). A draft is never used on a page until a person accepts it.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, type AdapterContext } from '../define';
-import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiSupportReplyDraft, type AiSupportReplyInput, type AiWriter } from './shared';
+import {
+  cutTo,
+  type AiArticleDraft,
+  type AiArticleInput,
+  type AiCampaignDraft,
+  type AiCampaignInput,
+  type AiProductDescriptionDraft,
+  type AiProductDescriptionInput,
+  type AiSeoDraft,
+  type AiSeoInput,
+  type AiSupportReplyDraft,
+  type AiSupportReplyInput,
+  type AiWriter,
+} from './shared';
 
 /** The mock takes no settings; every live provider's `mock()` passes this when it falls back to practice text. */
 export const emptyMockContext: AdapterContext<Record<string, never>> = { mode: 'MOCK', config: {}, storeId: null, async secret() { return null; } };
@@ -84,6 +97,15 @@ export function practiceSupportReply(input: AiSupportReplyInput): AiSupportReply
   return { body: cutTo(input.ruleBasedBody, input.max.body), practice: true };
 }
 
+/** S15 · PR 326 — the mock's product description: only the attributes it was given, joined in order, same shape
+ * `practiceDraft` already uses for SEO text. */
+export function practiceProductDescription(input: AiProductDescriptionInput): AiProductDescriptionDraft {
+  const f = input.facts;
+  const list = (xs: (string | undefined)[], sep: string) => xs.map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(sep);
+  const body = list([list([f.name, f.category], ' · '), list(f.colours ?? [], ', '), f.sizes?.length ? `Sizes: ${f.sizes.join(', ')}` : undefined, f.fabric, f.care, f.shop], '. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -110,6 +132,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftSupportReply(input) {
         if (!input.ruleBasedBody.trim()) throw new AdapterError('a support reply needs the store\'s own draft to rephrase');
         return practiceSupportReply(input);
+      },
+      async draftProductDescription(input) {
+        if (!input.facts.name.trim()) throw new AdapterError('a product description needs the product name');
+        return practiceProductDescription(input);
       },
     };
   },

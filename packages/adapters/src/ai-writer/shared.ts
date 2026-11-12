@@ -125,6 +125,28 @@ export interface AiSupportReplyDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 326 — the product content agent's own job (Doot, `mktProductDescription`): a shop-facing description
+ * written only from a product's own already-saved attributes — never a spec, size, material, fit, price or claim
+ * that is not in `facts`. The same `facts` shape `AiSeoInput` already uses (name/brand/category/colours/fabric/shop),
+ * plus the sizes a product actually comes in and its own care text, since a description job writes more than a
+ * title and a meta line.
+ */
+export interface AiProductDescriptionInput {
+  locale: 'en' | 'bn';
+  facts: { name: string; brand?: string; category?: string; colours?: string[]; sizes?: string[]; fabric?: string; care?: string; shop?: string };
+  max: { body: number };
+}
+
+export interface AiProductDescriptionDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -133,6 +155,8 @@ export interface AiWriter {
   draftArticle(input: AiArticleInput): Promise<AiArticleDraft>;
   /** PR 325 — the support agent's own job: a warmer rephrasing of an already-correct rule-based reply. */
   draftSupportReply(input: AiSupportReplyInput): Promise<AiSupportReplyDraft>;
+  /** PR 326 — the product content agent's own job: a shop-facing description from a product's own attributes. */
+  draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

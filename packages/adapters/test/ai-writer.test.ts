@@ -170,3 +170,32 @@ describe('practice support reply (PR 325)', () => {
     await expect(w.draftSupportReply(reply({ ruleBasedBody: ' ' }))).rejects.toThrow();
   });
 });
+
+// S15 · PR 326 — the practice product description: only the product's own attributes, joined in order, marked practice.
+describe('practice product description (PR 326)', () => {
+  const desc = (over: Partial<import('../src').AiProductDescriptionInput> = {}): import('../src').AiProductDescriptionInput => ({
+    locale: 'en',
+    facts: { name: 'Sample Pique Polo', brand: 'Sample Brand', category: 'Polos', colours: ['Navy', 'White'], sizes: ['S', 'M', 'L'], fabric: 'Cotton pique', care: 'Machine wash cold.', shop: 'Sample Shop' },
+    max: { body: 900 },
+    ...over,
+  });
+
+  it('writes only the attributes it was given, in order', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftProductDescription(desc());
+    expect(d).toEqual({ body: 'Sample Pique Polo · Polos. Navy, White. Sizes: S, M, L. Cotton pique. Machine wash cold.. Sample Shop', practice: true });
+  });
+
+  it('leaves no gap for an attribute that was not given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftProductDescription(desc({ facts: { name: 'Plain Tee' } }));
+    expect(d.body).toBe('Plain Tee');
+  });
+
+  it('cuts to the store limit and refuses a draft with no product name', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftProductDescription(desc({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftProductDescription(desc({ facts: { name: ' ' } }))).rejects.toThrow();
+  });
+});
