@@ -12,6 +12,7 @@ import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
 import { dashboardB } from './dashboard/B';
 import { dashboardC } from './dashboard/C';
+import { dashboardD } from './dashboard/D';
 import { ordersB } from './orders/B';
 import { ordersC } from './orders/C';
 import { productsB } from './products/B';
@@ -30,6 +31,7 @@ export const LOOK_PAGES: readonly LookPage[] = [
       dashboardA,
       dashboardB,
       dashboardC,
+      dashboardD,
       // admin:design dashboard
     ],
   },

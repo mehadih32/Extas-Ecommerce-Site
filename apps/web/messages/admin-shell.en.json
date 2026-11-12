@@ -646,6 +646,28 @@
       "none": "Nothing is going wrong right now",
       "later": "Customer problems from {a} and {b} join this card when they are built."
     },
+    "cmd": {
+      "title": "Business at a glance",
+      "lowTile": "Running low on stock",
+      "lowSub": "sizes close to zero",
+      "funnelTitle": "Order funnel",
+      "funnelSub": "orders placed {range} and how far they got",
+      "delivered": "Delivered",
+      "funnelNote": "{pct}% of all placed",
+      "hoursTitle": "When customers order",
+      "hoursSub": "last {n} days by weekday and 2-hour slot",
+      "hoursBusiest": " · busiest: {day} {hour}",
+      "cell": "{n} orders",
+      "cellOne": "1 order",
+      "fewer": "fewer",
+      "more": "more",
+      "scoreTitle": "Couriers side by side",
+      "scoreSub": "last {n} days · trend is delivery success week by week",
+      "parcels": "Parcels",
+      "returns": "Returns",
+      "days": "Days to deliver",
+      "trend": "Trend"
+    },
     "need": {
       "title": "Needs you now",
       "sub": "{n} lists need you · tap one to open it",
