@@ -440,3 +440,36 @@ describe('practice competitor journey step (PR 335)', () => {
     await expect(w.draftCompetitorStep(step({ facts: { stepLabel: 'Product', url: 'https://example.com/p/1', pageText: ' ' } }))).rejects.toThrow();
   });
 });
+
+describe('practice competitor comparison report (PR 336)', () => {
+  const cmp = (over: Partial<import('../src').AiCompetitorComparisonInput> = {}): import('../src').AiCompetitorComparisonInput => ({
+    locale: 'en',
+    facts: {
+      steps: [
+        { label: 'Category', theirs: { blocked: false, title: 'Polos', note: 'A grid of polos with a sale badge on every tile.' }, ours: { blocked: false, title: 'Polo', note: 'A filterable grid with no always-on discount badges.' } },
+        { label: 'Checkout', theirs: { blocked: true, title: null, note: null }, ours: { blocked: false, title: 'Checkout', note: 'A stepped form with live validation.' } },
+      ],
+    },
+    max: { reason: 160, claudesView: 300, advantageItems: 5, advantageLength: 120 },
+    ...over,
+  });
+
+  it('writes one honest row per already-walked step, in order, with no invented verdict', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftCompetitorComparison(cmp());
+    expect(d.practice).toBe(true);
+    expect(d.rows.map((r) => r.label)).toEqual(['Category', 'Checkout']);
+    for (const r of d.rows) {
+      expect(r.verdict).toBe('neither_matters');
+      expect(r.recommendation).toBe('pick_with_changes');
+      expect(r.reason).toContain(r.label);
+    }
+    expect(d.claudesView).toBeNull();
+    expect(d.extasAdvantages).toEqual([]);
+  });
+
+  it('refuses a draft with no walked step at all', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    await expect(w.draftCompetitorComparison(cmp({ facts: { steps: [] } }))).rejects.toThrow();
+  });
+});

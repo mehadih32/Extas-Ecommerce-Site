@@ -12,6 +12,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiCompetitorComparisonDraft,
+  type AiCompetitorComparisonInput,
   type AiCompetitorStepDraft,
   type AiCompetitorStepInput,
   type AiFraudReviewDraft,
@@ -189,6 +191,20 @@ export function practiceCompetitorStep(input: AiCompetitorStepInput): AiCompetit
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 336 — the mock's comparison-report judgement: an honest "neither_matters / pick_with_changes" line
+ * per step (no voice to borrow without a key, so the practice answer never invents a verdict it has no grounds
+ * for) naming only the step's own label; no claudesView and no extasAdvantages until a real provider is connected
+ * (inventing either here would be exactly the kind of guess this agent exists to avoid). */
+export function practiceCompetitorComparison(input: AiCompetitorComparisonInput): AiCompetitorComparisonDraft {
+  const rows = input.facts.steps.map((s) => ({
+    label: s.label,
+    verdict: 'neither_matters' as const,
+    recommendation: 'pick_with_changes' as const,
+    reason: cutTo(`Practice line for "${s.label}" — connect a real AI provider for a grounded verdict.`, input.max.reason),
+  }));
+  return { rows, claudesView: null, extasAdvantages: [], practice: true };
+}
+
 export function practiceStockAlertNote(input: AiStockAlertInput): AiStockAlertDraft {
   const f = input.facts;
   const where = [f.colour, f.size].filter((x): x is string => Boolean(x && x.trim())).join(' / ');
@@ -259,6 +275,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftCompetitorStep(input) {
         if (!input.facts.pageText.trim()) throw new AdapterError('a competitor step needs the page\'s own text');
         return practiceCompetitorStep(input);
+      },
+      async draftCompetitorComparison(input) {
+        if (!input.facts.steps.length) throw new AdapterError('a comparison needs at least one already-walked step');
+        return practiceCompetitorComparison(input);
       },
     };
   },

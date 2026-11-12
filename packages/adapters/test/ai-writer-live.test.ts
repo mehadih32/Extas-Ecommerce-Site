@@ -251,6 +251,38 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 336 — draftCompetitorComparison: judges an already-walked journey against our own matching pages,
+  // step by step, never inventing a step the caller did not give it, carrying the provider's own usage.
+  it('draftCompetitorComparison keeps only the rows for steps it was given, in our own order, and drops a row for any other label it answers with', async () => {
+    const steps = [
+      { label: 'Category', theirs: { blocked: false, title: 'Polos', note: 'A grid with a sale badge on every tile.' }, ours: { blocked: false, title: 'Polo', note: 'A filterable grid, no always-on badge.' } },
+      { label: 'Checkout', theirs: { blocked: true, title: null, note: null }, ours: { blocked: false, title: 'Checkout', note: 'A stepped form with live validation.' } },
+    ];
+    const complete = vi.fn(async () => ({
+      text: '{"rows": [{"label": "Checkout", "verdict": "we_better", "recommendation": "skip", "reason": "Their checkout could not be read; ours validates live."}, {"label": "Category", "verdict": "they_better", "recommendation": "pick_with_changes", "reason": "Their sale badge draws the eye, but always-on discounting is not our positioning."}, {"label": "Invented step", "verdict": "we_better", "recommendation": "skip", "reason": "x"}], "claudesView": "", "extasAdvantages": ["Live checkout validation", ""]}',
+      usage: { inputTokens: 900, outputTokens: 220 },
+    }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftCompetitorComparison({ locale: 'en', facts: { steps }, max: { reason: 160, claudesView: 300, advantageItems: 5, advantageLength: 120 } });
+    expect(d.rows.map((r) => r.label)).toEqual(['Category', 'Checkout']); // our own order, "Invented step" dropped
+    expect(d.rows[0]).toMatchObject({ verdict: 'they_better', recommendation: 'pick_with_changes' });
+    expect(d.rows[1]).toMatchObject({ verdict: 'we_better', recommendation: 'skip' });
+    expect(d.claudesView).toBeNull(); // an empty string answers as no view, never a fabricated one
+    expect(d.extasAdvantages).toEqual(['Live checkout validation']); // the blank entry is dropped, not kept as ""
+    expect(d.practice).toBe(false);
+    expect(d.usage).toEqual({ inputTokens: 900, outputTokens: 220 });
+  });
+
+  it('draftCompetitorComparison throws cleanly when every row it answers with is for a step it was not given, and carries no usage when the provider reported none', async () => {
+    const steps = [{ label: 'Product', theirs: { blocked: false, title: 'P', note: 'n' }, ours: null }];
+    const max = { reason: 160, claudesView: 300, advantageItems: 5, advantageLength: 120 };
+    const w = liveAiWriter(async () => ({ text: '{"rows": [{"label": "Nowhere", "verdict": "we_better", "recommendation": "skip", "reason": "x"}]}' }));
+    await expect(w.draftCompetitorComparison({ locale: 'en', facts: { steps }, max })).rejects.toThrow('did not judge any');
+    const w2 = liveAiWriter(async () => ({ text: '{"rows": [{"label": "Product", "verdict": "neither_matters", "recommendation": "skip", "reason": "ok"}]}' }));
+    const d = await w2.draftCompetitorComparison({ locale: 'en', facts: { steps }, max });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.

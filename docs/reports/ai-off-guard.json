@@ -1,9 +1,9 @@
 {
-  "at": "2026-11-12T08:59:24.177Z",
+  "at": "2026-11-12T09:26:12.166Z",
   "n": 7,
   "ok": 7,
-  "totalJobCount": 67,
-  "coveredJobCount": 29,
+  "totalJobCount": 68,
+  "coveredJobCount": 30,
   "checks": [
     {
       "id": "support",
@@ -106,6 +106,7 @@
         "reportsForecastNote",
         "reportsCompetitorScan",
         "reportsCompetitorJourneyStep",
+        "reportsCompetitorComparison",
         "reportsStockAlert",
         "reportsExecSummary"
       ],
