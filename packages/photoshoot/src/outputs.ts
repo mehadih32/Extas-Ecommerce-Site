@@ -24,7 +24,8 @@
 // seed, on the owner's or the runner's own next attempt.
 import { z } from 'zod';
 import { allow, checkStoreId, logChange, nowOf, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
-import { transitionJob, type JobRow, type JobStatus } from './jobs';
+import { estimateGenerationCostMinor, isPhotoshootProvider, recordGenerationCostEntry, type PhotoshootProviderKey } from './costLedger';
+import { transitionJob, type JobRow, type JobStatus, type JobTier } from './jobs';
 
 /** C7.5 step 9's own six dimensions, each 0 (worst) – 1 (best) toward the concern named — see the file header for
  * the direction convention `colourDifference`/`handFingerArtefacts` take. */
@@ -192,6 +193,15 @@ export async function recordScoredOutputs(deps: PhotoshootDeps, who: Who, jobId:
   const updatedJob = winnerPassed
     ? await transitionJob(deps, who, job.id, 'REVIEW_REQUIRED')
     : await transitionJob(deps, who, job.id, 'FAILED', { errorMessage: `every candidate was below the quality cut-off (best scored ${combinedScorePercent(winner.scores)}%, the cut-off is ${thresholdPercent}%)` });
+
+  // PR 459 (B3.9, C7.6 "cost shown before a batch" trued up to what was actually run): the spend is real the
+  // moment the provider was called — win or lose — so it is written here, never only on the owner's later
+  // review decision. Writes nothing for a job that never named a provider (every caller today, until a runner
+  // exists) or the practice provider — never an invented number.
+  const provider = isPhotoshootProvider(job.provider) ? (job.provider as PhotoshootProviderKey) : null;
+  const rates = provider && deps.settings ? await deps.settings.value('studio.photoshoot.rates', { storeId: who.storeId }) : null;
+  const actualMinor = provider && rates ? estimateGenerationCostMinor({ provider, tier: job.tier as JobTier, imageCount: d.candidates.length, rates }) : null;
+  await recordGenerationCostEntry(deps.db, who, { id: job.id, tier: job.tier }, provider, actualMinor, d.candidates.length, nowOf(deps));
 
   return { outputs: created.map(toOutputRow), winnerIndex: winner.index, job: updatedJob };
 }

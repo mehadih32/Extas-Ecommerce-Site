@@ -14,7 +14,12 @@ describe('computeIdempotencyKey', () => {
   });
 
   it('treats an omitted optional field the same as an explicit null', () => {
-    expect(computeIdempotencyKey(base)).toBe(computeIdempotencyKey({ ...base, colourId: null, recipeId: null, modelId: null, sceneId: null, seed: null }));
+    expect(computeIdempotencyKey(base)).toBe(computeIdempotencyKey({ ...base, colourId: null, recipeId: null, modelId: null, sceneId: null, seed: null, provider: null }));
+  });
+
+  it('a different provider is a different key — PR 459: two requests that differ only by provider must not collide', () => {
+    expect(computeIdempotencyKey({ ...base, provider: 'fashn' })).not.toBe(computeIdempotencyKey(base));
+    expect(computeIdempotencyKey({ ...base, provider: 'fashn' })).not.toBe(computeIdempotencyKey({ ...base, provider: 'fitroom' }));
   });
 
   it('a different product is a different key', () => {

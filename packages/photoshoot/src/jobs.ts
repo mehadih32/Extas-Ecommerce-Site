@@ -20,6 +20,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { StudioJobStatus } from '@extas/db/client';
 import { allow, checkStoreId, logChange, nowOf, parse, PhotoshootError, type PhotoshootDeps, type PhotoshootPermission, type Who } from './context';
+import { computeReuseHash, estimateGenerationCostMinor, imageCountForTier, isPhotoshootProvider, type PhotoshootProviderKey } from './costLedger';
 import { photoshootAgentCapCheck } from './spendCap';
 
 /** The DB's own `StudioJobStatus` enum values, carried here as a plain union so callers need no Prisma import. */
@@ -97,6 +98,9 @@ export interface JobRow {
   provider: string | null;
   providerJobId: string | null;
   idempotencyKey: string;
+  /** C7.6's own reuse fingerprint (PR 459) — `null` until a caller names a `provider` (no job runner names one
+   * yet, so most jobs still open without it; see `costLedger.ts`). */
+  reuseHash: string | null;
   attempt: number;
   seed: string | null;
   inputAssetIds: string[];
@@ -123,6 +127,7 @@ type JobRecord = {
   provider: string | null;
   providerJobId: string | null;
   idempotencyKey: string;
+  reuseHash: string | null;
   attempt: number;
   seed: string | null;
   inputAssetIds: string[];
@@ -152,13 +157,18 @@ export interface IdempotencyInput {
   tier: string;
   inputAssetIds: readonly string[];
   seed?: string | number | null;
+  /** PR 459: two requests that differ only by which provider they name must never collide on this key — a
+   * caller's own `provider` (when given) is part of the exact-repeat fingerprint too, same as everything else
+   * here. Omitted and `null` are still the same request, as for every other optional field. */
+  provider?: string | null;
 }
 
 /**
  * A deterministic fingerprint of the logical request — same product/colour/recipe/model/scene/angle/tier/inputs
- * (and seed, when the caller pins one) hashes to the same key every time, field order and asset-id order included,
- * so a resent request (a retried click, a replayed webhook) lands on the DB's own unique index instead of a second
- * row. It is not a secret and carries no owner data; it is only ever compared for equality.
+ * (and seed and provider, when the caller pins them) hashes to the same key every time, field order and
+ * asset-id order included, so a resent request (a retried click, a replayed webhook) lands on the DB's own
+ * unique index instead of a second row. It is not a secret and carries no owner data; it is only ever compared
+ * for equality.
  */
 export function computeIdempotencyKey(input: IdempotencyInput): string {
   const normalised = {
@@ -171,6 +181,7 @@ export function computeIdempotencyKey(input: IdempotencyInput): string {
     tier: input.tier,
     inputAssetIds: [...input.inputAssetIds].sort(),
     seed: input.seed == null ? null : String(input.seed),
+    provider: input.provider ?? null,
   };
   return createHash('sha256').update(JSON.stringify(normalised)).digest('hex');
 }
@@ -186,24 +197,76 @@ const jobInput = z
     tier: z.string().refine(isJobTier, 'unknown tier'),
     inputAssetIds: z.array(z.string().uuid()).min(1).max(20),
     seed: z.union([z.string().trim().min(1).max(100), z.number().int()]).nullish(),
+    // PR 459 (C7.6 "estimate", "reuse rules"): both optional and additive — a caller that does not yet know which
+    // provider will run this request (still every caller in S24; no "press Generate" trigger exists yet) gets the
+    // exact old behaviour, no estimate and no reuse check, never an invented number.
+    provider: z.string().refine(isPhotoshootProvider, 'unknown provider').nullish(),
+    providerVersion: z.string().trim().min(1).max(100).nullish(),
   })
   .strict();
 
+export interface CreateOrReuseJobResult {
+  job: JobRow;
+  /** True whenever the returned row already existed — either an exact in-flight repeat, or (see
+   * `reusedApproval`) an already-decided one C7.6's reuse rule found instead of spending again. */
+  reused: boolean;
+  /** True only when `reused` is true because an `APPROVED`/`PUBLISHED` job already answers this exact
+   * product/model/settings/provider fingerprint (C7.6's own reuse rule) — never set for the plain "exact repeat
+   * of an in-flight request" reuse PR 451 already had. */
+  reusedApproval?: boolean;
+}
+
 /**
- * Opens a queue row for one generation request, or hands back the existing one when the exact same request has
- * already been made (C7.6 "no double charging"). Every input asset and the product itself must already be on file
- * in this store. Requires `photoshoot.generate` — the same permission a real spend needs, since queuing is the
- * first step of one. Never calls a provider; the job comes back `QUEUED`, waiting for the runner (PR 452).
+ * Opens a queue row for one generation request, or hands back an existing one instead of spending again — two
+ * separate reuse rules, checked in this order:
+ *
+ *  1. **C7.6's own reuse rule** ("reuse approved outputs unless the source image, the model, the settings or the
+ *     provider version changed"): only when the caller names a `provider` (so a fingerprint can even be
+ *     computed), an already-`APPROVED`/`PUBLISHED` job with the same `computeReuseHash` wins outright — nothing
+ *     new opens, nothing new is estimated, no matter how long ago that job ran.
+ *  2. PR 451's own **exact-repeat idempotency** ("no double charging" on a resent in-flight request) — unchanged.
+ *
+ * Every input asset and the product itself must already be on file in this store. Requires `photoshoot.generate`
+ * — the same permission a real spend needs, since queuing is the first step of one. Never calls a provider; a
+ * freshly opened job comes back `QUEUED`, waiting for the runner (PR 452). When `provider` is given, the new
+ * row's own `estimateMinor` (C7.6 "cost shown before a batch") is read from the owner's own `rates`, keeping the
+ * "never an invented number" rule — a store with no `settings` reader (same fallback `recordScoredOutputs`'s own
+ * `qualityThresholdPercent` read already uses) simply gets `null` back, same as an unset rate would.
  */
-export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: unknown): Promise<{ job: JobRow; reused: boolean }> {
+export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: unknown): Promise<CreateOrReuseJobResult> {
   checkStoreId(who.storeId);
   await allow(deps, who, 'photoshoot.generate');
   const d = parse(jobInput, input, 'photoshoot job');
   const product = await deps.db.product.findFirst({ where: { id: d.productId, storeId: who.storeId } });
   if (!product) throw new PhotoshootError('SOURCE_INVALID', 'no such product in this store', ['productId']);
+
+  const provider = d.provider as PhotoshootProviderKey | null | undefined;
+  const reuseHash = provider
+    ? computeReuseHash({
+        productId: d.productId,
+        colourId: d.colourId,
+        recipeId: d.recipeId,
+        modelId: d.modelId,
+        sceneId: d.sceneId,
+        angle: d.angle,
+        tier: d.tier,
+        inputAssetIds: d.inputAssetIds,
+        provider,
+        providerVersion: d.providerVersion,
+      })
+    : null;
+  if (reuseHash) {
+    const approved = await deps.db.photoshootJob.findFirst({ where: { storeId: who.storeId, reuseHash, status: { in: ['APPROVED', 'PUBLISHED'] } }, orderBy: { createdAt: 'desc' } });
+    if (approved) return { job: toJobRow(approved), reused: true, reusedApproval: true };
+  }
+
   const idempotencyKey = computeIdempotencyKey(d);
   const existing = await deps.db.photoshootJob.findFirst({ where: { storeId: who.storeId, idempotencyKey } });
   if (existing) return { job: toJobRow(existing), reused: true };
+
+  const tier = d.tier as JobTier;
+  const rates = provider && deps.settings ? await deps.settings.value('studio.photoshoot.rates', { storeId: who.storeId }) : null;
+  const estimateMinor = provider && rates ? estimateGenerationCostMinor({ provider, tier, imageCount: imageCountForTier(tier), rates }) : null;
   const created = await deps.db.photoshootJob.create({
     data: {
       storeId: who.storeId,
@@ -215,13 +278,16 @@ export async function createOrReuseJob(deps: PhotoshootDeps, who: Who, input: un
       angle: d.angle,
       tier: d.tier,
       status: 'DRAFT',
+      provider: provider ?? null,
+      reuseHash,
+      estimateMinor,
       idempotencyKey,
       inputAssetIds: [...d.inputAssetIds],
       seed: d.seed == null ? null : String(d.seed),
       requestedById: who.actor.staffUserId,
     },
   });
-  await logChange(deps.db, who, { action: 'photoshoot.job.create', entityType: 'PhotoshootJob', entityId: created.id, before: null, after: { productId: created.productId, angle: created.angle, tier: created.tier, status: created.status } });
+  await logChange(deps.db, who, { action: 'photoshoot.job.create', entityType: 'PhotoshootJob', entityId: created.id, before: null, after: { productId: created.productId, angle: created.angle, tier: created.tier, status: created.status, provider: created.provider, estimateMinor: created.estimateMinor } });
   const queued = await transitionJob(deps, who, created.id, 'QUEUED');
   return { job: queued, reused: false };
 }
