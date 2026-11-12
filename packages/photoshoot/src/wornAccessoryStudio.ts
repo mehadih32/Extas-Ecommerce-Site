@@ -35,6 +35,9 @@
 // list (data only — the gate itself is Part 2), and each family's own Detail Finder checklist wiring. Deliberately
 // NOT here (Part 2, PR 472): recording the finished studio image itself, the mandatory-reprojection gate actually
 // enforced, and the plain-language "ask for the missing view" message C7.12 asks for.
+import { z } from 'zod';
+import { allow, checkStoreId, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
+import { recordGeneratedAsset, type AssetRow } from './assets';
 import type { AssetRole } from './roles';
 
 /** C7.12's own four worn-accessory families — the same keys `recipes.ts`'s own `CATEGORY_RECIPES` already names
@@ -115,3 +118,143 @@ export const WORN_ACCESSORY_MANDATORY_REPROJECTION_FAMILIES = ['sunglasses', 'wa
 /** True only for one of the three families C7.12's own sentence names — never caps. */
 export const wornAccessoryRequiresDetailReprojection = (family: WornAccessoryFamily): boolean =>
   (WORN_ACCESSORY_MANDATORY_REPROJECTION_FAMILIES as readonly WornAccessoryFamily[]).includes(family);
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 472 (Blueprint C7.12, C7.22 item 29) — the worn-accessory engine, part 2: the three pieces Part 1
+// (PR 471) left out on purpose — recording the finished per-view studio image itself, the mandatory detail
+// re-projection gate actually enforced (not just named as data), and C7.12's own plain-language "ask for the
+// missing view."
+
+/** The free tag every worn-accessory studio output carries, so later steps (and the admin) can find them among a
+ * product's other generated assets — the same pattern `FOOTWEAR_STUDIO_TAG` already set. The output's own family
+ * is carried as a SECOND tag (`d.family`, e.g. `'watches'`) rather than folded into this one constant, so a
+ * watch's `worn` output is never confused with a bag's by a reader filtering on this tag alone. */
+export const WORN_ACCESSORY_STUDIO_TAG = 'worn_accessory_studio';
+
+const recordOutputInput = z
+  .object({
+    family: z.enum(WORN_ACCESSORY_FAMILIES),
+    view: z.enum(WORN_ACCESSORY_VIEWS),
+    sourceAssetId: z.string().uuid(),
+    storageKey: z.string().min(1),
+    storage: z.enum(['LOCAL_DISK', 'AZURE_BLOB', 'S3_COMPATIBLE', 'GOOGLE_DRIVE']),
+    mimeType: z.string().min(1),
+    bytes: z.number().int().min(0),
+    checksumSha256: z.string().min(32),
+    width: z.number().int().min(1).optional(),
+    height: z.number().int().min(1).optional(),
+  })
+  .strict();
+export type RecordWornAccessoryOutputInput = z.input<typeof recordOutputInput>;
+
+export interface WornAccessoryOutput extends AssetRow {
+  family: WornAccessoryFamily;
+  view: WornAccessoryView;
+}
+
+/**
+ * Records a finished worn-accessory studio render (`photoshoot.generate`) — C7.12's own worn/flat shot for one of
+ * the four families. Refuses unless the named `sourceAssetId` is itself a real, non-archived reference photo
+ * tagged with THIS exact view's own role (`NO_WORN_ACCESSORY_REFERENCE`, the same "never invent" hard rule PR 466
+ * enforces for every footwear angle) — nothing here is ever produced from the other view's photo. For
+ * `sunglasses`/`watches`/`bags` (Part 1's own `wornAccessoryRequiresDetailReprojection`), ALSO refuses unless an
+ * approved `DetailRegion` (PR 454) already exists on that exact source reference photo
+ * (`DETAIL_REPROJECTION_REQUIRED`) — C7.12's own "mandatory for these families" sentence actually enforced as a
+ * gate here, never left as a comment; caps pass with no such gate, since the blueprint names only the other
+ * three. Filed through PR 444's `recordGeneratedAsset` chokepoint, tagged `WORN_ACCESSORY_STUDIO_TAG` plus the
+ * family's own key.
+ */
+export async function recordWornAccessoryOutput(deps: PhotoshootDeps, who: Who, input: unknown): Promise<WornAccessoryOutput> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const d = parse(recordOutputInput, input, 'worn-accessory studio output');
+
+  const source = await deps.db.mediaAsset.findFirst({ where: { id: d.sourceAssetId, storeId: who.storeId } });
+  const wantRole = wornAccessoryViewRole(d.view);
+  if (!source || !source.isOriginal || source.role !== wantRole || source.archivedAt) {
+    throw new PhotoshootError('NO_WORN_ACCESSORY_REFERENCE', `a ${d.family} ${d.view} studio image is never generated without a real, on-file ${wantRole} reference`, ['sourceAssetId']);
+  }
+
+  if (wornAccessoryRequiresDetailReprojection(d.family)) {
+    const approvedRegion = await deps.db.detailRegion.findFirst({ where: { assetId: d.sourceAssetId, storeId: who.storeId, approved: true } });
+    if (!approvedRegion) {
+      throw new PhotoshootError(
+        'DETAIL_REPROJECTION_REQUIRED',
+        `C7.12 makes detail re-projection mandatory for ${d.family} — approve a logo/text detail region on this reference photo (PR 454) before a studio image is recorded from it`,
+        ['sourceAssetId'],
+      );
+    }
+  }
+
+  const row = await recordGeneratedAsset(deps, who, {
+    sourceAssetId: d.sourceAssetId,
+    role: wantRole,
+    storageKey: d.storageKey,
+    storage: d.storage,
+    mimeType: d.mimeType,
+    bytes: d.bytes,
+    checksumSha256: d.checksumSha256,
+    width: d.width,
+    height: d.height,
+    tags: [WORN_ACCESSORY_STUDIO_TAG, d.family],
+  });
+  return { ...row, family: d.family, view: d.view };
+}
+
+/**
+ * The most recent, non-archived worn-accessory studio output already on file for this source photo, family and
+ * view (`photoshoot.read`) — what a later job orchestrator checks before queuing a new render, so the same
+ * reference photo is never paid for twice (C7.6 "reuse approved outputs unless the source … changed"), the same
+ * shape as `findExistingFootwearStudioOutput` (PR 466). Null when none exists yet.
+ */
+export async function findExistingWornAccessoryOutput(deps: Pick<PhotoshootDeps, 'db'>, who: Who, sourceAssetId: string, family: WornAccessoryFamily, view: WornAccessoryView): Promise<WornAccessoryOutput | null> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.read');
+  const row = await deps.db.mediaAsset.findFirst({
+    where: { storeId: who.storeId, sourceAssetId, role: wornAccessoryViewRole(view), isAiGenerated: true, archivedAt: null, tags: { hasEvery: [WORN_ACCESSORY_STUDIO_TAG, family] } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!row) return null;
+  return { id: row.id, storeId: row.storeId, isOriginal: row.isOriginal, role: row.role, isAiGenerated: row.isAiGenerated, sourceAssetId: row.sourceAssetId, archivedAt: row.archivedAt, tags: row.tags, family, view };
+}
+
+/** A plain label for each family, for the "ask for the missing view" message below — never the raw plural
+ * recipe key. */
+const WORN_ACCESSORY_FAMILY_LABEL: Record<WornAccessoryFamily, string> = {
+  caps: 'cap',
+  sunglasses: 'sunglasses',
+  watches: 'watch',
+  bags: 'bag',
+};
+
+/** A plain label for each view — never the raw snake_case role. */
+const WORN_ACCESSORY_VIEW_LABEL: Record<WornAccessoryView, string> = {
+  worn: 'worn',
+  flat: 'flat, laid-out',
+};
+
+export interface WornAccessoryMissingViewRequest {
+  view: WornAccessoryView;
+  /** C7.12's own plain words: "the system says plainly when it does not [have enough reference] and asks for
+   * the missing angle rather than inventing it" — the same sentence applied here one level up, to a missing
+   * VIEW rather than a missing angle. */
+  message: string;
+}
+
+/** C7.12's own honest ask, built straight from the family and view names — never a separate label table to keep
+ * in step with `WORN_ACCESSORY_FAMILY_LABEL`/`WORN_ACCESSORY_VIEW_LABEL` by hand. The same shape as
+ * `footwearMissingAngleMessage` (PR 466). */
+export function wornAccessoryMissingViewMessage(family: WornAccessoryFamily, view: WornAccessoryView): string {
+  const familyLabel = WORN_ACCESSORY_FAMILY_LABEL[family];
+  const viewLabel = WORN_ACCESSORY_VIEW_LABEL[view];
+  return `There is no real ${viewLabel} photo of this ${familyLabel} yet — please add one ${viewLabel} photo before the worn-accessory studio can produce that view.`;
+}
+
+/**
+ * Pure, no database: every wanted view that still has no real reference photo on file for this family, paired
+ * with C7.12's own ask — recomputed fresh from the real references on file every time, the same "part of the
+ * normal upload flow, not an error" shape `footwearMissingAngleRequests` (PR 466) already set.
+ */
+export function wornAccessoryMissingViewRequests(family: WornAccessoryFamily, assets: readonly WornAccessoryAsset[], wanted: readonly WornAccessoryView[] = WORN_ACCESSORY_VIEWS): WornAccessoryMissingViewRequest[] {
+  return missingWornAccessoryViews(assets, wanted).map((view) => ({ view, message: wornAccessoryMissingViewMessage(family, view) }));
+}
