@@ -1,5 +1,7 @@
-// S24 · PR 477 — pure tests for the set try-on engine's component/angle vocabulary, the "Set product type"
-// mapping onto a TOP_BOTTOM combo's own two items, and the "never invent" angle planner (no database).
+// S24 · PR 477/478 — pure tests for the set try-on engine's component/angle vocabulary, the "Set product type"
+// mapping onto a TOP_BOTTOM combo's own two items, the "never invent" angle planner, the component-tag round
+// trip, and the plain-language "ask for the missing component/angle" message (no database — the recorder itself
+// is covered by setTryOnStudio.db.test.ts).
 import { describe, expect, it } from 'vitest';
 import {
   isSetTryOnAngle,
@@ -10,6 +12,11 @@ import {
   SET_TRY_ON_ANGLES,
   SET_TRY_ON_COMPONENTS,
   setTryOnComponentProductIds,
+  setTryOnComponentsFromTags,
+  setTryOnComponentTag,
+  setTryOnMissingAngleMessage,
+  setTryOnMissingAngleRequests,
+  SET_TRY_ON_STUDIO_TAG,
   type SetTryOnComponents,
 } from './setTryOnStudio';
 
@@ -165,5 +172,67 @@ describe('missingSetTryOnAngles', () => {
 
   it('lists every angle when neither component has anything on file', () => {
     expect(missingSetTryOnAngles({ top: [], bottom: [] })).toEqual([...SET_TRY_ON_ANGLES]);
+  });
+});
+
+describe('setTryOnComponentTag / setTryOnComponentsFromTags — PR 478 round trip', () => {
+  const topId = '33333333-3333-3333-3333-333333333333';
+  const bottomId = '44444444-4444-4444-4444-444444444444';
+
+  it('reads a finished row’s own top and bottom straight back off its tags', () => {
+    const tags = [SET_TRY_ON_STUDIO_TAG, 'front', setTryOnComponentTag('top', topId), setTryOnComponentTag('bottom', bottomId)];
+    expect(setTryOnComponentsFromTags(tags)).toEqual({ topSourceAssetId: topId, bottomSourceAssetId: bottomId });
+  });
+
+  it('is null unless BOTH components are tagged', () => {
+    expect(setTryOnComponentsFromTags([setTryOnComponentTag('top', topId)])).toBeNull();
+    expect(setTryOnComponentsFromTags([])).toBeNull();
+  });
+
+  it('ignores every unrelated tag', () => {
+    const tags = ['some_other_tag', setTryOnComponentTag('top', topId), 'front', setTryOnComponentTag('bottom', bottomId)];
+    expect(setTryOnComponentsFromTags(tags)).toEqual({ topSourceAssetId: topId, bottomSourceAssetId: bottomId });
+  });
+});
+
+describe('setTryOnMissingAngleMessage / setTryOnMissingAngleRequests — PR 478 "ask for the missing component/angle"', () => {
+  it('names the exact component and side missing, in plain words', () => {
+    expect(setTryOnMissingAngleMessage('front', ['NO_TOP_REFERENCE'])).toMatch(/top.*front photo/);
+    expect(setTryOnMissingAngleMessage('back', ['NO_BOTTOM_BACK_REFERENCE'])).toMatch(/bottom.*back photo/);
+  });
+
+  it('names BOTH components when both are missing, never only the first', () => {
+    const msg = setTryOnMissingAngleMessage('front', ['NO_TOP_REFERENCE', 'NO_BOTTOM_REFERENCE']);
+    expect(msg).toMatch(/top/);
+    expect(msg).toMatch(/bottom/);
+  });
+
+  it('says plainly that nothing is invented', () => {
+    expect(setTryOnMissingAngleMessage('front', ['NO_TOP_REFERENCE'])).toMatch(/never invented/);
+  });
+
+  it('setTryOnMissingAngleRequests lists only the angles still missing something, each with its own message', () => {
+    const frontOnly: SetTryOnComponents = {
+      top: [{ role: 'front_reference', isOriginal: true, archivedAt: null }],
+      bottom: [{ role: 'front_reference', isOriginal: true, archivedAt: null }],
+    };
+    const requests = setTryOnMissingAngleRequests(frontOnly);
+    expect(requests.map((r) => r.angle)).toEqual(['back']);
+    expect(requests[0]!.message).toMatch(/top/);
+    expect(requests[0]!.message).toMatch(/bottom/);
+  });
+
+  it('is empty once every component has every reference the set needs', () => {
+    const complete: SetTryOnComponents = {
+      top: [
+        { role: 'front_reference', isOriginal: true, archivedAt: null },
+        { role: 'back_reference', isOriginal: true, archivedAt: null },
+      ],
+      bottom: [
+        { role: 'front_reference', isOriginal: true, archivedAt: null },
+        { role: 'back_reference', isOriginal: true, archivedAt: null },
+      ],
+    };
+    expect(setTryOnMissingAngleRequests(complete)).toEqual([]);
   });
 });

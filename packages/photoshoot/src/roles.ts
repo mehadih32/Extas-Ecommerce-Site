@@ -52,13 +52,22 @@ export const ASSET_ROLES = [
    * scene's own look is reused on a later, different garment set), so `REFERENCE_ROLES` below does NOT exclude
    * it. */
   'scene_library_demo',
+  /** S24 · PR 478 (C7.22 item 35): a finished two-garment set try-on render — one photograph of a model wearing
+   * BOTH the top and the bottom component of a `TOP_BOTTOM` combo (`setTryOnStudio.ts`), for one of C7.13's own
+   * four angles. The same reasoning as `combo_gift_set_composition` above: it traces back (`sourceAssetId`) to
+   * only ONE of its two real components (the top, PR 444's single-source model), with the other recorded as a
+   * tag, never pretended to be a second role on the same row — and, like that role, it is never meant to be a
+   * reference for further generation (no later engine is ever built FROM a finished set photo the way a footwear
+   * angle or a worn-accessory view can be), so `REFERENCE_ROLES` below excludes it too. */
+  'set_try_on',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 
 /** The reference roles a real photo of the garment can carry — every role except `primary_garment` (the garment's
- * own plain photo, not a reference to anything) and PR 475's own `combo_gift_set_composition` (always a finished
- * group output, never a reference any further generation is built from). */
-export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment' && r !== 'combo_gift_set_composition') as readonly AssetRole[];
+ * own plain photo, not a reference to anything), PR 475's own `combo_gift_set_composition` and PR 478's own
+ * `set_try_on` (both always a finished, multi-component output, never a reference any further generation is
+ * built from). */
+export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment' && r !== 'combo_gift_set_composition' && r !== 'set_try_on') as readonly AssetRole[];
 
 export const isAssetRole = (v: unknown): v is AssetRole => typeof v === 'string' && (ASSET_ROLES as readonly string[]).includes(v);
 

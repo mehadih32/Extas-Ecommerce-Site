@@ -76,6 +76,11 @@ export const PHOTOSHOOT_ERROR_CODES = [
   // photo it was actually demoed from — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
   // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE and NO_PIECE_REFERENCE already do for their own engines.
   'NO_SCENE_REFERENCE',
+  // PR 478 / C7.13 "the model must be wearing the complete set in one image" hard rule: recording a set try-on
+  // output with either the top or the bottom (or both) missing a real, on-file, matching-angle reference —
+  // "never invent" one half of a set the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
+  // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE, NO_PIECE_REFERENCE and NO_SCENE_REFERENCE already do.
+  'NO_SET_COMPONENT_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -100,7 +105,8 @@ export class PhotoshootError extends Error {
       this.code === 'DETAIL_REPROJECTION_REQUIRED' ||
       this.code === 'NO_REFLECTIVE_REFERENCE' ||
       this.code === 'NO_PIECE_REFERENCE' ||
-      this.code === 'NO_SCENE_REFERENCE'
+      this.code === 'NO_SCENE_REFERENCE' ||
+      this.code === 'NO_SET_COMPONENT_REFERENCE'
     )
       return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;

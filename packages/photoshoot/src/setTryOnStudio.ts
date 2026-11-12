@@ -31,12 +31,15 @@
 // cannot show one piece honestly and invent the other (C7.13: "the model must be wearing the complete set in one
 // image").
 //
-// No new `AssetRole`: the top and the bottom are each an ordinary garment already covered by the existing
-// `primary_garment`/`front_reference`/`back_reference` roles — C7.12's own `polo_tee_shirt_panjabi` and
-// `trouser_denim_chino` recipe rows (`recipes.ts`) already name exactly this vocabulary for a tracksuit's own top
-// and bottom. A set is two ALREADY-COVERED garments worn together, not a new kind of photographic subject the way
-// a worn accessory (PR 471) or a reflective surface (PR 473) is, so — unlike those two PRs — this one adds no row
-// to `ASSET_ROLES`/`roles.ts`.
+// No new `AssetRole` for the TWO REFERENCE photos: the top and the bottom are each an ordinary garment already
+// covered by the existing `primary_garment`/`front_reference`/`back_reference` roles — C7.12's own
+// `polo_tee_shirt_panjabi` and `trouser_denim_chino` recipe rows (`recipes.ts`) already name exactly this
+// vocabulary for a tracksuit's own top and bottom. A set is two ALREADY-COVERED garments worn together, not a new
+// kind of photographic subject the way a worn accessory (PR 471) or a reflective surface (PR 473) is, so — unlike
+// those two PRs — Part 1 added no row to `ASSET_ROLES`/`roles.ts` for the REFERENCES. The finished OUTPUT itself
+// is a different story (Part 2, below): one photograph that is honestly neither the top's own photo nor the
+// bottom's, so it gets its own new role, `set_try_on` — the same reasoning PR 475's own
+// `combo_gift_set_composition` already gave for a composed group image.
 //
 // Detail points for this family (C7.13 verbatim): "hood and drawcord, cuff and hem rib, zip pull and puller
 // branding, side stripe or tape, pocket, ankle rib, waistband drawcord, and fleece inside texture (a real macro)."
@@ -50,9 +53,45 @@
 // Part 1's own honest scope: the component vocabulary, the angle list, the "Set product type" mapping onto a
 // `TOP_BOTTOM` combo's own two items (pure, no schema change), the "never invent" angle plan (mirroring
 // `planGhostMannequinViews`'s own shape, generalised to two garments at once), and the Detail Finder checklist
-// wiring. Deliberately NOT here (Part 2, PR 478): recording the finished set-try-on image itself through PR 444's
+// wiring. Deliberately NOT there (Part 2, below): recording the finished set-try-on image itself through PR 444's
 // `recordGeneratedAsset` chokepoint, and C7.13's own "the system says plainly … and asks" for the missing
 // component or angle.
+//
+// S24 · PR 478 (Blueprint C7.13, C7.22 item 35) — the set try-on engine, part 2: the three pieces Part 1 left out
+// on purpose, grown into this same module, mirroring exactly how PR 466/472 completed PR 465/471's own Part 1s.
+//
+// Recording the finished output (C7.13 verbatim): "producing one photograph of the model wearing the whole set."
+// `recordSetTryOnOutput` (`photoshoot.generate`) refuses (`NO_SET_COMPONENT_REFERENCE`, naming every bad
+// component — `top`, `bottom`, or both) unless BOTH the named top and bottom source photos are real, non-archived
+// originals already carrying the right role for the wanted angle — `primary_garment`/`front_reference` for
+// `front`/`three_quarter`/`motion_walking`, `back_reference` for `back` (C7.13's own "the model must be wearing
+// the complete set in one image" makes a half answer as dishonest as none, the same hard rule Part 1's own
+// `planSetTryOnAngles` already states as a plan). PR 444's own `recordGeneratedAsset` chokepoint only ever traces
+// a generated row back to ONE real source photo (the same single-source limit PR 475's own
+// `comboGiftSetStudio.ts` already documents), so the recorded row's own `sourceAssetId` is the top's own photo —
+// the lead component, the same order `SET_TRY_ON_COMPONENTS` already names first — with the bottom's own photo
+// recorded as a `component:bottom:<id>` tag (and the top repeated as `component:top:<id>`, the same
+// always-both-tagged shape `comboGiftSetPieceTag` already set), so the whole pair is always readable back off the
+// row without widening PR 444's own model. Filed under the new `set_try_on` role (`roles.ts`) — never
+// `front_reference`/`back_reference` the way footwear's own single-reference output reuses its angle's role
+// (PR 466), because this output is honestly neither component's own photo, the same reasoning that gave
+// `combo_gift_set_composition` its own role rather than reusing one of its pieces' roles.
+//
+// The plain-language ask (C7.13's own honesty rule, generalised one level up the same way PR 472's own
+// `wornAccessoryMissingViewMessage` generalised C7.12's "says plainly … and asks for the missing angle" from a
+// single reference to a whole view): `setTryOnMissingAngleMessage`/`setTryOnMissingAngleRequests` are pure, no
+// database, built straight off Part 1's own `planSetTryOnAngles` — recomputed fresh every time, the same "part of
+// the normal upload flow, not an error" shape every other engine's own `missing*Requests` function already sets,
+// naming exactly which component (top, bottom, or both) and which side (front-like or back) is still missing.
+//
+// Part 2's own honest scope: the recorder, the reuse lookup, and the missing-component/angle message. Deliberately
+// NOT here: wiring any job orchestrator to actually call this module (no caller exists yet, the same honest gap
+// every other S24 engine's own Part 2 left — PR 466/472/474/475/476); a new AI Cost Book sub-job row (C7.20's own
+// fixed list of seven is not widened, the same reasoning PR 473/475/476's own headers already give); the unisex
+// couple-shot compose step and the occasion-scene suggester (C7.13's own later paragraphs, neither built yet).
+import { z } from 'zod';
+import { allow, checkStoreId, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
+import { recordGeneratedAsset, type AssetRow } from './assets';
 import { hasBackReference } from './roles';
 
 /** The two garments C7.13's own "Set" product type joins — never more, never fewer: C7.13 names only a top
@@ -170,4 +209,184 @@ export function missingSetTryOnAngles(components: SetTryOnComponents, wanted: re
   return planSetTryOnAngles(components, wanted)
     .filter((p) => !p.ready)
     .map((p) => p.angle);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 478 — recording the finished output.
+
+/** The free tag every set try-on studio output carries, so later steps (and the admin) can find them among a
+ * product's other generated assets — the same pattern `FOOTWEAR_STUDIO_TAG`/`WORN_ACCESSORY_STUDIO_TAG`/
+ * `COMBO_GIFT_SET_STUDIO_TAG` already set. */
+export const SET_TRY_ON_STUDIO_TAG = 'set_try_on_studio';
+
+/** The stable tag one component carries on a finished set try-on row — `component` is always `top` or `bottom`,
+ * never containing a colon, so this round-trips exactly through `setTryOnComponentsFromTags` below (the same
+ * shape `comboGiftSetPieceTag`/`comboGiftSetPiecesFromTags` already set for a group of pieces). */
+export function setTryOnComponentTag(component: SetTryOnComponent, sourceAssetId: string): string {
+  return `component:${component}:${sourceAssetId}`;
+}
+
+/** Reads a finished set try-on row's own top and bottom source photos straight back off its tags — `null` unless
+ * BOTH are present, since a row this module itself ever writes always tags both. */
+export function setTryOnComponentsFromTags(tags: readonly string[]): { topSourceAssetId: string; bottomSourceAssetId: string } | null {
+  let topSourceAssetId: string | undefined;
+  let bottomSourceAssetId: string | undefined;
+  for (const t of tags) {
+    if (!t.startsWith('component:')) continue;
+    const [, component, id] = t.split(':');
+    if (component === 'top') topSourceAssetId = id;
+    else if (component === 'bottom') bottomSourceAssetId = id;
+  }
+  if (!topSourceAssetId || !bottomSourceAssetId) return null;
+  return { topSourceAssetId, bottomSourceAssetId };
+}
+
+const recordOutputInput = z
+  .object({
+    angle: z.enum(SET_TRY_ON_ANGLES),
+    topSourceAssetId: z.string().uuid(),
+    bottomSourceAssetId: z.string().uuid(),
+    storageKey: z.string().min(1),
+    storage: z.enum(['LOCAL_DISK', 'AZURE_BLOB', 'S3_COMPATIBLE', 'GOOGLE_DRIVE']),
+    mimeType: z.string().min(1),
+    bytes: z.number().int().min(0),
+    checksumSha256: z.string().min(32),
+    width: z.number().int().min(1).optional(),
+    height: z.number().int().min(1).optional(),
+  })
+  .strict()
+  .refine((d) => d.topSourceAssetId !== d.bottomSourceAssetId, { message: 'the top and the bottom must be two different photos', path: ['bottomSourceAssetId'] });
+export type RecordSetTryOnOutputInput = z.input<typeof recordOutputInput>;
+
+export interface SetTryOnOutput extends AssetRow {
+  angle: SetTryOnAngle;
+  topSourceAssetId: string;
+  bottomSourceAssetId: string;
+}
+
+/** Whichever one of `primary_garment`/`front_reference` (front-like angles) or `back_reference` (the back angle)
+ * the wanted angle needs — the same rule `planSetTryOnAngles` already states as a plan, applied here to one real
+ * asset row rather than a caller-supplied fact. */
+function isReadyComponentAsset(angle: SetTryOnAngle, asset: { isOriginal: boolean; role: string | null; archivedAt: Date | null } | null): boolean {
+  if (!asset || !asset.isOriginal || asset.archivedAt) return false;
+  return angle === 'back' ? asset.role === 'back_reference' : asset.role === 'primary_garment' || asset.role === 'front_reference';
+}
+
+/**
+ * Records a finished set try-on render (`photoshoot.generate`) — C7.13's own "one photograph of the model wearing
+ * the whole set" for one angle. Refuses (`NO_SET_COMPONENT_REFERENCE`, naming every bad component — `top`,
+ * `bottom`, or both) unless BOTH the named top and bottom source photos are real, non-archived originals already
+ * carrying the right role for this exact angle — never invents one half of a set from the other's reference, and
+ * never produces a back view from a front-only reference on either side (C7.6's hard rule, both halves, the same
+ * way Part 1's own `planSetTryOnAngles` already states it as a plan). Filed through PR 444's
+ * `recordGeneratedAsset` chokepoint against the top's own photo (the lead component), under the new `set_try_on`
+ * role, tagged `SET_TRY_ON_STUDIO_TAG`, the angle, and both components' own `setTryOnComponentTag`.
+ */
+export async function recordSetTryOnOutput(deps: PhotoshootDeps, who: Who, input: unknown): Promise<SetTryOnOutput> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const d = parse(recordOutputInput, input, 'set try-on output');
+
+  const [topAsset, bottomAsset] = await Promise.all([
+    deps.db.mediaAsset.findFirst({ where: { id: d.topSourceAssetId, storeId: who.storeId } }),
+    deps.db.mediaAsset.findFirst({ where: { id: d.bottomSourceAssetId, storeId: who.storeId } }),
+  ]);
+
+  const bad: SetTryOnComponent[] = [];
+  if (!isReadyComponentAsset(d.angle, topAsset)) bad.push('top');
+  if (!isReadyComponentAsset(d.angle, bottomAsset)) bad.push('bottom');
+  if (bad.length) {
+    const wantRoleLabel = d.angle === 'back' ? 'back_reference' : 'primary_garment/front_reference';
+    throw new PhotoshootError(
+      'NO_SET_COMPONENT_REFERENCE',
+      `a set try-on ${d.angle} image is never generated without a real, on-file, non-archived ${wantRoleLabel} for both the top and the bottom — C7.13 never invents one half of a set`,
+      bad,
+    );
+  }
+
+  const row = await recordGeneratedAsset(deps, who, {
+    sourceAssetId: d.topSourceAssetId,
+    role: 'set_try_on',
+    storageKey: d.storageKey,
+    storage: d.storage,
+    mimeType: d.mimeType,
+    bytes: d.bytes,
+    checksumSha256: d.checksumSha256,
+    width: d.width,
+    height: d.height,
+    tags: [SET_TRY_ON_STUDIO_TAG, d.angle, setTryOnComponentTag('top', d.topSourceAssetId), setTryOnComponentTag('bottom', d.bottomSourceAssetId)],
+  });
+  return { ...row, angle: d.angle, topSourceAssetId: d.topSourceAssetId, bottomSourceAssetId: d.bottomSourceAssetId };
+}
+
+/**
+ * The most recent, non-archived set try-on output already on file for exactly this angle and this exact pair of
+ * component photos (`photoshoot.read`) — what a later job orchestrator checks before queuing a new render, so the
+ * same set is never paid for twice (C7.6 "reuse approved outputs unless the source … changed"), the same shape as
+ * `findExistingFootwearStudioOutput`/`findExistingWornAccessoryOutput`/`findExistingComboGiftSetOutput`. Null when
+ * none exists yet.
+ */
+export async function findExistingSetTryOnOutput(
+  deps: Pick<PhotoshootDeps, 'db'>,
+  who: Who,
+  angle: SetTryOnAngle,
+  topSourceAssetId: string,
+  bottomSourceAssetId: string,
+): Promise<SetTryOnOutput | null> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.read');
+  const tags = [SET_TRY_ON_STUDIO_TAG, angle, setTryOnComponentTag('top', topSourceAssetId), setTryOnComponentTag('bottom', bottomSourceAssetId)];
+  const row = await deps.db.mediaAsset.findFirst({
+    where: { storeId: who.storeId, role: 'set_try_on', isAiGenerated: true, archivedAt: null, tags: { hasEvery: tags } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!row) return null;
+  return { id: row.id, storeId: row.storeId, isOriginal: row.isOriginal, role: row.role, isAiGenerated: row.isAiGenerated, sourceAssetId: row.sourceAssetId, archivedAt: row.archivedAt, tags: row.tags, angle, topSourceAssetId, bottomSourceAssetId };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 478 — the plain-language "ask for the missing component/angle" message.
+
+/** A plain label for each angle — never the raw snake_case value. */
+const SET_TRY_ON_ANGLE_LABEL: Record<SetTryOnAngle, string> = {
+  front: 'front',
+  three_quarter: 'three-quarter',
+  back: 'back',
+  motion_walking: 'motion/walking',
+};
+
+/** Which component (and which side of it) one missing-angle reason names — built straight off
+ * `SET_TRY_ON_MISSING_REASONS`, never a second hand-kept table. */
+const SET_TRY_ON_REASON_PHRASE: Record<SetTryOnMissingReason, string> = {
+  NO_TOP_REFERENCE: "the top's own front photo",
+  NO_BOTTOM_REFERENCE: "the bottom's own front photo",
+  NO_TOP_BACK_REFERENCE: "the top's own back photo",
+  NO_BOTTOM_BACK_REFERENCE: "the bottom's own back photo",
+};
+
+export interface SetTryOnMissingAngleRequest {
+  angle: SetTryOnAngle;
+  /** C7.13's own honesty rule, generalised one level up the way `wornAccessoryMissingViewMessage` (PR 472)
+   * already generalised C7.12's "says plainly … and asks for the missing angle rather than inventing it" from a
+   * single reference to a whole view — here, to whichever component (or both) is still missing. */
+  message: string;
+}
+
+/** C7.13's own honest ask for one angle, naming exactly which component (or both) is still missing and why —
+ * built straight from `reasons`, never a separate guess at what went wrong. */
+export function setTryOnMissingAngleMessage(angle: SetTryOnAngle, reasons: readonly SetTryOnMissingReason[]): string {
+  const angleLabel = SET_TRY_ON_ANGLE_LABEL[angle];
+  const missing = reasons.map((r) => SET_TRY_ON_REASON_PHRASE[r]).join(' and ');
+  return `There is no real ${missing} on file yet — please add it before the ${angleLabel} set photo can be produced. It is never invented.`;
+}
+
+/**
+ * Pure, no database: every wanted angle still missing at least one component's own real reference, paired with
+ * C7.13's own plain ask — recomputed fresh off `planSetTryOnAngles` every time, the same "part of the normal
+ * upload flow, not an error" shape every other engine's own `missing*Requests` function already sets.
+ */
+export function setTryOnMissingAngleRequests(components: SetTryOnComponents, wanted: readonly SetTryOnAngle[] = SET_TRY_ON_ANGLES): SetTryOnMissingAngleRequest[] {
+  return planSetTryOnAngles(components, wanted)
+    .filter((p) => !p.ready)
+    .map((p) => ({ angle: p.angle, message: setTryOnMissingAngleMessage(p.angle, p.reasons) }));
 }

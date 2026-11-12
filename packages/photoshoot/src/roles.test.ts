@@ -26,14 +26,17 @@ describe('ASSET_ROLES', () => {
     // this one IS meant to be reused as a reference for a later, different garment set (C7.13's own "re-rendered
     // into a seasonal scene without a new shoot").
     expect((ASSET_ROLES as readonly string[]).includes('scene_library_demo')).toBe(true);
+    // S24 · PR 478 (C7.22 item 35): the set try-on engine's own finished two-garment render role.
+    expect((ASSET_ROLES as readonly string[]).includes('set_try_on')).toBe(true);
   });
 
-  it('REFERENCE_ROLES excludes primary_garment and combo_gift_set_composition only', () => {
+  it('REFERENCE_ROLES excludes primary_garment, combo_gift_set_composition and set_try_on only', () => {
     expect(REFERENCE_ROLES.includes('primary_garment' as never)).toBe(false);
     expect(REFERENCE_ROLES.includes('combo_gift_set_composition' as never)).toBe(false);
+    expect(REFERENCE_ROLES.includes('set_try_on' as never)).toBe(false);
     // scene_library_demo IS a reference role (see the module comment on roles.ts) — included, not excluded.
     expect(REFERENCE_ROLES.includes('scene_library_demo' as never)).toBe(true);
-    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 2);
+    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 3);
   });
 });
 
