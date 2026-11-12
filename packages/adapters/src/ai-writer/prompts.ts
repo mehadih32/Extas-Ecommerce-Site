@@ -20,6 +20,8 @@ import {
   type AiSeoInput,
   type AiSizeAdviceDraft,
   type AiSizeAdviceInput,
+  type AiGuideQaDraft,
+  type AiGuideQaInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
   type AiStockAlertDraft,
@@ -391,5 +393,31 @@ const stockAlertAnswer = z.object({ body: z.string() });
 export function parseStockAlertJson(text: string, input: AiStockAlertInput, usage?: { inputTokens: number; outputTokens: number }): AiStockAlertDraft {
   const parsed = stockAlertAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with an alert line');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 334 — the System Q&A agent's own job: one grounded answer to a question about the admin page's own
+// already-written Bengali guide, never inventing a button, setting or step the guide does not already describe
+// ---------------------------------------------------------------------------------------------------------------------
+
+const GUIDE_QA_RULE =
+  "Answer only from the page guide text given below, about the admin page named. If the question is not answered by this guide text, say so plainly — never invent a button, field, setting or step that is not already in the text. Keep the answer short and plain, pointing at exactly what the guide already says to do. The guide text itself is written in Bengali; answer in the language asked for, translating the relevant part of the guide rather than inventing new words for it.";
+
+export function guideQaPrompt(input: AiGuideQaInput): Prompt {
+  const f = input.facts;
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${GUIDE_QA_RULE}`,
+    user: `A Bangladeshi shop owner is looking at the admin page "${f.pageTitle}" and asked a question about it. Answer only from this page's own already-written Bengali guide text below; if the guide does not cover it, say so plainly rather than guess.\n\nGuide text:\n${f.guideText}\n\nOwner's question: ${f.question}\n\nAnswer in ${lang}. At most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 400,
+  };
+}
+
+const guideQaAnswer = z.object({ body: z.string() });
+
+export function parseGuideQaJson(text: string, input: AiGuideQaInput, usage?: { inputTokens: number; outputTokens: number }): AiGuideQaDraft {
+  const parsed = guideQaAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer the question');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

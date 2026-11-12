@@ -392,3 +392,27 @@ describe('practice stock alert note (PR 333)', () => {
     await expect(w.draftStockAlertNote(stock({ facts: { productName: 'Sample Pique Polo', sku: ' ', available: 0, threshold: 5, sinceDays: 1 } }))).rejects.toThrow();
   });
 });
+
+describe('practice guide Q&A answer (PR 334)', () => {
+  const qa = (over: Partial<import('../src').AiGuideQaInput> = {}): import('../src').AiGuideQaInput => ({
+    locale: 'bn',
+    facts: { pageTitle: 'Low stock', guideText: 'যে রং-সাইজ প্রায় শেষ, চেকআউটে আটকে রাখা মাল বাদ দিয়ে দেখায়।', question: 'এটা কীভাবে গোনা হয়?' },
+    max: { body: 300 },
+    ...over,
+  });
+
+  it("writes from the page's own already-written guide text it was given", async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftGuideQaAnswer(qa());
+    expect(d.practice).toBe(true);
+    expect(d.body).toBe('যে রং-সাইজ প্রায় শেষ, চেকআউটে আটকে রাখা মাল বাদ দিয়ে দেখায়।');
+  });
+
+  it('cuts to the store limit and refuses a draft with no guide text or no question', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftGuideQaAnswer(qa({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftGuideQaAnswer(qa({ facts: { pageTitle: 'Low stock', guideText: ' ', question: 'x' } }))).rejects.toThrow();
+    await expect(w.draftGuideQaAnswer(qa({ facts: { pageTitle: 'Low stock', guideText: 'text', question: ' ' } }))).rejects.toThrow();
+  });
+});

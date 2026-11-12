@@ -338,6 +338,39 @@ export interface AiStockAlertDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 334 — the System Q&A agent's own job (Prohori, the existing `adminGuideAnswer` Cost Book job, PR 312):
+ * the page-aware AI helper (CN-026) answering one question the owner typed about the admin page they are on.
+ * `facts` is always that page's own already-written Bengali guide (`docs/admin-guide/pages/<section>/<page>.md`,
+ * flattened to plain text server-side, struck-through/superseded lines dropped) — never a second, invented
+ * explanation of a button or setting the guide does not already describe. The model may only answer from this text;
+ * when the guide genuinely does not cover the question, the prompt itself (`prompts.ts`'s new `GUIDE_QA_RULE`)
+ * requires it to say so plainly rather than guess. The guide text itself is always written in Bengali (CN-014);
+ * `locale` is the admin interface's own English/Bengali toggle, which the answer follows — a translated answer,
+ * never a second, invented guide in that language.
+ */
+export interface AiGuideQaInput {
+  locale: 'en' | 'bn';
+  facts: {
+    /** The page guide's own already-written title (e.g. "Low stock"). */
+    pageTitle: string;
+    /** The page guide's own already-written body, flattened to plain text, never invented. */
+    guideText: string;
+    /** The owner's own typed question, verbatim. */
+    question: string;
+  };
+  max: { body: number };
+}
+
+export interface AiGuideQaDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -360,6 +393,8 @@ export interface AiWriter {
   draftStudioDetailNote(input: AiStudioDetailInput): Promise<AiStudioDetailDraft>;
   /** PR 333 — the reports agent's own job: one grounded line on why one low-stock alert is worth a look, never a reorder decision. */
   draftStockAlertNote(input: AiStockAlertInput): Promise<AiStockAlertDraft>;
+  /** PR 334 — the System Q&A agent's own job: one grounded answer to a question about the admin page's own guide, never an invented button or step. */
+  draftGuideQaAnswer(input: AiGuideQaInput): Promise<AiGuideQaDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

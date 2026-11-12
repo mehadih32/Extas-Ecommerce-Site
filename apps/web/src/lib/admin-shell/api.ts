@@ -8,12 +8,17 @@
 //   GET /api/admin/help/<slug>       one admin guide, parsed (lib/admin-shell/guide.ts)
 //   GET /api/admin/guide?path=|page= PR 594 (CN-026): the guide of the page at an address (or a page guide by its id),
 //                                    with its section's overview and the section's other pages (lib/admin-shell/help-pages.ts)
+//   POST /api/admin/guide/ask        PR 334 — the System Q&A agent: one AI-grounded Bengali answer to a question
+//                                    about a page's own already-written guide text (lib/admin-ai/guide-qa-dispatch.ts);
+//                                    `null` (AI off, Prohori paused, no connection ready, capped, or no guide text)
+//                                    leaves the guide panel's own written text as the only answer, exactly as before.
 // Every route runs guardAdmin (session, password change, 2FA, and its key when it has one); results are filtered by
 // the person's keys in the store, and counts come from one short per-store cache (`admin.shell.badgeCacheSeconds`).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { isOwner, permissionsFor, type PermissionKey } from '@extas/auth';
-import { adminDeps, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps, type Guarded } from '../admin-auth';
+import { adminDeps, body, errorResponse, fail, guardAdmin, json, readCookie, type AdminDeps, type Guarded } from '../admin-auth';
 import { ADMIN_LANG_COOKIE, adminLocale, pickAdminLang, type AdminLang } from '../admin-i18n';
+import { guideQaAnswer } from '../admin-ai/guide-qa-dispatch';
 import { loginNotes } from '../admin-security/login-notes';
 import { readPrefs } from '../admin-look/pick';
 import { lateChatNotes } from '../admin-support/late-notes';
@@ -165,6 +170,35 @@ export async function guideHandler(request: Request, deps: AdminDeps | null = ad
       return title ? [{ id: r.id, title, href: r.route.includes('[') ? null : r.route }] : [];
     });
     return json({ ok: true, section: place.section, page: guide ? place.page : null, overview, guide, pages });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+/**
+ * PR 334 — POST /api/admin/guide/ask {page, question}: the System Q&A agent, answering one question the owner typed
+ * about the page's own already-written guide. Any signed-in staff member may ask (the same openness `guideHandler`
+ * already gives the guide's own text — no extra permission, since explaining a page is never itself an action on
+ * it). Re-reads the page's own guide server-side by `page` (never trusts anything else a client could send as the
+ * "guide text"), so an answer can only ever be grounded in the real, current guide file. `answer` is the grounded
+ * Bengali string, or `null` on any honest "no" (AI off, Prohori paused, no connection ready, the monthly cap
+ * reached, the page has no guide, or the model answered with nothing usable) — the guide panel's own written text
+ * stays the complete, correct answer either way.
+ */
+export async function guideAskHandler(request: Request, deps: AdminDeps | null = adminDeps()): Promise<Response> {
+  if (request.method.toUpperCase() !== 'POST') return fail(405, 'method-not-allowed');
+  const c = await shellCall(request, deps);
+  if (c instanceof Response) return c;
+  try {
+    const input = await body(request);
+    const page = typeof input.page === 'string' ? input.page : '';
+    const question = typeof input.question === 'string' ? input.question : '';
+    const locale = input.locale === 'bn' ? 'bn' : 'en';
+    if (!PAGE_GUIDE_ID.test(page) || page.endsWith('/index')) return fail(400, 'INVALID_INPUT', ['page']);
+    const guide = await readPageGuide(page, guideDir());
+    if (!guide) return fail(404, 'NOT_FOUND');
+    const answer = await guideQaAnswer({ db: c.deps.db, resolver: c.deps.resolver, vault: c.deps.vault, now: c.deps.now }, MOTHER_STORE_ID, page, locale, question, guide);
+    return json({ ok: true, answer });
   } catch (e) {
     return errorResponse(e);
   }

@@ -4,8 +4,8 @@
 // facts given" rule. A provider only has to answer `complete({system, user, maxTokens}) -> {text}` (anthropic.ts,
 // openai-compatible.ts, google.ts); everything about what to ask and how to read the answer lives here once.
 import type { TestResult } from '../define';
-import { approvalExplainPrompt, articlePrompt, campaignPrompt, fraudReviewPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSocialReelCaptionJson, parseStockAlertJson, parseStudioDetailJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, socialReelCaptionPrompt, stockAlertPrompt, studioDetailPrompt, supportReplyPrompt } from './prompts';
-import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSocialCaptionDraft, AiSocialCaptionInput, AiStockAlertDraft, AiStockAlertInput, AiStudioDetailDraft, AiStudioDetailInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
+import { approvalExplainPrompt, articlePrompt, campaignPrompt, fraudReviewPrompt, guideQaPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseGuideQaJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSocialReelCaptionJson, parseStockAlertJson, parseStudioDetailJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, socialReelCaptionPrompt, stockAlertPrompt, studioDetailPrompt, supportReplyPrompt } from './prompts';
+import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiGuideQaDraft, AiGuideQaInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSocialCaptionDraft, AiSocialCaptionInput, AiStockAlertDraft, AiStockAlertInput, AiStudioDetailDraft, AiStudioDetailInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
 export interface CompleteInput {
   system: string;
@@ -80,6 +80,11 @@ export function liveAiWriter(complete: Completer): AiWriter {
       const { system, user, maxTokens } = stockAlertPrompt(input);
       const { text, usage } = await complete({ system, user, maxTokens });
       return parseStockAlertJson(text, input, usage);
+    },
+    async draftGuideQaAnswer(input: AiGuideQaInput): Promise<AiGuideQaDraft> {
+      const { system, user, maxTokens } = guideQaPrompt(input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseGuideQaJson(text, input, usage);
     },
   };
 }
