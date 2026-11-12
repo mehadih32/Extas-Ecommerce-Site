@@ -50,8 +50,10 @@ export const PROPS_MAX_KEYS = 24; // hardcode-ok: a payload-shape guard, not a b
  *  server's own clock (a slow send queue, never a backdated event). */
 export const OCCURRED_AT_PAST_MS = 10 * 60_000; // hardcode-ok: a clock-skew guard, not a business number
 
-/** Loose enough for both a real database id (uuid v7) and a demo/test id; never trusted further than "looks like one". */
-const ID_LIKE = /^[0-9a-f-]{8,64}$/i;
+/** Loose enough for both a real database id (uuid v7) and a demo/test id; never trusted further than "looks like
+ *  one". Exported so `funnel.ts` validates a step's own `productId`/`categoryId` the same way, rather than a second
+ *  pattern that could quietly drift from this one. */
+export const ID_LIKE = /^[0-9a-f-]{8,64}$/i;
 
 export type AnalyticsPropValue = string | number | boolean | null;
 

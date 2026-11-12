@@ -336,6 +336,9 @@
       },
       "competitors": {
         "write": "Add, edit, archive and restore a saved competitor page, and run its recheck by hand (Reports → Competitor Teardown)"
+      },
+      "analytics": {
+        "write": "Create, edit, archive and restore a saved funnel of page/shop events (Reports → Overview's own funnel per page)"
       }
     },
     "marketing": {

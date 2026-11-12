@@ -432,6 +432,10 @@ export const PERMISSIONS = {
   // competitor page and run its recheck by hand (`reports.competitors.write`); seeing the saved list and its
   // reports is already covered by `reports.read`. Never places a real order, never a price or policy decision.
   'reports.competitors.write': { group: 'reports' },
+  // S15 · PR 339 (Blueprint D5.2 "a funnel per product") — Reports → Overview's own "funnel per page": create,
+  // edit, archive and restore a saved funnel definition (`reports.analytics.write`); seeing a saved funnel and
+  // running it against the stored events is already covered by `reports.read`. Never a price, discount or order.
+  'reports.analytics.write': { group: 'reports' },
   // S13 · PR 254 (Blueprint MKT-05) — Marketing › Landing pages: see the pages and the orders each brought
   // (`marketing.landing.read`); create, edit, publish, take down and archive them (`marketing.landing.write`). A page shows
   // the product's own live prices; nothing here changes a price, a discount or an order.
