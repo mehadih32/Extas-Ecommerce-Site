@@ -24,6 +24,12 @@ export const ASSET_ROLES = [
   'sole_reference',
   /** A scene, background or context reference (e.g. the owner's own sample pose/styling image, PR 539 §59). */
   'context_reference',
+  /** S24 · PR 471: a real reference photo of a worn accessory actually worn or carried — a cap on a head,
+   * sunglasses on a face, a watch on a wrist, a bag carried (C7.12's "on-head"/"on-face"/"on-wrist"/"carried on
+   * model" column) — the worn-accessory engine's own `worn` view. The engine's own `flat` view (laid flat,
+   * folded or standing, C7.12's "product-only" column) reuses `front_reference` rather than adding a second new
+   * role, the same "reuse what already fits" choice PR 465 already made for three of footwear's own six angles. */
+  'worn_reference',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 

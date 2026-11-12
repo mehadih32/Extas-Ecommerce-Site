@@ -56,6 +56,15 @@ describe('CATEGORY_RECIPES', () => {
     expect(categoryRecipe('footwear').detailFinderGarmentTypes).toEqual(['footwear']);
   });
 
+  it('caps, sunglasses, watches and bags are now wired to their own real Detail Finder checklist (PR 471)', () => {
+    expect(categoryRecipe('caps').detailFinderGarmentTypes).toEqual(['cap']);
+    expect(categoryRecipe('sunglasses').detailFinderGarmentTypes).toEqual(['sunglasses']);
+    expect(categoryRecipe('watches').detailFinderGarmentTypes).toEqual(['watch']);
+    expect(categoryRecipe('bags').detailFinderGarmentTypes).toEqual(['bag']);
+    // the two vocabularies stay deliberately separate (singular Detail Finder key vs this table's plural key)
+    expect(categoryRecipe('bags').detailFinderGarmentTypes).not.toContain('bags');
+  });
+
   it('kidswear names no model library by default — C7.12\'s "not a child model… can be enabled later"', () => {
     expect(categoryRecipe('kidswear').modelLibrary).toBeNull();
   });

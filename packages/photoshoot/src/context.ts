@@ -56,6 +56,13 @@ export const PHOTOSHOOT_ERROR_CODES = [
   'CONCURRENCY_LIMIT',
   // PR 452 (C7.20): the Photoshoot agent's own monthly spend cap is reached — new generations pause, the job stays QUEUED
   'SPEND_CAP_REACHED',
+  // PR 472 / C7.12 hard rule: recording a worn-accessory studio output with no real, matching-view reference asset
+  // on file — "never invent" the same way PR 444's own NO_BACK_REFERENCE and PR 466's own NO_FOOTWEAR_REFERENCE do.
+  'NO_WORN_ACCESSORY_REFERENCE',
+  // PR 472 / C7.12: "Detail re-projection is mandatory for these families" (watches, sunglasses, bags) — a studio
+  // output for one of those three families is refused until an approved detail region (PR 454) exists on its own
+  // source reference photo; caps are deliberately not gated by this code.
+  'DETAIL_REPROJECTION_REQUIRED',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -72,7 +79,7 @@ export class PhotoshootError extends Error {
   get status(): number {
     if (this.code === 'NOT_FOUND') return 404;
     if (this.code === 'STALE') return 409;
-    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE' || this.code === 'NO_FOOTWEAR_REFERENCE') return 403;
+    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE' || this.code === 'NO_FOOTWEAR_REFERENCE' || this.code === 'NO_WORN_ACCESSORY_REFERENCE' || this.code === 'DETAIL_REPROJECTION_REQUIRED') return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;
     return 400;
   }

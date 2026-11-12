@@ -106,7 +106,7 @@ describe('PR 454 · reprojectedCandidateId', () => {
 
 describe('PR 463 · DETAIL_FINDER_CHECKLIST', () => {
   it('is C7.10’s own fixed list, one entry per named garment type', () => {
-    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear']);
+    expect(DETAIL_FINDER_GARMENT_TYPES).toEqual(['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear', 'cap', 'sunglasses', 'watch', 'bag']);
     expect(DETAIL_FINDER_CHECKLIST.polo).toEqual(['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo']);
     expect(DETAIL_FINDER_CHECKLIST.panjabi).toEqual(['neck_embroidery', 'button_placket', 'side_slit']);
   });
@@ -134,6 +134,31 @@ describe('PR 465 · DETAIL_FINDER_CHECKLIST.footwear (C7.12)', () => {
     const kind = detailFinderKind('footwear', 'eyelets');
     expect(kind).toBe('finder:footwear:eyelets');
     expect(parseDetailFinderKind(kind)).toEqual({ garmentType: 'footwear', point: 'eyelets' });
+  });
+});
+
+describe('PR 471 · DETAIL_FINDER_CHECKLIST.cap / sunglasses / watch / bag (C7.12)', () => {
+  it('is C7.12’s own recipe-table checklist, verbatim, for every worn-accessory family', () => {
+    expect(DETAIL_FINDER_CHECKLIST.cap).toEqual(['front_logo', 'back_closure', 'under_visor', 'eyelets']);
+    expect(DETAIL_FINDER_CHECKLIST.sunglasses).toEqual(['hinge', 'temple_logo', 'lens', 'nose_pad']);
+    expect(DETAIL_FINDER_CHECKLIST.watch).toEqual(['dial', 'crown', 'bracelet_links', 'clasp', 'caseback']);
+    expect(DETAIL_FINDER_CHECKLIST.bag).toEqual(['handle', 'zip_pull', 'lining', 'logo_plate', 'feet']);
+  });
+
+  it('isDetailFinderPoint keeps each worn-accessory family’s own points separate from every other type’s', () => {
+    expect(isDetailFinderPoint('cap', 'front_logo')).toBe(true);
+    expect(isDetailFinderPoint('cap', 'hinge')).toBe(false);
+    expect(isDetailFinderPoint('watch', 'dial')).toBe(true);
+    expect(isDetailFinderPoint('bag', 'dial')).toBe(false);
+    expect(isDetailFinderPoint('footwear', 'eyelets')).toBe(true);
+    expect(isDetailFinderPoint('cap', 'eyelets')).toBe(true);
+    expect(isDetailFinderPoint('polo', 'eyelets')).toBe(false);
+  });
+
+  it('detailFinderKind/parseDetailFinderKind round-trips every worn-accessory family the same as any garment type', () => {
+    const kind = detailFinderKind('watch', 'caseback');
+    expect(kind).toBe('finder:watch:caseback');
+    expect(parseDetailFinderKind(kind)).toEqual({ garmentType: 'watch', point: 'caseback' });
   });
 });
 
