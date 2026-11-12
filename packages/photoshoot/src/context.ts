@@ -81,6 +81,10 @@ export const PHOTOSHOOT_ERROR_CODES = [
   // "never invent" one half of a set the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
   // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE, NO_PIECE_REFERENCE and NO_SCENE_REFERENCE already do.
   'NO_SET_COMPONENT_REFERENCE',
+  // PR 479 / C7.13 "Unisex / couple shots" hard rule: composing a couple shot with the male or the female member
+  // (or both) missing a real, already-generated, on-file render to compose from — "never invent" one half of a
+  // couple shot the same way NO_SET_COMPONENT_REFERENCE already does for one half of a set.
+  'NO_COUPLE_MEMBER_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -106,7 +110,8 @@ export class PhotoshootError extends Error {
       this.code === 'NO_REFLECTIVE_REFERENCE' ||
       this.code === 'NO_PIECE_REFERENCE' ||
       this.code === 'NO_SCENE_REFERENCE' ||
-      this.code === 'NO_SET_COMPONENT_REFERENCE'
+      this.code === 'NO_SET_COMPONENT_REFERENCE' ||
+      this.code === 'NO_COUPLE_MEMBER_REFERENCE'
     )
       return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;

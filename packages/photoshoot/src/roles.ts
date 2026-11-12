@@ -60,14 +60,22 @@ export const ASSET_ROLES = [
    * reference for further generation (no later engine is ever built FROM a finished set photo the way a footwear
    * angle or a worn-accessory view can be), so `REFERENCE_ROLES` below excludes it too. */
   'set_try_on',
+  /** S24 · PR 479 (C7.22 item 36, "Unisex / couple shots"): a finished composed scene showing a male and a
+   * female model each wearing the same garment/set — built by composing TWO already, separately generated
+   * on-model renders (never a reference any further generation is built from, the same reasoning that gave
+   * `combo_gift_set_composition` and `set_try_on` their own roles rather than reusing one member's own role). Its
+   * own `sourceAssetId` traces back (transitively, through the male member's own generated row) to the real,
+   * original garment photo the male render itself traces to — PR 444's single-source model, never widened — with
+   * the female member's own render recorded as a tag, never pretended to be a second role on the same row. */
+  'couple_composition',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 
 /** The reference roles a real photo of the garment can carry — every role except `primary_garment` (the garment's
- * own plain photo, not a reference to anything), PR 475's own `combo_gift_set_composition` and PR 478's own
- * `set_try_on` (both always a finished, multi-component output, never a reference any further generation is
- * built from). */
-export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment' && r !== 'combo_gift_set_composition' && r !== 'set_try_on') as readonly AssetRole[];
+ * own plain photo, not a reference to anything), PR 475's own `combo_gift_set_composition`, PR 478's own
+ * `set_try_on` and PR 479's own `couple_composition` (all always a finished, multi-component output, never a
+ * reference any further generation is built from). */
+export const REFERENCE_ROLES = ASSET_ROLES.filter((r) => r !== 'primary_garment' && r !== 'combo_gift_set_composition' && r !== 'set_try_on' && r !== 'couple_composition') as readonly AssetRole[];
 
 export const isAssetRole = (v: unknown): v is AssetRole => typeof v === 'string' && (ASSET_ROLES as readonly string[]).includes(v);
 

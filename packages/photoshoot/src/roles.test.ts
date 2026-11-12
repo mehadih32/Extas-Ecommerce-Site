@@ -28,15 +28,18 @@ describe('ASSET_ROLES', () => {
     expect((ASSET_ROLES as readonly string[]).includes('scene_library_demo')).toBe(true);
     // S24 · PR 478 (C7.22 item 35): the set try-on engine's own finished two-garment render role.
     expect((ASSET_ROLES as readonly string[]).includes('set_try_on')).toBe(true);
+    // S24 · PR 479 (C7.22 item 36): the unisex/couple composition engine's own finished composed-scene role.
+    expect((ASSET_ROLES as readonly string[]).includes('couple_composition')).toBe(true);
   });
 
-  it('REFERENCE_ROLES excludes primary_garment, combo_gift_set_composition and set_try_on only', () => {
+  it('REFERENCE_ROLES excludes primary_garment, combo_gift_set_composition, set_try_on and couple_composition only', () => {
     expect(REFERENCE_ROLES.includes('primary_garment' as never)).toBe(false);
     expect(REFERENCE_ROLES.includes('combo_gift_set_composition' as never)).toBe(false);
     expect(REFERENCE_ROLES.includes('set_try_on' as never)).toBe(false);
+    expect(REFERENCE_ROLES.includes('couple_composition' as never)).toBe(false);
     // scene_library_demo IS a reference role (see the module comment on roles.ts) — included, not excluded.
     expect(REFERENCE_ROLES.includes('scene_library_demo' as never)).toBe(true);
-    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 3);
+    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 4);
   });
 });
 
