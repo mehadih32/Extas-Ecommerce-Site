@@ -209,6 +209,6 @@ describe.skipIf(!HAS_TEST_DB)('admin look on PostgreSQL (PR 12, CN-025)', () => 
     expect(desk.stages).not.toBeNull();
     expect(desk.goal).toBeNull();
     expect(desk.feed).toEqual([]);
-    expect([...desk.parts].sort()).toEqual(['delivery', 'feed', 'queues', 'stages']);
+    expect([...desk.parts].sort()).toEqual(['delivery', 'feed', 'funnel', 'hours', 'queues', 'stages']);
   });
 });
