@@ -228,16 +228,27 @@ describe.skipIf(!HAS_TEST_DB)('PR 452 · per-view retry, concurrency limiting, s
     expect(started.status).toBe('PROCESSING');
   });
 
-  it('with no AiAgent row keyed "photoshoot" yet, the cap check never blocks (CN-018 ships off)', async () => {
+  it('with no AiAgent row keyed "photoshoot" yet, the cap check never blocks — and PR 468\'s own ensure now seeds the row, still with no cap (CN-018 ships off)', async () => {
     const d = deps();
+    expect(await t.prisma.aiAgent.findUnique({ where: { key: 'photoshoot' } })).toBeNull(); // nothing yet, this test's own store is fresh
     const job = await makeQueuedJob();
     const started = await startProcessing(d, generator, job.id);
     expect(started.status).toBe('PROCESSING');
+    const seeded = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'photoshoot' } });
+    expect(seeded.monthlyCapMinor).toBeNull(); // the seed never invents a cap — the owner's own choice, once a screen lets him set it
+    expect(seeded.enabled).toBe(false);
   });
 
   it("a cap set but not yet reached never blocks; reaching it then refuses and leaves the job queued", async () => {
     const d = deps();
-    const agent = await t.prisma.aiAgent.create({ data: { key: 'photoshoot', code: 'A360-TEST-PHOTOSHOOT', nameEn: 'Photoshoot', role: 'photoshoot', monthlyCapMinor: 1000 } });
+    // PR 468's own `ensurePhotoshootAgentRow` may already have seeded this row with no cap (the test just above,
+    // or an earlier run of this same suite); upsert rather than a bare `create` so this test is self-contained
+    // either way, and set a real cap — proving the ensure call inside `startProcessing` never clobbers it.
+    const agent = await t.prisma.aiAgent.upsert({
+      where: { key: 'photoshoot' },
+      create: { key: 'photoshoot', code: 'A360-TEST-PHOTOSHOOT', nameEn: 'Photoshoot', role: 'photoshoot', monthlyCapMinor: 1000 },
+      update: { monthlyCapMinor: 1000 },
+    });
     const ledger = (costMinor: number) => t.prisma.aiUsageLedger.create({ data: { agentId: agent.id, providerKey: 'fashn', modelKey: 'try-on-v1.6', idempotencyKey: `t452-ledger-${crypto.randomUUID()}`, costUsdMicros: 1n, costMinor } });
 
     await ledger(500); // 50% of the 1000 cap — still "ok"
