@@ -12,6 +12,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiCompetitorStepDraft,
+  type AiCompetitorStepInput,
   type AiFraudReviewDraft,
   type AiFraudReviewInput,
   type AiProductDescriptionDraft,
@@ -178,6 +180,15 @@ export function practiceGuideQaAnswer(input: AiGuideQaInput): AiGuideQaDraft {
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 335 — the mock's competitor-step observation: a plain, honest line naming only the step and title it
+ * was given and how much page text it read (no voice to borrow without a key, so the practice answer never invents
+ * a layout/offer/trust-signal detail it was not asked to look at). */
+export function practiceCompetitorStep(input: AiCompetitorStepInput): AiCompetitorStepDraft {
+  const f = input.facts;
+  const body = `${f.stepLabel}${f.pageTitle ? ` — ${f.pageTitle}` : ''}: read ${f.pageText.length} characters of page text. Connect a real AI provider for a grounded observation.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export function practiceStockAlertNote(input: AiStockAlertInput): AiStockAlertDraft {
   const f = input.facts;
   const where = [f.colour, f.size].filter((x): x is string => Boolean(x && x.trim())).join(' / ');
@@ -244,6 +255,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
         if (!input.facts.guideText.trim()) throw new AdapterError('a guide answer needs the page\'s own guide text');
         if (!input.facts.question.trim()) throw new AdapterError('a guide answer needs the owner\'s own question');
         return practiceGuideQaAnswer(input);
+      },
+      async draftCompetitorStep(input) {
+        if (!input.facts.pageText.trim()) throw new AdapterError('a competitor step needs the page\'s own text');
+        return practiceCompetitorStep(input);
       },
     };
   },

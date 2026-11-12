@@ -12,6 +12,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiCompetitorStepDraft,
+  type AiCompetitorStepInput,
   type AiFraudReviewDraft,
   type AiFraudReviewInput,
   type AiProductDescriptionDraft,
@@ -419,5 +421,31 @@ const guideQaAnswer = z.object({ body: z.string() });
 export function parseGuideQaJson(text: string, input: AiGuideQaInput, usage?: { inputTokens: number; outputTokens: number }): AiGuideQaDraft {
   const parsed = guideQaAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer the question');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 335 — the Competitor Teardown agent's own job: one grounded observation on one already-read step of a
+// competitor's own public page, never a price, a decision, or the page's own wording copied verbatim
+// ---------------------------------------------------------------------------------------------------------------------
+
+const COMPETITOR_STEP_RULE =
+  "Describe only what the page text given below actually shows about this one step (layout, how variants/sizes are offered, the gallery, trust signals such as delivery/exchange/reviews, offers or urgency devices, what the cart or checkout fields ask for, SEO markup, tone). Never invent a price, a quantity or anything not shown in the text. Never copy the page's own sentences or code verbatim — describe the pattern in your own words, briefly. Never recommend a decision (pick/skip/adopt) — that is a later, separate step a person takes.";
+
+export function competitorStepPrompt(input: AiCompetitorStepInput): Prompt {
+  const f = input.facts;
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${COMPETITOR_STEP_RULE}`,
+    user: `A competitor's own public web page was read as the "${f.stepLabel}" step of a journey walk.${f.pageTitle ? ` Its title: "${f.pageTitle}".` : ''}\n\nPage text:\n${f.pageText}\n\nWrite one short, plain observation on what this step shows, grounded only in this text. Answer in ${lang}. At most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 400,
+  };
+}
+
+const competitorStepAnswer = z.object({ body: z.string() });
+
+export function parseCompetitorStepJson(text: string, input: AiCompetitorStepInput, usage?: { inputTokens: number; outputTokens: number }): AiCompetitorStepDraft {
+  const parsed = competitorStepAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not describe this step');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

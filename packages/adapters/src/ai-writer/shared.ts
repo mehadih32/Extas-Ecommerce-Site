@@ -371,6 +371,37 @@ export interface AiGuideQaDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 335 — the Competitor Teardown agent's own first job (the "journey walker" alone; the comparison/report
+ * engine and saved/scheduled competitors are PR 336/337): one short, grounded observation on one already-read step
+ * of a competitor's own public page (category, product, cart or checkout — Blueprint B8.1's own four stages).
+ * `pageText` is always that one step's own already-fetched page, reduced to plain text by the caller (never raw
+ * HTML, never a second read) — the model may only describe what this text shows (layout, trust signals,
+ * offers/urgency, checkout fields, SEO markup, tone), and must never invent a price or a decision, or copy the
+ * page's own wording verbatim (Blueprint B8.2: "ideas and patterns are studied; wording and design are not
+ * lifted").
+ */
+export interface AiCompetitorStepInput {
+  locale: 'en' | 'bn';
+  facts: {
+    /** The step's own label, e.g. "Category", "Product", "Cart", "Checkout" — never invented here. */
+    stepLabel: string;
+    url: string;
+    pageTitle?: string;
+    /** The page's own already-fetched text, reduced to plain text and cut before this call. */
+    pageText: string;
+  };
+  max: { body: number };
+}
+
+export interface AiCompetitorStepDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them. */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -395,6 +426,8 @@ export interface AiWriter {
   draftStockAlertNote(input: AiStockAlertInput): Promise<AiStockAlertDraft>;
   /** PR 334 — the System Q&A agent's own job: one grounded answer to a question about the admin page's own guide, never an invented button or step. */
   draftGuideQaAnswer(input: AiGuideQaInput): Promise<AiGuideQaDraft>;
+  /** PR 335 — the Competitor Teardown agent's own job: one grounded observation on one already-read step of a competitor's own page, never a price or a decision, never the page's own wording copied. */
+  draftCompetitorStep(input: AiCompetitorStepInput): Promise<AiCompetitorStepDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */
