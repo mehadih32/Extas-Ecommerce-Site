@@ -33,6 +33,11 @@
 // the data-class policy is applied on top of the owner's model pick — never different from `selectedProvider`
 // unless that pick is OpenRouter (the one free-capable connection) on an agent whose data is personal or business,
 // in which case the page explains that it is quietly using the cheapest ready paid connection instead.
+//
+// S15 · PR 324 (C1.4 "the AI-off principle") — the screen's "AI-off test" card (`offTest`, `./ai-off-guard.ts`): the
+// real, already-computed result of `tools/ai-off-guard.mjs`'s static scan of the source tree, read back from the
+// server's own deployed docs copy. Honestly `null` before a deploy has copied one, never a guessed count — this
+// replaces the demo's own fabricated "7/7 passed", which CLAUDE.md rule 1 (nothing invented) forbids shipping.
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
@@ -41,6 +46,7 @@ import type { Vault } from '@extas/vault';
 import { moneyOf } from '@/components/admin/products/model';
 import type { AppResolver } from '../settings';
 import { AI_AGENTS, isAiAgentKey, type AiAgentKey } from './agents';
+import { readAiOffGuardReport, type AiOffGuardReport } from './ai-off-guard';
 import { agentDataClass, routeProvider, type DataClassKey } from './data-classes';
 import { AiError, isAiError } from './errors';
 import { listWriterOptions, recommendedWriterOf, isWriterProvider, type WriterOption, type WriterProvider } from './model-picks';
@@ -56,6 +62,10 @@ export interface ControlRoomDeps {
   /** Only for sending the owner's Telegram cap alert (PR 309); absent/null is read as "no vault yet" — the alert
    * then simply uses the mock Telegram sender, the same as everywhere else that fact matters. */
   vault?: Vault | null;
+  /** PR 324: only a test ever overrides these, to point `readAiOffGuardReport` at a fixture folder instead of this
+   * process's own real docs copy. */
+  env?: NodeJS.ProcessEnv;
+  cwd?: string;
 }
 
 export interface ControlRoomAgent {
@@ -108,6 +118,9 @@ export interface ControlRoomView {
   modelOptions: WriterOption[];
   /** Claude's own pick — the first ready provider in `WRITER_PROVIDERS` order, or `null` until any is Tested. */
   recommendedProvider: WriterProvider | null;
+  /** PR 324: the real, already-computed AI-off guard result, or `null` before any deploy has copied one — never a
+   * guessed pass count. */
+  offTest: AiOffGuardReport | null;
 }
 
 export interface ControlRoomScreen {
@@ -138,13 +151,14 @@ function periodStarts(now: Date, timeZone: string): { today: Date; month: Date }
 export async function controlRoomView(deps: ControlRoomDeps, storeId: number): Promise<ControlRoomScreen> {
   const now = deps.now?.() ?? new Date();
   await ensureAgentRows(deps.db);
-  const [masterOn, capMinor, currency, timeZone, rows, modelOptions] = await Promise.all([
+  const [masterOn, capMinor, currency, timeZone, rows, modelOptions, offTest] = await Promise.all([
     deps.resolver.value('ai.enabled', { storeId }),
     deps.resolver.value('ai.monthlyCapMinor', { storeId }),
     deps.resolver.value('store.currency', { storeId }),
     deps.resolver.value('store.timeZone', { storeId }),
     deps.db.aiAgent.findMany({ where: { archivedAt: null }, orderBy: { createdAt: 'asc' } }),
     listWriterOptions(deps.db),
+    readAiOffGuardReport(deps.env, deps.cwd),
   ]);
   const recommendedProvider = recommendedWriterOf(modelOptions);
   const { today, month } = periodStarts(now, timeZone);
@@ -201,7 +215,7 @@ export async function controlRoomView(deps: ControlRoomDeps, storeId: number): P
   await checkAgentCapAlerts({ db: deps.db, vault: deps.vault ?? null, resolver: deps.resolver, now: () => now }, capAgents, moneyOf(currency, 'bn-BD'));
 
   return {
-    view: { at: now.toISOString(), masterOn, monthlyCapMinor: capMinor, currency, todayMinor, monthMinor, runningNow, agentCount: agents.length, modelOptions, recommendedProvider },
+    view: { at: now.toISOString(), masterOn, monthlyCapMinor: capMinor, currency, todayMinor, monthMinor, runningNow, agentCount: agents.length, modelOptions, recommendedProvider, offTest },
     agents,
   };
 }

@@ -92,6 +92,7 @@ interface View {
   agentCount: number;
   modelOptions: ModelOption[];
   recommendedProvider: string | null;
+  offTest: { n: number; ok: number; totalJobCount: number; coveredJobCount: number } | null;
 }
 interface Answer {
   ok: boolean;
@@ -156,6 +157,17 @@ describe.skipIf(!HAS_TEST_DB)('AI › Control room on PostgreSQL (PR 304)', () =
     // reading again is unchanged — the identity rows are not re-created on every read
     const again = (await ask('GET', reader)).a;
     expect(again.agents).toHaveLength(7);
+  });
+
+  // PR 324: `offTest` is `tools/ai-off-guard.mjs`'s own already-computed report, read back from disk — honestly
+  // `null` when no report has been committed yet, and never a count this screen invented itself either way.
+  it('the AI-off test is read back honestly, never invented here (PR 324)', async () => {
+    const { a } = await ask('GET', reader);
+    if (a.view.offTest === null) return; // no committed report reachable from this process's cwd — an honest gap
+    expect(a.view.offTest.n).toBeGreaterThan(0);
+    expect(a.view.offTest.ok).toBeGreaterThanOrEqual(0);
+    expect(a.view.offTest.ok).toBeLessThanOrEqual(a.view.offTest.n);
+    expect(a.view.offTest.coveredJobCount).toBeLessThanOrEqual(a.view.offTest.totalJobCount);
   });
 
   it('only ai.read opens it; only ai.control pauses or resumes an agent', async () => {
