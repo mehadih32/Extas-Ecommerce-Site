@@ -21,13 +21,17 @@
 
 | কী | ফাইল |
 |---|---|
-| সেকশনের সারকথা (১৪টা সেকশন) | `pages/<সেকশন>/index.md` — যেমন [pages/orders/index.md](pages/orders/index.md) |
+| সেকশনের সারকথা (সব সেকশন) | `pages/<সেকশন>/index.md` — যেমন [pages/orders/index.md](pages/orders/index.md) |
 | একটা পাতার গাইড | `pages/<সেকশন>/<পাতা>.md` — যেমন [pages/orders/all.md](pages/orders/all.md) |
 | কোন পাতার কোন গাইড | `apps/web/src/lib/admin-shell/help-pages.json` — প্রতিটা তৈরি পাতার ঠিকানা (route) আর তার গাইডের নাম `<সেকশন>/<পাতা>` |
 | ম্যানুয়ালের ছবি আর নম্বর (PR 388) | [marks.json](marks.json) — কোন পাতার ছবি নেওয়া হবে আর তার কোন অংশে নম্বর বসবে (CSS selector আর ছোট বাংলা নাম); রাতের স্মোক চেক ছবি তোলে |
 
-সেকশনের নাম মেনুর মতো: `dashboard`, `orders`, `products`, `customers`, `delivery`, `messages`, `support`, `marketing`,
+সেকশনের নাম মেনুর মতো: `dashboard`, `orders`, `products`, `customers`, `delivery`, `messages`, `support`, `rules`, `marketing`,
 `website`, `money`, `reports`, `ai`, `settings`, `help`।
+
+**মেনুর নাম বদল (PR 659, অ্যাডমিন প্রোটোটাইপ v5):** Today → **Home**, Delivery → **Couriers**, Support → **Inbox**,
+Money → **Finance**; **Rules** আলাদা সেকশন; **Messages** এখন মার্কেটিংয়ের **Message campaigns** ট্যাব। ফাইলের নাম আর
+পাতার ঠিকানা আগের মতোই; গাইডে পুরনো নাম থাকলে নতুন নামে পড়ুন।
 
 **প্রতিটা পাতার গাইডের ছয়টা অংশ, এই ক্রমে, এই নামেই** (`## ` শিরোনাম):
 1. `## এটা কী` — ১–২ লাইনে পাতাটা কী।
@@ -82,7 +86,7 @@
 | প্রোডাক্ট: তালিকা, নতুন, বদলানো, চালুর অপেক্ষায়, লিংক থেকে আনা, ERP থেকে আনা (PR 609), অডিট, স্টকে ফিরলে (`/admin/products/*`) | [products.md](products.md) | তৈরি (S01; ERP থেকে আনা: S09) |
 | সাইজ চার্ট (`/admin/size-charts`) | [size-charts.md](size-charts.md) | তৈরি (S01) |
 | স্টক ও ERP, স্টক গোনা, স্টক চলাচল (`/admin/stock/*`) | [stock.md](stock.md) | তৈরি (S09) |
-| স্মার্ট নিয়ম, নোটিশ ও পপ-আপ (`/admin/rules/*`) | [rules.md](rules.md) | তৈরি (S10) |
+| স্মার্ট নিয়ম, নোটিশ ও পপ-আপ (`/admin/rules/*`) — এখন আলাদা **Rules** সেকশন (PR 659) | [rules.md](rules.md) | তৈরি (S10) |
 | ডেলিভারি এলাকা আর চার্জ (~~`/admin/delivery`~~ `/admin/delivery/zones`) | [delivery.md](delivery.md) | তৈরি (S06) |
 | সার্ভার (`/admin/server`, রিপোর্ট সেকশনে) | [server.md](server.md) | তৈরি (PR 6) |
 | ক্যাশ: চার স্তর, কতক্ষণ রাখে, সব মুছুন (`/admin/settings/system/cache`) | [cache.md](cache.md) | তৈরি (S02 · PR 602) |

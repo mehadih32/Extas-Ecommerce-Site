@@ -4,7 +4,10 @@
 import { describe, expect, it } from 'vitest';
 import { noteUnread } from '@/components/admin/shell/NotificationsPanel';
 import { lumenNav } from './lumen-nav';
-import { SHELL_SECTIONS } from './sections';
+import bn from '../../../messages/admin-shell.bn.json';
+import en from '../../../messages/admin-shell.en.json';
+import { t, type Dict } from '../i18n';
+import { locate, sectionById, sectionHome, sectionVisible, SHELL_SECTIONS } from './sections';
 import { hiddenAdminParts } from '../stages/closed';
 import { aiCenterShown } from './stages';
 
@@ -15,14 +18,33 @@ describe('Lumen sidebar (PR 626)', () => {
     const nav = lumenNav(owner, { aiShown: true });
     expect(nav.map((g) => g.group)).toEqual(['daily', 'grow', 'business', 'system']);
     expect(nav.map((g) => g.sections.map((s) => s.id))).toEqual([
-      ['dashboard', 'orders', 'delivery', 'products', 'customers'],
-      ['marketing', 'messages', 'website', 'support'],
+      ['dashboard', 'orders', 'delivery', 'products', 'customers', 'support', 'rules'],
+      ['marketing', 'website'],
       ['money', 'reports'],
       ['ai', 'settings', 'help'],
     ]);
     const ids = nav.flatMap((g) => g.sections.map((s) => s.id));
     expect(new Set(ids).size).toBe(ids.length);
-    expect([...ids].sort()).toEqual(SHELL_SECTIONS.map((s) => s.id).sort());
+    // PR 659: Messages is folded into Marketing (no menu entry); every other section appears once
+    expect([...ids].sort()).toEqual(SHELL_SECTIONS.filter((s) => !s.folded).map((s) => s.id).sort());
+    expect(ids).not.toContain('messages');
+  });
+
+  it('PR 659: Messages pages live under Marketing › Message campaigns, Rules is its own section, and the words are the prototype\'s', () => {
+    expect(locate('/admin/messages/journey')?.section.id).toBe('marketing');
+    expect(locate('/admin/messages/journey')?.tab?.id).toBe('messages');
+    expect(locate('/admin/messages/consent')?.tab?.id).toBe('messages');
+    expect(locate('/admin/rules/eid')?.section.id).toBe('rules');
+    expect(locate('/admin/rules')?.tab?.id).toBe('all');
+    expect(sectionHome(sectionById('marketing')!, owner)).toBe('/admin/marketing/campaigns');
+    const label = (id: string) => t(en as Dict, `shell.sec.${id}`);
+    expect(['dashboard', 'delivery', 'support', 'money', 'rules'].map(label)).toEqual(['Home', 'Couriers', 'Inbox', 'Finance', 'Rules']);
+    expect(t(bn as Dict, 'shell.sec.rules')).toBe('নিয়ম');
+    expect(t(en as Dict, 'shell.tab.marketing.messages')).toBe('Message campaigns');
+    // a person with only the message keys still reaches them, through Marketing
+    const msg = { perms: new Set(['messages.log.view']), owner: false };
+    expect(sectionVisible(sectionById('marketing')!, msg)).toBe(true);
+    expect(sectionVisible(sectionById('messages')!, owner)).toBe(false);
   });
 
   it('hides the AI Center while it is not shown; S15 closed (PR 652 switch off, as shipped), whatever ai.enabled says', () => {

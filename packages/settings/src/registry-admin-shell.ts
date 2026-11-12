@@ -15,7 +15,7 @@ import { setting } from './define';
 const V = 33;
 const V209 = 263;
 
-/** The 14 sidebar entries of the new admin (decision D8), in the sidebar's order. */
+/** The sidebar entries of the new admin (decision D8; PR 659 adds Rules as its own section), in the order of the sections table. */
 export const ADMIN_SECTIONS = [
   'dashboard',
   'orders',
@@ -24,6 +24,7 @@ export const ADMIN_SECTIONS = [
   'delivery',
   'messages',
   'support',
+  'rules',
   'marketing',
   'website',
   'money',

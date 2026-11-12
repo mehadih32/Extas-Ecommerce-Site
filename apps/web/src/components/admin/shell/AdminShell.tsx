@@ -26,7 +26,7 @@
 // for the palette's "Recent"; while `admin.shell.keyJumps` is on, "g" then a letter opens a section (g d, g o …).
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { ADMIN_LANG_COOKIE, ADMIN_LOGIN } from '@/lib/admin-nav';
 import { DEFAULT_THEME, themeAttrs, themeOnRoot, themeStyle, type ThemeMode } from '@/lib/admin-look/theme';
 import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
@@ -99,6 +99,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   }
   /** When the lists shown were counted (ms); set after the first paint, so the server's count is never refetched at once. */
   const counted = useRef(0);
+  const foldAt = useRef(-1000);
   const opener = useRef<HTMLElement | null>(null);
   // A new count from the server replaces the shown one, and a new page closes what was open (state adjusted while
   // rendering, React's pattern for "reset when a prop changes", instead of setState inside an effect).
@@ -281,6 +282,17 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     setFly({ id, style: { top: Math.max(8, Math.min(r.top, window.innerHeight - 260)), left: r.right + 8 } });
   };
 
+  // PR 659 (prototype v5): a click on the section that is already open folds or opens its pages instead of loading the same
+  // page again; the second click of a double-click folds only once. A click on another section opens its page as before.
+  const foldClick = (ev: MouseEvent<HTMLAnchorElement>, id: string, hasPages: boolean, on: boolean, open: boolean) => {
+    setFly(null);
+    if (!on || !hasPages || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
+    ev.preventDefault();
+    if (ev.timeStamp - foldAt.current < 400) return;
+    foldAt.current = ev.timeStamp;
+    setOpenSec(open ? '' : id);
+  };
+
   const item = (s: ShellSection) => {
     const on = active === s.id;
     const tabs = tabsOf(s);
@@ -297,7 +309,15 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
         onBlur={(ev) => !ev.currentTarget.contains(ev.relatedTarget as Node | null) && setFly((f) => (f?.id === s.id ? null : f))}
       >
         <div className="lm-itw">
-          <Link className={`lm-it${on ? ' on' : ''}`} href={sectionHome(s, viewer)} aria-current={on ? 'page' : undefined} aria-label={n ? tt('nav.waitingIn', { section: name, n }) : name} onClick={() => setFly(null)} data-testid={`a3-nav-${s.id}`}>
+          <Link
+            className={`lm-it${on ? ' on' : ''}`}
+            href={sectionHome(s, viewer)}
+            aria-current={on ? 'page' : undefined}
+            aria-label={n ? tt(s.id === 'orders' ? 'nav.waitingInOrders' : 'nav.waitingIn', { section: name, n }) : name}
+            aria-expanded={tabs.length > 1 ? subOpen : undefined}
+            onClick={(ev) => foldClick(ev, s.id, tabs.length > 1, on, subOpen)}
+            data-testid={`a3-nav-${s.id}`}
+          >
             <ShellIcon name={s.icon} size={19} />
             <span className="lm-nl">{name}</span>
             {n ? (
