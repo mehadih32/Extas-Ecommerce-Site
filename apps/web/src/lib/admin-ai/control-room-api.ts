@@ -15,6 +15,9 @@
 //
 // S15 · PR 309 — the same POST also takes {key, monthlyCapMinor: number | null} (one agent's own monthly spend
 // cap; `null` turns it off), `ai.control`, audited (`ai.agent.cap`), refused (422 INVALID_CAP) for a bad value.
+//
+// S15 · PR 324 — `GET`'s `view` now also carries `offTest` (the AI-off guard's own committed report, `./ai-off-guard.ts`),
+// read fresh on every GET straight off disk; no new POST shape — a static scan has no "run" action to take.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { controlRoomView, isAiError, setAgentEnabled, setAgentKeepOn, setMasterEnabled } from './control-room';

@@ -1,0 +1,107 @@
+{
+  "jobCatalog": {
+    "file": "apps/web/src/lib/admin-ai/cost-book.ts",
+    "startMarker": "export const JOB_CATALOG",
+    "endMarker": "] as const;"
+  },
+  "checks": [
+    {
+      "id": "support",
+      "nameEn": "Support replies",
+      "nameBn": "সাপোর্টের উত্তর",
+      "fallbackEn": "Rule-based draft answers: keyword rules decide the intent and fill the words — no AI call",
+      "fallbackBn": "নিয়মভিত্তিক খসড়া উত্তর: কীওয়ার্ড নিয়মে বোঝা যায় কী চাওয়া হচ্ছে, AI ছাড়াই শব্দ বসে",
+      "jobKeyPrefixes": ["support"],
+      "proofs": [
+        {
+          "file": "packages/support/src/drafts-pure.ts",
+          "mustInclude": ["the rules of", "draft answers, without a database", "first match wins", "export function hasAny", "export function normaliseText"]
+        }
+      ]
+    },
+    {
+      "id": "fraud",
+      "nameEn": "Fraud judgement",
+      "nameBn": "প্রতারণার ঝুঁকি বিচার",
+      "fallbackEn": "The risk score is one pure, deterministic function of the order's own facts and the owner's settings — never an AI call",
+      "fallbackBn": "ঝুঁকির স্কোর অর্ডারের নিজের তথ্য আর মালিকের সেটিংস থেকে একটা স্থির নিয়মে বের হয় — AI ছাড়াই",
+      "jobKeys": ["orderFraudJudge"],
+      "proofs": [
+        {
+          "file": "packages/orders/src/risk-score.ts",
+          "mustInclude": ["pure function (no database, no clock)", "this file decides nothing about the order", "export const RISK_SCORE_MAX"]
+        }
+      ]
+    },
+    {
+      "id": "productDescriptions",
+      "nameEn": "Product descriptions",
+      "nameBn": "প্রোডাক্টের বর্ণনা",
+      "fallbackEn": "Plain, owner-editable text fields on every product — writing one has never needed AI",
+      "fallbackBn": "প্রতিটা প্রোডাক্টে সাদাসিধা, মালিকের লেখা যায় এমন টেক্সট ঘর — AI ছাড়াই সবসময় লেখা গেছে",
+      "jobKeys": ["mktProductDescription"],
+      "proofs": [
+        {
+          "file": "packages/catalogue/src/products.ts",
+          "mustInclude": ["descriptionEn", "descriptionBn"]
+        }
+      ]
+    },
+    {
+      "id": "blog",
+      "nameEn": "Blog writing",
+      "nameBn": "ব্লগ লেখা",
+      "fallbackEn": "The pipeline's pace, queue and health run without AI; an empty slot is never filled with an unfinished article",
+      "fallbackBn": "পাইপলাইনের গতি, লাইন আর স্বাস্থ্য AI ছাড়াই চলে; খালি সময় কখনো অসম্পূর্ণ লেখায় ভরা হয় না",
+      "jobKeyPrefixes": ["seoBlogArticle", "seoRewriteOld"],
+      "proofs": [
+        {
+          "file": "packages/settings/src/registry-blog-pipeline.ts",
+          "mustInclude": ["The non-AI half of the pipeline", "wait for S15, which is closed", "never filled with a weak post"]
+        }
+      ]
+    },
+    {
+      "id": "ads",
+      "nameEn": "Ads",
+      "nameBn": "বিজ্ঞাপন",
+      "fallbackEn": "A campaign keeps its last approved budget; only a practice writer exists, so nothing real changes without a person's approval",
+      "fallbackBn": "ক্যাম্পেইন তার সবশেষ অনুমোদিত বাজেটেই থাকে; এখনো প্র্যাকটিস রাইটার, কারো অনুমোদন ছাড়া আসল কিছু বদলায় না",
+      "jobKeyPrefixes": ["mktAdCopy", "mktCampaignBrief"],
+      "proofs": [
+        {
+          "file": "apps/web/src/lib/marketing/campaign-control.ts",
+          "mustInclude": ["nothing changes until a person with", "kept as PRACTICE, so no real budget or campaign changes"]
+        }
+      ]
+    },
+    {
+      "id": "siteAudit",
+      "nameEn": "Site audit",
+      "nameBn": "সাইট অডিট",
+      "fallbackEn": "The e-commerce checklist's own rule-based points keep running on the hourly check; only a small agent-judged subset pauses",
+      "fallbackBn": "ই-কমার্স চেকলিস্টের নিয়মভিত্তিক অংশ ঘণ্টায় ঘণ্টায় চলতেই থাকে; শুধু এজেন্ট-বিচার করা ছোট একটা অংশ থেমে যায়",
+      "jobKeyPrefixes": ["audit"],
+      "proofs": [
+        {
+          "file": "apps/web/src/lib/admin-health/audit.ts",
+          "mustInclude": ["generated from docs/qa/ECOMMERCE-CHECKLIST.md", "Nothing here fixes or deletes anything"]
+        }
+      ]
+    },
+    {
+      "id": "reports",
+      "nameEn": "Chief answers",
+      "nameBn": "প্রধানের উত্তর",
+      "fallbackEn": "Report figures only — the money report's own words come from the real Profit & loss numbers, never an AI sentence",
+      "fallbackBn": "শুধু রিপোর্টের সংখ্যা — মানি রিপোর্টের লেখা আসে আসল প্রফিট অ্যান্ড লসের সংখ্যা থেকে, AI-র বানানো বাক্য কখনো না",
+      "jobKeyPrefixes": ["reports"],
+      "proofs": [
+        {
+          "file": "packages/jobs/src/money-report.ts",
+          "mustInclude": ["moneyReportText", "Read-only: nothing moves money"]
+        }
+      ]
+    }
+  ]
+}
