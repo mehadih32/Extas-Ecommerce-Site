@@ -141,3 +141,28 @@ describe('practice article writer (PR 243)', () => {
     await expect(w.draftArticle({ ...brief, title: ' ' })).rejects.toThrow('brief');
   });
 });
+
+// S15 · PR 325 — the practice support reply: the store's own rule-based words, unchanged, marked practice.
+describe('practice support reply (PR 325)', () => {
+  const reply = (over: Partial<import('../src').AiSupportReplyInput> = {}): import('../src').AiSupportReplyInput => ({
+    locale: 'en',
+    question: 'where is my order',
+    facts: { intent: 'status', orderNumber: 'EX1', orderStatus: 'IN_TRANSIT' },
+    ruleBasedBody: 'Hi Rahim, order EX1 is on its way.',
+    max: { body: 300 },
+    ...over,
+  });
+
+  it('answers with the rule-based body, unchanged, marked practice', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSupportReply(reply());
+    expect(d).toEqual({ body: 'Hi Rahim, order EX1 is on its way.', practice: true });
+  });
+
+  it('cuts to the store limit and refuses an empty draft', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSupportReply(reply({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftSupportReply(reply({ ruleBasedBody: ' ' }))).rejects.toThrow();
+  });
+});

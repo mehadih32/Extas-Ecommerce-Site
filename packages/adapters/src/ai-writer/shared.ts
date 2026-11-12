@@ -87,12 +87,52 @@ export interface AiArticleDraft {
   practice: boolean;
 }
 
+/**
+ * S15 · PR 325 — the support agent's own job: a warmer rephrasing of a draft reply that `@extas/support`'s own
+ * rule-based engine (`drafts.ts`, PR 432) already decided and filled from real facts. The model may only rewrite
+ * `ruleBasedBody`'s words, never add, drop or change a fact — `facts` is given so it can check its own rewrite, not
+ * so it can invent from them. The caller has already masked any customer PII out of `question` before this reaches
+ * an adapter (Blueprint A5.1–A5.4).
+ */
+export interface AiSupportReplyInput {
+  locale: 'en' | 'bn';
+  /** The customer's own latest words, masked of e-mail/phone by the caller. */
+  question: string;
+  /** What the rule-based draft already decided, for the model to stay inside — never a fact to add from. */
+  facts: {
+    intent: string;
+    complaint?: string | null;
+    orderNumber?: string | null;
+    orderStatus?: string | null;
+    courier?: string | null;
+    tracking?: string | null;
+    late?: boolean;
+    size?: string | null;
+    customerName?: string | null;
+  };
+  /** The store's own rule-based words for this question — already correct and complete; the model's floor and its
+   * only source of fact. */
+  ruleBasedBody: string;
+  max: { body: number };
+}
+
+export interface AiSupportReplyDraft {
+  body: string;
+  /** True for the mock's practice text (the rule-based body, unchanged). */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them (PR 325's usage-ledger wiring) — absent
+   * for the mock, and for a provider whose response carried none. */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
   draftCampaign(input: AiCampaignInput): Promise<AiCampaignDraft>;
   /** PR 243 — a journal article's first draft from its brief. */
   draftArticle(input: AiArticleInput): Promise<AiArticleDraft>;
+  /** PR 325 — the support agent's own job: a warmer rephrasing of an already-correct rule-based reply. */
+  draftSupportReply(input: AiSupportReplyInput): Promise<AiSupportReplyDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

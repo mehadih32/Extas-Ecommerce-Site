@@ -4,7 +4,7 @@
 // (`practice: true`). A draft is never used on a page until a person accepts it.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, type AdapterContext } from '../define';
-import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiWriter } from './shared';
+import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiSupportReplyDraft, type AiSupportReplyInput, type AiWriter } from './shared';
 
 /** The mock takes no settings; every live provider's `mock()` passes this when it falls back to practice text. */
 export const emptyMockContext: AdapterContext<Record<string, never>> = { mode: 'MOCK', config: {}, storeId: null, async secret() { return null; } };
@@ -78,6 +78,12 @@ export function practiceArticle(input: AiArticleInput): AiArticleDraft {
   return { excerpt: cutTo(lead, 300), body: parts.join('\n\n'), practice: true };
 }
 
+/** S15 · PR 325 — the mock's support reply: the store's own rule-based words, unchanged (there is no real voice to
+ * borrow without a key, so the practice answer is honestly the same text the customer would get anyway). */
+export function practiceSupportReply(input: AiSupportReplyInput): AiSupportReplyDraft {
+  return { body: cutTo(input.ruleBasedBody, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -100,6 +106,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftArticle(input) {
         if (!input.title.trim() || !input.keywords.length || !(input.wordCount > 0)) throw new AdapterError('an article draft needs its brief');
         return practiceArticle(input);
+      },
+      async draftSupportReply(input) {
+        if (!input.ruleBasedBody.trim()) throw new AdapterError('a support reply needs the store\'s own draft to rephrase');
+        return practiceSupportReply(input);
       },
     };
   },
