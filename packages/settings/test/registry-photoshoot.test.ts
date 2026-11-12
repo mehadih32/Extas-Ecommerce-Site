@@ -1,15 +1,15 @@
-// S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance — off (0) as it ships, so
+// S24 · PR 447 (registry v292): the garment-prep/standardisation colour-drift tolerance — off (0) as it ships, so
 // nothing is ever flagged until the owner sets a number (CN-018).
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { photoshootColourToleranceSchema, photoshootSettings, PHOTOSHOOT_COLOUR_TOLERANCE_DEFAULT } from '../src/registry-photoshoot';
 
-describe('photoshoot garment-prep settings (v288)', () => {
-  it('is in the registry at version 288, store-scoped, labelled in English and Bengali, its default valid', () => {
+describe('photoshoot garment-prep settings (v292)', () => {
+  it('is in the registry at version 292, store-scoped, labelled in English and Bengali, its default valid', () => {
     for (const [key, s] of Object.entries(photoshootSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(s);
-      expect(s.version, key).toBe(288);
+      expect(s.version, key).toBe(292);
       expect(s.scope, key).toBe('store');
       expect(s.schema.safeParse(s.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {

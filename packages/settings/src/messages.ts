@@ -153,6 +153,9 @@ import blogPipelineBn from '../messages/blog-pipeline.bn.json';
 import blogPipelineEn from '../messages/blog-pipeline.en.json';
 import geoGuideBn from '../messages/geo-guide.bn.json';
 import geoGuideEn from '../messages/geo-guide.en.json';
+// S13 · PR 548 (registry v291): Marketing › Market & competitors' change-alerts card.
+import adsIntelBn from '../messages/ads-intel.bn.json';
+import adsIntelEn from '../messages/ads-intel.en.json';
 import merchantFeedBn from '../messages/merchant-feed.bn.json';
 import merchantFeedEn from '../messages/merchant-feed.en.json';
 // S18 · PR 379 (registry v74): the quiet bot check on sign-in and checkout.
@@ -320,6 +323,8 @@ messages.bn = mergeMessages(messages.bn, blogPipelineBn);
 // S13 · PR 569 (registry v255): geography-led ad guidance.
 messages.en = mergeMessages(messages.en, geoGuideEn);
 messages.bn = mergeMessages(messages.bn, geoGuideBn);
+messages.en = mergeMessages(messages.en, adsIntelEn);
+messages.bn = mergeMessages(messages.bn, adsIntelBn);
 // S13 · PR 589 (registry v256): the Merchant Center feed.
 messages.en = mergeMessages(messages.en, merchantFeedEn);
 messages.bn = mergeMessages(messages.bn, merchantFeedBn);
@@ -444,7 +449,7 @@ messages.bn = mergeMessages(messages.bn, privacyCustomerBn);
 // S23 · PR 437 (registry v281): the studio's cadence, voice and AI-caption switches.
 messages.en = mergeMessages(messages.en, studioEn);
 messages.bn = mergeMessages(messages.bn, studioBn);
-// S24 · PR 447 (registry v288): the garment-prep/standardisation colour-drift tolerance.
+// S24 · PR 447 (registry v292): the garment-prep/standardisation colour-drift tolerance.
 messages.en = mergeMessages(messages.en, photoshootEn);
 messages.bn = mergeMessages(messages.bn, photoshootBn);
 // S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
