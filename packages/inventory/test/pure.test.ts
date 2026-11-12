@@ -10,6 +10,7 @@ import {
   behaviourOf,
   canonical,
   compareStock,
+  compareVariants,
   damagedUnits,
   decimalToMinor,
   ERP_DEPENDENT_PATHS,
@@ -29,9 +30,13 @@ import {
   sellableUnits,
   sharedSellable,
   orderPushInput,
+  skuStockComparePage,
+  skuStockStoreLines,
   type ErpLink,
   type ErpSetup,
   type PoolRow,
+  type ReconcileResult,
+  type SkuStockReport,
 } from '../src';
 
 const setup = { storeId: 1, mode: 'EXTAS_ERP', integrationId: null, erpCompanyId: null, erpWarehouseId: null } as unknown as ErpSetup;
@@ -279,6 +284,54 @@ describe('PR 207 · the reconciliation', () => {
   });
   it('a read cut short never claims the ERP is missing a row', () => {
     expect(compareStock([], [shop('E', 6)], locations, new Set(['E']), false).mismatches).toEqual([]);
+  });
+});
+
+describe('PR 654 (CN-044) · the SKU/stock compare report', () => {
+  const t = new Date('2026-11-11T06:00:00Z');
+  const erpV = (sku: string, active: boolean, shopPrice: string | null) => ({ sku, barcode: null, styleCode: null, styleName: null, color: null, size: null, retailPrice: null, avgCost: null, shopPrice, grade: 'A' as const, active, updatedAt: t });
+
+  it('names a SKU on only one side and an active SKU with no shop price; a read cut short never claims a shop SKU is missing', () => {
+    const erp = [erpV('A', true, '500'), erpV('B', true, null), erpV('C', false, null), erpV('NEW', true, '100')];
+    const r = compareVariants(erp, ['A', 'B', 'C', 'GONE']);
+    expect(r).toEqual({ matched: 3, onlyInErp: ['NEW'], onlyInShop: ['GONE'], noShopPrice: ['B'] });
+    // An inactive ERP SKU (C) with no price is not flagged: it is not for sale, so a missing price is not a finding.
+    expect(r.noShopPrice).not.toContain('C');
+  });
+
+  it('every SKU matching reports no difference', () => {
+    expect(compareVariants([erpV('A', true, '500')], ['A'])).toEqual({ matched: 1, onlyInErp: [], onlyInShop: [], noShopPrice: [] });
+  });
+
+  const zeroCounts = { MISSING_IN_SHOP: 0, MISSING_IN_ERP: 0, ON_HAND_DIFFERS: 0, RESERVED_DIFFERS: 0 };
+  const okStock = (extra: Partial<ReconcileResult['counts']> = {}): ReconcileResult => ({ status: 'succeeded', reason: null, runId: 'r1', rows: 10, matched: 9, unknownSku: 0, unmappedWarehouse: 0, complete: true, counts: { ...zeroCounts, ...extra }, mismatches: [], error: null });
+
+  it('a clean store reads as fully matched, in Bengali first', () => {
+    const report: SkuStockReport = { status: 'succeeded', reason: null, error: null, stock: okStock(), variants: { matched: 5, onlyInErp: [], onlyInShop: [], noShopPrice: [], complete: true } };
+    const page = skuStockComparePage([{ storeId: 1, report }], t);
+    expect(page).toContain('সারকথা');
+    expect(page).toContain('পুরো মিলে গেছে');
+    expect(page).not.toContain('অমিল পাওয়া গেছে');
+  });
+
+  it('a real difference is named per store and the Bengali summary says so; a skipped or failed store never shows numbers', () => {
+    const withDiff: SkuStockReport = { status: 'succeeded', reason: null, error: null, stock: okStock({ ON_HAND_DIFFERS: 2 }), variants: { matched: 5, onlyInErp: ['NEW-1'], onlyInShop: ['GONE-1'], noShopPrice: ['NOPRICE-1'], complete: true } };
+    const skipped: SkuStockReport = { status: 'skipped', reason: 'ERP_ON_PRACTICE', error: null, stock: null, variants: null };
+    const failed: SkuStockReport = { status: 'failed', reason: null, error: { code: 'TIMEOUT', text: 'no answer within 20 s' }, stock: null, variants: null };
+    const page = skuStockComparePage([{ storeId: 1, report: withDiff }, { storeId: 2, report: skipped }, { storeId: 3, report: failed }], t);
+    expect(page).toContain('অমিল পাওয়া গেছে');
+    expect(page).toContain('NEW-1');
+    expect(page).toContain('GONE-1');
+    expect(page).toContain('NOPRICE-1');
+    expect(page).toContain('প্র্যাক্টিস ERP');
+    expect(page).toContain('TIMEOUT');
+    expect(skuStockStoreLines(2, skipped)[0]).not.toMatch(/\d+টা SKU/);
+  });
+
+  it('never prints a key or a vault address, whatever the error text happens to hold', () => {
+    const failed: SkuStockReport = { status: 'failed', reason: null, error: { code: 'AUTH', text: 'the ERP answered 401' }, stock: null, variants: null };
+    const page = skuStockComparePage([{ storeId: 1, report: failed }], t);
+    expect(page).not.toMatch(/Bearer|apiKey|secret/i);
   });
 });
 
