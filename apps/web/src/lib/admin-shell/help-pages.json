@@ -156,6 +156,7 @@
     { "id": "ai/permissions", "route": "/admin/ai/permissions" },
     { "id": "ai/diary", "route": "/admin/ai/diary" },
     { "id": "ai/skills", "route": "/admin/ai/skills" },
+    { "id": "ai/skills-sandbox", "route": "/admin/ai/skills/sandbox" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },

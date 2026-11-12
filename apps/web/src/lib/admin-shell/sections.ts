@@ -505,7 +505,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'diary', guide: 'ai', pages: [{ href: '/admin/ai/diary', perm: 'ai.read', keys: ['aiDiary'] }] },
       // S15 · PR 321 (C1.7 "Skill library") — every AiSkill as a card: name, agent, version, status, on/off; the
       // owner's own "Import a skill" and one-click rollback (owner only).
-      { id: 'skills', guide: 'ai', pages: [{ href: '/admin/ai/skills', perm: 'ai.read', keys: ['aiSkills'] }] },
+      // S15 · PR 322 adds the Sandbox sub-page (`/admin/ai/skills/sandbox`) beside the Library, matching the
+      // demo's own `A2B_SKSUB` two-page nav (AIC-04/04a).
+      {
+        id: 'skills',
+        guide: 'ai',
+        pages: [
+          { href: '/admin/ai/skills', perm: 'ai.read', keys: ['aiSkills'] },
+          { href: '/admin/ai/skills/sandbox', perm: 'ai.read', keys: ['aiSkillsSandbox'] },
+        ],
+      },
     ],
     ownerOnly: true,
     guide: 'ai',
