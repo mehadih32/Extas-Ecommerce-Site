@@ -438,6 +438,39 @@
         }
       }
     },
+    "src": {
+      "meta": "Write from a link · Blog & journal",
+      "title": "Write from a link",
+      "sub": "Paste a link to an article anywhere in the world. The writer reads it, researches the topic and writes an original piece — never a copy — in the language you pick.",
+      "back": "← Blog & journal",
+      "url": "Article link",
+      "urlHelp": "https://… — any page with an article on it.",
+      "language": "Language",
+      "en": "English",
+      "bn": "Bengali",
+      "words": "Words (about)",
+      "go": "Write from this link",
+      "going": "Reading and writing…",
+      "done": "The draft is ready; the editor opens.",
+      "donePractice": "Practice draft ready (no AI key yet); the editor opens.",
+      "used": "{n} of {max} drafts in the last 24 hours.",
+      "b_aiOff": "AI is off for the whole shop (AI section).",
+      "b_off": "Write from a link is off — turn it on in the card below.",
+      "b_limit": "Today’s drafts are used up.",
+      "practiceBox": "Practice text from the practice writer — no AI key is entered yet. Rewrite it before the review.",
+      "err_HOST_NOT_ALLOWED": "Not a web address, or this site is not allowed (settings below).",
+      "err_PAGE_UNREADABLE": "Could not read an article on that page.",
+      "err_AI_UNAVAILABLE": "The writer is not available right now; try again.",
+      "err_AI_OFF": "AI is off for the shop, or “Write from a link” is off.",
+      "err_DAILY_LIMIT": "Today’s drafts are used up.",
+      "card": {
+        "h": "Write from a link",
+        "d": "Off as it ships. It also needs AI on for the whole shop.",
+        "enabled": "Offer “Write from a link”",
+        "dailyMax": "Most drafts in a day",
+        "hosts": "Sites allowed (one a line; empty = any site)"
+      }
+    },
     "cal": {
       "meta": "Calendar · Blog & journal",
       "title": "Publish calendar",
