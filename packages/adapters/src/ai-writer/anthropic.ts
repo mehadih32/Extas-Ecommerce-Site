@@ -27,6 +27,7 @@ export type AnthropicConfig = z.output<typeof anthropicConfig>;
 
 interface AnthropicBody {
   content?: { type?: string; text?: string }[];
+  usage?: { input_tokens?: number; output_tokens?: number };
   error?: { message?: string };
 }
 
@@ -48,7 +49,8 @@ export function anthropicCompleter(apiKey: string, model: string, baseUrl: strin
     if (!res.ok) throw new AdapterError(`Anthropic refused (${res.status})${body.error?.message ? `: ${body.error.message}` : ''}`);
     const text = (body.content ?? []).filter((p) => p.type === 'text').map((p) => p.text ?? '').join('');
     if (!text.trim()) throw new AdapterError('Anthropic answered with no text');
-    return { text };
+    const usage = body.usage && typeof body.usage.input_tokens === 'number' && typeof body.usage.output_tokens === 'number' ? { inputTokens: body.usage.input_tokens, outputTokens: body.usage.output_tokens } : undefined;
+    return { text, ...(usage ? { usage } : {}) };
   };
 }
 
