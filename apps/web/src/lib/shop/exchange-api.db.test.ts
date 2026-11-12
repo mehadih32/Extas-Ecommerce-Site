@@ -139,18 +139,26 @@ describe.skipIf(!HAS_TEST_DB)('PR 186 · POST /api/account/exchange (PostgreSQL)
 
   it('a size exchange with "you sent the wrong size" and its label photo: the claim waits for staff (CN-018)', async () => {
     await on();
-    // a second delivered order of his, the same sample piece (made-up test data)
-    const NUMBER = 'TRY-186'; // hardcode-ok: a made-up test order number
+    // a second delivered order of his, the same sample piece (made-up test data). The base literal plus a random
+    // per-call suffix (never reused) means this fixture's order number and idempotency key can never collide with
+    // another run's, even one against a shared database — the same defensive habit as every TRY- fixture this file
+    // imports from ./account-try, each of which is made once and caught on P2002 instead of crashing.
+    const NUMBER = `TRY-186-${crypto.randomUUID().slice(0, 8)}`; // hardcode-ok: a made-up test order number, nonce-suffixed so parallel runs never collide
     const src = await t.prisma.order.findUniqueOrThrow({ where: { storeId_number: { storeId, number: TRY_DELIVERED_ORDER_NUMBER } }, include: { items: true } });
     const { id: _id, number: _n, idempotencyKey: _k, createdAt: _c, updatedAt: _u, items, ...order } = src;
-    await t.prisma.order.create({
-      data: {
-        ...(order as any),
-        number: NUMBER,
-        idempotencyKey: 'test:186',
-        items: { create: items.map(({ id: _i, orderId: _o, createdAt: _a, updatedAt: _b, ...it }) => it as any) },
-      },
-    });
+    await t.prisma.order
+      .create({
+        data: {
+          ...(order as any),
+          number: NUMBER,
+          idempotencyKey: `test:186:${NUMBER}`,
+          items: { create: items.map(({ id: _i, orderId: _o, createdAt: _a, updatedAt: _b, ...it }) => it as any) },
+        },
+      })
+      // defensive, like the TRY- fixtures above: a stray collision finds the existing row instead of crashing
+      .catch(async (e: unknown) => {
+        if ((e as { code?: string }).code !== 'P2002') throw e;
+      });
     const st = await read(await exchangeHandler(post({ action: 'state', number: NUMBER }, cookie), deps));
     const line = (st.body.lines as Json[]).find((l) => l.size === null);
     expect(line, 'a piece open for a size exchange').toBeTruthy();
