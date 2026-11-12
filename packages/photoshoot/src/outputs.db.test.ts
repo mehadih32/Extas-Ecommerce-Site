@@ -1,10 +1,12 @@
-// S24 · PR 453 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): `recordScoredOutputs` against the
-// actual `PhotoshootOutput` table, the quality-threshold setting and the job's own move to REVIEW_REQUIRED/FAILED.
+// S24 · PR 453/458 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): PR 453's `recordScoredOutputs`
+// against the actual `PhotoshootOutput` table, the quality-threshold setting and the job's own move to
+// REVIEW_REQUIRED/FAILED; PR 458 grows the same file in place with the owner's own review decision
+// (`decideOutputReview`) and the review queue (`listReviewQueue`).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { createOrReuseJob, transitionJob } from './jobs';
-import { getOutputsForJob, recordScoredOutputs } from './outputs';
+import { decideOutputReview, getOutputsForJob, listReviewQueue, recordScoredOutputs } from './outputs';
 import type { PhotoshootDeps, SettingsReader, Who } from './context';
 
 const perfect = { garmentShapeIntegrity: 1, printLegibility: 1, colourDifference: 1, handFingerArtefacts: 1, edgeQuality: 1, seamContinuity: 1 };
@@ -14,21 +16,28 @@ function fakeSettings(qualityThresholdPercent: number): SettingsReader {
   return { value: async () => qualityThresholdPercent as never };
 }
 
-describe.skipIf(!HAS_TEST_DB)('PR 453 · best-of-2 and automatic scoring (PostgreSQL)', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 453/458 · best-of-2, automatic scoring and the review decision (PostgreSQL)', () => {
   let t: TestDatabase;
   let S: number;
   let other: number;
   let generator: Who;
+  let approver: Who;
+  let reader: Who;
   const deps = (settings?: SettingsReader): PhotoshootDeps => ({ db: t.prisma, settings });
 
   beforeAll(async () => {
     t = await createTestDatabase('photoshoot_outputs');
     [S, other] = await seedSampleStores(t.prisma);
     await syncAuth(t.prisma);
-    const role = await createRole(t.prisma, SYSTEM, { key: 't453-generator', nameEn: 'generator', nameBn: 'generator', permissions: ['photoshoot.read', 'photoshoot.write', 'photoshoot.generate'] });
-    const u = await t.prisma.staffUser.create({ data: { email: 't453-generator@example.com', displayName: 'generator', passwordHash: 'not-a-login' } });
-    await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
-    generator = { actor: { staffUserId: u.id }, storeId: S };
+    const staff = async (key: string, perms: ('photoshoot.read' | 'photoshoot.write' | 'photoshoot.generate' | 'photoshoot.approve')[], storeId = S) => {
+      const role = await createRole(t.prisma, SYSTEM, { key, nameEn: key, nameBn: key, permissions: perms });
+      const u = await t.prisma.staffUser.create({ data: { email: `${key}@example.com`, displayName: key, passwordHash: 'not-a-login' } });
+      await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId } });
+      return { actor: { staffUserId: u.id }, storeId };
+    };
+    generator = await staff('t453-generator', ['photoshoot.read', 'photoshoot.write', 'photoshoot.generate']);
+    approver = await staff('t458-approver', ['photoshoot.read', 'photoshoot.approve']);
+    reader = await staff('t458-reader', ['photoshoot.read']);
   });
 
   afterAll(async () => t.drop());
@@ -133,5 +142,87 @@ describe.skipIf(!HAS_TEST_DB)('PR 453 · best-of-2 and automatic scoring (Postgr
         ],
       }),
     ).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+
+  // --- PR 458: the owner's own review decision (C7.5 step 10, C7.16) -------------------------------------------
+
+  async function makePendingOutput() {
+    const d = deps();
+    const job = await makeProcessingJob();
+    const asset = await makeGeneratedAsset();
+    const result = await recordScoredOutputs(d, generator, job.id, { candidates: [{ assetId: asset.id, scores: perfect }] });
+    return { job: result.job, output: result.outputs[0]! };
+  }
+
+  it('approving a PENDING output moves it to APPROVED and its job to APPROVED', async () => {
+    const d = deps();
+    const { output } = await makePendingOutput();
+    const result = await decideOutputReview(d, approver, output.id, { decision: 'approve' });
+    expect(result.output.reviewStatus).toBe('APPROVED');
+    expect(result.output.rejectReason).toBeNull();
+    expect(result.output.reviewedById).toBe(approver.actor.staffUserId);
+    expect(result.output.reviewedAt).toBeInstanceOf(Date);
+    expect(result.job.status).toBe('APPROVED');
+  });
+
+  it('rejecting with a reason moves the output to REJECTED (with the reason kept) and its job to REJECTED', async () => {
+    const d = deps();
+    const { output } = await makePendingOutput();
+    const result = await decideOutputReview(d, approver, output.id, { decision: 'reject', reason: 'the print drifted off-centre on the sleeve' });
+    expect(result.output.reviewStatus).toBe('REJECTED');
+    expect(result.output.rejectReason).toBe('the print drifted off-centre on the sleeve');
+    expect(result.job.status).toBe('REJECTED');
+  });
+
+  it('rejecting with no reason is refused outright — "reasons on rejection" (C7.16) — and nothing is changed', async () => {
+    const d = deps();
+    const { output, job } = await makePendingOutput();
+    await expect(decideOutputReview(d, approver, output.id, { decision: 'reject' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    const stillPending = await getOutputsForJob(d, approver, job.id);
+    expect(stillPending[0]!.reviewStatus).toBe('PENDING');
+  });
+
+  it('refuses a decision on an output that was never PENDING (NOT_SELECTED/AUTO_REJECTED), and on one already decided', async () => {
+    const d = deps();
+    const job = await makeProcessingJob();
+    const good = await makeGeneratedAsset();
+    const bad = await makeGeneratedAsset();
+    const result = await recordScoredOutputs(d, generator, job.id, {
+      candidates: [
+        { assetId: bad.id, scores: worst },
+        { assetId: good.id, scores: perfect },
+      ],
+    });
+    const notSelected = result.outputs.find((o) => o.assetId === bad.id)!;
+    await expect(decideOutputReview(d, approver, notSelected.id, { decision: 'approve' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+
+    const pending = result.outputs.find((o) => o.assetId === good.id)!;
+    await decideOutputReview(d, approver, pending.id, { decision: 'approve' });
+    await expect(decideOutputReview(d, approver, pending.id, { decision: 'approve' })).rejects.toMatchObject({ code: 'INVALID_INPUT' }); // no silent overwrite of a past decision
+  });
+
+  it('a reader without photoshoot.approve is refused outright; NOT_FOUND on an unknown or cross-store output', async () => {
+    const d = deps();
+    const { output } = await makePendingOutput();
+    await expect(decideOutputReview(d, reader, output.id, { decision: 'approve' })).rejects.toThrow();
+    await expect(decideOutputReview(d, approver, '00000000-0000-0000-0000-000000000000', { decision: 'approve' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(decideOutputReview(d, { actor: approver.actor, storeId: other }, output.id, { decision: 'approve' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('listReviewQueue lists only this store\'s own REVIEW_REQUIRED jobs with their PENDING output, oldest first', async () => {
+    const d = deps();
+    const before = await listReviewQueue(d, reader);
+    const beforeIds = new Set(before.map((r) => r.job.id));
+
+    const { job: job1 } = await makePendingOutput();
+    const { job: job2 } = await makePendingOutput();
+    const queue = (await listReviewQueue(d, reader)).filter((r) => !beforeIds.has(r.job.id));
+    expect(queue.map((r) => r.job.id)).toEqual([job1.id, job2.id]);
+    for (const row of queue) expect(row.output.reviewStatus).toBe('PENDING');
+
+    // deciding one removes it from the queue (its job is no longer REVIEW_REQUIRED)
+    await decideOutputReview(d, approver, queue[0]!.output.id, { decision: 'approve' });
+    const after = (await listReviewQueue(d, reader)).filter((r) => !beforeIds.has(r.job.id));
+    expect(after.map((r) => r.job.id)).toEqual([job2.id]);
   });
 });

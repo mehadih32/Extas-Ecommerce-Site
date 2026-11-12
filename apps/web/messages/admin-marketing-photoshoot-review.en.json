@@ -1,0 +1,41 @@
+{
+  "photoshootReview": {
+    "list": {
+      "metaTitle": "Review queue · Marketing",
+      "title": "Photoshoot review",
+      "sub": "Every generated image waiting for your decision, oldest first. Open one to compare it with the real original before you decide.",
+      "empty": "Nothing is waiting for review right now.",
+      "unknownProduct": "Unknown product",
+      "waitingSince": "Waiting since {when}",
+      "open": "Review"
+    },
+    "detail": {
+      "metaTitle": "Review this image · Marketing",
+      "title": "Review this image",
+      "sub": "Real original vs. generated image",
+      "original": "Real original",
+      "generated": "Generated image",
+      "noPicture": "No picture ready yet.",
+      "unknownProduct": "Unknown product",
+      "reasonLabel": "Reason for rejection",
+      "reasonHelp": "Required only when you reject — the owner's own agreement is \"reasons on rejection\". Not needed to approve.",
+      "reasonRequired": "Please say why, before rejecting.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "deciding": "Saving…",
+      "approved": "Approved.",
+      "rejected": "Rejected.",
+      "alreadyDecided": "This image has already been decided — nothing left to do here.",
+      "readOnly": "You can see this, but you do not have permission to decide it.",
+      "back": "Back to the review queue",
+      "err": {
+        "INVALID_INPUT": "Check what you typed — a rejection needs a reason.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "forbidden": "You do not have permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    }
+  }
+}

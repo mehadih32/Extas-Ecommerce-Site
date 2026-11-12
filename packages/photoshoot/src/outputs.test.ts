@@ -1,7 +1,7 @@
 // S24 · PR 453 — pure tests: the C7.5 step 9 combined score, the threshold check and best-of-2 selection. No
 // database involved.
 import { describe, expect, it } from 'vitest';
-import { combinedScorePercent, passesQualityThreshold, pickBestCandidate, QUALITY_METRIC_KEYS, qualityScoresSchema, type QualityScores } from './outputs';
+import { combinedScorePercent, decideOutputReviewInput, passesQualityThreshold, pickBestCandidate, QUALITY_METRIC_KEYS, qualityScoresSchema, type QualityScores } from './outputs';
 
 const perfect: QualityScores = { garmentShapeIntegrity: 1, printLegibility: 1, colourDifference: 1, handFingerArtefacts: 1, edgeQuality: 1, seamContinuity: 1 };
 const worst: QualityScores = { garmentShapeIntegrity: 0, printLegibility: 0, colourDifference: 0, handFingerArtefacts: 0, edgeQuality: 0, seamContinuity: 0 };
@@ -74,5 +74,25 @@ describe('pickBestCandidate', () => {
 
   it('refuses to pick a best of nothing', () => {
     expect(() => pickBestCandidate([])).toThrow();
+  });
+});
+
+// PR 458 — the review decision's own input shape (C7.16 "with reasons on rejection"): pure, no database.
+describe('decideOutputReviewInput', () => {
+  it('accepts a plain approve, with or without a reason', () => {
+    expect(decideOutputReviewInput.safeParse({ decision: 'approve' }).success).toBe(true);
+    expect(decideOutputReviewInput.safeParse({ decision: 'approve', reason: 'looks great' }).success).toBe(true);
+  });
+
+  it('requires a non-empty reason on a reject', () => {
+    expect(decideOutputReviewInput.safeParse({ decision: 'reject' }).success).toBe(false);
+    expect(decideOutputReviewInput.safeParse({ decision: 'reject', reason: '' }).success).toBe(false);
+    expect(decideOutputReviewInput.safeParse({ decision: 'reject', reason: '   ' }).success).toBe(false);
+    expect(decideOutputReviewInput.safeParse({ decision: 'reject', reason: 'blurry hands' }).success).toBe(true);
+  });
+
+  it('refuses anything outside approve/reject, and extra fields', () => {
+    expect(decideOutputReviewInput.safeParse({ decision: 'regenerate' }).success).toBe(false);
+    expect(decideOutputReviewInput.safeParse({ decision: 'approve', extra: 1 }).success).toBe(false);
   });
 });
