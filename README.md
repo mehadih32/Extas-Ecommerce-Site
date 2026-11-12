@@ -4133,6 +4133,8 @@ Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking
 
 In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 — the new menu with Rules as its own section and Messages inside Marketing, the Orders tabs and Processing view, the Batch page, the To ship chips and the With courier screen) — register PRs 659–707 (49 PRs, 5 build waves), filed 13 Nov 2026 (CN-048): the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look. Gap map: [`docs/demo/admin-proto-v5/GAP-MAP.md`](docs/demo/admin-proto-v5/GAP-MAP.md). *বাংলায়: আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ আসল অ্যাডমিন হবে; ৪৯টা নতুন PR, পাঁচটা ওয়েভে।*
 
+**PR 664 · Price adjust on every order** (off until the owner switches `orders.priceAdjust` on in Rules). On an open order, "Adjust price" (More actions) takes off a taka amount, a percent, the customer's wallet or the delivery charge; a reason from the owner's list is required (the "Other" reason needs a note); never more than the customer still has to pay, so no refund is ever made. Each role has its own limit in the setting (unlisted role: nothing without approval); above it the request waits and a person with `orders.priceApprove` approves it with the owner PIN, or refuses it. Every step is a new line in the append-only `OrderPriceAdjustment` ledger (migration 0200), with timeline words and an audit row. Routes `GET/POST /api/admin/orders/:id/price-adjust`, `POST /api/admin/orders/price-adjust/:requestId`. Guide: `docs/admin-guide/pages/orders/order.md`. Tests: pure rules, 11 database tests, page spec tests. *বাংলায়: অর্ডারে দাম কমানো, কারণ লাগবেই, রোলের সীমা, সীমার বেশি হলে মালিকের PIN-সহ অনুমোদন; শুরুতে বন্ধ।*
+
 ---
 
 ## PR log
@@ -4144,6 +4146,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | PR [664](docs/stages/S28.md#pr-664) | 13 Nov | S28 wave 1 (builder C): price adjust on every order. `orders.priceAdjust` v300 (off), append-only `OrderPriceAdjustment` ledger (migration 0200), `orders.priceAdjust` and `orders.priceApprove` keys, "Adjust price" with per-role limits and PIN approval, guide updated. |
 | pending | CN-048 (PR 659–707 filed) | 13 Nov | Status: Phase A gap map. `docs/demo/admin-proto-v5/GAP-MAP.md` joins the three part files into one list: 54 items already built, 123 small changes on existing PRs (65 dated lines in the register), 46 new items filed as 49 new PRs in the new stage S28, in 5 build waves. CN-048 adopts prototype v5 as the admin UI truth and lifts CN-046's freeze; Lumen stays the look. No app code. |
 | #177 | PR [506](docs/stages/S15.md#pr-506) | 13 Nov | S15: AI-off proof — the whole site works with AI off. |
 | #177 | PR [341](docs/stages/S15.md#pr-341) | 13 Nov | S15: Weekly and monthly digests to Telegram and e-mail. |

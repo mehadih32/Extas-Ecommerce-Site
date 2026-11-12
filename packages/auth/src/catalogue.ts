@@ -151,6 +151,13 @@ export const PERMISSIONS = {
   'orders.risk.read': { group: 'orders' },
   'orders.risk.decide': { group: 'orders' },
   'orders.merge': { group: 'orders' },
+  // S28 · PR 664 — take money off an open order that is not booked yet: a taka amount, a percent, the customer's wallet or the
+  // delivery charge, with a reason (the ledger line is kept). Inside the asker's own limit (Rules > Order flow) it applies at
+  // once; above it, it waits for someone who holds `orders.priceApprove`. The owner's switch `orders.priceAdjust` ships off.
+  'orders.priceAdjust': { group: 'orders' },
+  // S28 · PR 664 — answer a price-adjust request above the asker's limit, or apply one above one's own limit: needs the owner's PIN
+  // every time (a price action, CLAUDE.md rule 6).
+  'orders.priceApprove': { group: 'orders' },
   // S06 · PR 544 — the risk rules list (ORD-06): see every fraud and duplicate rule with its switch, and switch one on or
   // off. A rule only marks and proposes; switching it never blocks anyone, moves money or changes COD, a price or a charge.
   'risk.rules.read': { group: 'orders' },

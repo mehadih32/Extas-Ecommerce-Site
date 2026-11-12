@@ -144,7 +144,7 @@
    "stages": [
     "S28"
    ],
-   "done": 5,
+   "done": 6,
    "total": 49,
    "parkedTotal": 0,
    "why": "After launch; the owner-approved prototype is the admin UI truth; S15, S24, S25 untouched (CN-047)",
@@ -1777,7 +1777,7 @@
    "wave": "9",
    "range": "659–707",
    "total": 49,
-   "done": 5,
+   "done": 6,
    "state": "In progress",
    "parked": false,
    "registerStatus": "locked; filed 13 Nov 2026 (CN-048) — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look",
@@ -42125,13 +42125,24 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "price adjust on every order (`orders.priceAdjust` v300, off; taka, percent, wallet or free delivery on an open order; reason from the owner's list; per-role limit, above it a request the owner approves with the PIN; every adjustment a new append-only `OrderPriceAdjustment` line, migration 0200; keys `orders.priceAdjust` and `orders.priceApprove`; owner's written OK in BLOCKED 32)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "orders.priceAdjust",
+     "orders.priceApprove"
+    ],
+    "code": [],
+    "names": [
+     "OrderPriceAdjustment"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
