@@ -205,7 +205,7 @@ check "gate: the ERP, WhatsApp, Messenger and courier webhooks, the ERP's calls,
 check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "10:0"
 check "gate: the exemption blocks, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
 check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "11"
-check "gate: the server re-writes an older gate (fingerprint v7)" "$(grep -c '# preview gate v7 for' ../server/steps/09-stack.sh)" "1"
+check "gate: the server re-writes an older gate (fingerprint v8)" "$(grep -c '# preview gate v8 for' ../server/steps/09-stack.sh)" "1"
 # With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
 # login and no cookie, and nothing else does. CI downloads the release that matches the server's image (IMG_CADDY) and
 # runs this part; anywhere else it runs when a Caddy is installed.

@@ -1,6 +1,6 @@
 # ERP acceptance — demo ERP
 
-**সারকথা:** ডেমো ERP-এর চাবির অপেক্ষায়। মালিক সেটিংস → ERP সংযোগ পাতায় ডেমো দোকানের চাবি দিলে প্রতি রাতে আর প্রতিটা রিলিজের আগে এই পরীক্ষা চলবে।
+**সারকথা:** এবার ডেমো ERP-এর পরীক্ষা চালানো যায়নি (দোকানের ডেটাবেস পড়া যায়নি); কোনো পরীক্ষা ফেল ধরা হয়নি। পরের রানে আবার চলবে।
 
-- 2026-11-12T08:41:04.057Z: waiting for the demo key. Nothing was called; nothing failed.
+- 2026-11-12T13:53:33.139Z: not run. the shop's database could not be read: Error in connector: Error querying the database: FATAL: server login has been failing, cached error: connect failed (server_login_retry). Nothing was called; nothing failed.
 - The practice ERP runs every check in CI (packages/adapters/test/erp-acceptance.test.ts, the books drills).
