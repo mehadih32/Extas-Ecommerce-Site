@@ -352,7 +352,19 @@
       "blockWhyPh": "What happened, so the next person knows",
       "bundleNote": "Note for the packers (optional)",
       "propWhy": "Reason (the next person reads it)",
-      "propNote": "Why (a short note)"
+      "propNote": "Why (a short note)",
+      "priceKind": "What to take off",
+      "priceKinds": {
+        "AMOUNT": "A taka amount",
+        "PERCENT": "A percent of the price",
+        "WALLET": "The customer's wallet",
+        "FREE_DELIVERY": "The delivery charge (free delivery)"
+      },
+      "priceValue": "Amount in taka, or percent",
+      "priceValuePh": "e.g. 50, or 10 for 10%. Empty: all the wallet allows",
+      "priceReason": "Reason (required)",
+      "pricePin": "Owner PIN (only needed above your limit)",
+      "pricePinNeeded": "Owner PIN"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -401,7 +413,15 @@
       "ADD_ON_ONLY": "Only a line added after the order was placed is taken out here. Use \"Edit items & address\" for the others.",
       "NOT_RETRYABLE": "This booking was closed or tried again already, or the order has a newer booking. Read the page again.",
       "LOOKUP_AVAILABLE": "This courier can be asked by our reference: press Try again instead.",
-      "DUPLICATE": "Another parcel has this consignment id already. Check the number in the courier panel."
+      "DUPLICATE": "Another parcel has this consignment id already. Check the number in the courier panel.",
+      "ADJUST_OFF": "Price adjust is switched off in Rules.",
+      "ADJUST_TOO_MUCH": "That is more than the customer still has to pay, or more than the wallet holds.",
+      "NOTHING_TO_ADJUST": "There is nothing to take off.",
+      "ALREADY_DECIDED": "This request was answered already.",
+      "PIN_REQUIRED": "This needs the owner's PIN.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_LOCKED": "Too many wrong PIN tries. Wait a while and try again.",
+      "PIN_NOT_SET": "The owner has not set the PIN yet."
     },
     "cmd": {
       "confirm": {
@@ -549,6 +569,24 @@
         "title": "Let {n} go",
         "ok": "Let it go",
         "done": "The proposed hold on {n} is let go"
+      },
+      "priceAdjust": {
+        "label": "Adjust price",
+        "title": "Take money off order {n}",
+        "ok": "Adjust price",
+        "done": "Saved on order {n}: applied, or sent for approval when it is above your limit"
+      },
+      "priceApprove": {
+        "label": "Approve",
+        "title": "Approve the price adjustment on order {n}",
+        "ok": "Approve and apply",
+        "done": "The price adjustment on order {n} is approved and applied"
+      },
+      "priceRefuse": {
+        "label": "Refuse",
+        "title": "Refuse the price adjustment on order {n}",
+        "ok": "Refuse",
+        "done": "The price adjustment on order {n} is refused"
       }
     },
     "eff": {
@@ -595,7 +633,14 @@
       "propDismiss": "The number stays off the list; it is asked again only after a new rejection",
       "propHold": "The order goes on hold with the proposed reason; your note is in the timeline",
       "propLetGo": "The order goes on as it is; your note is in the timeline",
-      "propNoCancel": "Nothing is cancelled and the customer is told nothing"
+      "propNoCancel": "Nothing is cancelled and the customer is told nothing",
+      "priceDue": "Never more than the customer still has to pay: {due}",
+      "priceLimit": "Your limit: {amount} or {percent}% of the price. Above it the request waits for the owner",
+      "priceNoLimit": "You have no limit on this",
+      "priceLedger": "A new line in the order's price ledger with your name and the reason; nothing is edited",
+      "priceNoRefund": "No money is refunded. The total and the amount at the door change",
+      "priceApprove": "The adjustment is applied to the order now. The owner's PIN is checked",
+      "priceRefuse": "The request is refused and the order stays as it is"
     },
     "review": {
       "title": "Duplicate review",
@@ -849,7 +894,12 @@
       "shipment_rebook": "Parcel booked again (its amount or receiver had changed)",
       "order_exchangeIntent": "At checkout: may exchange on arrival",
       "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead",
-      "shipment_bookingClosed": "Courier booking closed from the courier's panel"
+      "shipment_bookingClosed": "Courier booking closed from the courier's panel",
+      "order_priceAdjust": "Price adjusted",
+      "order_priceAdjustAsked": "Price adjustment asked (above the limit)",
+      "order_priceAdjustRefused": "Price adjustment refused",
+      "priceLine": "{kind} · {amount} · {reason}",
+      "priceTotal": "total {before} → {after}"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -870,7 +920,8 @@
       "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found.",
       "packingCard": "{n} open packing card ({kinds}) on {pieces}. Booking waits until a person decides it on the packing screen.",
       "packingCardNoPiece": "{n} open packing card ({kinds}). Booking waits until a person decides it on the packing screen.",
-      "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens."
+      "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens.",
+      "priceRequest": "Price adjustment waiting for approval: {what}"
     },
     "items": {
       "title": "Items",

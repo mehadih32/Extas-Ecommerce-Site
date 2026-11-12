@@ -141,6 +141,8 @@
         "decide": "Decide a duplicate-order review: not a duplicate, cancel, hold or ask the customer"
       },
       "merge": "Put two open orders of one customer in one parcel (prices and charges stay as they are)",
+      "priceAdjust": "Take money off an open order that is not booked yet (a taka amount, a percent, the customer's wallet or the delivery charge), with a reason; above your own limit it waits for approval",
+      "priceApprove": "Approve or refuse a price adjustment that is above the asker's limit, or apply one above your own limit (needs the owner's PIN every time)",
       "lines": "Add a line to an order not yet with the courier, or take out a line added after placing (priced as its product page; nothing else is priced again)",
       "edit": "Edit an order not yet with the courier: the customer's name, phone and address, a size at the same price, or take a piece out (with a reason; prices, discounts, the delivery charge and COD never change)",
       "export": "Export orders as a CSV file (no personal details)",

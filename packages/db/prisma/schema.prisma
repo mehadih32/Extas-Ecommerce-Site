@@ -200,6 +200,7 @@ model Store {
   orderEvents             OrderEvent[]
   orderNotes              OrderNote[]
   orderGroups             OrderGroup[]
+  orderPriceAdjustments   OrderPriceAdjustment[]
   callTasks               CallTask[]
   notificationTemplates   NotificationTemplate[]
   notificationRules       NotificationRule[]
@@ -3057,6 +3058,9 @@ model Order {
   /// Follow-up 534 (PR 610/614): the order as each ERP link has it (ErpOrder.orderId, a foreign key since 0177).
   erpOrders ErpOrder[]
 
+  /// PR 664: the price-adjust ledger lines of this order (never edited, never deleted).
+  priceAdjustments OrderPriceAdjustment[]
+
   @@unique([storeId, number])
   @@unique([storeId, idempotencyKey])
   // PR 603: order by phone — runs on every order for the fraud engine.
@@ -3222,6 +3226,56 @@ model OrderGroup {
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   orders Order[]
+}
+
+/// @stage S05 · PR 664 (S28 Admin v5) — one line of an order's price-adjust ledger: a taka amount off, a percent off, the
+/// customer's wallet used, or the delivery charge taken off; with the reason, who asked, who approved and the order's
+/// total before and after. A PENDING line is a request above the asker's limit; the owner's answer is a NEW line (APPLIED
+/// or REJECTED, `requestId` pointing at the request). Never edited, never deleted; a mistake is corrected by a new line.
+/// @append-only
+model OrderPriceAdjustment {
+  id               String                    @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store                     @relation(fields: [storeId], references: [id])
+  orderId          String                    @db.Uuid
+  order            Order                     @relation(fields: [orderId], references: [id])
+  kind             OrderPriceAdjustmentKind
+  state            OrderPriceAdjustmentState
+  /// The percent typed (whole percent) for a PERCENT line; null for the others.
+  percent          Int?
+  /// The amount off (or the wallet used, or the delivery charge taken off), in minor units; always above zero.
+  amountMinor      Int
+  reasonKey        String
+  note             String?
+  /// The request this line answers (an APPLIED or REJECTED line that came after a PENDING one).
+  requestId        String?                   @db.Uuid
+  requestedById    String?                   @db.Uuid
+  /// Who applied or approved (an owner, or the asker inside his limit).
+  decidedById      String?                   @db.Uuid
+  /// The owner's PIN was checked for this line (a line above the asker's limit, or an approval).
+  pinChecked       Boolean                   @default(false)
+  totalBeforeMinor Int
+  totalAfterMinor  Int
+  /// The wallet entry a WALLET line debited.
+  walletEntryId    String?                   @db.Uuid
+  createdAt        DateTime                  @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, orderId, createdAt])
+  @@index([storeId, state, createdAt])
+  @@index([requestId])
+}
+
+enum OrderPriceAdjustmentKind {
+  AMOUNT
+  PERCENT
+  WALLET
+  FREE_DELIVERY
+}
+
+enum OrderPriceAdjustmentState {
+  PENDING
+  APPLIED
+  REJECTED
 }
 
 /// @stage S05 · PR 545, 563, 146 — the call queue for the AI or an employee: unclear address, new-customer verification,

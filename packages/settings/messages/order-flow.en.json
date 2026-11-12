@@ -1,0 +1,8 @@
+{
+  "orders": {
+    "priceAdjust": {
+      "label": "Price adjust on orders",
+      "help": "Staff may take money off an open order before it is booked: a taka amount, a percent, the customer's wallet or the delivery charge, with a reason. Every adjustment is a new line in the order's price ledger. Off as shipped. Add a role under 'Limits per role' to say how much it may take off by itself; a role that is not listed needs approval for everything. Above the limit the owner approves with the PIN."
+    }
+  }
+}

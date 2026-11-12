@@ -26,6 +26,7 @@ import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 import { giftRows } from './gift-card';
 import { lineSpecs } from './lines';
+import { priceAdjustSpec, priceEventLine, priceRequestBands } from './price-adjust';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
 export const COMMAND_PERM: Readonly<Record<CommandId, PermissionKey>> = {
@@ -67,6 +68,10 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   advanceResend: 'orders.advance.request',
   // PR 127 follow-up 215
   addLine: 'orders.lines',
+  // S28 · PR 664: price adjust and the owner's answers
+  priceAdjust: 'orders.priceAdjust',
+  priceApprove: 'orders.priceApprove',
+  priceRefuse: 'orders.priceApprove',
 };
 
 /** How many of the customer's other orders the page lists (the counts cover all of them). */
@@ -742,6 +747,10 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.note.archived': 'mute',
   'order.setFlags': 'mute',
   'order.edit': 'warn',
+  // S28 · PR 664: a ledger line applied, a request above someone's limit waiting, and one refused
+  'order.priceAdjust': 'warn',
+  'order.priceAdjustAsked': 'warn',
+  'order.priceAdjustRefused': 'mute',
   'order.twoSizeCheck': 'warn',
   'order.twoSizeAnswer': 'warn',
 };
@@ -932,6 +941,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const adv = perms.has('orders.advance.request') || o.status === 'AWAITING_ADVANCE' ? await od.advanceRequestView(deps, who.storeId, o.id) : null;
   const advance = advanceSpecs(view, o, adv, detail.allowed, perms);
   if (advance.request) (adv?.proposed ? specs.primary : specs.more).push(advance.request);
+  // S28 · PR 664: "Adjust price" (the owner's switch, the person's key, an open order) and the requests waiting for an answer
+  const adj = await od.priceAdjustView(deps, who, o.id);
+  const adjSpec = adj ? priceAdjustSpec(view, { id: o.id, number: o.number, version: o.version, currency: o.currency }, adj) : null;
+  if (adjSpec) specs.more.push(adjSpec);
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
   const lines = lineSpecs(view, o, detail.allowed, perms, detail.items.map((i) => ({ id: i.id, status: i.status, isAddOn: i.isAddOn, productName: i.productName, lineTotal: m(i.lineTotalMinor) })));
   const units = active.reduce((s, i) => s + i.quantity, 0);
@@ -1035,7 +1048,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || e.type === 'shipment.rebook' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : e.type === od.EXCHANGE_INTENT_EVENT ? exchangeIntentLine(view, e.data) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.PRICE_ADJUSTED_EVENT || e.type === od.PRICE_ASKED_EVENT || e.type === od.PRICE_REFUSED_EVENT ? priceEventLine(view, e.data, o.currency) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : e.type === od.EXCHANGE_INTENT_EVENT ? exchangeIntentLine(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })
@@ -1064,6 +1077,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     const spec = bundleSpec(view, o, numbers, perms);
     bands.push({ id: 'bundle', kind: 'stale', text: t(d, 'orders.band.bundle', { numbers }), specs: spec ? [spec] : [] });
   }
+  if (adj) bands.push(...priceRequestBands(view, { number: o.number, currency: o.currency }, adj));
   // PR 523: the number proposed for the blocklist, while the proposal is open (a person decides; the order goes on)
   const proposed = o.flags.includes(od.BLOCK_PROPOSED_FLAG) ? [...detail.timeline].reverse().find((e) => e.type === od.BLOCK_PROPOSAL_EVENT) : undefined;
   const proposalId = (proposed?.data as { proposalId?: unknown } | null)?.proposalId;

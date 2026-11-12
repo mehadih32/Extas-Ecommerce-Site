@@ -75,6 +75,9 @@ import comboPagesBn from '../messages/combo-pages.bn.json';
 import comboPagesEn from '../messages/combo-pages.en.json';
 import ordersBn from '../messages/orders.bn.json';
 import ordersEn from '../messages/orders.en.json';
+// S28 · PR 664 (registry v300): the Order flow rules in messages/order-flow.<lang>.json.
+import orderFlowBn from '../messages/order-flow.bn.json';
+import orderFlowEn from '../messages/order-flow.en.json';
 import checkoutMoreBn from '../messages/checkout-more.bn.json';
 import checkoutMoreEn from '../messages/checkout-more.en.json';
 import reviewsBn from '../messages/reviews.bn.json';
@@ -455,6 +458,9 @@ messages.bn = mergeMessages(messages.bn, photoshootBn);
 // S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 messages.en = mergeMessages(messages.en, photoshootCostEn);
 messages.bn = mergeMessages(messages.bn, photoshootCostBn);
+// S28 · PR 664 (registry v300): the Order flow rules.
+messages.en = mergeMessages(messages.en, orderFlowEn);
+messages.bn = mergeMessages(messages.bn, orderFlowBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {
