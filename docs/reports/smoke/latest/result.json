@@ -1,11 +1,11 @@
 {
-  "at": "2026-11-12 17:45 (Asia/Dhaka)",
+  "at": "2026-11-12 18:54 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "e7df4d0529b1",
+  "sha": "4893f4decdfb",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": false,
-  "pages": 562,
+  "pages": 566,
   "failed": 0,
   "problems": [
     "/reset: answered 401 with no cookie at all, expected 200 (no auth)",

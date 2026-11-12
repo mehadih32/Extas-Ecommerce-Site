@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-12 17:45 (Asia/Dhaka)
+# Smoke test · 2026-11-12 18:54 (Asia/Dhaka)
 
 > **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `e7df4d0529b1` · after deploy · result **FAIL** (562 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `4893f4decdfb` · after deploy · result **FAIL** (566 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -125,6 +125,8 @@ Site: https://new.extas.com.bd · commit `e7df4d0529b1` · after deploy · resul
 | `/admin/money` | phone | 200 | `/admin/money` | ok | — |
 | `/admin/reports` | phone | 200 | `/admin/reports` | ok | — |
 | `/admin/ai` | phone | 200 | `/admin/ai` | ok | — |
+| `/admin/agents` | phone | 200 | `/admin/agents` | ok | — |
+| `/admin/agents/gyani` | phone | 200 | `/admin/agents/gyani` | ok | — |
 | `/admin/settings` | phone | 200 | `/admin/settings` | ok | — |
 | `/admin/delivery/couriers` | phone | 200 | `/admin/delivery/couriers` | ok | — |
 | `/admin/delivery/couriers?archived=1` | phone | 200 | `/admin/delivery/couriers` | ok | — |
@@ -283,7 +285,7 @@ Site: https://new.extas.com.bd · commit `e7df4d0529b1` · after deploy · resul
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1cef3-bbe2-7eb3-bc3d-74d5b0080a58` | phone | 200 | `/admin/reports/health/history/01a1cef3-bbe2-7eb3-bc3d-74d5b0080a58` | ok | — |
+| `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | phone | 200 | `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -406,6 +408,8 @@ Site: https://new.extas.com.bd · commit `e7df4d0529b1` · after deploy · resul
 | `/admin/money` | desktop | 200 | `/admin/money` | ok | — |
 | `/admin/reports` | desktop | 200 | `/admin/reports` | ok | — |
 | `/admin/ai` | desktop | 200 | `/admin/ai` | ok | — |
+| `/admin/agents` | desktop | 200 | `/admin/agents` | ok | — |
+| `/admin/agents/gyani` | desktop | 200 | `/admin/agents/gyani` | ok | — |
 | `/admin/settings` | desktop | 200 | `/admin/settings` | ok | — |
 | `/admin/delivery/couriers` | desktop | 200 | `/admin/delivery/couriers` | ok | — |
 | `/admin/delivery/couriers?archived=1` | desktop | 200 | `/admin/delivery/couriers` | ok | — |
@@ -564,7 +568,7 @@ Site: https://new.extas.com.bd · commit `e7df4d0529b1` · after deploy · resul
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
-| `/admin/reports/health/history/01a1cef3-bbe2-7eb3-bc3d-74d5b0080a58` | desktop | 200 | `/admin/reports/health/history/01a1cef3-bbe2-7eb3-bc3d-74d5b0080a58` | ok | — |
+| `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | desktop | 200 | `/admin/reports/health/history/01a1cf9c-42df-74b1-8c0b-65cad6647c8d` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
