@@ -48,6 +48,10 @@ export const PHOTOSHOOT_ERROR_CODES = [
   'ORIGINAL_IMMUTABLE',
   // PR 444 / C7.6 hard rule: generating a back view with no real back_reference asset on file
   'NO_BACK_REFERENCE',
+  // PR 466 / C7.12 hard rule: recording a footwear product-only studio output with no real, matching-angle
+  // reference asset on file — "never invent" the same way PR 444's own NO_BACK_REFERENCE does, generalised to
+  // all six footwear angles rather than just the one ghost mannequin needed.
+  'NO_FOOTWEAR_REFERENCE',
   // PR 452: the store's own `studio.photoshoot.maxConcurrentJobs` is already reached — the job stays QUEUED, not failed
   'CONCURRENCY_LIMIT',
   // PR 452 (C7.20): the Photoshoot agent's own monthly spend cap is reached — new generations pause, the job stays QUEUED
@@ -68,7 +72,7 @@ export class PhotoshootError extends Error {
   get status(): number {
     if (this.code === 'NOT_FOUND') return 404;
     if (this.code === 'STALE') return 409;
-    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE') return 403;
+    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE' || this.code === 'NO_FOOTWEAR_REFERENCE') return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;
     return 400;
   }

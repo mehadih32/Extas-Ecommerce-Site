@@ -34,7 +34,10 @@
 // registered as one more Detail Finder type; see `detailRegions.ts`'s own `footwear` entry. Deliberately NOT here
 // (Part 2, PR 466): recording the finished per-angle studio image itself, and the plain-language "ask for the
 // missing angle" message C7.12 asks for.
+import { z } from 'zod';
+import { allow, checkStoreId, parse, PhotoshootError, type PhotoshootDeps, type Who } from './context';
 import type { AssetRole } from './roles';
+import { recordGeneratedAsset, type AssetRow } from './assets';
 
 /** C7.12's own six footwear angles, in the blueprint's own order. */
 export const FOOTWEAR_ANGLES = ['three_quarter', 'side', 'top', 'back', 'sole', 'detail'] as const;
@@ -102,4 +105,121 @@ export function missingFootwearAngles(assets: readonly FootwearStudioAsset[], wa
   return planFootwearAngles(assets, wanted)
     .filter((p) => !p.ready)
     .map((p) => p.angle);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 466 (Blueprint C7.12, C7.22 item 23) — footwear / product-only studio, part 2: the two pieces Part 1
+// (PR 465) left out on purpose — recording the finished per-angle studio image itself, and C7.12's own
+// plain-language "ask for the missing angle."
+
+/** The free tag every footwear product-only studio output carries, so later steps (and the admin) can find them
+ * among a product's other generated assets — the same pattern `GHOST_MANNEQUIN_TAG` and `DETAIL_FOCUS_CROP_TAG`
+ * already set. */
+export const FOOTWEAR_STUDIO_TAG = 'footwear_product_only_studio';
+
+const recordOutputInput = z
+  .object({
+    sourceAssetId: z.string().uuid(),
+    angle: z.enum(FOOTWEAR_ANGLES),
+    storageKey: z.string().min(1),
+    storage: z.enum(['LOCAL_DISK', 'AZURE_BLOB', 'S3_COMPATIBLE', 'GOOGLE_DRIVE']),
+    mimeType: z.string().min(1),
+    bytes: z.number().int().min(0),
+    checksumSha256: z.string().min(32),
+    width: z.number().int().min(1).optional(),
+    height: z.number().int().min(1).optional(),
+  })
+  .strict();
+export type RecordFootwearStudioOutputInput = z.input<typeof recordOutputInput>;
+
+export interface FootwearStudioOutput extends AssetRow {
+  angle: FootwearAngle;
+}
+
+/**
+ * Records a finished product-only studio render (`photoshoot.generate`) — C7.12's own "a multi-angle set from the
+ * owner's photos … on the standard background, with consistent shadow and scale." Refuses unless the named
+ * `sourceAssetId` is itself a real, non-archived reference photo tagged with THIS angle's own role — the C7.12
+ * hard rule actually enforced for every one of the six angles (not only "back", the way PR 446's own ghost-mannequin
+ * engine enforces it for just one): nothing here is ever produced from a different angle's photo, because
+ * product-only has nothing else to derive from. Filed through PR 444's `recordGeneratedAsset` chokepoint, so the
+ * same originals-immutable / generated-kept-separate guarantee carries through for free.
+ */
+export async function recordFootwearStudioOutput(deps: PhotoshootDeps, who: Who, input: unknown): Promise<FootwearStudioOutput> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const d = parse(recordOutputInput, input, 'footwear studio output');
+
+  const source = await deps.db.mediaAsset.findFirst({ where: { id: d.sourceAssetId, storeId: who.storeId } });
+  const wantRole = footwearAngleRole(d.angle);
+  if (!source || !source.isOriginal || source.role !== wantRole || source.archivedAt) {
+    throw new PhotoshootError('NO_FOOTWEAR_REFERENCE', `a ${d.angle} studio image is never generated without a real, on-file ${wantRole} reference`, ['sourceAssetId']);
+  }
+
+  const row = await recordGeneratedAsset(deps, who, {
+    sourceAssetId: d.sourceAssetId,
+    role: wantRole,
+    storageKey: d.storageKey,
+    storage: d.storage,
+    mimeType: d.mimeType,
+    bytes: d.bytes,
+    checksumSha256: d.checksumSha256,
+    width: d.width,
+    height: d.height,
+    tags: [FOOTWEAR_STUDIO_TAG],
+  });
+  return { ...row, angle: d.angle };
+}
+
+/**
+ * The most recent, non-archived footwear studio output already on file for this source photo and angle
+ * (`photoshoot.read`) — what a later job orchestrator checks before queuing a new render, so the same reference
+ * photo is never paid for twice (C7.6 "reuse approved outputs unless the source … changed"). Null when none
+ * exists yet.
+ */
+export async function findExistingFootwearStudioOutput(deps: Pick<PhotoshootDeps, 'db'>, who: Who, sourceAssetId: string, angle: FootwearAngle): Promise<FootwearStudioOutput | null> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.read');
+  const row = await deps.db.mediaAsset.findFirst({
+    where: { storeId: who.storeId, sourceAssetId, role: footwearAngleRole(angle), isAiGenerated: true, archivedAt: null, tags: { has: FOOTWEAR_STUDIO_TAG } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!row) return null;
+  return { id: row.id, storeId: row.storeId, isOriginal: row.isOriginal, role: row.role, isAiGenerated: row.isAiGenerated, sourceAssetId: row.sourceAssetId, archivedAt: row.archivedAt, tags: row.tags, angle };
+}
+
+/** A plain label for each angle, for the "ask for the missing angle" message below — never the raw snake_case
+ * identifier. */
+const FOOTWEAR_ANGLE_LABEL: Record<FootwearAngle, string> = {
+  three_quarter: 'three-quarter',
+  side: 'side',
+  top: 'top',
+  back: 'back',
+  sole: 'sole',
+  detail: 'detail',
+};
+
+export interface FootwearMissingAngleRequest {
+  angle: FootwearAngle;
+  /** C7.12's own plain words: "the system says plainly when it does not [have enough reference] and asks for
+   * the missing angle rather than inventing it." */
+  message: string;
+}
+
+/** C7.12's own honest ask, built straight from the angle's own name — never a separate label table to keep in
+ * step with `FOOTWEAR_ANGLE_LABEL` by hand. The same shape as `detailFinderClarityMessage` (PR 464), one level up
+ * (a missing angle, not a missing checklist point within one). */
+export function footwearMissingAngleMessage(angle: FootwearAngle): string {
+  const label = FOOTWEAR_ANGLE_LABEL[angle];
+  return `There is no real ${label} photo of this product yet — please add one ${label} photo before the product-only studio can produce that angle.`;
+}
+
+/**
+ * Pure, no database: every wanted angle that still has no real reference photo on file, paired with C7.12's own
+ * ask — recomputed fresh from the real references on file every time, the same "part of the normal upload flow,
+ * not an error" shape `detailFinderClarityRequests` (PR 464) already set for Detail Finder's own checklist
+ * points, one level up: a missing ANGLE here, not a missing checklist point within an already-present one.
+ */
+export function footwearMissingAngleRequests(assets: readonly FootwearStudioAsset[], wanted: readonly FootwearAngle[] = FOOTWEAR_ANGLES): FootwearMissingAngleRequest[] {
+  return missingFootwearAngles(assets, wanted).map((angle) => ({ angle, message: footwearMissingAngleMessage(angle) }));
 }
