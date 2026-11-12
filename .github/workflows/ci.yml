@@ -773,7 +773,15 @@ jobs:
         with:
           fetch-depth: 0
       - name: One register PR per commit
-        run: node tools/check-commits.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+        run: |
+          # CN-045: github.event.pull_request.base.sha is a snapshot from when THIS run's event fired, not live
+          # main. A run that sits queued for a while (automated deploy/smoke/erp report commits land on main every
+          # few minutes, each [skip ci]) picks up a stale base whose range then includes those unrelated main
+          # commits, failing this check for a PR that touched nothing of its own. Recompute the merge-base against
+          # a freshly fetched main instead, so the range is always just this PR's own commits.
+          git fetch origin main
+          BASE_SHA="$(git merge-base origin/main "${{ github.event.pull_request.head.sha }}")"
+          node tools/check-commits.mjs "$BASE_SHA" "${{ github.event.pull_request.head.sha }}"
 
   # readme-guard (owner, 20 Oct, CN-011; PR 594): README.md must be current in every pull request into main — a PR log
   # row for every PR in the title, stage counts equal to the register's statuses, no touched stage "Not started".
