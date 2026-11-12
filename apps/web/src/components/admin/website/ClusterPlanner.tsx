@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
 import { t, type Dict } from '@/lib/i18n';
 import { alikeLevel, closest, type LinkGap } from '@/lib/journal/clusters-model';
+import { PILLARS } from '@/lib/journal/authors-model';
 import type { Plan, PlanCluster, PlanPost, PlanTopic } from '@/lib/journal/clusters';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -18,7 +19,7 @@ const EDITOR = '/admin/website/blog';
 /** PR 528: a topic's brief. */
 const BRIEF = '/admin/website/blog/briefs';
 /** An input field's word on the screen. */
-const FIELD: Record<string, string> = { title: 'topic', clusterId: 'cluster', authorId: 'author', categoryId: 'category', targetPath: 'target', postId: 'pick' };
+const FIELD: Record<string, string> = { title: 'topic', clusterId: 'cluster', authorId: 'author', pillar: 'pillar', categoryId: 'category', targetPath: 'target', postId: 'pick' };
 
 export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; canPublish: boolean; lang: 'en' | 'bn'; part: 'queue' | 'clusters' | 'forms' }) {
   const id = useId();
@@ -29,7 +30,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
   const [said, setSaid] = useState<Said>(null);
   const [edit, setEdit] = useState<string | null>(null); // a cluster's id or 'new'
   const [cl, setCl] = useState<Record<string, string>>({});
-  const [tp, setTp] = useState({ title: '', query: '', locale: p.lang as string, clusterId: '', priority: '2', isPillar: false, authorId: '' });
+  const [tp, setTp] = useState({ title: '', query: '', locale: p.lang as string, clusterId: '', priority: '2', isPillar: false, pillar: '', authorId: '' });
   const [force, setForce] = useState(false);
   const [pick, setPick] = useState<Record<string, string>>({});
   const plan = p.plan;
@@ -204,6 +205,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
             <div className="a2-xs a2-mute">
               <span className={`a2-pill${x.status === 'approved' ? ' ok' : x.status === 'proposed' ? ' warn' : ''}`}>{x.postColumn ? c(`views.${x.postColumn}`) : l(`st.${x.status}`)}</span> <span className="a2-pill">{l(`p${x.priority}`)}</span> <span className="a2-pill">{l(x.locale)}</span>
               {x.isPillar ? <span className="a2-pill"> {l('pillarTopic')}</span> : null}
+              {x.pillar ? <span className="a2-pill"> {l(`pillar${x.pillar.charAt(0).toUpperCase()}${x.pillar.slice(1)}`)}</span> : null}
               {x.briefId ? <span className="a2-pill ok"> {l('briefOk')}</span> : null}
               {x.archived ? ` · ${l('archived')}` : ''}
             </div>
@@ -308,7 +310,7 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
 
   if (p.part === 'forms') {
     const addTopic = () =>
-      send('POST', '/api/admin/blog/topics', { title: tp.title, query: tp.query, locale: tp.locale, clusterId: tp.clusterId || null, priority: Number(tp.priority), isPillar: tp.isPillar, authorId: tp.authorId || null, force }, () => {
+      send('POST', '/api/admin/blog/topics', { title: tp.title, query: tp.query, locale: tp.locale, clusterId: tp.clusterId || null, priority: Number(tp.priority), isPillar: tp.isPillar, pillar: tp.pillar || null, authorId: tp.authorId || null, force }, () => {
         setTp({ ...tp, title: '', query: '', isPillar: false });
         setForce(false);
       });
@@ -335,7 +337,15 @@ export function ClusterPlanner(p: { words: Dict; plan: Plan; canWrite: boolean; 
                 ])}
               </div>
               {sel('clusterId', l('cluster'), tp.clusterId, (v) => setTp({ ...tp, clusterId: v }), clusterOpts)}
+              {sel(
+                'pillar',
+                l('section'),
+                tp.pillar,
+                (v) => setTp({ ...tp, pillar: v }),
+                [['', l('pillarNone')], ...PILLARS.map((x): [string, string] => [x, l(`pillar${x.charAt(0).toUpperCase()}${x.slice(1)}`)])],
+              )}
               {sel('authorId', l('author'), tp.authorId, (v) => setTp({ ...tp, authorId: v }), [['', l('authorNone')], ...plan.choices.authors.map((x): [string, string] => [x.id, x.displayName])])}
+              {tp.pillar && !tp.authorId ? <p className="a2-xs a2-mute">{l('authorAuto')}</p> : null}
               <div className="a2-swl">
                 <span id={`${id}-pil`}>{l('isPillar')}</span>
                 <button type="button" className={`a2-sw${tp.isPillar ? ' on' : ''}`} role="switch" aria-checked={tp.isPillar} aria-labelledby={`${id}-pil`} disabled={busy} onClick={() => setTp({ ...tp, isPillar: !tp.isPillar })} data-testid="pl-isPillar" />

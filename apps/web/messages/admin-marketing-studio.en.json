@@ -98,6 +98,65 @@
         "other": "Something went wrong."
       }
     },
+    "briefs": {
+      "metaTitle": "Creative brief — Studio",
+      "title": "Creative brief",
+      "sub": "A few short questions about a campaign, then three ready-made directions to choose from. Nothing is produced until you have seen a direction you like — ask to see the three again as many times as you want.",
+      "offNotice": "Off today. Turn on \"Creative brief\" in Settings before answering one.",
+      "listH": "Briefs",
+      "empty": "No brief started yet.",
+      "newH": "Start a brief",
+      "newD": "What this campaign is for, who it should reach, the offer and for how long — and, if you like, which products.",
+      "newDOff": "Turn the switch on in Settings first.",
+      "purpose": "What is this campaign for",
+      "audience": "Who should it reach",
+      "offer": "What is the offer",
+      "durationDays": "For how many days",
+      "products": "Which products (optional)",
+      "noProducts": "No product yet — add one in Products first.",
+      "campaign": "Campaign (optional)",
+      "noCampaign": "No campaign — answered ahead of one",
+      "draftIt": "Save this brief",
+      "drafting": "Saving…",
+      "proposeIt": "Propose three directions",
+      "proposing": "Proposing…",
+      "askForMore": "Show me the three again",
+      "chooseIt": "Choose this direction",
+      "choosing": "Choosing…",
+      "archiveIt": "Set aside",
+      "archiving": "Setting aside…",
+      "archived": "Set aside.",
+      "rowSummary": "{offer} · {durationDays} day(s)",
+      "directions": {
+        "urgency": {
+          "name": "Urgency — dark background, big timer, strong red",
+          "rationale": "{offer}, only {durationDays} day(s) left — built to feel urgent"
+        },
+        "festive": {
+          "name": "Festive — warm light, gold accents",
+          "rationale": "{offer} for {audience} — a warm, festive feel"
+        },
+        "clean_premium": {
+          "name": "Clean premium — product led, small offer tag",
+          "rationale": "{purpose}, a clean look with {offer} shown as a small tag"
+        }
+      },
+      "chosenDirection": "Chosen: {name}",
+      "status": {
+        "DRAFTING": "Answering",
+        "PROPOSED": "Three directions ready",
+        "CHOSEN": "Direction chosen",
+        "ARCHIVED": "Set aside"
+      },
+      "err": {
+        "INVALID_INPUT": "Check what you typed.",
+        "OFF": "The creative brief is off — turn it on in Settings first.",
+        "NOT_FOUND": "Not found — the page may need a refresh.",
+        "WRONG_STATE": "This brief has already moved on — the page may need a refresh.",
+        "network": "Could not reach the server.",
+        "other": "Something went wrong."
+      }
+    },
     "hub": {
       "metaTitle": "Studio · Marketing",
       "title": "Studio",
@@ -109,11 +168,15 @@
         "name": "Name",
         "kind": "Kind",
         "dailyLimit": "Daily limit",
+        "directPostApproved": "Direct posting",
         "spec": "Template shape",
         "assetId": "File",
         "templateId": "Template",
         "productIds": "Products",
-        "caption": "Caption"
+        "caption": "Caption",
+        "renderJobId": "Generated content",
+        "accountId": "Account",
+        "scheduledAt": "Hold until"
       },
       "err": {
         "INVALID_INPUT": "Check the fields: {fields}.",
@@ -123,6 +186,10 @@
         "TEMPLATE_ARCHIVED": "Restore the template before changing it.",
         "NO_PRODUCTS": "Pick at least one product to feature.",
         "WRONG_STATE": "This job already ran — refresh the page.",
+        "ACCOUNT_OFF": "This account is archived or switched off.",
+        "NOT_SUPPORTED": "This platform cannot be posted to yet.",
+        "DAILY_LIMIT": "This account has already reached its limit for that day.",
+        "EMPTY": "Write a caption before posting.",
         "TOO_LARGE": "The file is larger than the upload limit.",
         "NOT_AN_IMAGE": "That file is not a picture.",
         "TYPE_NOT_ALLOWED": "That kind of file is not accepted.",
@@ -176,7 +243,11 @@
         "limitSave": "Save",
         "saved": "Saved",
         "restore": "Bring back",
-        "archive": "Set aside"
+        "archive": "Set aside",
+        "draftOnly": "TikTok: lands in drafts only — someone taps publish in the app",
+        "directApproved": "TikTok: posts straight to the feed (app audit approval on file)",
+        "switchToDraft": "Switch back to drafts only",
+        "switchToDirect": "Allow direct posting (app audit approved)"
       },
       "templates": {
         "h": "Templates",
@@ -300,6 +371,88 @@
           "CANCELLED": "Cancelled"
         },
         "noPhoto": "None of this job's products has a live photo yet."
+      },
+      "posts": {
+        "h": "Posts",
+        "d": "Turn a finished preview into a post on a Facebook, Instagram or TikTok account, now or held for a chosen time (the calendar below). A new account always needs your approval first, so queuing one here only waits — nothing reaches the real account until that account is set to run free, or you approve it in the queue, and it is then posted (by hand, or by \"Run due posts now\" once its time comes).",
+        "empty": "No post queued yet.",
+        "addH": "Post something",
+        "noRenderJobs": "Generate something above first (it must finish before it can be posted).",
+        "noAccounts": "Add and switch on a Facebook, Instagram or TikTok account above first.",
+        "captionPh": "Leave empty to use the generated content's own caption",
+        "captionHelp": "Facebook, Instagram and TikTok can be posted to today; YouTube follows in a later PR.",
+        "scheduledAt": "Hold until (optional)",
+        "scheduledAtHelp": "Leave empty to post the moment this is cleared. Set a time to hold it for the calendar instead.",
+        "queue": "Queue it",
+        "queued": "Queued",
+        "run": "Post now",
+        "ran": "Posted",
+        "status": {
+          "PENDING_APPROVAL": "Waiting for approval",
+          "SCHEDULED": "Scheduled",
+          "PUBLISHING": "Ready to post",
+          "SUCCEEDED": "Posted",
+          "FAILED": "Could not post",
+          "REJECTED": "Rejected"
+        },
+        "waitingApproval": "This account needs approval before anything from it goes out.",
+        "posted": "Posted to the real account.",
+        "scheduledFor": "Held for {at}",
+        "decide": {
+          "approve": "Approve",
+          "reject": "Reject",
+          "done": "Decided"
+        },
+        "reschedule": {
+          "label": "Reschedule",
+          "save": "Save time",
+          "clear": "Clear time",
+          "saved": "Saved"
+        }
+      },
+      "calendar": {
+        "h": "Content calendar",
+        "d": "The next two weeks: every post that has a time, or that already went out the moment it was cleared with no time chosen.",
+        "empty": "Nothing in the next two weeks yet.",
+        "dayEmpty": "Nothing this day."
+      },
+      "rules": {
+        "h": "Auto-schedule rules",
+        "d": "A cadence of posts and reels a day, on chosen weekdays, drawing from chosen categories — a preview of the next day it would run on. Picking products and templates and actually sending them still needs a person today; see the guide for why.",
+        "empty": "No auto-schedule rule yet.",
+        "addH": "Add a rule",
+        "account": "Account",
+        "anyAccount": "— any account —",
+        "postsPerDay": "Posts a day",
+        "reelsPerDay": "Reels a day",
+        "weekdays": "Active weekdays",
+        "weekday0": "Sun",
+        "weekday1": "Mon",
+        "weekday2": "Tue",
+        "weekday3": "Wed",
+        "weekday4": "Thu",
+        "weekday5": "Fri",
+        "weekday6": "Sat",
+        "categoryIds": "Categories",
+        "categoryIdsPh": "Category id, category id, …",
+        "categoryIdsHelp": "Paste one or more category ids, separated by commas. Leave empty to draw from every category.",
+        "add": "Add rule",
+        "added": "Rule added — switched off",
+        "turnOn": "Turn on",
+        "turnOff": "Turn off",
+        "archive": "Set aside",
+        "restore": "Bring back",
+        "archived": "Set aside",
+        "on": "On",
+        "off": "Off",
+        "saved": "Saved",
+        "nextActiveDay": "Next active day: {date}",
+        "noNextActiveDay": "No weekday is active, or this rule is off."
+      },
+      "runDue": {
+        "button": "Run due posts now",
+        "done": "Due posts sent",
+        "result": "{ran} sent now ({succeeded} ok, {failed} failed)."
       }
     },
     "overlay": {

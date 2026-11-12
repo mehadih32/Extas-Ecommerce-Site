@@ -121,6 +121,7 @@
     "blogAds": "নিজের বিজ্ঞাপন",
     "blogAd": "নিজের বিজ্ঞাপন",
     "blogPipeline": "লেখার পাইপলাইন",
+    "blogSource": "লিংক থেকে লেখা",
     "marketingStudioOverlay": "ক্যাম্পেইন ওভারলে",
     "marketingLanding": "ল্যান্ডিং পেজ",
     "marketingLandingPage": "ল্যান্ডিং পেজ বানানো",
@@ -129,6 +130,7 @@
     "marketingStudioMotion": "মোশন লাইব্রেরি",
     "marketingStudioModels": "মডেল লাইব্রেরি",
     "marketingStudioVideos": "ভিডিও",
+    "marketingStudioBriefs": "ক্রিয়েটিভ ব্রিফ",
     "marketingSeasonal": "উৎসবের পেজ",
     "marketingSeasonalPage": "উৎসবের পেজ বানানো",
     "marketingSeasonalYearly": "উৎসবের পেজ · প্রতি বছর",
@@ -505,6 +507,43 @@
         "verifyToken": "ভেরিফাই টোকেন — আপনার বানানো যেকোনো লম্বা শব্দ; Meta-র ওয়েবহুক সেটিংসেও একই শব্দ লিখুন",
         "igUserId": "Instagram Business অ্যাকাউন্টের আইডি (Meta অ্যাপ → লিংক করা পেজ → Instagram accounts)",
         "apiVersion": "API ভার্সন — খালি রাখলে দোকান যেটা দিয়ে বানানো সেটাই",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "facebookPagePublish": {
+      "name": "Facebook Page পোস্টিং (স্টুডিও)",
+      "desc": "কনটেন্ট স্টুডিও থেকে সরাসরি পেজের ফিডে পোস্ট করতে দেয়। কী বসিয়ে টেস্ট (পেজ পড়া) পাস না হওয়া পর্যন্ত নকল মোড: তার আগে কিছুই পোস্ট হয় না। আজকের পোস্ট সবসময় একটাই ছবি (স্টুডিওর আসল ভিডিও বানানোর যন্ত্র পরে আসবে)।",
+      "fields": {
+        "pageAccessToken": "পেজ অ্যাক্সেস টোকেন (Meta অ্যাপ → Messenger → API settings; দীর্ঘমেয়াদি পেজ টোকেন)",
+        "pageId": "পেজের আইডি (পেজ → About → Page transparency, বা Meta অ্যাপ → Messenger)",
+        "apiVersion": "API ভার্সন — খালি রাখলে দোকান যেটা দিয়ে বানানো সেটাই",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "instagramPublish": {
+      "name": "Instagram পোস্টিং (স্টুডিও)",
+      "desc": "পেজের সাথে যুক্ত Instagram Business অ্যাকাউন্টের ফিডে পোস্ট করতে দেয়। কী বসিয়ে টেস্ট (অ্যাকাউন্ট পড়া) পাস না হওয়া পর্যন্ত নকল মোড: তার আগে কিছুই পোস্ট হয় না। আজকের পোস্ট সবসময় একটাই ছবি (স্টুডিওর আসল ভিডিও বানানোর যন্ত্র পরে আসবে)।",
+      "fields": {
+        "pageAccessToken": "পেজ অ্যাক্সেস টোকেন (উপরের Facebook Page পোস্টিং-এর টোকেনটাই)",
+        "igUserId": "Instagram Business Account আইডি (Meta অ্যাপ → যুক্ত পেজ → Instagram accounts)",
+        "apiVersion": "API ভার্সন — খালি রাখলে দোকান যেটা দিয়ে বানানো সেটাই",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "tiktokPublish": {
+      "name": "TikTok পোস্টিং (স্টুডিও)",
+      "desc": "এই টিকটক অ্যাকাউন্টে কনটেন্ট স্টুডিও থেকে ছবির পোস্ট করতে দেয় — অ্যাকাউন্টের নিজের \"সরাসরি পোস্ট\" সুইচ চালু না হওয়া পর্যন্ত শুধু ড্রাফটে যায় (Marketing › Studio), যার জন্য আগে টিকটকের অ্যাপ অডিট অনুমোদন লাগে। কী বসিয়ে টেস্ট (অ্যাকাউন্ট পড়া) পাস না হওয়া পর্যন্ত নকল মোড: তার আগে কিছুই পোস্ট হয় না। আজকের পোস্ট সবসময় একটাই ছবি (স্টুডিওর আসল ভিডিও বানানোর যন্ত্র পরে আসবে)।",
+      "fields": {
+        "accessToken": "অ্যাক্সেস টোকেন (TikTok for Developers → আপনার অ্যাপ → Content Posting API, video.publish/video.upload স্কোপ সহ)",
+        "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
+      }
+    },
+    "youtubePublish": {
+      "name": "YouTube চ্যানেল (স্টুডিও)",
+      "desc": "কনটেন্ট স্টুডিওকে এই YouTube চ্যানেলের সাথে যুক্ত করে, যাতে টেস্ট দিয়ে প্রমাণ হয় কী-টা ঠিক আছে। এখনো এখান থেকে পোস্ট হয় না: YouTube-এর আপলোড API-এর জন্য আসল ভিডিও ফাইল লাগে, আর স্টুডিও আজ শুধু একটা প্রিভিউ ছবি বানায় — আসল ভিডিও বানানোর যন্ত্র না আসা পর্যন্ত (পরের একটা PR) YouTube-এ পোস্ট করা বন্ধ থাকে; এর বদলে কিছু বানিয়ে দেখানো হয় না।",
+      "fields": {
+        "accessToken": "অ্যাক্সেস টোকেন (Google Cloud → YouTube Data API v3, youtube.upload স্কোপ সহ)",
+        "channelId": "চ্যানেল আইডি (YouTube Studio → Settings → Channel → Advanced settings)",
         "baseUrl": "ঠিকানা — শুধু টেস্ট সার্ভারের জন্য"
       }
     },

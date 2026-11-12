@@ -1,8 +1,11 @@
-// S23 · PR 437–439 — Marketing › Studio on a real PostgreSQL: the whole page (accounts, templates, brand assets,
-// render jobs); seeing needs `studio.read`, changing accounts/templates/assets needs `studio.write`, queueing or
-// running a render job needs `studio.generate`; a brand asset's archive/restore also needs `media.manage`,
-// uploading one needs `media.upload` (checked by the shared `/api/admin/media`, not exercised here). A throwaway
-// database (skipped without TEST_DATABASE_ADMIN_URL). Sample values only.
+// S23 · PR 437–442 — Marketing › Studio on a real PostgreSQL: the whole page (accounts, templates, brand assets,
+// render jobs, posts, the calendar and the auto-schedule rules); seeing needs `studio.read`, changing
+// accounts/templates/assets/rules needs `studio.write`, queueing or running a render job needs `studio.generate`,
+// and so does queuing, rescheduling a post — running one, or queuing one on an account that runs free, also needs
+// `studio.publish`, same as `schedule.runDue`; deciding a post waiting for approval needs `studio.approve`; a
+// brand asset's archive/restore also needs `media.manage`, uploading one needs `media.upload` (checked by the
+// shared `/api/admin/media`, not exercised here). A throwaway database (skipped without TEST_DATABASE_ADMIN_URL).
+// Sample values only.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
@@ -33,13 +36,15 @@ function req(method: string, o: { body?: unknown; cookie?: string; path?: string
   return new Request(`https://${HOST}${o.path ?? '/api/admin/marketing/studio'}`, { method, headers, body: o.body === undefined ? undefined : JSON.stringify(o.body) });
 }
 
-describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)', () => {
+describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437–442)', () => {
   let t: TestDatabase;
   let admin: AdminDeps;
   let media: MediaDeps;
   let owner = '';
   let writer = '';
+  let publisher = '';
   let reader = '';
+  let decider = '';
 
   const api = async (method: string, body?: unknown, cookie = owner) => {
     const res = await studioHandler(req(method, { body, cookie }), admin, media);
@@ -68,7 +73,9 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
       return cookiesOf(await passwordHandler(req('POST', { path: '/api/admin/auth/password', cookie: once, body: { current: 'first password from the owner', next: 'a sentence this account alone chose as its own' } }), admin));
     };
     writer = await makeStaff('w438', ['studio.read', 'studio.write', 'studio.generate', 'media.manage']);
+    publisher = await makeStaff('p440', ['studio.read', 'studio.write', 'studio.generate', 'studio.publish', 'media.manage']);
     reader = await makeStaff('r438', ['studio.read']);
+    decider = await makeStaff('d442', ['studio.read', 'studio.approve']);
   });
   afterAll(async () => {
     await t?.drop();
@@ -77,7 +84,7 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
   it('GET answers accounts, templates, brand assets and render jobs together; a reader cannot write', async () => {
     const g = await api('GET', undefined, reader);
     expect(g.status).toBe(200);
-    expect(g.a).toMatchObject({ ok: true, accounts: [], templates: [], assets: [], renders: [], canWrite: false });
+    expect(g.a).toMatchObject({ ok: true, accounts: [], templates: [], assets: [], renders: [], posts: [], canWrite: false, canPublish: false });
     const denied = await api('POST', { action: 'account.add', platform: 'facebook', externalId: 'p-1', name: 'Page' }, reader);
     expect(denied.status).toBe(403);
   });
@@ -137,5 +144,122 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Studio on PostgreSQL (PR 437, 438)'
     const g = await api('GET', undefined, writer);
     expect((g.a.renders as { id: string }[]).some((r) => r.id === jobId)).toBe(true);
     expect(g.a.images as Record<string, unknown>).toHaveProperty(asset.id);
+  });
+
+  it('queues a post from a finished render job and runs it once its account runs free; a writer without studio.publish cannot queue one that runs free', async () => {
+    const tpl = await api('POST', { action: 'template.add', kind: 'image', name: 'Post poster', spec: { aspectRatio: '1:1', brandAssetIds: [] } }, publisher);
+    const templateId = (tpl.a as { id: string }).id;
+    const product = await t.prisma.product.create({ data: { storeId: S, slug: 'studio-post-1', nameEn: 'Studio Post Tee' } });
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${S}/studio-post-1.jpg`, mimeType: 'image/jpeg', bytes: 400n, checksumSha256: 'spost'.padEnd(64, '0'), isOriginal: true } });
+    await t.prisma.productMedia.create({ data: { storeId: S, productId: product.id, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+    const queuedRender = await api('POST', { action: 'render.queue', templateId, productIds: [product.id], caption: 'Studio post' }, publisher);
+    const renderJobId = (queuedRender.a as { id: string }).id;
+    await api('POST', { action: 'render.run', id: renderJobId }, publisher);
+
+    const acc = await api('POST', { action: 'account.add', platform: 'facebook', externalId: 'p-440', name: 'Post Page' }, publisher);
+    const accountId = (acc.a as { id: string }).id;
+    const enabled = await api('POST', { action: 'account.switch', id: accountId, enabled: true, version: (acc.a as { version: string }).version }, publisher);
+
+    const needsApproval = await api('POST', { action: 'post.queue', renderJobId, accountId }, publisher);
+    expect(needsApproval.status).toBe(200);
+    expect(needsApproval.a).toMatchObject({ ok: true, status: 'PENDING_APPROVAL' });
+
+    const freed = await api('POST', { action: 'account.requireApproval', id: accountId, requireApproval: false, version: (enabled.a as { version: string }).version }, publisher);
+    expect(freed.status).toBe(200);
+
+    const deniedQueue = await api('POST', { action: 'post.queue', renderJobId, accountId, caption: 'needs publish' }, writer);
+    expect(deniedQueue.status).toBe(403);
+
+    const queued = await api('POST', { action: 'post.queue', renderJobId, accountId, caption: 'Launch post' }, publisher);
+    expect(queued.status).toBe(200);
+    expect(queued.a).toMatchObject({ ok: true, status: 'PUBLISHING', platform: 'facebook' });
+    const postId = (queued.a as { id: string }).id;
+
+    const deniedRun = await api('POST', { action: 'post.run', id: postId }, writer);
+    expect(deniedRun.status).toBe(403);
+
+    const ran = await api('POST', { action: 'post.run', id: postId }, publisher);
+    expect(ran.status).toBe(200);
+    expect(ran.a).toMatchObject({ ok: true, status: 'SUCCEEDED' });
+    expect(typeof (ran.a as { externalPostId: string }).externalPostId).toBe('string');
+
+    const g = await api('GET', undefined, publisher);
+    expect((g.a.posts as { id: string }[]).some((p) => p.id === postId)).toBe(true);
+    expect(g.a.canPublish).toBe(true);
+  });
+
+  it('adds, switches and archives an auto-schedule rule (PR 442); a reader cannot', async () => {
+    const denied = await api('POST', { action: 'rule.add', cadence: { postsPerDay: 1, reelsPerDay: 0, activeWeekdays: [] }, categoryIds: [] }, reader);
+    expect(denied.status).toBe(403);
+
+    const made = await api('POST', { action: 'rule.add', cadence: { postsPerDay: 2, reelsPerDay: 1, activeWeekdays: [1, 3] }, categoryIds: [] }, writer);
+    expect(made.status).toBe(200);
+    expect(made.a).toMatchObject({ ok: true, enabled: false, archived: false });
+    const ruleId = (made.a as { id: string }).id;
+
+    const on = await api('POST', { action: 'rule.switch', id: ruleId, enabled: true, version: (made.a as { version: string }).version }, writer);
+    expect(on.a).toMatchObject({ ok: true, enabled: true });
+    expect((on.a as { nextActiveDay: string | null }).nextActiveDay).not.toBeNull();
+
+    const archived = await api('POST', { action: 'rule.archive', id: ruleId, archived: true, version: (on.a as { version: string }).version }, writer);
+    expect(archived.a).toMatchObject({ ok: true, archived: true, enabled: false });
+
+    const g = await api('GET', undefined, writer);
+    expect((g.a.scheduleRules as { id: string }[]).some((r) => r.id === ruleId)).toBe(true);
+  });
+
+  it('holds a post for a chosen time, approves it through the queue, reschedules it, shows it on the calendar, and `schedule.runDue` sends it once its time comes (PR 442); a decider without `studio.generate` cannot reschedule', async () => {
+    const tpl = await api('POST', { action: 'template.add', kind: 'image', name: 'Calendar poster', spec: { aspectRatio: '1:1', brandAssetIds: [] } }, publisher);
+    const templateId = (tpl.a as { id: string }).id;
+    const product = await t.prisma.product.create({ data: { storeId: S, slug: 'studio-cal-1', nameEn: 'Studio Calendar Tee' } });
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${S}/studio-cal-1.jpg`, mimeType: 'image/jpeg', bytes: 400n, checksumSha256: 'scal1'.padEnd(64, '0'), isOriginal: true } });
+    await t.prisma.productMedia.create({ data: { storeId: S, productId: product.id, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+    const queuedRender = await api('POST', { action: 'render.queue', templateId, productIds: [product.id], caption: 'Studio calendar' }, publisher);
+    const renderJobId = (queuedRender.a as { id: string }).id;
+    await api('POST', { action: 'render.run', id: renderJobId }, publisher);
+
+    const acc = await api('POST', { action: 'account.add', platform: 'facebook', externalId: 'p-442', name: 'Calendar Page' }, publisher);
+    const accountId = (acc.a as { id: string }).id;
+    await api('POST', { action: 'account.switch', id: accountId, enabled: true, version: (acc.a as { version: string }).version }, publisher);
+    // This account keeps `requireApproval: true` (the default), so the queued post waits for the approval queue.
+
+    const soon = new Date(Date.now() + 5000).toISOString();
+    const queued = await api('POST', { action: 'post.queue', renderJobId, accountId, caption: 'Calendar post', scheduledAt: soon }, publisher);
+    expect(queued.status).toBe(200);
+    expect(queued.a).toMatchObject({ ok: true, status: 'PENDING_APPROVAL', scheduledAt: soon });
+    const postId = (queued.a as { id: string }).id;
+
+    const deniedReschedule = await api('POST', { action: 'post.reschedule', id: postId, scheduledAt: null }, decider);
+    expect(deniedReschedule.status).toBe(403);
+
+    const deniedDecide = await api('POST', { action: 'post.decide', id: postId, decision: 'approve' }, reader);
+    expect(deniedDecide.status).toBe(403);
+
+    const approved = await api('POST', { action: 'post.decide', id: postId, decision: 'approve' }, decider);
+    expect(approved.status).toBe(200);
+    expect(approved.a).toMatchObject({ ok: true, status: 'SCHEDULED' });
+
+    const laterIso = new Date(Date.now() + 86_400_000).toISOString();
+    const moved = await api('POST', { action: 'post.reschedule', id: postId, scheduledAt: laterIso }, publisher);
+    expect(moved.a).toMatchObject({ ok: true, status: 'SCHEDULED', scheduledAt: laterIso });
+
+    const cal = await api('GET', undefined, publisher);
+    const calendarDays = cal.a.calendar as { date: string; posts: { id: string }[] }[];
+    expect(calendarDays.some((day) => day.posts.some((p) => p.id === postId))).toBe(true);
+
+    // Moved back to right now so `schedule.runDue` has something due.
+    const backNow = await api('POST', { action: 'post.reschedule', id: postId, scheduledAt: new Date(Date.now() + 500).toISOString() }, publisher);
+    expect(backNow.a).toMatchObject({ ok: true, status: 'SCHEDULED' });
+    await new Promise((r) => setTimeout(r, 1200));
+
+    const deniedRunDue = await api('POST', { action: 'schedule.runDue' }, writer);
+    expect(deniedRunDue.status).toBe(403);
+
+    const due = await api('POST', { action: 'schedule.runDue' }, publisher);
+    expect(due.status).toBe(200);
+    expect(due.a).toMatchObject({ ok: true, ran: 1, succeeded: 1 });
+
+    const again = await api('POST', { action: 'schedule.runDue' }, publisher);
+    expect(again.a).toMatchObject({ ok: true, ran: 0 });
   });
 });

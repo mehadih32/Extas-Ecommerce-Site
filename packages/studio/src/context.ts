@@ -47,8 +47,11 @@ export const STUDIO_ERROR_CODES = [
   // PR 440–442: the post's platform account is switched off, archived, or over its daily limit
   'ACCOUNT_OFF',
   'DAILY_LIMIT',
-  // PR 440–442: a post not DRAFT/QUEUED cannot be approved, rejected or edited again
+  // PR 440–442: a post not DRAFT/QUEUED cannot be approved, rejected or edited again; PR 440 also refuses posting a
+  // render job that has not finished yet with this same code
   'WRONG_STATE',
+  // PR 440: the account's platform has no publishing adapter yet (TikTok/YouTube are PR 441)
+  'NOT_SUPPORTED',
   // PR 443: the channel is not added in Support, or is switched off
   'CHANNEL_OFF',
 ] as const;

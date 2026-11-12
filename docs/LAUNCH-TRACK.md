@@ -36,6 +36,8 @@
 
 **6 Nov 2026, 14:55 (CN-036 update):** open stages 517 active, 465 built, **52 to build** (S00 24, S02 13, S12 9, S13 3, S19 3) — after batch 11 (#85): 469 built, **48 to build** (S02 11, S19 1), **Launch 306/331**; after batch 12 (#86, the Lumen foundation 625–630, S02 78, 79): 477 built, **40 to build** (S00 18, S02 9), **Launch 312/331**; after batch 13 (#87, S02 80, 81, 83, S12 251–253): 483 built, **34 to build** (S00 18, S02 6, S12 6), Launch unchanged; after batch 14 (#89, S00 631–637, S02 595–599, S12 530, 547): 497 built, **20 to build** (S00 11, S02 1, S12 4), **Launch 319/331**; after batch 15 (#91, S00 638–645, 647, 648, S02 600, S12 591, 592, S13 569, 589): 512 built, **5 to build** (S00 1 — 646, S12 2 — 529, 593, S13 1 — 548: AI work, wait for S15; S19 1 — 587), **Launch 329/331** (left: 646 and 587); after batch 16 (#92, follow-ups only): unchanged; after batch 17 (#93, follow-ups only): unchanged; after batch 18 (#94, follow-ups only): unchanged; after batch 19 (#96, follow-ups only): unchanged; S02 is done; closed stages S15, S17, S23, S24, S25 (and S26, S27) 127 active, 1 built (PR 362), **126 closed** until the owner says so. The After-launch rows of a closed stage stay in the list below, marked closed, and are skipped.
 
+**12 Nov 2026 (AI-2 lane, CN-044/CN-045):** PR 490 (S25, campaign creative brief and three-direction grooming flow) built in a new worktree/branch (`.claude/worktrees/ai2-s25-pr490`, `pr-490-campaign-creative-brief`), after checking open GitHub PRs as well as local worktrees for a collision on this number (none found — PR #179 covers only 484–488, PR #124 covers 489). 533/648 PRs overall (S25 4/10). **Correction, same session:** the earlier PR 487/488 work on branch `pr-487-campaign-creative-export-part1` (GitHub PR #183) was a genuine duplicate of PR #179's own, already-tested 484–488 chain (confirmed by reading #179's commits); PR #183 is now closed, superseded, with no further pushes — register PRs 487 and 488 stay credited to #179.
+
 Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered); since 6 Nov 2026 also the admin looks PR 649–651 (CN-036). They stay in the parking lot until the owner says so.
 
 **Launch left, by stage (25 Oct 2026):** S01 1 · S05 1 · S08 15 · S09 2 · S11 14 · S13 1 · S14 7 · S16 9 · S17 1 · S18 9 · S19 17 · S20 1 · S21 3 · S22 2 = 83.
@@ -664,7 +666,7 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 266 | 487 | S25 | Campaign creative export — part 1 | to build |
 | 267 | 488 | S25 | Campaign creative export — part 2 | to build |
 | 268 | 489 | S25 | Campaign overlay system — page-level and time-bound | to build |
-| 269 | 490 | S25 | Campaign creative brief and three-direction grooming flow | to build |
+| 269 | 490 | S25 | Campaign creative brief and three-direction grooming flow | built |
 | 270 | 356 | S17 | Store entity and query scoping | to build |
 | 271 | 357 | S17 | Store switcher | to build |
 | 272 | 358 | S17 | Shared vs separate settings | to build |
