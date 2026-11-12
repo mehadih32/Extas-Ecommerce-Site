@@ -1,11 +1,11 @@
 {
-  "at": "2026-11-12 12:42 (Asia/Dhaka)",
+  "at": "2026-11-12 13:49 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "06ffb720de42",
+  "sha": "fe844b912975",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": false,
-  "pages": 558,
+  "pages": 562,
   "failed": 18,
   "problems": [
     "signed out, /admin/products did not go to the sign-in page (/admin/products)",
