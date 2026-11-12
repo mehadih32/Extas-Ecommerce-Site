@@ -288,6 +288,12 @@
 .adm2 .a3-tx{flex:1;min-width:0}
 .adm2 .a3-tv{font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.15;margin-top:3px}
 .adm2 .a3-tn{font-size:12.5px;color:var(--mute);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* PR 658 (CN-025/CN-044): the Command center design's KPI tiles — a3-ktile:hover and the phone a3-kv size already
+   existed (future-proofed with the rest of this file's kit); the base layout is added here. */
+.adm2 .a3-kt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.adm2 .a3-ktile{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--a3r);box-shadow:var(--a3sh);min-width:0}
+.adm2 .a3-kd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm2 .a3-so{font-size:12.5px;color:var(--mute);margin-top:2px}
 .adm2 .a3-pipe{margin-top:20px;padding:20px 24px;display:grid;grid-template-columns:190px minmax(0,1fr) 240px;align-items:center;gap:24px}
 .adm2 .a3-pipeh h2{font-size:15.5px;font-weight:650}
 .adm2 .a3-pipeh p{font-size:13px;color:var(--mute);margin:3px 0 10px}
@@ -396,6 +402,7 @@
   .adm2 .a3-tile{flex-direction:column;align-items:stretch}
   .adm2 .a3-tile .a3-spark{width:100%}
   .adm2 .a3-k4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adm2 .a3-kt{grid-template-columns:repeat(2,minmax(0,1fr))}
   .adm2 .a3-dg2{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-dg3[style*="--n:3"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   .adm2 .a3-dg3[style*="--n:3"]>:last-child{grid-column:1/-1}
@@ -433,6 +440,7 @@
   .adm2 .a3-stg:last-child{grid-column:1/-1;border-left:0;padding-left:0}
   .adm2 .a3-dg3,.adm2 .a3-dg3[style*="--n:4"],.adm2 .a3-dg3[style*="--n:3"]{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-k4{grid-template-columns:minmax(0,1fr)}
+  .adm2 .a3-kt{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-kv{font-size:27px}
   .adm2 .a3-water{grid-template-columns:repeat(var(--n),minmax(46px,1fr));overflow-x:auto;height:240px}
   .adm2 .a3-chd{padding:16px 16px 0}

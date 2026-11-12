@@ -357,7 +357,10 @@
       "/admin/reports/health/smoke",
       "/admin/reports/health/history",
       "/admin/ai",
+      "/admin/agents",
+      "/admin/agents/gyani",
       "/admin/ai/audit",
+      "/admin/ai/reports",
       "/admin/money/refunds",
       "/admin/money/refunds?view=all",
       "/admin/build",
@@ -386,6 +389,7 @@
       "/admin/marketing/ad-platforms/campaigns",
       "/admin/marketing/studio/motion",
       "/admin/marketing/studio/videos",
+      "/admin/marketing/studio/overlay",
       "/admin/website/layouts",
       "/admin/website/layouts?page=category",
       "/admin/website/layouts?page=product",
@@ -551,6 +555,7 @@
       { "from": "/admin/customers", "selector": "[data-testid=\"cus-row\"] a.a2-b", "take": 1, "required": true, "expect": ["[data-testid=\"customer-page\"][data-lm-ready]", "[data-testid=\"cus-split\"]", "[data-testid=\"cus-tabs\"]", "[data-testid=\"cus-profile-kpis\"]", "[data-testid=\"cus-history\"]", "[data-testid=\"cus-orders\"]", "[data-testid=\"a2-tabs\"]"] }
     ],
     "expect": {
+      "/admin/ai/reports": ["[data-testid=\"ai-reports\"][data-lm-ready]", "[data-testid=\"ai-reports-agents\"]", "[data-testid=\"ai-reports-periods\"]", "[data-testid=\"ai-report-current\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/orders/packing": ["[data-testid=\"pack-page\"][data-lm-ready]", "[data-testid=\"pack-steps\"]", "[data-testid=\"pack-settings\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/products/reviews": ["[data-testid=\"product-reviews\"][data-lm-ready]", "[data-testid=\"review-views\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/products/questions": ["[data-testid=\"product-questions\"][data-lm-ready]", "[data-testid=\"question-views\"]", "[data-testid=\"a2-subtabs\"]"],
