@@ -199,6 +199,8 @@ import adminHouseAdsEn from '../../../messages/admin-house-ads.en.json';
 import adminHouseAdsBn from '../../../messages/admin-house-ads.bn.json';
 import adminMerchantFeedEn from '../../../messages/admin-merchant-feed.en.json';
 import adminMerchantFeedBn from '../../../messages/admin-merchant-feed.bn.json';
+import adminIntelEn from '../../../messages/admin-intel.en.json';
+import adminIntelBn from '../../../messages/admin-intel.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -218,6 +220,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-geo-guide': { en: adminGeoGuideEn, bn: adminGeoGuideBn },
   'admin-house-ads': { en: adminHouseAdsEn, bn: adminHouseAdsBn },
   'admin-merchant-feed': { en: adminMerchantFeedEn, bn: adminMerchantFeedBn },
+  'admin-intel': { en: adminIntelEn, bn: adminIntelBn },
   'admin-books': { en: adminBooksEn, bn: adminBooksBn },
   'admin-books-daily': { en: adminBooksDailyEn, bn: adminBooksDailyBn },
   'admin-build': { en: adminBuildEn, bn: adminBuildBn },
