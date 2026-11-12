@@ -1,18 +1,21 @@
-// S24 · PR 455 (Blueprint C7.8, part 1 of 2 — "AI upscale to 2500–3000px · artifact repair (hands, edges,
-// garment boundary)") — "A finishing pass inside the system, applied to every approved image" (replaces any
-// outsourced retouch). C7.7's own owner decision: "Nothing outsourced. No external retouch service, no human
-// retoucher. Every finishing step is built into the system; the extra API cost for that is accepted." — C7.7's
-// own "two-stage render": try-on at base resolution -> AI upscale -> detail re-projection (PR 454) -> gentle
-// retouch -> web sharpening (PR 456).
+// S24 · PR 455–456 (Blueprint C7.8 — "AI upscale to 2500–3000px · artifact repair (hands, edges, garment
+// boundary) · contact-shadow synthesis so the garment sits on the body properly · … house colour grade so every
+// image on the site looks like one shoot · final web sharpening") — "A finishing pass inside the system, applied
+// to every approved image" (replaces any outsourced retouch). C7.7's own owner decision: "Nothing outsourced. No
+// external retouch service, no human retoucher. Every finishing step is built into the system; the extra API
+// cost for that is accepted." — C7.7's own "two-stage render": try-on at base resolution -> AI upscale -> detail
+// re-projection (PR 454) -> gentle retouch -> web sharpening.
 //
-// `FINISHING_STEPS` fixes the pipeline's own order. This PR wires the first two steps (upscale, artifact
-// repair); PR 456 grows this same array in place with the remaining three (contact shadow, colour grade,
-// sharpen) rather than duplicating it — the same "same file, grown in place" pattern PR 452 used on PR 451's
-// `jobs.ts`.
+// `FINISHING_STEPS` fixes the pipeline's own order. PR 455 wired the first two (upscale, artifact repair); PR
+// 456 grows this same array in place with the remaining three (contact shadow, colour grade, sharpen) rather
+// than duplicating it — the same "same file, grown in place" pattern PR 452 used on PR 451's `jobs.ts`. (Colour
+// verification against the real garment colour is PR 447's own `ColourVerification` step, run earlier in the
+// pipeline at step 6 — the finishing pass's own "colour match" here is the house colour grade, not a second
+// verification.)
 //
-// No upscale/repair model is wired yet — exactly PR 450's, PR 453's and PR 454's own honest scope for their own
-// unbuilt pieces: this module only ever (a) plans which steps a generated image still needs (pure, no
-// database), and (b) records a job runner's finished step as its own new asset through PR 444's
+// No upscale/repair/grade/sharpen model is wired yet — exactly PR 450's, PR 453's and PR 454's own honest scope
+// for their own unbuilt pieces: this module only ever (a) plans which steps a generated image still needs (pure,
+// no database), and (b) records a job runner's finished step as its own new asset through PR 444's
 // `recordGeneratedAsset` chokepoint, tracing back to the SAME real original the image being finished already
 // traces to (never to the image being finished itself — a generated image must always trace to a real one,
 // C7.5) — the same pattern PR 454's detail re-projection established for exactly this one-way rule.
@@ -21,9 +24,10 @@ import { allow, checkStoreId, parse, PhotoshootError, type PhotoshootDeps, type 
 import { isAssetRole, type AssetRole } from './roles';
 import { recordGeneratedAsset, type AssetRow } from './assets';
 
-/** C7.8's own finishing pipeline, in the order it runs. PR 455 wires the first two; PR 456 grows this same array
- * with the remaining three (contact shadow, colour grade, sharpen) rather than duplicating it. */
-export const FINISHING_STEPS = ['upscale', 'artifactRepair'] as const;
+/** C7.8's own finishing pipeline, in the order it runs. PR 455 wired the first two (upscale, artifact repair);
+ * PR 456 grew this same array with the remaining three (contact shadow, house colour grade, final web
+ * sharpening) — "applied to every approved image," every one of the five, in this order, never skipped. */
+export const FINISHING_STEPS = ['upscale', 'artifactRepair', 'contactShadow', 'colourGrade', 'sharpen'] as const;
 export type FinishingStep = (typeof FINISHING_STEPS)[number];
 
 /** The free tag every finishing output carries, plus its own step name (e.g. `finishing:upscale`), so later
@@ -53,6 +57,12 @@ export function planFinishing(candidate: FinishingCandidate): FinishingPlan {
   const done = new Set(candidate.completedSteps);
   const remaining = FINISHING_STEPS.filter((s) => !done.has(s));
   return { remaining, next: remaining[0] ?? null };
+}
+
+/** S24 · PR 456: true once every C7.8 finishing step has run for this candidate — the output set (C7.5 step
+ * 11) is never built from a candidate this still says `false` for. */
+export function isFinishingComplete(candidate: FinishingCandidate): boolean {
+  return planFinishing(candidate).remaining.length === 0;
 }
 
 const recordOutputInput = z
