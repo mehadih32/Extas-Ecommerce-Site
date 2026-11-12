@@ -8,8 +8,8 @@
 // reaches `complete`, the one call in this whole package that actually leaves the server over HTTP. See masking.ts's
 // own header for why this is a safety net on top of PR 310's provider routing, not a replacement for it.
 import type { TestResult } from '../define';
-import { articlePrompt, campaignPrompt, fraudReviewPrompt, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, supportReplyPrompt } from './prompts';
-import type { AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
+import { approvalExplainPrompt, articlePrompt, campaignPrompt, fraudReviewPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, supportReplyPrompt } from './prompts';
+import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
 export interface CompleteInput {
   system: string;
@@ -74,6 +74,11 @@ export function liveAiWriter(complete: Completer): AiWriter {
       const { system, user, maxTokens } = fraudReviewPrompt(input);
       const { text, usage } = await complete({ system, user, maxTokens });
       return parseFraudReviewJson(text, input, usage);
+    },
+    async draftApprovalExplainNote(input: AiApprovalExplainInput): Promise<AiApprovalExplainDraft> {
+      const { system, user, maxTokens } = approvalExplainPrompt(input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseApprovalExplainJson(text, input, usage);
     },
   };
 }

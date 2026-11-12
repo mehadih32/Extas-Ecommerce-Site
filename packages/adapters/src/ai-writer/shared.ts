@@ -221,6 +221,35 @@ export interface AiFraudReviewDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 330 — the growth marketing agent's own job (Gyani, the existing `adminApprovalExplain` Cost Book row,
+ * PR 312): one plain paragraph turning an already-decided, already-localized approval-queue item — today, one of
+ * Tirondaj's own growth-agent proposals (PR 269) waiting on Marketing › Ad platforms › Growth agent — into a fuller
+ * explanation for the owner about to decide. `facts` is always the page's own already-built `what`/`why` words
+ * (growth-agent.ts's own localized sentence, never a new figure or a second read of the ad spend) and never the
+ * item's own decision (approve/reject, pause, raise or lower a budget): the model is never handed anything to echo
+ * back as its own recommendation.
+ */
+export interface AiApprovalExplainInput {
+  locale: 'en' | 'bn';
+  facts: {
+    /** The item's own already-built, already-localized one-line title (growth-agent.ts's own `what(p)`). */
+    title: string;
+    /** Each already-localized reason line the item's own card already shows (growth-agent.ts's own `why(p)`). */
+    why: string[];
+  };
+  max: { body: number };
+}
+
+export interface AiApprovalExplainDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -235,6 +264,8 @@ export interface AiWriter {
   draftSizeAdvice(input: AiSizeAdviceInput): Promise<AiSizeAdviceDraft>;
   /** PR 329 — the fraud review agent's own job: one grounded paragraph on why a review alert fired, never a decision. */
   draftFraudReviewNote(input: AiFraudReviewInput): Promise<AiFraudReviewDraft>;
+  /** PR 330 — the growth marketing agent's own job: one grounded paragraph explaining an approval-queue item, never a decision. */
+  draftApprovalExplainNote(input: AiApprovalExplainInput): Promise<AiApprovalExplainDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

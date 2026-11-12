@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { AdapterError, defineAdapter, type AdapterContext } from '../define';
 import {
   cutTo,
+  type AiApprovalExplainDraft,
+  type AiApprovalExplainInput,
   type AiArticleDraft,
   type AiArticleInput,
   type AiCampaignDraft,
@@ -129,6 +131,15 @@ export function practiceFraudReviewNote(input: AiFraudReviewInput): AiFraudRevie
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 330 — the mock's approval-explain note: only the already-decided title and reasons it was given, joined
+ * in one plain sentence (no voice to borrow without a key). Never a decision word — the same words a person already
+ * sees on the approval-queue item, said back as one paragraph. */
+export function practiceApprovalExplainNote(input: AiApprovalExplainInput): AiApprovalExplainDraft {
+  const f = input.facts;
+  const body = [f.title, f.why.length ? f.why.join('; ') : null].filter((x): x is string => Boolean(x)).join('. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -167,6 +178,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftFraudReviewNote(input) {
         if (!input.facts.why.length && !input.facts.matches.length && !input.facts.history.length) throw new AdapterError('a fraud review note needs at least one reason, match or history line');
         return practiceFraudReviewNote(input);
+      },
+      async draftApprovalExplainNote(input) {
+        if (!input.facts.title.trim()) throw new AdapterError('an approval explanation needs the item\'s own title');
+        return practiceApprovalExplainNote(input);
       },
     };
   },

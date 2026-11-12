@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { AdapterError } from '../define';
 import {
   cutTo,
+  type AiApprovalExplainDraft,
+  type AiApprovalExplainInput,
   type AiArticleDraft,
   type AiArticleInput,
   type AiCampaignDraft,
@@ -267,5 +269,32 @@ const fraudReviewAnswer = z.object({ body: z.string() });
 export function parseFraudReviewJson(text: string, input: AiFraudReviewInput, usage?: { inputTokens: number; outputTokens: number }): AiFraudReviewDraft {
   const parsed = fraudReviewAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a review explanation');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 330 — the growth marketing agent's own job: one plain paragraph explaining an approval-queue item, never a
+// decision
+// ---------------------------------------------------------------------------------------------------------------------
+
+const APPROVAL_EXPLAIN_RULE =
+  'Write only from the title and reasons given. Never invent a reason, a figure, a campaign, a product or a district that is not listed. Never propose, recommend or hint at a decision — not to approve, reject, pause a campaign, raise or lower a budget, or anything else; a person decides that, not you. Only explain, in plain words, why the system is asking.';
+
+export function approvalExplainPrompt(input: AiApprovalExplainInput): Prompt {
+  const f = input.facts;
+  const sections = [`title: ${f.title}`, f.why.length ? `why:\n${f.why.map((w) => `- ${w}`).join('\n')}` : null].filter((s): s is string => Boolean(s)).join('\n\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${APPROVAL_EXPLAIN_RULE}`,
+    user: `A Bangladeshi menswear shop's admin system is asking its owner to decide one item in its approval queue. Write one short, plain paragraph, in ${lang}, explaining why the system is asking — for the owner about to decide. Never suggest what they should decide.\n\n${sections}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 250,
+  };
+}
+
+const approvalExplainAnswer = z.object({ body: z.string() });
+
+export function parseApprovalExplainJson(text: string, input: AiApprovalExplainInput, usage?: { inputTokens: number; outputTokens: number }): AiApprovalExplainDraft {
+  const parsed = approvalExplainAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with an approval explanation');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }
