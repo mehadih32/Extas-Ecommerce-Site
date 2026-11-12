@@ -4,7 +4,7 @@
 // a missing field, an empty body) is a `BAD_ANSWER`-shaped `AdapterError`, never a guess dressed up as a draft.
 import { z } from 'zod';
 import { AdapterError } from '../define';
-import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput } from './shared';
+import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiSupportReplyDraft, type AiSupportReplyInput } from './shared';
 
 export interface Prompt {
   system: string;
@@ -122,4 +122,32 @@ export function parseArticleJson(text: string): AiArticleDraft {
   const parsed = articleAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with an article');
   return { excerpt: cutTo(parsed.data.excerpt, 300), body: parsed.data.body.trim(), practice: false };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 325 — the support agent's own job: a warmer rephrasing of the rule-based draft (never a new fact)
+// ---------------------------------------------------------------------------------------------------------------------
+
+const FACT_RULE = 'Keep every fact in the draft exactly as given — never add, remove or change an order number, status, tracking code, size, price, policy or promise. If the draft asks the customer for more information, keep asking for the same thing.';
+
+export function supportReplyPrompt(input: AiSupportReplyInput): Prompt {
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  const f = input.facts;
+  const facts = Object.entries({ intent: f.intent, complaint: f.complaint, orderNumber: f.orderNumber, orderStatus: f.orderStatus, courier: f.courier, tracking: f.tracking, late: f.late ? 'yes' : undefined, size: f.size, customerName: f.customerName })
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  return {
+    system: SYSTEM_RULE,
+    user: `A customer wrote to a Bangladeshi menswear shop's support chat, in ${lang}:\n"${input.question}"\n\nThe shop's own rule-based draft reply, already correct and complete, is:\n"${input.ruleBasedBody}"\n\nFacts behind that draft:\n${facts || '(none)'}\n\nRewrite the draft in a warmer, more natural ${lang} voice that a staff member could send as-is. ${FACT_RULE} At most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 500,
+  };
+}
+
+const supportReplyAnswer = z.object({ body: z.string() });
+
+export function parseSupportReplyJson(text: string, input: AiSupportReplyInput, usage?: { inputTokens: number; outputTokens: number }): AiSupportReplyDraft {
+  const parsed = supportReplyAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a reply');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }
