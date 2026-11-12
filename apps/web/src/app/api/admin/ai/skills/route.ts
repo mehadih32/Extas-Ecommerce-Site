@@ -1,5 +1,5 @@
-// S15 · PR 321 — /api/admin/ai/skills: GET the skill library (`ai.read`); POST import/rollback/enable
-// (`ai.skills.write`). lib/admin-ai/skills-api.ts.
+// S15 · PR 321/322 — /api/admin/ai/skills: GET the skill library (`ai.read`), or a skill's sandbox run history
+// with `?sandboxHistory=`; POST import/rollback/enable/sandbox (`ai.skills.write`). lib/admin-ai/skills-api.ts.
 import { adminDeps } from '@/lib/admin-auth';
 import { skillsHandler } from '@/lib/admin-ai/skills-api';
 

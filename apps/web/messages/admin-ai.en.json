@@ -341,5 +341,41 @@
       "toastOff": "Switched off",
       "toastFailed": "Could not change this switch"
     }
+  },
+  "aiSkillsSandbox": {
+    "metaTitle": "Skill sandbox",
+    "title": "Sandbox",
+    "sub": "Test a skill without touching the live shop. Nothing is written, sent or charged.",
+    "formTitle": "Try a skill on a copy of real data",
+    "formSub": "Runs on a read-only copy; nothing is written, sent or charged",
+    "skillLabel": "Skill",
+    "dataLabel": "Data",
+    "data7": "Last 7 days of orders",
+    "data30": "Last 30 days of orders",
+    "run": "Run in sandbox",
+    "working": "Running…",
+    "needPermission": "You can see this page, but running a sandbox test needs permission.",
+    "empty": "No skills yet — add one on the Library tab first.",
+    "resultEmptyTitle": "Result",
+    "resultEmpty": "Run the sandbox to see what the skill would do.",
+    "resultTitle": "Result",
+    "ordersRead": "{n} real orders read — nothing written, sent or charged",
+    "passed": "Ready for approval (version {version} has real content)",
+    "notPassed": "Not ready yet — this version has no real content to test",
+    "cost": "Estimated cost: {amount}",
+    "costNote": {
+      "NO_AGENT_JOB": "Cost not estimable yet — this skill's agent has no Cost Book job to base it on",
+      "NO_EXCHANGE_RATE": "Cost not shown — no USD exchange rate has been typed yet (Money › Costs & fees)"
+    },
+    "historyTitle": "Earlier runs of this skill",
+    "historyEmpty": "No earlier runs yet.",
+    "toastOk": "Sandbox run finished",
+    "toastFailed": "Could not run the sandbox",
+    "err": {
+      "NOT_FOUND": "Pick a real skill",
+      "NO_VERSION": "This skill has no version to test yet",
+      "INVALID_INPUT": "Pick a real data window",
+      "other": "Could not run the sandbox"
+    }
   }
 }

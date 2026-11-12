@@ -183,3 +183,25 @@
   align-items: flex-start;
   gap: 8px;
 }
+/* S15 · PR 322 — AI › Skills › Sandbox: one run-history row stacks its four pieces (status pill, orders read,
+   cost note, when) at phone width instead of squeezing them onto one line — the same "step down, never wrap"
+   instinct as PR 321's own .ai-sk-actions, just for a row of plain text/pills rather than two controls. */
+.adm2 .ai-sbx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm2 .ai-sbx-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln2);
+}
+.adm2 .ai-sbx-row:last-child {
+  border-bottom: none;
+}

@@ -159,6 +159,8 @@
     "healthFixes": "Fixes to approve",
     "aiAgents": "Agents",
     "aiAudit": "Checklist audit",
+    "aiSkills": "Library",
+    "aiSkillsSandbox": "Sandbox",
     "supportAnalytics": "Support analytics",
     "reportsSearches": "Searches report",
     "reportsOrders": "Orders report"
