@@ -64,6 +64,7 @@ describe('PR 426 · Messenger (the Page) for the Support inbox', () => {
     const row = connectionCatalogue.find((r) => r.id === 'messengerPage')!;
     expect(row).toMatchObject({ kind: 'MESSENGER', provider: messengerPageAdapter.provider, adapter: true });
     expect(row.secrets.map((s) => s.field)).toEqual([...messengerPageAdapter.secrets]);
-    expect(supportAdapters.map((a) => `${a.kind}:${a.provider}`)).toEqual(['WHATSAPP:mockWhatsApp', 'WHATSAPP:whatsappCloud', 'MESSENGER:mockMessenger', 'MESSENGER:messengerPage']);
+    // S23 · PR 443 added the Facebook comments / Instagram engagement adapters to the same Support list
+    expect(supportAdapters.map((a) => `${a.kind}:${a.provider}`)).toEqual(['WHATSAPP:mockWhatsApp', 'WHATSAPP:whatsappCloud', 'MESSENGER:mockMessenger', 'MESSENGER:messengerPage', 'META:mockFacebookPageComments', 'META:facebookPageComments', 'META:mockInstagramEngagement', 'META:instagramEngagement']);
   });
 });
