@@ -11,15 +11,58 @@
 // depend on `apps/web`; the two copies are kept honest by `spendCap.test.ts` asserting the exact same table PR
 // 309's own test does. `monthlySpendMinor` reads the one shared `AiUsageLedger` (C7.20: "every generation writes to
 // the same ai_usage_ledger... photoshoot cost is not a separate pot of money") by `agentId`, business-wide (an
-// `AiAgent`'s cap is installation-wide, like every other agent's — it has no `storeId` of its own). No `AiAgent`
-// row keyed `photoshoot` exists yet (that seed, and the Control room card, are PR 480/S24 item 25's "AI 360
-// wiring") — `photoshootAgentCapCheck` treats a missing row exactly like `agentCapState` treats a missing cap:
-// "none", never a block. Nothing here writes an `AiUsageLedger` row; nothing here calls a provider.
+// `AiAgent`'s cap is installation-wide, like every other agent's — it has no `storeId` of its own).
+//
+// S24 · PR 468 (item 25, "AI 360 wiring and Cost Book rows for every photoshoot sub-job") closes the half of this
+// gap that is honestly this package's own to close: `ensurePhotoshootAgentRow` below seeds the real `AiAgent` row
+// keyed `photoshoot`, so `photoshootAgentCapCheck` is no longer reading a row that can never exist. Deliberately
+// NOT here (same honest boundary as every unbuilt piece before it): writing an `AiUsageLedger` row for a real
+// generation. `recordGenerationCostEntry` (costLedger.ts) knows the real spend in BDT minor units (`amountMinor`)
+// and which provider ran it, but `AiUsageLedger.costUsdMicros` is a NOT-NULL real USD figure and `.modelKey` is
+// meant to be the provider's own literal model-version string (e.g. FASHN's `tryon-v1.6`) — this package has no
+// USD exchange-rate reader (CN-018: never invent a number) and deliberately never imports `@extas/adapters`
+// (where that literal model string actually lives), the same boundary this file has kept since PR 452. Wiring the
+// real ledger write needs one of those two gaps closed first, by whichever PR owns it; filed in
+// `docs/after-golive-notes.md` rather than guessed at here with a placeholder number or string.
 import type { PrismaClient } from '@extas/db/client';
 import { dayStart, ymdIn } from '@extas/metrics';
 
-/** The one `AiAgent.key` this module ever reads. Seeded by a later PR (S24 item 25); until then, "no cap". */
+/** The one `AiAgent.key` this module ever reads. */
 export const PHOTOSHOOT_AGENT_KEY = 'photoshoot';
+/** Identity fields for the Photoshoot agent's own `AiAgent` row — never one of the "seven fixed EXTAS agents"
+ * (`apps/web/src/lib/admin-ai/agents.ts`, pinned at exactly seven by its own tests, a different lane's shared
+ * file, CLAUDE.md rule 10): Photoshoot is a pipeline, not a person, so it gets its own row through its own
+ * package rather than joining that fixed roster. */
+export const PHOTOSHOOT_AGENT_CODE = 'STUDIO-PHOTOSHOOT';
+export const PHOTOSHOOT_AGENT_NAME_EN = 'Photoshoot agent';
+export const PHOTOSHOOT_AGENT_NAME_BN = 'ফটোশুট এজেন্ট';
+export const PHOTOSHOOT_AGENT_ROLE =
+  "Generates, scores and finishes product photos from the owner's own reference photos. Writes to media only — never price, stock, orders or customer data (C7.20).";
+
+/**
+ * Keeps the Photoshoot agent's own identity row in step with the constants above (the same idea as admin-ai's own
+ * `ensureAgentRows` for the seven human-named agents) — never touches `enabled`, `monthlyCapMinor`,
+ * `keepOnWhenMasterOff` or `schedule`, which stay the owner's own choice once a screen lets him set them. Called
+ * from `photoshootAgentCapCheck` below, so the row always exists by the time anything asks about the cap, and any
+ * later Studio settings screen has a real row to read and write from its very first load.
+ */
+export async function ensurePhotoshootAgentRow(db: Pick<PrismaClient, 'aiAgent'>) {
+  return db.aiAgent.upsert({
+    where: { key: PHOTOSHOOT_AGENT_KEY },
+    create: {
+      key: PHOTOSHOOT_AGENT_KEY,
+      code: PHOTOSHOOT_AGENT_CODE,
+      nameEn: PHOTOSHOOT_AGENT_NAME_EN,
+      nameBn: PHOTOSHOOT_AGENT_NAME_BN,
+      role: PHOTOSHOOT_AGENT_ROLE,
+      isChief: false,
+      enabled: false,
+      keepOnWhenMasterOff: false,
+      verified: true,
+    },
+    update: { code: PHOTOSHOOT_AGENT_CODE, nameEn: PHOTOSHOOT_AGENT_NAME_EN, nameBn: PHOTOSHOOT_AGENT_NAME_BN, role: PHOTOSHOOT_AGENT_ROLE },
+  });
+}
 
 export type AgentCapState = 'none' | 'ok' | 'warned' | 'paused';
 
@@ -50,12 +93,13 @@ export async function monthlySpendMinor(db: PrismaClient, agentId: string, now: 
 
 /**
  * The enforcement check `startProcessing` makes before letting a job spend: "none"/"ok"/"warned" all let the job
- * through; "paused" is the one state that refuses it. Honestly "none" (never blocks) while no `AiAgent` row keyed
- * `photoshoot` exists yet, or it exists with no cap set — both the ship-as-off default (CN-018).
+ * through; "paused" is the one state that refuses it. Ensures the Photoshoot agent's own row exists (idempotent,
+ * never touches a cap the owner already set) and is honestly "none" (never blocks) while that row carries no cap
+ * yet, or was archived — both the ship-as-off default (CN-018).
  */
 export async function photoshootAgentCapCheck(db: PrismaClient, now: Date): Promise<{ state: AgentCapState; spentMinor: number; capMinor: number | null }> {
-  const agent = await db.aiAgent.findUnique({ where: { key: PHOTOSHOOT_AGENT_KEY } });
-  if (!agent || agent.archivedAt) return { state: 'none', spentMinor: 0, capMinor: null };
+  const agent = await ensurePhotoshootAgentRow(db);
+  if (agent.archivedAt) return { state: 'none', spentMinor: 0, capMinor: null };
   const spentMinor = await monthlySpendMinor(db, agent.id, now);
   return { state: agentCapState(spentMinor, agent.monthlyCapMinor), spentMinor, capMinor: agent.monthlyCapMinor };
 }
