@@ -15,9 +15,11 @@ import { AgentAssignmentForm } from '@/components/admin/agents/AgentAssignmentFo
 import { AgentProfileEditor } from '@/components/admin/agents/AgentProfileEditor';
 import { AgentRewardForm } from '@/components/admin/agents/AgentRewardForm';
 import { CompleteAssignmentButton } from '@/components/admin/agents/CompleteAssignmentButton';
+import { CurriculumLevelControl, type CurriculumStatusId } from '@/components/admin/agents/CurriculumLevelControl';
 import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
+import { agentCurriculumView } from '@/lib/admin-ai/agent-curriculum';
 import { agentProfileView, type AgentProfileAssignment } from '@/lib/admin-ai/agent-profile';
 import { isAiError } from '@/lib/admin-ai/errors';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -87,6 +89,13 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ k
     throw e;
   }
 
+  const curriculum = await agentCurriculumView({ db: access.deps.db }, key);
+  const statusLabels: Record<CurriculumStatusId, string> = {
+    notStarted: c('curriculum.status.notStarted'),
+    inProgress: c('curriculum.status.inProgress'),
+    passed: c('curriculum.status.passed'),
+    failed: c('curriculum.status.failed'),
+  };
   const name = view.lang === 'bn' ? profile.nameBn : profile.nameEn;
   const assignmentRow = (a: AgentProfileAssignment, done: boolean) => (
     <div key={a.id} className="ag-li" data-testid={`agent-task-${a.id}`}>
@@ -189,6 +198,41 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ k
             ) : (
               <p className="a2-sm a2-mute">{c('workLog.none')}</p>
             )}
+          </section>
+
+          <section className="a2-card ag-mt" data-testid="agent-curriculum">
+            <h2 className="a2-h3">{c('curriculum.heading')}</h2>
+            <p className="a2-xs a2-mute">{c('curriculum.note')}</p>
+            {curriculum.levels.map((lv) => (
+              <div key={lv.level} className="ag-li" data-testid={`curriculum-level-${lv.level}`}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="a2-sm bold">{lv.title}</div>
+                  {lv.description ? <div className="a2-xs a2-mute">{lv.description}</div> : null}
+                  <div className="a2-xs a2-mute">
+                    {statusLabels[lv.status]}
+                    {lv.status === 'passed' && lv.score !== null ? ` · ${lv.score}/100` : ''}
+                    {lv.earnedAt ? ` · ${c('curriculum.earnedOn', { date: dateOnly(lv.earnedAt, view.locale) })}` : ''}
+                  </div>
+                  {canControl ? (
+                    <CurriculumLevelControl
+                      agentKey={key}
+                      level={lv.level}
+                      status={lv.status}
+                      score={lv.score}
+                      statusLabels={statusLabels}
+                      labels={{ score: c('curriculum.score'), save: c('curriculum.save'), saved: c('curriculum.saved'), failed: c('curriculum.failed'), scoreRequired: c('curriculum.scoreRequired') }}
+                    />
+                  ) : null}
+                </div>
+              </div>
+            ))}
+            {curriculum.modulesWritten ? (
+              <div className="a2-xs a2-mute ag-mt">
+                {c('curriculum.modulesWritten')}: {curriculum.modulesWritten}
+                {curriculum.exam ? ` · ${c('curriculum.exam')}: ${curriculum.exam}` : ''}
+                {curriculum.levelEarnedNote ? ` · ${c('curriculum.levelEarnedNote')}: ${curriculum.levelEarnedNote}` : ''}
+              </div>
+            ) : null}
           </section>
         </div>
 

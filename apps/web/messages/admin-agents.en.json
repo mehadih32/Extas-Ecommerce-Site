@@ -63,6 +63,25 @@
       "heading": "Work log",
       "none": "Nothing logged yet — its real work log fills in once the live dashboard runs its tasks."
     },
+    "curriculum": {
+      "heading": "Curriculum and certification",
+      "modulesWritten": "Modules written",
+      "exam": "Exam",
+      "levelEarnedNote": "Level earned (taught so far)",
+      "status": {
+        "notStarted": "Not started",
+        "inProgress": "In progress",
+        "passed": "Passed",
+        "failed": "Failed"
+      },
+      "score": "Score",
+      "earnedOn": "Earned {date}",
+      "save": "Save",
+      "saved": "Curriculum updated",
+      "failed": "Could not update the curriculum",
+      "scoreRequired": "A passed level needs a score (0–100)",
+      "note": "Levels stay \"Not started\" until the owner marks them — the sandbox exam runner is not built yet (PR 322)."
+    },
     "readOnly": "You can see this page but not change it.",
     "notFound": "No such agent."
   }
