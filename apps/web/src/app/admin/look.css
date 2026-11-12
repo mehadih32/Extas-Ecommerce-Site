@@ -540,3 +540,25 @@
 /* PR 12 (CN-025) with PR 594 (CN-026): the guide's side panel beside the V12.4 shell; from 1280 px the page and the top bar
    move over, so the help icon, To-do and the account menu stay in reach while the guide is open. */
 @media (min-width:1280px){.adm2.a2-gopen :is(.a3-tb,.a3-body){margin-right:var(--a2-gw);min-width:0}}
+
+/* PR 657 (CN-025, CN-044 ERP lane, follow-up 382) — Products designs B "Focus view" and C "Command view": the hero
+   card over the "ready to publish" queue, and the flow strip of the catalogue's own counts. Both read `.a3-card`,
+   `.a3-btn`, `.a3-pill` etc. already defined above; only their own layout is new. */
+.adm2 .a3-phero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;flex-wrap:wrap;margin-bottom:16px}
+.adm2 .a3-phn{font-size:40px;font-weight:650;letter-spacing:-.02em;line-height:1.1;display:block;margin:4px 0}
+.adm2 .a3-pflow{display:flex;gap:0;margin-bottom:16px;overflow-x:auto}
+.adm2 .a3-fstep{flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-right:1px solid var(--ln2);color:inherit;transition:background-color .12s}
+.adm2 .a3-fstep:last-child{border-right:0}
+.adm2 .a3-fstep:hover{background:var(--lm-hover)}
+.adm2 .a3-fstep b{font-size:24px;font-weight:650;letter-spacing:-.02em}
+.adm2 .a3-fstep span{font-size:12.5px;color:var(--mute)}
+@media (max-width:767px){
+  .adm2 .a3-phero{padding:16px 16px 14px}
+  .adm2 .a3-phn{font-size:32px}
+  .adm2 .a3-pflow{flex-wrap:wrap}
+  .adm2 .a3-fstep{min-width:45%;border-right:0;border-bottom:1px solid var(--ln2)}
+  .adm2 .a3-fstep:nth-child(2n){border-right:0}
+}
+@media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
+  .adm2 .a3-fstep{min-height:44px}
+}
