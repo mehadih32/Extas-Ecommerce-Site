@@ -161,7 +161,10 @@
     "aiAudit": "Checklist audit",
     "supportAnalytics": "Support analytics",
     "reportsSearches": "Searches report",
-    "reportsOrders": "Orders report"
+    "reportsOrders": "Orders report",
+    "messagesCampaigns": "Message campaigns",
+    "messagesAutomations": "Automations",
+    "messagesEmail": "E-mail"
   },
   "login": {
     "metaTitle": "Admin sign-in",

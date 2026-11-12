@@ -161,7 +161,10 @@
     "aiAudit": "চেকলিস্ট অডিট",
     "supportAnalytics": "সাপোর্টের হিসাব",
     "reportsSearches": "সার্চ রিপোর্ট",
-    "reportsOrders": "অর্ডার রিপোর্ট"
+    "reportsOrders": "অর্ডার রিপোর্ট",
+    "messagesCampaigns": "মেসেজ ক্যাম্পেইন",
+    "messagesAutomations": "অটো মেসেজ",
+    "messagesEmail": "ই-মেইল"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",
