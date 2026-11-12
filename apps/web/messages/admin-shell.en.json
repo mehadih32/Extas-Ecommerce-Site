@@ -152,6 +152,7 @@
       },
       "ai": {
         "control": "Control room",
+        "agents": "Agents",
         "audit": "Checklist audit"
       }
     },

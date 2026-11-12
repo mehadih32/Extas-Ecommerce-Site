@@ -489,6 +489,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 304 (C1.1, C1.2; AIC-01) — Control room: every agent, what it did last, today's and this month's
       // cost, and a pause button per agent (the master switch itself joins with PR 305).
       { id: 'control', guide: 'ai', pages: [{ href: '/admin/ai', perm: 'ai.read', keys: ['aiControl'] }] },
+      // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
+      { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
       // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
       { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
     ],

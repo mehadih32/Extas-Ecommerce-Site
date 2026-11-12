@@ -150,6 +150,8 @@
     { "id": "reports/health-history-run", "route": "/admin/reports/health/history/[id]" },
     { "id": "reports/health-fixes", "route": "/admin/reports/health/fixes" },
     { "id": "ai/control", "route": "/admin/ai" },
+    { "id": "ai/agents", "route": "/admin/agents" },
+    { "id": "ai/agent-profile", "route": "/admin/agents/[key]" },
     { "id": "ai/audit", "route": "/admin/ai/audit" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },

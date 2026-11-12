@@ -357,6 +357,8 @@
       "/admin/reports/health/smoke",
       "/admin/reports/health/history",
       "/admin/ai",
+      "/admin/agents",
+      "/admin/agents/gyani",
       "/admin/ai/audit",
       "/admin/money/refunds",
       "/admin/money/refunds?view=all",
