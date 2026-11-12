@@ -1,5 +1,5 @@
 /* S15 · PR 577 — the team page (/admin/agents) and one agent's 360° profile (/admin/agents/:key). Uses the shared
-   --lm-*/--g*/--ink* theme tokens, so it needs no colour literal of its own (the hardcode guard checks CSS files
+   --lm-, --g and --ink theme tokens, so it needs no colour literal of its own (the hardcode guard checks CSS files
    too). */
 .adm2 .ag-grid {
   display: grid;
