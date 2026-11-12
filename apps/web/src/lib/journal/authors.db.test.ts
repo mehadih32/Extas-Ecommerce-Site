@@ -35,7 +35,7 @@ describe.skipIf(!HAS_TEST_DB)('Website › Blog & journal › the author team un
   it('seeds exactly the five, by slug, idempotently, and never overwrites the owner\'s own edit', async () => {
     const first = await journalAuthors(t.prisma, S);
     const ai = first.filter((a) => a.isAiAuthor);
-    expect(ai.map((a) => a.slug).sort()).toEqual(['bazar', 'jotno', 'rong', 'ritu', 'suta']);
+    expect(ai.map((a) => a.slug).sort()).toEqual(['bazar', 'jotno', 'ritu', 'rong', 'suta']);
     expect(ai.map((a) => a.agentKey).sort()).toEqual(['A360-08', 'A360-09', 'A360-10', 'A360-11', 'A360-12']);
     expect(ai.every((a) => a.bioEn && a.bioBn)).toBe(true);
 
