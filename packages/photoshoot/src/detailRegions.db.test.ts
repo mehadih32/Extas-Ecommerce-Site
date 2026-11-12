@@ -1,16 +1,25 @@
 // S24 · PR 454 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): recording and approving a detail
 // region on a real reference photo, the "never on a generated image" rule, the readiness plan fed real rows, and
 // recording the finished re-projection through PR 444's `recordGeneratedAsset` chokepoint.
+// S24 · PR 463 on the same database (below PR 454's own suite): the Detail Finder's own confirm/rename/add/remove
+// workflow, on both a real flat-lay photo and a generated on-model render (C7.10's own "the ghost and on-model
+// renders too, not only the flat-lay"), store scoping and permission checks.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import {
+  addDetailFocusRegion,
   approveDetailRegion,
+  confirmDetailFocusRegion,
   DETAIL_REPROJECTION_TAG,
+  listDetailFocusRegionsForProduct,
   listDetailRegionsForProduct,
   planDetailReprojection,
+  proposeDetailFocusRegion,
   recordDetailRegion,
   recordDetailReprojectionOutput,
+  removeDetailFocusRegion,
+  renameDetailFocusRegion,
   reprojectedCandidateId,
 } from './detailRegions';
 import type { PhotoshootDeps, Who } from './context';
@@ -181,5 +190,155 @@ describe.skipIf(!HAS_TEST_DB)('PR 454 · detail re-projection (PostgreSQL)', () 
   it('listDetailRegionsForProduct is store-scoped and permission-gated', async () => {
     const d = deps();
     await expect(listDetailRegionsForProduct(d, { actor: reader.actor, storeId: S }, productId)).resolves.toBeInstanceOf(Array);
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 463 · Detail Finder focus regions (PostgreSQL)', () => {
+  let t: TestDatabase;
+  let S: number;
+  let other: number;
+  let writer: Who;
+  let generator: Who;
+  let approver: Who;
+  let reader: Who;
+  const deps = (): PhotoshootDeps => ({ db: t.prisma });
+  const productId = crypto.randomUUID();
+  const bbox = { x: 0.1, y: 0.1, width: 0.2, height: 0.2 };
+
+  beforeAll(async () => {
+    t = await createTestDatabase('photoshoot_detail_finder');
+    [S, other] = await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    const staff = async (key: string, perms: ('photoshoot.read' | 'photoshoot.write' | 'photoshoot.generate' | 'photoshoot.approve')[]) => {
+      const role = await createRole(t.prisma, SYSTEM, { key, nameEn: key, nameBn: key, permissions: perms });
+      const u = await t.prisma.staffUser.create({ data: { email: `${key}@example.com`, displayName: key, passwordHash: 'not-a-login' } });
+      await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+      return { actor: { staffUserId: u.id }, storeId: S };
+    };
+    writer = await staff('t463-writer', ['photoshoot.read', 'photoshoot.write']);
+    generator = await staff('t463-generator', ['photoshoot.read', 'photoshoot.generate']);
+    approver = await staff('t463-approver', ['photoshoot.read', 'photoshoot.approve']);
+    reader = await staff('t463-reader', ['photoshoot.read']);
+  });
+
+  afterAll(async () => t.drop());
+
+  async function makeFlatLay(storeId = S) {
+    return t.prisma.mediaAsset.create({ data: { storeId, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `test/${crypto.randomUUID()}.jpg`, mimeType: 'image/jpeg', bytes: 1000n, checksumSha256: 'a'.repeat(64), isOriginal: true, role: 'primary_garment' } });
+  }
+
+  async function makeOnModelRender(storeId = S) {
+    const original = await makeFlatLay(storeId);
+    return t.prisma.mediaAsset.create({ data: { storeId, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `test/${crypto.randomUUID()}.jpg`, mimeType: 'image/jpeg', bytes: 500n, checksumSha256: 'b'.repeat(64), isOriginal: false, isAiGenerated: true, sourceAssetId: original.id, role: 'primary_garment' } });
+  }
+
+  it('proposes a region on a real flat-lay AND on a generated on-model render — C7.10’s own point, never PR 454’s "no generated image" rule', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const onModel = await makeOnModelRender();
+
+    const onFlatLay = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'polo', point: 'chest_logo', bbox });
+    expect(onFlatLay.approved).toBe(false);
+    expect(onFlatLay.detectedBy).toBe('auto');
+    expect(onFlatLay.garmentType).toBe('polo');
+    expect(onFlatLay.point).toBe('chest_logo');
+
+    const onRender = await proposeDetailFocusRegion(d, generator, { productId, assetId: onModel.id, garmentType: 'polo', point: 'side_tape', bbox });
+    expect(onRender.point).toBe('side_tape');
+  });
+
+  it('refuses a checklist point that garment type never listed', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    await expect(proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'polo', point: 'rivets', bbox })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+
+  it('refuses an asset from another store', async () => {
+    const d = deps();
+    const foreign = await makeFlatLay(other);
+    await expect(proposeDetailFocusRegion(d, generator, { productId, assetId: foreign.id, garmentType: 'polo', point: 'chest_logo', bbox })).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+  });
+
+  it('a reader without photoshoot.generate is refused outright', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    await expect(proposeDetailFocusRegion(d, reader, { productId, assetId: flatLay.id, garmentType: 'polo', point: 'chest_logo', bbox })).rejects.toThrow();
+  });
+
+  it('confirm moves a proposal to approved', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const row = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'shirt', point: 'collar', bbox });
+    const confirmed = await confirmDetailFocusRegion(d, approver, row.id);
+    expect(confirmed.approved).toBe(true);
+  });
+
+  it('a writer without photoshoot.approve cannot confirm', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const row = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'shirt', point: 'button', bbox });
+    await expect(confirmDetailFocusRegion(d, writer, row.id)).rejects.toThrow();
+  });
+
+  it('confirmDetailFocusRegion refuses an unknown region, and refuses a PR 454 region (not one of this PR’s own rows)', async () => {
+    const d = deps();
+    await expect(confirmDetailFocusRegion(d, approver, '00000000-0000-0000-0000-000000000000')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const flatLay = await makeFlatLay();
+    const pr454Region = await recordDetailRegion(d, writer, { productId, assetId: flatLay.id, kind: 'logo', bbox });
+    await expect(confirmDetailFocusRegion(d, approver, pr454Region.id)).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+  });
+
+  it('owner’s own "add" starts already approved, no confirm step needed', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const row = await addDetailFocusRegion(d, writer, { productId, assetId: flatLay.id, garmentType: 'hoodie', point: 'drawcord_tips', bbox });
+    expect(row.approved).toBe(true);
+    expect(row.detectedBy).toBe('manual');
+  });
+
+  it('rename relabels within the same garment type, and refuses a point the garment type never listed', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const row = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'denim_chino', point: 'rivets', bbox });
+    const renamed = await renameDetailFocusRegion(d, writer, row.id, { point: 'selvedge' });
+    expect(renamed.point).toBe('selvedge');
+    expect(renamed.garmentType).toBe('denim_chino');
+    await expect(renameDetailFocusRegion(d, writer, row.id, { point: 'drawcord_tips' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+
+  it('remove sets rejectedAt and is never a delete; a confirmed region cannot be removed; a removed one cannot be removed twice', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const proposed = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'panjabi', point: 'side_slit', bbox });
+    const removed = await removeDetailFocusRegion(d, writer, proposed.id);
+    expect(removed.rejectedAt).not.toBeNull();
+    await expect(removeDetailFocusRegion(d, writer, proposed.id)).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+
+    const confirmed = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'panjabi', point: 'button_placket', bbox });
+    await confirmDetailFocusRegion(d, approver, confirmed.id);
+    await expect(removeDetailFocusRegion(d, writer, confirmed.id)).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+
+    // still on file, never deleted
+    const row = await t.prisma.detailRegion.findUniqueOrThrow({ where: { id: proposed.id } });
+    expect(row).toBeTruthy();
+  });
+
+  it('a removed region cannot be confirmed or renamed — it is re-added instead', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    const proposed = await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'hoodie', point: 'rib', bbox });
+    await removeDetailFocusRegion(d, writer, proposed.id);
+    await expect(confirmDetailFocusRegion(d, approver, proposed.id)).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+    await expect(renameDetailFocusRegion(d, writer, proposed.id, { point: 'zip_pull' })).rejects.toMatchObject({ code: 'SOURCE_INVALID' });
+  });
+
+  it('listDetailFocusRegionsForProduct never returns a PR 454 region, and is store-scoped and permission-gated', async () => {
+    const d = deps();
+    const flatLay = await makeFlatLay();
+    await recordDetailRegion(d, writer, { productId, assetId: flatLay.id, kind: 'print', bbox });
+    await proposeDetailFocusRegion(d, generator, { productId, assetId: flatLay.id, garmentType: 'polo', point: 'cuff', bbox });
+    const rows = await listDetailFocusRegionsForProduct(d, reader, productId);
+    expect(rows.every((r) => r.garmentType && r.point)).toBe(true);
+    expect(rows.some((r) => r.point === 'cuff')).toBe(true);
   });
 });

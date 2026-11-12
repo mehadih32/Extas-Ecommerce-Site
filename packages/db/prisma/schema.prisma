@@ -10683,19 +10683,23 @@ model ImageEdit {
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
 }
 
-/// @stage S24 · PR 454, 463, 464 — a detail region (logo, print, embroidery, text) found and re-projected.
+/// @stage S24 · PR 454, 463, 464 — a detail region (logo, print, embroidery, text) found and re-projected, shared
+/// with the Detail Finder's own focus-crop regions (PR 463, C7.10) on the same bbox shape — `kind` there is
+/// namespaced (`finder:<category>:<point>`) so the two uses never collide. `rejectedAt` (PR 463) is the owner's
+/// own "remove" on a wrongly proposed focus region — never a delete, a second terminal state next to `approved`.
 model DetailRegion {
-  id         String   @id @default(uuid(7)) @db.Uuid
+  id         String    @id @default(uuid(7)) @db.Uuid
   storeId    Int
-  store      Store    @relation(fields: [storeId], references: [id])
-  productId  String   @db.Uuid
-  assetId    String   @db.Uuid
+  store      Store     @relation(fields: [storeId], references: [id])
+  productId  String    @db.Uuid
+  assetId    String    @db.Uuid
   kind       String
   bbox       Json
   detectedBy String
-  approved   Boolean  @default(false)
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+  approved   Boolean   @default(false)
+  rejectedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
 }
 
 /// @stage S24 · PR 447 — colour verification of a standardised image against the ERP colour (drift flagged).
