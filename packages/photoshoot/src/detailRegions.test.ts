@@ -5,10 +5,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   bboxSchema,
+  detailFinderClarityMessage,
+  detailFinderClarityRequests,
   detailFinderCoverage,
   DETAIL_FINDER_CHECKLIST,
   detailFinderKind,
   DETAIL_FINDER_GARMENT_TYPES,
+  detailFocusCropRegionId,
+  DETAIL_FOCUS_CROP_TAG,
   DETAIL_REGION_KINDS,
   DETAIL_REPROJECTION_TAG,
   isDetailFinderPoint,
@@ -174,5 +178,61 @@ describe('PR 463 · detailFinderCoverage', () => {
     // 'cuff' is a real checklist point for both polo and shirt — a shirt cuff region must never count toward polo's own coverage.
     const coverage = detailFinderCoverage('polo', [focusRegion({ garmentType: 'shirt', point: 'cuff', approved: true })]);
     expect(coverage.cuff).toBe('missing');
+  });
+});
+
+describe('PR 464 · detailFocusCropRegionId', () => {
+  it('finds the region id among the crop output’s own tags', () => {
+    const regionId = crypto.randomUUID();
+    expect(detailFocusCropRegionId([DETAIL_FOCUS_CROP_TAG, regionId])).toBe(regionId);
+  });
+
+  it('is null when no tag looks like a uuid', () => {
+    expect(detailFocusCropRegionId([DETAIL_FOCUS_CROP_TAG])).toBeNull();
+    expect(detailFocusCropRegionId([])).toBeNull();
+  });
+});
+
+describe('PR 464 · detailFinderClarityMessage', () => {
+  it('turns a checklist point’s own name into C7.10’s own back-and-forth wording', () => {
+    expect(detailFinderClarityMessage('collar_tape')).toBe('The collar tape is not readable in these photos — please take one closer photo of the collar tape.');
+  });
+});
+
+describe('PR 464 · detailFinderClarityRequests', () => {
+  const focusRegion = (overrides: Partial<DetailFocusRegionRow> = {}): DetailFocusRegionRow => ({
+    id: crypto.randomUUID(),
+    storeId: 1,
+    productId: crypto.randomUUID(),
+    assetId: crypto.randomUUID(),
+    garmentType: 'polo',
+    point: 'chest_logo',
+    bbox: { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
+    detectedBy: 'auto',
+    approved: false,
+    rejectedAt: null,
+    createdAt: new Date(),
+    ...overrides,
+  });
+
+  it('asks for every missing checklist point, and only those', () => {
+    const requests = detailFinderClarityRequests('panjabi', []);
+    expect(requests.map((r) => r.point).sort()).toEqual(['button_placket', 'neck_embroidery', 'side_slit']);
+    expect(requests[0]!.message).toContain('please take one closer photo');
+  });
+
+  it('never asks for a point that is only proposed or already confirmed', () => {
+    const proposed = focusRegion({ garmentType: 'polo', point: 'chest_logo', approved: false });
+    const confirmed = focusRegion({ garmentType: 'polo', point: 'cuff', approved: true });
+    const requests = detailFinderClarityRequests('polo', [proposed, confirmed]);
+    const points = requests.map((r) => r.point);
+    expect(points).not.toContain('chest_logo');
+    expect(points).not.toContain('cuff');
+  });
+
+  it('asks again for a point whose every region was removed', () => {
+    const rejected = focusRegion({ garmentType: 'hoodie', point: 'rib', approved: false, rejectedAt: new Date() });
+    const requests = detailFinderClarityRequests('hoodie', [rejected]);
+    expect(requests.map((r) => r.point)).toContain('rib');
   });
 });

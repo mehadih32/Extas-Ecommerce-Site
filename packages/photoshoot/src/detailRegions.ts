@@ -5,8 +5,8 @@
 // fidelity lever in the whole module").
 //
 // `DetailRegion` (packages/db/prisma/schema.prisma) already exists for exactly this, shared with two later PRs
-// (463, 464's "detail finder" — a different use of the same bbox shape, on a finished image rather than a real
-// reference) — no migration here. This module owns the C7.5 step 8 side of it: locating a region on a REAL
+// (463 and 464, below — "Detail Finder," a different use of the same bbox shape, on a finished image rather than
+// a real reference) — no migration here. This module owns the C7.5 step 8 side of it: locating a region on a REAL
 // reference photo (never on a generated image — the warp needs true pixels, the same one-way rule C7.6 already
 // enforces for every original); the owner's own approval of it (nothing is ever warped from a region nobody has
 // confirmed is actually the logo/print — the same "mandatory review" standing rule, applied one step earlier
@@ -433,4 +433,110 @@ export function detailFinderCoverage(garmentType: DetailFinderGarmentType, regio
     else result[point] = 'proposed';
   }
   return result;
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 464 (Blueprint C7.10, Part 2) — the two pieces Part 1 (PR 463) left out on purpose: the focus crop
+// itself ("each confirmed region becomes a focused close-up image in the gallery"), and the readability gate
+// ("if the system cannot see a detail clearly, it asks … this back-and-forth is part of the normal upload flow,
+// not an error").
+
+/** The tag every focus-crop output carries, so later steps (and the admin gallery) can find them among a
+ * product's other generated assets, the same way `DETAIL_REPROJECTION_TAG` marks PR 454's own output. */
+export const DETAIL_FOCUS_CROP_TAG = 'detail_focus_crop';
+
+/** The region id a focus-crop output's own tags name it as built from — the round-trip reader for the "built
+ * from" note `recordDetailFocusCropOutput` writes, the same shape as `reprojectedCandidateId` above. */
+export function detailFocusCropRegionId(tags: readonly string[]): string | null {
+  return tags.find((t) => UUID_RE.test(t)) ?? null;
+}
+
+const cropOutputInput = z
+  .object({
+    regionId: z.string().uuid(),
+    storageKey: z.string().min(1),
+    storage: z.enum(['LOCAL_DISK', 'AZURE_BLOB', 'S3_COMPATIBLE', 'GOOGLE_DRIVE']),
+    mimeType: z.string().min(1),
+    bytes: z.number().int().min(0),
+    checksumSha256: z.string().min(32),
+    width: z.number().int().min(1).optional(),
+    height: z.number().int().min(1).optional(),
+  })
+  .strict();
+export type RecordDetailFocusCropOutputInput = z.input<typeof cropOutputInput>;
+
+export interface DetailFocusCropOutput extends AssetRow {
+  regionId: string;
+}
+
+/**
+ * Records a finished focus-crop image (`photoshoot.generate`) — C7.10's own "each confirmed region becomes a
+ * focused close-up image in the gallery." Refuses a region that is not one of this PR's own Detail Finder rows,
+ * or is not yet confirmed (unapproved or removed — the same "mandatory review" standing rule applied here too:
+ * nothing is cropped from a region nobody has looked at). Filed through PR 444's `recordGeneratedAsset`
+ * chokepoint, which only ever accepts a REAL original as `sourceAssetId` (C7.6's own global rule) — when the
+ * region sits on a generated render (C7.10's own "ghost and on-model renders too"), this walks one step back to
+ * that render's own real original (guaranteed to exist, by the same chokepoint having already enforced it when
+ * the render itself was recorded) rather than the render directly, and carries the region's own id in `tags`
+ * (`detailFocusCropRegionId` reads it back) so a reviewer can always find which exact region, and which exact
+ * base image (flat-lay or render), a given focus crop was cut from.
+ */
+export async function recordDetailFocusCropOutput(deps: PhotoshootDeps, who: Who, input: unknown): Promise<DetailFocusCropOutput> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const d = parse(cropOutputInput, input, 'detail focus crop output');
+
+  const region = await loadFocusRegion(deps, who, d.regionId);
+  if (region.rejectedAt) throw new PhotoshootError('SOURCE_INVALID', 'a removed focus region cannot have a crop produced from it', ['regionId']);
+  if (!region.approved) throw new PhotoshootError('SOURCE_INVALID', 'a focus region must be confirmed before a crop is produced from it', ['regionId']);
+
+  const base = await deps.db.mediaAsset.findFirst({ where: { id: region.assetId, storeId: who.storeId } });
+  if (!base) throw new PhotoshootError('SOURCE_INVALID', 'the region’s own photo was not found in this store', ['regionId']);
+  const originalId = base.isOriginal ? base.id : base.sourceAssetId;
+  if (!originalId) throw new PhotoshootError('SOURCE_INVALID', 'the region’s own photo has no real original to trace back to', ['regionId']);
+
+  const role: AssetRole = isAssetRole(base.role) ? base.role : 'primary_garment';
+  const row = await recordGeneratedAsset(deps, who, {
+    sourceAssetId: originalId,
+    role,
+    storageKey: d.storageKey,
+    storage: d.storage,
+    mimeType: d.mimeType,
+    bytes: d.bytes,
+    checksumSha256: d.checksumSha256,
+    width: d.width,
+    height: d.height,
+    tags: [DETAIL_FOCUS_CROP_TAG, d.regionId],
+  });
+  return { ...row, regionId: d.regionId };
+}
+
+export interface DetailFinderClarityRequest {
+  point: string;
+  /** C7.10's own back-and-forth wording, verbatim in shape: "part of the normal upload flow, not an error." */
+  message: string;
+}
+
+/** C7.10's own exact phrasing ("The collar tape is not readable in these photos — please take one closer photo
+ * of the collar tape"), built from the checklist point's own name — never a separate label table to keep in
+ * step with `DETAIL_FINDER_CHECKLIST` by hand. */
+export function detailFinderClarityMessage(point: string): string {
+  const label = point.replace(/_/g, ' ');
+  return `The ${label} is not readable in these photos — please take one closer photo of the ${label}.`;
+}
+
+/**
+ * Pure, no database: every checklist point of one garment type that still has nothing good to show for it —
+ * nobody has proposed or added anything at all ('missing'), or every region anyone did propose was removed
+ * ('rejected_only') — paired with C7.10's own ask. Deliberately silent on a 'proposed' point (something is on
+ * file, just not yet reviewed — not a reason to ask for a new photo) and on a 'confirmed' one (nothing to ask
+ * for). This is the whole of C7.10's "the system … asks" for now: no upload handling, no stored request, no
+ * resolve step — recomputed fresh from the real regions on file every time, the same "part of the normal
+ * upload flow, not an error" the owner's own words ask for, with no new state to go stale.
+ */
+export function detailFinderClarityRequests(garmentType: DetailFinderGarmentType, regions: readonly DetailFocusRegionRow[]): DetailFinderClarityRequest[] {
+  const coverage = detailFinderCoverage(garmentType, regions);
+  return Object.entries(coverage)
+    .filter(([, status]) => status === 'missing' || status === 'rejected_only')
+    .map(([point]) => ({ point, message: detailFinderClarityMessage(point) }));
 }
