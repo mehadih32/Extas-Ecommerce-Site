@@ -1,11 +1,14 @@
-// S23 · PR 437–439 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
+// S23 · PR 437–440 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
 // social accounts (PR 437: add, rename, switch, approval, daily limit, archive/restore), the brand asset library
-// and the templates (PR 438: add, update, archive/restore), and render jobs (PR 439: queue a template + products,
-// generate a preview — see render.ts for the honest scope). The publishing adapters, the calendar/approval queue
-// and the comment/DM ingestion (PR 440–443) join this page as they are built. Seeing needs `studio.read`; managing
-// accounts/templates/assets needs `studio.write`; queueing/generating a render job needs `studio.generate` (the API
-// checks every permission again). Hidden from the menu by `stages.closedShown.S23` until the stage is finished
-// (CN-036/CN-039), but this address works once you have it.
+// and the templates (PR 438: add, update, archive/restore), render jobs (PR 439: queue a template + products,
+// generate a preview — see render.ts for the honest scope) and now posts (PR 440: queue a finished render job onto
+// a Facebook or Instagram account; a post only reaches the real account once its account runs free and someone
+// presses "Post now" — see publish.ts for the honest scope). TikTok, YouTube, the calendar/approval queue and the
+// comment/DM ingestion (PR 441–443) join this page as they are built. Seeing needs `studio.read`; managing
+// accounts/templates/assets needs `studio.write`; queueing a render job or a post, and running a render job, need
+// `studio.generate`; queuing a post on an account that runs free, and running it ("Post now"), also need
+// `studio.publish` (the API checks every permission again, inside `@extas/studio`). Hidden from the menu by
+// `stages.closedShown.S23` until the stage is finished (CN-036/CN-039), but this address works once you have it.
 // lib/marketing/studio.ts. Guide: docs/admin-guide/pages/marketing/studio.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -13,7 +16,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { BRAND_ASSET_KINDS, STUDIO_PLATFORMS, TEMPLATE_ASPECT_RATIOS, TEMPLATE_KINDS } from '@extas/studio';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { altFor, ResponsiveImage } from '@/components/media/ResponsiveImage';
-import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioRenderForm, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
+import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioPostForm, StudioRenderForm, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -59,15 +62,19 @@ export default async function StudioPage() {
   // Uploading to the brand asset library also needs the Media library's own permission, re-checked by /api/admin/media.
   const canUploadMedia = access.guard.permissions?.has('media.upload') ?? false;
   const canGenerate = access.guard.permissions?.has('studio.generate') ?? false;
+  const canPublish = access.guard.permissions?.has('studio.publish') ?? false;
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `studio.hub.${k}`, vars);
-  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
+  const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'ACCOUNT_OFF', 'NOT_SUPPORTED', 'EMPTY', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
   const err = Object.fromEntries(errKeys.map((k) => [k, g(`err.${k}`)]));
-  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'spec', 'assetId', 'templateId', 'productIds', 'caption'].map((k) => [k, g(`f.${k}`)])) };
+  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'spec', 'assetId', 'templateId', 'productIds', 'caption', 'renderJobId', 'accountId'].map((k) => [k, g(`f.${k}`)])) };
   const platforms = STUDIO_PLATFORMS.map((p) => ({ id: p, label: g(`platforms.${p}`) }));
   const kinds = TEMPLATE_KINDS.map((k) => ({ id: k, label: g(`templateKinds.${k}`) }));
   const assetKinds = BRAND_ASSET_KINDS.map((k) => ({ id: k, label: g(`assetKinds.${k}`) }));
   const liveAccounts = o.accounts.filter((a) => !a.archived);
   const liveTemplates = o.templates.filter((tp) => !tp.archived).map((tp) => ({ id: tp.id, label: `${tp.name} (${g(`templateKinds.${tp.kind}`)})` }));
+  const PUBLISHABLE = ['facebook', 'instagram'] as const;
+  const postableAccounts = liveAccounts.filter((a) => a.enabled && (PUBLISHABLE as readonly string[]).includes(a.platform)).map((a) => ({ id: a.id, label: `${a.name} (${g(`platforms.${a.platform}`)})` }));
+  const postableRenders = o.renders.filter((r) => r.status === 'SUCCEEDED').map((r) => ({ id: r.id, label: r.caption ? r.caption.slice(0, 60) : (r.kind ? g(`templateKinds.${r.kind}`) : r.id) }));
 
   return (
     <div className="a2-z" data-testid="studio-page" data-lm-ready="">
@@ -251,6 +258,56 @@ export default async function StudioPage() {
                 captionPh: g('renders.captionPh'),
                 queue: g('renders.queue'),
                 queued: g('renders.queued'),
+              }}
+            />
+          </details>
+        ) : null}
+      </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="st-post-h" data-testid="st-posts">
+        <h2 className="a2-h3" id="st-post-h">
+          {g('posts.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{g('posts.d')}</p>
+        {o.posts.length ? (
+          <ul className="adp-rules">
+            {o.posts.map((p) => (
+              <li key={p.id} className="adp-rule" data-testid="st-post">
+                <p className="a2-sm adp-sub">
+                  {g(`platforms.${p.platform}`)} <span className={`a2-pill ${p.status === 'SUCCEEDED' ? 'ok' : p.status === 'FAILED' ? 'warn' : 'line'}`}>{g(`posts.status.${p.status}`)}</span>
+                </p>
+                {p.caption ? <p className="a2-sm a2-mute">{p.caption}</p> : null}
+                {p.status === 'FAILED' && p.error ? <p className="a2-sm a2-mute">{p.error}</p> : null}
+                {p.status === 'SUCCEEDED' ? <p className="a2-sm a2-mute">{g('posts.posted')}</p> : null}
+                {canPublish && p.status === 'PUBLISHING' ? (
+                  <span className="a2-gap8 yt-mt8">
+                    <StudioAct texts={texts} body={{ action: 'post.run', id: p.id }} label={g('posts.run')} testId="st-post-run" done={g('posts.ran')} />
+                  </span>
+                ) : null}
+                {p.status === 'PENDING_APPROVAL' ? <p className="a2-sm a2-mute">{g('posts.waitingApproval')}</p> : null}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute yt-mt8">{g('posts.empty')}</p>
+        )}
+        {canGenerate ? (
+          <details className="a2-mt12 a2-more-opts" data-testid="st-add-post" open={!o.posts.length}>
+            <summary className="a2-sm a2-b">{g('posts.addH')}</summary>
+            <StudioPostForm
+              texts={texts}
+              renders={postableRenders}
+              accounts={postableAccounts}
+              w={{
+                renderJob: g('f.renderJobId'),
+                noRenderJobs: g('posts.noRenderJobs'),
+                account: g('f.accountId'),
+                noAccounts: g('posts.noAccounts'),
+                caption: g('f.caption'),
+                captionPh: g('posts.captionPh'),
+                captionHelp: g('posts.captionHelp'),
+                queue: g('posts.queue'),
+                queued: g('posts.queued'),
               }}
             />
           </details>

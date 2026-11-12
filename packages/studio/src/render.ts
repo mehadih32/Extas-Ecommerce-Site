@@ -9,8 +9,8 @@
 // real compositor: overlay + caption baked into pixels for an image post, real encoding for a reel/short) is not
 // built yet (no video encoder is in the stack today). Until it is, every job finishes as a **preview**: its
 // `outputAssetId` is simply the first featured product's own live lead photo — a real, already-existing asset, never
-// a fabricated one — so the rest of the pipeline (PR 440's approval queue, PR 441's calendar, PR 442's publishing)
-// can be built and tested end to end right now (CLAUDE.md rule 2: mocks for missing integrations). A later PR swaps
+// a fabricated one — so the rest of the pipeline (PR 440–441's publishing adapters, PR 442's calendar and approval
+// queue) can be built and tested end to end right now (CLAUDE.md rule 2: mocks for missing integrations). A later PR swaps
 // this preview step for the real compositor without touching the queue, the plan or anything upstream of it.
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';

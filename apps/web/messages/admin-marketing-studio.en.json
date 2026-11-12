@@ -172,7 +172,9 @@
         "assetId": "File",
         "templateId": "Template",
         "productIds": "Products",
-        "caption": "Caption"
+        "caption": "Caption",
+        "renderJobId": "Generated content",
+        "accountId": "Account"
       },
       "err": {
         "INVALID_INPUT": "Check the fields: {fields}.",
@@ -182,6 +184,9 @@
         "TEMPLATE_ARCHIVED": "Restore the template before changing it.",
         "NO_PRODUCTS": "Pick at least one product to feature.",
         "WRONG_STATE": "This job already ran — refresh the page.",
+        "ACCOUNT_OFF": "This account is archived or switched off.",
+        "NOT_SUPPORTED": "This platform cannot be posted to yet.",
+        "EMPTY": "Write a caption before posting.",
         "TOO_LARGE": "The file is larger than the upload limit.",
         "NOT_AN_IMAGE": "That file is not a picture.",
         "TYPE_NOT_ALLOWED": "That kind of file is not accepted.",
@@ -359,6 +364,28 @@
           "CANCELLED": "Cancelled"
         },
         "noPhoto": "None of this job's products has a live photo yet."
+      },
+      "posts": {
+        "h": "Posts",
+        "d": "Turn a finished preview into a post on a Facebook or Instagram account. A new account always needs your approval first, so queuing one here only waits — nothing reaches the real account until that account is set to run free and you press \"Post now\".",
+        "empty": "No post queued yet.",
+        "addH": "Post something",
+        "noRenderJobs": "Generate something above first (it must finish before it can be posted).",
+        "noAccounts": "Add and switch on a Facebook or Instagram account above first.",
+        "captionPh": "Leave empty to use the generated content's own caption",
+        "captionHelp": "Only Facebook and Instagram can be posted to today; TikTok and YouTube follow in a later PR.",
+        "queue": "Queue it",
+        "queued": "Queued",
+        "run": "Post now",
+        "ran": "Posted",
+        "status": {
+          "PENDING_APPROVAL": "Waiting for approval",
+          "PUBLISHING": "Ready to post",
+          "SUCCEEDED": "Posted",
+          "FAILED": "Could not post"
+        },
+        "waitingApproval": "This account needs approval before anything from it goes out.",
+        "posted": "Posted to the real account."
       }
     },
     "overlay": {

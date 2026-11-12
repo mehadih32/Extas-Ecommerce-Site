@@ -23,6 +23,7 @@ import { adsReaderAdapters } from './ads/readers';
 import { speechAdapters } from './speech';
 import { webPushAdapters } from './web-push';
 import { liveAiWriterAdapters } from './ai-writer';
+import { socialPublishAdapters } from './social-publish';
 import { keyedPhotoshootProviderAdapters } from './photoshoot-provider';
 
 export * from './define';
@@ -85,6 +86,10 @@ export * from './ads/campaign-writer';
 export * from './speech';
 // S22 · PR 435 — web push for the support app (VAPID, RFC 8291; the mock sends nothing until the key pair is in).
 export * from './web-push';
+// S23 · PR 440, 441 — Facebook Page, Instagram, TikTok and YouTube publishing for the content studio: the mock until
+// each platform's token (and, for Instagram, the linked Business Account id; for YouTube, the channel id) are in and
+// the Test passes.
+export * from './social-publish';
 // S24 · PR 449 (C7.17) — the photoshoot provider adapters (FASHN AI, Fitroom): the mock until a key is entered and
 // its Test passes; PR 450 adds their job methods (estimate/generate/status/fetch).
 export * from './photoshoot-provider';
@@ -98,7 +103,10 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 567: the
 // courier fraud checks too. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters, ...liveAiWriterAdapters, ...keyedPhotoshootProviderAdapters, ...liveSocialEngagementAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters, ...liveAiWriterAdapters, ...socialPublishAdapters, ...keyedPhotoshootProviderAdapters, ...liveSocialEngagementAdapters] as const;
+
+/** S23 · PR 440, 441 — the studio's own publishing adapters for `createConnections` (Facebook Page, Instagram, TikTok, YouTube). */
+export const studioPublishAdapters = [...socialPublishAdapters] as const;
 
 /** PR 426, 443 — the Support inbox's channels (WhatsApp, Messenger, Facebook comments, Instagram) for `createConnections`: each falls back to its mock. */
 export const supportAdapters = [...whatsappAdapters, ...messengerAdapters, ...socialEngagementAdapters] as const;
