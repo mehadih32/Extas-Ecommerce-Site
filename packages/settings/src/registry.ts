@@ -139,6 +139,7 @@ import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
 import { analyticsSettings } from './registry-analytics';
+import { reportsDigestSettings } from './registry-reports-digest';
 import { studioVideoSettings } from './registry-creative-studio-video';
 import { studioCreativeBriefSettings } from './registry-creative-studio-brief';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
@@ -1555,6 +1556,8 @@ export const registry = {
   ...studioVideoSettings,
   // ---- S15 · PR 338 (Blueprint D5) · the site-wide analytics event layer's master switch, on (registry-analytics.ts, version 288). ----
   ...analyticsSettings,
+  // ---- S15 · PR 341 (Blueprint D5.3) · weekly/monthly digests to Telegram and e-mail, off (registry-reports-digest.ts, version 289). ----
+  ...reportsDigestSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

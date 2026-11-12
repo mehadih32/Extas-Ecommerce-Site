@@ -8,3 +8,6 @@
 export * from './events';
 export * from './record';
 export * from './funnel';
+// S15 · PR 341 — weekly/monthly digests: the trailing window of each kind and the deterministic summary built from
+// stored events plus each saved funnel's own run (digest.ts); `apps/web/src/lib/analytics/digest.ts` sends it.
+export * from './digest';
