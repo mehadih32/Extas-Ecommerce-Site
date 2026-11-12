@@ -4,6 +4,7 @@
 // through an HTTP route (there is none; AI 360's own job dispatcher has never had one). No real network call: the
 // global `fetch` is replaced for the one test that reaches a live provider.
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -15,7 +16,13 @@ import { supportAiReplyOption, type SupportAiDeps } from './support-dispatch';
 
 const S = MOTHER_STORE_ID;
 const NOW = new Date('2026-11-11T10:00:00Z');
-const OWNER = { staffUserId: 'system' } as never;
+// S15 · PR 331's own incidental fix (found while investigating a real CI "db" job failure on this stack's own
+// commit 45f45287): PR 325-330's own db tests each invented a placeholder `{ staffUserId: 'system' }` instead of
+// using `@extas/auth`'s real `SYSTEM` actor (`{ staffUserId: null }`) — `resolver.ts`'s own `checkWrite` has
+// always required a real UUID or `null`, so every one of these `setMasterEnabled` calls has always thrown
+// `INVALID_ACTOR` for real; the `.db.test.ts` self-skip (no `TEST_DATABASE_ADMIN_URL` in any session that built
+// PR 325-330) meant nobody had ever actually run this file against a real Postgres until CI finally did.
+const OWNER = SYSTEM;
 const CONVO_ID = 'c-325-sample';
 
 const facts = (over: Partial<SupportReplyFacts> = {}): SupportReplyFacts => ({

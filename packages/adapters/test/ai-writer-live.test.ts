@@ -160,6 +160,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 331 — draftSocialReelCaption: one short caption with a hook for a reel/short render-queue template,
+  // carrying the provider's own usage through the same generic `complete()` plumbing PR 325 built.
+  it('draftSocialReelCaption writes from the template\'s own name and notes, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "New arrivals just dropped — swipe to see every colour."}', usage: { inputTokens: 40, outputTokens: 15 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftSocialReelCaption({ locale: 'en', facts: { templateName: 'Reel — new arrivals', notes: 'Upbeat, fast cuts' }, max: { body: 220 } });
+    expect(d).toEqual({ body: 'New arrivals just dropped — swipe to see every colour.', practice: false, usage: { inputTokens: 40, outputTokens: 15 } });
+  });
+
+  it('draftSocialReelCaption throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { templateName: 'Reel — new arrivals' };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftSocialReelCaption({ locale: 'en', facts, max: { body: 220 } })).rejects.toThrow('caption');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftSocialReelCaption({ locale: 'en', facts, max: { body: 220 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.

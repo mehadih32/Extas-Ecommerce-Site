@@ -4,6 +4,7 @@
 // `@extas/support`'s own `opts.sizeAdvice` — never through an HTTP route (there is none). No real network call:
 // the global `fetch` is replaced for the tests that reach a live provider.
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
@@ -14,7 +15,10 @@ import { sizeAdviceNote, sizeAdviceOption, type SizeAdviceAiDeps, type SizeAdvic
 
 const S = MOTHER_STORE_ID;
 const NOW = new Date('2026-11-12T10:00:00Z');
-const OWNER = { staffUserId: 'system' } as never;
+// S15 · PR 331's own incidental fix — see `support-dispatch.db.test.ts`'s own comment on this same line: the
+// placeholder actor here always threw `INVALID_ACTOR` for real against a real Postgres (never actually run until
+// now); `SYSTEM` (`{ staffUserId: null }`, `@extas/auth`) is the real system actor `resolver.ts` accepts.
+const OWNER = SYSTEM;
 const CONVO_ID = 'c-328-sample';
 
 const facts = (over: Partial<SizeAdviceFacts> = {}): SizeAdviceFacts => ({

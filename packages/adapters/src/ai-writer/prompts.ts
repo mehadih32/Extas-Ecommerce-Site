@@ -20,6 +20,8 @@ import {
   type AiSeoInput,
   type AiSizeAdviceDraft,
   type AiSizeAdviceInput,
+  type AiSocialCaptionDraft,
+  type AiSocialCaptionInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
 } from './shared';
@@ -296,5 +298,34 @@ const approvalExplainAnswer = z.object({ body: z.string() });
 export function parseApprovalExplainJson(text: string, input: AiApprovalExplainInput, usage?: { inputTokens: number; outputTokens: number }): AiApprovalExplainDraft {
   const parsed = approvalExplainAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with an approval explanation');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 331 — the social content agent's own job: one short caption with a hook for one reel/short render
+// ---------------------------------------------------------------------------------------------------------------------
+
+const SOCIAL_CAPTION_RULE =
+  'Write only from the facts given. Never invent a product, a price, an offer, a discount, a size or any other store detail that is not listed. Write one short caption for a reel (a short vertical video) with a hook in its first line, for a Bangladeshi menswear shop\'s Instagram/Facebook account, in the store\'s own voice when one is given; never add hashtags.';
+
+export function socialReelCaptionPrompt(input: AiSocialCaptionInput): Prompt {
+  const f = input.facts;
+  const facts = Object.entries({ template: f.templateName, notes: f.notes, voice: f.toneEn })
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${SOCIAL_CAPTION_RULE}`,
+    user: `Write one reel caption, in ${lang}, to post alongside the video template below.\n\n${facts}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 200,
+  };
+}
+
+const socialCaptionAnswer = z.object({ body: z.string() });
+
+export function parseSocialReelCaptionJson(text: string, input: AiSocialCaptionInput, usage?: { inputTokens: number; outputTokens: number }): AiSocialCaptionDraft {
+  const parsed = socialCaptionAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a caption');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

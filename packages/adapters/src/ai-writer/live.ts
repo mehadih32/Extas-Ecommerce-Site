@@ -8,8 +8,8 @@
 // reaches `complete`, the one call in this whole package that actually leaves the server over HTTP. See masking.ts's
 // own header for why this is a safety net on top of PR 310's provider routing, not a replacement for it.
 import type { TestResult } from '../define';
-import { approvalExplainPrompt, articlePrompt, campaignPrompt, fraudReviewPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, supportReplyPrompt } from './prompts';
-import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
+import { approvalExplainPrompt, articlePrompt, campaignPrompt, fraudReviewPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseFraudReviewJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSocialReelCaptionJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, socialReelCaptionPrompt, supportReplyPrompt } from './prompts';
+import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiFraudReviewDraft, AiFraudReviewInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSocialCaptionDraft, AiSocialCaptionInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
 export interface CompleteInput {
   system: string;
@@ -79,6 +79,11 @@ export function liveAiWriter(complete: Completer): AiWriter {
       const { system, user, maxTokens } = approvalExplainPrompt(input);
       const { text, usage } = await complete({ system, user, maxTokens });
       return parseApprovalExplainJson(text, input, usage);
+    },
+    async draftSocialReelCaption(input: AiSocialCaptionInput): Promise<AiSocialCaptionDraft> {
+      const { system, user, maxTokens } = socialReelCaptionPrompt(input);
+      const { text, usage } = await complete({ system, user, maxTokens });
+      return parseSocialReelCaptionJson(text, input, usage);
     },
   };
 }
