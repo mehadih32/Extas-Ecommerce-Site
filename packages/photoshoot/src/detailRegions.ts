@@ -214,3 +214,223 @@ export async function recordDetailReprojectionOutput(deps: PhotoshootDeps, who: 
 export function reprojectedCandidateId(tags: readonly string[]): string | null {
   return tags.find((t) => UUID_RE.test(t)) ?? null;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// S24 · PR 463 (Blueprint C7.10 "Detail Finder") — the owner's own point: a polo has side tapes, a side vent,
+// collar tape, embroidery, print under the placket; these small details are what make a garment look premium, and
+// they must be shown. This is a different use of `DetailRegion`'s own bbox shape from the rest of this file: the
+// region sits on a FINISHED image (the ghost-mannequin or on-model render — C7.10 is explicit that focus crops
+// "are produced from the ghost and on-model renders too, not only from the flat-lay") rather than on a real
+// original, so `recordDetailRegion`'s own one-way "never on a generated image" rule above does not apply here.
+// `kind` is namespaced `finder:<category>:<point>` so a Detail Finder row can never be confused with one of
+// `recordDetailRegion`'s own logo/print/embroidery/text/label rows sharing the same column and bbox shape.
+//
+// Part 1's own honest scope: the fixed per-garment checklist (C7.10's own list), and the owner's four actions on a
+// proposed region — confirm, rename, add, remove. No automatic scanner is wired yet (no CV provider exists for
+// this — the same honest gap `detectedBy: 'manual'` already names above for PR 454's own regions): nothing here
+// ever calls out to find a region on a real photo; `proposeDetailFocusRegion` is the primitive a later job
+// runner's own scanner will call. Also not here (Part 2, PR 464): the focus-crop image itself, and C7.10's own
+// "the collar tape is not readable — please take one closer photo" readability gate.
+
+/** C7.10's own fixed garment types — a narrow, Detail-Finder-only vocabulary, never the general category/recipe
+ * framework PR 469–470 build later for shot planning; this list exists only to drive the checklist below. */
+export const DETAIL_FINDER_GARMENT_TYPES = ['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi'] as const;
+export type DetailFinderGarmentType = (typeof DETAIL_FINDER_GARMENT_TYPES)[number];
+
+/** C7.10's own checklist of likely detail points per garment type — a fixed data-model vocabulary, never an owner
+ * setting. `label` here (denim/chino's woven label) is a different value from `DETAIL_REGION_KINDS`'s own
+ * `'label'` above: the `finder:` namespace below keeps the two from ever colliding in storage. */
+export const DETAIL_FINDER_CHECKLIST: Record<DetailFinderGarmentType, readonly string[]> = {
+  polo: ['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo'],
+  shirt: ['collar', 'cuff', 'button', 'pocket', 'yoke', 'stitch_density'],
+  denim_chino: ['rivets', 'back_pocket_stitching', 'label', 'zip_and_hardware', 'selvedge'],
+  hoodie: ['drawcord_tips', 'kangaroo_pocket', 'rib', 'zip_pull'],
+  panjabi: ['neck_embroidery', 'button_placket', 'side_slit'],
+};
+
+export const DETAIL_FINDER_KIND_PREFIX = 'finder:';
+
+/** True only for a checklist point this garment type actually lists — refuses a point that belongs to a
+ * different garment type, or one nobody listed at all. */
+export function isDetailFinderPoint(garmentType: DetailFinderGarmentType, point: string): boolean {
+  return (DETAIL_FINDER_CHECKLIST[garmentType] as readonly string[]).includes(point);
+}
+
+/** Builds the namespaced `kind` a Detail Finder region is stored under. */
+export function detailFinderKind(garmentType: DetailFinderGarmentType, point: string): string {
+  return `${DETAIL_FINDER_KIND_PREFIX}${garmentType}:${point}`;
+}
+
+/** Reads a stored `kind` back into its garment type and checklist point, or `null` when it is not one of this
+ * PR's own rows (a PR 454 logo/print/embroidery/text/label region, or anything malformed). */
+export function parseDetailFinderKind(kind: string): { garmentType: DetailFinderGarmentType; point: string } | null {
+  if (!kind.startsWith(DETAIL_FINDER_KIND_PREFIX)) return null;
+  const rest = kind.slice(DETAIL_FINDER_KIND_PREFIX.length);
+  const sep = rest.indexOf(':');
+  if (sep < 0) return null;
+  const garmentType = rest.slice(0, sep);
+  const point = rest.slice(sep + 1);
+  if (!(DETAIL_FINDER_GARMENT_TYPES as readonly string[]).includes(garmentType)) return null;
+  if (!point) return null;
+  return { garmentType: garmentType as DetailFinderGarmentType, point };
+}
+
+export interface DetailFocusRegionRow {
+  id: string;
+  storeId: number;
+  productId: string;
+  assetId: string;
+  garmentType: DetailFinderGarmentType;
+  point: string;
+  bbox: DetailRegionBBox;
+  detectedBy: DetailRegionDetectedBy;
+  approved: boolean;
+  rejectedAt: Date | null;
+  createdAt: Date;
+}
+
+function toFocusRow(r: DetailRegionRecord & { rejectedAt: Date | null }): DetailFocusRegionRow {
+  const parsed = parseDetailFinderKind(r.kind);
+  if (!parsed) throw new PhotoshootError('SOURCE_INVALID', 'this detail region is not one of the Detail Finder’s own rows', ['kind']);
+  return { id: r.id, storeId: r.storeId, productId: r.productId, assetId: r.assetId, garmentType: parsed.garmentType, point: parsed.point, bbox: r.bbox as DetailRegionBBox, detectedBy: r.detectedBy as DetailRegionDetectedBy, approved: r.approved, rejectedAt: r.rejectedAt, createdAt: r.createdAt };
+}
+
+const focusPointInput = z
+  .object({
+    productId: z.string().uuid(),
+    assetId: z.string().uuid(),
+    garmentType: z.enum(DETAIL_FINDER_GARMENT_TYPES),
+    point: z.string().min(1),
+    bbox: bboxSchema,
+  })
+  .strict()
+  .refine((d) => isDetailFinderPoint(d.garmentType, d.point), { message: 'not one of this garment type’s own checklist points', path: ['point'] });
+export type ProposeDetailFocusRegionInput = z.input<typeof focusPointInput>;
+
+/**
+ * Records a system-proposed focus region (`photoshoot.generate`) — the half of C7.10 that would be called by a
+ * future automatic scanner (not built here, the same honest gap PR 454 already left for its own `detectedBy`).
+ * Deliberately does NOT require `asset.isOriginal`: C7.10 names the ghost-mannequin and on-model renders as valid
+ * sources too, never only the flat-lay. Refuses only an asset outside this store, or a checklist point this
+ * garment type never listed. Starts unapproved and unrejected — nothing becomes a focus crop until the owner
+ * confirms it (`confirmDetailFocusRegion`).
+ */
+export async function proposeDetailFocusRegion(deps: PhotoshootDeps, who: Who, input: unknown): Promise<DetailFocusRegionRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.generate');
+  const d = parse(focusPointInput, input, 'detail focus region');
+  const asset = await deps.db.mediaAsset.findFirst({ where: { id: d.assetId, storeId: who.storeId } });
+  if (!asset) throw new PhotoshootError('SOURCE_INVALID', 'the photo was not found in this store', ['assetId']);
+  const kind = detailFinderKind(d.garmentType, d.point);
+  const row = await deps.db.detailRegion.create({ data: { storeId: who.storeId, productId: d.productId, assetId: d.assetId, kind, bbox: d.bbox, detectedBy: 'auto', approved: false, rejectedAt: null } });
+  await logChange(deps.db, who, { action: 'photoshoot.detailFocusRegion.propose', entityType: 'DetailRegion', entityId: row.id, before: null, after: { productId: d.productId, assetId: d.assetId, kind } });
+  return toFocusRow(row);
+}
+
+/**
+ * The owner's own "add" (`photoshoot.write`) — a region the scanner missed, typed in by hand. Unlike a proposal,
+ * the owner's own addition starts already `approved: true`: there is no one else to confirm it against.
+ */
+export async function addDetailFocusRegion(deps: PhotoshootDeps, who: Who, input: unknown): Promise<DetailFocusRegionRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.write');
+  const d = parse(focusPointInput, input, 'detail focus region');
+  const asset = await deps.db.mediaAsset.findFirst({ where: { id: d.assetId, storeId: who.storeId } });
+  if (!asset) throw new PhotoshootError('SOURCE_INVALID', 'the photo was not found in this store', ['assetId']);
+  const kind = detailFinderKind(d.garmentType, d.point);
+  const row = await deps.db.detailRegion.create({ data: { storeId: who.storeId, productId: d.productId, assetId: d.assetId, kind, bbox: d.bbox, detectedBy: 'manual', approved: true, rejectedAt: null } });
+  await logChange(deps.db, who, { action: 'photoshoot.detailFocusRegion.add', entityType: 'DetailRegion', entityId: row.id, before: null, after: { productId: d.productId, assetId: d.assetId, kind } });
+  return toFocusRow(row);
+}
+
+async function loadFocusRegion(deps: Pick<PhotoshootDeps, 'db'>, who: Who, regionId: string) {
+  const row = await deps.db.detailRegion.findFirst({ where: { id: regionId, storeId: who.storeId } });
+  if (!row) throw new PhotoshootError('NOT_FOUND', 'no such detail region in this store');
+  if (!parseDetailFinderKind(row.kind)) throw new PhotoshootError('SOURCE_INVALID', 'this detail region is not one of the Detail Finder’s own rows', ['kind']);
+  return row;
+}
+
+/**
+ * The owner's own "confirm" (`photoshoot.approve`) — C7.10's own review of what the (future) scanner proposed.
+ * Refuses a region that was already removed: a removed proposal is re-added, never resurrected.
+ */
+export async function confirmDetailFocusRegion(deps: PhotoshootDeps, who: Who, regionId: string): Promise<DetailFocusRegionRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.approve');
+  const before = await loadFocusRegion(deps, who, regionId);
+  if (before.rejectedAt) throw new PhotoshootError('SOURCE_INVALID', 'a removed focus region cannot be confirmed — add it again instead', ['regionId']);
+  const row = await deps.db.detailRegion.update({ where: { id: regionId }, data: { approved: true } });
+  await logChange(deps.db, who, { action: 'photoshoot.detailFocusRegion.confirm', entityType: 'DetailRegion', entityId: row.id, before: { approved: before.approved }, after: { approved: true } });
+  return toFocusRow(row);
+}
+
+const renameInput = z.object({ point: z.string().min(1) }).strict();
+
+/**
+ * The owner's own "rename" (`photoshoot.write`) — relabels a proposed or confirmed region to a different
+ * checklist point of the SAME garment type (garment type itself never changes: it is a fact about the product,
+ * not the region). Refuses a point the garment type never listed, and a removed region.
+ */
+export async function renameDetailFocusRegion(deps: PhotoshootDeps, who: Who, regionId: string, input: unknown): Promise<DetailFocusRegionRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.write');
+  const before = await loadFocusRegion(deps, who, regionId);
+  if (before.rejectedAt) throw new PhotoshootError('SOURCE_INVALID', 'a removed focus region cannot be renamed — add it again instead', ['regionId']);
+  const parsed = parseDetailFinderKind(before.kind);
+  if (!parsed) throw new PhotoshootError('SOURCE_INVALID', 'this detail region is not one of the Detail Finder’s own rows', ['kind']);
+  const d = parse(renameInput, input, 'rename');
+  if (!isDetailFinderPoint(parsed.garmentType, d.point)) throw new PhotoshootError('INVALID_INPUT', 'not one of this garment type’s own checklist points', ['point']);
+  const kind = detailFinderKind(parsed.garmentType, d.point);
+  const row = await deps.db.detailRegion.update({ where: { id: regionId }, data: { kind } });
+  await logChange(deps.db, who, { action: 'photoshoot.detailFocusRegion.rename', entityType: 'DetailRegion', entityId: row.id, before: { kind: before.kind }, after: { kind } });
+  return toFocusRow(row);
+}
+
+/**
+ * The owner's own "remove" (`photoshoot.write`) — a wrongly proposed region the owner does not want. Never a
+ * delete (CLAUDE.md): the row stays on file with `rejectedAt` set, so a later read of the same product never
+ * shows it as still pending. Refuses a region already removed, or already confirmed (confirm a region and the
+ * owner's own decision about it is final the same way every other review decision here is — undo it by not
+ * producing a focus crop later, not by un-reviewing the region).
+ */
+export async function removeDetailFocusRegion(deps: PhotoshootDeps, who: Who, regionId: string): Promise<DetailFocusRegionRow> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.write');
+  const before = await loadFocusRegion(deps, who, regionId);
+  if (before.rejectedAt) throw new PhotoshootError('SOURCE_INVALID', 'this focus region was already removed', ['regionId']);
+  if (before.approved) throw new PhotoshootError('SOURCE_INVALID', 'a confirmed focus region cannot be removed', ['regionId']);
+  const now = new Date();
+  const row = await deps.db.detailRegion.update({ where: { id: regionId }, data: { rejectedAt: now } });
+  await logChange(deps.db, who, { action: 'photoshoot.detailFocusRegion.remove', entityType: 'DetailRegion', entityId: row.id, before: { rejectedAt: null }, after: { rejectedAt: now.toISOString() } });
+  return toFocusRow(row);
+}
+
+/** Every Detail Finder focus region on file for a product (`photoshoot.read`), newest first — never a PR 454
+ * logo/print/embroidery/text/label row, which this filters out by its own `kind` namespace. */
+export async function listDetailFocusRegionsForProduct(deps: Pick<PhotoshootDeps, 'db'>, who: Who, productId: string): Promise<DetailFocusRegionRow[]> {
+  checkStoreId(who.storeId);
+  await allow(deps, who, 'photoshoot.read');
+  const rows = await deps.db.detailRegion.findMany({ where: { productId, storeId: who.storeId, kind: { startsWith: DETAIL_FINDER_KIND_PREFIX } }, orderBy: { createdAt: 'desc' } });
+  return rows.map(toFocusRow);
+}
+
+export type DetailFinderPointStatus = 'missing' | 'proposed' | 'confirmed' | 'rejected_only';
+
+/**
+ * Pure, no database: per checklist point of one garment type, where its own regions stand — 'missing' (nobody has
+ * proposed or added anything for it yet), 'rejected_only' (every region on file for it was removed), 'proposed'
+ * (something is on file but nobody has confirmed it), or 'confirmed' (at least one confirmed, un-removed region —
+ * ready for Part 2's own focus crop). Sets up Part 2 (the crop image itself, and C7.10's "ask for a closer photo"
+ * when a point stays 'missing') without doing either of those — this PR's own honest scope.
+ */
+export function detailFinderCoverage(garmentType: DetailFinderGarmentType, regions: readonly DetailFocusRegionRow[]): Record<string, DetailFinderPointStatus> {
+  const result = {} as Record<string, DetailFinderPointStatus>;
+  for (const point of DETAIL_FINDER_CHECKLIST[garmentType]) {
+    const own = regions.filter((r) => r.garmentType === garmentType && r.point === point);
+    if (!own.length) result[point] = 'missing';
+    else if (own.some((r) => r.approved && !r.rejectedAt)) result[point] = 'confirmed';
+    else if (own.every((r) => r.rejectedAt)) result[point] = 'rejected_only';
+    else result[point] = 'proposed';
+  }
+  return result;
+}
