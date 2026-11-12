@@ -294,3 +294,35 @@ describe('practice approval-explain note (PR 330)', () => {
     await expect(w.draftApprovalExplainNote(approval({ facts: { title: ' ', why: [] } }))).rejects.toThrow();
   });
 });
+
+// S15 · PR 331 — the practice reel caption: only the template's own name, notes and voice tone it was given, joined
+// in one plain line, marked practice.
+describe('practice social reel caption (PR 331)', () => {
+  const social = (over: Partial<import('../src').AiSocialCaptionInput> = {}): import('../src').AiSocialCaptionInput => ({
+    locale: 'en',
+    facts: { templateName: 'Reel — new arrivals', notes: 'Upbeat, fast cuts' },
+    max: { body: 220 },
+    ...over,
+  });
+
+  it('writes from the template\'s own name and notes it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSocialReelCaption(social());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Reel — new arrivals');
+    expect(d.body).toContain('Upbeat, fast cuts');
+  });
+
+  it('writes from the template name alone when there are no notes or voice tone', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSocialReelCaption(social({ facts: { templateName: 'Reel — new arrivals' } }));
+    expect(d.body).toBe('Reel — new arrivals');
+  });
+
+  it('cuts to the store limit and refuses a draft with no template name', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSocialReelCaption(social({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftSocialReelCaption(social({ facts: { templateName: ' ' } }))).rejects.toThrow();
+  });
+});

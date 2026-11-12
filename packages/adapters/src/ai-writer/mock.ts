@@ -20,6 +20,8 @@ import {
   type AiSeoInput,
   type AiSizeAdviceDraft,
   type AiSizeAdviceInput,
+  type AiSocialCaptionDraft,
+  type AiSocialCaptionInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
   type AiWriter,
@@ -140,6 +142,15 @@ export function practiceApprovalExplainNote(input: AiApprovalExplainInput): AiAp
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 331 — the mock's reel caption: only the template's own name, notes and voice tone it was given, joined
+ * in one plain line (no voice to borrow without a key, so the practice answer stays honestly plain rather than
+ * invent a hook). */
+export function practiceSocialReelCaption(input: AiSocialCaptionInput): AiSocialCaptionDraft {
+  const f = input.facts;
+  const body = [f.templateName, f.notes, f.toneEn].map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(' — ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -182,6 +193,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftApprovalExplainNote(input) {
         if (!input.facts.title.trim()) throw new AdapterError('an approval explanation needs the item\'s own title');
         return practiceApprovalExplainNote(input);
+      },
+      async draftSocialReelCaption(input) {
+        if (!input.facts.templateName.trim()) throw new AdapterError('a reel caption needs the template\'s own name');
+        return practiceSocialReelCaption(input);
       },
     };
   },

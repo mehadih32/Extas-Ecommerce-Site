@@ -250,6 +250,32 @@ export interface AiApprovalExplainDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 331 — the social content agent's own job (Doot, the existing `socialReelCaption` Cost Book job, PR 312):
+ * one short caption with a hook for one reel/short render queued in Marketing › Studio (S23's own render-queue
+ * form, PR 439) — the exact spot that form's own placeholder text already named ("nothing here writes this for
+ * you yet"). Gated by its own feature switch (`studio.ai.captions`, off as it ships) on top of the usual
+ * master/agent switches, since `registry-studio.ts`'s own comment and `catalogue.ts`'s own permission note both
+ * name this exact job as the one `studio.ai.captions`/`studio.generate` turn on. `facts` is always the real
+ * template's own already-saved name and notes (never a product, a price, an offer or a size the staff has not
+ * typed into the template itself) plus the store's own already-saved brand voice tone line (`studio.voice`'s
+ * `toneEn`) — never invented.
+ */
+export interface AiSocialCaptionInput {
+  locale: 'en' | 'bn';
+  facts: { templateName: string; notes?: string; toneEn?: string };
+  max: { body: number };
+}
+
+export interface AiSocialCaptionDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -266,6 +292,8 @@ export interface AiWriter {
   draftFraudReviewNote(input: AiFraudReviewInput): Promise<AiFraudReviewDraft>;
   /** PR 330 — the growth marketing agent's own job: one grounded paragraph explaining an approval-queue item, never a decision. */
   draftApprovalExplainNote(input: AiApprovalExplainInput): Promise<AiApprovalExplainDraft>;
+  /** PR 331 — the social content agent's own job: one short caption with a hook for one reel/short render queue template. */
+  draftSocialReelCaption(input: AiSocialCaptionInput): Promise<AiSocialCaptionDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */
