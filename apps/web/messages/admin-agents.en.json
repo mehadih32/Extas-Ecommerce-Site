@@ -1,0 +1,69 @@
+{
+  "aiAgents": {
+    "metaTitle": "Agents",
+    "title": "The seven agents",
+    "sub": "Each agent's own 360° profile: its role, plan, skills, work log and assignments.",
+    "backToTeam": "All agents",
+    "team": {
+      "open": "{n} open",
+      "done": "{n} done"
+    },
+    "verified": "Verified by the owner",
+    "role": "Role",
+    "owns": "Owns",
+    "neverTouches": "Never touches",
+    "plan": "Plan",
+    "skillsHas": "Skills it has",
+    "skillsLearning": "Skills it is learning",
+    "noPlan": "—",
+    "noSkills": "—",
+    "joined": "Joined {date}",
+    "notJoinedYet": "Joining date not set",
+    "edit": {
+      "heading": "Edit profile",
+      "bio": "Bio",
+      "photo": "Photo URL",
+      "joined": "Joining date",
+      "verified": "Verified by the owner",
+      "save": "Save",
+      "saved": "Profile saved",
+      "failed": "Could not save the profile",
+      "invalid": "Check the photo URL and the joining date"
+    },
+    "rewards": {
+      "heading": "Rewards",
+      "none": "No rewards yet.",
+      "label": "What for",
+      "note": "Note (optional)",
+      "give": "Give a reward",
+      "given": "Reward given",
+      "failed": "Could not give the reward"
+    },
+    "assignments": {
+      "heading": "Assignments",
+      "openHeading": "Open",
+      "doneHeading": "Done",
+      "noneOpen": "No open assignments.",
+      "noneDone": "Nothing finished yet.",
+      "title": "Task",
+      "description": "Details (optional)",
+      "due": "Due date",
+      "assign": "Assign",
+      "assigned": "Task assigned",
+      "failed": "Could not assign the task",
+      "markDone": "Mark done",
+      "done": "Marked done",
+      "completeFailed": "Could not mark it done",
+      "dueOn": "Due {date}",
+      "noDue": "No due date",
+      "completedOn": "Done {date}",
+      "from": "from {source}"
+    },
+    "workLog": {
+      "heading": "Work log",
+      "none": "Nothing logged yet — its real work log fills in once the live dashboard runs its tasks."
+    },
+    "readOnly": "You can see this page but not change it.",
+    "notFound": "No such agent."
+  }
+}

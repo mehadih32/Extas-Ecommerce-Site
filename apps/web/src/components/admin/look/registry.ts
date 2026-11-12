@@ -4,7 +4,6 @@
 // (docs/admin-guide/HOW-TO-ADD-A-DESIGN.md). Nothing else changes: Settings → Admin look, the "…" menu, the API's
 // checks and the page's data loader all read this list.
 //
-// `standard` is the design a team sees until the owner picks one in Settings → Admin look (`admin.look.pages`). For launch
 // (CN-027) every page had one design: the Dashboard its V12.4 default (A, "Calm overview"), Orders and Products their
 // built page. The other V12.4 designs are after-launch follow-ups (PROGRESS.md 380–382, CN-044 ERP lane): the Dashboard's
 // "Classic cards" (PR 655, key C — B was already taken by the Lumen "Today", PR 631) and command centre; Orders' B
@@ -12,6 +11,7 @@
 import { classicDesign } from './classic';
 import { dashboardA } from './dashboard/A';
 import { dashboardB } from './dashboard/B';
+import { dashboardC } from './dashboard/C';
 import { ordersB } from './orders/B';
 import { ordersC } from './orders/C';
 import { productsB } from './products/B';
@@ -29,6 +29,7 @@ export const LOOK_PAGES: readonly LookPage[] = [
     designs: [
       dashboardA,
       dashboardB,
+      dashboardC,
       // admin:design dashboard
     ],
   },
