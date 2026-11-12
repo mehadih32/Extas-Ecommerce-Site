@@ -5597,23 +5597,46 @@
    "builtFacts": {
     "routes": [],
     "settings": [
-     "admin.look.pages.dashboard"
+     "admin.look.pages.dashboard",
+     "orders.read",
+     "all.funnel",
+     "all.hours"
     ],
     "code": [
      "lib/admin-look/dashboard-data.ts",
      "cost-report.ts",
      "docs/admin-guide/pages/dashboard/home.md",
      "docs/admin-guide/dashboard.md",
-     "docs/admin-guide/pages/settings/look.md"
+     "docs/admin-guide/pages/settings/look.md",
+     "api.db.test.ts"
     ],
     "names": [
      "funnel",
      "hours",
-     "AT TIME ZONE"
+     "AT TIME ZONE",
+     "stages",
+     "feed",
+     "delivery",
+     "db",
+     "main",
+     "TEST_DATABASE_ADMIN_URL",
+     "fix-dashboard-parts-test"
     ],
-    "tests": []
+    "tests": [
+     "**Updated 12 Nov 2026 (CI triage, found while rebasing PR 579/149):** this PR's own `api.db.test.ts` empty-shop test was never extended for the two new `funnel`/`hours` parts it added — gated on `orders.read` same as `stages`/`feed`/`delivery`, so the \"a part the person may not open is not read at all\" assertion's expected parts list was stale (missing `funnel`, `hours`), failing the `db` CI job on every PR that merges current `main`, unrelated to that PR's own diff",
+     "The PR's own local run had skipped this DB-only test (no `TEST_DATABASE_ADMIN_URL` locally) so it was never caught before merge",
+     "Fixed on `main` directly (branch `fix-dashboard-parts-test`): the stale assertion corrected to the actual, correct six-part list, plus two new assertions added for the empty-shop shape of `all.funnel`/`all.hours` themselves (honest zeros, matching the test's own stated purpose) — a gap, not just the one failing line"
+    ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "11 Oct",
+     "sortKey": 15840,
+     "source": "Build status",
+     "sourceLink": "../MASTER-REGISTER.md#build-status",
+     "text": "**Updated 12 Nov 2026 (CI triage, found while rebasing PR 579/149):** this PR's own `api.db.test.ts` empty-shop test was never extended for the two new `funnel`/`hours` parts it added — gated on `orders.read` same as `stages`/`feed`/`delivery`, so the \"a part the person may not open is not read at all\" assertion's expected parts list was stale (missing `funnel`, `hours`), failing the `db` CI job on every PR that merges current `main`, unrelated to that PR's own diff. The PR's own local run had skipped this DB-only test (no `TEST_DATABASE_ADMIN_URL` locally) so it was never caught before merge. Fixed on `main` directly (branch `fix-dashboard-parts-test`): the stale assertion corrected to the actual, correct six-part list, plus two new assertions added for the empty-shop shape of `all.funnel`/`all.hours` themselves (honest zeros, matching the test's own stated purpose) — a gap, not just the one failing line."
+    }
+   ],
    "mentions": [
     655
    ],
