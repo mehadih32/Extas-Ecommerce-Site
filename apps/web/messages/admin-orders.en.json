@@ -90,7 +90,7 @@
       "section": "Section",
       "sort": "Order",
       "sortNew": "Newest first",
-      "sortRisk": "Highest risk first",
+      "sortRisk": "Lowest courier score first (highest risk)",
       "docs": {
         "sticker": "Sticker",
         "stickerAgain": "Sticker ×{n}",
@@ -111,6 +111,17 @@
           "sheet": "{n} on a handover sheet",
           "handed": "{n} handed over"
         }
+      },
+      "dateLabel": "Date placed",
+      "dateAny": "Any date",
+      "dateFrom": "From day",
+      "dateTo": "To day",
+      "datePreset": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "days7": "Last 7 days",
+        "month": "This month",
+        "lastMonth": "Last month"
       }
     },
     "kpi": {
@@ -138,7 +149,9 @@
       "finished": "Finished",
       "prepaid": "Prepaid",
       "readyToBook": "Ready to book",
-      "incomplete": "Incomplete"
+      "incomplete": "Incomplete",
+      "processing": "Processing",
+      "cancelled": "Cancelled"
     },
     "st": {
       "DRAFT": "Draft",
@@ -246,7 +259,7 @@
     },
     "page": {
       "all": "All orders",
-      "confirm": "To confirm",
+      "confirm": "Processing",
       "riskRules": "Risk rules"
     },
     "bulk": {
@@ -1734,6 +1747,29 @@
         "returned": "The parcel is marked returned (your name and the time in the audit log); the order moves to returned.",
         "return": "The courier's return of this parcel opens, so the hand-back list and the reports expect it."
       }
+    },
+    "cancelled": {
+      "title": "Cancelled orders",
+      "sub": "Orders cancelled in the days chosen above (all days when none is chosen).",
+      "count": "Cancelled orders",
+      "money": "Order value not collected",
+      "none": "No cancelled orders in these days.",
+      "reasons": "Why they were cancelled",
+      "stages": "Where they were cancelled",
+      "who": "Who cancelled",
+      "noReason": "No reason given",
+      "unknown": "Not recorded",
+      "excel": "Download Excel file (CSV)",
+      "pdf": "Print or save as PDF",
+      "note": "Counts only; nothing here cancels or refunds anything."
+    },
+    "actor": {
+      "STAFF": "A person in the team",
+      "CUSTOMER": "The customer",
+      "SYSTEM": "The system",
+      "AI_AGENT": "An assistant",
+      "COURIER": "The courier",
+      "ERP": "The ERP"
     }
   }
 }

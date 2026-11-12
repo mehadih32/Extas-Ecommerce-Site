@@ -13,6 +13,8 @@ export interface FilterSelect {
   any: string;
   value: string;
   options: { value: string; label: string }[];
+  /** PR 660: the date bar's own day boxes, drawn after this select (a custom range). */
+  custom?: { from: string; to: string; fromLabel: string; toLabel: string };
 }
 
 export function OrderFilters({ action, view, defaultView, q, search, go, aria, selects, clear, keep }: { action: string; view: string; defaultView: string; q: string; search: string; go: string; aria: string; selects: FilterSelect[]; clear: { href: string; label: string } | null; /** PR 287: more parts of the address the search keeps (the Customers list's segment). */ keep?: Record<string, string> }) {
@@ -40,7 +42,17 @@ export function OrderFilters({ action, view, defaultView, q, search, go, aria, s
           <label className="a2-sr" htmlFor={`of-${s.name}`}>
             {s.label}
           </label>
-          <select id={`of-${s.name}`} className="a2-sel" name={s.name} defaultValue={s.value} onChange={() => form.current?.requestSubmit()}>
+          <select
+            id={`of-${s.name}`}
+            className="a2-sel"
+            name={s.name}
+            defaultValue={s.value}
+            onChange={() => {
+              // a preset replaces any custom days (the page reads the days first, so they are emptied here)
+              if (s.custom && form.current) for (const n of ['from', 'to']) (form.current.elements.namedItem(n) as HTMLInputElement | null)!.value = '';
+              form.current?.requestSubmit();
+            }}
+          >
             <option value="">{s.any}</option>
             {s.options.map((o) => (
               <option key={o.value} value={o.value}>
@@ -48,6 +60,18 @@ export function OrderFilters({ action, view, defaultView, q, search, go, aria, s
               </option>
             ))}
           </select>
+          {s.custom ? (
+            <>
+              <label className="a2-sr" htmlFor="of-from">
+                {s.custom.fromLabel}
+              </label>
+              <input id="of-from" className="a2-inp" type="date" name="from" defaultValue={s.custom.from} aria-label={s.custom.fromLabel} onChange={() => form.current?.requestSubmit()} />
+              <label className="a2-sr" htmlFor="of-to">
+                {s.custom.toLabel}
+              </label>
+              <input id="of-to" className="a2-inp" type="date" name="to" defaultValue={s.custom.to} aria-label={s.custom.toLabel} onChange={() => form.current?.requestSubmit()} />
+            </>
+          ) : null}
         </span>
       ))}
       <button type="submit" className="a2-btn">

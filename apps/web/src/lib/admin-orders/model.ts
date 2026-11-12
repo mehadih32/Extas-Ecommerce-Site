@@ -68,8 +68,10 @@ export const UNBOOKED_SHIPMENT: ReadonlySet<string> = new Set(['BOOKING_FAILED',
  * (SIM-F-020): "Prepaid" — paid orders nothing flagged, confirmed without a call — beside the call queue.
  */
 export const LIST_PAGES = {
-  all: { base: '/admin/orders', views: ['all', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished'] },
-  confirm: { base: '/admin/orders/confirm', views: ['toConfirm', 'prepaid', 'cancelRequests', 'awaitingAdvance'] },
+  // PR 660 (CN-048): "Processing" (a view, not a status) and "Cancelled" join the saved views of All orders; the Processing
+  // tab (the address stays /admin/orders/confirm) opens on the Processing view, with the old queues as its chips.
+  all: { base: '/admin/orders', views: ['all', 'processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished', 'cancelled'] },
+  confirm: { base: '/admin/orders/confirm', views: ['processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'inReview', 'cancelRequests'] },
 } as const;
 
 /**
@@ -90,6 +92,9 @@ export interface ListQuery {
   risk?: string;
   section?: string;
   sort?: string;
+  /** PR 660: the days the order was placed, from and to (both included), YYYY-MM-DD in the store's time zone. */
+  from?: string;
+  to?: string;
   cursor?: string;
 }
 
@@ -99,7 +104,7 @@ export function listHref(page: ListPageId, cur: ListQuery, change: Partial<ListQ
   const next: ListQuery = { ...cur, cursor: undefined, ...change };
   const sp = new URLSearchParams();
   if (next.view && next.view !== p.views[0]) sp.set('view', next.view);
-  for (const k of ['q', 'status', 'payment', 'source', 'risk', 'section', 'sort', 'cursor'] as const) {
+  for (const k of ['q', 'status', 'payment', 'source', 'risk', 'section', 'sort', 'from', 'to', 'cursor'] as const) {
     const v = next[k];
     if (v) sp.set(k, v);
   }
