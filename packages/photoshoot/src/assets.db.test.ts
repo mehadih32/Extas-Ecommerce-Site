@@ -94,6 +94,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 444 · photoshoot asset model (PostgreSQL)', (
     expect(sourceRow.role).toBe('front_reference');
   });
 
+  it('records free pipeline-step tags (S24 · PR 446), defaulting to none', async () => {
+    const d = deps();
+    const original = await makeOriginal('primary_garment');
+    const untagged = await recordGeneratedAsset(d, writer, { sourceAssetId: original.id, role: 'primary_garment', storageKey: 'test/gen-tags-1.jpg', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'h'.repeat(64) });
+    expect(untagged.tags).toEqual([]);
+    const tagged = await recordGeneratedAsset(d, writer, { sourceAssetId: original.id, role: 'front_reference', storageKey: 'test/gen-tags-2.jpg', storage: 'LOCAL_DISK', mimeType: 'image/jpeg', bytes: 1, checksumSha256: 'i'.repeat(64), tags: ['ghost_mannequin'] });
+    expect(tagged.tags).toEqual(['ghost_mannequin']);
+  });
+
   it('refuses a generated image whose named source is missing, in another store, or itself generated (never AI-from-AI)', async () => {
     const d = deps();
     await expect(
