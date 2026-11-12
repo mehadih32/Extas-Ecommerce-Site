@@ -9,6 +9,7 @@
 //   close" from the setting's two levels.
 import { z } from 'zod';
 import { ROUTES } from '../shop/routes';
+import { PILLARS } from './authors-model';
 import { blocks, type Inline } from './blocks';
 import { TITLE_MAX } from './model';
 
@@ -191,6 +192,9 @@ export const topicInputSchema = z
     clusterId: nullUuid,
     priority: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(2),
     isPillar: z.boolean().default(false),
+    /** PR 593: the section it belongs to (care, style, fabric, fit, season, brand) — left blank, a new topic has no
+     * default writer; given, the matching author of the five under Doot writes it unless `authorId` overrides that. */
+    pillar: z.enum(PILLARS).nullish().transform((v) => v ?? null),
     authorId: nullUuid,
     /** Add it although a very close article or topic exists (the second press). */
     force: z.boolean().optional(),
