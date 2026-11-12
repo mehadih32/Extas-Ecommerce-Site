@@ -85,6 +85,8 @@ import adminFraudEn from '../../../messages/admin-fraud.en.json';
 import adminFraudBn from '../../../messages/admin-fraud.bn.json';
 import adminFulfilEn from '../../../messages/admin-fulfil.en.json';
 import adminFulfilBn from '../../../messages/admin-fulfil.bn.json';
+import adminFunnelsEn from '../../../messages/admin-funnels.en.json';
+import adminFunnelsBn from '../../../messages/admin-funnels.bn.json';
 import adminGoliveEn from '../../../messages/admin-golive.en.json';
 import adminGoliveBn from '../../../messages/admin-golive.bn.json';
 import adminHealthEn from '../../../messages/admin-health.en.json';
@@ -249,6 +251,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-flags': { en: adminFlagsEn, bn: adminFlagsBn },
   'admin-fraud': { en: adminFraudEn, bn: adminFraudBn },
   'admin-fulfil': { en: adminFulfilEn, bn: adminFulfilBn },
+  'admin-funnels': { en: adminFunnelsEn, bn: adminFunnelsBn },
   'admin-golive': { en: adminGoliveEn, bn: adminGoliveBn },
   'admin-health': { en: adminHealthEn, bn: adminHealthBn },
   'admin-inbox': { en: adminInboxEn, bn: adminInboxBn },

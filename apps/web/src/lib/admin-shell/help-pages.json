@@ -140,6 +140,7 @@
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
     { "id": "reports/experiments", "route": "/admin/reports/experiments" },
+    { "id": "reports/funnels", "route": "/admin/reports/funnels" },
     { "id": "reports/experiment", "route": "/admin/reports/experiments/[id]" },
     { "id": "money/month-end", "route": "/admin/money/month-end" },
     { "id": "money/books-account", "route": "/admin/money/books" },
