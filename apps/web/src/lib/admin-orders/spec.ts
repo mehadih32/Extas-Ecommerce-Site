@@ -26,6 +26,8 @@ export interface FieldSpec {
   noteFor?: string;
   /** The label while the note is needed (the chosen reason asks for one). */
   labelNeeded?: string;
+  /** S28 · PR 664: a text box that hides what is typed (the owner's PIN); never kept, never shown again. */
+  secret?: boolean;
 }
 
 export type ButtonTone = '' | 'pri' | 'bad' | 'badf' | 'ghost';
