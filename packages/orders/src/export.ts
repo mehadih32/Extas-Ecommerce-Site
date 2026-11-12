@@ -13,6 +13,7 @@ import { can, audit } from '@extas/auth';
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, type OrdersDeps, type Who } from './context';
 import { OrdersError } from './errors';
+import { dayRange } from './day-range';
 import { listBase, listQuery, listWhere, openReviewIds } from './list';
 import { dueOf } from './pure';
 
@@ -163,7 +164,7 @@ export async function exportOrders(deps: OrdersDeps, who: Who, input: unknown = 
   const columns = wanted.filter((c) => personalOk || !ORDER_EXPORT_PERSONAL.has(c));
   if (!columns.length) throw new OrdersError('INVALID_INPUT', 'no column may be exported without personal details', ['columns']);
   const personal = columns.some((c) => ORDER_EXPORT_PERSONAL.has(c));
-  const where: Prisma.OrderWhereInput = q.ids ? { AND: [listBase(who.storeId), { id: { in: q.ids } }] } : listWhere(who.storeId, q, await openReviewIds(deps, who.storeId));
+  const where: Prisma.OrderWhereInput = q.ids ? { AND: [listBase(who.storeId), { id: { in: q.ids } }] } : listWhere(who.storeId, { ...q, placed: dayRange(q.from, q.to, timeZone) }, await openReviewIds(deps, who.storeId));
   const count = await deps.db.order.count({ where });
   if (count > maxRows) throw new OrdersError('EXPORT_TOO_LARGE', `${count} orders are more than one file holds (${maxRows}); narrow the filter`, ['maxRows'], { count, maxRows });
   const orders = await deps.db.order.findMany({ where, orderBy: [{ placedAt: 'desc' }, { id: 'desc' }], select: EXPORT_SELECT });

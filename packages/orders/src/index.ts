@@ -67,6 +67,8 @@ export * from './customer';
 export * from './notes';
 export * from './duplicates';
 export * from './list';
+export * from './day-range';
+export * from './cancelled-summary';
 export * from './followups';
 export * from './calls';
 export * from './addon';

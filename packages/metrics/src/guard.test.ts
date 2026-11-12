@@ -29,6 +29,7 @@ export const ALLOWED: Record<string, string> = {
   'packages/payments/src/cod.ts': 'the cash still with each courier and on the road (the COD position, PR 166), money owed to the shop, not a sales figure',
   'packages/shipping/src/booking.ts': "a parcel's declared value for the courier (its own lines' totals, PR 176), not a sales figure",
   'packages/orders/src/exchange.ts': "an exchange's new order gets its own subtotal from its swap lines (PR 185), not a sales figure",
+  'packages/orders/src/cancelled-summary.ts': 'the Cancelled summary adds up the value of the orders that were cancelled in the period (PR 660), money that was never sold, not a sales figure',
   'packages/orders/src/returns-erp.ts': 'the Returns section adds up money lost on returns per month (declined, exchange net, delivery charges, underpaid; PR 613), not a sales figure',
   'apps/web/src/lib/tracking/orders.ts': "a delivered or confirmed order's event value for the ad platforms from that one order's kept lines (PR 258), not a sales figure",
   'apps/web/src/lib/tracking/feed.ts': "a shipped, returned or qualified order's event value for the ad platforms from that one order's lines (PR 532), not a sales figure",
