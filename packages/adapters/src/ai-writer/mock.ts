@@ -20,6 +20,8 @@ import {
   type AiSeoInput,
   type AiSizeAdviceDraft,
   type AiSizeAdviceInput,
+  type AiGuideQaDraft,
+  type AiGuideQaInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
   type AiStockAlertDraft,
@@ -168,6 +170,14 @@ export function practiceStudioDetailNote(input: AiStudioDetailInput): AiStudioDe
 /** S15 · PR 333 — the mock's stock alert line: only the numbers the stock page already shows, joined in one plain
  * line (no voice to borrow without a key, so the practice answer stays honestly plain rather than invent a reorder
  * quantity, a supplier or a cause it was not told about). */
+/** S15 · PR 334 — the mock's guide Q&A answer: only the page's own already-written guide text it was given, cut to
+ * the store limit (no voice to borrow without a key, so the practice answer stays the guide's own words rather than
+ * invent a button or step not already in the text). */
+export function practiceGuideQaAnswer(input: AiGuideQaInput): AiGuideQaDraft {
+  const body = input.facts.guideText.trim();
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export function practiceStockAlertNote(input: AiStockAlertInput): AiStockAlertDraft {
   const f = input.facts;
   const where = [f.colour, f.size].filter((x): x is string => Boolean(x && x.trim())).join(' / ');
@@ -229,6 +239,11 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftStockAlertNote(input) {
         if (!input.facts.productName.trim() || !input.facts.sku.trim()) throw new AdapterError('a stock alert note needs the SKU\'s own product name and code');
         return practiceStockAlertNote(input);
+      },
+      async draftGuideQaAnswer(input) {
+        if (!input.facts.guideText.trim()) throw new AdapterError('a guide answer needs the page\'s own guide text');
+        if (!input.facts.question.trim()) throw new AdapterError('a guide answer needs the owner\'s own question');
+        return practiceGuideQaAnswer(input);
       },
     };
   },

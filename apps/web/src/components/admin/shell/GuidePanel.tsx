@@ -194,7 +194,61 @@ function SidePanel({ title, sub, closeLabel, onClose, children }: { title: strin
   );
 }
 
-export function GuidePanel({ dict, request, mode = 'side', here, onOpen, onClose }: { dict: Dict; request: GuideRequest; mode?: GuideMode; here?: string; onOpen(r: GuideRequest): void; onClose(): void }) {
+/** PR 334 — the System Q&A agent's own box: the owner types a question about the page they are on, and gets back
+ * one Bengali answer grounded only in that page's own already-written guide text (never invented) — or an honest
+ * "this guide doesn't cover that" when the model says so, Gyani/Prohori's switch is off, or no connection is ready.
+ * The guide's own written text above stays complete and correct either way; this is additive only. */
+function AskBox({ page, lang, tt }: { page: string; lang: 'en' | 'bn'; tt(k: string): string }) {
+  const [q, setQ] = useState('');
+  const [state, setState] = useState<{ loading: boolean; answer: string | null; asked: boolean; failed: boolean }>({ loading: false, answer: null, asked: false, failed: false });
+  const ask = async () => {
+    const question = q.trim();
+    if (!question || state.loading) return;
+    setState({ loading: true, answer: null, asked: false, failed: false });
+    try {
+      const r = await fetch('/api/admin/guide/ask', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ page, question, locale: lang }) });
+      const j = (await r.json().catch(() => ({}))) as { ok?: boolean; answer?: string | null };
+      if (!r.ok || !j.ok) setState({ loading: false, answer: null, asked: true, failed: true });
+      else setState({ loading: false, answer: j.answer ?? null, asked: true, failed: false });
+    } catch {
+      setState({ loading: false, answer: null, asked: true, failed: true });
+    }
+  };
+  return (
+    <div className="a2-gask a2-mt12" data-testid="ag-ask">
+      <div className="a2-gaskrow">
+        <input
+          type="text"
+          className="a2-inp"
+          value={q}
+          placeholder={tt('ask.placeholder')}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void ask();
+            }
+          }}
+          data-testid="ag-ask-input"
+        />
+        <button type="button" className="a2-btn" disabled={state.loading || !q.trim()} onClick={() => void ask()} data-testid="ag-ask-btn">
+          {state.loading ? tt('ask.loading') : tt('ask.button')}
+        </button>
+      </div>
+      {state.asked ? (
+        <div className="a2-note a2-mt12" role="note" data-testid="ag-ask-answer">
+          <ShellIcon name="spark" size={15} />
+          <span>
+            <b className="a2-blk">{tt('ask.label')}</b>
+            <span className="a2-blk">{state.failed ? tt('ask.error') : state.answer ?? tt('ask.empty')}</span>
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function GuidePanel({ dict, request, mode = 'side', here, lang = 'en', onOpen, onClose }: { dict: Dict; request: GuideRequest; mode?: GuideMode; here?: string; lang?: 'en' | 'bn'; onOpen(r: GuideRequest): void; onClose(): void }) {
   const tt = (k: string, vars?: Record<string, string>) => t(dict, `shell.guide.${k}`, vars);
   const [state, setState] = useState<Loaded | null>(null);
   const key = keyOf(request);
@@ -264,6 +318,7 @@ export function GuidePanel({ dict, request, mode = 'side', here, onOpen, onClose
               </Link>
             ) : null}
             <Blocks blocks={ready.guide.blocks} onGuide={toSlug} boxes={boxes} />
+            {ready.page ? <AskBox page={ready.page} lang={lang} tt={tt} /> : null}
           </article>
         ) : null}
       </>

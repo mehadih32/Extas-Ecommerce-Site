@@ -396,6 +396,11 @@
 .adm2 .a2-gpages button.on { background: var(--g); border-color: var(--g); color: #fff; font-weight: 600; }
 .adm2 .a2-guidebody .a2-gpt { font-size: 20px; font-weight: 700; line-height: 1.35; color: var(--ink); margin: 0 0 10px; padding: 0; border: 0; }
 .adm2 .a2-gopen { margin: 0 0 8px; }
+/* PR 334: the System Q&A agent's own box in the guide panel ("ask a question about this page") */
+.adm2 .a2-gask { border-top: 1px solid var(--ln2); padding-top: 12px; }
+.adm2 .a2-gaskrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm2 .a2-gaskrow .a2-inp { flex: 1 1 160px; min-width: 0; }
+.adm2 .a2-gaskrow .a2-btn { flex: 0 0 auto; }
 /* the Dashboard and Help pages */
 .adm2 .a2-kpis.k2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .adm2 .a2-kspark { color: var(--g); }

@@ -271,6 +271,14 @@
         "tip": "টিপ",
         "careful": "সাবধান",
         "example": "উদাহরণ"
+      },
+      "ask": {
+        "placeholder": "Type your question…",
+        "button": "Ask",
+        "loading": "Thinking…",
+        "label": "AI's own answer",
+        "empty": "This guide doesn't cover that — read the text above.",
+        "error": "Could not send the question. Try again."
       }
     },
     "palette": {

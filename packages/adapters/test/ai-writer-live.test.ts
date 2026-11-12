@@ -215,6 +215,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 334 — draftGuideQaAnswer: one grounded answer to a question about the admin page's own already-written
+  // guide, never inventing a button or step, carrying the provider's own usage through the same generic plumbing.
+  it("draftGuideQaAnswer writes from the page's own already-written guide text, practice: false, carrying the provider's own usage", async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "চেকআউটে আটকে রাখা মাল বাদ দিয়ে, যা বিক্রি করা যায় তা দিয়ে গোনা হয়।"}', usage: { inputTokens: 60, outputTokens: 25 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftGuideQaAnswer({ locale: 'bn', facts: { pageTitle: 'Low stock', guideText: 'যে রং-সাইজ প্রায় শেষ তা দেখায়।', question: 'এটা কীভাবে গোনা হয়?' }, max: { body: 300 } });
+    expect(d).toEqual({ body: 'চেকআউটে আটকে রাখা মাল বাদ দিয়ে, যা বিক্রি করা যায় তা দিয়ে গোনা হয়।', practice: false, usage: { inputTokens: 60, outputTokens: 25 } });
+  });
+
+  it('draftGuideQaAnswer throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { pageTitle: 'Low stock', guideText: 'guide text', question: 'q' };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftGuideQaAnswer({ locale: 'bn', facts, max: { body: 300 } })).rejects.toThrow('the question');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftGuideQaAnswer({ locale: 'bn', facts, max: { body: 300 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.
