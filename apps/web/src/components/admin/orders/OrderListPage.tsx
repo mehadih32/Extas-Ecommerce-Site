@@ -25,6 +25,8 @@ import { ShellIcon } from '../shell/ShellIcon';
 import { SummaryTiles, type SummaryTile } from '../lumen/SummaryTiles';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
+import type { LookMenuProps } from '../look/LookMenu';
+import { LookMenu } from '../look/LookMenu';
 import { OrderFilters, type FilterSelect } from './OrderFilters';
 import { OrderTable } from './OrderTable';
 
@@ -40,7 +42,9 @@ export const ordersDict = (view: AdminView): Dict => ({ orders: view.dict.orders
 /** The read side of the order service for a page (no inventory: pages only read). */
 export const readDeps = (deps: AdminDeps): od.OrdersDeps => ({ db: deps.db, settings: deps.resolver, now: deps.now });
 
-async function Kpis({ view, a, counts, now }: { view: AdminView; a: ListAccess; counts: Record<string, number>; now: Date }) {
+// PR 656 (CN-025, follow-up 381): exported so the Orders designs B and C (components/admin/look/orders/) can draw
+// the same four figures, read through the one loader below, without a second query.
+export async function Kpis({ view, a, counts, now }: { view: AdminView; a: ListAccess; counts: Record<string, number>; now: Date }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const canMoney = a.perms.has('metrics.read');
@@ -132,7 +136,7 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
   ];
 }
 
-export async function OrderListPage({ view, a, query, now }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date }) {
+export async function OrderListPage({ view, a, query, now, menu }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date; /** PR 656 (follow-up 381): the "…" menu that lets a person switch to design B or C; `null` keeps this page exactly as it drew before. */ menu?: LookMenuProps | null }) {
   const d = view.dict;
   const page: ListPageId = 'all';
   const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
@@ -143,7 +147,7 @@ export async function OrderListPage({ view, a, query, now }: { view: AdminView; 
   const shown = formatNumber(data.rows.length, view.locale);
   return (
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={menu ? <LookMenu {...menu} /> : null} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
       <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />

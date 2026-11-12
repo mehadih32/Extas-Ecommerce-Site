@@ -314,6 +314,36 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: true,
     targetMode: 'LIVE',
   },
+  // S23 · PR 443 — the same Page's public comments (its `feed` webhook field), into the Support inbox: its own switch
+  // beside Messenger above, so the owner can take comments without taking DMs, or the other way round. Same Page id
+  // and app secret as Messenger when both are entered; the mock serves until the Test (reading the Page) passes.
+  {
+    id: 'facebookPageComments',
+    kind: 'META',
+    provider: 'facebookPageComments',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }, { field: 'appSecret' }, { field: 'verifyToken' }],
+    config: [{ field: 'pageId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
+  // S23 · PR 443 — the linked Instagram Business account's comments and Direct messages, into the Support inbox: its
+  // own webhook (object "instagram", not the Page's own). The mock serves until the Test (reading the account)
+  // passes. TikTok has no such webhook yet (packages/adapters/src/social-engagement/index.ts's header note) — not
+  // built, so no row for it here.
+  {
+    id: 'instagramEngagement',
+    kind: 'META',
+    provider: 'instagramEngagement',
+    adapter: true,
+    secrets: [{ field: 'pageAccessToken' }, { field: 'appSecret' }, { field: 'verifyToken' }],
+    config: [{ field: 'igUserId' }, { field: 'apiVersion', optional: true }, { field: 'baseUrl', optional: true }],
+    // false, not true: `kind: 'META'` is shared with Meta Ads, Studio's Facebook/Instagram posting and the Page
+    // comments row above — `exclusive` disables every OTHER enabled row of the same kind (integrations.ts), so
+    // true here would silently turn Studio's own publishing off the moment Instagram engagement is switched on.
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // S11 · PR 233 — Google Search Console (a service account's JSON key; its e-mail added as a user of the property) and
   // Bing Webmaster Tools (the API key). The mock (no property, nothing sent) serves until the Test (listing the
   // properties) passes. Both may be on together: they are two engines, not two of one.

@@ -8,7 +8,8 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 288;
+// FIX lane (12 Nov): bumped from 288 to 289 — PR 447 (registry-photoshoot.ts) landed first with 288 already.
+const V = 289;
 
 const providerTierRateSchema = z
   .object({

@@ -1,0 +1,123 @@
+/* S15 · PR 577 — the team page (/admin/agents) and one agent's 360° profile (/admin/agents/:key). Uses the shared
+   --lm-, --g and --ink theme tokens, so it needs no colour literal of its own (the hardcode guard checks CSS files
+   too). */
+.adm2 .ag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.adm2 .ag-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm2 .ag-ch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adm2 .ag-av {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--g1);
+  font-size: 20px;
+  overflow: hidden;
+}
+.adm2 .ag-av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.adm2 .ag-av.lg {
+  flex-basis: 64px;
+  width: 64px;
+  height: 64px;
+  font-size: 28px;
+}
+.adm2 .ag-cn {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .ag-cn b {
+  overflow-wrap: anywhere;
+}
+.adm2 .ag-counts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .ag-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.adm2 .ag-heron {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .ag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .ag-grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (min-width: 900px) {
+  .adm2 .ag-grid2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.adm2 .ag-editor {
+  display: flex;
+  flex-direction: column;
+}
+.adm2 .ag-mt {
+  margin-top: 10px;
+}
+.adm2 .ag-inline {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.adm2 .ag-inline .a2-inp {
+  flex: 1 1 150px;
+}
+.adm2 .ag-date {
+  flex: 0 0 150px;
+}
+.adm2 .ag-assign {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.adm2 .ag-li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--ln);
+  flex-wrap: wrap;
+}
+.adm2 .ag-li:first-child {
+  border-top: none;
+}
