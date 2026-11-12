@@ -25,10 +25,13 @@ export const BN_PREFIX = '/bn';
 export const isShopLang = (v: unknown): v is ShopLang => v === 'en' || v === 'bn';
 
 /**
- * Paths the proxy never touches: the admin, the API, the ERP's signed calls (PR 620), the progress page, media and the
- * framework's own files.
+ * Paths the proxy never touches: the admin, the API, the ERP's signed calls (PR 620), the progress page, media, the
+ * framework's own files, and (CN-043) the old-browser reset page and the self-unregistering legacy service workers —
+ * none of these go through the shop's language routing, so an uppercase one (`OneSignalSDKWorker.js`) is never
+ * redirected to a lowercase address that doesn't exist.
  */
-const NOT_SHOP = /^\/(admin|api|erp-api|status|media|_next|favicon\.ico|robots\.txt|sitemap\.xml|sitemaps)(\/|$)/;
+const NOT_SHOP =
+  /^\/(admin|api|erp-api|status|media|_next|favicon\.ico|robots\.txt|sitemap\.xml|sitemaps|reset|sw\.js|service-worker\.js|OneSignalSDKWorker\.js|firebase-messaging-sw\.js)(\/|$)/;
 
 export function isShopPath(path: string): boolean {
   return !NOT_SHOP.test(path);

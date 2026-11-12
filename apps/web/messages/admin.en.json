@@ -121,6 +121,7 @@
     "blogAds": "House ads",
     "blogAd": "House ad",
     "blogPipeline": "Content pipeline",
+    "marketingStudioOverlay": "Campaign overlays",
     "marketingLanding": "Landing pages",
     "marketingLandingPage": "Landing page builder",
     "marketingLandingTemplates": "Landing page templates",
@@ -152,6 +153,7 @@
     "healthSmoke": "Smoke runs",
     "healthHistory": "Run history",
     "healthFixes": "Fixes to approve",
+    "aiAgents": "Agents",
     "aiAudit": "Checklist audit",
     "supportAnalytics": "Support analytics",
     "reportsSearches": "Searches report",
@@ -476,6 +478,30 @@
         "appSecret": "App secret (Meta app → Settings → Basic) — checks that the webhook really comes from Meta",
         "verifyToken": "Verify token — any long word you choose; type the same one in Meta's webhook settings",
         "pageId": "Page ID (the Page → About → Page transparency, or Meta app → Messenger)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "facebookPageComments": {
+      "name": "Facebook Page comments (Support)",
+      "desc": "The Page's own public comments, into the Support inbox as new conversations ('price?' under a photo becomes a chat). Mock until the keys are in and the test (reading the Page) passes: nothing is read before that. Comments stay visible on the Page too — nothing here hides or deletes them, and no reply goes out from here. Webhook address: /api/social-comments/facebook",
+      "fields": {
+        "pageAccessToken": "Page access token (Meta app → Messenger → API settings; a long-lived Page token)",
+        "appSecret": "App secret (Meta app → Settings → Basic) — checks that the webhook really comes from Meta",
+        "verifyToken": "Verify token — any long word you choose; type the same one in Meta's webhook settings",
+        "pageId": "Page ID (the Page → About → Page transparency, or Meta app → Messenger)",
+        "apiVersion": "API version — leave empty for the one the shop was built with",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
+    "instagramEngagement": {
+      "name": "Instagram comments & Direct (Support)",
+      "desc": "The linked Instagram Business account's public comments and Direct messages, into the Support inbox. Mock until the keys are in and the test (reading the account) passes: nothing is read before that. A comment is marked as public so the team never mistakes it for a private message; no reply goes out from here. Webhook address: /api/social-comments/instagram",
+      "fields": {
+        "pageAccessToken": "Page access token (the same Page token as Instagram posting, if that is set up)",
+        "appSecret": "App secret (Meta app → Settings → Basic) — checks that the webhook really comes from Meta",
+        "verifyToken": "Verify token — any long word you choose; type the same one in Meta's webhook settings",
+        "igUserId": "Instagram Business Account ID (Meta app → the linked Page → Instagram accounts)",
         "apiVersion": "API version — leave empty for the one the shop was built with",
         "baseUrl": "Address — only for a test server"
       }

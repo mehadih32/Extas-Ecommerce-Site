@@ -288,6 +288,12 @@
 .adm2 .a3-tx{flex:1;min-width:0}
 .adm2 .a3-tv{font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.15;margin-top:3px}
 .adm2 .a3-tn{font-size:12.5px;color:var(--mute);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* PR 658 (CN-025/CN-044): the Command center design's KPI tiles — a3-ktile:hover and the phone a3-kv size already
+   existed (future-proofed with the rest of this file's kit); the base layout is added here. */
+.adm2 .a3-kt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.adm2 .a3-ktile{display:flex;flex-direction:column;gap:6px;padding:16px 18px;background:var(--sf);border:1px solid var(--ln);border-radius:var(--a3r);box-shadow:var(--a3sh);min-width:0}
+.adm2 .a3-kd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm2 .a3-so{font-size:12.5px;color:var(--mute);margin-top:2px}
 .adm2 .a3-pipe{margin-top:20px;padding:20px 24px;display:grid;grid-template-columns:190px minmax(0,1fr) 240px;align-items:center;gap:24px}
 .adm2 .a3-pipeh h2{font-size:15.5px;font-weight:650}
 .adm2 .a3-pipeh p{font-size:13px;color:var(--mute);margin:3px 0 10px}
@@ -396,6 +402,7 @@
   .adm2 .a3-tile{flex-direction:column;align-items:stretch}
   .adm2 .a3-tile .a3-spark{width:100%}
   .adm2 .a3-k4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adm2 .a3-kt{grid-template-columns:repeat(2,minmax(0,1fr))}
   .adm2 .a3-dg2{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-dg3[style*="--n:3"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   .adm2 .a3-dg3[style*="--n:3"]>:last-child{grid-column:1/-1}
@@ -433,6 +440,7 @@
   .adm2 .a3-stg:last-child{grid-column:1/-1;border-left:0;padding-left:0}
   .adm2 .a3-dg3,.adm2 .a3-dg3[style*="--n:4"],.adm2 .a3-dg3[style*="--n:3"]{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-k4{grid-template-columns:minmax(0,1fr)}
+  .adm2 .a3-kt{grid-template-columns:minmax(0,1fr)}
   .adm2 .a3-kv{font-size:27px}
   .adm2 .a3-water{grid-template-columns:repeat(var(--n),minmax(46px,1fr));overflow-x:auto;height:240px}
   .adm2 .a3-chd{padding:16px 16px 0}
@@ -540,6 +548,31 @@
 /* PR 12 (CN-025) with PR 594 (CN-026): the guide's side panel beside the V12.4 shell; from 1280 px the page and the top bar
    move over, so the help icon, To-do and the account menu stay in reach while the guide is open. */
 @media (min-width:1280px){.adm2.a2-gopen :is(.a3-tb,.a3-body){margin-right:var(--a2-gw);min-width:0}}
+
+/* PR 656 (CN-025, follow-up 381) — Orders design B "Focus view": the "To confirm" hero and the folded filters. */
+.adm2 .a3-ohero{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 24px}
+.adm2 .a3-ohn{font-size:38px;line-height:1.1;display:block;margin:2px 0}
+.adm2 .a3-ofold{background:var(--sf);border:1px solid var(--ln);border-radius:var(--a3r);margin-bottom:14px;box-shadow:var(--a3sh)}
+.adm2 .a3-ofold>summary{display:flex;align-items:center;gap:8px;padding:12px 16px;cursor:pointer;font-weight:600;list-style:none;color:var(--ink2)}
+.adm2 .a3-ofold>summary::-webkit-details-marker{display:none}
+.adm2 .a3-ofold[open]>summary{border-bottom:1px solid var(--ln)}
+.adm2 .a3-ofold .a2-fbar{padding:14px 16px;margin:0}
+
+/* PR 656 (CN-025, follow-up 381) — Orders design C "Command view": the flow strip and the denser table. Its flow-step
+   class is "a3-ofstep" (not "a3-fstep"), since Products' own design C (PR 657, below) already uses that name for an
+   unrelated layout — same page, same CSS file, two different rule sets, so the names must not collide. */
+.adm2 .a3-oflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.adm2 .a3-ofstep{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:var(--a3r);background:var(--sf);border:1px solid var(--ln);box-shadow:var(--a3sh);text-decoration:none;color:inherit;min-width:0}
+.adm2 .a3-ofstep span{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .a3-ofstep b{font-size:22px;line-height:1.15}
+.adm2 .a3-ofstep.on{box-shadow:inset 0 0 0 2px var(--a3-c1)}
+.adm2 .a3-odense .a2-tbl tbody tr{line-height:1.2}
+.adm2 .a3-odense .a2-tbl td,.adm2 .a3-odense .a2-tbl th{padding:6px 10px}
+@media (max-width:899px){.adm2 .a3-oflow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
+  .adm2 .a3-ofold>summary{min-height:44px}
+  .adm2 .a3-ofstep{min-height:44px}
+}
 
 /* PR 657 (CN-025, CN-044 ERP lane, follow-up 382) — Products designs B "Focus view" and C "Command view": the hero
    card over the "ready to publish" queue, and the flow strip of the catalogue's own counts. Both read `.a3-card`,

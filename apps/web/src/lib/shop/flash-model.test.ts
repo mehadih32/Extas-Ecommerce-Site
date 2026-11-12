@@ -21,6 +21,7 @@ const card = (id: string, priceMinor: number | null, wasMinor: number | null = n
   photos: {},
   inStock: true,
   sortRank: 0,
+  overlay: null,
 });
 
 const H = 3_600_000;
