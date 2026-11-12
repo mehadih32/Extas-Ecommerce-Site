@@ -3,11 +3,16 @@
 // approved image to export from (SOURCE_INVALID otherwise), refusing a request that names none (SELECTION_EMPTY) or
 // more than one (INVALID_INPUT), checking an optional campaign/brief is real (NOT_FOUND), listing exports newest
 // first, and cancelling a still-DRAFT one (never deleted).
+//
+// S25 · PR 488, part 2: `produceCreativeExport` — the honest-preview producer. No real crop engine exists, so it
+// never actually crops, bakes in an overlay or sends anything; it fills `outputAssetIds` (one per chosen size) from
+// the selection's own first approved media, re-read at production time rather than trusted from the request, and
+// refuses an already-produced or cancelled export.
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { cancelCreativeExport, listCreativeExports, requestCreativeExport, StudioError, type StudioDeps, type Who } from './index';
+import { cancelCreativeExport, listCreativeExports, produceCreativeExport, requestCreativeExport, StudioError, type StudioDeps, type Who } from './index';
 
 describe.skipIf(!HAS_TEST_DB)('PR 487 · campaign creative export, part 1 (PostgreSQL)', () => {
   let t: TestDatabase;
@@ -168,5 +173,85 @@ describe.skipIf(!HAS_TEST_DB)('PR 487 · campaign creative export, part 1 (Postg
 
   it('refuses an export id that does not exist (NOT_FOUND)', async () => {
     await expect(cancelCreativeExport(sd, writer, randomUUID())).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 488 · campaign creative export, part 2 (PostgreSQL)', () => {
+  let t: TestDatabase;
+  let S: number;
+  let writer: Who;
+  let sd: StudioDeps;
+
+  beforeAll(async () => {
+    t = await createTestDatabase('creative_studio_export_produce');
+    [S] = await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    const role = await createRole(t.prisma, SYSTEM, { key: 't488-writer', nameEn: 'writer', nameBn: 'writer', permissions: ['marketing.studio.read', 'marketing.studio.write'] });
+    const u = await t.prisma.staffUser.create({ data: { email: 't488-writer@example.com', displayName: 'writer', passwordHash: 'not-a-login' } });
+    await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+    writer = { actor: { staffUserId: u.id }, storeId: S };
+    sd = { db: t.prisma };
+  });
+
+  afterAll(async () => t.drop());
+
+  const makeProduct = () => t.prisma.product.create({ data: { storeId: S, slug: `prod-${randomUUID()}`, nameEn: 'Solid polo' } });
+  const makeAsset = () => t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `studio/${randomUUID()}`, mimeType: 'image/jpeg', bytes: BigInt(1000), checksumSha256: randomUUID() } });
+  const attachMedia = async (productId: string, sortOrder = 0) => {
+    const asset = await makeAsset();
+    return t.prisma.productMedia.create({ data: { storeId: S, productId, assetId: asset.id, role: 'FRONT', sortOrder } });
+  };
+
+  it('produces a DRAFT export: READY, one outputAssetId per chosen size, from the selection’s first approved media', async () => {
+    const product = await makeProduct();
+    const m1 = await attachMedia(product.id, 0);
+    await attachMedia(product.id, 1);
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-1x1', 'meta-4x5', 'tiktok-9x16'] });
+    const produced = await produceCreativeExport(sd, writer, exp.id);
+    expect(produced.status).toBe('READY');
+    expect(produced.outputAssetIds).toEqual([m1.assetId, m1.assetId, m1.assetId]); // the first media's own asset, once per size — never fabricated
+  });
+
+  it('lands FAILED (never throws) when the selection no longer has anything approved by production time', async () => {
+    const product = await makeProduct();
+    const media = await attachMedia(product.id);
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-1x1'] });
+    await t.prisma.productMedia.update({ where: { id: media.id }, data: { archivedAt: new Date() } });
+    const result = await produceCreativeExport(sd, writer, exp.id);
+    expect(result.status).toBe('FAILED');
+    expect(result.outputAssetIds).toEqual([]);
+  });
+
+  it('a FAILED export can be tried again once the selection has approved media again (no attempt cap — this never calls a provider)', async () => {
+    const product = await makeProduct();
+    const media = await attachMedia(product.id);
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-1x1'] });
+    await t.prisma.productMedia.update({ where: { id: media.id }, data: { archivedAt: new Date() } });
+    const first = await produceCreativeExport(sd, writer, exp.id);
+    expect(first.status).toBe('FAILED');
+    const second = await attachMedia(product.id);
+    const retried = await produceCreativeExport(sd, writer, exp.id);
+    expect(retried.status).toBe('READY');
+    expect(retried.outputAssetIds).toEqual([second.assetId]);
+  });
+
+  it('refuses to produce twice — an already-READY export is WRONG_STATE', async () => {
+    const product = await makeProduct();
+    await attachMedia(product.id);
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-1x1'] });
+    await produceCreativeExport(sd, writer, exp.id);
+    await expect(produceCreativeExport(sd, writer, exp.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('refuses a cancelled export — request a new one instead (WRONG_STATE)', async () => {
+    const product = await makeProduct();
+    await attachMedia(product.id);
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-1x1'] });
+    await cancelCreativeExport(sd, writer, exp.id);
+    await expect(produceCreativeExport(sd, writer, exp.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('refuses an export id that does not exist (NOT_FOUND)', async () => {
+    await expect(produceCreativeExport(sd, writer, randomUUID())).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });

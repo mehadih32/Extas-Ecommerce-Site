@@ -15,7 +15,7 @@ import { z } from 'zod';
 import { setting } from './define';
 
 const V282 = 282;
-const V288 = 288;
+const V289 = 289;
 /** A generous ceiling on the owner's own rate — a technical bound, not a business number. */
 export const VIDEO_RATE_MAX_MINOR = 100_000; // hardcode-ok: guards the input field, never a price
 
@@ -44,7 +44,7 @@ export const studioVideoSettings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 24,
-    version: V288,
+    version: V289,
     since: V282,
   }),
 };

@@ -6,11 +6,14 @@
 // product), and that an optional campaign or creative brief, when named, is a real record of this store too
 // (`NOT_FOUND`). `SELECTION_EMPTY` refuses a request that names no product, SKU or category at all.
 //
-// S25 · PR 488 (Blueprint C8.5, C8.6 item 8) — campaign creative export, part 2, the actual producer. Nothing is
-// composited here yet: no real crop/safe-zone engine or ad-account sender is in the stack today (the same honest gap
-// PR 439/482/485/486 note), so producing the export — filling `CreativeExport.outputAssetIds`, one per chosen
-// platform size, and (optionally) sending it to a connected ad account — is PR 488, built on top of this file
-// without touching `requestCreativeExport`, `listCreativeExports` or `cancelCreativeExport`.
+// S25 · PR 488 (Blueprint C8.5, C8.6 item 8) — campaign creative export, part 2, the actual producer. No real
+// crop/safe-zone engine or ad-account sender is in the stack today (the same honest gap PR 439/482/485/486 already
+// note), so `produceCreativeExport` does not actually crop, bake in the overlay or send anything anywhere: it fills
+// `outputAssetIds`, one per chosen platform size, with the **selection's own first real, already-approved media
+// asset** (re-read at production time, never assumed still good from the request), reused for every size — a real,
+// already-existing file, never a fabricated per-size crop. The row moves `DRAFT`/`FAILED` → `READY` (or stays
+// `FAILED`, never thrown past, when the selection no longer has anything approved to export from). Sending a `READY`
+// export to a connected ad account is a later refinement that touches only this file, never `requestCreativeExport`.
 import { z } from 'zod';
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { audit } from '@extas/auth';
@@ -115,25 +118,26 @@ export async function listCreativeExports(deps: StudioDeps, storeId: number): Pr
   return rows.map(view);
 }
 
-/** Whether the selection already has at least one real, non-archived product image or video to export from
- * (Blueprint C8.5: "the system gathers the approved images and videos for that selection"). `ProductMedia` already
- * live on a product counts as approved — it is already published; Studio-produced reels (PR 485/486) joining the
- * pool is a later increase in scope, not this PR's. A SKU's own colour-specific photos count, and so do the
- * product's shared ones (`colourId` left out on a `ProductMedia` row). A category counts any of its own products'
- * media — sub-categories are their own, separately chosen, selection, never gathered recursively here. */
-async function hasExportableMedia(db: PrismaClient, storeId: number, selection: CreativeExportSelection): Promise<boolean> {
+/** The selection's own first real, non-archived product image or video to export from (Blueprint C8.5: "the system
+ * gathers the approved images and videos for that selection"), ordered the same way the product page shows them
+ * (`sortOrder`) — or `null` when there is nothing approved yet. `ProductMedia` already live on a product counts as
+ * approved — it is already published; Studio-produced reels (PR 485/486) joining the pool is a later increase in
+ * scope, not this PR's or PR 488's. A SKU's own colour-specific photos count, and so do the product's shared ones
+ * (`colourId` left out on a `ProductMedia` row). A category counts any of its own products' media — sub-categories
+ * are their own, separately chosen, selection, never gathered recursively here. */
+async function firstExportableAssetId(db: PrismaClient, storeId: number, selection: CreativeExportSelection): Promise<string | null> {
+  let row: { assetId: string } | null = null;
   if (selection.productId) {
-    return (await db.productMedia.count({ where: { storeId, productId: selection.productId, archivedAt: null } })) > 0;
-  }
-  if (selection.variantId) {
+    row = await db.productMedia.findFirst({ where: { storeId, productId: selection.productId, archivedAt: null }, orderBy: { sortOrder: 'asc' }, select: { assetId: true } });
+  } else if (selection.variantId) {
     const variant = await db.productVariant.findFirst({ where: { id: selection.variantId, storeId, archivedAt: null } });
-    if (!variant) return false;
-    return (await db.productMedia.count({ where: { storeId, productId: variant.productId, archivedAt: null, OR: [{ colourId: variant.colourId }, { colourId: null }] } })) > 0;
+    if (variant) {
+      row = await db.productMedia.findFirst({ where: { storeId, productId: variant.productId, archivedAt: null, OR: [{ colourId: variant.colourId }, { colourId: null }] }, orderBy: { sortOrder: 'asc' }, select: { assetId: true } });
+    }
+  } else if (selection.categoryId) {
+    row = await db.productMedia.findFirst({ where: { storeId, archivedAt: null, product: { storeId, categoryId: selection.categoryId, archivedAt: null } }, orderBy: { sortOrder: 'asc' }, select: { assetId: true } });
   }
-  if (selection.categoryId) {
-    return (await db.productMedia.count({ where: { storeId, archivedAt: null, product: { storeId, categoryId: selection.categoryId, archivedAt: null } } })) > 0;
-  }
-  return false;
+  return row?.assetId ?? null;
 }
 
 /**
@@ -173,8 +177,8 @@ export async function requestCreativeExport(deps: StudioDeps, who: Who, input: u
     if (!brief) throw new StudioError('NOT_FOUND', 'no such creative brief', ['briefId']);
   }
 
-  const hasMedia = await hasExportableMedia(deps.db, who.storeId, d.selection);
-  if (!hasMedia) throw new StudioError('SOURCE_INVALID', 'nothing approved to export from this selection yet', ['selection']);
+  const previewAssetId = await firstExportableAssetId(deps.db, who.storeId, d.selection);
+  if (!previewAssetId) throw new StudioError('SOURCE_INVALID', 'nothing approved to export from this selection yet', ['selection']);
 
   const row = await deps.db.creativeExport.create({
     data: {
@@ -208,5 +212,48 @@ export async function cancelCreativeExport(deps: StudioDeps, who: Who, exportId:
   if (row0.status !== 'DRAFT') throw new StudioError('WRONG_STATE', 'only an export still waiting to be produced can be cancelled', ['status']);
   const row = await deps.db.creativeExport.update({ where: { id: row0.id }, data: { status: 'CANCELLED' } });
   await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.cancel', entityType: 'CreativeExport', entityId: row.id, before: { status: row0.status }, after: { status: row.status } }, who.ctx);
+  return view(row);
+}
+
+/**
+ * Produces a `DRAFT` (or previously `FAILED`) export (`marketing.studio.write`, checked by the caller) — part 2 of
+ * Blueprint C8.6 item 7/8. Re-reads the selection's own first approved media asset at production time (`firstExportableAssetId`,
+ * the same lookup `requestCreativeExport` uses) rather than trusting it is still what it was when requested — a
+ * product's last approved photo can be archived in between. Refuses a cancelled export (`WRONG_STATE` — request a
+ * new one, a `CANCELLED` row is terminal) or one already `READY` (`WRONG_STATE` — never redone silently).
+ *
+ * No real crop/safe-zone engine exists yet (this file's header comment): nothing is actually cropped per size, the
+ * offer overlay is never actually baked in, and nothing is sent to an ad account. The honest preview is that one
+ * asset's id, reused for every chosen platform size (`outputAssetIds`); `FAILED` (never throws) when the selection
+ * no longer has anything approved, and a `FAILED` export may be tried again with no attempt cap — this reads data
+ * only, it never calls a provider or spends money, the same reasoning `assembleReel`'s own retry uses.
+ */
+export async function produceCreativeExport(deps: StudioDeps, who: Who, exportId: string): Promise<CreativeExportView> {
+  const row0 = await deps.db.creativeExport.findFirst({ where: { id: exportId, storeId: who.storeId } });
+  if (!row0) throw new StudioError('NOT_FOUND', 'no such export', ['exportId']);
+  if (row0.status !== 'DRAFT' && row0.status !== 'FAILED') throw new StudioError('WRONG_STATE', 'only an export waiting to be produced, or one that failed to, can be produced', ['status']);
+
+  const selection = row0.selection as unknown as CreativeExportSelection;
+  const previewAssetId = await firstExportableAssetId(deps.db, who.storeId, selection);
+
+  if (!previewAssetId) {
+    const row = await deps.db.creativeExport.update({ where: { id: row0.id }, data: { status: 'FAILED' } });
+    await audit(
+      deps.db,
+      who.actor,
+      { storeId: who.storeId, action: 'studio.export.produce', entityType: 'CreativeExport', entityId: row.id, before: { status: row0.status }, after: { status: row.status, reason: 'nothing approved to export from this selection any more' } },
+      who.ctx,
+    );
+    return view(row);
+  }
+
+  const outputAssetIds = row0.sizes.map(() => previewAssetId);
+  const row = await deps.db.creativeExport.update({ where: { id: row0.id }, data: { status: 'READY', outputAssetIds } });
+  await audit(
+    deps.db,
+    who.actor,
+    { storeId: who.storeId, action: 'studio.export.produce', entityType: 'CreativeExport', entityId: row.id, before: { status: row0.status }, after: { status: row.status, outputAssetIds, previewOnly: true } },
+    who.ctx,
+  );
   return view(row);
 }

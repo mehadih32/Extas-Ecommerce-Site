@@ -613,54 +613,6 @@
         "network": "Could not reach the server.",
         "other": "Something went wrong."
       }
-    },
-    "export": {
-      "metaTitle": "Export — Studio",
-      "title": "Export",
-      "sub": "Package a product's, a SKU's or a category's already-approved photos and clips into every platform size for a campaign. No real crop engine or ad-account sender is connected yet, so a request only gathers and checks the inputs — producing the sized files is a later refinement.",
-      "listH": "Requested exports",
-      "empty": "No export requested yet.",
-      "status": {
-        "DRAFT": "Waiting to be produced",
-        "READY": "Ready",
-        "FAILED": "Could not be produced",
-        "CANCELLED": "Cancelled"
-      },
-      "newH": "Request an export",
-      "newD": "Pick exactly one of a product, a SKU or a category that already has an approved photo or clip, then the platform sizes to cut it for.",
-      "kind": "Pick by",
-      "kindProduct": "Product",
-      "kindVariant": "SKU",
-      "kindCategory": "Category",
-      "idLabel": "Id",
-      "idPh": "Paste the id",
-      "sizes": "Platform sizes",
-      "size": {
-        "meta1x1": "Meta — square (1:1)",
-        "meta4x5": "Meta — feed, portrait (4:5)",
-        "meta9x16": "Meta — stories & reels (9:16)",
-        "google191x1": "Google (1.91:1)",
-        "tiktok9x16": "TikTok (9:16)"
-      },
-      "withOverlay": "Pull the price/offer overlay from the campaign",
-      "landingUrl": "Landing URL (optional)",
-      "landingUrlPh": "https://…",
-      "campaignId": "Campaign id (optional)",
-      "campaignIdPh": "Id of a campaign on the Marketing calendar",
-      "request": "Request this export",
-      "requesting": "Requesting…",
-      "requested": "Export requested — producing the sized files is a later refinement.",
-      "cancel": "Cancel",
-      "cancelling": "Cancelling…",
-      "err": {
-        "INVALID_INPUT": "Check what you picked.",
-        "NOT_FOUND": "Not found — the page may need a refresh.",
-        "SELECTION_EMPTY": "Pick a product, a SKU or a category.",
-        "SOURCE_INVALID": "Nothing approved to export from that yet.",
-        "WRONG_STATE": "This export has already moved on — the page may need a refresh.",
-        "network": "Could not reach the server.",
-        "other": "Something went wrong."
-      }
     }
   }
 }
