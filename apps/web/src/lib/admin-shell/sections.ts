@@ -69,6 +69,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         { href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] },
         { href: '/admin/orders/confirm/calls', perm: 'orders.confirm', keys: ['ordersCalls'] },
       ] },
+      // S28 · PR 661 (CN-048): Batch — every order not yet handed to the courier (Current) and the handed-over sheets (Past).
+      { id: 'batch', pages: [{ href: '/admin/orders/batch', perm: 'orders.read', keys: ['ordersBatch'] }] },
       // PR 660 (CN-048): this tab is "To ship" in the menu (pack, print, picking list, invoices); the rider's handover is the With courier tab
       // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
       // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page; S20 · PR 407: the invoices.
