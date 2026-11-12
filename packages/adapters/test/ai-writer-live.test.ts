@@ -107,6 +107,23 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 328 — draftSizeAdvice: one grounded sentence on why Find My Size gave that size, never a new size,
+  // carrying the provider's own usage through the same generic `complete()` plumbing PR 325 built.
+  it('draftSizeAdvice writes from the recommendation\'s own measurements, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "Size L fits because its chest of 44in comfortably covers your estimated need of 42in."}', usage: { inputTokens: 70, outputTokens: 18 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftSizeAdvice({ locale: 'en', facts: { sizeLabel: 'L', fieldLabel: 'Chest', valueInch: 44, needInch: 42, bodyInch: 40, easeInch: 2, covered: true, heightIn: 67, weightKg: 68 }, max: { body: 240 } });
+    expect(d).toEqual({ body: 'Size L fits because its chest of 44in comfortably covers your estimated need of 42in.', practice: false, usage: { inputTokens: 70, outputTokens: 18 } });
+  });
+
+  it('draftSizeAdvice throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftSizeAdvice({ locale: 'en', facts: { sizeLabel: 'L', fieldLabel: 'Chest', valueInch: 44, needInch: 42, bodyInch: 40, easeInch: 2, covered: true, heightIn: 67, weightKg: 68 }, max: { body: 240 } })).rejects.toThrow('size explanation');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftSizeAdvice({ locale: 'en', facts: { sizeLabel: 'L', fieldLabel: 'Chest', valueInch: 44, needInch: 42, bodyInch: 40, easeInch: 2, covered: true, heightIn: 67, weightKg: 68 }, max: { body: 240 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.

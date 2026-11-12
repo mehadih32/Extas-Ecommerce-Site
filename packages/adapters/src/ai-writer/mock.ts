@@ -14,6 +14,8 @@ import {
   type AiProductDescriptionInput,
   type AiSeoDraft,
   type AiSeoInput,
+  type AiSizeAdviceDraft,
+  type AiSizeAdviceInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
   type AiWriter,
@@ -106,6 +108,16 @@ export function practiceProductDescription(input: AiProductDescriptionInput): Ai
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 328 — the mock's size advice: only the measurements it was given, in one plain sentence (no voice to
+ * borrow without a key, so the practice answer stays honestly plain rather than invent warmth). */
+export function practiceSizeAdvice(input: AiSizeAdviceInput): AiSizeAdviceDraft {
+  const f = input.facts;
+  const body = f.covered
+    ? `Size ${f.sizeLabel}: its ${f.fieldLabel.toLowerCase()} of ${f.valueInch}" covers your estimated need of ${f.needInch}" (body ${f.bodyInch}" + ${f.easeInch}" ease).`
+    : `Size ${f.sizeLabel} is the largest size; its ${f.fieldLabel.toLowerCase()} of ${f.valueInch}" is a little short of your estimated need of ${f.needInch}", so it may still feel close.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -136,6 +148,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftProductDescription(input) {
         if (!input.facts.name.trim()) throw new AdapterError('a product description needs the product name');
         return practiceProductDescription(input);
+      },
+      async draftSizeAdvice(input) {
+        if (!input.facts.sizeLabel.trim()) throw new AdapterError('a size advice note needs the recommended size');
+        return practiceSizeAdvice(input);
       },
     };
   },

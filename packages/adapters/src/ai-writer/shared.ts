@@ -151,6 +151,41 @@ export interface AiProductDescriptionDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 328 — the size advice agent's own job (Gyani, `supportSizeAdvice`): one warm sentence explaining why
+ * Find My Size (`@extas/catalogue/size-finder`'s own rule engine, PR 58) gave the size it gave — never asked for,
+ * and never able to change, the size itself. `facts` is exactly that engine's own already-decided `Recommendation`
+ * (the measure it needed, the room the chart gives, whether the chosen size actually covers the need), carried
+ * through unchanged by the caller; nothing here is a customer's own words or any personal data.
+ */
+export interface AiSizeAdviceInput {
+  locale: 'en' | 'bn';
+  facts: {
+    sizeLabel: string;
+    nextSizeLabel?: string;
+    /** The chart's own measure that decided it, in plain words (e.g. "chest", "waist"). */
+    fieldLabel: string;
+    valueInch: number;
+    needInch: number;
+    bodyInch: number;
+    easeInch: number;
+    covered: boolean;
+    garment?: string;
+    heightIn: number;
+    weightKg: number;
+  };
+  max: { body: number };
+}
+
+export interface AiSizeAdviceDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -161,6 +196,8 @@ export interface AiWriter {
   draftSupportReply(input: AiSupportReplyInput): Promise<AiSupportReplyDraft>;
   /** PR 326 — the product content agent's own job: a shop-facing description from a product's own attributes. */
   draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft>;
+  /** PR 328 — the size advice agent's own job: one grounded sentence on why Find My Size gave that size. */
+  draftSizeAdvice(input: AiSizeAdviceInput): Promise<AiSizeAdviceDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

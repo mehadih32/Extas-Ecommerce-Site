@@ -199,3 +199,33 @@ describe('practice product description (PR 326)', () => {
     await expect(w.draftProductDescription(desc({ facts: { name: ' ' } }))).rejects.toThrow();
   });
 });
+
+// S15 · PR 328 — the practice size advice: only the recommendation's own measurements, in one plain sentence, marked practice.
+describe('practice size advice (PR 328)', () => {
+  const advice = (over: Partial<import('../src').AiSizeAdviceInput> = {}): import('../src').AiSizeAdviceInput => ({
+    locale: 'en',
+    facts: { sizeLabel: 'L', fieldLabel: 'Chest', valueInch: 44, needInch: 42, bodyInch: 40, easeInch: 2, covered: true, heightIn: 67, weightKg: 68 },
+    max: { body: 240 },
+    ...over,
+  });
+
+  it('writes a covered answer from the measurements it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSizeAdvice(advice());
+    expect(d).toEqual({ body: 'Size L: its chest of 44" covers your estimated need of 42" (body 40" + 2" ease).', practice: true });
+  });
+
+  it('writes the honest "largest size" answer when the chart does not cover the need', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSizeAdvice(advice({ facts: { sizeLabel: 'XXL', fieldLabel: 'Chest', valueInch: 46, needInch: 48, bodyInch: 46, easeInch: 2, covered: false, heightIn: 72, weightKg: 95 } }));
+    expect(d.body).toContain('largest size');
+    expect(d.body).not.toContain('covers');
+  });
+
+  it('cuts to the store limit and refuses a draft with no recommended size', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftSizeAdvice(advice({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftSizeAdvice(advice({ facts: { ...advice().facts, sizeLabel: ' ' } }))).rejects.toThrow();
+  });
+});
