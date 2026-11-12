@@ -15,7 +15,7 @@ import { PRIVATE_FAMILIES } from './indexing';
 /** The paths no robot reads on an open shop: never shop pages, then a customer's own pages in both languages. */
 export function closedPaths(searchListed: boolean): string[] {
   const families = [...PRIVATE_FAMILIES, ...(searchListed ? [] : [ROUTES.search.slice(1)])];
-  return ['/admin', '/api/', '/erp-api/', ...families.flatMap((f) => [`/${f}`, `${BN_PREFIX}/${f}`])];
+  return ['/admin', '/reset', '/api/', '/erp-api/', ...families.flatMap((f) => [`/${f}`, `${BN_PREFIX}/${f}`])];
 }
 
 export interface RobotsFacts {
