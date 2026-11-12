@@ -301,6 +301,43 @@ export interface AiStudioDetailDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 333 — the reports agent's own job (Gyani, the existing `reportsStockAlert` Cost Book job, PR 312): one
+ * short, plain line explaining why a single SKU's own already-open low-stock alert is worth a look, beside the raw
+ * numbers the stock page (`/admin/stock`, S09's own PR 202/205) already shows. `facts` is always that page's own
+ * already-computed `LowStockItem` fields (`packages/inventory`'s `listLowStock`, PR 202) — the identical available
+ * count, threshold and how long it has sat low that the card already shows as plain numbers — never a reorder
+ * quantity, a supplier name or a restock date invented from nothing, and the model is never handed, and never
+ * asked for, any decision (what to reorder, how much, from whom): the fraud/approval queue's own "never a decision"
+ * rule (PR 329/330) applies here the same way.
+ */
+export interface AiStockAlertInput {
+  locale: 'en' | 'bn';
+  facts: {
+    /** The variant's own already-localized product name (the page's own `nameIn()`, never re-translated here). */
+    productName: string;
+    sku: string;
+    colour?: string;
+    size?: string;
+    /** The shared sellable number right now — never clipped at zero upstream, so it may already read negative. */
+    available: number;
+    threshold: number;
+    /** Whole days since the alert first opened (`LowStockItem.since`), already computed by the caller — the model
+     * is never handed a raw timestamp to do its own date arithmetic on. */
+    sinceDays: number;
+  };
+  max: { body: number };
+}
+
+export interface AiStockAlertDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -321,6 +358,8 @@ export interface AiWriter {
   draftSocialReelCaption(input: AiSocialCaptionInput): Promise<AiSocialCaptionDraft>;
   /** PR 332 — the photoshoot studio's own job: one grounded note on which already-saved attributes a generated photo must keep accurate. */
   draftStudioDetailNote(input: AiStudioDetailInput): Promise<AiStudioDetailDraft>;
+  /** PR 333 — the reports agent's own job: one grounded line on why one low-stock alert is worth a look, never a reorder decision. */
+  draftStockAlertNote(input: AiStockAlertInput): Promise<AiStockAlertDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

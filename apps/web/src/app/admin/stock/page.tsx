@@ -13,6 +13,7 @@ import { Icon } from '@/components/admin/Icon';
 import { formatNumber, nameIn } from '@/components/admin/products/model';
 import { NewStylesButton, ReconcileButton, ResyncButtons, RetryDocuments } from '@/components/admin/stock/StockActions';
 import { ago, dateTime, errorCodeOf, keyOf, mismatchLine, STOCK_HOME } from '@/components/admin/stock/text';
+import { stockAlertOption, type StockAlertFacts } from '@/lib/admin-ai/stock-alert-dispatch';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -66,6 +67,17 @@ export default async function StockPage() {
   const failedDocs = health.pushes.failed + health.pushes.dead + health.pushes.skipped;
   const lastError = errorLine(d, health.stock.lastError, view.locale);
   const lowMore = Math.max(0, low.total - low.items.length);
+  // S15 · PR 333: one plain AI line on why each open alert is worth a look, grounded only in this card's own already
+  // -computed numbers above (never a reorder decision); `null` (AI off, no ready connection, capped, or the model
+  // answered nothing) leaves the card's own raw numbers exactly as PR 202/205 already built it.
+  const lowNotes = new Map(
+    await Promise.all(
+      low.items.map(async (a) => {
+        const facts: StockAlertFacts = { productName: nameIn(view.lang, { nameEn: a.productName.en, nameBn: a.productName.bn }), sku: a.sku, colour: a.colour, size: a.size, available: a.available, threshold: a.threshold, since: a.since };
+        return [a.alertId, await stockAlertOption(access.deps, s.storeId, a.alertId, view.lang === 'bn' ? 'bn' : 'en')(facts)] as const;
+      }),
+    ),
+  );
 
   return (
     <AdminFrame view={view} current={KEY} ready>
@@ -262,6 +274,15 @@ export default async function StockPage() {
                       {t(d, 'stock.sep')}
                       {t(d, 'stock.low.threshold', { n: num(a.threshold) })}
                     </span>
+                    {lowNotes.get(a.alertId) ? (
+                      <div className="a2-note a2-mt12" role="note" data-testid="low-stock-ai-note">
+                        <Icon name="spark" size={15} />
+                        <span>
+                          <b className="a2-blk">{t(d, 'stock.low.aiNote.label')}</b>
+                          <span className="a2-blk">{lowNotes.get(a.alertId)}</span>
+                        </span>
+                      </div>
+                    ) : null}
                   </span>
                 </li>
               ))}

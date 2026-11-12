@@ -22,6 +22,8 @@ import {
   type AiSizeAdviceInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
+  type AiStockAlertDraft,
+  type AiStockAlertInput,
   type AiStudioDetailDraft,
   type AiStudioDetailInput,
   type AiSupportReplyDraft,
@@ -163,6 +165,16 @@ export function practiceStudioDetailNote(input: AiStudioDetailInput): AiStudioDe
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 333 — the mock's stock alert line: only the numbers the stock page already shows, joined in one plain
+ * line (no voice to borrow without a key, so the practice answer stays honestly plain rather than invent a reorder
+ * quantity, a supplier or a cause it was not told about). */
+export function practiceStockAlertNote(input: AiStockAlertInput): AiStockAlertDraft {
+  const f = input.facts;
+  const where = [f.colour, f.size].filter((x): x is string => Boolean(x && x.trim())).join(' / ');
+  const body = `${f.productName}${where ? ` (${where})` : ''}, ${f.sku}: ${f.available} left, threshold ${f.threshold}, low for ${f.sinceDays} day${f.sinceDays === 1 ? '' : 's'}.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -213,6 +225,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftStudioDetailNote(input) {
         if (!input.facts.name.trim()) throw new AdapterError('a studio detail note needs the garment\'s own name');
         return practiceStudioDetailNote(input);
+      },
+      async draftStockAlertNote(input) {
+        if (!input.facts.productName.trim() || !input.facts.sku.trim()) throw new AdapterError('a stock alert note needs the SKU\'s own product name and code');
+        return practiceStockAlertNote(input);
       },
     };
   },

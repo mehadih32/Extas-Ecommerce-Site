@@ -22,6 +22,8 @@ import {
   type AiSizeAdviceInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
+  type AiStockAlertDraft,
+  type AiStockAlertInput,
   type AiStudioDetailDraft,
   type AiStudioDetailInput,
   type AiSupportReplyDraft,
@@ -359,5 +361,35 @@ const studioDetailAnswer = z.object({ body: z.string() });
 export function parseStudioDetailJson(text: string, input: AiStudioDetailInput, usage?: { inputTokens: number; outputTokens: number }): AiStudioDetailDraft {
   const parsed = studioDetailAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a detail note');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 333 — the reports agent's own job: one grounded line on why a single SKU's own open low-stock alert is
+// worth a look, beside the raw numbers the stock page already shows, never a reorder decision
+// ---------------------------------------------------------------------------------------------------------------------
+
+const STOCK_ALERT_RULE =
+  "Write only from the numbers given: the SKU's own name, colour/size, its current available count, its own threshold and how many days it has sat low. Never invent a reorder quantity, a supplier, a restock date or a cause the numbers do not show. Never propose or decide anything — not whether to reorder, not how much, not from whom; a person decides that. Only say, in plain words, why this one SKU is worth a look right now.";
+
+export function stockAlertPrompt(input: AiStockAlertInput): Prompt {
+  const f = input.facts;
+  const facts = Object.entries({ product: f.productName, sku: f.sku, colour: f.colour, size: f.size, available: f.available, threshold: f.threshold, daysLow: f.sinceDays })
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${STOCK_ALERT_RULE}`,
+    user: `A Bangladeshi menswear shop's stock page already shows this SKU as low. From only the numbers below, write one short, plain line, in ${lang}, saying why it is worth a look. Never invent a reorder quantity, a supplier or a cause. Never decide anything.\n\n${facts}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 150,
+  };
+}
+
+const stockAlertAnswer = z.object({ body: z.string() });
+
+export function parseStockAlertJson(text: string, input: AiStockAlertInput, usage?: { inputTokens: number; outputTokens: number }): AiStockAlertDraft {
+  const parsed = stockAlertAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with an alert line');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }
