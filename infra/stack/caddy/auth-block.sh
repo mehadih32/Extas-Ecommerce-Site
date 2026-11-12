@@ -33,7 +33,9 @@
 # not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
 # ({http.request.orig_uri}: the path exactly as sent, then any query), case for case, by one anchored pattern of its
 # exact path: an encoded letter or slash, a dot segment, a double or trailing slash, other capitals, HEAD or any other
-# method all stay behind the gate. `[?]` keeps the patterns free of backslashes.
+# method all stay behind the gate. `[?]` and, for the service-worker routes' literal dot, `[.]` keep every pattern
+# free of backslashes — a CEL string literal has no `\.` escape, so a backslash-dot here would fail to parse and
+# Caddy would never start (qa-gate, 12 Nov, caught in CI: every check got connection-refused, not 401/200).
 set -euo pipefail
 tag="${1:?}"; user="${2:?}"; hash="${3:?}"; token="${4:?}"; days="${5:?}"
 [[ "$token" =~ ^[0-9a-f]{32,128}$ ]] || { echo "auth-block: the cookie token must be hex" >&2; exit 2; }
@@ -48,10 +50,10 @@ exempt 'GET POST' '/api/messenger/webhook'
 exempt GET '/erp-api/(top-products|customers)'
 exempt POST '/api/courier/(steadfast|pathao)/webhook'
 exempt GET '/reset'
-exempt GET '/sw\.js'
-exempt GET '/service-worker\.js'
-exempt GET '/OneSignalSDKWorker\.js'
-exempt GET '/firebase-messaging-sw\.js'
+exempt GET '/sw[.]js'
+exempt GET '/service-worker[.]js'
+exempt GET '/OneSignalSDKWorker[.]js'
+exempt GET '/firebase-messaging-sw[.]js'
 printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"
