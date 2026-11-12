@@ -6,7 +6,17 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, syncAuth, SYSTEM } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
-import { archiveCreativeExport, previewCreativeExportSelection, requestCreativeExport, type StudioDeps, type Who } from './index';
+import {
+  archiveCreativeExport,
+  markCreativeExportDownloaded,
+  previewCreativeExportSelection,
+  queueCreativeExport,
+  requestCreativeExport,
+  runCreativeExport,
+  sendCreativeExportToAdAccount,
+  type StudioDeps,
+  type Who,
+} from './index';
 
 describe.skipIf(!HAS_TEST_DB)('PR 487 · campaign creative export selection (PostgreSQL)', () => {
   let t: TestDatabase;
@@ -114,5 +124,63 @@ describe.skipIf(!HAS_TEST_DB)('PR 487 · campaign creative export selection (Pos
     overrides = { 'studio.creativeExport': { enabled: true } };
     const { productId } = await productWithPhoto();
     await expect(requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId }, sizes: [] })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+  });
+
+  it('queues a DRAFT export, refuses to queue twice (WRONG_STATE), 404s an unknown id', async () => {
+    overrides = { 'studio.creativeExport': { enabled: true } };
+    const { productId } = await productWithPhoto();
+    const row = await requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId }, sizes: ['meta_1_1'] });
+    const queued = await queueCreativeExport(deps(), writer, row.id);
+    expect(queued.status).toBe('QUEUED');
+    await expect(queueCreativeExport(deps(), writer, row.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+    await expect(queueCreativeExport(deps(), writer, randomUUID())).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('runs a queued export to APPROVED, gathering outputAssetIds as an honest preview', async () => {
+    overrides = { 'studio.creativeExport': { enabled: true } };
+    const { productId, assetId } = await productWithPhoto();
+    const row = await requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId }, sizes: ['meta_1_1', 'tiktok_9_16'] });
+    await queueCreativeExport(deps(), writer, row.id);
+    const ran = await runCreativeExport(deps(), writer, row.id);
+    expect(ran.status).toBe('APPROVED');
+    expect(ran.outputAssetIds).toEqual([assetId]);
+    await expect(runCreativeExport(deps(), writer, row.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
+  });
+
+  it('refuses to run an export whose only product lost its live photo since it was prepared', async () => {
+    overrides = { 'studio.creativeExport': { enabled: true } };
+    const product = await t.prisma.product.create({ data: { storeId: S, slug: `ce-gone-${randomUUID()}`, nameEn: 'Soon gone' } });
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${randomUUID()}.jpg`, mimeType: 'image/jpeg', bytes: BigInt(1000), checksumSha256: randomUUID() } });
+    const media = await t.prisma.productMedia.create({ data: { storeId: S, productId: product.id, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+    const row = await requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId: product.id }, sizes: ['meta_1_1'] });
+    await queueCreativeExport(deps(), writer, row.id);
+    await t.prisma.productMedia.update({ where: { id: media.id }, data: { archivedAt: new Date() } });
+    await expect(runCreativeExport(deps(), writer, row.id)).rejects.toMatchObject({ code: 'SELECTION_EMPTY' });
+  });
+
+  it('sends an APPROVED export to a real ad account of this store, refuses an unknown one and the wrong state', async () => {
+    overrides = { 'studio.creativeExport': { enabled: true } };
+    const { productId } = await productWithPhoto();
+    const row = await requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId }, sizes: ['meta_1_1'] });
+    await expect(sendCreativeExportToAdAccount(deps(), writer, row.id, randomUUID())).rejects.toMatchObject({ code: 'WRONG_STATE' });
+    await queueCreativeExport(deps(), writer, row.id);
+    await runCreativeExport(deps(), writer, row.id);
+    const account = await t.prisma.adAccount.create({ data: { storeId: S, platform: 'META', externalId: `act_${randomUUID()}`, name: 'Practice account', currency: 'BDT' } });
+    await expect(sendCreativeExportToAdAccount(deps(), writer, row.id, randomUUID())).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    const sent = await sendCreativeExportToAdAccount(deps(), writer, row.id, account.id);
+    expect(sent.status).toBe('PUBLISHED');
+    expect(sent.sentToAdAccountId).toBe(account.id);
+  });
+
+  it('marks an APPROVED export downloaded instead, never touching sentToAdAccountId', async () => {
+    overrides = { 'studio.creativeExport': { enabled: true } };
+    const { productId } = await productWithPhoto();
+    const row = await requestCreativeExport(deps(), writer, { selection: { kind: 'product', productId }, sizes: ['meta_1_1'] });
+    await queueCreativeExport(deps(), writer, row.id);
+    await runCreativeExport(deps(), writer, row.id);
+    const downloaded = await markCreativeExportDownloaded(deps(), writer, row.id);
+    expect(downloaded.status).toBe('PUBLISHED');
+    expect(downloaded.sentToAdAccountId).toBeNull();
+    await expect(markCreativeExportDownloaded(deps(), writer, row.id)).rejects.toMatchObject({ code: 'WRONG_STATE' });
   });
 });

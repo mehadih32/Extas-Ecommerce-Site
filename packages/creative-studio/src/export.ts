@@ -2,9 +2,17 @@
 // campaign the owner picks a product, a SKU (variant), or a whole category, names the platform sizes he wants and
 // whether a price/offer overlay should be pulled from the campaign; this gathers the already-approved product
 // photos that selection covers and sits the export as a `DRAFT` `CreativeExport` row. While `studio.creativeExport`
-// is off (CN-018: off by default) every request is refused with `OFF`. Nothing is composed, cropped or sent to an
-// ad account here — that is part 2 (PR 488), which turns a `DRAFT` row's gathered assets into real per-size files
-// and "one click sends them to the connected ad account or downloads them" (Blueprint C8.5).
+// is off (CN-018: off by default) every request is refused with `OFF`.
+//
+// S25 · PR 488 (Blueprint C8.5, C8.6 item 8) — part 2: `queueCreativeExport`/`runCreativeExport` move a `DRAFT`
+// export through `QUEUED` to `APPROVED`, re-gathering the selection's live approved photos at run time
+// (`SELECTION_EMPTY` again if nothing still qualifies) as the export's `outputAssetIds` — an honest preview (the
+// already-approved photos themselves, exactly as PR 439/440's render engine and PR 482's mock video provider do),
+// since no real per-size crop/overlay compositor is connected yet. From `APPROVED`, `sendCreativeExportToAdAccount`
+// records (practice only — no adapter method exists yet to push a creative to a real ad account) that the owner
+// sent it to a connected `AdAccount` of this store, and `markCreativeExportDownloaded` records that he downloaded
+// it instead (the asset ids are fetched through the existing `/api/media/<id>/download` route); either move lands
+// on `PUBLISHED` once — Blueprint C8.5's "one click sends them to the connected ad account or downloads them".
 import { z } from 'zod';
 import type { PrismaClient } from '@extas/db/client';
 import { audit } from '@extas/auth';
@@ -196,5 +204,70 @@ export async function archiveCreativeExport(deps: StudioDeps, who: Who, exportId
   const row = await deps.db.creativeExport.update({ where: { id: job.id }, data: { status: 'CANCELLED' } });
   const productIds = await productIdsFor(deps.db, who.storeId, row.selection as CreativeExportSelection).catch(() => []);
   await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.cancel', entityType: 'CreativeExport', entityId: job.id, before: { status: job.status }, after: { status: row.status } }, who.ctx);
+  return view(row, { productCount: productIds.length, assetCount: row.outputAssetIds.length });
+}
+
+async function findOwnExport(db: PrismaClient, storeId: number, exportId: string) {
+  const job = await db.creativeExport.findFirst({ where: { id: exportId, storeId } });
+  if (!job) throw new StudioError('NOT_FOUND', 'no such export', ['exportId']);
+  return job;
+}
+
+/** Moves a requested export from `DRAFT` to `QUEUED` (`marketing.studio.write`, checked by the caller). */
+export async function queueCreativeExport(deps: StudioDeps, who: Who, exportId: string): Promise<CreativeExportView> {
+  const job = await findOwnExport(deps.db, who.storeId, exportId);
+  if (job.status !== 'DRAFT') throw new StudioError('WRONG_STATE', 'only a waiting export can be queued', ['status']);
+  const row = await deps.db.creativeExport.update({ where: { id: job.id }, data: { status: 'QUEUED' } });
+  const productIds = await productIdsFor(deps.db, who.storeId, row.selection as CreativeExportSelection).catch(() => []);
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.queue', entityType: 'CreativeExport', entityId: job.id, before: { status: job.status }, after: { status: row.status } }, who.ctx);
+  return view(row, { productCount: productIds.length, assetCount: row.outputAssetIds.length });
+}
+
+/**
+ * Runs one `QUEUED` export (`marketing.studio.write`, checked by the caller): re-gathers the selection's live
+ * approved photos as `outputAssetIds` — an honest preview (the approved photos themselves, exactly as PR 439/440's
+ * render engine and PR 482's mock video provider do), since no real per-size crop/overlay compositor is connected
+ * yet — and lands on `APPROVED`. Refuses `SELECTION_EMPTY` if nothing still qualifies (a product unpublished or a
+ * photo archived since the export was prepared).
+ */
+export async function runCreativeExport(deps: StudioDeps, who: Who, exportId: string): Promise<CreativeExportView> {
+  const job = await findOwnExport(deps.db, who.storeId, exportId);
+  if (job.status !== 'QUEUED') throw new StudioError('WRONG_STATE', 'only a queued export can be run', ['status']);
+  const productIds = await productIdsFor(deps.db, who.storeId, job.selection as CreativeExportSelection);
+  const assetIds = await approvedAssetIds(deps.db, who.storeId, productIds);
+  if (!assetIds.length) throw new StudioError('SELECTION_EMPTY', 'none of this selection has an approved photo any more', ['selection']);
+  const row = await deps.db.creativeExport.update({ where: { id: job.id }, data: { status: 'APPROVED', outputAssetIds: assetIds } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.run', entityType: 'CreativeExport', entityId: job.id, before: { status: job.status }, after: { status: row.status, assetCount: assetIds.length } }, who.ctx);
+  return view(row, { productCount: productIds.length, assetCount: assetIds.length });
+}
+
+/**
+ * Sends an `APPROVED` export to a connected `AdAccount` of this store (`marketing.studio.approve`, checked by the
+ * caller — Blueprint C8.5's "one click sends them to the connected ad account"). No adapter method exists yet to
+ * push a creative file to a real ad platform, so this records the intent only (practice, audited) — the same
+ * "practice copies only until the real call exists" honesty the rest of the ads module keeps (S13 PR 259–261, 268).
+ */
+export async function sendCreativeExportToAdAccount(deps: StudioDeps, who: Who, exportId: string, adAccountId: string): Promise<CreativeExportView> {
+  const job = await findOwnExport(deps.db, who.storeId, exportId);
+  if (job.status !== 'APPROVED') throw new StudioError('WRONG_STATE', 'only an export ready to go out can be sent', ['status']);
+  const account = await deps.db.adAccount.findFirst({ where: { id: adAccountId, storeId: who.storeId }, select: { id: true } });
+  if (!account) throw new StudioError('NOT_FOUND', 'no such ad account', ['adAccountId']);
+  const row = await deps.db.creativeExport.update({ where: { id: job.id }, data: { status: 'PUBLISHED', sentToAdAccountId: account.id } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.send', entityType: 'CreativeExport', entityId: job.id, before: { status: job.status }, after: { status: row.status, sentToAdAccountId: account.id } }, who.ctx);
+  const productIds = await productIdsFor(deps.db, who.storeId, row.selection as CreativeExportSelection).catch(() => []);
+  return view(row, { productCount: productIds.length, assetCount: row.outputAssetIds.length });
+}
+
+/**
+ * Records that an `APPROVED` export was downloaded instead of sent (`marketing.studio.write`) — Blueprint C8.5's
+ * "…or downloads them". The files themselves are the export's own `outputAssetIds`, each fetched through the
+ * existing `/api/media/<id>/download` route; nothing new is generated here, only the export's own state moves on.
+ */
+export async function markCreativeExportDownloaded(deps: StudioDeps, who: Who, exportId: string): Promise<CreativeExportView> {
+  const job = await findOwnExport(deps.db, who.storeId, exportId);
+  if (job.status !== 'APPROVED') throw new StudioError('WRONG_STATE', 'only an export ready to go out can be downloaded', ['status']);
+  const row = await deps.db.creativeExport.update({ where: { id: job.id }, data: { status: 'PUBLISHED' } });
+  await audit(deps.db, who.actor, { storeId: who.storeId, action: 'studio.export.download', entityType: 'CreativeExport', entityId: job.id, before: { status: job.status }, after: { status: row.status } }, who.ctx);
+  const productIds = await productIdsFor(deps.db, who.storeId, row.selection as CreativeExportSelection).catch(() => []);
   return view(row, { productCount: productIds.length, assetCount: row.outputAssetIds.length });
 }

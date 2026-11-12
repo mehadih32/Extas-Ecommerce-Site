@@ -50,9 +50,9 @@ export default async function CreativeExportsPage() {
     );
   const g = (k: string) => t(d, `studio.exports.${k}`);
   const canWrite = access.guard.permissions?.has('marketing.studio.write') ?? false;
-  const errs = Object.fromEntries(['INVALID_INPUT', 'OFF', 'NOT_FOUND', 'SELECTION_EMPTY', 'WRONG_STATE', 'network', 'other'].map((k) => [k, g(`err.${k}`)]));
+  const errs = Object.fromEntries(['INVALID_INPUT', 'OFF', 'NOT_FOUND', 'SELECTION_EMPTY', 'WRONG_STATE', 'forbidden', 'network', 'other'].map((k) => [k, g(`err.${k}`)]));
   const sizeName = Object.fromEntries(CREATIVE_EXPORT_SIZES.map((s) => [s, g(`size.${s}`)])) as Record<CreativeExportSize, string>;
-  const { exports, exportEnabled, campaigns, categories } = await exportsOverview(access.deps, { db: access.deps.db, settings: access.deps.resolver });
+  const { exports, exportEnabled, campaigns, categories, adAccounts, canSend } = await exportsOverview(access.deps, { db: access.deps.db, settings: access.deps.resolver }, access.guard.actor);
   const texts: ExportTexts = {
     selectionKind: g('selectionKind'),
     kindProduct: g('kindProduct'),
@@ -76,6 +76,18 @@ export default async function CreativeExportsPage() {
     archiveIt: g('archiveIt'),
     archiving: g('archiving'),
     archived: g('archived'),
+    queueIt: g('queueIt'),
+    queuing: g('queuing'),
+    runIt: g('runIt'),
+    running: g('running'),
+    downloadIt: g('downloadIt'),
+    downloading: g('downloading'),
+    downloaded: g('downloaded'),
+    sendIt: g('sendIt'),
+    sending: g('sending'),
+    sent: g('sent'),
+    adAccount: g('adAccount'),
+    noAdAccount: g('noAdAccount'),
     err: errs,
   };
   const statusWord = (s: string) => g(`status.${s}`) || s;
@@ -105,7 +117,7 @@ export default async function CreativeExportsPage() {
                   <span className="a2-pill">{statusWord(e.status)}</span>
                 </p>
                 <p className="a2-sm a2-mute">{g('rowSummary').replace('{products}', String(e.productCount)).replace('{photos}', String(e.assetCount))}</p>
-                {canWrite ? <CreativeExportActions url={API} exportId={e.id} status={e.status} texts={texts} /> : null}
+                {canWrite ? <CreativeExportActions url={API} exportId={e.id} status={e.status} adAccounts={adAccounts} canSend={canSend} texts={texts} /> : null}
               </li>
             ))}
           </ul>

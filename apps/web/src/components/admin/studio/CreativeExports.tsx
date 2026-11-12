@@ -3,6 +3,10 @@
 // before preparing it, then prepare the export. POST {action: 'preview' | 'request' | 'archive'} on
 // /api/admin/marketing/studio/exports. The API checks the permission and every rule again; the page is read again
 // after a request or an archive.
+// S25 · PR 488 — `CreativeExportActions` also carries the rest of the row's own next move: "Queue it" on a
+// waiting (`DRAFT`) export, "Run it" on a queued one (gathers `outputAssetIds`), then "Download" or, with
+// `marketing.studio.approve`, "Send to ad account" on an `APPROVED` one. POST {action: 'queue' | 'run' |
+// 'download', exportId} or {action: 'send', exportId, adAccountId}.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { CREATIVE_EXPORT_SIZES, type CreativeExportSize } from '@extas/creative-studio';
@@ -38,6 +42,18 @@ export interface ExportTexts {
   archiveIt: string;
   archiving: string;
   archived: string;
+  queueIt: string;
+  queuing: string;
+  runIt: string;
+  running: string;
+  downloadIt: string;
+  downloading: string;
+  downloaded: string;
+  sendIt: string;
+  sending: string;
+  sent: string;
+  adAccount: string;
+  noAdAccount: string;
   err: Record<string, string>;
 }
 
@@ -196,34 +212,110 @@ export function CreativeExportForm({ url, categories, campaigns, texts: x }: { u
   );
 }
 
-/** Sets aside a `DRAFT` export row — never a hard delete. */
-export function CreativeExportActions({ url, exportId, status, texts: x }: { url: string; exportId: string; status: string; texts: ExportTexts }) {
+/**
+ * One export row's own next move — set a waiting (`DRAFT`) one aside or queue it, run a queued one, then download
+ * or (with `marketing.studio.approve`) send a ready (`APPROVED`) one to a connected ad account.
+ */
+export function CreativeExportActions({
+  url,
+  exportId,
+  status,
+  adAccounts,
+  canSend,
+  texts: x,
+}: {
+  url: string;
+  exportId: string;
+  status: string;
+  adAccounts: { id: string; name: string; platform: string }[];
+  canSend: boolean;
+  texts: ExportTexts;
+}) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<'archive' | 'queue' | 'run' | 'download' | 'send' | null>(null);
   const [out, setOut] = useState<Out>(null);
+  const [adAccountId, setAdAccountId] = useState(adAccounts[0]?.id ?? '');
 
-  if (status !== 'DRAFT') return null;
-
-  async function act() {
-    setBusy(true);
+  async function act(action: 'archive' | 'queue' | 'run' | 'download', successToast?: string) {
+    setBusy(action);
     setOut(null);
-    const a = await call('POST', url, { action: 'archive', exportId });
-    setBusy(false);
+    const a = await call('POST', url, { action, exportId });
+    setBusy(null);
     if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
-    showToast({ text: x.archived, tone: 'ok' });
+    if (successToast) showToast({ text: successToast, tone: 'ok' });
     router.refresh();
   }
 
-  return (
-    <span className="adp-read">
-      <button type="button" className="a2-btn sm" disabled={busy} onClick={() => void act()} data-testid="export-archive">
-        {busy ? x.archiving : x.archiveIt}
-      </button>
-      {out ? (
-        <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
-          {out.text}
-        </span>
-      ) : null}
+  async function send() {
+    if (!adAccountId) return;
+    setBusy('send');
+    setOut(null);
+    const a = await call('POST', url, { action: 'send', exportId, adAccountId });
+    setBusy(null);
+    if (a.status !== 200) return setOut({ text: errText(a, x.err), bad: true });
+    showToast({ text: x.sent, tone: 'ok' });
+    router.refresh();
+  }
+
+  const outLine = out ? (
+    <span className={`a2-sm${out.bad ? ' adp-bad' : ''}`} role="status" aria-live="polite">
+      {out.text}
     </span>
-  );
+  ) : null;
+
+  if (status === 'DRAFT')
+    return (
+      <span className="adp-read">
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('queue')} data-testid="export-queue">
+          {busy === 'queue' ? x.queuing : x.queueIt}
+        </button>
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('archive', x.archived)} data-testid="export-archive">
+          {busy === 'archive' ? x.archiving : x.archiveIt}
+        </button>
+        {outLine}
+      </span>
+    );
+
+  if (status === 'QUEUED')
+    return (
+      <span className="adp-read">
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('run')} data-testid="export-run">
+          {busy === 'run' ? x.running : x.runIt}
+        </button>
+        {outLine}
+      </span>
+    );
+
+  if (status === 'APPROVED')
+    return (
+      <span className="adp-read">
+        <button type="button" className="a2-btn sm" disabled={busy !== null} onClick={() => void act('download', x.downloaded)} data-testid="export-download">
+          {busy === 'download' ? x.downloading : x.downloadIt}
+        </button>
+        {canSend ? (
+          <>
+            <label className="a2-lbl" htmlFor={`export-account-${exportId}`}>
+              {x.adAccount}
+            </label>
+            <select id={`export-account-${exportId}`} className="a2-sel" value={adAccountId} disabled={busy !== null} onChange={(e) => setAdAccountId(e.target.value)} data-testid="export-account">
+              {adAccounts.length ? (
+                adAccounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.platform})
+                  </option>
+                ))
+              ) : (
+                <option value="">{x.noAdAccount}</option>
+              )}
+            </select>
+            <button type="button" className="a2-btn sm pri" disabled={busy !== null || !adAccountId} onClick={() => void send()} data-testid="export-send">
+              {busy === 'send' ? x.sending : x.sendIt}
+            </button>
+          </>
+        ) : null}
+        {outLine}
+      </span>
+    );
+
+  return null;
 }

@@ -1,10 +1,25 @@
 // S25 · PR 487 — Marketing › Studio › Campaign exports at /admin/marketing/studio/exports: GET the overview
-// (`marketing.studio.read`); POST {action: 'preview' | 'request', input} (`marketing.studio.write`). 'preview'
-// counts the live products and approved photos a selection covers without writing anything; 'request' prepares a
-// `DRAFT` export. Composing the per-size files and sending to an ad account is part 2 (PR 488).
+// (`marketing.studio.read`); POST {action: 'preview' | 'request' | 'archive', ...} (`marketing.studio.write`).
+// 'preview' counts the live products and approved photos a selection covers without writing anything; 'request'
+// prepares a `DRAFT` export.
+// S25 · PR 488 — {action: 'queue' | 'run'} (`marketing.studio.write`) move the export on to `APPROVED`;
+// {action: 'download'} (`marketing.studio.write`) and {action: 'send', adAccountId} (`marketing.studio.approve`,
+// checked in addition to the write permission every POST already needs) land it on `PUBLISHED`.
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import type { Actor, RequestContext } from '@extas/auth';
-import { archiveCreativeExport, listCreativeExports, previewCreativeExportSelection, requestCreativeExport, StudioError, type CreativeExportView, type StudioDeps } from '@extas/creative-studio';
+import { can, type Actor, type RequestContext } from '@extas/auth';
+import {
+  archiveCreativeExport,
+  listCreativeExports,
+  markCreativeExportDownloaded,
+  previewCreativeExportSelection,
+  queueCreativeExport,
+  requestCreativeExport,
+  runCreativeExport,
+  sendCreativeExportToAdAccount,
+  StudioError,
+  type CreativeExportView,
+  type StudioDeps,
+} from '@extas/creative-studio';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 
 const S = MOTHER_STORE_ID;
@@ -14,6 +29,8 @@ export interface ExportsOverview {
   exportEnabled: boolean;
   campaigns: { id: string; name: string }[];
   categories: { id: string; name: string }[];
+  adAccounts: { id: string; name: string; platform: string }[];
+  canSend: boolean;
 }
 
 async function pickableCampaigns(deps: AdminDeps): Promise<{ id: string; name: string }[]> {
@@ -26,15 +43,29 @@ async function pickableCategories(deps: AdminDeps): Promise<{ id: string; name: 
   return rows.map((c) => ({ id: c.id, name: c.nameEn }));
 }
 
-export async function exportsOverview(deps: AdminDeps, sd: StudioDeps): Promise<ExportsOverview> {
-  const [exports, setting, campaigns, categories] = await Promise.all([listCreativeExports(sd, S), deps.resolver.value('studio.creativeExport', { storeId: S }), pickableCampaigns(deps), pickableCategories(deps)]);
-  return { exports, exportEnabled: setting.enabled, campaigns, categories };
+async function pickableAdAccounts(deps: AdminDeps): Promise<{ id: string; name: string; platform: string }[]> {
+  const rows = await deps.db.adAccount.findMany({ where: { storeId: S, archivedAt: null }, select: { id: true, name: true, platform: true }, orderBy: { name: 'asc' }, take: 50 });
+  return rows.map((a) => ({ id: a.id, name: a.name, platform: a.platform }));
+}
+
+export async function exportsOverview(deps: AdminDeps, sd: StudioDeps, actor?: Actor): Promise<ExportsOverview> {
+  const [exports, setting, campaigns, categories, adAccounts, canSend] = await Promise.all([
+    listCreativeExports(sd, S),
+    deps.resolver.value('studio.creativeExport', { storeId: S }),
+    pickableCampaigns(deps),
+    pickableCategories(deps),
+    pickableAdAccounts(deps),
+    actor ? can(deps.db, actor, 'marketing.studio.approve', { storeId: S }) : Promise.resolve(false),
+  ]);
+  return { exports, exportEnabled: setting.enabled, campaigns, categories, adAccounts, canSend };
 }
 
 /**
  * /api/admin/marketing/studio/exports — GET the overview (`marketing.studio.read`); POST
- * {action: 'preview', input: selection} or {action: 'request', input} or {action: 'archive', exportId}
- * (`marketing.studio.write`).
+ * {action: 'preview', input: selection} | {action: 'request', input} | {action: 'archive' | 'queue' | 'run' |
+ * 'download', exportId} (`marketing.studio.write`); {action: 'send', exportId, adAccountId} needs
+ * `marketing.studio.approve` as well (Blueprint C8.5: "one click sends them to the connected ad account" is the
+ * owner's OK, not every writer's).
  */
 export async function exportsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   const method = request.method.toUpperCase();
@@ -46,13 +77,31 @@ export async function exportsHandler(request: Request, deps: AdminDeps | null): 
   const sd: StudioDeps = { db: deps!.db, settings: deps!.resolver };
   const who = { actor: g.actor as Actor, storeId: S, ctx: g.ctx as RequestContext };
   try {
-    if (method === 'GET') return json({ ok: true, ...(await exportsOverview(deps!, sd)) });
+    if (method === 'GET') return json({ ok: true, ...(await exportsOverview(deps!, sd, who.actor)) });
     if (b.action === 'preview') return json({ ok: true, preview: await previewCreativeExportSelection(sd, S, b.input) });
     if (b.action === 'request') return json({ ok: true, export: await requestCreativeExport(sd, who, b.input) });
     const exportId = typeof b.exportId === 'string' ? b.exportId : '';
     if (b.action === 'archive') {
       if (!exportId) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
       return json({ ok: true, export: await archiveCreativeExport(sd, who, exportId) });
+    }
+    if (b.action === 'queue') {
+      if (!exportId) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
+      return json({ ok: true, export: await queueCreativeExport(sd, who, exportId) });
+    }
+    if (b.action === 'run') {
+      if (!exportId) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
+      return json({ ok: true, export: await runCreativeExport(sd, who, exportId) });
+    }
+    if (b.action === 'download') {
+      if (!exportId) throw new StudioError('INVALID_INPUT', 'an export id is needed', ['exportId']);
+      return json({ ok: true, export: await markCreativeExportDownloaded(sd, who, exportId) });
+    }
+    if (b.action === 'send') {
+      const adAccountId = typeof b.adAccountId === 'string' ? b.adAccountId : '';
+      if (!exportId || !adAccountId) throw new StudioError('INVALID_INPUT', 'an export id and an ad account are needed', ['exportId', 'adAccountId']);
+      if (!(await can(deps!.db, who.actor, 'marketing.studio.approve', { storeId: S }))) return fail(403, 'forbidden');
+      return json({ ok: true, export: await sendCreativeExportToAdAccount(sd, who, exportId, adAccountId) });
     }
     throw new StudioError('INVALID_INPUT', 'unknown action', ['action']);
   } catch (e) {

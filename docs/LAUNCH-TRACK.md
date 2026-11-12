@@ -36,6 +36,8 @@
 
 **12 Nov 2026 (AI-2 lane, CN-044/CN-045):** PR 487 (S25, campaign creative export part 1) built on top of reopened S25 (CN-039); 532/648 PRs overall. Opened as a GitHub PR but **not merged** — the CN-045 live-incident merge freeze (owner, 12 Nov) holds every PR, including this one, until the FIX lane's deploy-rollback fix (GitHub PR #182) is confirmed live and the freeze is lifted.
 
+**12 Nov 2026 (AI-2 lane, CN-044/CN-045):** PR 488 (S25, campaign creative export part 2 — queue/run/download/send) built as a second commit on the same branch/PR as PR 487; 533/648 PRs overall. CLAUDE.md's CN-045 batch-branch rule (one register-PR branch → a `batch-<date>-<n>` branch, never `main` directly) appeared mid-session; since no batch branch existed yet anywhere in the repo (every other lane's open PR still targets `main`), this lane created the first one, `batch-2026-11-12-1`, off `main`, and retargeted GitHub PR #183 to it rather than leaving it on `main` or inventing a different convention. Flagged for the FIX lane / coordinator in `PROGRESS.md` since this is a cross-lane process change, not something this lane can apply to the other ~40 open PRs.
+
 Parked (not counted): S26 handover pack, PR 513–518, and S27 (unnumbered); since 6 Nov 2026 also the admin looks PR 649–651 (CN-036). They stay in the parking lot until the owner says so.
 
 **Launch left, by stage (25 Oct 2026):** S01 1 · S05 1 · S08 15 · S09 2 · S11 14 · S13 1 · S14 7 · S16 9 · S17 1 · S18 9 · S19 17 · S20 1 · S21 3 · S22 2 = 83.
@@ -662,7 +664,7 @@ Built automatically right after the Launch list, in the existing order: E3 waves
 | 264 | 485 | S25 | Reel assembly with music, text, logo and aspect variants — part 1 | to build |
 | 265 | 486 | S25 | Reel assembly — part 2 | to build |
 | 266 | 487 | S25 | Campaign creative export — part 1 | built |
-| 267 | 488 | S25 | Campaign creative export — part 2 | to build |
+| 267 | 488 | S25 | Campaign creative export — part 2 | built |
 | 268 | 489 | S25 | Campaign overlay system — page-level and time-bound | to build |
 | 269 | 490 | S25 | Campaign creative brief and three-direction grooming flow | to build |
 | 270 | 356 | S17 | Store entity and query scoping | to build |
