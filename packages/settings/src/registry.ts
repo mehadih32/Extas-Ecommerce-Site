@@ -138,7 +138,7 @@ import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
-import { photoshootSettings } from './registry-photoshoot';
+import { analyticsSettings } from './registry-analytics';
 import { studioVideoSettings } from './registry-creative-studio-video';
 import { studioCreativeBriefSettings } from './registry-creative-studio-brief';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
@@ -1553,12 +1553,8 @@ export const registry = {
   ...photoshootSettings,
   // ---- S25 · PR 482 (Blueprint C8.1, C8.2) · the image-to-video engine's master switch and its cost-per-second rate, off / 0; PR 484 adds best-of-2, off (registry-creative-studio-video.ts, version 289 — 288 already taken by registry-photoshoot.ts's PR 447, merged first). ----
   ...studioVideoSettings,
-  // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
-  ...photoshootCostSettings,
-  // ---- S25 · PR 490 (Blueprint C8.4) · the creative brief's master switch, off (registry-creative-studio-brief.ts, version 290). ----
-  ...studioCreativeBriefSettings,
-  // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
-  ...adsIntelSettings,
+  // ---- S15 · PR 338 (Blueprint D5) · the site-wide analytics event layer's master switch, on (registry-analytics.ts, version 288). ----
+  ...analyticsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
