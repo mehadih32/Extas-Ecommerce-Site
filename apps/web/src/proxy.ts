@@ -37,7 +37,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { AB_PREVIEW_COOKIE, AB_PREVIEW_HEADER, AB_PREVIEW_PARAM, AB_VISITOR_HEADER, BOT, newVisitorId, previewCookie, previewOf, visitorIdOf } from './lib/experiments/edge';
 import { liveTests, showing } from './lib/experiments/live';
-import { expireLegacyCookies, legacyCookieNames, registrableDomain, RESET_CLEAR_SITE_DATA } from './lib/legacy-browser';
+import { expireLegacyCookies, legacyCookieNames, registrableDomain } from './lib/legacy-browser';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { bengaliGateSends } from './lib/seo/bengali-gate';
 import { lowerCaseTarget } from './lib/seo/indexing';
@@ -141,14 +141,7 @@ function withAb(res: NextResponse, ab: { cookie: string | null; noStore: boolean
 export async function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return withLegacyCookieCleanup(gateApi(req), req);
-  if (!isShopPath(pathname)) {
-    const res = withLegacyCookieCleanup(withPageCsp(NextResponse.next()), req);
-    // CN-045: the route's own Clear-Site-Data header was missing from the Docker-built image's answer in CI's own
-    // "sign-in end to end" run; the proxy's own headers are proven to always reach the browser, so it answers the
-    // same value too (lib/legacy-browser.ts RESET_CLEAR_SITE_DATA), never for any other path.
-    if (pathname === '/reset') res.headers.set('clear-site-data', RESET_CLEAR_SITE_DATA);
-    return res;
-  }
+  if (!isShopPath(pathname)) return withLegacyCookieCleanup(withPageCsp(NextResponse.next()), req);
   const lower = lowerCaseTarget(pathname);
   if (lower) {
     const url = req.nextUrl.clone();

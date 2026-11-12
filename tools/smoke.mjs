@@ -473,7 +473,7 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
  * cookie at all, so the same run also proves the owner's "no auth" ask: a browser holding nothing still reaches it
  * (infra/stack/caddy/auth-block.sh exempts it, the same way the webhook paths are exempted).
  */
-async function resetPageProblems(browser, base) {
+export async function resetPageProblems(browser, base) {
   const problems = [];
   const ctx = await checkContext(browser, {});
   try {
@@ -481,7 +481,10 @@ async function resetPageProblems(browser, base) {
     const r = await page.goto(`${base}/reset`, { waitUntil: "load" });
     const status = r?.status() ?? 0;
     if (status !== 200) problems.push(`/reset: answered ${status} with no cookie at all, expected 200 (no auth)`);
-    const header = r?.headers()["clear-site-data"] ?? "";
+    // CN-045 (12 Nov, qa-gate): Playwright's own `response.headers()` convenience object silently drops
+    // Clear-Site-Data — Chromium treats it specially and it is missing from that dictionary even though the browser
+    // received and acted on it. `headerValue()` reads the raw response header list instead and sees it correctly.
+    const header = (r && (await r.headerValue("clear-site-data"))) ?? "";
     if (!/"cookies"/.test(header)) problems.push(`/reset: no Clear-Site-Data "cookies" header (got ${JSON.stringify(header)})`);
     problems.push(...pageProblems("/reset", status, await page.innerText("body").catch(() => "")));
   } catch (e) {
