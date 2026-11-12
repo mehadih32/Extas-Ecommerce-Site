@@ -284,6 +284,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const reviewView = pdpReviewsView(reviewData.rows, { average: reviewData.average, total: reviewData.total }, revSet);
   const ratingLine = ratingLineOf(reviewView, revSet);
 
+  // ---- PR 461 · S24 Photoshoot Studio disclosure (Blueprint C7.15): no "AI" badge on the image, but one honest
+  // line in the product details — only on a page that actually has an on-model (S24) shot in some colour.
+  const hasOnModelShot = Object.values(m.shots).some((list) => list.some((s) => s.kind === 'model'));
+
   // ---- PR 64 · details ----
   const fabric = fabricLine(lang === 'bn' ? (data.fabricBn ?? data.fabricEn) : data.fabricEn, data.gsm, (n) => t('pdp.details.gsm', { n: c.num(n) }));
   const care = careList(lang === 'bn' ? (data.careBn ?? data.careEn) : data.careEn);
@@ -656,6 +660,11 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                   trial={rl.on && rl.trialLine ? t('pdp.rules.trial') : null}
                 />
                 <PdpDetails blocks={blocks} more={t('pdp.details.more')} />
+                {hasOnModelShot ? (
+                  <p className="small text2" data-testid="pdp-ai-disclosure">
+                    {t('pdp.galleryDisclosure')}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>

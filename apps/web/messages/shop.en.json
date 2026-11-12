@@ -566,10 +566,18 @@
       "fabric": "Fabric photo",
       "trueColour": "True colour photo, daylight, no filter",
       "set": "Set photo",
-      "other": "Photo"
+      "other": "Photo",
+      "modelAngle": {
+        "front": "On model photo, front",
+        "threeQuarter": "On model photo, three-quarter angle",
+        "back": "On model photo, back",
+        "walking": "On model photo, walking",
+        "seated": "On model photo, seated"
+      }
     },
     "alt": "{name} in {colour}, {view}",
     "trueChip": "True colour · daylight, no filter",
+    "galleryDisclosure": "Some pictures show the garment placed on a model by computer; the fabric and colour photos are the real ones.",
     "zoom": {
       "open": "Open the photo full screen",
       "title": "Photos of {name}",

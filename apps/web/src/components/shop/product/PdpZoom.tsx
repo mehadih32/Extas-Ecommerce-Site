@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '../Icon';
-import { clampPan, clampZoom } from '@/lib/shop/pdp-gallery';
+import { clampPan, clampZoom, onModelAngles } from '@/lib/shop/pdp-gallery';
 import type { PdpShot } from '@/lib/shop/product-model';
 import { usePdp } from './PdpRoot';
 import { ShotPicture } from './ShotPicture';
@@ -19,7 +19,7 @@ interface Props {
   garment: string | null;
   hex: string;
   lang: 'en' | 'bn';
-  altOf: (s: PdpShot) => string;
+  altOf: (s: PdpShot, i: number) => string;
   onClose: (at: number) => void;
 }
 
@@ -30,6 +30,13 @@ const HINT_MS = 2200;
 
 export function PdpZoom({ shots, start, garment, hex, lang, altOf, onClose }: Props) {
   const { m, set, w, num } = usePdp();
+  // PR 461 — the same per-angle labels the gallery strip uses (C7.15), so the full-screen viewer never calls two
+  // different on-model photos by the same name either.
+  const angles = onModelAngles(shots);
+  const kindLabel = (s: PdpShot, i: number) => {
+    const a = angles[i];
+    return a ? w(`view.modelAngle.${a}`) : w(`view.${s.kind}`);
+  };
   const steps = set.gallery.zoomSteps;
   const desk = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
   const max = desk ? steps[steps.length - 1]! : set.gallery.zoomMax;
@@ -295,10 +302,10 @@ export function PdpZoom({ shots, start, garment, hex, lang, altOf, onClose }: Pr
           }
         }}
       >
-        {shots.map((s) => (
+        {shots.map((s, at) => (
           <div key={s.id} className="zm-slide" data-v={s.draw}>
             <div className="zm-pan">
-              <ShotPicture shot={s} garment={garment} hex={hex} slot="zoom" sizes="100vw" alt={altOf(s)} lang={lang} ratio={null} className="zm-draw" />
+              <ShotPicture shot={s} garment={garment} hex={hex} slot="zoom" sizes="100vw" alt={altOf(s, at)} lang={lang} ratio={null} className="zm-draw" />
             </div>
           </div>
         ))}
@@ -314,7 +321,7 @@ export function PdpZoom({ shots, start, garment, hex, lang, altOf, onClose }: Pr
           </button>
           <div className="zm-thumbs" role="group" aria-label={w('photos')}>
             {shots.map((s, k) => (
-              <button key={s.id} type="button" className={`zm-th${k === i ? ' on' : ''}`} aria-label={w(`view.${s.kind}`)} aria-pressed={k === i} onClick={() => goTo(k)}>
+              <button key={s.id} type="button" className={`zm-th${k === i ? ' on' : ''}`} aria-label={kindLabel(s, k)} aria-pressed={k === i} onClick={() => goTo(k)}>
                 <ShotPicture shot={s} garment={garment} hex={hex} slot="thumb" sizes="64px" alt="" lang={lang} ratio="ratio-11" />
               </button>
             ))}
