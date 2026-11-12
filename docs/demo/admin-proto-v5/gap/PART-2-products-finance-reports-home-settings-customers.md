@@ -150,10 +150,10 @@ Real Settings tabs: store, policies, keys (integrations), erp, security, privacy
 ---
 ## Counts (rows above, each separate item counted once; "M/D" counted as D, "D / N" as D, N/A rows not counted)
 
-- BUILT-MATCHES: **18**
-- BUILT-DIFFERS: **48**
+- BUILT-MATCHES: **22**
+- BUILT-DIFFERS: **45**
 - NEW: **18**
-- N/A (prototype-only): 3
+- N/A (prototype-only): 3; proposed new PRs: 16; delta follow-up lines: 30
 
 ## Proposed new register PRs (provisional ids; next free register number = 659 at time of writing)
 
