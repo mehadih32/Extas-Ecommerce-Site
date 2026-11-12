@@ -16,6 +16,7 @@ import { telegramAdapters } from './telegram';
 import { certificateAdapters } from './certificate';
 import { googleDriveAdapters } from './google-drive';
 import { liveMessengerAdapters, messengerAdapters } from './messenger';
+import { liveSocialEngagementAdapters, socialEngagementAdapters } from './social-engagement';
 import { searchConsoleAdapters } from './search-console';
 import { adEventAdapters } from './ads';
 import { adsReaderAdapters } from './ads/readers';
@@ -83,6 +84,9 @@ export * from './ads/campaign-writer';
 export * from './speech';
 // S22 · PR 435 — web push for the support app (VAPID, RFC 8291; the mock sends nothing until the key pair is in).
 export * from './web-push';
+// S23 · PR 443 — Facebook Page comments (the Page's own `feed` field) and Instagram comments + Direct messages, into
+// the Support inbox: mocks until their keys arrive, the same shape as Messenger above.
+export * from './social-engagement';
 
 /** PR 148 — every message sender (SMS, WhatsApp, e-mail) for `createConnections` in the message engine. */
 export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAdapters] as const;
@@ -90,7 +94,7 @@ export const messageAdapters = [...smsAdapters, ...whatsappAdapters, ...emailAda
 // PR 176: the couriers with keys (Steadfast) are rows of Keys & connections; the practice courier is not. PR 567: the
 // courier fraud checks too. PR 291: the SMS
 // gateway too (its key and Test button); PR 292 the WhatsApp Business Platform; the mock senders are not.
-export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters, ...liveAiWriterAdapters] as const;
+export const allAdapters = [...storageAdapters, ...erpAdapters, ...pageReaderAdapters, ...paymentAdapters, ...keyedCourierAdapters, ...fraudCheckAdapters, ...cdnAdapters, ...telegramAdapters, ...certificateAdapters, ...googleDriveAdapters, ...liveSmsAdapters, ...liveWhatsAppAdapters, ...liveMessengerAdapters, ...searchConsoleAdapters, ...adEventAdapters, ...adsReaderAdapters, ...speechAdapters, ...webPushAdapters, ...liveAiWriterAdapters, ...liveSocialEngagementAdapters] as const;
 
-/** PR 426 — the Support inbox's channels (WhatsApp, Messenger) for `createConnections`: each falls back to its mock. */
-export const supportAdapters = [...whatsappAdapters, ...messengerAdapters] as const;
+/** PR 426, 443 — the Support inbox's channels (WhatsApp, Messenger, Facebook comments, Instagram) for `createConnections`: each falls back to its mock. */
+export const supportAdapters = [...whatsappAdapters, ...messengerAdapters, ...socialEngagementAdapters] as const;
