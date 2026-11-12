@@ -8,6 +8,10 @@ describe('ASSET_ROLES', () => {
     for (const r of ['primary_garment', 'front_reference', 'side_reference', 'back_reference', 'detail_reference', 'context_reference']) {
       expect((ASSET_ROLES as readonly string[]).includes(r)).toBe(true);
     }
+    // S24 · PR 465: the three roles the product-only studio engine needed that no garment reference ever did.
+    for (const r of ['three_quarter_reference', 'top_reference', 'sole_reference']) {
+      expect((ASSET_ROLES as readonly string[]).includes(r)).toBe(true);
+    }
   });
 
   it('REFERENCE_ROLES excludes primary_garment only', () => {

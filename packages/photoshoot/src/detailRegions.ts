@@ -233,19 +233,25 @@ export function reprojectedCandidateId(tags: readonly string[]): string | null {
 // "the collar tape is not readable — please take one closer photo" readability gate.
 
 /** C7.10's own fixed garment types — a narrow, Detail-Finder-only vocabulary, never the general category/recipe
- * framework PR 469–470 build later for shot planning; this list exists only to drive the checklist below. */
-export const DETAIL_FINDER_GARMENT_TYPES = ['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi'] as const;
+ * framework PR 469–470 build later for shot planning; this list exists only to drive the checklist below.
+ * `footwear` (S24 · PR 465) is not a garment, but C7.12's own footwear recipe names exactly this shape of
+ * checklist ("detail points: sole pattern, stitching, logo, eyelets") for its own "detail" angle, so it is
+ * registered here rather than rebuilt — Detail Finder's `propose`/`confirm`/`rename`/`remove`/crop machinery below
+ * is already generic over the type name. */
+export const DETAIL_FINDER_GARMENT_TYPES = ['polo', 'shirt', 'denim_chino', 'hoodie', 'panjabi', 'footwear'] as const;
 export type DetailFinderGarmentType = (typeof DETAIL_FINDER_GARMENT_TYPES)[number];
 
 /** C7.10's own checklist of likely detail points per garment type — a fixed data-model vocabulary, never an owner
  * setting. `label` here (denim/chino's woven label) is a different value from `DETAIL_REGION_KINDS`'s own
- * `'label'` above: the `finder:` namespace below keeps the two from ever colliding in storage. */
+ * `'label'` above: the `finder:` namespace below keeps the two from ever colliding in storage. `footwear`'s own
+ * four points are C7.12's recipe table, verbatim. */
 export const DETAIL_FINDER_CHECKLIST: Record<DetailFinderGarmentType, readonly string[]> = {
   polo: ['side_tape', 'side_vent', 'collar_tape', 'placket_and_buttons', 'cuff', 'chest_logo'],
   shirt: ['collar', 'cuff', 'button', 'pocket', 'yoke', 'stitch_density'],
   denim_chino: ['rivets', 'back_pocket_stitching', 'label', 'zip_and_hardware', 'selvedge'],
   hoodie: ['drawcord_tips', 'kangaroo_pocket', 'rib', 'zip_pull'],
   panjabi: ['neck_embroidery', 'button_placket', 'side_slit'],
+  footwear: ['sole_pattern', 'stitching', 'logo', 'eyelets'],
 };
 
 export const DETAIL_FINDER_KIND_PREFIX = 'finder:';
