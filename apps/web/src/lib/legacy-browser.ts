@@ -46,6 +46,16 @@ export function registrableDomain(host: string | null): string | null {
 /** The well-known paths old WordPress plugins (and push SDKs it carried) registered a service worker at. */
 export const LEGACY_SERVICE_WORKER_PATHS = ['/sw.js', '/service-worker.js', '/OneSignalSDKWorker.js', '/firebase-messaging-sw.js'] as const;
 
+/**
+ * CN-045 (12 Nov, qa-gate): `/reset`'s own Clear-Site-Data value. The route handler (route.ts) already answers this
+ * header itself, but the CI "sign-in end to end" run against the built Docker image (standalone output) showed the
+ * header missing from the browser's own answer even though `next dev` always returns it correctly — a production-build
+ * difference in exactly this one Route Handler's headers that this repo could not pin down further without a live
+ * Docker rebuild. The proxy (proxy.ts) answers it too, from this same constant, as a second, always-reliable path: its
+ * own headers (the page CSP, the legacy cookie cleanup) are proven to reach the browser in every build mode.
+ */
+export const RESET_CLEAR_SITE_DATA = '"cache", "cookies", "storage"';
+
 /** A service worker that removes itself and every cache it owned, so an old registration stops intercepting requests. */
 export const LEGACY_SERVICE_WORKER_SCRIPT =
   "self.addEventListener('install',()=>self.skipWaiting());" +

@@ -87,3 +87,14 @@ describe('an address the shop has no page for answers 404 from the proxy (PR 40 
     expect(handed(post, 'x-extas-not-found')).toBeNull();
   });
 });
+
+describe('/reset answers its own Clear-Site-Data header from the proxy (CN-045)', () => {
+  it('/reset gets the header; no other non-shop path does', async () => {
+    const reset = await proxy(new NextRequest(`${BASE}/reset`));
+    expect(reset.headers.get('clear-site-data')).toBe('"cache", "cookies", "storage"');
+    for (const path of ['/admin', '/status', '/sw.js']) {
+      const res = await proxy(new NextRequest(`${BASE}${path}`));
+      expect(res.headers.get('clear-site-data'), path).toBeNull();
+    }
+  });
+});

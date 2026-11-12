@@ -3,7 +3,7 @@
 // from ever loading in the first place, so nothing of ours runs to clear anything. `Clear-Site-Data` here does include
 // "cookies" (fresh-start.ts explains why that route avoids it): after go-live, this domain is only ours, and this page
 // is a one-time, owner-given link, never the normal error path. Never indexed.
-import { resetPageHtml } from '@/lib/legacy-browser';
+import { RESET_CLEAR_SITE_DATA, resetPageHtml } from '@/lib/legacy-browser';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,7 @@ export async function GET(): Promise<Response> {
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'no-store',
-      'clear-site-data': '"cache", "cookies", "storage"',
+      'clear-site-data': RESET_CLEAR_SITE_DATA,
       'x-robots-tag': 'noindex, nofollow',
     },
   });
