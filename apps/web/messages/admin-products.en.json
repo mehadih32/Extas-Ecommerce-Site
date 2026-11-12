@@ -143,6 +143,18 @@
       "chars": "{n} / {max}",
       "preview": "Google preview"
     },
+    "aiDescription": {
+      "write": "Write with AI",
+      "writing": "Writing…",
+      "confirmOverwrite": "This will replace the English description already typed here. Continue?",
+      "done": "AI wrote a draft below — review it, then Save changes.",
+      "reason": {
+        "AI_OFF": "AI is off right now (Settings → AI).",
+        "NOT_READY": "No AI connection is ready yet.",
+        "CAP_EXCEEDED": "This month's AI spending cap has been reached.",
+        "NO_ANSWER": "AI could not write a description just now — try again."
+      }
+    },
     "colours": {
       "none": "No colours yet.",
       "add": "Add a colour",

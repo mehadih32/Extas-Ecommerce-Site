@@ -89,6 +89,23 @@ describe('shared live AiWriter (PR 306)', () => {
     const d = await w2.draftSupportReply({ locale: 'en', question: 'x', facts: { intent: 'status' }, ruleBasedBody: 'x', max: { body: 100 } });
     expect(d.usage).toBeUndefined();
   });
+
+  // S15 · PR 326 — draftProductDescription: a shop-facing description from the product's own attributes, never an
+  // invented spec, carrying the provider's own usage through the same generic `complete()` plumbing PR 325 built.
+  it('draftProductDescription writes from the product\'s own attributes, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "A navy pique polo in sizes S-L, 100% cotton."}', usage: { inputTokens: 90, outputTokens: 14 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftProductDescription({ locale: 'en', facts: { name: 'Sample Pique Polo', colours: ['Navy'], sizes: ['S', 'M', 'L'], fabric: 'Cotton' }, max: { body: 300 } });
+    expect(d).toEqual({ body: 'A navy pique polo in sizes S-L, 100% cotton.', practice: false, usage: { inputTokens: 90, outputTokens: 14 } });
+  });
+
+  it('draftProductDescription throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftProductDescription({ locale: 'en', facts: { name: 'Sample Tee' }, max: { body: 100 } })).rejects.toThrow('description');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftProductDescription({ locale: 'en', facts: { name: 'Sample Tee' }, max: { body: 100 } });
+    expect(d.usage).toBeUndefined();
+  });
 });
 
 describe('Anthropic (PR 306)', () => {
