@@ -368,7 +368,8 @@ export default async function AiCostBookPage() {
           id: s.id,
           name: view.lang === "bn" ? s.nameBn : s.nameEn,
         }))}
-        money={amount}
+        storeMoney={storeMoney}
+        usdMoney={usdMoney}
         title={c("whatIf.title")}
         resetText={c("whatIf.reset")}
       />
@@ -405,7 +406,8 @@ export default async function AiCostBookPage() {
               })),
             }),
           )}
-          money={amount}
+          storeMoney={storeMoney}
+          usdMoney={usdMoney}
           lang={view.lang}
           labels={{
             title: c("calc.title"),
