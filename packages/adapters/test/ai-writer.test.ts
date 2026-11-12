@@ -229,3 +229,36 @@ describe('practice size advice (PR 328)', () => {
     await expect(w.draftSizeAdvice(advice({ facts: { ...advice().facts, sizeLabel: ' ' } }))).rejects.toThrow();
   });
 });
+
+// S15 · PR 329 — the practice fraud review note: only the already-decided reasons, matches and history it was given,
+// joined in plain sentences, marked practice — never a decision word.
+describe('practice fraud review note (PR 329)', () => {
+  const review = (over: Partial<import('../src').AiFraudReviewInput> = {}): import('../src').AiFraudReviewInput => ({
+    locale: 'en',
+    facts: { kind: 'duplicate', severity: 'High', why: ['A · Same customer, same items again · 100% sure · within 5 days · proposes cancel'], matches: ['EX-1002 · Processing · 3 Nov · ৳1,200'], history: ['3 orders, 2 delivered'] },
+    max: { body: 240 },
+    ...over,
+  });
+
+  it('writes a paragraph from the reasons, matches and history it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftFraudReviewNote(review());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Same customer');
+    expect(d.body).toContain('EX-1002');
+    expect(d.body).toContain('3 orders, 2 delivered');
+  });
+
+  it('writes from matches and history alone when there is no fired rule', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftFraudReviewNote(review({ facts: { kind: 'risk', why: [], matches: [], history: ['3 orders, 2 delivered'] } }));
+    expect(d.body).toBe('3 orders, 2 delivered');
+  });
+
+  it('cuts to the store limit and refuses a draft with nothing to explain', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftFraudReviewNote(review({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftFraudReviewNote(review({ facts: { kind: 'duplicate', why: [], matches: [], history: [] } }))).rejects.toThrow();
+  });
+});

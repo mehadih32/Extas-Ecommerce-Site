@@ -607,6 +607,9 @@
         "medium": "Medium",
         "high": "High"
       },
+      "aiNote": {
+        "label": "AI's own words on why — "
+      },
       "approve": {
         "label": "Not a duplicate",
         "title": "{n} is not a duplicate?",

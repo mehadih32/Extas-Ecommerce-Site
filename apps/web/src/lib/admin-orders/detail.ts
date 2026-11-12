@@ -16,6 +16,8 @@ import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands'
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
 import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
+import type { AdminDeps } from '../admin-auth';
+import { fraudReviewOption, type FraudReviewFacts } from '../admin-ai/fraud-review-dispatch';
 import { alertExplainView, duplicateCheckSummary, type AlertExplainView } from './alert';
 import { learnedLine } from '../admin-reports/learning-view';
 import { outcomeLabel, reasonLabel, recordSpec } from './calls-view';
@@ -103,6 +105,10 @@ export interface ReviewCard {
   specs: CommandSpec[];
   /** PR 521: why the alert fired, what matched, what the riders wrote, his history and the options (one click opens it). */
   explain: AlertExplainView | null;
+  /** PR 329: one plain AI paragraph on why the alert fired, grounded only in `explain`'s own already-decided words
+   * — never a decision, never shown without `explain` beside it. Null: AI off/paused, no ready connection, capped,
+   * nothing to explain, or no `aiDeps` caller opted in. */
+  aiNote: string | null;
   /** PR 543: what the team did with reviews like this one (the learning on), or null. */
   learned: string | null;
 }
@@ -827,7 +833,7 @@ export function courierReason(view: AdminView, key: string): string {
 }
 
 /** Everything the order page draws, or null when there is no such order in this store. */
-export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: AdminView, id: string, perms: ReadonlySet<string>): Promise<OrderDetailView | null> {
+export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: AdminView, id: string, perms: ReadonlySet<string>, aiDeps?: AdminDeps): Promise<OrderDetailView | null> {
   let detail: od.OrderDetail;
   try {
     detail = await od.getOrder(deps, who, id);
@@ -872,6 +878,24 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const explained = perms.has('orders.risk.read')
     ? await Promise.all(detail.reviews.map((r) => od.alertSummary(deps, who, r.id).catch(() => null)))
     : detail.reviews.map(() => null);
+  // PR 521: the same words, already built, that the card shows — the one source `explainOf` and the AI note
+  // (PR 329) are both grounded in, built once here rather than twice.
+  const explainViews = explained.map((sum) => (sum ? alertExplainView(view, sum, { money: (minor) => m(minor), date: (at) => dt.format(at) }) : null));
+  // PR 329: a plain paragraph on why each OPEN review's alert fired, from that same already-built explain view —
+  // never a new fact, never a decision; `null` (AI off, no ready connection, capped, or no words to explain) leaves
+  // the review card exactly as PR 521 already built it. Only while an `aiDeps` caller opted in (today: the order
+  // detail page itself) and the person may read the review in the first place.
+  const aiNotes =
+    aiDeps && perms.has('orders.risk.read')
+      ? await Promise.all(
+          detail.reviews.map((r, i) => {
+            const ev = explainViews[i];
+            if (r.status !== 'OPEN' || !ev) return Promise.resolve<string | null>(null);
+            const facts: FraudReviewFacts = { kind: r.risk ? 'risk' : 'duplicate', severity: r.severity ? t(d, `orders.review.sev.${r.severity}`) : null, why: ev.why, matches: ev.matches.map((mm) => `${mm.number} · ${mm.status} · ${mm.sub}`.replace(/ · $/, '')), history: ev.history };
+            return fraudReviewOption(aiDeps, who.storeId, r.id, view.lang)(facts);
+          }),
+        )
+      : detail.reviews.map(() => null);
   // PR 543: what the team did with reviews like the open ones (nothing when the learning is off)
   const openReviews = perms.has('orders.risk.read') ? detail.reviews.filter((r) => r.status === 'OPEN') : [];
   const learned = openReviews.length ? await od.learnedHints(deps, who.storeId, openReviews.map((r) => ({ alertId: r.id, kind: r.risk ? ('risk' as const) : ('duplicate' as const), summary: { section: r.section, rules: r.rules } }))) : new Map<string, od.LearnHint>();
@@ -1002,7 +1026,6 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const numbers = new Map(matchedRows.map((r) => [r.id, r]));
   const paidText = detail.money.paidMinor + detail.money.walletAppliedMinor > 0 ? m(detail.money.paidMinor + detail.money.walletAppliedMinor) : null;
   const reviews: ReviewCard[] = detail.reviews.map((r, i) => {
-    const sum = explained[i];
     const matched = r.matchedOrderIds.map((mid) => numbers.get(mid)).filter((v): v is NonNullable<typeof v> => !!v);
     const why = r.because.map((k) => t(d, `orders.risk.sig.${k}`)).join(' · ');
     return {
@@ -1015,7 +1038,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       matched: matched.map((mm) => ({ number: mm.number, href: orderHref(mm.id), status: t(d, `orders.st.${mm.status}`), tone: ORDER_TONE[mm.status] })),
       at: dt.format(r.createdAt),
       specs: r.status === 'OPEN' ? reviewSpecs(view, r.id, o.number, matched, perms, reasons, paidText, r.risk) : [],
-      explain: sum ? alertExplainView(view, sum, { money: (minor) => m(minor), date: (at) => dt.format(at) }) : null,
+      explain: explainViews[i] ?? null,
+      // PR 329: the AI note sits beside the card's own deterministic "why" (PR 521), never in place of it.
+      aiNote: aiNotes[i] ?? null,
       learned: r.status === 'OPEN' ? learnedLine(d, learned.get(r.id), (n) => formatNumber(n, view.locale)) : null,
     };
   });

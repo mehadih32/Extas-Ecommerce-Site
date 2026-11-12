@@ -10,6 +10,8 @@ import {
   type AiArticleInput,
   type AiCampaignDraft,
   type AiCampaignInput,
+  type AiFraudReviewDraft,
+  type AiFraudReviewInput,
   type AiProductDescriptionDraft,
   type AiProductDescriptionInput,
   type AiSeoDraft,
@@ -118,6 +120,15 @@ export function practiceSizeAdvice(input: AiSizeAdviceInput): AiSizeAdviceDraft 
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 329 — the mock's fraud review note: only the already-decided reasons, matches and history it was given,
+ * joined in plain sentences (no voice to borrow without a key; the practice answer stays honestly plain). Never a
+ * decision word — the same facts a person already sees on the card, said back in one paragraph. */
+export function practiceFraudReviewNote(input: AiFraudReviewInput): AiFraudReviewDraft {
+  const f = input.facts;
+  const body = [f.why.length ? f.why.join('; ') : null, f.matches.length ? `Matched: ${f.matches.join('; ')}` : null, f.history.length ? f.history.join('; ') : null].filter((x): x is string => Boolean(x)).join('. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -152,6 +163,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftSizeAdvice(input) {
         if (!input.facts.sizeLabel.trim()) throw new AdapterError('a size advice note needs the recommended size');
         return practiceSizeAdvice(input);
+      },
+      async draftFraudReviewNote(input) {
+        if (!input.facts.why.length && !input.facts.matches.length && !input.facts.history.length) throw new AdapterError('a fraud review note needs at least one reason, match or history line');
+        return practiceFraudReviewNote(input);
       },
     };
   },

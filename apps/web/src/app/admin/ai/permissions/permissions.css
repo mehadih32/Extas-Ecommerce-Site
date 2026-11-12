@@ -1,4 +1,4 @@
-/* S15 · PR 318 — AI › Permissions (/admin/ai/permissions), Lumen look. Uses the shared --lm-*/a2-* tokens only, so
+/* S15 · PR 318 — AI › Permissions (/admin/ai/permissions), Lumen look. Uses the shared --lm-* and a2-* tokens only, so
    the hardcode guard finds no colour literal here. One card per agent on every width (never a wide table that
    would need to scroll sideways on a phone), the resource rows stacking the same on phone and desktop. */
 .adm2 .ai-pm-list {

@@ -186,6 +186,41 @@ export interface AiSizeAdviceDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 329 — the fraud review agent's own job (Gyani, the existing `orderFraudJudge` Cost Book row, PR 312):
+ * one plain paragraph explaining why a duplicate/risk review alert fired, for the staff member who must decide —
+ * never a decision itself. `facts` is always the admin order page's own already-built, already-localized
+ * `AlertExplainView` words (`packages/orders`'s `alertSummary`/PR 521's own `alertExplainView`, the identical rules,
+ * signals, matched orders and history text the review card already shows) — never a new score, never the order's
+ * own raw PII beyond what the card already names, and never the decision options or the proposed action (so the
+ * model is never even handed anything resembling "cancel/hold/approve" to echo back as its own call).
+ */
+export interface AiFraudReviewInput {
+  locale: 'en' | 'bn';
+  facts: {
+    /** "duplicate" or "risk" — which kind of review this is, same two kinds the card itself shows. */
+    kind: 'duplicate' | 'risk';
+    /** The card's own severity word (e.g. "High"), already localized; absent when the card shows none. */
+    severity?: string;
+    /** Each already-localized reason line the card's own "why this fired" list shows (fired rules, risk signals). */
+    why: string[];
+    /** Each already-localized matched-order summary line the card's own "what matched" list shows. */
+    matches: string[];
+    /** Each already-localized history line the card's own "history" section shows. */
+    history: string[];
+  };
+  max: { body: number };
+}
+
+export interface AiFraudReviewDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -198,6 +233,8 @@ export interface AiWriter {
   draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft>;
   /** PR 328 — the size advice agent's own job: one grounded sentence on why Find My Size gave that size. */
   draftSizeAdvice(input: AiSizeAdviceInput): Promise<AiSizeAdviceDraft>;
+  /** PR 329 — the fraud review agent's own job: one grounded paragraph on why a review alert fired, never a decision. */
+  draftFraudReviewNote(input: AiFraudReviewInput): Promise<AiFraudReviewDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

@@ -124,6 +124,24 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 329 — draftFraudReviewNote: one plain paragraph on why a review alert fired, never a decision,
+  // carrying the provider's own usage through the same generic `complete()` plumbing PR 325 built.
+  it('draftFraudReviewNote writes from the alert\'s own already-decided reasons, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "This order was raised because it repeats another order\'s items within a few days."}', usage: { inputTokens: 90, outputTokens: 24 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftFraudReviewNote({ locale: 'en', facts: { kind: 'duplicate', severity: 'High', why: ['A · Same customer, same items again · 100% sure · within 5 days · proposes cancel'], matches: ['EX-1002 · Processing · 3 Nov · ৳1,200'], history: ['3 orders, 2 delivered'] }, max: { body: 400 } });
+    expect(d).toEqual({ body: "This order was raised because it repeats another order's items within a few days.", practice: false, usage: { inputTokens: 90, outputTokens: 24 } });
+  });
+
+  it('draftFraudReviewNote throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { kind: 'duplicate' as const, why: ['A · Same customer, same items again · 100% sure · within 5 days · proposes cancel'], matches: [], history: [] };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftFraudReviewNote({ locale: 'en', facts, max: { body: 400 } })).rejects.toThrow('review explanation');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftFraudReviewNote({ locale: 'en', facts, max: { body: 400 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.
