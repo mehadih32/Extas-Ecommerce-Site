@@ -1,10 +1,11 @@
-// S23 · PR 437–440 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
-// social accounts (PR 437: add, rename, switch, approval, daily limit, archive/restore), the brand asset library
-// and the templates (PR 438: add, update, archive/restore), render jobs (PR 439: queue a template + products,
-// generate a preview — see render.ts for the honest scope) and now posts (PR 440: queue a finished render job onto
-// a Facebook or Instagram account; a post only reaches the real account once its account runs free and someone
-// presses "Post now" — see publish.ts for the honest scope). TikTok, YouTube, the calendar/approval queue and the
-// comment/DM ingestion (PR 441–443) join this page as they are built. Seeing needs `studio.read`; managing
+// S23 · PR 437–441 (Blueprint C5 · Social & content studio) — Marketing › Studio at /admin/marketing/studio: the
+// social accounts (PR 437: add, rename, switch, approval, daily limit, archive/restore; PR 441 adds TikTok's own
+// `directPostApproved` draft/direct switch), the brand asset library and the templates (PR 438: add, update,
+// archive/restore), render jobs (PR 439: queue a template + products, generate a preview — see render.ts for the
+// honest scope) and now posts (PR 440/441: queue a finished render job onto a Facebook, Instagram or TikTok
+// account; a post only reaches the real account once its account runs free and someone presses "Post now" — see
+// publish.ts for the honest scope, including why YouTube still refuses). The calendar/approval queue and the
+// comment/DM ingestion (PR 442–443) join this page as they are built. Seeing needs `studio.read`; managing
 // accounts/templates/assets needs `studio.write`; queueing a render job or a post, and running a render job, need
 // `studio.generate`; queuing a post on an account that runs free, and running it ("Post now"), also need
 // `studio.publish` (the API checks every permission again, inside `@extas/studio`). Hidden from the menu by
@@ -13,7 +14,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { BRAND_ASSET_KINDS, STUDIO_PLATFORMS, TEMPLATE_ASPECT_RATIOS, TEMPLATE_KINDS } from '@extas/studio';
+import { BRAND_ASSET_KINDS, PUBLISHABLE_PLATFORMS, STUDIO_PLATFORMS, TEMPLATE_ASPECT_RATIOS, TEMPLATE_KINDS } from '@extas/studio';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { altFor, ResponsiveImage } from '@/components/media/ResponsiveImage';
 import { StudioAccountForm, StudioAccountLimit, StudioAct, StudioAssetKind, StudioAssetUpload, StudioPostForm, StudioRenderForm, StudioTemplateForm, type StudioFormTexts } from '@/components/admin/marketing/StudioForms';
@@ -66,14 +67,13 @@ export default async function StudioPage() {
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `studio.hub.${k}`, vars);
   const errKeys = ['INVALID_INPUT', 'NOT_FOUND', 'STALE', 'ALREADY_ADDED', 'TEMPLATE_ARCHIVED', 'NO_PRODUCTS', 'WRONG_STATE', 'ACCOUNT_OFF', 'NOT_SUPPORTED', 'EMPTY', 'TOO_LARGE', 'NOT_AN_IMAGE', 'TYPE_NOT_ALLOWED', 'STILL_IN_USE', 'forbidden', 'unauthorized', 'network', 'other'];
   const err = Object.fromEntries(errKeys.map((k) => [k, g(`err.${k}`)]));
-  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'spec', 'assetId', 'templateId', 'productIds', 'caption', 'renderJobId', 'accountId'].map((k) => [k, g(`f.${k}`)])) };
+  const texts: StudioFormTexts = { err, fields: Object.fromEntries(['platform', 'externalId', 'name', 'kind', 'dailyLimit', 'directPostApproved', 'spec', 'assetId', 'templateId', 'productIds', 'caption', 'renderJobId', 'accountId'].map((k) => [k, g(`f.${k}`)])) };
   const platforms = STUDIO_PLATFORMS.map((p) => ({ id: p, label: g(`platforms.${p}`) }));
   const kinds = TEMPLATE_KINDS.map((k) => ({ id: k, label: g(`templateKinds.${k}`) }));
   const assetKinds = BRAND_ASSET_KINDS.map((k) => ({ id: k, label: g(`assetKinds.${k}`) }));
   const liveAccounts = o.accounts.filter((a) => !a.archived);
   const liveTemplates = o.templates.filter((tp) => !tp.archived).map((tp) => ({ id: tp.id, label: `${tp.name} (${g(`templateKinds.${tp.kind}`)})` }));
-  const PUBLISHABLE = ['facebook', 'instagram'] as const;
-  const postableAccounts = liveAccounts.filter((a) => a.enabled && (PUBLISHABLE as readonly string[]).includes(a.platform)).map((a) => ({ id: a.id, label: `${a.name} (${g(`platforms.${a.platform}`)})` }));
+  const postableAccounts = liveAccounts.filter((a) => a.enabled && (PUBLISHABLE_PLATFORMS as readonly string[]).includes(a.platform)).map((a) => ({ id: a.id, label: `${a.name} (${g(`platforms.${a.platform}`)})` }));
   const postableRenders = o.renders.filter((r) => r.status === 'SUCCEEDED').map((r) => ({ id: r.id, label: r.caption ? r.caption.slice(0, 60) : (r.kind ? g(`templateKinds.${r.kind}`) : r.id) }));
 
   return (
@@ -103,11 +103,17 @@ export default async function StudioPage() {
                 {!a.archived ? (
                   <p className="a2-sm a2-mute">{a.dailyLimit === null ? g('accounts.noLimit') : g('accounts.limit', { n: a.dailyLimit })}</p>
                 ) : null}
+                {!a.archived && a.platform === 'tiktok' ? (
+                  <p className="a2-sm a2-mute">{g(a.directPostApproved ? 'accounts.directApproved' : 'accounts.draftOnly')}</p>
+                ) : null}
                 {canWrite && !a.archived ? (
                   <span className="a2-gap8 yt-mt8">
                     <StudioAct texts={texts} body={{ action: 'account.switch', id: a.id, enabled: !a.enabled, version: a.version }} label={g(a.enabled ? 'accounts.turnOff' : 'accounts.turnOn')} testId="st-account-switch" done={g('accounts.saved')} />
                     <StudioAct texts={texts} body={{ action: 'account.requireApproval', id: a.id, requireApproval: !a.requireApproval, version: a.version }} label={g(a.requireApproval ? 'accounts.letRunFree' : 'accounts.askApproval')} testId="st-account-approval" done={g('accounts.saved')} />
                     <StudioAccountLimit texts={texts} id={a.id} version={a.version} dailyLimit={a.dailyLimit} w={{ label: g('accounts.limitPh'), save: g('accounts.limitSave'), saved: g('accounts.saved') }} />
+                    {a.platform === 'tiktok' ? (
+                      <StudioAct texts={texts} body={{ action: 'account.directPostApproved', id: a.id, directPostApproved: !a.directPostApproved, version: a.version }} label={g(a.directPostApproved ? 'accounts.switchToDraft' : 'accounts.switchToDirect')} testId="st-account-directpost" done={g('accounts.saved')} />
+                    ) : null}
                   </span>
                 ) : null}
                 {canWrite ? (

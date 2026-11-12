@@ -109,7 +109,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 440 · posting a render job to Facebook/Instag
     expect(ran.error).toBe('the Page access token has expired');
   });
 
-  it('refuses a job that has not finished, an account that is off, a TikTok/YouTube account, and an empty caption', async () => {
+  it('refuses a job that has not finished, an account that is off, a YouTube account (PR 441), and an empty caption', async () => {
     const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-440-3', name: 'Guard Page' });
     const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
 
@@ -122,9 +122,10 @@ describe.skipIf(!HAS_TEST_DB)('PR 440 · posting a render job to Facebook/Instag
     const job = await finishedRenderJob('x');
     await expect(queueSocialPost(pd(), who, { renderJobId: job.id, accountId: offAccount.id, caption: 'x' })).rejects.toMatchObject({ code: 'ACCOUNT_OFF' });
 
-    const tiktok = await saveStudioAccount(sd(), who, { action: 'add', platform: 'tiktok', externalId: 'tt-440-1', name: 'TikTok' });
-    const tiktokOn = await saveStudioAccount(sd(), who, { action: 'switch', id: tiktok.id, enabled: true, version: tiktok.version });
-    await expect(queueSocialPost(pd(), who, { renderJobId: job.id, accountId: tiktokOn.id, caption: 'x' })).rejects.toMatchObject({ code: 'NOT_SUPPORTED' });
+    // YouTube still refuses (PR 441): a real connection exists, but a photo is not a video — named why, not "no adapter".
+    const youtube = await saveStudioAccount(sd(), who, { action: 'add', platform: 'youtube', externalId: 'yt-440-1', name: 'YouTube' });
+    const youtubeOn = await saveStudioAccount(sd(), who, { action: 'switch', id: youtube.id, enabled: true, version: youtube.version });
+    await expect(queueSocialPost(pd(), who, { renderJobId: job.id, accountId: youtubeOn.id, caption: 'x' })).rejects.toMatchObject({ code: 'NOT_SUPPORTED', message: 'YouTube needs a real video; the studio makes a preview photo until the video engine is built' });
 
     const noCaptionJob = await finishedRenderJob();
     await expect(queueSocialPost(pd(), who, { renderJobId: noCaptionJob.id, accountId: enabled.id })).rejects.toMatchObject({ code: 'EMPTY' });
@@ -144,5 +145,83 @@ describe.skipIf(!HAS_TEST_DB)('PR 440 · posting a render job to Facebook/Instag
     const genOnly: Who = { actor: { staffUserId: u.id }, storeId: S };
     await expect(queueSocialPost(pd(), genOnly, { renderJobId: job.id, accountId: free.id, caption: 'x' })).rejects.toThrow();
     void generateOnly;
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 441 · TikTok draft + direct posting (PostgreSQL)', () => {
+  let t: TestDatabase;
+  let S: number;
+  let who: Who;
+  const settings = {
+    async value<K extends Key>(key: K): Promise<Value<K>> {
+      return registry[key].default as Value<K>;
+    },
+  };
+  const sd = (): StudioDeps => ({ db: t.prisma, settings });
+  let lastSent: { imageUrl: string; caption: string; directPostApproved?: boolean } | null = null;
+  const pd = (): PublishDeps => ({
+    ...sd(),
+    publisher: { async resolve() { return { api: { async publishPhoto(post) { lastSent = post; return { ok: true, externalPostId: 'tt-ext-1' }; } }, mode: 'MOCK' }; } },
+    async publicUrlOf(assetId) { return assetId ? `https://shop.example.test/media/${assetId}.jpg` : null; },
+  });
+
+  const makeProduct = (slug: string, nameEn: string) => t.prisma.product.create({ data: { storeId: S, slug, nameEn } });
+  const giveCoverPhoto = async (productId: string) => {
+    const asset = await t.prisma.mediaAsset.create({ data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: `products/${S}/${productId.slice(0, 8)}.jpg`, mimeType: 'image/jpeg', bytes: 500n, checksumSha256: productId.slice(0, 8).padEnd(64, '0'), isOriginal: true } });
+    await t.prisma.productMedia.create({ data: { storeId: S, productId, assetId: asset.id, role: 'FRONT', isPrimary: true } });
+    return asset.id;
+  };
+  const finishedRenderJob = async (caption?: string) => {
+    const tpl = await saveStudioTemplate(sd(), who, { action: 'add', kind: 'image', name: `TikTok poster ${Date.now()}`, spec: { aspectRatio: '1:1', brandAssetIds: [] } });
+    const product = await makeProduct(`tt-post-${Date.now()}`, 'TikTok Tee');
+    await giveCoverPhoto(product.id);
+    const job = await queueSocialRender(sd(), who, { templateId: tpl.id, productIds: [product.id], ...(caption ? { caption } : {}) });
+    return runSocialRenderJob(sd(), who, job.id);
+  };
+
+  beforeAll(async () => {
+    t = await createTestDatabase('studio_publish_tiktok');
+    [S] = await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    const role = await createRole(t.prisma, SYSTEM, { key: 't441-pub', nameEn: 't441-pub', nameBn: 't441-pub', permissions: ['studio.read', 'studio.write', 'studio.generate', 'studio.publish'] });
+    const u = await t.prisma.staffUser.create({ data: { email: 't441-pub@example.com', displayName: 't441-pub', passwordHash: 'not-a-login' } });
+    await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
+    who = { actor: { staffUserId: u.id }, storeId: S };
+  });
+
+  afterAll(async () => t.drop());
+
+  it('a new TikTok account defaults to draft (`directPostApproved: false`), and the adapter is told so', async () => {
+    lastSent = null;
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'tiktok', externalId: 'tt-441-1', name: 'EXTAS TikTok' });
+    expect(acc.directPostApproved).toBe(false);
+    const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const free = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: false, version: enabled.version });
+    const job = await finishedRenderJob('Draft for now');
+
+    const queued = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: free.id, caption: 'Draft for now' });
+    expect(queued.platform).toBe('tiktok');
+    const ran = await runSocialPost(pd(), who, queued.id);
+    expect(ran.status).toBe('SUCCEEDED');
+    expect(lastSent).toMatchObject({ caption: 'Draft for now', directPostApproved: false });
+  });
+
+  it('once the owner switches `directPostApproved` on, a later post tells the adapter to post direct', async () => {
+    lastSent = null;
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'tiktok', externalId: 'tt-441-2', name: 'Approved TikTok' });
+    const enabled = await saveStudioAccount(sd(), who, { action: 'switch', id: acc.id, enabled: true, version: acc.version });
+    const free = await saveStudioAccount(sd(), who, { action: 'requireApproval', id: acc.id, requireApproval: false, version: enabled.version });
+    const approved = await saveStudioAccount(sd(), who, { action: 'directPostApproved', id: acc.id, directPostApproved: true, version: free.version });
+    expect(approved.directPostApproved).toBe(true);
+
+    const job = await finishedRenderJob('Live now');
+    const queued = await queueSocialPost(pd(), who, { renderJobId: job.id, accountId: approved.id, caption: 'Live now' });
+    await runSocialPost(pd(), who, queued.id);
+    expect(lastSent).toMatchObject({ directPostApproved: true });
+  });
+
+  it('`directPostApproved` means nothing on a non-TikTok account and is refused', async () => {
+    const acc = await saveStudioAccount(sd(), who, { action: 'add', platform: 'facebook', externalId: 'fb-441-1', name: 'Not TikTok' });
+    await expect(saveStudioAccount(sd(), who, { action: 'directPostApproved', id: acc.id, directPostApproved: true, version: acc.version })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
   });
 });

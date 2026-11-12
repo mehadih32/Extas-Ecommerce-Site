@@ -1,13 +1,14 @@
-// S23 · PR 437–440 (Blueprint C5.4 "a module of its own … all of its switches, schedules, spend and reports appear
+// S23 · PR 437–441 (Blueprint C5.4 "a module of its own … all of its switches, schedules, spend and reports appear
 // inside AI 360" — the AI 360 wiring itself is a later PR; this is the studio's own hub) — Marketing › Studio at
 // /admin/marketing/studio: the social accounts (PR 437), the brand asset library and the templates (PR 438),
-// render jobs (PR 439: `queueSocialRender`/`runSocialRenderJob`) and now posts to Facebook/Instagram (PR 440:
-// `queueSocialPost`/`runSocialPost`, `@extas/studio`'s `publish.ts`, through `@extas/adapters/social-publish`).
-// Seeing needs `studio.read`; adding, changing and archiving need `studio.write` (the API checks again, and
-// archiving a brand asset also needs the Media library's own `media.manage`, @extas/studio's `assets.ts`);
-// queueing a render job or a post needs `studio.generate`; a post that goes out right away (the account runs free)
-// also needs `studio.publish`, checked inside `@extas/studio` itself. TikTok and YouTube have no adapter yet
-// (PR 441); choosing one of those account refuses with `NOT_SUPPORTED`.
+// render jobs (PR 439: `queueSocialRender`/`runSocialRenderJob`) and now posts to Facebook, Instagram and TikTok
+// (PR 440/441: `queueSocialPost`/`runSocialPost`, `@extas/studio`'s `publish.ts`, through
+// `@extas/adapters/social-publish`). Seeing needs `studio.read`; adding, changing and archiving need `studio.write`
+// (the API checks again, and archiving a brand asset also needs the Media library's own `media.manage`,
+// @extas/studio's `assets.ts`); queueing a render job or a post needs `studio.generate`; a post that goes out
+// right away (the account runs free) also needs `studio.publish`, checked inside `@extas/studio` itself. YouTube
+// has a real connection (Keys & connections) but no honest way to post a photo as a video yet (PR 441); choosing a
+// YouTube account refuses with `NOT_SUPPORTED`, named why.
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { imageSources, mediaHttpStatus, mediaUrl, MediaError, type ImageSource, type MediaDeps } from '@extas/media';
 import {

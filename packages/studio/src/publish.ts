@@ -1,7 +1,9 @@
-// S23 · PR 440 (Blueprint C5.1, C5.3, C5.5 point 3 "Publishing adapters — Facebook Page, Instagram feed/reel/story
-// (part 1)") — turns a finished render job (PR 439) into a `SocialPost` on one of the store's Facebook or
-// Instagram accounts (PR 437), through `@extas/adapters/social-publish`'s two adapters. TikTok and YouTube have no
-// adapter yet (PR 441): choosing one of those refuses outright (`NOT_SUPPORTED`).
+// S23 · PR 440–441 (Blueprint C5.1, C5.3, C5.5 point 3 "Publishing adapters …") — turns a finished render job
+// (PR 439) into a `SocialPost` on one of the store's accounts (PR 437), through `@extas/adapters/social-publish`'s
+// adapters: Facebook, Instagram (PR 440) and now TikTok (PR 441, its photo mode — draft or direct by the account's
+// own `directPostApproved` flag, read fresh at run time so a mid-queue owner decision is honoured). YouTube has a
+// real connection (Keys & connections can test it) but no honest way to post a photo as a video yet, so an account
+// on that platform still refuses here (`NOT_SUPPORTED`), with a reason naming why rather than "no adapter".
 //
 // Automatic vs queued (Blueprint C5.3, CLAUDE.md rule 2/6 — nothing goes out without the owner's OK by default):
 // every new account ships `requireApproval: true` (PR 437), so by default a post made here is only queued, status
@@ -21,9 +23,12 @@ import type { SocialPublisher } from '@extas/adapters';
 import { allow, checkStoreId, logChange, nowOf, parse, StudioError, type StudioDeps, type Who } from './context';
 import type { StudioPlatform } from './accounts';
 
-/** The platforms with a publishing adapter today (PR 440); TikTok and YouTube follow in PR 441. */
-export const PUBLISHABLE_PLATFORMS = ['facebook', 'instagram'] as const satisfies readonly StudioPlatform[];
+/** The platforms the studio can actually post a photo to today (PR 440, PR 441). YouTube stays out: see above. */
+export const PUBLISHABLE_PLATFORMS = ['facebook', 'instagram', 'tiktok'] as const satisfies readonly StudioPlatform[];
 export type PublishablePlatform = (typeof PUBLISHABLE_PLATFORMS)[number];
+
+/** The honest reason a YouTube account refuses before a post is even queued (PR 441; see social-publish's header). */
+const YOUTUBE_NOT_YET = 'YouTube needs a real video; the studio makes a preview photo until the video engine is built';
 
 export const queuePostInput = z
   .object({
@@ -121,7 +126,8 @@ export async function queueSocialPost(deps: PublishDeps, who: Who, input: unknow
   if (!account) throw new StudioError('NOT_FOUND', 'no such account', ['accountId']);
   if (account.archivedAt || !account.enabled) throw new StudioError('ACCOUNT_OFF', 'this account is archived or switched off', ['accountId']);
   if (!PUBLISHABLE_PLATFORMS.includes(account.platform as PublishablePlatform)) {
-    throw new StudioError('NOT_SUPPORTED', `${account.platform} has no publishing adapter yet`, ['accountId']);
+    const why = account.platform === 'youtube' ? YOUTUBE_NOT_YET : `${account.platform} has no publishing adapter yet`;
+    throw new StudioError('NOT_SUPPORTED', why, ['accountId']);
   }
   if (!account.requireApproval) await allow(deps, who, 'studio.publish');
   const input_ = (job.input ?? {}) as { caption?: string | null };
@@ -152,7 +158,7 @@ export async function queueSocialPost(deps: PublishDeps, who: Who, input: unknow
  */
 export async function runSocialPost(deps: PublishDeps, who: Who, postId: string): Promise<SocialPostRow> {
   await allow(deps, who, 'studio.publish');
-  const post = await deps.db.socialPost.findFirst({ where: { id: postId, storeId: who.storeId }, include: { account: { select: { platform: true, externalId: true } } } });
+  const post = await deps.db.socialPost.findFirst({ where: { id: postId, storeId: who.storeId }, include: { account: { select: { platform: true, externalId: true, directPostApproved: true } } } });
   if (!post) throw new StudioError('NOT_FOUND', 'no such post', ['postId']);
   if (post.status !== 'PUBLISHING') throw new StudioError('WRONG_STATE', 'only a post waiting to publish can run', ['status']);
   const platform = post.account.platform as PublishablePlatform;
@@ -167,7 +173,7 @@ export async function runSocialPost(deps: PublishDeps, who: Who, postId: string)
   }
 
   const { api } = await deps.publisher.resolve(who.storeId, platform);
-  const result = await api.publishPhoto({ imageUrl, caption: post.caption ?? '' });
+  const result = await api.publishPhoto({ imageUrl, caption: post.caption ?? '', directPostApproved: post.account.directPostApproved });
   const after = result.ok
     ? await finish({ status: 'SUCCEEDED', externalPostId: result.externalPostId, publishedAt: nowOf(deps) })
     : await finish({ status: 'FAILED', error: result.error });
