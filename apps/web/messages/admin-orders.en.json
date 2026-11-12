@@ -1773,6 +1773,55 @@
       "AI_AGENT": "An assistant",
       "COURIER": "The courier",
       "ERP": "The ERP"
+    },
+    "batch": {
+      "title": "Batch",
+      "sub": "{n} orders not yet handed to the courier · {past} past batches",
+      "metaTitle": "Batch",
+      "viewsAria": "Current or past batches",
+      "view": {
+        "current": "Current",
+        "past": "Past"
+      },
+      "pipelineH": "Where the current batch is",
+      "stage": {
+        "toConfirm": "To confirm",
+        "confirmed": "Confirmed",
+        "booked": "Booked",
+        "packed": "Packed"
+      },
+      "stuckH": "Stuck",
+      "stuckNone": "Nothing is stuck.",
+      "stuck": {
+        "noStock": "No stock",
+        "noAnswer": "No answer",
+        "suspicious": "Suspicious",
+        "merge": "Merge needed"
+      },
+      "stuckWhy": {
+        "noStock": "a piece is held for more orders than are on the shelf",
+        "noAnswer": "the customer did not answer the call",
+        "suspicious": "a risk review is open",
+        "merge": "a possible duplicate is waiting"
+      },
+      "yoursH": "Your work",
+      "yoursNone": "Nothing needs you in this batch.",
+      "movedH": "Moved on by itself",
+      "movedNone": "The rules have moved nothing on in this batch.",
+      "fromLast": "From last batch",
+      "open": "Open",
+      "printAll": "Print all",
+      "printHelp": "Opens To ship: the summary line, the picking list and the stickers of booked orders.",
+      "note": "The current batch is every order not yet handed to the courier. When the courier's pickup is recorded, those parcels move to Past.",
+      "pastH": "Past batches",
+      "pastEmpty": "No pickup has been recorded yet.",
+      "pastRow": "{parcels} parcels · {pieces} pieces · to collect {collect}",
+      "pastBy": "Taken by {rider}",
+      "pastMissing": "{n} not taken at this pickup",
+      "pastLink": "Open handover",
+      "empty": "No orders in the current batch.",
+      "total": "{n} orders",
+      "ago": "placed {age}"
     }
   }
 }

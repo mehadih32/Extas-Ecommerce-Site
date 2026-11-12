@@ -144,7 +144,7 @@
    "stages": [
     "S28"
    ],
-   "done": 2,
+   "done": 3,
    "total": 49,
    "parkedTotal": 0,
    "why": "After launch; the owner-approved prototype is the admin UI truth; S15, S24, S25 untouched (CN-047)",
@@ -1777,7 +1777,7 @@
    "wave": "9",
    "range": "659–707",
    "total": 49,
-   "done": 2,
+   "done": 3,
    "state": "In progress",
    "parked": false,
    "registerStatus": "locked; filed 13 Nov 2026 (CN-048) — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look",
@@ -42019,15 +42019,34 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "Batch page (CN-048; read only; no migration, no new permission, no new setting): a new Batch tab in Orders at `/admin/orders/batch`. Current is every open order not yet handed to the courier, counted along the pipeline (To confirm, Confirmed, Booked, Packed), with the Stuck chips (No stock, No answer, Suspicious, Merge needed, each with its reason on hover), \"Your work\" (oldest first; leftovers from an earlier day tagged \"From last batch\") and \"Moved on by itself\" (orders the rules confirmed, with the rule's one-line reason; no clock time of a batch run). Past is the handed-over sheets from the handover history (courier, time, parcels, pieces, to collect, rider, left out). \"Print all\" opens To ship, where the summary line, picking list and stickers are built by PR 666. New `batchOverview` in `@extas/orders` (`orders.read`), Bengali guide `orders/batch`, shell and page words in English and Bengali, db tests on PostgreSQL. Honest scope: no PDF built here and no merge button (the merge of two orders stays on the order's own page).",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [
+     "/admin/orders/batch"
+    ],
+    "settings": [
+     "orders.read"
+    ],
+    "code": [
+     "@extas/orders",
+     "orders/batch"
+    ],
+    "names": [
+     "batchOverview"
+    ],
+    "tests": [
+     "New `batchOverview` in `@extas/orders` (`orders.read`), Bengali guide `orders/batch`, shell and page words in English and Bengali, db tests on PostgreSQL"
+    ]
+   },
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    666
+   ],
    "blueprint": [],
    "bn": "ব্যাচ পেজ: এখনকার ব্যাচ, আটকে থাকা অর্ডারের কারণ, নিজে নিজে এগোনো অর্ডার আর আগের ব্যাচের তালিকা।",
    "bnAuto": false,

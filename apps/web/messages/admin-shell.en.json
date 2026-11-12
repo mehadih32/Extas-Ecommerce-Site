@@ -97,6 +97,7 @@
       "orders": {
         "all": "All orders",
         "confirm": "Processing",
+        "batch": "Batch",
         "riskrules": "Risk rules",
         "packing": "To ship",
         "courier": "With courier",
