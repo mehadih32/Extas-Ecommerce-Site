@@ -12,6 +12,9 @@ describe('ASSET_ROLES', () => {
     for (const r of ['three_quarter_reference', 'top_reference', 'sole_reference']) {
       expect((ASSET_ROLES as readonly string[]).includes(r)).toBe(true);
     }
+    // S24 · PR 471: the one role the worn-accessory engine's own "worn" view needed (its "flat" view reuses
+    // front_reference instead of adding a second one).
+    expect((ASSET_ROLES as readonly string[]).includes('worn_reference')).toBe(true);
   });
 
   it('REFERENCE_ROLES excludes primary_garment only', () => {

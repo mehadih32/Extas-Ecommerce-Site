@@ -14,6 +14,7 @@ export * from './spendCap';
 export * from './outputs';
 export * from './detailRegions';
 export * from './footwearStudio';
+export * from './wornAccessoryStudio';
 export * from './finishing';
 export * from './imageEdits';
 export * from './pilotMetrics';
