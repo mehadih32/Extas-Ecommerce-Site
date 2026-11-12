@@ -44,6 +44,14 @@ export const ASSET_ROLES = [
    * of its several real pieces (`comboGiftSetStudio.ts`'s own documented limit of PR 444's single-source model),
    * with the rest of the group recorded as tags, never pretended to be a second role on the same row. */
   'combo_gift_set_composition',
+  /** S24 · PR 476 (C7.22 item 33): a finished demo frame approved by the owner for one named scene (one of
+   * `sceneLibrary.ts`'s own four presets, or a custom occasion scene the suggester, PR 480, will mint later) —
+   * proof the scene's own look was actually shown and approved before being saved to the library, never on the
+   * strength of a description alone. Unlike `combo_gift_set_composition`, this role IS meant to be a reference
+   * for further generation (C7.13's own "re-rendered into a seasonal scene without a new shoot" — the saved
+   * scene's own look is reused on a later, different garment set), so `REFERENCE_ROLES` below does NOT exclude
+   * it. */
+  'scene_library_demo',
 ] as const;
 export type AssetRole = (typeof ASSET_ROLES)[number];
 

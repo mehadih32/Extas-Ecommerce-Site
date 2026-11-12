@@ -1,0 +1,14 @@
+{
+  "studio": {
+    "photoshoot": {
+      "sceneLibraryEnabled": {
+        "label": "Studio — scene library",
+        "help": "Off by default. Turn this on to let the studio save an approved background (studio grey, street, festive, winter, or an approved occasion scene) to a shared library and reuse it for later garment sets without a new shoot. A scene is only ever saved from a real, approved demo frame — nothing is ever invented."
+      },
+      "sceneLibraryDefaultPreset": {
+        "label": "Studio — scene library default background",
+        "help": "Which approved background a new scene starts from: studio grey, street, festive, or winter. You can still change it for any one scene."
+      }
+    }
+  }
+}

@@ -72,6 +72,10 @@ export const PHOTOSHOOT_ERROR_CODES = [
   // own likeness, the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE, NO_WORN_ACCESSORY_REFERENCE and
   // NO_REFLECTIVE_REFERENCE already do for their own engines.
   'NO_PIECE_REFERENCE',
+  // PR 476 / C7.13 "Scene library" hard rule: saving a scene-library entry with no real, on-file, non-archived
+  // photo it was actually demoed from — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
+  // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE and NO_PIECE_REFERENCE already do for their own engines.
+  'NO_SCENE_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -95,7 +99,8 @@ export class PhotoshootError extends Error {
       this.code === 'NO_WORN_ACCESSORY_REFERENCE' ||
       this.code === 'DETAIL_REPROJECTION_REQUIRED' ||
       this.code === 'NO_REFLECTIVE_REFERENCE' ||
-      this.code === 'NO_PIECE_REFERENCE'
+      this.code === 'NO_PIECE_REFERENCE' ||
+      this.code === 'NO_SCENE_REFERENCE'
     )
       return 403;
     if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;

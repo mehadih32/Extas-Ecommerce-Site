@@ -22,11 +22,17 @@ describe('ASSET_ROLES', () => {
     // S24 · PR 475 (C7.22 item 32): the combo/gift-set composition studio's own finished-group-image role —
     // never a reference for any further generation.
     expect((ASSET_ROLES as readonly string[]).includes('combo_gift_set_composition')).toBe(true);
+    // S24 · PR 476 (C7.22 item 33): the scene library's own approved-demo role — unlike combo_gift_set_composition,
+    // this one IS meant to be reused as a reference for a later, different garment set (C7.13's own "re-rendered
+    // into a seasonal scene without a new shoot").
+    expect((ASSET_ROLES as readonly string[]).includes('scene_library_demo')).toBe(true);
   });
 
   it('REFERENCE_ROLES excludes primary_garment and combo_gift_set_composition only', () => {
     expect(REFERENCE_ROLES.includes('primary_garment' as never)).toBe(false);
     expect(REFERENCE_ROLES.includes('combo_gift_set_composition' as never)).toBe(false);
+    // scene_library_demo IS a reference role (see the module comment on roles.ts) — included, not excluded.
+    expect(REFERENCE_ROLES.includes('scene_library_demo' as never)).toBe(true);
     expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 2);
   });
 });
