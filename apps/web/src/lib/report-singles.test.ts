@@ -59,4 +59,11 @@ describe('PR 689 · single reports as files', () => {
     const f = singleFile('customers', { ...data, customers: null }, en);
     expect(f.tables[0]!.rows).toEqual([[en('off'), null]]);
   });
+  it('the daily business report is the day\'s figures and what to restock', () => {
+    expect(SINGLE_REPORTS).toContain('daily');
+    const f = singleFile('daily', data, en);
+    expect(f.title).toBe('Daily business report');
+    expect(f.tables.map((x) => x.name)).toEqual(['Figures', 'Restock now']);
+    expect(singleFile('daily', data, wordsFor('bn')).title).not.toBe(f.title);
+  });
 });

@@ -155,7 +155,18 @@
         "customers": "Customers",
         "team": "Team"
       },
-      "printFail": "The print window did not open. The PDF is open in a new tab; print it from there."
+      "printFail": "The print window did not open. The PDF is open in a new tab; print it from there.",
+      "daily": {
+        "title": "Daily business report",
+        "note": "Every night: sales, profit, restock and what waits for tomorrow, sent to you only (never to a buyer or a supplier).",
+        "on": "Send every night at",
+        "telegram": "Telegram",
+        "email": "Email",
+        "see": "See today's",
+        "saved": "Daily report updated",
+        "forbidden": "You may not change this.",
+        "failed": "It was not saved. Try again."
+      }
     }
   }
 }

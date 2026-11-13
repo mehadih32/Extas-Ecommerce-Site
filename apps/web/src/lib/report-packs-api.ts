@@ -7,8 +7,10 @@
 //                                                          Excel workbook (one sheet per part) or a CSV; the period is the pack's
 //                                                          own unless `period` or your own dates are given (the bank pack's
 //                                                          balances need `books.read` too)
-//   GET   /api/admin/reports/packs                         the packs' schedules
-//   POST  /api/admin/reports/packs                         {pack, frequency, channels, enabled} saves one schedule (off as shipped)
+//   GET   /api/admin/reports/packs                         the packs' schedules and the daily business report's
+//   POST  /api/admin/reports/packs                         {pack, frequency, channels, enabled} saves one schedule (off as shipped);
+//                                                          {daily: {enabled, time, channels}} saves the daily business report
+//   GET   /api/admin/reports/packs/daily?format=pdf|xlsx|csv   the daily business report of today (the library's figures for the day and the restock list)
 // Read-only: a pack changes nothing; a schedule only sends the owner a Telegram summary (never a buyer or supplier).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
@@ -113,14 +115,17 @@ export async function packsHandler(request: Request, deps: AdminDeps | null, pac
     const who: inv.Who = { actor: g.actor, storeId, ctx: g.ctx };
     const cdep: cat.CatalogueDeps = { db: deps!.db, settings: deps!.resolver, now: deps!.now, sellable: sellableReader(deps!.db, deps!.resolver, storeId) };
     if (pack === undefined) {
-      if (m === 'GET') return json({ ok: true, schedules: await cat.listSchedules(cdep, who) });
+      if (m === 'GET') return json({ ok: true, schedules: await cat.listSchedules(cdep, who), daily: await cat.dailyReport(cdep, who) });
       await requirePermission(deps!.db, g.actor, 'reports.read', { storeId });
-      return json({ ok: true, schedules: await cat.saveSchedule(cdep, who, (await body(request)) as cat.SaveScheduleInput) });
+      const b = (await body(request)) as { daily?: cat.SaveDailyReportInput };
+      // The daily business report's switch, hour and channels (the nightly job sends the owner a short summary; nothing to a buyer).
+      if (b.daily !== undefined) return json({ ok: true, daily: await cat.saveDailyReport(cdep, who, b.daily) });
+      return json({ ok: true, schedules: await cat.saveSchedule(cdep, who, b as cat.SaveScheduleInput) });
     }
     const f = url.searchParams.get('format');
     const format = f === 'csv' || f === 'xlsx' ? f : 'pdf';
     const w = wordsFor(url.searchParams.get('lang') ?? 'en');
-    const period = periodOf(url, (PACKS as readonly string[]).includes(pack) ? PACK_PRESET[pack as PackId] : 'last30');
+    const period = periodOf(url, (PACKS as readonly string[]).includes(pack) ? PACK_PRESET[pack as PackId] : pack === 'daily' ? 'today' : 'last30');
     if (period === null) return fail(400, 'INVALID_INPUT', ['period']);
     const model = (PACKS as readonly string[]).includes(pack)
       ? packFile(pack as PackId, await packData(deps!, who, pack as PackId, period), w)

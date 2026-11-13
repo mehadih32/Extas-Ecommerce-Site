@@ -14,6 +14,7 @@ describe('PR 690 · /api/admin/reports/packs', () => {
     expect((await packsHandler(req('GET', '/api/admin/reports/packs/bank'), null, 'bank')).status).toBe(503);
     // the single reports are served on the same address
     expect((await packsHandler(req('GET', '/api/admin/reports/packs/figures?format=xlsx'), null, 'figures')).status).toBe(503);
+    expect((await packsHandler(req('GET', '/api/admin/reports/packs/daily?format=pdf'), null, 'daily')).status).toBe(503);
     expect((await packsHandler(req('POST', '/api/admin/reports/packs/review'), null, 'review')).status).toBe(405);
   });
 });

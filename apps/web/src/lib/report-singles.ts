@@ -5,7 +5,7 @@ import type { FileTable, ReportFile, Value, Words } from './report-files';
 import { wordsFor } from './report-files';
 import type { LibraryCard, ReviewFacts } from './report-library-api';
 
-export const SINGLE_REPORTS = ['figures', 'products', 'timing', 'review', 'courier', 'areas', 'customers', 'team'] as const;
+export const SINGLE_REPORTS = ['figures', 'products', 'timing', 'review', 'courier', 'areas', 'customers', 'team', 'daily'] as const;
 export type SingleId = (typeof SINGLE_REPORTS)[number];
 
 export interface SingleData {
@@ -39,13 +39,16 @@ export function singleFile(id: SingleId, d: SingleData, w: Words = wordsFor('en'
   const val = (c: Pick<LibraryCard, 'kind'>, n: number | null): Value => (c.kind === 'money' ? { money: n } : n);
   let tables: FileTable[];
   let range = d.range;
-  if (id === 'figures') {
+  if (id === 'figures' || id === 'daily') {
     tables = [
       {
         name: w('partFigures'),
         columns: [{ title: w('figure') }, { title: w('value'), right: true }, { title: w('before'), right: true }, { title: w('change'), right: true }],
         rows: d.cards.map((c): Value[] => [w(`cards.${c.id}`), val(c, c.now), c.prev === null ? null : val(c, c.prev), c.change === null ? null : `${c.change}%`]),
       },
+      ...(id === 'daily'
+        ? [{ name: w('partRestock'), columns: [{ title: w('style') }, { title: w('sizes'), right: true }, { title: w('stockDays'), right: true }, { title: w('sold30'), right: true }], rows: d.restock.restock.map((s): Value[] => [s.name, w('sizesOf', { n: s.sizesInStock, total: s.sizesTotal }), s.stockDays, s.sold30]) }]
+        : []),
     ];
   } else if (id === 'products') {
     const cols = [{ title: w('style') }, { title: w('sizes'), right: true }, { title: w('stockDays'), right: true }, { title: w('sold30'), right: true }];

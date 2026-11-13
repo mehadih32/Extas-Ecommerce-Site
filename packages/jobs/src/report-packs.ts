@@ -6,7 +6,7 @@
 // `lastSentAt`. Read-only; never to a buyer or supplier.
 // The PDF and spreadsheet of a pack are downloaded on Reports › Report packs.
 import { sendOwnerAlert } from '@extas/adapters';
-import { periodRange, scheduleDue, PACK_IDS, type ScheduleFrequency } from '@extas/catalogue';
+import { dailyDue, DAILY_PACK, periodRange, scheduleDue, PACK_IDS, type ScheduleFrequency } from '@extas/catalogue';
 import { profitReport } from '@extas/inventory';
 import { nowOf, type JobDeps } from './context';
 import { runKey, textSlot } from './keys';
@@ -24,14 +24,18 @@ export interface ReportPackPayload {
 const dayIn = (now: Date, tz: string) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 
 export const reportPackPlanner: Planner = async (deps, now) => {
-  const rows = await deps.db.reportSchedule.findMany({ where: { enabled: true, reportKey: { startsWith: 'pack:' } }, select: { storeId: true, reportKey: true, frequency: true, channels: true } });
+  const rows = await deps.db.reportSchedule.findMany({ where: { enabled: true, reportKey: { startsWith: 'pack:' } }, select: { storeId: true, reportKey: true, frequency: true, channels: true, recipients: true } });
   const out: Awaited<ReturnType<Planner>> = [];
   for (const r of rows) {
     if (!r.channels.includes('telegram') && !r.channels.includes('email')) continue;
     const tz = await deps.settings.value('store.timeZone', { storeId: r.storeId });
-    const period = scheduleDue(r.frequency as ScheduleFrequency, dayIn(now, tz));
     const pack = r.reportKey.slice(5);
-    if (!period || !(PACK_IDS as readonly string[]).includes(pack)) continue;
+    // The daily business report goes every night from the owner's hour on the shop clock, once a day (the run key holds the day).
+    const time = (r.recipients as { time?: unknown } | null)?.time;
+    const hm = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
+    if (pack === DAILY_PACK && !dailyDue(typeof time === 'string' ? time : '22:00', hm)) continue; // hardcode-ok: the prototype's first hour
+    const period = scheduleDue(r.frequency as ScheduleFrequency, dayIn(now, tz));
+    if (!period || !(pack === DAILY_PACK || (PACK_IDS as readonly string[]).includes(pack))) continue;
     const payload = { storeId: r.storeId, pack, period };
     out.push({ queue: REPORT_PACK_QUEUE, name: REPORT_PACK_JOB, payload, key: runKey(REPORT_PACK_JOB, payload, textSlot(`${pack}:${period}`)) });
   }
@@ -49,10 +53,15 @@ export async function runReportPack(deps: JobDeps, p: ReportPackPayload): Promis
   const tz = await deps.settings.value('store.timeZone', at);
   if (row.lastSentAt && dayIn(row.lastSentAt, tz) === dayIn(nowOf(deps), tz)) return { sent: false, reason: 'already' };
   const currency = await deps.settings.value('store.currency', at);
-  const r = periodRange(p.pack === 'stock' || p.pack === 'sales' ? 'last30' : 'lastmonth', dayIn(nowOf(deps), tz));
+  const daily = p.pack === DAILY_PACK;
+  const r = periodRange(daily ? 'today' : p.pack === 'stock' || p.pack === 'sales' ? 'last30' : 'lastmonth', dayIn(nowOf(deps), tz));
   const report = await profitReport({ db: deps.db, settings: deps.settings }, p.storeId, r.from, r.to);
   const money = (n: number) => `${currency} ${(n / 100).toFixed(2)}`;
-  const text = `Report pack: ${p.pack}\n${r.from} to ${r.to}\nSales ${money(report.salesMinor)}\nNet profit ${report.netProfitMinor === null ? 'not known yet' : money(report.netProfitMinor)}\nOpen Reports > Report packs for the PDF and the Excel file.`;
+  const figures = `Sales ${money(report.salesMinor)}\nNet profit ${report.netProfitMinor === null ? 'not known yet' : money(report.netProfitMinor)}`;
+  const waiting = daily ? await deps.db.order.count({ where: { storeId: p.storeId, status: 'PLACED', archivedAt: null } }) : 0;
+  const text = daily
+    ? `Daily business report\n${r.from}\n${figures}\nOrders waiting for confirmation: ${waiting}\nOpen Reports > Downloads & report packs for the full PDF.`
+    : `Report pack: ${p.pack}\n${r.from} to ${r.to}\n${figures}\nOpen Reports > Report packs for the PDF and the Excel file.`;
   let sent = false;
   if (byTelegram && deps.owner) {
     const t = await sendOwnerAlert(deps.owner.telegram, text);
@@ -60,7 +69,7 @@ export async function runReportPack(deps: JobDeps, p: ReportPackPayload): Promis
     sent = true;
   }
   if (ownerEmail && deps.messages) {
-    const mail = await (await deps.messages.sender(p.storeId, 'EMAIL')).send({ to: ownerEmail, subject: `Report pack: ${p.pack} (${r.from} to ${r.to})`, text, purpose: 'report.pack' });
+    const mail = await (await deps.messages.sender(p.storeId, 'EMAIL')).send({ to: ownerEmail, subject: daily ? `Daily business report (${r.from})` : `Report pack: ${p.pack} (${r.from} to ${r.to})`, text, purpose: 'report.pack' });
     if (!mail.ok) throw new Error(`email: ${mail.error}`);
     sent = true;
   }
