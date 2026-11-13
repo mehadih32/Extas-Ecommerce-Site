@@ -34,6 +34,7 @@ import { REPORT_PACK_JOB, REPORT_PACK_QUEUE, runReportPack, type ReportPackPaylo
 import { RANKING_JOB, RANKING_QUEUE, runRankingJob } from './shop-ranking';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
+import { runStartFreshPurge, START_FRESH_PURGE_JOB, START_FRESH_QUEUE } from './start-fresh-purge';
 import { runTrackingSweep, TRACKING_SWEEP_JOB, TRACKING_SWEEP_QUEUE, type TrackingSweepPayload } from './tracking-sweep';
 
 /** What a job's function reports: ok with a short summary, or a failure with its reason (the job is tried again). */
@@ -504,6 +505,22 @@ const trackingSweepJob: JobDefinition<TrackingSweepPayload> = {
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runTrackingSweep(deps, p)) }),
 };
 
+/**
+ * PR 706 — the purge that finishes a Start fresh run (start-fresh-purge.ts; planned only while a run waits for it).
+ * Safe to run twice: a run that is DONE is not waiting any more.
+ */
+const startFreshPurgeJob: JobDefinition<{ storeId: number }> = {
+  key: START_FRESH_PURGE_JOB,
+  queue: START_FRESH_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${START_FRESH_PURGE_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runStartFreshPurge(deps.db, p.storeId)) }),
+};
+
 const definitions: JobDefinition<never>[] = [
   ...INVENTORY_JOBS.map((n) => inventoryJob(n) as unknown as JobDefinition<never>),
   webhookJob as unknown as JobDefinition<never>,
@@ -527,6 +544,7 @@ const definitions: JobDefinition<never>[] = [
   adSpendImportJob as unknown as JobDefinition<never>,
   orderFollowUpsJob as unknown as JobDefinition<never>,
   trackingSweepJob as unknown as JobDefinition<never>,
+  startFreshPurgeJob as unknown as JobDefinition<never>,
 ];
 
 /** Every job by key. */

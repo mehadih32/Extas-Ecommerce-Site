@@ -11,7 +11,7 @@
 .w4-li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--lm-ln); flex-wrap: wrap; }
 .w4-n { width: 28px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 .w4-grow { flex: 1 1 160px; min-width: 0; display: grid; }
-.w4-ell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w4-ell { overflow-wrap: anywhere; white-space: normal; }
 .w4-score { display: grid; width: 84px; gap: 2px; font-size: 12px; }
 .w4-score i { display: block; height: 4px; border-radius: 2px; background: currentColor; opacity: 0.55; max-width: 100%; }
 .w4-delta { width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }

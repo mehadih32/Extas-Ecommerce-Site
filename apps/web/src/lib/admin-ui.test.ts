@@ -47,11 +47,12 @@ describe('admin messages (Bengali first, English beside it)', () => {
 });
 
 describe('admin language and return path', () => {
-  it('the cookie wins, then the store locale, then Bengali', () => {
+  it('the cookie wins, else English on first open (the store locale does not decide it)', () => {
     expect(pickAdminLang('en', 'bn-BD')).toBe('en');
-    expect(pickAdminLang(null, 'en-GB')).toBe('en');
-    expect(pickAdminLang('fr', 'bn-BD')).toBe('bn');
-    expect(pickAdminLang(undefined, undefined)).toBe('bn');
+    expect(pickAdminLang('bn', 'en-GB')).toBe('bn');
+    expect(pickAdminLang(null, 'bn-BD')).toBe('en');
+    expect(pickAdminLang('fr', 'bn-BD')).toBe('en');
+    expect(pickAdminLang(undefined, undefined)).toBe('en');
     expect(adminLocale('bn', 'bn-BD')).toBe('bn-BD');
     expect(adminLocale('en', 'bn-BD')).toBe('en');
   });

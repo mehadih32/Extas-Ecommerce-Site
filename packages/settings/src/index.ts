@@ -267,6 +267,8 @@ export * from './placeholder';
 export * from './registry-studio';
 // S15 · PR 338 (Blueprint D5) — the site-wide analytics event layer's master switch, on as it ships (registry-analytics.ts, version 288).
 export * from './registry-analytics';
+// S28 · PR 700-707 — wave 5b's settings, all off as they ship (registry-s28-w5b.ts, versions 700-707).
+export * from './registry-s28-w5b';
 // S15 · PR 341 (Blueprint D5.3) — weekly/monthly digests to Telegram and e-mail, off as it ships (registry-reports-digest.ts, version 289).
 export * from './registry-reports-digest';
 // S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
@@ -290,3 +292,5 @@ export * from './registry-learning-engine';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
 // S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 321).
 export * from './registry-products-v5';
+// S28 · PR 706 (CN-049) — practice mode switches (registry-practice.ts, version 380).
+export * from './registry-practice';

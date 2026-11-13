@@ -147,10 +147,13 @@ export interface OrderRow {
   riskScore: number | null;
   riskBand: string | null;
   riskSection: string | null;
+  /** PR 706 (CN-049): a practice order (the list shows a small Practice mark). */
+  isPractice?: boolean;
 }
 
 const ROW_SELECT = {
   id: true,
+  isPractice: true,
   number: true,
   status: true,
   version: true,
@@ -246,9 +249,11 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
   const q = parse(listQuery, query, 'query');
   const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
   const reviews = await openReviewIds(deps, who.storeId);
-  const base = listBase(who.storeId);
+  // PR 706 (CN-049): practice orders show only while practice mode is on; off, every list and count leaves them out.
+  const hidePractice: Prisma.OrderWhereInput = (await setting(deps, who.storeId, 'practice.enabled')).on ? {} : { isPractice: false };
+  const base: Prisma.OrderWhereInput = { AND: [listBase(who.storeId), hidePractice] };
   const placed = await placedRange(deps, who.storeId, q.from, q.to);
-  const where = listWhere(who.storeId, { ...q, placed }, reviews);
+  const where: Prisma.OrderWhereInput = { AND: [listWhere(who.storeId, { ...q, placed }, reviews), hidePractice] };
   const found = await deps.db.order.findMany({ where, orderBy: orderOf(q.sort), take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}), select: ROW_SELECT });
   const page = found.slice(0, take);
   const refunded = await refundedOf(deps, who.storeId, page.map((o) => o.id));
@@ -282,6 +287,7 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
     riskScore: o.riskScore,
     riskBand: o.riskBand,
     riskSection: o.riskSection,
+    isPractice: o.isPractice,
   }));
   const counts = Object.fromEntries(
     await Promise.all(ORDER_VIEWS.map(async (v) => [v, await deps.db.order.count({ where: { AND: [base, viewWhere(v, reviews)] } })] as const)),

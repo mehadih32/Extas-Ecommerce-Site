@@ -1,15 +1,15 @@
 {
-  "at": "2026-11-13 20:19 (Asia/Dhaka)",
+  "at": "2026-11-13 22:52 (Asia/Dhaka)",
   "base": "https://new.extas.com.bd",
-  "sha": "44c1fc7b1c3b",
+  "sha": "41b253a853bc",
   "kind": "after deploy",
   "rolledBack": true,
   "ok": true,
-  "pages": 608,
+  "pages": 624,
   "failed": 0,
   "problems": [],
   "database": {
-    "appendOnly": "ok: 39 tables append-only",
+    "appendOnly": "ok: 40 tables append-only",
     "appRole": "extas_app"
   }
 }
