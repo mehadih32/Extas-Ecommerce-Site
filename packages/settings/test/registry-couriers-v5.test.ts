@@ -32,7 +32,7 @@ describe("courier payouts setting (v311)", () => {
     expect(registry["delivery.courier.payouts"]).toBe(spec);
     expect(spec.version).toBe(311);
     expect(spec.isOwnerData).toBe(false);
-    expect(spec.default).toEqual({ enabled: false, pollMinutes: 30, minAmountMinor: 0 });
+    expect(spec.default).toEqual({ enabled: true, pollMinutes: 30, minAmountMinor: 0 });
     for (const lang of ["en", "bn"] as const) {
       expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
       expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
@@ -49,7 +49,7 @@ describe("courier claim terms setting (v312)", () => {
     const spec = couriersV5Settings["delivery.courier.claimTerms"];
     expect(registry["delivery.courier.claimTerms"]).toBe(spec);
     expect(spec.version).toBe(312);
-    expect(spec.default).toEqual({ deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: false });
+    expect(spec.default).toEqual({ deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: true });
     for (const lang of ["en", "bn"] as const) {
       expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
       expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
