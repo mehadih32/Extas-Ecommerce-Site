@@ -21,6 +21,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { LIST_DPIS, LIST_PAPERS } from '@extas/settings';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { CourierMove } from '@/components/admin/fulfil/CourierMove';
 import { HandoverDone } from '@/components/admin/fulfil/Handover';
 import { PdfButton } from '@/components/admin/fulfil/Print';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -49,7 +50,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'ful.handover.title')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function HandoverPage() {
+type Search = Promise<Record<string, string | string[] | undefined>>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? '';
+
+export default async function HandoverPage({ searchParams }: { searchParams: Search }) {
+  const sp = await searchParams;
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID)]);
   const view = withFulfil(plain);
@@ -64,6 +69,13 @@ export default async function HandoverPage() {
     );
   const who: sh.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const sd = await shippingDeps(access.deps);
+  // S28 · PR 667: what the couriers hold now (`?status=` narrows it) and one parcel's history in the drawer (`?track=`)
+  const heldStatus = (sh.COURIER_HELD as readonly string[]).includes(one(sp.status)) ? (one(sp.status) as sh.HeldStatus) : undefined;
+  const trackId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(one(sp.track)) ? one(sp.track) : '';
+  const [held, drawer] = await Promise.all([
+    sh.withCourier(sd, who, heldStatus ? { status: heldStatus } : {}),
+    trackId ? sh.parcelHistory(sd, who, trackId).catch(() => null) : Promise.resolve(null),
+  ]);
   const [couriers, handed, currency, cards] = await Promise.all([
     sh.handoverList(sd, who),
     sh.handoverHistory(sd, who),
@@ -112,6 +124,23 @@ export default async function HandoverPage() {
     { kind: 'number', path: 'afterHours', label: hs('reconcile.afterHours'), help: hs('reconcile.afterHoursHelp'), min: 1, max: 168 },
     { kind: 'number', path: 'windowHours', label: hs('reconcile.windowHours'), help: hs('reconcile.windowHoursHelp'), min: 1, max: 168 },
   ];
+  // S28 · PR 667: the watch card (stuck alert, hours, backup courier) and the courier accounts the backup is chosen from
+  const wc = (k: string, vars?: Record<string, string | number>) => t(d, `ful.withCourier.${k}`, vars);
+  const canBook = access.guard.permissions?.has('delivery.book') ?? false;
+  let courierAccounts: { id: string; name: string }[] = [];
+  try {
+    courierAccounts = (await sh.listCouriers(sd, who)).couriers.filter((c) => c.enabled && !c.archived).map((c) => ({ id: c.id, name: c.name }));
+  } catch (e) {
+    if (!sh.isShippingError(e)) throw e;
+  }
+  const watchFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'stuckAlert', label: wc('watch.stuckAlert'), help: wc('watch.stuckAlertHelp') },
+    { kind: 'number', path: 'stuckHours', label: wc('watch.stuckHours'), help: wc('watch.stuckHoursHelp'), min: 1, max: 720 },
+    { kind: 'select', path: 'backupCourierId', label: wc('watch.backup'), help: wc('watch.backupHelp'), options: [{ value: '', label: wc('watch.noBackup') }, ...courierAccounts.map((c) => ({ value: c.id, label: c.name }))] },
+  ];
+  const watchTexts: FieldsCardTexts = { ...texts('reconcile'), h: wc('watch.h'), d: wc('watch.d') };
+  const backup = held.watch.backupCourierId ? courierAccounts.find((c) => c.id === held.watch.backupCourierId) : undefined;
+  const hrefHeld = (status?: string, track?: string) => `${HERE}${status || track ? '?' : ''}${[status ? `status=${status}` : '', track ? `track=${track}` : ''].filter(Boolean).join('&')}`;
   const orderList = (lines: { orderNumber: string }[]) => lines.map((l) => l.orderNumber).join(', ');
 
   return (
@@ -133,6 +162,111 @@ export default async function HandoverPage() {
           </div>
         ))}
       </div>
+      {/* S28 · PR 667: the day-end check, then what the couriers hold now (live status, filter, stuck and cancelled-but-booked marks) */}
+      <section className="a2-card a2-mt12" aria-label={wc('dayend.h')} data-testid="dayend">
+        <h2 className="a2-h4">{wc('dayend.h')}</h2>
+        <p className="a2-xs a2-mt6">{wc('dayend.line', { packed: n(held.dayEnd.packedToday), entered: n(held.dayEnd.enteredToday) })}</p>
+        <p className="a2-xs a2-mute">{held.dayEnd.missing.length ? wc('dayend.missing', { list: held.dayEnd.missing.join(', ') }) : wc('dayend.ok')}</p>
+      </section>
+      <section className="a2-card a2-mt12" aria-label={wc('held.h')} data-testid="held">
+        <h2 className="a2-h4">{wc('held.h')}</h2>
+        <p className="a2-xs a2-mute a2-mt6">{wc('held.d')}</p>
+        {held.stuck ? <p className="a2-xs a2-mt6" data-testid="held-stuck">{wc('held.stuckCount', { n: n(held.stuck), hours: n(held.watch.stuckHours) })}</p> : null}
+        {held.cancelledButBooked ? <p className="a2-xs a2-mt6" style={{ color: 'var(--bad)' }} data-testid="held-cancelled">{wc('held.cancelledCount', { n: n(held.cancelledButBooked) })}</p> : null}
+        <nav className="a2-views a2-mt12" aria-label={wc('held.status')} data-testid="held-filter">
+          <Link className={`a2-view${heldStatus ? '' : ' on'}`} href={hrefHeld()} aria-current={heldStatus ? undefined : 'page'}>
+            {wc('held.all')}
+          </Link>
+          {Object.entries(held.counts).map(([st, c]) => (
+            <Link key={st} className={`a2-view${heldStatus === st ? ' on' : ''}`} href={hrefHeld(st)} aria-current={heldStatus === st ? 'page' : undefined} data-status={st}>
+              {t(d, `ful.status.${st}`)}
+              <span className="a2-cnt">{n(c)}</span>
+            </Link>
+          ))}
+        </nav>
+        {held.rows.length ? (
+          <div className="a2-tblw a2-mt12">
+            <table className="a2-tbl">
+              <thead>
+                <tr>
+                  <th>{t(d, 'ful.packing.col.order')}</th>
+                  <th>{wc('held.courier')}</th>
+                  <th>{wc('held.status')}</th>
+                  <th>{wc('held.moved')}</th>
+                  <th className="r">{wc('held.cod')}</th>
+                  <th>{wc('held.track')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {held.rows.map((r) => (
+                  <tr key={r.shipmentId} data-testid="held-row">
+                    <td className="a2-tdh">
+                      <b>
+                        <Link className="a2-lnk" href={`/admin/orders/${r.orderId}`}>
+                          {r.orderNumber}
+                        </Link>
+                      </b>
+                    </td>
+                    <td data-l={wc('held.courier')}>{r.courierName}</td>
+                    <td data-l={wc('held.status')}>
+                      <span className="a2-pill line">{t(d, `ful.status.${r.status}`)}</span>
+                      {r.stuck ? <span className="a2-pill warn"> {wc('held.stuck')}</span> : null}
+                      {r.cancelledButBooked ? (
+                        <span className="a2-pill bad" title={wc('held.cancelledHelp')}>
+                          {' '}
+                          {wc('held.cancelled')}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td data-l={wc('held.moved')}>{r.movedAt ? printedAt(r.movedAt, view.timeZone) : wc('held.none')}</td>
+                    <td className="r" data-l={wc('held.cod')}>
+                      <span className="a2-num">{r.codMinor ? m(r.codMinor, currency) : t(d, 'ful.handover.paid')}</span>
+                    </td>
+                    <td data-l={wc('held.track')}>
+                      <Link className="a2-lnk" href={hrefHeld(heldStatus, r.shipmentId)} scroll={false} data-testid="held-track">
+                        {wc('held.track')}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="a2-xs a2-mute a2-mt12" data-testid="held-empty">
+            {wc('held.empty')}
+          </p>
+        )}
+      </section>
+      {drawer ? (
+        <aside className="a2-card a2-mt12" aria-label={wc('drawer.h')} data-testid="track-drawer">
+          <div className="a2-between">
+            <h2 className="a2-h4">
+              {wc('drawer.h')} · {drawer.orderNumber} · {drawer.courierName}
+            </h2>
+            <Link className="a2-btn sm ghost" href={hrefHeld(heldStatus)} scroll={false}>
+              {wc('drawer.close')}
+            </Link>
+          </div>
+          <p className="a2-xs a2-mute a2-mt6">
+            {wc('drawer.consignment')}: <span className="a2-mono">{drawer.consignmentId ?? '-'}</span> · {wc('drawer.tracking')}: <span className="a2-mono">{drawer.trackingCode ?? '-'}</span> · {wc('held.cod')}: {drawer.codMinor ? m(drawer.codMinor, currency) : t(d, 'ful.handover.paid')}
+          </p>
+          <p className="a2-xs a2-mt6">{wc('drawer.attempts', { n: n(drawer.attempts) })}</p>
+          {drawer.events.length ? (
+            <ol className="a2-xs a2-mt6" style={{ paddingInlineStart: 18 }}>
+              {drawer.events.map((e, i) => (
+                <li key={i}>
+                  <b>{t(d, `ful.status.${e.status}`)}</b> · {printedAt(e.at, view.timeZone)}
+                  {e.message ? ` · ${e.message}` : ''}
+                  {e.riderNote ? ` · ${wc('drawer.rider', { note: e.riderNote })}` : ''}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="a2-xs a2-mute a2-mt6">{wc('drawer.empty')}</p>
+          )}
+        </aside>
+      ) : null}
       {couriers.length ? (
         couriers.map((c) => (
           <section key={c.courierAccountId} className="a2-card a2-mt12" aria-label={c.courierName} data-testid="handover-courier">
@@ -148,6 +282,7 @@ export default async function HandoverPage() {
                 <div className="a2-cmds">
                   <PdfButton dict={fd} url={`${API}/sheet`} body={{ courierAccountId: c.courierAccountId }} label={t(d, c.openBatch ? 'ful.handover.printAgain' : 'ful.handover.print')} busyLabel={t(d, 'ful.packing.printing')} tone={c.openBatch ? 'ghost' : 'pri'} testId="handover-print" disabled={!c.ready.parcels} keyed fileName="handover-sheet.pdf" />
                   {c.openBatch ? <HandoverDone dict={fd} url={`${API}/done`} batchId={c.openBatch.id} testId="handover-done" /> : null}
+                  {canBook && backup && backup.id !== c.courierAccountId && c.parcels.length ? <CourierMove dict={fd} url={`${API}/move`} shipmentIds={c.parcels.map((p) => p.shipmentId)} backupName={backup.name} /> : null}
                 </div>
               ) : null}
             </div>
@@ -266,6 +401,7 @@ export default async function HandoverPage() {
       <FieldsCard url={SETTINGS} screen={cards['delivery.handover.sheet']} fields={sheetFields} texts={texts('sheet')} canEdit={canSettings} testId="handover-settings" />
       <FieldsCard url={SETTINGS} screen={cards['fulfilment.handover.history']} fields={historyFields} texts={texts('history')} canEdit={canSettings} testId="handover-history-settings" />
       <FieldsCard url={SETTINGS} screen={cards['fulfilment.handover.reconcile']} fields={reconcileFields} texts={texts('reconcile')} canEdit={canSettings} testId="handover-reconcile-settings" />
+      <FieldsCard url={SETTINGS} screen={cards['fulfilment.courierWatch']} fields={watchFields} texts={watchTexts} canEdit={canSettings} testId="courier-watch-settings" />
     </div>
   );
 }

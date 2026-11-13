@@ -217,7 +217,7 @@ class Skip extends Error {
 }
 
 /** One order: checks, the parcel row under the order service's lock, then the courier. */
-async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: string): Promise<BookingOutcome> {
+export async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: string): Promise<BookingOutcome> {
   const [cfg, timeZone, zones] = await Promise.all([setting(deps, who.storeId, 'delivery.courier.booking'), setting(deps, who.storeId, 'store.timeZone'), setting(deps, who.storeId, 'delivery.courier.zoneSync')]);
   const today = localDay(nowOf(deps), timeZone);
   // a quick look first (no lock): most refusals need no transaction
