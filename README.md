@@ -4128,9 +4128,9 @@ Parked — register PRs 513–518, built only when the owner hands the system to
 
 Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
 
-### S28 · Admin v5 (prototype alignment) — Not started
+### S28 · Admin v5 (prototype alignment) — In progress
 
-Planned — register PRs 659–707 (49 PRs, 5 build waves), filed 13 Nov 2026 (CN-048): the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look. Gap map: [`docs/demo/admin-proto-v5/GAP-MAP.md`](docs/demo/admin-proto-v5/GAP-MAP.md). *বাংলায়: আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ আসল অ্যাডমিন হবে; ৪৯টা নতুন PR, পাঁচটা ওয়েভে।*
+In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 — the new menu with Rules as its own section and Messages inside Marketing, the Orders tabs and Processing view, the Batch page, the To ship chips and the With courier screen) — register PRs 659–707 (49 PRs, 5 build waves), filed 13 Nov 2026 (CN-048): the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look. Gap map: [`docs/demo/admin-proto-v5/GAP-MAP.md`](docs/demo/admin-proto-v5/GAP-MAP.md). *বাংলায়: আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ আসল অ্যাডমিন হবে; ৪৯টা নতুন PR, পাঁচটা ওয়েভে।*
 
 ---
 
