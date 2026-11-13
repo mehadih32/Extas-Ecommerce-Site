@@ -26,6 +26,7 @@
     },
     "tab": {
       "products": {
+        "ranking": "Shop ranking",
         "all": "All products",
         "queue": "Launch queue",
         "combos": "Combos & sets",
@@ -62,6 +63,8 @@
         "intel": "Market & competitors"
       },
       "reports": {
+        "library": "Report library",
+        "packs": "Report packs",
         "health": "Site health",
         "fraud": "Fraud & RTO",
         "stopped": "Stopped by the engine",
@@ -148,6 +151,8 @@
         "popups": "Pop-ups & notices"
       },
       "money": {
+        "cash": "Money in & out",
+        "budgets": "Budgets & profit",
         "books": "Books",
         "overview": "Overview",
         "profit": "Profit & loss",
