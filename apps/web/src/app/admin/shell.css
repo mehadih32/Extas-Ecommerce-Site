@@ -694,3 +694,6 @@
 }
 /* PR 407, 425: a card's "More options" fold (<details><summary class="a2-h4">) is one tap target, 44 px tall. */
 .adm2 details > summary.a2-h4 { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+
+/* Wave 5B follow-up (CI device gate; the English default made the words longer): on a phone a status pill may wrap instead of pushing the page wider. */
+@media (max-width:640px){.adm2 .a2-pill{white-space:normal;max-width:100%;text-align:left;height:auto;min-height:21px}}
