@@ -168,7 +168,12 @@
     "reportsOrders": "Orders report",
     "messagesCampaigns": "Message campaigns",
     "messagesAutomations": "Automations",
-    "messagesEmail": "E-mail"
+    "messagesEmail": "E-mail",
+    "booksAccount": "ERP account",
+    "booksMatch": "Match",
+    "booksDifferences": "Differences",
+    "booksCloses": "Closes",
+    "moneyBudgets": "Budgets & profit"
   },
   "login": {
     "metaTitle": "Admin sign-in",

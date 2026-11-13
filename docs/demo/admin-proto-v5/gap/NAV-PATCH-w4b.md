@@ -47,4 +47,6 @@ Give it to the Accounts role and the owner only (the money rule).
 ## Applied 13 Nov 2026 (W4B gap close)
 - Tabs added (sections.ts, `admin-shell.*.json`): Products > Shop ranking, Money > Money in & out, Money > Budgets & profit, Reports > Report library (first tab) and Reports > Report packs. The global search finds them (test `search-wave4b.test.ts`). smoke.json lists the four new routes.
 - Home: the three KPI tiles (net profit, money with couriers, ad spend), the pinned report cards and the `exchangesRequested` Do-now line are built (`dsh.cmd.*` and `dash.queue.exchangesRequested` in admin-shell).
-- Still open: the Finance 7-tab regroup and hiding the VAT tab (menu only), Settings group listing, `cash.record` in the role tree check.
+- Finance 7-tab regroup done (gap close 2): Overview, Money in & out, Profit & loss, Costs & budgets, ERP account, Wallet & refunds, VAT (hidden while `vat.system` is off). Couriers tab: with PR 670/675 on `w2-couriers`.
+- `cash.record` is in the permission catalogue and in ACCESS_TREE (group books; tested); no default role holds it.
+- Still open: Settings group listing.
