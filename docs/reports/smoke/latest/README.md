@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-13 15:26 (Asia/Dhaka)
+# Smoke test · 2026-11-13 15:42 (Asia/Dhaka)
 
-> **বাংলায়:** 1টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (596টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `bee4f44ed376` · after deploy · result **FAIL** (596 page views, 1 failed)
+Site: https://new.extas.com.bd · commit `bee4f44ed376` · after deploy · result **PASS** (596 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -300,7 +300,7 @@ Site: https://new.extas.com.bd · commit `bee4f44ed376` · after deploy · resul
 | `/admin/reports/funnels` | phone | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d3f9-f37d-7e53-a3de-1d8b239096ad` | phone | 200 | `/admin/reports/health/history/01a1d3f9-f37d-7e53-a3de-1d8b239096ad` | ok | — |
+| `/admin/reports/health/history/01a1d443-d988-7e72-a5ed-36b6fb41310c` | phone | 200 | `/admin/reports/health/history/01a1d443-d988-7e72-a5ed-36b6fb41310c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -591,14 +591,14 @@ Site: https://new.extas.com.bd · commit `bee4f44ed376` · after deploy · resul
 | `/admin/marketing/photoshoot/review` | desktop | 200 | `/admin/marketing/photoshoot/review` | ok | — |
 | `/admin/ai/cost-book` | desktop | 200 | `/admin/ai/cost-book` | ok | — |
 | `/admin/ai/approvals` | desktop | 200 | `/admin/ai/approvals` | ok | — |
-| `/admin/ai/permissions` | desktop | 200 | `/admin/ai/permissions` | **FAIL**: /admin/ai/permissions: request failed: /admin (net::ERR_CONNECTION_CLOSED); /admin/ai/permissions: console error: Failed to load resource: net::ERR_CONNECTION_CLOSED (/admin?home=1&_rsc=j7eaihOMoi9gF7ez) | — |
+| `/admin/ai/permissions` | desktop | 200 | `/admin/ai/permissions` | ok | — |
 | `/admin/ai/diary` | desktop | 200 | `/admin/ai/diary` | ok | — |
 | `/admin/ai/skills` | desktop | 200 | `/admin/ai/skills` | ok | — |
 | `/admin/ai/skills/sandbox` | desktop | 200 | `/admin/ai/skills/sandbox` | ok | — |
 | `/admin/reports/funnels` | desktop | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d3f9-f37d-7e53-a3de-1d8b239096ad` | desktop | 200 | `/admin/reports/health/history/01a1d3f9-f37d-7e53-a3de-1d8b239096ad` | ok | — |
+| `/admin/reports/health/history/01a1d443-d988-7e72-a5ed-36b6fb41310c` | desktop | 200 | `/admin/reports/health/history/01a1d443-d988-7e72-a5ed-36b6fb41310c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
