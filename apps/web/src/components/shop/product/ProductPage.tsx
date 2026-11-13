@@ -58,7 +58,7 @@ import { COLOUR_QUERY, REF_QUERY, ROUTES, SIZE_QUERY } from '@/lib/shop/routes';
 import { supportRefOf } from '@/lib/shop/support-ref-model';
 import { SupportRefBeacon } from '@/components/shop/SupportRefBeacon';
 import { categoryName } from '@/lib/shop/shell-model';
-import { breadcrumbLd, faqLd, largestUrl, productLd } from '@/lib/shop/structured-data';
+import { absolute, breadcrumbLd, faqLd, largestUrl, productLd } from '@/lib/shop/structured-data';
 import { setCardGroups } from '@/lib/shop/combo';
 import { AddedPanel } from '../bag/AddedPanel';
 import { SetOffer } from '../combo/SetCards';
@@ -77,6 +77,7 @@ import { PdpAlternatives } from './PdpAlternatives';
 import { PdpEffects } from './PdpEffects';
 import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
+import { loadPdpVideo, PdpVideoBlock, videoLdFor } from './PdpVideoBlock';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
 import { PdpQa } from './PdpQa';
@@ -100,6 +101,7 @@ import './pdp.css';
 import { shopNotFound } from '@/lib/shop/not-found';
 
 const KEYS = [
+  'catalogue.video',
   // PR 77: the sections under the first screen, in the owner's order and on his screens (Website › Page layouts)
   'layout.product',
   'seo.structuredData',
@@ -417,7 +419,12 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
       colourPaths: set['pdp.page'].colourPaths,
       sizeWords: sizeWordsFor(set['pdp.sizeWords'], lang),
       usual: set['pdp.usualSize'].on
-        ? { preselect: set['pdp.usualSize'].preselect, days: set['pdp.usualSize'].days, group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']), account: accountKept }
+        ? {
+            preselect: set['pdp.usualSize'].preselect,
+            days: set['pdp.usualSize'].days,
+            group: sizeGroupOf(data.garment, set['catalogue.sizeCharts.diagramFor']),
+            account: accountKept,
+          }
         : null,
     },
     words: { ...pageWords(c, finder !== null, tpl === 'T3'), ...usualWords(c) },
@@ -432,14 +439,23 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   // ---- PR 102 · the sets this product is in, on sale now (one line each, above the buttons) ----
   const offerSet = set['combos.pdpOffer'];
   // follow-up 242 · the set builder's line, only where the builder offers this product (`combos.builder.places`, off)
-  const [offer, buildLine] = await Promise.all([offerSet.on && m.onSale ? setCardGroups(c, { productId: data.id }) : null, m.onSale ? buildEntryFor(c, 'product', [data.id]) : null]);
+  const [offer, buildLine] = await Promise.all([
+    offerSet.on && m.onSale ? setCardGroups(c, { productId: data.id }) : null,
+    m.onSale ? buildEntryFor(c, 'product', [data.id]) : null,
+  ]);
   const [head, last] = nameParts(m.name);
   const cat = data.category;
   // the added-to-bag panel (S04 · PR 106) for `?added=<line>`; closing it returns to this same address without it
   const added = one(search.added);
   const view = added ? await currentBag(c) : null;
   const [bagCards, picks] = view
-    ? await Promise.all([cardsByIds(c.storeId, view.items.map((i) => i.productId)), bagPickCards(c.storeId, view.productIds, bagSet['bag.panel.picks'])])
+    ? await Promise.all([
+        cardsByIds(
+          c.storeId,
+          view.items.map((i) => i.productId),
+        ),
+        bagPickCards(c.storeId, view.productIds, bagSet['bag.panel.picks']),
+      ])
     : [null, null];
   const keep = new URLSearchParams();
   for (const [k, v] of Object.entries(search)) if (k !== 'added' && typeof v === 'string') keep.set(k, v);
@@ -453,6 +469,8 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   // PR 224: the answered questions the Q&A block shows, as FAQ data (optional markup, off as shipped; same rows)
   const qaSet = set['pdp.qa'];
   const qaItems = sd.faq && qaSet.on ? qaLdItems(qaView(await answeredQuestionsOnce(c.storeId, m.productId, qaSet.max), qaSet, false)) : [];
+  // S28 · PR 681: the product's video (nothing while `catalogue.video` is off), and its VideoObject from the same row
+  const pdpVideo = await loadPdpVideo(c, m.productId, set['catalogue.video']);
   // follow-up 515: the return policy and free delivery the page states (each its own switch, off as shipped), for the
   // country the Merchant Center feed targets (one target country in the shop)
   const country = sd.product && (sd.returns || sd.shipping) ? (await readPageSettings(['ads.merchantFeed'] as const, c.storeId))['ads.merchantFeed'].country : null;
@@ -505,10 +523,22 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               returns: sd.returns && country && tf.exchangeHours !== null ? { hours: tf.exchangeHours, exchangeOnly: !set['policy.returns.afterDelivery'], country } : null,
               freeShipping: sd.shipping && country && freeAlone ? { country } : null,
               // follow-up 514: the variants the page draws as a ProductGroup (off as shipped), each at the address that opens it
-              group: sd.variants ? { id: data.id, variants: ldVariants.map((v) => ({ ...v, colour: v.colour ? (m.colours.find((x) => x.key === v.colour)?.name ?? null) : null, size: v.size ? (m.sizes.find((x) => x.key === v.size)?.label ?? null) : null, href: variantHref(v), images: colourPhoto(v.colour) })) } : null,
+              group: sd.variants
+                ? {
+                    id: data.id,
+                    variants: ldVariants.map((v) => ({
+                      ...v,
+                      colour: v.colour ? (m.colours.find((x) => x.key === v.colour)?.name ?? null) : null,
+                      size: v.size ? (m.sizes.find((x) => x.key === v.size)?.label ?? null) : null,
+                      href: variantHref(v),
+                      images: colourPhoto(v.colour),
+                    })),
+                  }
+                : null,
             })
           : null,
         sd.faq ? faqLd(here, pageHref, qaItems) : null,
+        videoLdFor(pdpVideo, { name: m.name, description: description, pageUrl: absolute(here, pageHref) }),
       ]}
     />
   ) : null;
@@ -561,12 +591,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
               </span>
             </nav>
           ) : null}
-          <div
-            className={`pdp-grid${tpl === 'T2' ? ' t2' : ''}`}
-            style={tpl === 'T2' ? ({ '--pdp-t2buy': `${t2.deskBuyPx}px` } as React.CSSProperties) : undefined}
-          >
+          <div className={`pdp-grid${tpl === 'T2' ? ' t2' : ''}`} style={tpl === 'T2' ? ({ '--pdp-t2buy': `${t2.deskBuyPx}px` } as React.CSSProperties) : undefined}>
             <div className="pdp-g">
               <PdpGallery badge={badge} overlay={m.overlay} lang={lang} template={tpl} t2={t2} t3={t3} />
+              <PdpVideoBlock c={c} video={pdpVideo} name={m.name} />
             </div>
             <div className="pdp-b sticky-d" id="pdp-buy">
               <div className="pdp-sec pdp-head">
@@ -587,13 +615,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                   </a>
                 ) : null}
                 {icons.panel ? (
-                  <PdpRail
-                    set={icons}
-                    productId={m.productId}
-                    wa={railWa}
-                    waLabel={t('rail.wa')}
-                    heart={icons.wish === 'rail' ? heartWords : null}
-                  >
+                  <PdpRail set={icons} productId={m.productId} wa={railWa} waLabel={t('rail.wa')} heart={icons.wish === 'rail' ? heartWords : null}>
                     {icons.share ? (
                       <PdpShare
                         set={set['pdp.share']}

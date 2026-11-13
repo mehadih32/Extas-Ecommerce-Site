@@ -4,5 +4,11 @@
       "label": "Photo quality checks",
       "help": "Plain checks on each product photo: too small, blurry, too dark, wrong shape, cut off. Nothing is sent anywhere. Off until you turn it on."
     }
+  },
+  "catalogue": {
+    "video": {
+      "label": "Product video",
+      "help": "A video on the product page: an uploaded clip or a YouTube, Vimeo or Facebook link. Shown as a clean picture with a play button; the player loads only when a customer taps. Off until you turn it on."
+    }
   }
 }

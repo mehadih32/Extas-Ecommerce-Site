@@ -43,3 +43,19 @@ export function photoCheckFields(d: Dict): FieldsCardField[] {
     n('edgeBusy', 1, 128),
   ];
 }
+
+/** PR 681 — Video settings (`catalogue.video`). */
+export function videoFields(d: Dict): FieldsCardField[] {
+  return [
+    { kind: 'switch', path: 'on', label: t(d, 'products.vid.checks.on'), help: t(d, 'products.vid.checks.onHelp') },
+    { kind: 'switch', path: 'allowUpload', label: t(d, 'products.vid.checks.allowUpload'), help: t(d, 'products.vid.checks.allowUploadHelp') },
+    { kind: 'number', path: 'maxUploadMb', label: t(d, 'products.vid.checks.maxUploadMb'), help: t(d, 'products.vid.checks.maxUploadMbHelp'), min: 1, max: 500 },
+    { kind: 'switch', path: 'playOnTap', label: t(d, 'products.vid.checks.playOnTap'), help: t(d, 'products.vid.checks.playOnTapHelp') },
+    {
+      kind: 'checks',
+      path: 'providers',
+      label: t(d, 'products.vid.checks.providers'),
+      options: ['YOUTUBE', 'VIMEO', 'FACEBOOK'].map((v) => ({ value: v, label: v === 'YOUTUBE' ? 'YouTube' : v === 'VIMEO' ? 'Vimeo' : 'Facebook' })),
+    },
+  ];
+}

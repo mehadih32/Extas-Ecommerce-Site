@@ -52,3 +52,4 @@ export * from './page-facts';
 export * from './link-import';
 export * from './ghost';
 export * from './audit';
+export * from './video';

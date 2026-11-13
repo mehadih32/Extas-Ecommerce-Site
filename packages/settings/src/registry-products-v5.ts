@@ -29,6 +29,22 @@ export const mediaQualitySchema = z
   .strict();
 export type MediaQualitySettings = z.output<typeof mediaQualitySchema>;
 
+export const catalogueVideoSchema = z
+  .object({
+    /** The switch: while off no video can be added and none shows on the product page. */
+    on: z.boolean(),
+    /** Which links are taken. */
+    providers: z.array(z.enum(['YOUTUBE', 'VIMEO', 'FACEBOOK'])).max(3),
+    /** An uploaded clip may be added (stored as it is; making it lighter stays a mock until a transcoder is connected). */
+    allowUpload: z.boolean(),
+    /** The largest uploaded clip, in megabytes. */
+    maxUploadMb: z.int().min(1).max(500),
+    /** The player loads only when a customer taps play (the page stays fast). */
+    playOnTap: z.boolean(),
+  })
+  .strict();
+export type CatalogueVideoSettings = z.output<typeof catalogueVideoSchema>;
+
 export const productsV5Settings = {
   'media.quality': setting({
     schema: mediaQualitySchema,
@@ -47,6 +63,20 @@ export const productsV5Settings = {
     labelKey: 'media.quality.label',
     helpKey: 'media.quality.help',
     isOwnerData: false,
+    sortOrder: 270,
+    version: V,
+  }),
+  'catalogue.video': setting({
+    schema: catalogueVideoSchema,
+    // hardcode-ok: shipped defaults (off); edited on Products › a product › Video › More options
+    default: { on: false, providers: ['YOUTUBE', 'VIMEO', 'FACEBOOK'], allowUpload: true, maxUploadMb: 50, playOnTap: true },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'catalogue',
+    labelKey: 'catalogue.video.label',
+    helpKey: 'catalogue.video.help',
+    isOwnerData: false,
+    isPublic: false,
     sortOrder: 270,
     version: V,
   }),
