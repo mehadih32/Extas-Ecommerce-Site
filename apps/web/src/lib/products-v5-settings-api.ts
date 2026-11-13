@@ -4,15 +4,17 @@
 //   media.quality  Products › a product's photos › Photo checks (PR 680)
 //   catalogue.video  Products › a product › Video settings (PR 681)
 //   catalogue.faq  Products › FAQs › More options (PR 682)
+//   catalogue.demo  Products › Demo products (PR 684); a saved change shows or hides the demo products at once
 //   catalogue.erpSizeChart  Products › a product › Size chart from the ERP › More options (PR 683)
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { catalogueErpSizeChartSchema, catalogueFaqSchema, catalogueVideoSchema, mediaQualitySchema, storeTarget } from '@extas/settings';
+import * as cat from '@extas/catalogue';
+import { catalogueDemoSchema, catalogueErpSizeChartSchema, catalogueFaqSchema, catalogueVideoSchema, mediaQualitySchema, storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
-export const PRODUCT_V5_KEYS = ['media.quality', 'catalogue.video', 'catalogue.faq', 'catalogue.erpSizeChart'] as const;
+export const PRODUCT_V5_KEYS = ['media.quality', 'catalogue.video', 'catalogue.faq', 'catalogue.erpSizeChart', 'catalogue.demo'] as const;
 export type ProductV5Key = (typeof PRODUCT_V5_KEYS)[number];
 
 export interface ProductV5Card {
@@ -47,6 +49,7 @@ const WHERE: Record<ProductV5Key, string> = {
   'catalogue.video': 'Products › a product › Video › More options',
   'catalogue.faq': 'Products › FAQs › More options',
   'catalogue.erpSizeChart': 'Products › a product › Size chart from the ERP › More options',
+  'catalogue.demo': 'Products › Demo products',
 };
 const isKey = (k: unknown): k is ProductV5Key => typeof k === 'string' && (PRODUCT_V5_KEYS as readonly string[]).includes(k);
 export const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
@@ -93,6 +96,8 @@ export async function saveProductV5(deps: Deps, who: Who, input: unknown): Promi
       },
       who.ctx,
     );
+    // S28 · PR 684: demo products follow their switches at once (shown or hidden; nothing is deleted)
+    if (key === 'catalogue.demo') await cat.reconcileDemo({ db: deps.db, settings: deps.resolver }, { actor: who.actor, storeId: S, ctx: who.ctx });
   }
   return productV5Cards(deps, who);
 }

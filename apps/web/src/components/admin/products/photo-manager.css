@@ -112,3 +112,27 @@
 .fq-form {
   margin-bottom: 12px;
 }
+
+/* S28 · PR 684 — Products › Demo products */
+.dm-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 36px;
+}
+.dm-name {
+  font-weight: 600;
+  flex: 1 1 140px;
+  overflow-wrap: anywhere;
+}
+.dm-tree,
+.dm-kids {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dm-never {
+  margin: 0;
+  padding-inline-start: 18px;
+}

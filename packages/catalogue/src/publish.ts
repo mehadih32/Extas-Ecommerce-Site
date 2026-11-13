@@ -18,6 +18,7 @@ import { allow, found, logChange, parse, setting, TX, type CatalogueDeps, type D
 import { CatalogueError, isCatalogueError } from './errors';
 import { productReadiness, readStoredHealth, type Readiness, type StoredHealth } from './health';
 import { updateProduct } from './products';
+import { reconcileDemoCore } from './demo';
 
 export type QueueReason = 'new' | 'unpublished' | 'live-failing';
 
@@ -53,12 +54,20 @@ async function syncQueue(tx: Db, who: Who, p: { id: string; status: string; arch
  * Checks the product, stores its health (score + what is missing), moves a draft to READY_TO_PUBLISH or back, and keeps
  * its queue item in step. Needs `catalogue.read` (it stores derived data only; a status move is logged).
  */
-export async function checkProduct(deps: CatalogueDeps, who: Who, productId: string, opts: { reason?: QueueReason; /** Store the check's time even when nothing changed (the audit report, PR 39). */ stamp?: boolean } = {}): Promise<Readiness> {
+export async function checkProduct(
+  deps: CatalogueDeps,
+  who: Who,
+  productId: string,
+  opts: { reason?: QueueReason; /** Store the check's time even when nothing changed (the audit report, PR 39). */ stamp?: boolean } = {},
+): Promise<Readiness> {
   const r = await productReadiness(deps, who, productId);
   const now = deps.now?.() ?? new Date();
   const stored = storedOf(r);
   const status = await deps.db.$transaction(async (tx) => {
-    const p = found(await tx.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true, status: true, archivedAt: true, healthScore: true, healthIssues: true } }), 'product');
+    const p = found(
+      await tx.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true, status: true, archivedAt: true, healthScore: true, healthIssues: true } }),
+      'product',
+    );
     let next = p.status;
     if (p.status === 'DRAFT' && r.ready) next = 'READY_TO_PUBLISH';
     if (p.status === 'READY_TO_PUBLISH' && !r.ready) next = 'DRAFT';
@@ -66,7 +75,8 @@ export async function checkProduct(deps: CatalogueDeps, who: Who, productId: str
     if (healthChanged || next !== p.status || opts.stamp) {
       await tx.product.update({ where: { id: p.id }, data: { healthScore: r.score, healthIssues: stored as unknown as Prisma.InputJsonValue, status: next } });
     }
-    if (next !== p.status) await logChange(tx, who, next === 'READY_TO_PUBLISH' ? 'product.ready' : 'product.notReady', 'Product', p.id, { status: p.status }, { status: next, blocking: r.blocking });
+    if (next !== p.status)
+      await logChange(tx, who, next === 'READY_TO_PUBLISH' ? 'product.ready' : 'product.notReady', 'Product', p.id, { status: p.status }, { status: next, blocking: r.blocking });
     await syncQueue(tx, who, { ...p, status: next }, r, opts.reason ?? null, now);
     return next;
   }, TX);
@@ -88,7 +98,10 @@ export async function publishProduct(deps: CatalogueDeps, who: Who, productId: s
   if (!r.ready) throw new CatalogueError('CHECKLIST_FAILED', 'the publish checklist is not complete', r.blocking);
   const now = deps.now?.() ?? new Date();
   const out = await deps.db.$transaction(async (tx) => {
-    const p = found(await tx.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true, status: true, archivedAt: true, publishedAt: true } }), 'product');
+    const p = found(
+      await tx.product.findFirst({ where: { id: productId, storeId: who.storeId }, select: { id: true, status: true, archivedAt: true, publishedAt: true } }),
+      'product',
+    );
     if (p.status === 'PUBLISHED') return { status: p.status, publishedAt: p.publishedAt };
     const row = await tx.product.update({ where: { id: p.id }, data: { status: 'PUBLISHED', publishedAt: now, unpublishedAt: null } });
     await tx.categoryProduct.updateMany({ where: { storeId: who.storeId, productId: p.id }, data: { isVisible: true } });
@@ -98,6 +111,8 @@ export async function publishProduct(deps: CatalogueDeps, who: Who, productId: s
   }, TX);
   // PR 602: a new product on the shop — its page, every category list and the sitemap
   emitCacheEvent({ kind: 'product', storeId: who.storeId, productIds: [productId], reason: 'publish' });
+  // S28 · PR 684: a real product on the shop may be the one that makes a category's demo products hide by themselves
+  await reconcileDemoCore(deps, who).catch(() => undefined);
   return { productId, status: out.status, publishedAt: out.publishedAt?.toISOString() ?? null, readiness: { ...r, status: out.status } };
 }
 
@@ -125,7 +140,14 @@ export async function unpublishProduct(deps: CatalogueDeps, who: Who, productId:
 export const BULK_ACTIONS = ['publish', 'unpublish', 'recheck', 'archive', 'restore'] as const;
 export type BulkAction = (typeof BULK_ACTIONS)[number];
 export const bulkInput = z
-  .object({ action: z.enum(BULK_ACTIONS), productIds: z.array(z.uuid()).min(1).max(1000).refine((l) => new Set(l).size === l.length, { message: 'each product once' }) })
+  .object({
+    action: z.enum(BULK_ACTIONS),
+    productIds: z
+      .array(z.uuid())
+      .min(1)
+      .max(1000)
+      .refine((l) => new Set(l).size === l.length, { message: 'each product once' }),
+  })
   .strict();
 export type BulkInput = z.input<typeof bulkInput>;
 

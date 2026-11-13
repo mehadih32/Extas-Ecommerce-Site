@@ -48,14 +48,24 @@ export function healthRows(products: readonly HealthProduct[], collections: read
     if (blank(p.description)) issues.push('noDescription');
     if (p.photos < 1) issues.push('noPhoto');
     if (p.photosNoAlt > 0) issues.push('photoNoAlt');
-    if (issues.length) rows.push({ kind: 'product', key: `p:${p.id}`, name: p.name, path: `${productPrefix.replace(/\/$/, '')}/${p.slug}`, fix: `/admin/products/${p.id}`, issues, photosNoAlt: p.photosNoAlt });
+    if (issues.length)
+      rows.push({
+        kind: 'product',
+        key: `p:${p.id}`,
+        name: p.name,
+        path: `${productPrefix.replace(/\/$/, '')}/${p.slug}`,
+        fix: `/admin/products/${p.id}`,
+        issues,
+        photosNoAlt: p.photosNoAlt,
+      });
   }
   for (const c of collections) {
     const issues: HealthIssue[] = [];
     if (c.styles < 1) issues.push('noStyles');
     if (blank(c.text)) issues.push('noText');
     if (blank(c.searchLine)) issues.push('noSearchLine');
-    if (issues.length) rows.push({ kind: 'collection', key: `c:${c.slug}`, name: c.name, path: `/collections/${c.slug}`, fix: '/admin/website/seo/categories', issues, photosNoAlt: 0 });
+    if (issues.length)
+      rows.push({ kind: 'collection', key: `c:${c.slug}`, name: c.name, path: `/collections/${c.slug}`, fix: '/admin/website/seo/categories', issues, photosNoAlt: 0 });
   }
   return rows;
 }
@@ -70,17 +80,39 @@ export function healthCounts(rows: readonly HealthRow[]): Record<HealthIssue, nu
 type CategorySeo = Record<string, { text?: { en: string }; meta?: { en: string } }> | null;
 
 /** The published products and shown collections of a store, read once, with what each is missing. */
-export async function seoHealth(db: PrismaClient, storeId: number, categorySeo: CategorySeo, productPrefix: string): Promise<{ rows: HealthRow[]; products: number; collections: number }> {
+export async function seoHealth(
+  db: PrismaClient,
+  storeId: number,
+  categorySeo: CategorySeo,
+  productPrefix: string,
+): Promise<{ rows: HealthRow[]; products: number; collections: number }> {
   const [products, media, trueShots, cats, listed] = await Promise.all([
-    db.product.findMany({ where: { storeId, status: 'PUBLISHED', archivedAt: null }, select: { id: true, slug: true, nameEn: true, descriptionEn: true, categoryId: true }, orderBy: [{ nameEn: 'asc' }] }),
-    db.productMedia.findMany({ where: { storeId, archivedAt: null, role: { not: 'VIDEO' }, product: { status: 'PUBLISHED', archivedAt: null }, asset: { archivedAt: null } }, select: { productId: true, asset: { select: { altEn: true } } } }),
+    db.product.findMany({
+      where: { storeId, status: 'PUBLISHED', isDemo: false, archivedAt: null },
+      select: { id: true, slug: true, nameEn: true, descriptionEn: true, categoryId: true },
+      orderBy: [{ nameEn: 'asc' }],
+    }),
+    db.productMedia.findMany({
+      where: { storeId, archivedAt: null, role: { not: 'VIDEO' }, product: { status: 'PUBLISHED', archivedAt: null }, asset: { archivedAt: null } },
+      select: { productId: true, asset: { select: { altEn: true } } },
+    }),
     // the true-colour photo of a colour counts as a photo too (PR 232 writes its description as well)
-    db.productColour.findMany({ where: { storeId, archivedAt: null, trueColourAssetId: { not: null }, product: { status: 'PUBLISHED', archivedAt: null } }, select: { productId: true, trueColourAssetId: true } }),
-    db.category.findMany({ where: { storeId, isVisible: true, archivedAt: null }, select: { id: true, slug: true, nameEn: true, parentId: true }, orderBy: [{ sortOrder: 'asc' }, { nameEn: 'asc' }] }),
+    db.productColour.findMany({
+      where: { storeId, archivedAt: null, trueColourAssetId: { not: null }, product: { status: 'PUBLISHED', archivedAt: null } },
+      select: { productId: true, trueColourAssetId: true },
+    }),
+    db.category.findMany({
+      where: { storeId, isVisible: true, archivedAt: null },
+      select: { id: true, slug: true, nameEn: true, parentId: true },
+      orderBy: [{ sortOrder: 'asc' }, { nameEn: 'asc' }],
+    }),
     db.categoryProduct.findMany({ where: { storeId, isVisible: true, product: { status: 'PUBLISHED', archivedAt: null } }, select: { categoryId: true, productId: true } }),
   ]);
   const trueAssets = new Map(
-    (await db.mediaAsset.findMany({ where: { id: { in: trueShots.map((x) => x.trueColourAssetId as string) }, archivedAt: null }, select: { id: true, altEn: true } })).map((a) => [a.id, a.altEn]),
+    (await db.mediaAsset.findMany({ where: { id: { in: trueShots.map((x) => x.trueColourAssetId as string) }, archivedAt: null }, select: { id: true, altEn: true } })).map((a) => [
+      a.id,
+      a.altEn,
+    ]),
   );
   const photos = new Map<string, { all: number; noAlt: number }>();
   const count = (productId: string, alt: string | null) => {

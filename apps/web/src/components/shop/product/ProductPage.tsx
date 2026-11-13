@@ -79,6 +79,7 @@ import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
 import { loadPdpVideo, PdpVideoBlock, videoLdFor } from './PdpVideoBlock';
 import { PdpFaq } from './PdpFaq';
+import { isDemoProductOnce } from '@/lib/shop/pdp-demo';
 import { pickedFaqs } from '@/lib/shop/pdp-faq-load';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
@@ -191,7 +192,8 @@ export async function productMetadata(c: ShopContext, search: ProductSearch): Pr
   const tokens = { ...(c.storeName ? { shop: c.storeName } : {}), ...(colourName ? { name: title, colour: colourName, colours: colourName } : {}) };
   const texts = await productPageTexts(c.storeId, data.id, c.lang, tokens, body);
   // PR 527: a sold-out, taken-off or archived page stays listed while its switch says so (both on as shipped)
-  const index = !one(search[TEMPLATE_QUERY]) && ghostListed(data.reason, set['seo.urlPolicy']);
+  // S28 · PR 684: a demo (sample) product's page is never indexed
+  const index = !one(search[TEMPLATE_QUERY]) && ghostListed(data.reason, set['seo.urlPolicy']) && !(await isDemoProductOnce(c.storeId, data.id));
   return shopMetadata(c, `${prefix.replace(/^\/+|\/+$/g, '')}/${data.slug}`, title, { path, index, ...(texts ? { seo: { texts } } : {}) });
 }
 

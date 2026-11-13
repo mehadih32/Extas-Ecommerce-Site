@@ -55,3 +55,4 @@ export * from './audit';
 export * from './video';
 export * from './faq';
 export * from './erp-size-chart';
+export * from './demo';

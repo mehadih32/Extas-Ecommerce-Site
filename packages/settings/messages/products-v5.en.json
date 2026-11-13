@@ -17,6 +17,10 @@
     "erpSizeChart": {
       "label": "ERP size chart",
       "help": "Use the size chart the ERP sends for a style when adding a product. Until the ERP ships it, a sample chart stands in (source Sample). The shop's own chart made from it is never overwritten by a later ERP change. Off until you turn it on."
+    },
+    "demo": {
+      "label": "Demo products",
+      "help": "Sample products that fill the categories so the shop never looks empty while real products arrive. Never sold, never sent to Google, feeds, ads or the ERP, never counted in stock, reports or finance. Off until you turn it on."
     }
   }
 }
