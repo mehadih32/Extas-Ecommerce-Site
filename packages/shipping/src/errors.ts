@@ -25,6 +25,10 @@ export type ShippingErrorCode =
   | 'NOT_PRINTABLE'
   /** PR 180: a sticker printed again needs a short reason (the owner's "ask why on a reprint"). */
   | 'REASON_REQUIRED'
+  /** PR 667: "Move to the backup courier" needs a backup courier picked in the settings first. */
+  | 'NO_BACKUP_COURIER'
+  /** PR 667: the parcel was picked up by the courier meanwhile, so it cannot be moved. */
+  | 'NOT_WITH_US'
   /** PR 180: this courier has no parcel ready to hand over (booked, with us, its sticker printed, nothing changed). */
   | 'NOTHING_TO_HAND_OVER'
   /** PR 180: this handover batch was marked handed over already (`data.handedOverAt`). */
@@ -103,6 +107,7 @@ export class ShippingError extends Error {
       case 'TOO_MANY':
       case 'NO_ZONE_LIST':
       case 'REASON_REQUIRED':
+      case 'NO_BACKUP_COURIER':
       case 'NOTHING_TO_HAND_OVER':
       case 'NOT_HANDED_OVER':
       case 'NOT_IN_ORDER':
