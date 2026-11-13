@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-13 18:02 (Asia/Dhaka)
+# Smoke test · 2026-11-13 18:35 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (606টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (608টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · result **PASS** (606 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `4a6a2c9784ea` · after deploy · result **PASS** (608 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -297,6 +297,7 @@ Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · resul
 | `/admin/marketing/intel` | phone | 200 | `/admin/marketing/intel` | ok | — |
 | `/admin/marketing/photoshoot/review` | phone | 200 | `/admin/marketing/photoshoot/review` | ok | — |
 | `/admin/ai/cost-book` | phone | 200 | `/admin/ai/cost-book` | ok | — |
+| `/admin/ai/models` | phone | 200 | `/admin/ai/models` | ok | — |
 | `/admin/ai/approvals` | phone | 200 | `/admin/ai/approvals` | ok | — |
 | `/admin/ai/permissions` | phone | 200 | `/admin/ai/permissions` | ok | — |
 | `/admin/ai/diary` | phone | 200 | `/admin/ai/diary` | ok | — |
@@ -305,7 +306,7 @@ Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · resul
 | `/admin/reports/funnels` | phone | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | phone | 200 | `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | ok | — |
+| `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | phone | 200 | `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -600,6 +601,7 @@ Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · resul
 | `/admin/marketing/intel` | desktop | 200 | `/admin/marketing/intel` | ok | — |
 | `/admin/marketing/photoshoot/review` | desktop | 200 | `/admin/marketing/photoshoot/review` | ok | — |
 | `/admin/ai/cost-book` | desktop | 200 | `/admin/ai/cost-book` | ok | — |
+| `/admin/ai/models` | desktop | 200 | `/admin/ai/models` | ok | — |
 | `/admin/ai/approvals` | desktop | 200 | `/admin/ai/approvals` | ok | — |
 | `/admin/ai/permissions` | desktop | 200 | `/admin/ai/permissions` | ok | — |
 | `/admin/ai/diary` | desktop | 200 | `/admin/ai/diary` | ok | — |
@@ -608,7 +610,7 @@ Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · resul
 | `/admin/reports/funnels` | desktop | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | desktop | 200 | `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | ok | — |
+| `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | desktop | 200 | `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
