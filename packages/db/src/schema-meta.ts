@@ -247,6 +247,8 @@ export const APPEND_ONLY_LOCKED = [
   'OrderMerge',
   // S28 · PR 695 (migration 0263_affiliates): each payout to an affiliate partner; a correction is a new, negative row.
   'AffiliatePayout',
+  // S28 · PR 702 (migration 0272_cash_handover): each end-of-day cash / bKash count; a wrong one is put right with a newer row.
+  'CashHandover',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

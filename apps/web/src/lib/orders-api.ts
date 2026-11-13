@@ -82,6 +82,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { decideErpLine, erpOrderView } from '@extas/inventory';
 import * as od from '@extas/orders';
 import { partialBoxView, savePartialDelivery } from '@extas/shipping';
+import { maskForPerson } from './staff-controls';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { addLineBody } from './admin-orders/lines';
 import { mergeBody } from './admin-orders/merge';
@@ -126,7 +127,9 @@ export async function handle(request: Request, deps: AdminDeps | null, permissio
   try {
     const key = request.headers.get('idempotency-key')?.trim() || undefined;
     const out = await fn({ deps: await ordersDeps(deps!), who: { actor: g.actor, storeId, ctx: g.ctx }, url, opts: { idempotencyKey: key } });
-    return json({ ok: true, ...out }, { status });
+    // PR 702: a role set to hide a customer's phone and address sees them hidden on every order answer it reads
+    const shown = request.method.toUpperCase() === 'GET' ? await maskForPerson(deps!, g.actor.staffUserId ?? null, storeId, out) : out;
+    return json({ ok: true, ...shown }, { status });
   } catch (e) {
     return ordersFail(e);
   }

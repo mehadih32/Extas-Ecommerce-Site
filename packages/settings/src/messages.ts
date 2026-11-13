@@ -146,6 +146,8 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
 import analyticsBn from '../messages/analytics.bn.json';
+import s28W5bBn from '../messages/s28-w5b.bn.json';
+import s28W5bEn from '../messages/s28-w5b.en.json';
 import analyticsEn from '../messages/analytics.en.json';
 import reportsDigestBn from '../messages/reports-digest.bn.json';
 import reportsDigestEn from '../messages/reports-digest.en.json';
@@ -523,6 +525,9 @@ messages.bn = mergeMessages(messages.bn, studioBn);
 // S15 · PR 338 (registry v288): the site-wide analytics event layer's master switch.
 messages.en = mergeMessages(messages.en, analyticsEn);
 messages.bn = mergeMessages(messages.bn, analyticsBn);
+// S28 · PR 700-707 (registry v700-707): wave 5b's settings.
+messages.en = mergeMessages(messages.en, s28W5bEn);
+messages.bn = mergeMessages(messages.bn, s28W5bBn);
 // S15 · PR 341 (registry v289): weekly/monthly digests to Telegram and e-mail.
 messages.en = mergeMessages(messages.en, reportsDigestEn);
 messages.bn = mergeMessages(messages.bn, reportsDigestBn);
