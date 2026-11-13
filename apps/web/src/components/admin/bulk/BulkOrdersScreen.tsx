@@ -301,7 +301,7 @@ export function BulkOrdersScreen(p: BulkOrdersScreenProps) {
       {p.canSettings ? (
         <section className="a2-card a2-mt12" data-testid="bulk-settings">
           <h2 className="a2-h3">{c('settings.title')}</h2>
-          <label className="s28-row a2-mt6"><input type="checkbox" checked={sEnabled} onChange={(e) => setSEnabled(e.target.checked)} data-testid="bulk-on" /> {c('settings.enabled')}</label>
+          <label className="a2-chkl s28-row a2-mt6"><input type="checkbox" checked={sEnabled} onChange={(e) => setSEnabled(e.target.checked)} data-testid="bulk-on" /> {c('settings.enabled')}</label>
           <div className="s28-row a2-mt6">
             <label>{c('settings.advance')}<input className="a2-inp" inputMode="numeric" value={sAdv} style={{ width: 90 }} onChange={(e) => setSAdv(e.target.value)} /></label>
             <label>{c('settings.valid')}<input className="a2-inp" inputMode="numeric" value={sValid} style={{ width: 90 }} onChange={(e) => setSValid(e.target.value)} /></label>

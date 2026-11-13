@@ -219,7 +219,7 @@ export function BehaviourScreen(p: BehaviourScreenProps) {
       {p.canEdit ? (
         <section className="a2-card a2-mt12" data-testid="vb-settings">
           <h2 className="a2-h3">{c("settings.title")}</h2>
-          <label className="s28-row a2-mt6">
+          <label className="a2-chkl s28-row a2-mt6">
             <input
               type="checkbox"
               checked={collect}
