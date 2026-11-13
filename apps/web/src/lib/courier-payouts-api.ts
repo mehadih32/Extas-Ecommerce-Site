@@ -29,12 +29,12 @@ function storeIdOf(url: URL): number | null {
   return Number.isInteger(n) && n >= 1 ? n : null;
 }
 
-function payFail(e: unknown): Response {
+export function payFail(e: unknown): Response {
   if (pay.isPaymentsError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ? { data: e.data } : {}) }, { status: e.status });
   return errorResponse(e);
 }
 
-async function handle(request: Request, deps: AdminDeps | null, permission: PermissionKey, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
+export async function handle(request: Request, deps: AdminDeps | null, permission: PermissionKey, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
   const storeId = storeIdOf(new URL(request.url));
   if (storeId === null) return fail(400, 'invalid-store-id');
   const g = await guardAdmin(request, deps, { permission, storeId });

@@ -53,6 +53,7 @@
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },
     { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]/areas" },
+    { "id": "delivery/courier-statement", "route": "/admin/delivery/couriers/[id]/statement" },
     { "id": "delivery/settings", "route": "/admin/delivery/settings" },
     { "id": "messages/log", "route": "/admin/messages/log" },
     { "id": "messages/channels", "route": "/admin/messages/channels" },

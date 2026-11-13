@@ -333,6 +333,23 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     expect((await months(B, '2026-11')).map((m) => m.salaryMinor)).toEqual([100n]);
   });
 
+  it('S28 · PR 675: "Accept the courier figure" writes the charge above ours on the delivery line, once per statement line, only while the courier-charges switch is on', async () => {
+    const w = { actor: owner, storeId: B };
+    const line = randomUUID();
+    const accept = { kind: 'COURIER_DIFFERENCE' as const, statementId: line, reference: 'STM-0002', amountMinor: 1_000 };
+    expect(await recordStatementCost(deps(), w, accept)).toEqual({ status: 'OFF' });
+    overrides.set(`books.costs.fromStatements@${B}`, { courierCharges: true, gatewayFees: false });
+    try {
+      const r = await recordStatementCost(deps(), w, accept);
+      expect(r.status).toBe('WRITTEN');
+      const row = await t.prisma.costEntry.findUniqueOrThrow({ where: { id: r.id! } });
+      expect([row.summaryLine, row.amountMinor, row.refType, row.refId]).toEqual(['DELIVERY', 1_000, 'courier.figure', line]);
+      expect(await recordStatementCost(deps(), w, accept)).toEqual({ status: 'ALREADY', id: r.id });
+    } finally {
+      overrides.delete(`books.costs.fromStatements@${B}`);
+    }
+  });
+
   it('follow-up 565: an imported statement writes its courier charges or gateway fees as one cost line, only while its switch is on', async () => {
     const w = { actor: owner, storeId: B };
     const settlement = randomUUID();
