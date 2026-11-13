@@ -4646,6 +4646,8 @@ model CourierClaim {
   decidedById      String?           @db.Uuid
   sentAt           DateTime?         @db.Timestamptz(3)
   closedAt         DateTime?         @db.Timestamptz(3)
+  /// S28 · PR 673: the day the courier's time to pay runs out (set when the claim is raised, from the owner's setting).
+  deadlineAt       DateTime?         @db.Timestamptz(3)
   createdAt        DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
 
@@ -4660,6 +4662,10 @@ enum CourierClaimKind {
   DAMAGED
   RIDER_OVERCHARGE
   OTHER
+  /// S28 · PR 673: the courier handed in less cash than the parcel collected.
+  SHORT_COD
+  /// S28 · PR 673: a returned parcel came back short.
+  RETURN_SHORT
 }
 
 enum CourierClaimState {

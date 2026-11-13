@@ -84,7 +84,7 @@
       "declared": "declared {amount}",
       "list": "Claims",
       "empty": "No claims yet.",
-      "kind": { "LOST": "Lost", "DAMAGED": "Damaged", "RIDER_OVERCHARGE": "Rider's extra", "OTHER": "Other" },
+      "kind": { "LOST": "Lost", "DAMAGED": "Damaged", "RIDER_OVERCHARGE": "Rider's extra", "OTHER": "Other", "SHORT_COD": "Short COD", "RETURN_SHORT": "Return came back short" },
       "state": { "OPEN": "Open", "SENT": "Sent", "SETTLED": "Settled", "REJECTED": "Rejected" },
       "send": "Mark sent",
       "ref": "The courier's claim number",

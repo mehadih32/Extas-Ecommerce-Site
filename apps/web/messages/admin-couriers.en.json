@@ -176,6 +176,18 @@
         "pollMinutesHelp": "How often the courier is asked where a request stands.",
         "minAmountMinor": "Smallest amount to ask for",
         "minAmountMinorHelp": "In the smallest unit of the currency (100 = one whole unit). 0 means no minimum."
+      },
+      "claims": {
+        "h": "Courier claims: time to pay",
+        "d": "Give a claim a deadline and flag the late ones. Off until you switch it on.",
+        "deadlineEnabled": "Give claims a deadline",
+        "deadlineEnabledHelp": "A claim gets a deadline when it is raised; one past it shows as late.",
+        "days": "Days the courier has to pay",
+        "daysHelp": "Counted from the day the claim is raised.",
+        "warnDays": "Flag as due soon, days before",
+        "warnDaysHelp": "0 means no early flag.",
+        "postRecovered": "Post money won back to the courier's account",
+        "postRecoveredHelp": "Keep this off until the owner has said yes."
       }
     },
     "t": {
@@ -258,6 +270,39 @@
         "FORBIDDEN": "You may not do this.",
         "other": "Something went wrong. Nothing was asked twice; look at the list and try again."
       }
+    },
+    "k": {
+      "off": "Courier claims are switched off.",
+      "totals": "Where the claims stand",
+      "open": "{n} open or sent, {amount} asked",
+      "lateN": "{n} past the deadline, {amount}",
+      "won": "{n} won, the courier paid {paid} of {asked}",
+      "claimable": "Lost or damaged, not claimed yet",
+      "declared": "declared {amount}",
+      "ledger": "All claims",
+      "out": {
+        "open": "Open",
+        "sent": "Sent",
+        "won": "Won",
+        "lost": "Lost"
+      },
+      "dl": {
+        "late": "Late",
+        "soon": "Due soon"
+      },
+      "deadline": "deadline {date}",
+      "paidLine": "paid {amount}",
+      "none": "No claims yet.",
+      "new": "New claim",
+      "kind": "What kind of claim",
+      "parcel": "The parcel",
+      "amount": "Amount claimed (৳)",
+      "note": "What happened (the courier reads this)",
+      "raise": "Raise the claim",
+      "cancel": "Cancel",
+      "check": "Choose the parcel, type an amount and say what happened.",
+      "raised": "Claim raised.",
+      "noParcels": "This courier has no parcels yet."
     }
   }
 }

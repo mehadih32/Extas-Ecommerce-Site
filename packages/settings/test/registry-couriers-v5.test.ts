@@ -43,3 +43,20 @@ describe("courier payouts setting (v311)", () => {
     expect(s.safeParse({ enabled: true, pollMinutes: 30, minAmountMinor: -1 }).success).toBe(false);
   });
 });
+
+describe("courier claim terms setting (v312)", () => {
+  it("delivery.courier.claimTerms ships off, labelled in both languages", () => {
+    const spec = couriersV5Settings["delivery.courier.claimTerms"];
+    expect(registry["delivery.courier.claimTerms"]).toBe(spec);
+    expect(spec.version).toBe(312);
+    expect(spec.default).toEqual({ deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: false });
+    for (const lang of ["en", "bn"] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    const s = spec.schema;
+    expect(s.safeParse({ deadlineEnabled: true, days: 1, warnDays: 0, postRecovered: false }).success).toBe(true);
+    expect(s.safeParse({ deadlineEnabled: true, days: 0, warnDays: 0, postRecovered: false }).success).toBe(false);
+    expect(s.safeParse({ deadlineEnabled: true, days: 30, warnDays: 61, postRecovered: false }).success).toBe(false);
+  });
+});
