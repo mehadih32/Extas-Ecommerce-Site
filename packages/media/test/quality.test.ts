@@ -78,6 +78,7 @@ describe('analysePhoto', () => {
         width: 1000,
         height: 1250,
         channels: 3,
+        background: { r: 0, g: 0, b: 0 },
         noise: { type: 'gaussian', mean: 128, sigma: 60 },
       },
     })

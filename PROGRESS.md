@@ -343,6 +343,7 @@
 | 2026-11-13 | **PR 682 · S28 (wave 4, lane w4a) — product and category FAQs built, switch off** |
 | 2026-11-13 | **PR 683 · S28 (wave 4, lane w4a) — ERP size chart site side built (sample source), switch off** |
 | 2026-11-13 | **PR 684 · S28 (wave 4, lane w4a) — demo products built, switch off** |
+| 2026-11-13 | **PR 685 · S28 (wave 4, lane w4a) — add-product wizard built (8 steps)** |
 
 ## Parked
 

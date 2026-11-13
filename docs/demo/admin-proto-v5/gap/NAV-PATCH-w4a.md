@@ -23,3 +23,11 @@ The lane may not edit `sections.ts`, `lumen-nav.ts` or `admin-shell.*.json`. The
 - Until then the page opens under the "Questions" place (it passes `productQuestions` to `PageHead` and `SectionTabs`).
   After the patch, change `KEY` in `apps/web/src/app/admin/products/demo/page.tsx` to `productDemo`.
 - Shell messages: `shell.page.productDemo` en "Demo products" / bn "ডেমো প্রোডাক্ট".
+
+## PR 685 — Add-product wizard (8 steps)
+
+No new menu item. The wizard is the existing "New product" page (`/admin/products/new`, step 1) and the product's own
+page with `?wizard=2` to `?wizard=8` (steps 2-8). The Products home "New product" button needs no change. Optional:
+show a "Continue where I stopped" count next to "New product" using `wizardDrafts` (catalogue service) if the nav
+patch wants a badge. API: `/api/admin/products/<id>/wizard` (GET steps done, POST remember a step; permission
+`catalogue.read` / `catalogue.write`).
