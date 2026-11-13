@@ -39,3 +39,6 @@
 .w4-packs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .w4-packs .w4-kpi { gap: 8px; }
 .w4-dates { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Touch size (device gate): the weight slider and its label are 44 px tall, the whole row takes the tap. */
+.w4-slider label { display: flex; align-items: center; min-height: 44px; }
+.w4-slider input[type='range'] { min-height: 44px; margin: 0; }
