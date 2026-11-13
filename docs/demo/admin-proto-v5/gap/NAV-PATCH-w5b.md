@@ -47,3 +47,15 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
   Analytics page (not a menu row of its own). Key `webAnalytics.behaviour`, guide `website/analytics-behaviour`. The shop layout reads
   `analytics.behaviour` and draws `BehaviourBeacon` only when collect is on (off by default); `POST /api/shop/behaviour` is public, same-site, always 204;
   `GET /api/admin/analytics-behaviour`. Links to the existing Reports > Funnels and Searches pages.
+
+## PR 705 Settings regroup: People, Roles, Activity log
+- Three new pages under Settings: `/admin/settings/people` (perm `staff.read`; changing `staff.manage`), `/admin/settings/roles` (perm `roles.read`;
+  changing `roles.manage`), `/admin/settings/activity` (perm `audit.read`). Tab ids `people`, `roles`, `activity`; keys `people`, `roles`, `activity`;
+  guides `settings/people`, `settings/roles`, `settings/activity`. Add them as tabs of the Settings section in sections.ts (the comment there already says
+  "People and Roles join with their PRs"). They use the existing `/api/admin/{staff,roles,permissions}` routes; new read route `/api/admin/activity-log` (CSV with `&format=csv`).
+- Prototype grouping for the Settings tab row (two groups, in this order):
+  - Business: Store details (`store`), Policies (`policies`), People (`people`), Roles (`roles`), Staff controls (`staffControls`), ERP link (`erp`), Admin look (`look`).
+  - System (owner): Keys and connections (`keys`), Telegram approvals (`telegramApprovals`), Backups and system (`system`), Security (`security`), Activity log (`activity`),
+    Privacy (`privacy`), Start fresh (`startFresh`). Under More: Shimmer, Start and search.
+  - Owner-only tabs keep their own permission; the grouping is only the order and a divider, nothing else changes.
+- New setting `activity.log` {pageSize 50}. Store details extras (logo, contacts, social links) were not part of this PR: the Store page is untouched.
