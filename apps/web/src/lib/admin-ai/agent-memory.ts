@@ -32,6 +32,7 @@ import type { PrismaClient } from '@extas/db/client';
 import { INSTALLATION } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { isAiAgentKey } from './agents';
+import { ensureAgentRows } from './control-room';
 import { AiError } from './errors';
 
 export const MEMORY_KINDS = ['fact', 'decision', 'instruction', 'campaign', 'task', 'lesson'] as const;
@@ -114,6 +115,14 @@ export async function setMemoryEnabled(deps: Pick<AgentMemoryDeps, 'resolver'>, 
   });
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** `AiMemory.id` is a Postgres `uuid` column, so a malformed id (not just an absent one) is just as much "not
+ * found" from the caller's side — Prisma would otherwise throw on the bad format before any row lookup happens. */
+function requireMemoryId(memoryId: string): void {
+  if (!UUID_RE.test(memoryId)) throw new AiError(404, 'NOT_FOUND', ['memoryId']);
+}
+
 function validateContent(content: string): string {
   const v = content.trim();
   if (!v || v.length > CONTENT_MAX) throw new AiError(422, 'INVALID_INPUT', ['content']);
@@ -137,6 +146,7 @@ export async function recordAgentMemory(
   const content = validateContent(input.content);
   if (input.sourceRef !== undefined && input.sourceRef !== null && input.sourceRef.length > SOURCE_REF_MAX) throw new AiError(422, 'INVALID_INPUT', ['sourceRef']);
 
+  await ensureAgentRows(deps.db);
   const agent = await deps.db.aiAgent.findUnique({ where: { key } });
   if (!agent || agent.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
   const created = await deps.db.aiMemory.create({
@@ -159,6 +169,7 @@ export interface AgentMemoryListOptions {
 export async function listAgentMemories(deps: Pick<AgentMemoryDeps, 'db'>, key: string, opts: AgentMemoryListOptions = {}): Promise<AgentMemoryView[]> {
   if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
   if (opts.kind !== undefined && !isMemoryKind(opts.kind)) throw new AiError(422, 'INVALID_INPUT', ['kind']);
+  await ensureAgentRows(deps.db);
   const agent = await deps.db.aiAgent.findUnique({ where: { key } });
   if (!agent || agent.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
   const rows = await deps.db.aiMemory.findMany({
@@ -190,6 +201,7 @@ export interface AgentMemoryDigest {
  * yet, every count is honestly 0. */
 export async function weeklyAgentMemoryDigest(deps: Pick<AgentMemoryDeps, 'db' | 'now'>, key: string): Promise<AgentMemoryDigest> {
   if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
+  await ensureAgentRows(deps.db);
   const agent = await deps.db.aiAgent.findUnique({ where: { key } });
   if (!agent || agent.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
   const now = deps.now?.() ?? new Date();
@@ -235,9 +247,11 @@ export async function correctAgentMemory(
   patch: { content?: string; tags?: string[] },
 ): Promise<AgentMemoryView> {
   if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
+  requireMemoryId(memoryId);
   const content = patch.content === undefined ? undefined : validateContent(patch.content);
   const tags = patch.tags === undefined ? undefined : cleanTags(patch.tags);
 
+  await ensureAgentRows(deps.db);
   return deps.db.$transaction(async (tx) => {
     const agent = await tx.aiAgent.findUnique({ where: { key } });
     if (!agent || agent.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
@@ -263,6 +277,8 @@ export async function correctAgentMemory(
  * state, so a double tap writes once. */
 export async function setAgentMemoryArchived(deps: Pick<AgentMemoryDeps, 'db'>, who: { actor: Actor; ctx?: RequestContext }, key: string, memoryId: string, archived: boolean): Promise<AgentMemoryView> {
   if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
+  requireMemoryId(memoryId);
+  await ensureAgentRows(deps.db);
   return deps.db.$transaction(async (tx) => {
     const agent = await tx.aiAgent.findUnique({ where: { key } });
     if (!agent || agent.archivedAt) throw new AiError(404, 'NOT_FOUND', ['key']);
