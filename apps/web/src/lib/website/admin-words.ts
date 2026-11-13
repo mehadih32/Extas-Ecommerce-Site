@@ -225,6 +225,22 @@ import adminReportsPacksEn from '../../../messages/admin-reports-packs.en.json';
 import adminReportsPacksBn from '../../../messages/admin-reports-packs.bn.json';
 import adminV5W5aEn from '../../../messages/admin-v5-w5a.en.json';
 import adminV5W5aBn from '../../../messages/admin-v5-w5a.bn.json';
+import adminBulkOrdersEn from '../../../messages/admin-bulk-orders.en.json';
+import adminBulkOrdersBn from '../../../messages/admin-bulk-orders.bn.json';
+import adminMapEn from '../../../messages/admin-map.en.json';
+import adminMapBn from '../../../messages/admin-map.bn.json';
+import adminPeopleEn from '../../../messages/admin-people.en.json';
+import adminPeopleBn from '../../../messages/admin-people.bn.json';
+import adminPracticeEn from '../../../messages/admin-practice.en.json';
+import adminPracticeBn from '../../../messages/admin-practice.bn.json';
+import adminStaffControlsEn from '../../../messages/admin-staff-controls.en.json';
+import adminStaffControlsBn from '../../../messages/admin-staff-controls.bn.json';
+import adminStartFreshEn from '../../../messages/admin-start-fresh.en.json';
+import adminStartFreshBn from '../../../messages/admin-start-fresh.bn.json';
+import adminTelegramApprovalsEn from '../../../messages/admin-telegram-approvals.en.json';
+import adminTelegramApprovalsBn from '../../../messages/admin-telegram-approvals.bn.json';
+import adminWebsiteAnalyticsEn from '../../../messages/admin-website-analytics.en.json';
+import adminWebsiteAnalyticsBn from '../../../messages/admin-website-analytics.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -318,6 +334,14 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-reports-library': { en: adminReportsLibraryEn, bn: adminReportsLibraryBn },
   'admin-reports-packs': { en: adminReportsPacksEn, bn: adminReportsPacksBn },
   'admin-v5-w5a': { en: adminV5W5aEn, bn: adminV5W5aBn },
+  'admin-bulk-orders': { en: adminBulkOrdersEn, bn: adminBulkOrdersBn },
+  'admin-map': { en: adminMapEn, bn: adminMapBn },
+  'admin-people': { en: adminPeopleEn, bn: adminPeopleBn },
+  'admin-practice': { en: adminPracticeEn, bn: adminPracticeBn },
+  'admin-staff-controls': { en: adminStaffControlsEn, bn: adminStaffControlsBn },
+  'admin-start-fresh': { en: adminStartFreshEn, bn: adminStartFreshBn },
+  'admin-telegram-approvals': { en: adminTelegramApprovalsEn, bn: adminTelegramApprovalsBn },
+  'admin-website-analytics': { en: adminWebsiteAnalyticsEn, bn: adminWebsiteAnalyticsBn },
   'admin-searches': { en: adminSearchesEn, bn: adminSearchesBn },
   'admin-seasonal': { en: adminSeasonalEn, bn: adminSeasonalBn },
   'admin-seasonal-home': { en: adminSeasonalHomeEn, bn: adminSeasonalHomeBn },

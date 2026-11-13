@@ -83,7 +83,8 @@
       "customers_grades_run": "Working out each customer's grade",
       "tracking_sweep": "Tracked events still waiting",
       "catalogue_ranking_run": "Nightly shop ranking of the products",
-      "reports_pack_send": "Sending the scheduled report summaries"
+      "reports_pack_send": "Sending the scheduled report summaries",
+      "startFresh_purge": "Clearing the shop for go-live after the owner's Start fresh run"
     },
     "workers": {
       "title": "Workers",
