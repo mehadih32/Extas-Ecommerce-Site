@@ -1,1 +1,22 @@
-{"state":"NOT_IN_VERSION"}
+{
+  "at": "2026-11-13T02:46:00.792Z",
+  "stores": [
+    {
+      "storeId": 1,
+      "status": "skipped",
+      "reason": "ERP_ON_PRACTICE",
+      "error": null,
+      "stock": {
+        "matched": 0,
+        "counts": {
+          "MISSING_IN_SHOP": 0,
+          "MISSING_IN_ERP": 0,
+          "ON_HAND_DIFFERS": 0,
+          "RESERVED_DIFFERS": 0
+        },
+        "complete": true
+      },
+      "variants": null
+    }
+  ]
+}
