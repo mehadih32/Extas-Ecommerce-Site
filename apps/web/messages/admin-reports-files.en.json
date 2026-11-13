@@ -8,7 +8,11 @@
       "figures": "Sales and profit",
       "products": "Products and stock",
       "timing": "When orders come in",
-      "review": "Monthly review"
+      "review": "Monthly review",
+      "courier": "Courier performance",
+      "areas": "Sales by area",
+      "customers": "Customers",
+      "team": "Team"
     },
     "cards": {
       "sales": "Sales",
@@ -59,6 +63,32 @@
     "busiest": "Busiest day",
     "pageWords": "{n}/{of}",
     "none": "-",
-    "before": "Before"
+    "before": "Before",
+    "partCourier": "Couriers",
+    "partAreas": "Areas",
+    "partCustomers": "Buyers",
+    "partTeam": "Team counts",
+    "courierName": "Courier",
+    "parcels": "Parcels",
+    "delivered": "Delivered",
+    "success": "Delivered share",
+    "onTime": "On time",
+    "returned": "Returned",
+    "refused": "Refused",
+    "area": "Area",
+    "pieces": "Pieces",
+    "returnRate": "Return rate",
+    "areaUnknown": "Area not known",
+    "newBuyers": "New buyers",
+    "returning": "Returning buyers",
+    "quiet": "Quiet for {n} days",
+    "buyers": "Buyers",
+    "repeat": "Repeat buyers",
+    "off": "This report is switched off, or you may not open it.",
+    "person": "Person",
+    "confirmed": "Confirmed",
+    "packed": "Packed",
+    "handedOver": "Handed over",
+    "replies": "Replies"
   }
 }

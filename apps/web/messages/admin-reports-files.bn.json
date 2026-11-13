@@ -8,7 +8,11 @@
       "figures": "বিক্রি ও লাভ",
       "products": "প্রোডাক্ট ও স্টক",
       "timing": "অর্ডার কখন আসে",
-      "review": "মাসের রিভিউ"
+      "review": "মাসের রিভিউ",
+      "courier": "কুরিয়ারের পারফরম্যান্স",
+      "areas": "এলাকা অনুযায়ী বিক্রি",
+      "customers": "কাস্টমার",
+      "team": "টিম"
     },
     "cards": {
       "sales": "বিক্রি",
@@ -59,6 +63,32 @@
     "busiest": "সবচেয়ে ব্যস্ত দিন",
     "pageWords": "{n}/{of}",
     "none": "-",
-    "before": "আগের সময়ে"
+    "before": "আগের সময়ে",
+    "partCourier": "কুরিয়ার",
+    "partAreas": "এলাকা",
+    "partCustomers": "ক্রেতা",
+    "partTeam": "টিমের হিসাব",
+    "courierName": "কুরিয়ার",
+    "parcels": "পার্সেল",
+    "delivered": "ডেলিভারি হয়েছে",
+    "success": "ডেলিভারির হার",
+    "onTime": "সময়মতো",
+    "returned": "ফেরত",
+    "refused": "ফেরত দিয়েছে",
+    "area": "এলাকা",
+    "pieces": "পিস",
+    "returnRate": "ফেরতের হার",
+    "areaUnknown": "এলাকা জানা নেই",
+    "newBuyers": "নতুন ক্রেতা",
+    "returning": "আবার কেনা ক্রেতা",
+    "quiet": "{n} দিন চুপ",
+    "buyers": "ক্রেতা",
+    "repeat": "বারবার কেনা ক্রেতা",
+    "off": "এই রিপোর্ট বন্ধ আছে, অথবা আপনি খুলতে পারবেন না।",
+    "person": "জন",
+    "confirmed": "কনফার্ম",
+    "packed": "প্যাক",
+    "handedOver": "হ্যান্ডওভার",
+    "replies": "উত্তর"
   }
 }
