@@ -136,3 +136,6 @@
 .sc-auto { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 6px; background: var(--ad-brand-tint); border: 1px solid var(--sc-cov-ok-line); margin-top: 12px; font-size: 13.5px; }
 .sc-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
 .ad-input.sc-mono { font-family: var(--sc-font-mono); font-size: 13px; resize: vertical; }
+/* PR 709: the measurement buttons wrap inside the card on a phone (360 px: "Paste" row stuck out at 364 px). */
+.ad .ad-btn-sm{max-width:100%;white-space:normal;text-align:center}
+.sc-m0{min-width:0;flex-wrap:wrap}
