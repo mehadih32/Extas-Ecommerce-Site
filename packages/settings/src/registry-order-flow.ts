@@ -1,19 +1,19 @@
-// S28 · Admin v5 · the Order flow rules (docs/demo/admin-proto-v5/DECISIONS.md "Order flow"). Registry version 310 (PR 664);
+// S28 · Admin v5 · the Order flow rules (docs/demo/admin-proto-v5/DECISIONS.md "Order flow"). Registry version 330 (PR 664);
 // PR 665 and PR 669 add their own keys to this file at their own versions. Labels: messages/order-flow.<lang>.json (Orders
-// group; the Rules page of PR 676 shows them under "Order flow"). Every switch ships OFF and every number is empty until
+// group; the Rules page of PR 676 shows them under "Order flow"). Every switch ships OFF, except price adjust (ON by the owner's written OK), and every number is empty until
 // the owner sets it (CN-018): nothing here is decided in code.
 //
 // PR 664 — `orders.priceAdjust`: take money off an open order before it is booked (a taka amount, a percent, the customer's
-// wallet, or the delivery charge), with a reason from the owner's list. Off as shipped. A role not listed in `roleLimits` has
+// wallet, or the delivery charge), with a reason from the owner's list. ON as shipped (the owner's written OK of 13 Nov 2026), with no role limits. A role not listed in `roleLimits` has
 // a limit of nothing (every adjustment it asks for waits for someone who may approve); a listed role's `null` is "no limit".
 // An adjustment is a new ledger line (never an edit) and money or price changes need the owner's PIN above the asker's limit.
 import { z } from 'zod';
 import { setting } from './define';
 import { dictionarySchema } from './schemas';
 
-const V664 = 310;
-const V665 = 311;
-const V669 = 312;
+const V664 = 330;
+const V665 = 331;
+const V669 = 332;
 
 /** Role keys are lower-case words and dots or hyphens (`order-manager`). */
 const roleKeySchema = z
@@ -32,7 +32,7 @@ export type PriceAdjustLimit = z.output<typeof priceAdjustLimitSchema>;
 
 export const priceAdjustSchema = z
   .object({
-    /** Staff may adjust the price of an open order (off: the buttons are not shown and the service refuses). */
+    /** Staff may adjust the price of an open order (when off, the buttons are not shown and the service refuses; ships ON). */
     enabled: z.boolean(),
     /** The reasons the staff pick from (a note is needed with the one keyed `other`). */
     reasons: dictionarySchema.refine((l) => l.length > 0, { message: 'at least one reason' }),

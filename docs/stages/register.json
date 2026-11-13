@@ -44043,7 +44043,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "price adjust on every order (`orders.priceAdjust` v310, ON as shipped by the owner's written OK of 13 Nov; taka, percent, wallet or free delivery on an open order; reason from the owner's list; per-role limit, above it a request the owner approves with the PIN; every adjustment a new append-only `OrderPriceAdjustment` line, migration 0200; keys `orders.priceAdjust` and `orders.priceApprove`; owner's written OK in BLOCKED 32)",
+    "note": "price adjust on every order (`orders.priceAdjust` v330, ON as shipped by the owner's written OK of 13 Nov; taka, percent, wallet or free delivery on an open order; reason from the owner's list; per-role limit, above it a request the owner approves with the PIN; every adjustment a new append-only `OrderPriceAdjustment` line, migration 0200; keys `orders.priceAdjust` and `orders.priceApprove`; owner's written OK in BLOCKED 32)",
     "github": []
    },
    "builtFacts": {
