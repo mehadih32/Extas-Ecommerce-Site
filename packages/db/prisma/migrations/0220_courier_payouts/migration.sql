@@ -1,4 +1,4 @@
--- S28 · PR 671 (CN-048, admin prototype v5) — payouts asked of a courier through the courier's own payment-request feature.
+-- PR 671 (S28, CN-048, admin prototype v5) — payouts asked of a courier through the courier's own payment-request feature.
 -- Additive only: one new table with its indexes and keys; nothing existing is changed, dropped or renamed. The feature ships
 -- off (`delivery.courier.payouts.enabled`), so the table stays empty until the owner turns it on.
 -- CreateTable
