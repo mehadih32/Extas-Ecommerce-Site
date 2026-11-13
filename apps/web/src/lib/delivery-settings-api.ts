@@ -19,13 +19,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { couriersSchema, courierPayoutsSchema, courierBookingSchema, courierSelectionSchema, courierTrackingSchema, courierWebhooksSchema, courierZoneSyncSchema, districtPromiseSchema, holidaySchema, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
+import { couriersSchema, courierPayoutsSchema, courierClaimTermsSchema, courierBookingSchema, courierSelectionSchema, courierTrackingSchema, courierWebhooksSchema, courierZoneSyncSchema, districtPromiseSchema, holidaySchema, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice', 'delivery.courier.tracking', 'delivery.courier.booking', 'delivery.courier.selection', 'delivery.courier.webhooks', 'delivery.courier.zoneSync', 'delivery.couriers', 'delivery.courier.payouts', 'fulfilment.packing.check', 'fulfilment.packing.photo', 'fulfilment.packing.weight', 'fulfilment.packing.queue', 'fulfilment.packing.issues'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice', 'delivery.courier.tracking', 'delivery.courier.booking', 'delivery.courier.selection', 'delivery.courier.webhooks', 'delivery.courier.zoneSync', 'delivery.couriers', 'delivery.courier.payouts', 'delivery.courier.claimTerms', 'fulfilment.packing.check', 'fulfilment.packing.photo', 'fulfilment.packing.weight', 'fulfilment.packing.queue', 'fulfilment.packing.issues'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -46,6 +46,8 @@ const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown
   'delivery.couriers': { schema: couriersSchema, reason: 'Delivery › Delivery settings › Default courier', action: 'delivery.couriers.save' },
   // S28 · PR 671: courier payouts through the courier's own payment request (off)
   'delivery.courier.payouts': { schema: courierPayoutsSchema, reason: "Delivery › Delivery settings › Courier payouts", action: 'delivery.courier.payouts.save' },
+  // S28 · PR 673: the courier's time to pay a claim (off)
+  'delivery.courier.claimTerms': { schema: courierClaimTermsSchema, reason: 'Delivery › Delivery settings › Courier claims', action: 'delivery.courier.claimTerms.save' },
   // follow-up 462: the packing step's cards, under More options
   'fulfilment.packing.check': { schema: packingCheckSchema, reason: 'Delivery › Delivery settings › More options › Checking the pieces', action: 'fulfilment.packing.check.save' },
   'fulfilment.packing.photo': { schema: packingPhotoSchema, reason: 'Delivery › Delivery settings › More options › The packing photo', action: 'fulfilment.packing.photo.save' },

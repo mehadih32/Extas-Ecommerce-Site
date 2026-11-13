@@ -8,6 +8,7 @@ import { setting } from './define';
 
 const V670 = 310;
 const V671 = 311;
+const V673 = 312;
 
 export const couriersSchema = z.object({ defaultCourierId: z.union([z.uuid(), z.literal('')]) }).strict();
 export type CouriersSettings = z.output<typeof couriersSchema>;
@@ -23,6 +24,21 @@ export const courierPayoutsSchema = z
   })
   .strict();
 export type CourierPayoutsSettings = z.output<typeof courierPayoutsSchema>;
+
+/** PR 673: the courier's time to pay a claim, and whether money won back is posted. Off as shipped; every number is the owner's. */
+export const courierClaimTermsSchema = z
+  .object({
+    /** On: a claim gets a deadline when it is raised, and a late one is flagged. */
+    deadlineEnabled: z.boolean(),
+    /** Days the courier has to pay, counted from the day the claim is raised. */
+    days: z.number().int().min(1).max(365),
+    /** Days before the deadline a claim is flagged "due soon"; 0 = no early flag. */
+    warnDays: z.number().int().min(0).max(60),
+    /** On: money won back from a courier is posted to its account (needs the owner's OK first, see BLOCKED). */
+    postRecovered: z.boolean(),
+  })
+  .strict();
+export type CourierClaimTermsSettings = z.output<typeof courierClaimTermsSchema>;
 
 export const couriersV5Settings = {
   'delivery.couriers': setting({
@@ -52,5 +68,19 @@ export const couriersV5Settings = {
     labelKey: "delivery.courier.payouts.label",
     helpKey: "delivery.courier.payouts.help",
     sortOrder: 971,
+  }),
+  'delivery.courier.claimTerms': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'delivery',
+    version: V673,
+    schema: courierClaimTermsSchema,
+    // hardcode-ok: off as shipped (CN-018); the days are the owner's to set
+    default: { deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: false },
+    valueType: 'JSON',
+    labelKey: 'delivery.courier.claimTerms.label',
+    helpKey: 'delivery.courier.claimTerms.help',
+    sortOrder: 972,
   }),
 };

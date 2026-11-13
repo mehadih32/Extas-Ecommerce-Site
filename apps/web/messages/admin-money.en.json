@@ -58,6 +58,13 @@
       "payments": "Payments",
       "perDay": "A day on average",
       "tiles": "Cash received by window"
+    },
+    "claims": {
+      "title": "Courier claims to receive",
+      "sub": "Money the couriers still owe the shop on claims it has raised (open or sent)",
+      "count": "{n} claim(s)",
+      "late": "{n} past the deadline",
+      "none": "No courier owes the shop a claim now."
     }
   }
 }

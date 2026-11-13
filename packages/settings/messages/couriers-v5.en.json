@@ -8,6 +8,10 @@
       "payouts": {
         "label": "Couriers: payouts through the courier's own payment request",
         "help": "Off as shipped. When on, a person with the right and the owner's PIN can ask a courier to pay what it holds, through the courier's own payment-request feature. The request is read back by itself; when the courier says Paid, the orders it covers are marked settled. Polling interval in minutes and the smallest amount to ask for are set here."
+      },
+      "claimTerms": {
+        "label": "Couriers: time to pay a claim",
+        "help": "Off as shipped. When on, a claim gets a deadline (the days set here) when it is raised, a claim past it is flagged late, and one close to it is flagged due soon. The last switch posts money won back from a courier to its account; keep it off until the owner has said yes."
       }
     }
   }
