@@ -4199,6 +4199,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | S28 · PR 686–691 (wave 4B) | 13 Nov | Shop ranking, cashbook and forecast, budgets and profit snapshot, report library, report packs and schedules, Home Command as default. Gap close (13 Nov): the five pages are tabs (menu and search), Downloads & report packs in one place (Excel, PDF, Print; English or Bengali), packs by e-mail to the owner, Home tiles for profit, COD and ad spend with pinned reports and the exchange line. Still open: `docs/demo/admin-proto-v5/gap/NAV-PATCH-w4b.md`. Migrations 0250–0253; settings v686–v689; permission `cash.record`. |
 | pending | S28 · PR 686–691 (wave 4B) | 13 Nov | Shop ranking, cashbook and forecast, budgets and profit snapshot, report library, report packs and schedules, Home Command as default. Nav patch: `docs/demo/admin-proto-v5/gap/NAV-PATCH-w4b.md`. Migrations 0250–0253; settings v686–v689; permission `cash.record`. |
 | pending | PR [584](docs/stages/S15.md#pr-584) | 13 Nov | S15: Telegram identity and command routing — off by default, gated by the owner's switch and the Telegram connection's webhook secret. |
 | pending | PR [580](docs/stages/S15.md#pr-580) | 13 Nov | S15: Model auto-suggest with free-model qualification. |

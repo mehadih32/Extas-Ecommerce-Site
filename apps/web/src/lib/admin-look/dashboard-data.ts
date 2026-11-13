@@ -9,10 +9,12 @@
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { dayStart, daysPeriod, groupLines, kpi, kpiByDay, lines, sumLines, ymdIn, type Kpi, type LineRow, type Period } from '@extas/metrics';
 import { imageSources, type ImageSource } from '@extas/media';
+import { profitReport } from '@extas/inventory';
 import type { AdminToday } from '@extas/settings';
 import type { QueueRow } from '../admin-shell/queues';
 import type { ShellViewer } from '../admin-shell/sections';
 import { OFF_SITE, offSiteMissing } from '../backup-gate';
+import { moneyOverview } from '../money-overview';
 import { chartWindow, shiftDay, type DashRange } from './range';
 
 // PR 631 (CN-036): 'feed' (the newest orders, Lumen Today's live feed) and 'goal' (this month's Sales against the
@@ -20,7 +22,9 @@ import { chartWindow, shiftDay, type DashRange } from './range';
 // PR 658 (CN-025/CN-027 follow-up 380, second half; CN-044, ERP lane): 'funnel' (orders placed in the selected
 // period and how far each one got, from the four stage timestamps already on Order) and 'hours' (the last
 // `admin.dashboardDesigns.courierDays` days of orders by weekday and 2-hour slot, for the Command center design).
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours'] as const;
+// S28 · PR 691 (admin prototype v5, Home Command): 'profit' (net profit, delivered sales and ad spend of the period and the one before,
+// from the same report as Finance), 'cod' (the cash the couriers hold) and 'pins' (the library cards pinned to Home).
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours', 'profit', 'cod', 'pins'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -36,6 +40,9 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   goal: ['metrics.read'],
   funnel: ['orders.read'],
   hours: ['orders.read'],
+  profit: ['books.read'],
+  cod: ['payments.view'],
+  pins: ['reports.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -178,6 +185,50 @@ export interface DashGoal {
   daysLeft: number;
 }
 
+/** The profit report of one span, as the Home tiles need it. Net profit is null while the ad spend is not known. */
+export interface DashProfitSpan {
+  salesMinor: number;
+  netMinor: number | null;
+  /** Null while an ad platform's spend for a day is not known. */
+  adsMinor: number | null;
+  orders: number;
+}
+export interface DashProfit {
+  cur: DashProfitSpan;
+  prev: DashProfitSpan;
+}
+/** The cash the couriers hold for the shop (COD collected, not yet paid out) and how many parcels it is in. */
+export interface DashCod {
+  minor: number;
+  parcels: number;
+}
+/** One library card pinned to Home: its figure (and the span before) when Home has it, else a link to the library. */
+export interface DashPin {
+  id: string;
+  kind: 'money' | 'count' | 'link';
+  now: number | null;
+  prev: number | null;
+}
+
+/** Delivered sales per unit of ad spend; null with no spend. */
+export const salesPerUnit = (salesMinor: number, adsMinor: number | null): number | null => (adsMinor !== null && adsMinor > 0 ? salesMinor / adsMinor : null);
+
+/** The pinned cards in the order pinned: a figure for sales, profit, orders and average order; the others open the library. */
+export function pinTiles(ids: readonly string[], p: DashProfit | null): DashPin[] {
+  const known = new Set(['sales', 'profit', 'orders', 'aov', 'discount', 'restock', 'unsold']);
+  const aov = (x: DashProfitSpan) => (x.orders > 0 ? Math.round(x.salesMinor / x.orders) : null);
+  const out: DashPin[] = [];
+  for (const id of ids) {
+    if (!known.has(id)) continue;
+    if (p && id === 'sales') out.push({ id, kind: 'money', now: p.cur.salesMinor, prev: p.prev.salesMinor });
+    else if (p && id === 'profit') out.push({ id, kind: 'money', now: p.cur.netMinor, prev: p.prev.netMinor });
+    else if (p && id === 'orders') out.push({ id, kind: 'count', now: p.cur.orders, prev: p.prev.orders });
+    else if (p && id === 'aov') out.push({ id, kind: 'money', now: aov(p.cur), prev: aov(p.prev) });
+    else out.push({ id, kind: 'link', now: null, prev: null });
+  }
+  return out;
+}
+
 export interface DashboardData {
   parts: ReadonlySet<DashPart>;
   range: DashRange;
@@ -197,6 +248,9 @@ export interface DashboardData {
   goal: DashGoal | null;
   funnel: DashFunnel | null;
   hours: DashHours | null;
+  profit: DashProfit | null;
+  cod: DashCod | null;
+  pins: DashPin[] | null;
 }
 
 const OPEN = {
@@ -553,11 +607,28 @@ async function hours(c: DashCtx): Promise<DashHours> {
   return { days, cells };
 }
 
+/** S28 · PR 691: the profit report for the selected period and the one before (the same report as Finance). */
+async function profit(c: DashCtx): Promise<DashProfit> {
+  const span = async (from: string, to: string): Promise<DashProfitSpan> => {
+    const r = await profitReport({ db: c.db, settings: c.settings as Parameters<typeof profitReport>[0]['settings'] }, c.storeId, from, to);
+    return { salesMinor: r.salesMinor, netMinor: r.netProfitMinor, adsMinor: r.adsMinor, orders: r.orders };
+  };
+  const [cur, prev] = await Promise.all([span(c.range.from, c.range.to), span(c.range.prev.from, c.range.prev.to)]);
+  return { cur, prev };
+}
+
+/** S28 · PR 691: the cash the couriers hold for the shop. */
+async function cod(c: DashCtx): Promise<DashCod> {
+  const o = await moneyOverview(c.db, c.storeId, c.now, c.timeZone);
+  return { minor: o.cod.minor, parcels: o.cod.parcels };
+}
+
 export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Promise<DashboardData> {
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
-  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr] = await Promise.all([
+  const needProfit = parts.has('profit') || parts.has('pins');
+  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr, pf, cd, pinRows] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
@@ -569,6 +640,9 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
     on('goal', () => goal(c)),
     on('funnel', () => funnel(c)),
     on('hours', () => hours(c)),
+    needProfit ? profit(c) : Promise.resolve(null),
+    on('cod', () => cod(c)),
+    on('pins', () => c.db.reportView.findMany({ where: { storeId: c.storeId, reportKey: 'pin', archivedAt: null }, orderBy: { createdAt: 'asc' }, select: { name: true } })),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr, profit: parts.has('profit') ? pf : null, cod: cd, pins: pinRows ? pinTiles(pinRows.map((r) => r.name), pf) : null };
 }
