@@ -23,6 +23,7 @@
     { "id": "support/rider-issues", "route": "/admin/support/rider-issues" },
     { "id": "support/replies", "route": "/admin/support/replies" },
     { "id": "support/comments", "route": "/admin/support/comments" },
+    { "id": "support/live", "route": "/admin/support/comments/live" },
     { "id": "support/app", "route": "/admin/support/app" },
     { "id": "support/analytics", "route": "/admin/support/analytics" },
     { "id": "products/all", "route": "/admin/products" },

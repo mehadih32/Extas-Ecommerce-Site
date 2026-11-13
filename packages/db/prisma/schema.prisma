@@ -438,6 +438,8 @@ model Store {
   supportProductShares    SupportProductShare[]
   supportFollowUps        SupportFollowUp[]
   supportSavedReplies     SupportSavedReply[]
+  liveSessions            LiveSession[]
+  liveCaptures            LiveCapture[]
   supportEscalations      SupportEscalation[]
   supportChannelTaps      SupportChannelTap[]
   conversationEvents      ConversationEvent[]
@@ -11492,4 +11494,52 @@ model SupportSavedReply {
 
   @@unique([storeId, shortcut])
   @@index([storeId, archivedAt])
+}
+
+/// @stage S28 · PR 694 (CN-048) — Inbox › Comments › Live selling: one live session of a Page (Facebook or Instagram) with
+/// the product codes said on air (`codes`: [{ code: "P1", productId }]). `status` LIVE | ENDED; one LIVE per store.
+model LiveSession {
+  id          String        @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store         @relation(fields: [storeId], references: [id])
+  title       String
+  /// messenger (Facebook) | instagram
+  channelKind String
+  status      String        @default("LIVE")
+  codes       Json
+  startedAt   DateTime      @default(now()) @db.Timestamptz(3)
+  endedAt     DateTime?     @db.Timestamptz(3)
+  createdById String?       @db.Uuid
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+  captures    LiveCapture[]
+
+  @@index([storeId, status, startedAt])
+}
+
+/// @stage S28 · PR 694 (CN-048) — a comment caught during a live session. `status` NEW | IN_BAG (its piece is in that chat's
+/// bag: staff confirm by call, then "Create order" in the chat) | SKIPPED. `parsed` is the reading of the words
+/// ({ ok, code, size, qty, guessedCode } or { ok: false, reason }). Never deleted.
+model LiveCapture {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store       @relation(fields: [storeId], references: [id])
+  sessionId      String      @db.Uuid
+  session        LiveSession @relation(fields: [sessionId], references: [id])
+  /// The channel's id of the comment (null for one typed in by hand).
+  commentId      String?
+  commenterId    String
+  name           String?
+  text           String
+  parsed         Json
+  status         String      @default("NEW")
+  conversationId String?     @db.Uuid
+  variantId      String?     @db.Uuid
+  qty            Int?
+  practice       Boolean     @default(false)
+  createdAt      DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime    @updatedAt @db.Timestamptz(3)
+
+  @@unique([sessionId, commentId])
+  @@index([storeId, sessionId, createdAt])
 }
