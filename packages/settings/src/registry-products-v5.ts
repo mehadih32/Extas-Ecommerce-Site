@@ -159,7 +159,7 @@ export const productsV5Settings = {
       off: [],
       auto: true,
       autoN: 5,
-      samplePriceMinor: 99900,
+      samplePriceMinor: 99900, // hardcode-ok: the demo sample price as shipped, a setting default the owner edits
       popupEn: 'This product is coming soon. See what is available now.',
       popupBn: 'এই প্রোডাক্টটা শিগগিরই আসছে। এখন যা আছে সেগুলো দেখুন।',
     },

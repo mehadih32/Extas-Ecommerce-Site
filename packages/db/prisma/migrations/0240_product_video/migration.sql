@@ -1,4 +1,4 @@
--- S28 · PR 681 — a product's video (a link or an uploaded file). Additive only: a new table and enum; nothing is
+-- PR 681 (S28 Admin v5) — a product's video (a link or an uploaded file). Additive only: a new table and enum; nothing is
 -- dropped or renamed.
 -- CreateEnum
 CREATE TYPE "VideoSource" AS ENUM ('LINK', 'FILE');

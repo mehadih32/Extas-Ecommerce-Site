@@ -1,4 +1,4 @@
--- S28 · PR 683 — size charts the ERP sends per style (inbound). Additive only: a new table; nothing is dropped or renamed.
+-- PR 683 (S28 Admin v5) — size charts the ERP sends per style (inbound). Additive only: a new table; nothing is dropped or renamed.
 -- CreateTable
 CREATE TABLE "ErpSizeChart" (
     "id" UUID NOT NULL,
