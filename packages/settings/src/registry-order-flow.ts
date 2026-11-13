@@ -1,4 +1,4 @@
-// S28 · Admin v5 · the Order flow rules (docs/demo/admin-proto-v5/DECISIONS.md "Order flow"). Registry version 300 (PR 664);
+// S28 · Admin v5 · the Order flow rules (docs/demo/admin-proto-v5/DECISIONS.md "Order flow"). Registry version 310 (PR 664);
 // PR 665 and PR 669 add their own keys to this file at their own versions. Labels: messages/order-flow.<lang>.json (Orders
 // group; the Rules page of PR 676 shows them under "Order flow"). Every switch ships OFF and every number is empty until
 // the owner sets it (CN-018): nothing here is decided in code.
@@ -11,9 +11,9 @@ import { z } from 'zod';
 import { setting } from './define';
 import { dictionarySchema } from './schemas';
 
-const V664 = 300;
-const V665 = 301;
-const V669 = 302;
+const V664 = 310;
+const V665 = 311;
+const V669 = 312;
 
 /** Role keys are lower-case words and dots or hyphens (`order-manager`). */
 const roleKeySchema = z
