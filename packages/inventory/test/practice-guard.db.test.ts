@@ -49,7 +49,7 @@ describe.skipIf(!HAS_TEST_DB)('practice orders never reach the ERP (PR 706)', ()
   const doc = (id: string) => ({
     type: 'order.status' as const,
     externalOrderId: `X-${id.slice(0, 6)}`,
-    body: { status: 'confirmed' },
+    body: { status: 'PROCESSING' as const },
   });
 
   beforeAll(async () => {
