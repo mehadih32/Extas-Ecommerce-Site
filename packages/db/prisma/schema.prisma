@@ -11689,6 +11689,10 @@ model StartFreshRun {
   createdAt       DateTime         @default(now()) @db.Timestamptz(3)
   finishedAt      DateTime?        @db.Timestamptz(3)
   updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  /// The server's purge of the append-only kinds (orders, customers, chats, coupon uses, analytics): when it finished (PR 706).
+  purgedAt        DateTime?        @db.Timestamptz(3)
+  /// What the purge removed, rows per table.
+  purgeResult     Json             @default("{}")
 
   @@index([storeId, createdAt])
 }

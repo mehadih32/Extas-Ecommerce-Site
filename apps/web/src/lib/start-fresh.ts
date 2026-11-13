@@ -6,9 +6,12 @@
 //   - Kinds the site may clear itself (carts, reviews, returns) go in ONE transaction, children first; a refusal rolls
 //     them all back and the try is FAILED with the server's words.
 //   - Kinds that sit on tables the app may never delete from (orders with their events, customers with their wallets,
-//     coupon uses, chats, analytics, customer problems) are HANDED_OFF: recorded with their counts for the server's
-//     own purge (a server job, run in the owner's name from the backup-checked state) — the site never deletes them.
-//   - Real products are kept unless the owner chooses "remove": then they are archived (they come back from Archived).
+//     coupon uses, chats, analytics) are HANDED_OFF: recorded with their counts for the server's own purge (the job
+//     `startFresh.purge`, run in the owner's name from the backup-checked state) — the site never deletes them.
+//   - Products the owner uploaded are always kept. Demo products (Product.isDemo, PR 684) are kept unless the owner ticks
+//     "also remove the demo products": then only they are archived (they come back from Archived).
+//   - Customer problem records are kept for good (owner decision 16, 13 Nov 2026).
+//   - The handed-off kinds are removed by the server's job `startFresh.purge` (packages/jobs, migration 0277); the run turns DONE then.
 //   - The ERP's own test entries are cleared by an ERP call; it is a mock until the ERP ships (`erpStatus` says so).
 // Settings, rules, policies, shop text, staff, keys and the size charts, combos and coupons themselves are never touched.
 // Everything is audited; the PIN is never stored.
@@ -26,7 +29,7 @@ type Db = PrismaClient;
 export const START_FRESH_WORDS = 'START FRESH'; // hardcode-ok: the confirmation phrase the owner's decision names
 
 export type FreshKind = 'orders' | 'customers' | 'carts' | 'returns' | 'inbox' | 'reviews' | 'coupons' | 'reports' | 'problems';
-export type FreshHow = 'CLEARED' | 'HANDED_OFF';
+export type FreshHow = 'CLEARED' | 'HANDED_OFF' | 'KEPT';
 
 interface KindDef {
   id: FreshKind;
@@ -70,7 +73,8 @@ export const KINDS: readonly KindDef[] = [
   },
   { id: 'coupons', how: 'HANDED_OFF', count: (db, s) => db.couponRedemption.count({ where: { storeId: s } }) },
   { id: 'reports', how: 'HANDED_OFF', count: (db, s) => db.analyticsEvent.count({ where: { storeId: s } }) },
-  { id: 'problems', how: 'HANDED_OFF', count: (db, s) => db.customerProblem.count({ where: { storeId: s } }) },
+  { id: 'problems', how: 'KEPT', // owner decision 13 Nov 2026 (16): customer-problem records are never deleted
+     count: (db, s) => db.customerProblem.count({ where: { storeId: s } }) },
 ];
 
 export interface KindResult {
@@ -79,12 +83,19 @@ export interface KindResult {
   how: FreshHow;
 }
 
+/** Does `Product.isDemo` exist (PR 684, wave 4A)? Without it there are no demo products to keep or remove. */
+async function hasDemoColumn(db: Pick<Db, '$queryRaw'>): Promise<boolean> {
+  const r = await db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'Product' AND column_name = 'isDemo'`;
+  return Number(r[0]?.n ?? 0) > 0;
+}
+
 /** What the preview says: counts per kind, the total and the real products. */
-export async function startFreshPreview(db: Db, storeId: number): Promise<{ kinds: KindResult[]; total: number; products: number }> {
+export async function startFreshPreview(db: Db, storeId: number): Promise<{ kinds: KindResult[]; total: number; products: number; demoProducts: number }> {
   const kinds: KindResult[] = [];
   for (const k of KINDS) kinds.push({ id: k.id, count: await k.count(db, storeId), how: k.how });
   const products = await db.product.count({ where: { storeId, status: { not: 'ARCHIVED' } } });
-  return { kinds, total: kinds.reduce((n, k) => n + k.count, 0), products };
+  const demo = (await hasDemoColumn(db)) ? Number((await db.$queryRaw<{ n: number }[]>`SELECT count(*)::int AS n FROM "Product" WHERE "storeId" = ${storeId} AND "isDemo" = true AND "status" <> 'ARCHIVED'`)[0]?.n ?? 0) : 0;
+  return { kinds, total: kinds.reduce((n, k) => n + (k.how === 'KEPT' ? 0 : k.count), 0), products, demoProducts: demo };
 }
 
 /** The newest backup that SUCCEEDED, and whether it is fresh enough to run on. */
@@ -102,7 +113,7 @@ export interface FreshView {
   backupMaxAgeMinutes: number;
   preview: Awaited<ReturnType<typeof startFreshPreview>>;
   backup: ReturnType<typeof backupGate>;
-  done: { at: string; status: string; removeProducts: boolean; kinds: KindResult[]; erpStatus: string } | null;
+  done: { at: string; status: string; removeProducts: boolean; kinds: KindResult[]; purgedAt: string | null; erpStatus: string } | null;
 }
 
 export async function startFreshView(deps: AdminDeps, actor: Actor, storeId: number): Promise<FreshView> {
@@ -120,7 +131,7 @@ export async function startFreshView(deps: AdminDeps, actor: Actor, storeId: num
     backupMaxAgeMinutes: cfg.backupMaxAgeMinutes,
     preview,
     backup: backupGate(list, now, cfg.backupMaxAgeMinutes),
-    done: run ? { at: (run.finishedAt ?? run.createdAt).toISOString(), status: run.status, removeProducts: run.removeProducts, kinds: run.kinds as unknown as KindResult[], erpStatus: run.erpStatus } : null,
+    done: run ? { at: (run.finishedAt ?? run.createdAt).toISOString(), status: run.status, removeProducts: run.removeProducts, kinds: (run.kinds as unknown as KindResult[]).map((k) => (k.how === 'HANDED_OFF' && run.purgedAt ? { ...k, how: 'CLEARED' as const } : k)), purgedAt: run.purgedAt ? run.purgedAt.toISOString() : null, erpStatus: run.erpStatus } : null,
   };
 }
 
@@ -151,7 +162,8 @@ export async function runStartFresh(deps: AdminDeps, actor: Actor, ctx: RequestC
   try {
     await deps.db.$transaction(async (tx) => {
       for (const k of KINDS) if (k.how === 'CLEARED' && k.clear) await k.clear(tx as unknown as Db, storeId);
-      if (b.data.removeProducts) await tx.product.updateMany({ where: { storeId, status: { not: 'ARCHIVED' } }, data: { status: 'ARCHIVED' } });
+      // only demo products, and only when the box was ticked; a product the owner uploaded is never touched
+      if (b.data.removeProducts && (await hasDemoColumn(tx as unknown as Db))) await tx.$executeRaw`UPDATE "Product" SET "status" = 'ARCHIVED', "updatedAt" = now() WHERE "storeId" = ${storeId} AND "isDemo" = true AND "status" <> 'ARCHIVED'`;
     });
   } catch (e) {
     const detail = (e instanceof Error ? e.message : String(e)).split('\n').filter(Boolean).slice(-1)[0] ?? 'failed';

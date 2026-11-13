@@ -45810,7 +45810,7 @@
    "title": "Start fresh (one time) —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Start fresh (one time)** — Preview of what is cleared, kept and chosen; full Drive backup first; type START FRESH and the PIN; clears test and sample entries on the site and, by an ERP call, the ERP-side test entries; never real data; one-time lock; audited. Built now, but its run action stays behind the owner written OK (BLOCKED.md) and never blocks other work. Size L; depends on 684; shared files: Prisma (test marks on orders, customers, payments, stock moves); ERP contract (mock).",
+   "scope": "**Start fresh (one time)** — Preview of what is cleared, kept and chosen; full Drive backup first; type START FRESH and the PIN; clears test and sample entries on the site and, by an ERP call, the ERP-side test entries; never real data; one-time lock; audited. Built now, but its run action stays behind the owner written OK (BLOCKED.md) and never blocks other work. Size L; depends on 684; shared files: Prisma (test marks on orders, customers, payments, stock moves); ERP contract (mock). Updated 13 Nov 2026 (owner decisions): the server's purge job `startFresh.purge` (migration 0277, a database function that refuses any run the owner did not make) removes the handed-off kinds; customer problems are never deleted; products the owner uploaded are always kept and only demo products go when the box is ticked; the ERP contract names no clear call, so that part stays a mock.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
