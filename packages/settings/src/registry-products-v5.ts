@@ -69,6 +69,25 @@ export const catalogueErpSizeChartSchema = z
   .strict();
 export type CatalogueErpSizeChartSettings = z.output<typeof catalogueErpSizeChartSchema>;
 
+export const catalogueDemoSchema = z
+  .object({
+    /** The master switch: while off no demo product shows anywhere in the shop. */
+    on: z.boolean(),
+    /** Categories where demo products are turned off (a category's whole branch goes with it). */
+    off: z.array(z.uuid()).max(500),
+    /** Hide the demo products of a category by themselves once it has enough real products. */
+    auto: z.boolean(),
+    /** How many real products a category needs before its demo products hide. */
+    autoN: z.int().min(1).max(500),
+    /** The price a demo product shows, in minor units (paisa). */
+    samplePriceMinor: z.int().min(100).max(100_000_000),
+    /** The pop-up a customer sees on Add to bag of a demo product, in English and Bengali. */
+    popupEn: z.string().trim().min(1).max(300),
+    popupBn: z.string().trim().min(1).max(300),
+  })
+  .strict();
+export type CatalogueDemoSettings = z.output<typeof catalogueDemoSchema>;
+
 export const productsV5Settings = {
   'media.quality': setting({
     schema: mediaQualitySchema,
@@ -130,6 +149,28 @@ export const productsV5Settings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 272,
+    version: V,
+  }),
+  'catalogue.demo': setting({
+    schema: catalogueDemoSchema,
+    // hardcode-ok: shipped defaults (off); every value is edited on Products › Demo products
+    default: {
+      on: false,
+      off: [],
+      auto: true,
+      autoN: 5,
+      samplePriceMinor: 99900,
+      popupEn: 'This product is coming soon. See what is available now.',
+      popupBn: 'এই প্রোডাক্টটা শিগগিরই আসছে। এখন যা আছে সেগুলো দেখুন।',
+    },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'catalogue',
+    labelKey: 'catalogue.demo.label',
+    helpKey: 'catalogue.demo.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 273,
     version: V,
   }),
 };
