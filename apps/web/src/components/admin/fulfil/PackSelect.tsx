@@ -48,6 +48,8 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
   const id = useId();
   const [ticked, setTicked] = useState<Set<string>>(new Set());
   const [courierAccountId, setCourier] = useState(couriers[0]?.id ?? '');
+  // PR 674: a one-off note for the courier, for every order of this press
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   // only what the server listed now can be ticked
@@ -66,7 +68,7 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
     if (!toBook.length || !courierAccountId) return;
     setBusy(true);
     setMsg(null);
-    const a = await call('POST', '/api/admin/delivery/bookings', { courierAccountId, orderIds: toBook.map((r) => r.orderId) });
+    const a = await call('POST', '/api/admin/delivery/bookings', { courierAccountId, orderIds: toBook.map((r) => r.orderId), ...(note.trim() ? { note: note.trim() } : {}) });
     setBusy(false);
     if (!a.data.ok) {
       setMsg({ ok: false, text: a.status === 0 ? fulError(dict, 'network') : fulError(dict, a.data.error, ((a.data.details as string[] | undefined) ?? []).join(', '), 'pack') });
@@ -102,6 +104,10 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
                         </option>
                       ))}
                     </select>
+                    <label className="a2-sr" htmlFor={`${id}-n`}>
+                      {t(dict, 'ful.pack.bookNote')}
+                    </label>
+                    <input id={`${id}-n`} className="a2-input" value={note} maxLength={200} placeholder={t(dict, 'ful.pack.bookNote')} onChange={(e) => setNote(e.target.value)} disabled={busy} data-testid="pack-select-note" />
                     <button type="button" className="a2-btn pri" onClick={book} disabled={busy || !courierAccountId} data-testid="pack-select-book">
                       {busy ? t(dict, 'ful.pack.booking') : t(dict, 'ful.pack.sel.book', { n: String(toBook.length) })}
                     </button>

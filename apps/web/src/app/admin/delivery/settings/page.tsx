@@ -16,7 +16,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { PACKING_CHECK_MODES, ZONE_UNMAPPED_RULES } from '@extas/settings';
+import { COURIER_MESSAGE_EVENTS, COURIER_MESSAGE_TOKENS, PACKING_CHECK_MODES, ZONE_UNMAPPED_RULES } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -168,6 +168,12 @@ export default async function DeliverySettingsPage() {
     { kind: 'number', path: 'warnDays', label: t(d, 'cr.s.claims.warnDays'), help: t(d, 'cr.s.claims.warnDaysHelp'), min: 0, max: 60 },
     { kind: 'switch', path: 'postRecovered', label: t(d, 'cr.s.claims.postRecovered'), help: t(d, 'cr.s.claims.postRecoveredHelp') },
   ];
+  // S28 · PR 674: the texts to a courier (off): a switch and one text per event in both languages
+  const msgPair = (k: string) => ({ en: `${t(d, `cr.s.msg.ev.${k}`)} · ${lang.en}`, bn: `${t(d, `cr.s.msg.ev.${k}`)} · ${lang.bn}` });
+  const msgFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: t(d, 'cr.s.msg.enabled'), help: t(d, 'cr.s.msg.enabledHelp') },
+    ...COURIER_MESSAGE_EVENTS.map((e): FieldsCardField => ({ kind: 'pair', path: e, label: msgPair(e), max: 240, help: e === 'booking' ? t(d, 'cr.s.msg.tokens', { tokens: COURIER_MESSAGE_TOKENS.join(', ') }) : undefined })),
+  ];
   // follow-up 462: the packing step's cards, under More options
   const pa = (k: string, vars?: Record<string, string>) => t(d, `eta.packing.${k}`, vars);
   const packCard = (key: 'fulfilment.packing.check' | 'fulfilment.packing.photo' | 'fulfilment.packing.weight' | 'fulfilment.packing.queue' | 'fulfilment.packing.issues') => ({ key: cards[key].key, value: cards[key].value, version: cards[key].version });
@@ -228,6 +234,7 @@ export default async function DeliverySettingsPage() {
       <FieldsCard url={API} screen={{ key: cards['delivery.couriers'].key, value: cards['delivery.couriers'].value, version: cards['delivery.couriers'].version }} fields={defaultFields} texts={{ ...texts, h: t(d, 'cr.s.card.h'), d: t(d, 'cr.s.card.d') }} canEdit={canEdit} testId="delivery-courier-default" />
       <FieldsCard url={API} screen={{ key: cards['delivery.courier.payouts'].key, value: cards['delivery.courier.payouts'].value, version: cards['delivery.courier.payouts'].version }} fields={payoutFields} texts={{ ...texts, h: t(d, 'cr.s.payouts.h'), d: t(d, 'cr.s.payouts.d') }} canEdit={canEdit} testId="delivery-courier-payouts" />
       <FieldsCard url={API} screen={{ key: cards['delivery.courier.claimTerms'].key, value: cards['delivery.courier.claimTerms'].value, version: cards['delivery.courier.claimTerms'].version }} fields={claimFields} texts={{ ...texts, h: t(d, 'cr.s.claims.h'), d: t(d, 'cr.s.claims.d') }} canEdit={canEdit} testId="delivery-courier-claims" />
+      <FieldsCard url={API} screen={{ key: cards['delivery.courier.messages'].key, value: cards['delivery.courier.messages'].value, version: cards['delivery.courier.messages'].version }} fields={msgFields} texts={{ ...texts, h: t(d, 'cr.s.msg.h'), d: t(d, 'cr.s.msg.d') }} canEdit={canEdit} testId="delivery-courier-messages" />
       <FieldsCard url={API} screen={card('delivery.courier.webhooks')} fields={webhookFields} texts={{ ...texts, h: ck('webhooks.h'), d: ck('webhooks.d') }} canEdit={canEdit} testId="delivery-courier-webhooks" />
       <FieldsCard url={API} screen={card('delivery.courier.zoneSync')} fields={zoneFields} texts={{ ...texts, h: ck('zoneSync.h'), d: ck('zoneSync.d') }} canEdit={canEdit} testId="delivery-courier-zones" />
       {/* the browser opens it before hydration when the address names #packing: that `open` is expected */}

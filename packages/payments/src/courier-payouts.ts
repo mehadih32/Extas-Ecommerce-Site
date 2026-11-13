@@ -17,6 +17,7 @@
 //
 // A paid amount that differs from what the covered parcels come to is kept in `differenceMinor` and flagged, never
 // corrected; a parcel the courier's request did not cover stays with the courier. Nothing here deletes anything.
+import { minorToMajorText } from '@extas/adapters/money';
 import { courierCapabilitiesOf, type CourierPayoutInfo, type PayoutRequestResult } from '@extas/adapters';
 import { verifyOwnerPin, type PinPolicy } from '@extas/auth';
 import type { Prisma } from '@extas/db/client';
@@ -93,7 +94,7 @@ const idsOf = (v: Prisma.JsonValue): string[] => (Array.isArray(v) ? v.filter((x
 const rowOf = ({ shipmentIds, ...r }: Row): PayoutRow => ({ ...r, parcels: idsOf(shipmentIds).length });
 
 async function account(deps: PaymentsDeps, storeId: number, id: string) {
-  const a = UUID.test(id) ? await deps.db.courierAccount.findFirst({ where: { id, storeId }, select: { id: true, providerKey: true, enabled: true, archivedAt: true } }) : null;
+  const a = UUID.test(id) ? await deps.db.courierAccount.findFirst({ where: { id, storeId }, select: { id: true, name: true, providerKey: true, enabled: true, archivedAt: true } }) : null;
   if (!a) throw new PaymentsError('NOT_FOUND', 'no such courier account', ['courierAccountId']);
   return a;
 }
@@ -172,6 +173,22 @@ async function pinPolicy(deps: PaymentsDeps): Promise<PinPolicy> {
   return { minLength, maxLength: Math.max(minLength, PIN_MAX_DIGITS), maxAttempts, lockMinutes };
 }
 
+/**
+ * S28 · PR 674: the owner's payout text (`delivery.courier.messages`) filled for this request, in the booking card's note
+ * language; null while the switch is off. It travels as the payout request's note, never as a message of its own.
+ */
+async function payoutNote(deps: PaymentsDeps, storeId: number, courierName: string, amountMinor: number): Promise<string | null> {
+  const cfg = await setting(deps, storeId, 'delivery.courier.messages');
+  if (!cfg.enabled) return null;
+  const [lang, currency] = await Promise.all([setting(deps, storeId, 'delivery.courier.booking'), setting(deps, storeId, 'store.currency')]);
+  const values: Record<string, string> = { courier: courierName, amount: minorToMajorText(amountMinor, currency) };
+  const text = cfg.payout[lang.noteLang]
+    .replace(/\{(\w+)\}/g, (_, k: string) => values[k] ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text || null;
+}
+
 /** Asks the courier to pay what the parcels it holds come to (`payments.settle` and the owner's PIN). */
 export async function requestPayout(deps: PaymentsDeps, who: Who, courierAccountId: string, input: unknown): Promise<PayoutRow & { replay: boolean }> {
   await allow(deps, who, 'payments.settle');
@@ -218,9 +235,10 @@ export async function requestPayout(deps: PaymentsDeps, who: Who, courierAccount
     await auditMoney(tx, who, 'courier.payout.request', 'CourierPayout', r.id, undefined, { courierAccountId: a.id, amountMinor: cov.netMinor, parcels: cov.parcels.length, mode });
     return r;
   });
+  const note = await payoutNote(deps, storeId, a.name, cov.netMinor);
   let result: PayoutRequestResult;
   try {
-    result = await api.payouts.request!({ merchantRef: row.id, amountMinor: cov.netMinor, note: null });
+    result = await api.payouts.request!({ merchantRef: row.id, amountMinor: cov.netMinor, note });
   } catch (e) {
     result = { ok: false, error: e instanceof Error ? e.message.split('\n')[0]!.slice(0, 200) : 'no answer', unknown: true };
   }
