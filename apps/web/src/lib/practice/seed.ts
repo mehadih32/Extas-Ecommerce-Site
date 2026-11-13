@@ -295,7 +295,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
         sizeLabel: v.size,
         quantity: qty,
         unitPriceMinor: v.priceMinor,
-        discountMinor: 0,
+        discountMinor: 0, // hardcode-ok: a sample order without a discount
         lineTotalMinor: v.priceMinor * qty,
         unitCostMinor: v.costMinor,
         createdAt: placedAt,
