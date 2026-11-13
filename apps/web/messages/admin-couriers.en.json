@@ -188,6 +188,24 @@
         "warnDaysHelp": "0 means no early flag.",
         "postRecovered": "Post money won back to the courier's account",
         "postRecoveredHelp": "Keep this off until the owner has said yes."
+      },
+      "msg": {
+        "h": "Messages to the courier",
+        "d": "One text per event, in English and Bengali. Off until you switch it on.",
+        "enabled": "Use these texts",
+        "enabledHelp": "The booking, delivery and COD texts go in the parcel's note; the payout text goes in the payout request's note. The rest are for you to copy.",
+        "tokens": "You can use these placeholders: {tokens}",
+        "ev": {
+          "booking": "Booking note",
+          "delivery": "Delivery instruction",
+          "cod": "COD line",
+          "reattempt": "Re-attempt",
+          "hold": "Hold",
+          "cancel": "Cancel",
+          "returnPickup": "Return pick-up",
+          "claim": "Claim",
+          "payout": "Payout"
+        }
       }
     },
     "t": {
@@ -303,6 +321,28 @@
       "check": "Choose the parcel, type an amount and say what happened.",
       "raised": "Claim raised.",
       "noParcels": "This courier has no parcels yet."
+    },
+    "q": {
+      "title": "Texts for this courier",
+      "sub": "The texts you wrote in Delivery settings, to copy into the courier's own panel, phone or chat; fill in the placeholders by hand. Nothing is sent from here.",
+      "off": "The texts are switched off, so booking and payout requests carry none of them. You can still copy them here.",
+      "edit": "Change the texts",
+      "copy": "Copy",
+      "copied": "Copied",
+      "where": {
+        "note": "Goes in the parcel's note",
+        "payout": "Goes in the payout request's note",
+        "copy": "For you to copy"
+      },
+      "langs": "Language of the parcel note",
+      "lang": {
+        "en": "English",
+        "bn": "বাংলা"
+      }
+    },
+    "o": {
+      "note": "A note for the courier (this press only)",
+      "noteHelp": "Goes first in the parcel's note, before your saved texts."
     }
   }
 }

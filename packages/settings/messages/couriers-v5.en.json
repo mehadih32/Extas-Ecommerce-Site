@@ -12,6 +12,10 @@
       "claimTerms": {
         "label": "Couriers: time to pay a claim",
         "help": "Off as shipped. When on, a claim gets a deadline (the days set here) when it is raised, a claim past it is flagged late, and one close to it is flagged due soon. The last switch posts money won back from a courier to its account; keep it off until the owner has said yes."
+      },
+      "messages": {
+        "label": "Couriers: messages to the courier",
+        "help": "Off as shipped. When on, the booking, delivery and COD texts go to the courier in the parcel's note (in the note language of the booking card), and the payout text in the payout request's note. The other texts are offered to copy in Courier 360. Placeholders: order, customer, cod, courier, date, amount, consignment. Nothing is sent to a courier by itself."
       }
     }
   }
