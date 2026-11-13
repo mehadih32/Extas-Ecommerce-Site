@@ -580,6 +580,64 @@
       "toDraft": "Make it a real product",
       "confirmDraft": "Turn this sample into an ordinary draft product? It leaves the demo list and its sample prices are switched off. You finish it and publish it yourself.",
       "drafted": "It is now a draft product"
+    },
+    "wiz": {
+      "steps": "Add-product steps",
+      "of": "Step {n} of {total}",
+      "back": "Back",
+      "next": "Save and continue",
+      "full": "Open the full product screen",
+      "saveNote": "Use Save on the product screen to keep what you typed, then Save and continue. The product stays a draft until you publish it in step 8.",
+      "preview": "How it looks on a phone",
+      "noPhoto": "No photo yet",
+      "noName": "No name yet",
+      "noPrice": "No price yet",
+      "counts": "{photos} photos · {colours} colours",
+      "resume": "Continue where I stopped",
+      "resumeAt": "· stopped at step {n}",
+      "demoNote": "Sample products in this category can be turned off in",
+      "s": {
+        "start": {
+          "name": "Start",
+          "title": "Name and where it comes from",
+          "why": "A clear name and the right category let customers find it. If the style is made in the ERP, add its style code here and the ERP's details come along. For a set of products, use Combos instead."
+        },
+        "basics": {
+          "name": "Basics",
+          "title": "Describe the product",
+          "why": "The fabric and the description are what a customer reads before buying. Write what you would tell a customer in the shop."
+        },
+        "colours": {
+          "name": "Colours and sizes",
+          "title": "Pick colours and sizes",
+          "why": "Every colour and size you pick becomes one item you can sell and count. Pick only what you really have."
+        },
+        "photos": {
+          "name": "Photos and video",
+          "title": "Add photos and a video",
+          "why": "Photos sell the product. Add a front photo for every colour, then a back and a close-up. A short video is optional."
+        },
+        "prices": {
+          "name": "Prices and stock",
+          "title": "Set prices for every item",
+          "why": "Every item needs a selling price. Stock comes from the ERP and is shown here only to read. Items bought as B-grade keep their own price and stock."
+        },
+        "size": {
+          "name": "Size chart",
+          "title": "Add a size chart",
+          "why": "A size chart means fewer returns. If the ERP has one for this style, take it with one button; your own edits are never overwritten."
+        },
+        "search": {
+          "name": "Search and Google",
+          "title": "Check the link and the Google name",
+          "why": "This is how the product shows in Google. The name and link are made for you; change them only if they look wrong."
+        },
+        "publish": {
+          "name": "Publish",
+          "title": "Check and publish",
+          "why": "The checklist shows what is still missing. When it is all green, publish. Nothing goes on the shop before that."
+        }
+      }
     }
   },
   "checks": {

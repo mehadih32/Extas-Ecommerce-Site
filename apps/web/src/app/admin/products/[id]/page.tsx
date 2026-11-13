@@ -17,7 +17,8 @@ import { VideoPanel } from '@/components/admin/products/VideoPanel';
 import { ErpChartPanel } from '@/components/admin/products/ErpChartPanel';
 import { erpChartFields, fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
 import { productV5Cards } from '@/lib/products-v5-settings-api';
-import { nameIn } from '@/components/admin/products/model';
+import { formatMoney, nameIn } from '@/components/admin/products/model';
+import { WizardBar } from '@/components/admin/products/WizardBar';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -35,8 +36,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'products.edit.metaTitle'), robots: { index: false, follow: false } };
 }
 
-export default async function ProductEditPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function ProductEditPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const wizardStep = cat.parseWizardStep(sp.wizard);
   if (!UUID.test(id)) notFound();
   const deps = adminDeps();
   const view = await adminView(deps);
@@ -88,6 +96,8 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
   }
   const video = await cat.getProductVideo(c.deps, c.who, id);
   const erpChart = await cat.erpChartView(c.deps, c.who, id);
+  const wizard = wizardStep ? await cat.wizardView(c.deps, c.who, id) : null;
+  const lowest = product.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
   const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
 
   const d = view.dict;
@@ -97,6 +107,23 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
         <Icon name="back" size={14} />
         {t(d, 'products.back')}
       </Link>
+      <div className={wizardStep ? 'wiz' : undefined} data-step={wizardStep ?? undefined}>
+      {wizardStep && wizard ? (
+        <WizardBar
+          dict={d}
+          step={wizardStep}
+          productId={id}
+          done={wizard.done}
+          furthest={wizard.state?.furthest ?? wizardStep}
+          canWrite={c.can('catalogue.write')}
+          preview={{
+            name: nameIn(view.lang, product),
+            price: lowest.length ? formatMoney(Math.min(...lowest), money) : null,
+            photos: wizard.facts.photos,
+            colours: wizard.facts.colours,
+          }}
+        />
+      ) : null}
       <div className="ad-hd">
         <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
         <h1 className="ad-h1">{nameIn(view.lang, product)}</h1>
@@ -126,6 +153,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           upload: !!media && c.can('media.upload'),
         }}
       />
+      <div id="wiz-video">
       <section className="ad-card" aria-label={t(d, 'products.vid.title')}>
         <VideoPanel
           dict={d}
@@ -149,6 +177,8 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           testId="video-settings"
         />
       </details>
+      </div>
+      <div id="wiz-size">
       <section className="ad-card" aria-label={t(d, 'products.erpc.title')}>
         <ErpChartPanel dict={d} productId={id} canWrite={c.can('catalogue.write')} settingsHref="#erp-chart-settings" chart={erpChart} />
       </section>
@@ -163,6 +193,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           testId="erp-chart-settings"
         />
       </details>
+      </div>
       <details className="ad-card pa-more" id="photo-checks" data-testid="photo-checks-card">
         <summary>{t(d, 'products.pm.checks.more')}</summary>
         <FieldsCard
@@ -174,6 +205,12 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           testId="photo-checks"
         />
       </details>
+      {wizardStep === 8 ? (
+        <p className="ad-mini">
+          {t(d, 'products.wiz.demoNote')} <Link href="/admin/products/demo">{t(d, 'products.demo.title')}</Link>
+        </p>
+      ) : null}
+      </div>
     </AdminFrame>
   );
 }
