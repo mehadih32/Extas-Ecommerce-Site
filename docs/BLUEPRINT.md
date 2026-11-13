@@ -2470,6 +2470,7 @@ their stages. 2–3 agents build at once (A1.4 V2).
 | 6 | S15, S16, S21 | 615–618 the ERP account ledger, books match, daily summary and fixed costs (25 Oct 2026; Launch, built as soon as 607–614 are in); 506, 577–585 AI 360 and agents; 504, 536, 537, 568 finance; 570 audit runner, 594 PR register | The control room and the numbers it governs |
 | 7 | S24, S25 | 539 | Imagery, once the catalogue is real |
 | 8 | S17, S18, S19 | 619 switch-over and 621 ERP acceptance suite (25 Oct 2026), 620 signed ERP calls; 623 the customer's privacy request (1 Nov 2026, CN-034); 511, 512 multi-store; 507 backup settings; 587 WordPress migration (on go-live day, with 586); 652 closed stages hidden by a switch and 653 redirect import from the old public sitemap (CN-036, 6 Nov 2026, before go-live) | Multi-store, compliance and go-live |
+| 9 | S28 | 659–707 (13 Nov 2026, CN-048): the admin prototype v5 becomes the real admin, in five sub-waves (shell and orders, couriers, rules and offers, products and finance and reports, the rest) | After launch; the owner-approved prototype is the admin UI truth; S15, S24, S25 untouched (CN-047) |
 | — | S26, S27 | 513–518 (parked); S27 unnumbered; the admin looks 649–651 (parked, S00, CN-036) | Handover pack, built only on the owner's word |
 
 **Dependencies that cross waves (Gyani's build notes, not owner decisions):**
