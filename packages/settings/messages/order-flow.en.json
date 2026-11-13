@@ -12,7 +12,7 @@
   "returns": {
     "replacement": {
       "label": "Replacement for a defective or wrong item",
-      "help": "Send a defective, damaged or wrong piece again free: the same piece, no price difference, no refund and no wallet credit, and the old piece comes back. Off as shipped. Hours: how long after delivery one can be opened (168 as shipped). Old piece days: how many days the old piece has to come back (7 as shipped; shown on the returns board, never billed by itself). Reasons: which of defect, damage and wrong open one."
+      "help": "Send a defective, damaged or wrong piece again free: the same piece, no price difference, no refund and no wallet credit, and the old piece comes back. On as shipped (the owner's decision, 13 Nov 2026). Hours: how long after delivery one can be opened (168 as shipped). Old piece days: how many days the old piece has to come back (7 as shipped; shown on the returns board, never billed by itself). Reasons: which of defect, damage and wrong open one."
     }
   }
 }

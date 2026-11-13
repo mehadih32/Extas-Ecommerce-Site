@@ -43963,13 +43963,22 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "courier score out of 10 (CN-048; `risk.courierScore` in Rules › Order flow, off as shipped; six checks scored 0-10 by owner bands, weights and limits; kept as the `order.courierScore` event; a card on the order page; accuracy report; no migration, no new permission)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "risk.courierScore",
+     "order.courierScore"
+    ],
+    "code": [],
+    "names": [],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
@@ -43992,13 +44001,23 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "auto-confirm rules engine (CN-048; `orders.autoConfirm`, off as shipped; nine cases, Low/Normal/Strict presets; auto = the same Confirm with `confirmedBy RULE`, call = a call task, person = a red tag; suspicious orders never auto-confirm; no money, price or COD touched; no migration)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "orders.autoConfirm"
+    ],
+    "code": [],
+    "names": [
+     "confirmedBy RULE"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
@@ -44024,7 +44043,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "price adjust on every order (`orders.priceAdjust` v310, off; taka, percent, wallet or free delivery on an open order; reason from the owner's list; per-role limit, above it a request the owner approves with the PIN; every adjustment a new append-only `OrderPriceAdjustment` line, migration 0200; keys `orders.priceAdjust` and `orders.priceApprove`; owner's written OK in BLOCKED 32)",
+    "note": "price adjust on every order (`orders.priceAdjust` v310, ON as shipped by the owner's written OK of 13 Nov; taka, percent, wallet or free delivery on an open order; reason from the owner's list; per-role limit, above it a request the owner approves with the PIN; every adjustment a new append-only `OrderPriceAdjustment` line, migration 0200; keys `orders.priceAdjust` and `orders.priceApprove`; owner's written OK in BLOCKED 32)",
     "github": []
    },
    "builtFacts": {
@@ -44061,13 +44080,23 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "merge orders into one (`orders.mergeOrders` v301, off: look-back 5 days, auto-merge off, a different address asks; \"Merge\" and \"Merge + call\" on the kept order: lines move at their sold price, the other order is cancelled as duplicate with a note, nothing after Packed; append-only `OrderMerge` record, migration 0201)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "orders.mergeOrders"
+    ],
+    "code": [],
+    "names": [
+     "OrderMerge"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
@@ -44183,13 +44212,19 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "incomplete orders v5 (CN-048; migrations 0210 and 0211; newest first by day, date presets, 'Ordered later', known customer, 'Possible match' (off, marks only), call log, four ready messages that only open WhatsApp or SMS, 'Confirm as order' (COD only, source PHONE), journey report; wiring of 662 and 663)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [],
+    "code": [],
+    "names": [],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
@@ -44212,13 +44247,24 @@
    "owner": "",
    "demo": null,
    "status": {
-    "state": "Filed",
-    "built": false,
-    "date": "",
-    "note": "",
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-13",
+    "note": "replacement path (`returns.replacement` v302, off: 168 hours, old piece back in 7 days, reasons fault, damaged, wrong): a defective or wrong piece is sent again free as an exchange row of kind REPLACEMENT on the returns board, the same piece, no price difference, no charge, no refund and no wallet credit, the old piece due back by a date; the size exchange and the 72-hour cheaper-piece-to-wallet exchange are untouched; migration 0202 adds `kind` and `oldPieceDueAt` to Exchange)",
     "github": []
    },
-   "builtFacts": null,
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "returns.replacement"
+    ],
+    "code": [],
+    "names": [
+     "kind",
+     "oldPieceDueAt"
+    ],
+    "tests": []
+   },
    "updates": [],
    "mentions": [],
    "blueprint": [],
