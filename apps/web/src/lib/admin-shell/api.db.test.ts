@@ -87,7 +87,7 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
     expect(ownerJump.items).toHaveLength(13);
     expect(ownerJump.items.map((i) => i.href)).not.toContain('/admin/ai');
     const staffJump = (await groups(staff, '')).find((g) => g.id === 'jump')!;
-    expect(staffJump.items.map((i) => i.href)).toEqual(['/admin/products']);
+    expect(staffJump.items.map((i) => i.href)).toEqual(['/admin/products', '/admin/products/demo']);
 
     const stock = await groups(owner, 'stock');
     expect(stock.find((g) => g.id === 'pages')?.items.map((i) => i.href)).toContain('/admin/stock');
