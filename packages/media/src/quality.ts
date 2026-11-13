@@ -109,7 +109,10 @@ export async function analysePhoto(body: Uint8Array, rules: MediaQualitySettings
 export async function fixPhoto(
   body: Uint8Array,
   issues: readonly QualityIssue[],
-  cfg: { ratio: Ratio; background: { r: number; g: number; b: number } },
+  cfg: {
+    ratio: Ratio;
+    background: string | { r: number; g: number; b: number };
+  },
   targetBrightness = 110,
 ): Promise<Uint8Array | null> {
   const todo = issues.filter((i) => FIXABLE.includes(i));

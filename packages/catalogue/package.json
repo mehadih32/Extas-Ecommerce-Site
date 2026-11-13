@@ -10,6 +10,7 @@
     ".": "./src/index.ts",
     "./sku": "./src/sku.ts",
     "./video-link": "./src/video-link.ts",
+    "./wizard-pick": "./src/wizard-pick.ts",
     "./size-chart-math": "./src/size-chart-math.ts",
     "./size-finder": "./src/size-finder.ts"
   },
