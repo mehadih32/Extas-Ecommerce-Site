@@ -5,8 +5,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ADMIN_SECTIONS } from '@extas/settings';
-import adminBn from '../../../messages/admin.bn.json';
-import adminEn from '../../../messages/admin.en.json';
+import { adminDicts } from '../admin-i18n';
 import bn from '../../../messages/admin-shell.bn.json';
 import en from '../../../messages/admin-shell.en.json';
 import { ADMIN_PAGES } from '../admin-nav';
@@ -79,8 +78,8 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     const orders = sectionById('orders')!;
     expect(sectionVisible(orders, viewer(['orders.invoice']))).toBe(false);
     // PR 540: Today's digest only reads, so a reader of orders sees it too
-    expect(visibleTabs(orders, viewer(['orders.read'])).map((x) => x.id)).toEqual(['all', 'batch', 'incomplete', 'digest']);
-    expect(visibleTabs(orders, viewer(['orders.read', 'orders.confirm'])).map((x) => x.id)).toEqual(['all', 'confirm', 'batch', 'incomplete', 'digest']);
+    expect(visibleTabs(orders, viewer(['orders.read'])).map((x) => x.id)).toEqual(['batch', 'all', 'incomplete', 'digest']);
+    expect(visibleTabs(orders, viewer(['orders.read', 'orders.confirm'])).map((x) => x.id)).toEqual(['batch', 'all', 'confirm', 'incomplete', 'digest']);
     expect(locate('/admin/orders/digest')?.page?.keys).toEqual(['ordersDigest']);
     expect(locate('/admin/orders/incomplete')?.page?.keys).toEqual(['ordersIncomplete']);
     expect(sectionHome(orders, viewer(['orders.confirm']))).toBe('/admin/orders/confirm');
@@ -91,7 +90,7 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     expect(locate('/admin/orders/returns/refused')?.page?.keys).toEqual(['ordersReturnsRefused']);
     expect(locate('/admin/orders/returns/refused')?.tab?.id).toBe('returns');
     expect(sectionHome(orders, viewer(['returns.qc']))).toBe('/admin/orders/returns/qc');
-    expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['all', 'batch', 'returns', 'incomplete', 'digest']);
+    expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['batch', 'all', 'returns', 'incomplete', 'digest']);
     expect(locateKey('order')?.page?.href).toBe('/admin/orders');
   });
 
@@ -99,7 +98,7 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     for (const s of SHELL_SECTIONS)
       for (const tab of s.tabs)
         if (tab.pages.length > 1)
-          for (const p of tab.pages) for (const d of [adminEn, adminBn]) expect(t(d as unknown as Dict, `nav.${p.keys[0]}`), p.href).not.toContain('nav.');
+          for (const p of tab.pages) for (const d of [adminDicts.en, adminDicts.bn]) expect(t(d, `nav.${p.keys[0]}`), p.href).not.toContain('nav.');
   });
 
   it('an entry leads to the Dashboard itself, the first tab the person may open, or the placeholder', () => {

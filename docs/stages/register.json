@@ -43949,7 +43949,15 @@
      "3 new test cases, admin guide updated"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 13 Nov 2026 (CN-048; new PR 659–707)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 659** — Updated 13 Nov 2026 (CN-048, follow-up): the real menu equals the prototype's `A.NAV` exactly. `apps/web/src/lib/admin-shell/nav-v5.ts` says, per section, the prototype's tabs in its order and words (a real tab with no prototype tab sits under \"More\"; nothing deleted, no address changes); `sections.ts` keeps every built page in `RAW_SECTIONS` and `SHELL_SECTIONS` applies it. Entries for pages built in the not-yet-merged lanes (NAV-PATCH of waves 4A, 4B, 5A, 5B: 25 pages, listed in `nav-pending.json`) stay hidden until their `page.tsx` is merged: run `node tools/nav/activate-pending.mjs` after each of those merges (a test fails with that instruction when a page landed and the list is stale). \"Add product\" is its own Products tab. Tests: `nav-v5.test.ts` (14)."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শেলের মেনু প্রোটোটাইপের মতো সাজানো: Home, Orders, Couriers, Inbox, Rules, Finance — Lumen ডিজাইনই থাকছে, কিছু মোছা হচ্ছে না।",
