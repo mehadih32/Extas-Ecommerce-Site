@@ -10,3 +10,7 @@ The lane may not edit `sections.ts`, `lumen-nav.ts` or `admin-shell.*.json`. The
 - Until then the page opens under the "Questions" place (it passes `productQuestions` to `PageHead` and `SectionTabs`).
   After the patch, change `KEY` in `apps/web/src/app/admin/products/faqs/page.tsx` to `productFaqs`.
 - Shell messages: `shell.page.productFaqs` en "FAQs" / bn "FAQ".
+
+## PR 683 — ERP size chart
+- No new page and no menu change: the panel sits on the product edit page (`/admin/products/<id>`).
+- The wizard (PR 685) reuses the same panel in step 6.

@@ -468,6 +468,7 @@ model Store {
   checkoutVoices          CheckoutVoice[]
   productVideos           ProductVideo[]
   productFaqs             ProductFaq[]
+  erpSizeCharts           ErpSizeChart[]
 }
 
 enum StoreStatus {
@@ -1639,6 +1640,28 @@ model ProductMedia {
   updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([productId, colourId, sortOrder])
+}
+
+/// @stage S28 · PR 683 — a size chart the ERP sent for a style (inbound, one per style code). The shop's own chart made
+/// from it (`appliedSizeChartId`) is never overwritten by a later ERP change: a newer ERP chart only waits here.
+model ErpSizeChart {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  storeId            Int
+  store              Store     @relation(fields: [storeId], references: [id])
+  erpStyleCode       String
+  /// { unit: "inch", fields: ["chest", ...], rows: [{ size, values }] }
+  payload            Json
+  versionHash        String
+  /// MOCK until the ERP ships it, then ERP.
+  source             String
+  receivedAt         DateTime  @default(now()) @db.Timestamptz(3)
+  appliedSizeChartId String?   @db.Uuid
+  appliedHash        String?
+  archivedAt         DateTime? @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, erpStyleCode])
 }
 
 /// @stage S28 · PR 682 — a question and answer shown on the product page: on one product, on every product of a category

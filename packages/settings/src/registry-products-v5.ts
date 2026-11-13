@@ -59,6 +59,16 @@ export const catalogueFaqSchema = z
   .strict();
 export type CatalogueFaqSettings = z.output<typeof catalogueFaqSchema>;
 
+export const catalogueErpSizeChartSchema = z
+  .object({
+    /** The switch: while off the product screens do not offer the ERP's size chart. */
+    on: z.boolean(),
+    /** Where the chart comes from: a sample chart (MOCK) until the ERP ships it, then the ERP. */
+    source: z.enum(['MOCK', 'ERP']),
+  })
+  .strict();
+export type CatalogueErpSizeChartSettings = z.output<typeof catalogueErpSizeChartSchema>;
+
 export const productsV5Settings = {
   'media.quality': setting({
     schema: mediaQualitySchema,
@@ -106,6 +116,20 @@ export const productsV5Settings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 271,
+    version: V,
+  }),
+  'catalogue.erpSizeChart': setting({
+    schema: catalogueErpSizeChartSchema,
+    // hardcode-ok: shipped defaults (off, sample chart); edited on Products › a product › Size chart › More options
+    default: { on: false, source: 'MOCK' },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'catalogue',
+    labelKey: 'catalogue.erpSizeChart.label',
+    helpKey: 'catalogue.erpSizeChart.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 272,
     version: V,
   }),
 };

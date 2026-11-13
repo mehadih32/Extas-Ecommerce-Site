@@ -69,3 +69,17 @@ export function faqFields(d: Dict): FieldsCardField[] {
     { kind: 'switch', path: 'markup', label: t(d, 'products.faq.checks.markup'), help: t(d, 'products.faq.checks.markupHelp') },
   ];
 }
+
+/** PR 683 — ERP size chart settings (`catalogue.erpSizeChart`). */
+export function erpChartFields(d: Dict): FieldsCardField[] {
+  return [
+    { kind: 'switch', path: 'on', label: t(d, 'products.erpc.checks.on'), help: t(d, 'products.erpc.checks.onHelp') },
+    {
+      kind: 'select',
+      path: 'source',
+      label: t(d, 'products.erpc.checks.source'),
+      help: t(d, 'products.erpc.checks.sourceHelp'),
+      options: ['MOCK', 'ERP'].map((v) => ({ value: v, label: t(d, `products.erpc.checks.source_${v}`) })),
+    },
+  ];
+}

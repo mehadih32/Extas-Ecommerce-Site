@@ -13,6 +13,10 @@
     "faq": {
       "label": "Product FAQs",
       "help": "Questions and answers on the product page: per product, per category (added to every product of it by itself) and shop-wide. Shown as a tidy list that opens on tap. Off until you turn it on."
+    },
+    "erpSizeChart": {
+      "label": "ERP size chart",
+      "help": "Use the size chart the ERP sends for a style when adding a product. Until the ERP ships it, a sample chart stands in (source Sample). The shop's own chart made from it is never overwritten by a later ERP change. Off until you turn it on."
     }
   }
 }

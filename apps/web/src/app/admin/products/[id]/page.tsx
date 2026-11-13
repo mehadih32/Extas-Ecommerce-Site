@@ -14,7 +14,8 @@ import { ProductForm } from '@/components/admin/products/ProductForm';
 import type { PhotoNotes } from '@/components/admin/products/PhotoManager';
 import { FieldsCard } from '@/components/admin/settings/FieldsCard';
 import { VideoPanel } from '@/components/admin/products/VideoPanel';
-import { fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
+import { ErpChartPanel } from '@/components/admin/products/ErpChartPanel';
+import { erpChartFields, fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
 import { productV5Cards } from '@/lib/products-v5-settings-api';
 import { nameIn } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -86,6 +87,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
     };
   }
   const video = await cat.getProductVideo(c.deps, c.who, id);
+  const erpChart = await cat.erpChartView(c.deps, c.who, id);
   const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
 
   const d = view.dict;
@@ -145,6 +147,20 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           texts={fieldsTexts(d, 'products.vid.checks', 'products.vid.checks.h', 'products.vid.checks.d')}
           canEdit={c.can('catalogue.write')}
           testId="video-settings"
+        />
+      </details>
+      <section className="ad-card" aria-label={t(d, 'products.erpc.title')}>
+        <ErpChartPanel dict={d} productId={id} canWrite={c.can('catalogue.write')} settingsHref="#erp-chart-settings" chart={erpChart} />
+      </section>
+      <details className="ad-card pa-more" id="erp-chart-settings" data-testid="erp-chart-settings-card">
+        <summary>{t(d, 'products.erpc.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['catalogue.erpSizeChart'].key, value: v5['catalogue.erpSizeChart'].value, version: v5['catalogue.erpSizeChart'].version }}
+          fields={erpChartFields(d)}
+          texts={fieldsTexts(d, 'products.erpc.checks', 'products.erpc.checks.h', 'products.erpc.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="erp-chart-settings"
         />
       </details>
       <details className="ad-card pa-more" id="photo-checks" data-testid="photo-checks-card">

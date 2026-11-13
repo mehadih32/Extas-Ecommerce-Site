@@ -486,6 +486,56 @@
           }
         }
       }
+    },
+    "erpc": {
+      "title": "Size chart from the ERP",
+      "help": "The ERP can send a size chart for each style. Press the button to get it and use it as this product's size chart. Your own edits to a chart are never overwritten by a later ERP change.",
+      "off": "The ERP size chart is off.",
+      "turnOn": "Turn it on",
+      "noStyle": "This product has no ERP style code, so there is no chart to get.",
+      "none": "No chart yet for style {style}.",
+      "fetch": "Get the ERP chart",
+      "use": "Use ERP chart",
+      "useNew": "Use the newer ERP chart",
+      "available": "The ERP chart for style {style} is here: {sizes}. Source: {source}.",
+      "applied": "This product uses the ERP chart for style {style}.",
+      "newer": "The ERP sent a newer chart for style {style}. Your chart is unchanged; use the newer one to make a new chart.",
+      "source_MOCK": "Sample",
+      "source_ERP": "ERP",
+      "fetched": "ERP chart received",
+      "used": "Size chart set from the ERP",
+      "already": "This product already uses it.",
+      "skipped": "Left out: {what}.",
+      "notShipped": "The ERP does not send size charts yet. Choose Sample under More options to try it.",
+      "noErpChart": "The ERP has no chart for this style.",
+      "noGarment": "Choose a category with a garment type first.",
+      "checks": {
+        "h": "ERP size chart",
+        "d": "Whether the product screens offer the ERP's size chart.",
+        "on": "Offer the ERP size chart",
+        "onHelp": "While off, the button is not shown.",
+        "source": "Where the chart comes from",
+        "sourceHelp": "Sample until the ERP ships size charts.",
+        "source_MOCK": "Sample chart",
+        "source_ERP": "The ERP",
+        "more": "ERP size chart settings",
+        "ui": {
+          "save": "Save",
+          "saving": "Saving…",
+          "saved": "Saved",
+          "discard": "Discard",
+          "unsaved": "You have unsaved changes",
+          "readOnly": "You can look but not change these.",
+          "err": {
+            "STALE": "Someone changed this meanwhile. The page was refreshed.",
+            "INVALID_INPUT": "Check the numbers.",
+            "forbidden": "You may not change this.",
+            "unauthorized": "Please sign in again.",
+            "network": "No connection.",
+            "other": "Could not save."
+          }
+        }
+      }
     }
   },
   "checks": {
