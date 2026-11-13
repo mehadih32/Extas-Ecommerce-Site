@@ -69,7 +69,7 @@ export async function planFollowUps(deps: MessagesDeps, storeId: number): Promis
   const now = nowOf(deps);
   const oldest = new Date(now.getTime() - (cfg.firstAfterMinutes * MINUTE + cfg.catchUpHours * 60 * MINUTE + Math.max(cfg.offer.afterHours, 1) * 60 * MINUTE));
   const drafts = await deps.db.checkoutDraft.findMany({
-    where: { storeId, convertedOrderId: null, handledAt: null, phone: { not: null }, followUpCount: { lt: FOLLOW_UP_CEILING }, lastActivityAt: { gte: oldest, lte: new Date(now.getTime() - cfg.firstAfterMinutes * MINUTE) } },
+    where: { storeId, isPractice: false, convertedOrderId: null, handledAt: null, phone: { not: null }, followUpCount: { lt: FOLLOW_UP_CEILING }, lastActivityAt: { gte: oldest, lte: new Date(now.getTime() - cfg.firstAfterMinutes * MINUTE) } },
     orderBy: { lastActivityAt: 'desc' },
     take: BATCH,
     select: { id: true, phone: true, customerId: true, cartId: true, lastStep: true, lastActivityAt: true, followUpCount: true, restoreCode: true, createdAt: true, data: true },

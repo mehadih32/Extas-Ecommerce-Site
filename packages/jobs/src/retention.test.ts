@@ -53,4 +53,11 @@ describe('PR 302 · customers are never auto-deleted', () => {
     expect(worker.length).toBeGreaterThan(5);
     for (const p of worker) expect(readFileSync(p, 'utf8'), rel(p)).not.toMatch(/\b(carryOutErasure|requestErasure|erasure)\b/);
   });
+
+  it("PR 706: the one removal of customers is the owner's Start fresh, a database function that refuses any run the owner did not make; the worker only calls it", () => {
+    const src = readFileSync(join(ROOT, 'packages/jobs/src/start-fresh-purge.ts'), 'utf8');
+    expect(src).toContain('extas_start_fresh_purge');
+    expect(src).not.toMatch(/\.(delete|deleteMany)\s*\(/);
+    expect(src).toContain("status: 'PARTIAL', purgedAt: null");
+  });
 });

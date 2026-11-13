@@ -1,0 +1,12 @@
+{
+  "practice": {
+    "enabled": {
+      "label": "Practice mode",
+      "help": "Off as shipped. When on, sample orders, customers, incomplete orders, courier claims and payouts show in the admin like real ones, each with a small Practice mark, so you can practise. They never leave the system: nothing goes to the ERP, a courier, a customer or an ad feed. When off, they are hidden from every list and report."
+    },
+    "showReset": {
+      "label": "Show Reset sample data button",
+      "help": "On by default while practice mode is on. The button on the Practice data screen removes all practice records (needs your PIN) and can fill fresh sample data again. Turn it off when the practice period is over."
+    }
+  }
+}

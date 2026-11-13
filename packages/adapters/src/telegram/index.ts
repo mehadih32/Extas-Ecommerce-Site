@@ -23,6 +23,7 @@
 //   Telegram sends it back on every update as `X-Telegram-Bot-Api-Secret-Token`; the webhook refuses anything that
 //   does not match (never processes an unverifiable call, the same care `support-connect.ts`'s Messenger webhook
 //   takes with its own signature). Without it typed in, inbound commands stay off no matter the feature switch.
+import { createHmac } from 'node:crypto';
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 
@@ -57,6 +58,12 @@ export interface TelegramSendOptions {
   keyboard?: TelegramInlineKeyboard;
 }
 
+/** One inline button: its words and the data Telegram hands back when it is tapped (at most 64 bytes). */
+export interface TelegramButton {
+  text: string;
+  data: string;
+}
+
 export interface TelegramSender {
   provider: string;
   /** Sends one plain-text message (cut to Telegram's limit) to the connection's chat, optionally with buttons. */
@@ -65,12 +72,24 @@ export interface TelegramSender {
   check?(): Promise<{ ok: boolean; message: string }>;
   /** Clears a pressed button's loading spinner (PR 584); a no-op where it is not needed (the mock). */
   answerCallback?(callbackQueryId: string, text?: string): Promise<void>;
+  // S28 · PR 703 — the approvals: buttons, a reply to the chat, deleting a message (the typed PIN), the webhook.
+  /** The configured chat (the only chat an inbound update is accepted from). */
+  chatId?: string;
+  /** One message with rows of inline buttons. */
+  sendWithButtons?(text: string, rows: readonly (readonly TelegramButton[])[]): Promise<TelegramResult>;
+  /** Removes one message from the chat (the PIN the owner typed). True when it is gone. */
+  deleteMessage?(messageId: number): Promise<boolean>;
+  /** The secret part of the webhook's address: a keyed hash of the token, never the token. Live client only. */
+  webhookSecret?(): string;
+  /** Tells Telegram where to send updates (`https://…/api/telegram/webhook/<secret>`). */
+  setWebhook?(url: string): Promise<{ ok: boolean; message: string }>;
 }
 
 export interface MockTelegramMessage {
   at: Date;
   text: string;
   keyboard?: TelegramInlineKeyboard;
+  buttons?: readonly (readonly TelegramButton[])[];
 }
 
 const G = globalThis as unknown as { __extasMockTelegram?: MockTelegramMessage[] };
@@ -89,13 +108,20 @@ export const mockTelegramOutbox = {
 const cut = (text: string) => (text.length > TELEGRAM_MAX_TEXT ? `${text.slice(0, TELEGRAM_MAX_TEXT - 1)}…` : text);
 
 export function mockTelegramSender(provider = TELEGRAM_PROVIDER): TelegramSender {
+  const keep = (text: string, buttons?: readonly (readonly TelegramButton[])[], keyboard?: TelegramInlineKeyboard) => {
+    const all = outbox();
+    all.push({ at: new Date(), text: cut(text), ...(buttons ? { buttons } : {}), ...(keyboard ? { keyboard } : {}) });
+    if (all.length > MOCK_KEEP) all.splice(0, all.length - MOCK_KEEP);
+    return { ok: true, messageId: null } as const;
+  };
+  // The mock has no webhook secret and no way to delete: it sends nothing anywhere, so no update can come back to it.
   return {
     provider,
     async send(text, opts) {
-      const all = outbox();
-      all.push({ at: new Date(), text: cut(text), keyboard: opts?.keyboard });
-      if (all.length > MOCK_KEEP) all.splice(0, all.length - MOCK_KEEP);
-      return { ok: true, messageId: null };
+      return keep(text, undefined, opts?.keyboard);
+    },
+    async sendWithButtons(text, rows) {
+      return keep(text, rows);
     },
     async answerCallback() {
       // nothing to clear: no real button exists in the mock
@@ -166,6 +192,11 @@ export function parseTelegramUpdate(body: unknown): TelegramUpdate | null {
   return u as unknown as TelegramUpdate;
 }
 
+/** The webhook's secret: HMAC-SHA256 of a fixed label keyed by the bot token, in hex (the token never leaves the vault). */
+export function telegramWebhookSecret(token: string): string {
+  return createHmac('sha256', token).update('extas-telegram-webhook').digest('hex');
+}
+
 export const telegramConfig = z.object({
   /** Where the alerts go: the chat's id (a number, `-100…` for a channel) or a public channel's `@name`. */
   chatId: z.string().trim().regex(TELEGRAM_CHAT, 'a chat id is a number (like -1001234567890) or @channelname'),
@@ -188,7 +219,7 @@ interface BotBody {
 }
 
 /** The Bot API client. Never puts its address (which holds the token) into an error. */
-export function createTelegramClient(o: ClientOptions): TelegramSender & { check(): Promise<{ ok: boolean; message: string }> } {
+export function createTelegramClient(o: ClientOptions): TelegramSender & { check(): Promise<{ ok: boolean; message: string }>; chatId: string; webhookSecret(): string } {
   if (!TELEGRAM_TOKEN.test(o.token)) throw new Error('the bot token does not look like one from @BotFather (123456789:ABC…)');
   const doFetch = o.fetch ?? fetch;
   const base = `${o.baseUrl.replace(/\/+$/, '')}/bot${o.token}`;
@@ -215,6 +246,7 @@ export function createTelegramClient(o: ClientOptions): TelegramSender & { check
 
   return {
     provider: TELEGRAM_PROVIDER,
+    chatId: o.chatId,
     async send(text, opts) {
       try {
         const r = await call('sendMessage', { chat_id: o.chatId, text: cut(text), disable_web_page_preview: true, ...(opts?.keyboard ? { reply_markup: opts.keyboard } : {}) });
@@ -223,18 +255,43 @@ export function createTelegramClient(o: ClientOptions): TelegramSender & { check
         return { ok: false, error: e instanceof Error ? e.message : String(e) };
       }
     },
+    async sendWithButtons(text, rows) {
+      try {
+        const r = await call('sendMessage', { chat_id: o.chatId, text: cut(text), disable_web_page_preview: true, reply_markup: { inline_keyboard: rows.map((row) => row.map((b) => ({ text: b.text, callback_data: b.data }))) } });
+        return { ok: true, messageId: r.result?.message_id ?? null };
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) };
+      }
+    },
+    async deleteMessage(messageId) {
+      try {
+        await call('deleteMessage', { chat_id: o.chatId, message_id: messageId });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    async answerCallback(callbackId, text) {
+      try {
+        await call('answerCallbackQuery', { callback_query_id: callbackId, ...(text ? { text: text.slice(0, 200) } : {}) });
+      } catch {
+        // the spinner stops by itself
+      }
+    },
+    webhookSecret: () => telegramWebhookSecret(o.token),
+    async setWebhook(url) {
+      try {
+        await call('setWebhook', { url, allowed_updates: ['callback_query', 'message'], drop_pending_updates: true });
+        return { ok: true, message: 'Telegram will send the bot\'s button taps and messages to the ERP' };
+      } catch (e) {
+        return { ok: false, message: e instanceof Error ? e.message : String(e) };
+      }
+    },
     async check() {
       const me = await call('getMe', {});
       const chat = await call('getChat', { chat_id: o.chatId });
       const name = chat.result?.title ?? chat.result?.first_name ?? chat.result?.username ?? o.chatId;
       return { ok: true, message: `Telegram: @${me.result?.username ?? 'the bot'} can write to ${name}` };
-    },
-    async answerCallback(callbackQueryId, text) {
-      try {
-        await call('answerCallbackQuery', { callback_query_id: callbackQueryId, ...(text ? { text: text.slice(0, 200) } : {}) });
-      } catch {
-        // the button's spinner stays a moment longer; never worth failing the whole webhook over
-      }
     },
   };
 }

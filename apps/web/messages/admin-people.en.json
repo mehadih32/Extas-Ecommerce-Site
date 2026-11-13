@@ -1,0 +1,131 @@
+{
+  "people": {
+    "metaTitle": "People",
+    "title": "People",
+    "sub": "Who can sign in, which roles they have, and their 2-step login.",
+    "you": "you",
+    "empty": "No one here yet.",
+    "noRole": "No role yet",
+    "kpi": {
+      "active": "Active people",
+      "suspended": "Suspended",
+      "noTwoFactor": "Active without 2-step login"
+    },
+    "show": {
+      "active": "Active",
+      "all": "Everyone"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "SUSPENDED": "Suspended",
+      "ARCHIVED": "Archived"
+    },
+    "twoFactorOn": "2-step login on",
+    "twoFactorOff": "2-step login off",
+    "lastLogin": "Last signed in {d}",
+    "neverLogin": "Never signed in",
+    "mustChange": "must set a new password",
+    "giveRole": "Give a role",
+    "give": "Give role",
+    "take": "Take away",
+    "suspend": "Suspend",
+    "activate": "Make active",
+    "archive": "Archive",
+    "resetTwoFactor": "Reset 2-step login",
+    "roleGiven": "Role given.",
+    "roleTaken": "Role taken away.",
+    "suspended": "Person suspended.",
+    "activated": "Person is active.",
+    "archived": "Person archived.",
+    "twoFactorReset": "2-step login reset.",
+    "added": "Person added.",
+    "add": {
+      "title": "Add a person",
+      "name": "Name",
+      "email": "Email",
+      "password": "First password",
+      "role": "Role",
+      "noRole": "No role yet",
+      "note": "They must set their own password the first time they sign in. Nothing is ever deleted: someone who leaves is archived and their past work stays in the activity log.",
+      "go": "Add person"
+    },
+    "errors": {
+      "INVALID_INPUT": "Check the name, email and password.",
+      "FORBIDDEN": "You may not do that.",
+      "CONFLICT": "That email is already used.",
+      "ESCALATION": "You cannot give more than you hold yourself.",
+      "NOT_FOUND": "Not found.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    },
+    "roles": {
+      "metaTitle": "Roles",
+      "title": "Roles",
+      "sub": "What each role can open. Tick a group to give all its pages.",
+      "archivedTag": "archived",
+      "ownerNote": "The owner always holds everything.",
+      "archivedNote": "Archived: this role gives nothing.",
+      "people": "{n} people",
+      "tickNote": "A half box means only some pages of the group are on.",
+      "save": "Save changes",
+      "undo": "Undo",
+      "saved": "Role saved.",
+      "changes": "{a} added, {r} removed",
+      "noChanges": "No changes yet.",
+      "archive": "Archive role",
+      "restore": "Restore role",
+      "archived": "Role archived.",
+      "restored": "Role restored.",
+      "created": "Role created.",
+      "new": {
+        "title": "New role",
+        "nameEn": "Name in English",
+        "nameBn": "Name in Bengali",
+        "from": "Start from",
+        "go": "Create role"
+      }
+    },
+    "activity": {
+      "metaTitle": "Activity log",
+      "title": "Activity log",
+      "sub": {
+        "changes": "Every change made in the admin, newest first. Only the names of the fields that changed are shown, never their values.",
+        "views": "Every time a person opened a customer's details, newest first."
+      },
+      "kinds": {
+        "changes": "Changes",
+        "views": "Customer data viewed"
+      },
+      "download": "Download CSV",
+      "filters": {
+        "who": "Person",
+        "anyone": "Anyone",
+        "text": "Words in the action",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply filters",
+        "clear": "Clear"
+      },
+      "cols": {
+        "when": "When",
+        "who": "Who",
+        "what": "What",
+        "record": "Record"
+      },
+      "actor": {
+        "STAFF": "A staff member",
+        "SYSTEM": "The system",
+        "CUSTOMER": "A customer",
+        "AI_AGENT": "The AI helper",
+        "COURIER": "A courier",
+        "ERP": "The ERP"
+      },
+      "fields": "Changed: {list}",
+      "empty": "Nothing matches these filters.",
+      "newer": "Newer",
+      "older": "Older",
+      "page": "Page {n}",
+      "note": "The log is a record only. A download is written to the log too."
+    }
+  }
+}

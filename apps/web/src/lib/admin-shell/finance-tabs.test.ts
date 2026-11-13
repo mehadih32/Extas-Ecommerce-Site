@@ -11,8 +11,8 @@ const resolver = (vat: unknown) => ({ value: async (k: string) => (k === 'vat.sy
 
 describe('Finance tabs', () => {
   it('opens on Overview and has the prototype tabs in order, VAT hidden while it is off', () => {
-    expect(visibleTabs(money, OWNER(['money.vat'])).map((t) => t.id)).toEqual(['overview', 'cash', 'profit', 'costs', 'erp', 'refunds', 'couriers']);
-    expect(visibleTabs(money, OWNER()).map((t) => t.id)).toEqual(['overview', 'cash', 'profit', 'costs', 'erp', 'refunds', 'couriers', 'vat']);
+    expect(visibleTabs(money, OWNER(['money.vat'])).map((t) => t.id)).toEqual(['overview', 'cash', 'profit', 'costs', 'erp', 'couriers', 'refunds']);
+    expect(visibleTabs(money, OWNER()).map((t) => t.id)).toEqual(['overview', 'cash', 'profit', 'costs', 'erp', 'couriers', 'refunds', 'vat']);
     expect(sectionHome(money, OWNER())).toBe('/admin/money');
   });
   it('every old address still belongs to a tab', () => {

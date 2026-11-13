@@ -74,6 +74,10 @@ describe('0001_init migration', () => {
   });
 });
 
+// The only migrations that may carry a DELETE FROM: the owner's one-time Start fresh purge (PR 706), run by a database
+// function that refuses any run the owner did not make; and the practice-history purge (0281, CN-049: rows of flagged practice orders only). Everything else stays free of deletes.
+const PURGE_MIGRATIONS = new Set(['0277_start_fresh_purge', '0281_practice_purge']);
+
 describe('later migrations', () => {
   it('are numbered folders after 0001_init, each with a migration.sql that says why', () => {
     expect(folders[0]).toBe('0001_init');
@@ -93,7 +97,7 @@ describe('later migrations', () => {
     if (f === '(none)') return;
     const sql = sqlOf(f);
     expect(sql).not.toMatch(/\b(DROP|TRUNCATE)\s+(TABLE|SCHEMA|DATABASE|MATERIALIZED VIEW|COLUMN)\b/i);
-    expect(sql).not.toMatch(/\bDELETE\s+FROM\b/i);
+    if (!PURGE_MIGRATIONS.has(f)) expect(sql).not.toMatch(/\bDELETE\s+FROM\b/i);
   });
 
   it('PR 27, 32: links to size charts, collections and tags are archived, never deleted (0002_archived_links)', () => {

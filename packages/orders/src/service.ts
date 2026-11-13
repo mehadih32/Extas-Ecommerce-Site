@@ -45,6 +45,8 @@ export interface CommandOptions {
   idempotencyKey?: string;
   /** [ver]: the order's version the screen showed; a newer one on the server is refused with STALE. */
   version?: number;
+  /** S28 · PR 664 (wired to the staff limits and approvals of PR 702/703): the screen layer's answer to "may this adjustment apply now?" (`false` = leave it PENDING for an approver). When set it replaces the old per-role limit of the price adjust setting. */
+  priceGate?: (a: { discountMinor: number; baseMinor: number }) => Promise<boolean>;
 }
 
 export interface CommandResult {

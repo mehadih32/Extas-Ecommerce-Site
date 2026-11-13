@@ -1,0 +1,61 @@
+{
+  "practice": {
+    "metaTitle": "Practice data",
+    "title": "Practice data",
+    "sub": "Sample customers, orders, couriers and claims to practise with for the first days. Nothing here reaches a real customer, courier or the ERP.",
+    "card": {
+      "title": "Practice mode",
+      "lead": "While it is on, the shop holds sample data like the demo, marked Practice. Nothing is sent: no courier booking, no messages, no ads feed, no ERP.",
+      "guard": "Owner only · switching it off hides practice records from reports and lists, it does not remove them"
+    },
+    "mode": {
+      "on": "Practice mode is on.",
+      "off": "Practice mode is off.",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off"
+    },
+    "fill": "Add sample data",
+    "filled": "Sample data added.",
+    "alreadyFilled": "Sample data is already there.",
+    "counts": "Practice records now",
+    "kinds": {
+      "orders": "Orders",
+      "customers": "Customers",
+      "incomplete": "Incomplete orders",
+      "claims": "Courier claims",
+      "payouts": "Courier payouts",
+      "parcels": "Parcels",
+      "couriers": "Courier accounts",
+      "products": "Sample products"
+    },
+    "kept": "Products you uploaded yourself ({n}) are never removed by a reset.",
+    "reset": {
+      "open": "Reset practice data…",
+      "title": "Reset practice data",
+      "lead": "Removes every practice record and leaves a clean store. Real orders, customers and the products you uploaded stay.",
+      "backup": "Take a backup first if you are not sure (Settings › System › Backups).",
+      "removeDemo": "Also remove demo products",
+      "refill": "Add sample data again after (Refresh)",
+      "words": "Type RESET PRACTICE",
+      "pin": "Owner PIN",
+      "cancel": "Cancel",
+      "go": "Reset now",
+      "working": "Working…"
+    },
+    "resetDone": "Practice data reset.",
+    "ownerOnly": "Only the owner can use this page.",
+    "errors": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "PRACTICE_OFF": "Turn practice mode on first.",
+      "RESET_HIDDEN": "Reset is switched off for this shop.",
+      "WORDS_MISMATCH": "Type RESET PRACTICE exactly.",
+      "INVALID_INPUT": "Check what you typed.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}

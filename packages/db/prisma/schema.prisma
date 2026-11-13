@@ -196,6 +196,13 @@ model Store {
   checkoutParameterLayers CheckoutParameterLayer[]
   checkoutFlagEvents      CheckoutFlagEvent[]
   bulkEnquiries           BulkEnquiry[]
+  cashHandovers           CashHandover[]
+  startFreshRuns          StartFreshRun[]
+  bulkQuotes              BulkQuote[]
+  approvalRequests        ApprovalRequest[]
+  pageViewDays            PageViewDay[]
+  behaviourDays           BehaviourDay[]
+  bulkBatches             BulkBatch[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -1408,6 +1415,8 @@ model Product {
   publishedAt      DateTime?       @db.Timestamptz(3)
   unpublishedAt    DateTime?       @db.Timestamptz(3)
   archivedAt       DateTime?       @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice       Boolean         @default(false)
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
 
@@ -1421,6 +1430,7 @@ model Product {
   @@index([storeId, status, publishedAt])
   @@index([storeId, erpStyleCode])
   @@index([storeId, isDemo])
+  @@index([storeId, isPractice], map: "idx_product_practice")
 }
 
 enum ProductStatus {
@@ -2941,6 +2951,8 @@ model CheckoutDraft {
   possibleMatchCustomerId String?   @db.Uuid
   createdAt               DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice              Boolean   @default(false)
 
   flagEvents CheckoutFlagEvent[]
   calls      CheckoutDraftCall[]
@@ -3054,6 +3066,8 @@ model BulkEnquiry {
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
 
+  quotes BulkQuote[]
+
   @@unique([storeId, refNo])
   @@index([storeId, status, createdAt])
   @@index([storeId, phone, createdAt])
@@ -3152,6 +3166,8 @@ model Order {
   gpsLng                   Decimal?           @db.Decimal(9, 6)
   piiExpiresAt             DateTime?          @db.Timestamptz(3)
   idempotencyKey           String
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice               Boolean            @default(false)
   erpOrderId               String?
   erpSyncStatus            String?
   shipAfter                DateTime?          @db.Timestamptz(3)
@@ -3226,6 +3242,7 @@ model Order {
   @@index([piiExpiresAt])
   // PR 407: the invoice job finds orders changed since their invoice was last compared.
   @@index([storeId, updatedAt], map: "idx_order_updated")
+  @@index([storeId, isPractice], map: "idx_order_practice")
 }
 
 enum OrderStatus {
@@ -4240,6 +4257,8 @@ model Payment {
   erpSyncedAt          DateTime?      @db.Timestamptz(3)
   createdAt            DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice           Boolean        @default(false)
   /// PR 165 (§6.5.3, §6.6 S11) — where the money stands (null while none has come in): PROVISIONAL from the gateway's
   /// answer or a staff record, RECONCILED once matched to a statement (PR 174), FINAL at the month close.
   moneyStatus          MoneyStatus?
@@ -4362,6 +4381,8 @@ model CourierSettlement {
   receivedAccountRef String?
   fileHash           String?
   importedById       String?        @db.Uuid
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice         Boolean        @default(false)
 
   lines CourierSettlementLine[]
 
@@ -4686,6 +4707,8 @@ model CourierAccount {
   integrationId String?   @db.Uuid
   enabled       Boolean   @default(false)
   archivedAt    DateTime? @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice courier made for the sample parcels (never a real connection); removed by "Reset practice data".
+  isPractice    Boolean   @default(false)
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
 
@@ -4775,6 +4798,8 @@ model Shipment {
   exceptionKey        String?
   lastTrackedAt       DateTime?      @db.Timestamptz(3)
   bookedById          String?        @db.Uuid
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice          Boolean        @default(false)
 
   events ShipmentEvent[]
 
@@ -4880,6 +4905,8 @@ model CourierClaim {
   closedAt         DateTime?         @db.Timestamptz(3)
   /// S28 · PR 673: the day the courier's time to pay runs out (set when the claim is raised, from the owner's setting).
   deadlineAt       DateTime?         @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice       Boolean           @default(false)
   createdAt        DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
 
@@ -8355,6 +8382,8 @@ model Customer {
   mergedAt                 DateTime?      @db.Timestamptz(3)
   createdAt                DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice               Boolean        @default(false)
 
   credential   CustomerCredential?
   sessions     CustomerSession[]
@@ -11626,4 +11655,228 @@ model AdCreativeDay {
 
   @@unique([adId, date])
   @@index([storeId, date])
+}
+
+/// @stage S28 · PR 702 — the end-of-day cash / bKash sheet one staff member hands over (admin prototype v5, Settings →
+/// Staff controls). One row per count; a wrong count is put right with a newer row for the same day, method and person
+/// (the newest counts, the older stay as history). The "expected" figure is what the shop's own payments record says
+/// that person took that day; the counted figure is what they hand over. Nothing here moves money.
+/// @append-only
+model CashHandover {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  storeId       Int
+  store         Store    @relation(fields: [storeId], references: [id])
+  /// The shop's day (its own time zone), as a date.
+  day           DateTime @db.Date
+  staffUserId   String   @db.Uuid
+  /// CASH (counter cash) or WALLET (bKash, Nagad and the other mobile wallets taken to the shop's own numbers).
+  method        String
+  expectedMinor Int
+  countedMinor  Int
+  note          String?
+  /// Who wrote the row (the staff member, or the owner for them).
+  createdById   String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, day])
+  @@index([storeId, staffUserId, day])
+}
+
+enum StartFreshStatus {
+  RUNNING
+  DONE
+  PARTIAL
+  FAILED
+}
+
+/// @stage S28 · PR 706 (admin prototype v5, GAP-MAP part 2 P2-14) — "Start fresh", the one-time clearing of the test and
+/// sample business data on go-live day. One row per try. A try that is RUNNING, DONE or PARTIAL holds the store's one
+/// place (a partial unique index, migration 0276): after it the button is gone for good; a FAILED try (nothing cleared,
+/// the whole step rolled back) may be tried again. `kinds` records, per kind, how many rows there were and whether
+/// the site cleared them (CLEARED) or handed them to the server's own purge (HANDED_OFF: tables the app may never
+/// delete from, because they are append-only). The ERP's side is a call that is a mock until the ERP ships (`erpStatus`).
+model StartFreshRun {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store            @relation(fields: [storeId], references: [id])
+  status          StartFreshStatus @default(RUNNING)
+  /// The BackupRequest that was safe in Drive before this ran (the gate).
+  backupRequestId String?          @db.Uuid
+  /// Whether the real products were archived (they can be brought back) or kept.
+  removeProducts  Boolean          @default(false)
+  kinds           Json             @default("[]")
+  erpStatus       String           @default("NOT_SENT")
+  detail          String?
+  requestedById   String?          @db.Uuid
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  finishedAt      DateTime?        @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  /// The server's purge of the append-only kinds (orders, customers, chats, coupon uses, analytics): when it finished (PR 706).
+  purgedAt        DateTime?        @db.Timestamptz(3)
+  /// What the purge removed, rows per table.
+  purgeResult     Json             @default("{}")
+
+  @@index([storeId, createdAt])
+}
+
+enum BulkPricing {
+  PIECE
+  TIER
+}
+
+enum BulkBatchStatus {
+  WAITING
+  PACKED
+  SHIPPED
+  DELIVERED
+}
+
+/// @stage S28 · PR 704 (admin prototype v5, GAP-MAP part 1 O-35 / N17) — a quote for a bulk or corporate order, over the
+/// enquiry PR 606 built (`enquiryId`, optional: a quote may also be made from a call). Lines are the styles and the pieces
+/// per size; the price is one agreed price per piece or a price by quantity (tiers); the advance is a percent of the total.
+/// Every figure is saved as minor units so a printed quotation and invoice never differ from the screen. "Advance received"
+/// and "Balance received" are marks the team puts with the owner's PIN: they record that the company paid, they never move
+/// money and never make a Payment row (Accounts/Money own that). Delivery is in batches (`BulkBatch`).
+model BulkQuote {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store        @relation(fields: [storeId], references: [id])
+  /// The store's running quote number (shown with the setting's prefix).
+  refNo             Int
+  enquiryId         String?      @db.Uuid
+  enquiry           BulkEnquiry? @relation(fields: [enquiryId], references: [id])
+  company           String
+  contact           String
+  phone             String
+  /// [{ name, colour, sizes: { S: 10, M: 20 } }]
+  lines             Json
+  pricing           BulkPricing  @default(PIECE)
+  pieceMinor        Int          @default(0)
+  /// [{ from: 50, minor: 72000 }] for TIER.
+  tiers             Json         @default("[]")
+  advancePct        Int
+  pieces            Int
+  unitMinor         Int
+  totalMinor        Int
+  advanceMinor      Int
+  note              String?
+  advanceReceivedAt DateTime?    @db.Timestamptz(3)
+  balanceReceivedAt DateTime?    @db.Timestamptz(3)
+  createdById       String?      @db.Uuid
+  createdAt         DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+  batches           BulkBatch[]
+
+  @@unique([storeId, refNo])
+  @@index([storeId, createdAt])
+  @@index([enquiryId])
+}
+
+/// @stage S28 · PR 704 — one delivery batch of a bulk quote: its pieces, the planned day and where it is (waiting, packed,
+/// with the courier, delivered) with the courier's tracking once shipped.
+model BulkBatch {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store           @relation(fields: [storeId], references: [id])
+  quoteId   String          @db.Uuid
+  quote     BulkQuote       @relation(fields: [quoteId], references: [id])
+  no        Int
+  pieces    Int
+  plannedOn DateTime        @db.Date
+  status    BulkBatchStatus @default(WAITING)
+  tracking  String?
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([quoteId, no])
+  @@index([storeId, status])
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// @stage S28 · PR 703 (admin prototype v5, GAP-MAP part 3 X6 / N12) — an urgent item that waits for the owner's OK (a
+/// prepaid refund, a price change, a big COD order). Whoever raises it (`source`) names what it is about in plain words
+/// (`title`, `detail`: never a phone or address) and, optionally, the thing it points at (`refType`, `refId`) and the
+/// money (`amountMinor`). The owner decides in the ERP or on Telegram (Approve or Reject, then the PIN typed in the chat,
+/// the PIN message deleted at once); either way it is one decision, with the owner's PIN, and audited. Deciding records
+/// the decision only: the screen that raised it acts on it. `intent` is the button the owner tapped on Telegram, waiting
+/// for the PIN. Nothing is ever deleted; a decided request stays.
+model ApprovalRequest {
+  id                String                @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store                 @relation(fields: [storeId], references: [id])
+  /// refund · price · cod · other
+  kind              String
+  source            String
+  title             String
+  detail            String?
+  amountMinor       Int?
+  refType           String?
+  refId             String?
+  status            ApprovalRequestStatus @default(PENDING)
+  /// APPROVE or REJECT: the button tapped on Telegram, waiting for the PIN.
+  intent            String?
+  intentAt          DateTime?             @db.Timestamptz(3)
+  telegramMessageId Int?
+  /// Telegram stops answering the buttons after the setting's minutes; the request then waits in the ERP.
+  askedAt           DateTime?             @db.Timestamptz(3)
+  decidedAt         DateTime?             @db.Timestamptz(3)
+  /// TELEGRAM or ADMIN.
+  decidedVia        String?
+  decidedById       String?               @db.Uuid
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, status, createdAt])
+  @@index([refType, refId])
+}
+
+/// @stage S28 · PR 700 (admin prototype v5, GAP-MAP part 3 W6 / N8) — the daily roll-up of the shop's first-party page
+/// views (AnalyticsEvent `page_view`, privacy-safe: no IP, no name, no phone). One row per store, day (the store's own
+/// day) and dimension value: `dim` is `all` (the day's totals, key empty), `source`, `page`, `device`, `region` or
+/// `path`, `key` its value (a referrer host, a page type, mobile/tablet/desktop, a coarse region, a path without its
+/// query). `visitors` are distinct visitor cookies in that row, `sessions` distinct sessions (a visitor with no session
+/// counts one per day). Rebuilt from the events for a day whenever the Overview is read (today always, a past day once);
+/// rows older than the setting's keep-days are removed (a roll-up, never the shop's own record).
+model PageViewDay {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  day       DateTime @db.Date
+  dim       String
+  key       String   @default("")
+  views     Int      @default(0)
+  visitors  Int      @default(0)
+  sessions  Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, dim, key])
+  @@index([storeId, day])
+}
+
+/// @stage S28 · PR 701 (admin prototype v5, GAP-MAP part 3 W8 / N9) — what shoppers do on a page, counted, never recorded
+/// one by one: no visitor id, no value typed, no text. `kind` is CLICK (key `col,row` of a grid laid over the page),
+/// SCROLL (key 25, 50, 75 or 100: the deepest part of the page reached), FIELD (a checkout box was touched, key the box's
+/// own name) or FIELD_EMPTY (it was left empty, the drop-off). `device` is mobile, tablet or desktop. The shop's beacon adds
+/// to the count of the store's day (the store's own day); rows older than the setting's keep-days are removed.
+model BehaviourDay {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  day       DateTime @db.Date
+  kind      String
+  pageType  String
+  device    String
+  key       String
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, kind, pageType, device, key])
+  @@index([storeId, day, kind])
 }
