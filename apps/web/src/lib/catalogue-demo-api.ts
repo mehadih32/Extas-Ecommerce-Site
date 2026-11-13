@@ -1,6 +1,7 @@
 // S28 · PR 684 — /api/admin/demo-products: demo (sample) products.
 //   GET    the categories with their demo and real counts and whether demo shows there now   `catalogue.read`
 //   POST   {action: "seed", categoryId?}   one sample for every category that has none (or one category)   `catalogue.write`
+//          {action: "catalogue"}                 the demo catalogue: the approved demo's 72 styles as demo products (idempotent)
 //          {action: "reconcile"}           show or hide the demo products to match the switches
 //          {action: "toDraft", productId}  turn one demo product into an ordinary draft to finish
 // The switches themselves are the setting `catalogue.demo`, saved through /api/admin/products-v5-settings.
@@ -17,6 +18,11 @@ export function demoHandler(request: Request, deps: AdminDeps | null): Promise<R
     if (b?.action === 'seed') {
       if (b.categoryId !== undefined && b.categoryId !== null && !(typeof b.categoryId === 'string' && isUuid(b.categoryId))) return fail(400, 'INVALID_INPUT', ['categoryId']);
       const r = await cat.seedDemoProducts(c.deps, c.who, { categoryId: (b.categoryId as string | null | undefined) ?? null });
+      const rec = await cat.reconcileDemo(c.deps, c.who);
+      return { ...r, ...rec, demo: await cat.demoView(c.deps, c.who) };
+    }
+    if (b?.action === 'catalogue') {
+      const r = await cat.addDemoCatalogue(c.deps, c.who);
       const rec = await cat.reconcileDemo(c.deps, c.who);
       return { ...r, ...rec, demo: await cat.demoView(c.deps, c.who) };
     }

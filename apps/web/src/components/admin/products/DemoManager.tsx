@@ -47,6 +47,8 @@ export interface DemoManagerProps {
   emptyCategories: number;
   /** The shop's price in major units per 100 minor (paisa). */
   minorPerMajor: number;
+  /** How many styles the demo catalogue holds. */
+  catalogueSize: number;
 }
 
 export function DemoManager(p: DemoManagerProps) {
@@ -113,6 +115,17 @@ export function DemoManager(p: DemoManagerProps) {
             data-testid="demo-seed"
           >
             {t(d, 'products.demo.seed')}
+          </button>
+        ) : null}
+        {p.canWrite ? (
+          <button
+            type="button"
+            className="a2-btn"
+            disabled={busy}
+            onClick={() => run(t(d, 'products.demo.catalogueDone'), call('POST', '/api/admin/demo-products', { action: 'catalogue' }))}
+            data-testid="demo-catalogue"
+          >
+            {t(d, 'products.demo.catalogue', { n: p.catalogueSize })}
           </button>
         ) : null}
       </section>
