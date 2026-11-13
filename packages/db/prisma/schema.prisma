@@ -199,6 +199,7 @@ model Store {
   cashHandovers           CashHandover[]
   startFreshRuns          StartFreshRun[]
   bulkQuotes              BulkQuote[]
+  approvalRequests        ApprovalRequest[]
   bulkBatches             BulkBatch[]
   orders                  Order[]
   orderItems              OrderItem[]
@@ -11761,4 +11762,47 @@ model BulkBatch {
 
   @@unique([quoteId, no])
   @@index([storeId, status])
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// @stage S28 · PR 703 (admin prototype v5, GAP-MAP part 3 X6 / N12) — an urgent item that waits for the owner's OK (a
+/// prepaid refund, a price change, a big COD order). Whoever raises it (`source`) names what it is about in plain words
+/// (`title`, `detail`: never a phone or address) and, optionally, the thing it points at (`refType`, `refId`) and the
+/// money (`amountMinor`). The owner decides in the ERP or on Telegram (Approve or Reject, then the PIN typed in the chat,
+/// the PIN message deleted at once); either way it is one decision, with the owner's PIN, and audited. Deciding records
+/// the decision only: the screen that raised it acts on it. `intent` is the button the owner tapped on Telegram, waiting
+/// for the PIN. Nothing is ever deleted; a decided request stays.
+model ApprovalRequest {
+  id                String                @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store                 @relation(fields: [storeId], references: [id])
+  /// refund · price · cod · other
+  kind              String
+  source            String
+  title             String
+  detail            String?
+  amountMinor       Int?
+  refType           String?
+  refId             String?
+  status            ApprovalRequestStatus @default(PENDING)
+  /// APPROVE or REJECT: the button tapped on Telegram, waiting for the PIN.
+  intent            String?
+  intentAt          DateTime?             @db.Timestamptz(3)
+  telegramMessageId Int?
+  /// Telegram stops answering the buttons after the setting's minutes; the request then waits in the ERP.
+  askedAt           DateTime?             @db.Timestamptz(3)
+  decidedAt         DateTime?             @db.Timestamptz(3)
+  /// TELEGRAM or ADMIN.
+  decidedVia        String?
+  decidedById       String?               @db.Uuid
+  createdAt         DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime              @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, status, createdAt])
+  @@index([refType, refId])
 }

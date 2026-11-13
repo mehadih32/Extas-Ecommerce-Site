@@ -16,5 +16,11 @@
       "label": "Bulk and corporate orders",
       "help": "The Orders > Bulk screen: quotes with an agreed price, advance and balance marks, a company invoice and delivery in batches. Off until you turn it on. Numbers: the advance percent a new quote starts with, how many days a quote stands, the most batches, days to the first batch and between batches, and the quote number prefix."
     }
+  },
+  "telegram": {
+    "approvals": {
+      "label": "Urgent approvals on Telegram",
+      "help": "Send urgent approvals (a prepaid refund, a price change, a big COD order) to your Telegram. Tap Approve or Reject, then type your PIN in the chat; the PIN message is deleted at once. Off until you turn it on. Numbers: what a big COD order is, how many minutes the buttons stay live, and the wrong-PIN alarm and lock per day."
+    }
   }
 }

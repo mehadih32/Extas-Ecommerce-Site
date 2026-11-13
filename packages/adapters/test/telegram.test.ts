@@ -17,6 +17,7 @@ import {
   telegramAdapter,
   telegramConfig,
   telegramIdentityLine,
+  telegramWebhookSecret,
   TELEGRAM_MAX_TEXT,
   TELEGRAM_SECRET_HEADER,
   type TelegramSender,
@@ -113,6 +114,37 @@ describe('Telegram adapter (PR 392)', () => {
     const api: TelegramSender = await telegramAdapter.mock({ mode: 'MOCK', config: { chatId: '1' }, storeId: null, secret: async () => null });
     const link = { use: async () => ({ api, mode: 'MOCK' }) };
     expect(await sendOwnerAlert(link as never, 'ব্যাকআপ ঠিক আছে')).toEqual({ ok: true, messageId: null, mode: 'MOCK' });
+  });
+
+  // S28 · PR 703 — the approvals' parts of the client.
+  it('live: buttons go out as an inline keyboard, a message is deleted, a tap is answered, the webhook is set', async () => {
+    const { f, calls } = fakeBotApi();
+    const c = createTelegramClient({ baseUrl: 'https://bot.test', token: TOKEN, chatId: '42', fetch: f });
+    expect(await c.sendWithButtons!('OK?', [[{ text: 'Approve', data: 'a:1' }, { text: 'Reject', data: 'r:1' }]])).toEqual({ ok: true, messageId: 77 });
+    expect(calls[0]!.body.reply_markup).toEqual({ inline_keyboard: [[{ text: 'Approve', callback_data: 'a:1' }, { text: 'Reject', callback_data: 'r:1' }]] });
+    expect(await c.deleteMessage!(9)).toBe(true);
+    await c.answerCallback!('cb1', 'Type your PIN');
+    expect(calls.map((x) => x.method)).toEqual(['sendMessage', 'deleteMessage', 'answerCallbackQuery']);
+    expect(calls[1]!.body).toEqual({ chat_id: '42', message_id: 9 });
+    expect(await c.setWebhook!('https://erp.test/api/telegram/webhook/abc')).toMatchObject({ ok: true });
+    expect(c.chatId).toBe('42');
+  });
+
+  it('the webhook secret is a keyed hash of the token, never the token, and differs per token', () => {
+    const a = telegramWebhookSecret(TOKEN);
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(a).not.toContain(TOKEN.split(':')[1]);
+    expect(telegramWebhookSecret('7654321:CCHdqTcvCH1vGWJxfSeofSAs0K5PALDsawZ')).not.toBe(a);
+    const { f } = fakeBotApi();
+    expect(createTelegramClient({ baseUrl: 'https://bot.test', token: TOKEN, chatId: '42', fetch: f }).webhookSecret()).toBe(a);
+  });
+
+  it('the mock keeps a message with its buttons and has no webhook secret (nothing can reach it)', async () => {
+    mockTelegramOutbox.clear();
+    const api = await telegramAdapter.mock({ mode: 'MOCK', config: { chatId: '1' }, storeId: null, secret: async () => null });
+    await api.sendWithButtons!('OK?', [[{ text: 'Approve', data: 'a:1' }]]);
+    expect(mockTelegramOutbox.all()[0]!.buttons).toEqual([[{ text: 'Approve', data: 'a:1' }]]);
+    expect(api.webhookSecret).toBeUndefined();
   });
 });
 

@@ -29,3 +29,10 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
   Orders section after Returns (the prototype's "Bulk / corporate" chip on All orders may also link here). Key `ordersBulk`, guide `orders/bulk`.
   Off until the owner turns `bulk.orders` on (screen has the switch). Quote numbers use the setting's prefix (QT-). Advance and balance are
   marks with the owner's PIN; no Payment row is made (Money and Accounts own that).
+
+## PR 703 Telegram approvals
+- Page `/admin/settings/telegram-approvals` (perm `settings.write`; the owner only inside), a tab "Telegram approvals" under Settings next to
+  Keys and connections. Key `telegramApprovals`, guide `settings/telegram-approvals`. Webhook `/api/telegram/webhook/<secret>` is public
+  (secret = keyed hash of the bot token; a mock connection answers 404). Off until the owner turns `telegram.approvals` on.
+- Other screens raise one with `requestApproval(deps, storeId, { kind: refund|price|cod|other, source, title, detail?, amountMinor?, refType?, refId? })`
+  from `lib/telegram-approvals.ts` (price adjust 664, prepaid refund, big COD) and read `ApprovalRequest.status` for the answer; deciding only records it.
