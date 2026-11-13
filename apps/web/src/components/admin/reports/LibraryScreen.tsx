@@ -3,16 +3,20 @@
 // (value and change against the period before, pin to Home), the restock and unsold lists, orders by weekday and hour with the
 // discount given, last month's review in a few lines made from the numbers, and saved views. Words: messages/admin-reports-
 // library.*.json (`reportsLibrary.*`). Read-only reports: nothing here moves money.
+// S28 · PR 689 follow-up: the period bar also has 6 months and your own dates, with Excel / PDF / Print of the report on the screen,
+// and Downloads & report packs (DownloadsPanel) holds every file of Reports in one place.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import type { LibraryCard, ReviewFacts } from '@/lib/report-library-api';
 import { t, type Dict } from '@/lib/i18n';
+import { fileUrl } from '@/lib/report-file-links';
 import { call } from '../api';
+import { DownloadsPanel, printPdf } from './DownloadsPanel';
 import { showToast } from '../lumen/Toast';
 import { formatMoney, type Money } from '../products/model';
 
-const PRESETS = ['today', 'last7', 'last30', 'month', 'lastmonth'] as const;
-type Preset = (typeof PRESETS)[number];
+const PRESETS = ['today', 'last7', 'last30', 'month', 'lastmonth', 'last6m'] as const;
+type Preset = (typeof PRESETS)[number] | 'last3m' | 'last12m' | 'custom';
 
 interface Row {
   productId: string;
@@ -33,8 +37,10 @@ export interface LibraryScreenProps {
   restock: { restock: Row[]; unsold: Row[] };
   time: { weekday: number[]; hour: number[]; orders: number; discountMinor: number; couponOrders: number };
   review: ReviewFacts;
-  views: { id: string; name: string; params: { preset: Preset; compare: boolean } }[];
+  views: { id: string; name: string; params: { preset: Preset; compare: boolean; filters?: Record<string, string> } }[];
   pins: string[];
+  /** The admin's language (the files speak it). */
+  lang: string;
 }
 
 type Say = (k: string, vars?: Record<string, string | number>) => string;
@@ -46,7 +52,11 @@ export function LibraryScreen(p: LibraryScreenProps) {
   const m = (minor: number) => formatMoney(minor, p.money);
   const [name, setName] = useState('');
   const [said, setSaid] = useState<string | null>(null);
+  const [from, setFrom] = useState(p.range.from);
+  const [to, setTo] = useState(p.range.to);
   const go = (preset: string, compare: boolean) => router.push(`?preset=${preset}${compare ? '&compare=1' : ''}`);
+  const goDates = (a: string, b: string, compare: boolean) => router.push(`?from=${a}&to=${b}${compare ? '&compare=1' : ''}`);
+  const filePeriod = p.preset === 'custom' ? { from: p.range.from, to: p.range.to } : { preset: p.preset };
   const err = (status: number, error?: string) => (status === 403 ? c('err.forbidden') : c(`err.${['INVALID_INPUT', 'CONFLICT'].includes(error ?? '') ? error : 'other'}`));
 
   async function pin(cardId: string, pinned: boolean) {
@@ -58,7 +68,7 @@ export function LibraryScreen(p: LibraryScreenProps) {
     setSaid(err(a.status, (a.data as { error?: string }).error));
   }
   async function saveView() {
-    const a = await call('POST', '/api/admin/reports/library', { action: 'save-view', reportKey: 'library', name, params: { preset: p.preset, compare: p.compare, filters: {} } });
+    const a = await call('POST', '/api/admin/reports/library', { action: 'save-view', reportKey: 'library', name, params: { preset: p.preset, compare: p.compare, filters: p.preset === 'custom' ? { from: p.range.from, to: p.range.to } : {} } });
     if (a.status === 201) {
       showToast({ text: c('saved'), tone: 'ok' });
       setName('');
@@ -127,9 +137,37 @@ export function LibraryScreen(p: LibraryScreenProps) {
               {c(`period.${x}`)}
             </button>
           ))}
+          <button type="button" className={`a2-btn sm${p.preset === 'custom' ? ' pri' : ''}`} aria-pressed={p.preset === 'custom'} onClick={() => goDates(from, to, p.compare)} data-testid="lib-period-custom">
+            {c('period.custom')}
+          </button>
           <label className="a2-sm">
-            <input type="checkbox" checked={p.compare} onChange={(e) => go(p.preset, e.target.checked)} data-testid="lib-compare" /> {c('period.compare')}
+            <input type="checkbox" checked={p.compare} onChange={(e) => (p.preset === 'custom' ? goDates(p.range.from, p.range.to, e.target.checked) : go(p.preset, e.target.checked))} data-testid="lib-compare" /> {c('period.compare')}
           </label>
+        </div>
+        {p.preset === 'custom' ? (
+          <div className="w4-dates a2-mt6" data-testid="lib-dates">
+            <label className="a2-xs a2-mute">
+              {c('period.from')} <input type="date" className="a2-inp" value={from} max={to} onChange={(e) => setFrom(e.target.value)} data-testid="lib-from" />
+            </label>
+            <label className="a2-xs a2-mute">
+              {c('period.to')} <input type="date" className="a2-inp" value={to} min={from} onChange={(e) => setTo(e.target.value)} data-testid="lib-to" />
+            </label>
+            <button type="button" className="a2-btn sm" disabled={!from || !to || from > to} onClick={() => goDates(from, to, p.compare)} data-testid="lib-dates-show">
+              {c('period.show')}
+            </button>
+          </div>
+        ) : null}
+        <div className="w4-row a2-mt6" data-testid="lib-toolbar">
+          <span className="a2-xs a2-mute">{c('dl.thisReport')}</span>
+          <a className="a2-btn sm" href={fileUrl('figures', 'xlsx', filePeriod, p.lang)} data-testid="lib-xls">
+            {c('dl.excel')}
+          </a>
+          <a className="a2-btn sm" href={fileUrl('figures', 'pdf', filePeriod, p.lang, { download: true })} data-testid="lib-pdf">
+            {c('dl.pdf')}
+          </a>
+          <button type="button" className="a2-btn sm" onClick={() => printPdf(fileUrl('figures', 'pdf', filePeriod, p.lang), () => setSaid(c('dl.printFail')))} data-testid="lib-print">
+            {c('dl.print')}
+          </button>
         </div>
         <p className="a2-xs a2-mute a2-mt6">{c('period.range', p.range)}</p>
       </section>
@@ -202,6 +240,8 @@ export function LibraryScreen(p: LibraryScreenProps) {
         </ul>
       </section>
 
+      <DownloadsPanel dict={p.dict} lang={p.lang} period={filePeriod} />
+
       <section className="a2-card" aria-labelledby={`${id}-vw`} data-testid="lib-views">
         <h2 className="a2-h3" id={`${id}-vw`}>
           {c('views.title')}
@@ -226,7 +266,7 @@ export function LibraryScreen(p: LibraryScreenProps) {
                   <b>{v.name}</b>
                   <span className="a2-xs a2-mute">{c(`period.${v.params.preset}`)}</span>
                 </span>
-                <button type="button" className="a2-btn sm" onClick={() => go(v.params.preset, v.params.compare)}>
+                <button type="button" className="a2-btn sm" onClick={() => (v.params.preset === 'custom' && v.params.filters?.from && v.params.filters?.to ? goDates(v.params.filters.from, v.params.filters.to, v.params.compare) : go(v.params.preset, v.params.compare))}>
                   {c('views.open')}
                 </button>
                 <button type="button" className="a2-btn sm" onClick={() => archive(v.id)}>

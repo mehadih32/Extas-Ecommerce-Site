@@ -1,6 +1,6 @@
 // S28 · PR 689 — the report library's rules without a database: the period bar, the change, the restock verdict.
 import { describe, expect, it } from 'vitest';
-import { scheduleDue, changePct, periodRange, restockVerdict } from '../src';
+import { scheduleDue, changePct, customRange, periodRange, restockVerdict } from '../src';
 
 describe('report library rules (PR 689)', () => {
   it('periods are whole days with the span just before for compare', () => {
@@ -12,6 +12,17 @@ describe('report library rules (PR 689)', () => {
   it('last month is the whole month before, compared with the month before that span', () => {
     expect(periodRange('lastmonth', '2026-11-13')).toMatchObject({ from: '2026-10-01', to: '2026-10-31', prevFrom: '2026-09-01', prevTo: '2026-09-30' });
     expect(periodRange('lastmonth', '2026-01-05')).toMatchObject({ from: '2025-12-01', to: '2025-12-31' });
+  });
+  it('3, 6 and 12 months are the whole months before this one, compared with the same number of months before them', () => {
+    expect(periodRange('last3m', '2026-11-13')).toEqual({ preset: 'last3m', from: '2026-08-01', to: '2026-10-31', prevFrom: '2026-05-01', prevTo: '2026-07-31' });
+    expect(periodRange('last6m', '2026-11-13')).toMatchObject({ from: '2026-05-01', to: '2026-10-31', prevFrom: '2025-11-01', prevTo: '2026-04-30' });
+    expect(periodRange('last12m', '2026-02-10')).toMatchObject({ from: '2025-02-01', to: '2026-01-31', prevFrom: '2024-02-01', prevTo: '2025-01-31' });
+  });
+  it('your own dates compare with the span of the same length just before; a bad or backwards pair is refused', () => {
+    expect(customRange('2026-11-01', '2026-11-10')).toEqual({ preset: 'custom', from: '2026-11-01', to: '2026-11-10', prevFrom: '2026-10-22', prevTo: '2026-10-31' });
+    expect(customRange('2026-11-10', '2026-11-01')).toBeNull();
+    expect(customRange('2026-13-01', '2026-11-01')).toBeNull();
+    expect(customRange('nope', '2026-11-01')).toBeNull();
   });
   it('the change is whole percent, and null with nothing before', () => {
     expect(changePct(150, 100)).toBe(50);

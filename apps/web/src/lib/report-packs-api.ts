@@ -1,8 +1,12 @@
 // S28 · PR 690 (admin prototype v5, Reports › Report packs) — the packs' admin API. Every route signs the person in (guardAdmin,
 // `reports.read`, the store in `?storeId=`); @extas/catalogue checks it again.
 //
-//   GET   /api/admin/reports/packs/<pack>?format=pdf|csv   a pack as a PDF on the shop's letterhead or as a spreadsheet file
-//                                                          (the bank pack's balances need `books.read` too)
+//   GET   /api/admin/reports/packs/<report>?format=pdf|xlsx|csv[&period=last6m|&from=&to=][&lang=bn][&download=1]
+//                                                          a pack (monthly, bank, stock, sales) or a single report (figures,
+//                                                          products, timing, review) as a PDF on the shop's letterhead, a real
+//                                                          Excel workbook (one sheet per part) or a CSV; the period is the pack's
+//                                                          own unless `period` or your own dates are given (the bank pack's
+//                                                          balances need `books.read` too)
 //   GET   /api/admin/reports/packs                         the packs' schedules
 //   POST  /api/admin/reports/packs                         {pack, frequency, channels, enabled} saves one schedule (off as shipped)
 // Read-only: a pack changes nothing; a schedule only sends the owner a Telegram summary (never a buyer or supplier).
@@ -12,8 +16,10 @@ import * as inv from '@extas/inventory';
 import { requirePermission } from '@extas/auth';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
-import { libraryScreen } from './report-library-api';
-import { PACKS, PACK_PRESET, packCsv, packPdf, type PackData, type PackId } from './report-packs';
+import { libraryScreen, periodOf } from './report-library-api';
+import { fileCsv, filePdf, fileXlsx, wordsFor } from './report-files';
+import { PACKS, PACK_PRESET, packFile, type PackData, type PackId } from './report-packs';
+import { SINGLE_REPORTS, singleFile, type SingleData, type SingleId } from './report-singles';
 import { sellableReader } from './shop/sellable';
 
 function storeIdOf(url: URL): number | null {
@@ -23,8 +29,8 @@ function storeIdOf(url: URL): number | null {
 }
 
 /** The numbers of one pack, from the same functions as the library and Finance. */
-export async function packData(admin: AdminDeps, who: inv.Who, pack: PackId): Promise<PackData> {
-  const s = await libraryScreen(admin, who, PACK_PRESET[pack]);
+export async function packData(admin: AdminDeps, who: inv.Who, pack: PackId, period: Parameters<typeof libraryScreen>[2] = PACK_PRESET[pack]): Promise<PackData> {
+  const s = await libraryScreen(admin, who, period);
   const currency = await admin.resolver.value('store.currency', { storeId: who.storeId });
   let accounts: PackData['accounts'] = null;
   if (pack === 'bank') {
@@ -48,6 +54,15 @@ export async function packData(admin: AdminDeps, who: inv.Who, pack: PackId): Pr
   };
 }
 
+/** The numbers of one single report (the library's own screen for the period). */
+export async function singleData(admin: AdminDeps, who: inv.Who, period: Parameters<typeof libraryScreen>[2]): Promise<SingleData> {
+  const s = await libraryScreen(admin, who, period);
+  const currency = await admin.resolver.value('store.currency', { storeId: who.storeId });
+  return { range: { from: s.range.from, to: s.range.to }, currency, cards: s.cards, restock: s.restock, time: s.time, review: s.review };
+}
+
+const isFile = (x: string) => (PACKS as readonly string[]).includes(x) || (SINGLE_REPORTS as readonly string[]).includes(x);
+
 async function letterhead(admin: AdminDeps, storeId: number) {
   const v = <K extends Parameters<typeof admin.resolver.value>[0]>(k: K) => admin.resolver.value(k, { storeId });
   const [name, address, phone, timeZone] = await Promise.all([v('store.name'), v('contact.address'), v('contact.phone'), v('store.timeZone')]);
@@ -60,7 +75,7 @@ export async function packsHandler(request: Request, deps: AdminDeps | null, pac
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
-  if (pack !== undefined && !(PACKS as readonly string[]).includes(pack)) return fail(404, 'NOT_FOUND');
+  if (pack !== undefined && !isFile(pack)) return fail(404, 'NOT_FOUND');
   if (pack !== undefined && m !== 'GET') return fail(405, 'method-not-allowed');
   const g = await guardAdmin(request, deps, { permission: 'reports.read', storeId });
   if (g instanceof Response) return g;
@@ -72,19 +87,28 @@ export async function packsHandler(request: Request, deps: AdminDeps | null, pac
       await requirePermission(deps!.db, g.actor, 'reports.read', { storeId });
       return json({ ok: true, schedules: await cat.saveSchedule(cdep, who, (await body(request)) as cat.SaveScheduleInput) });
     }
-    const format = url.searchParams.get('format') === 'csv' ? 'csv' : 'pdf';
-    const data = await packData(deps!, who, pack as PackId);
+    const f = url.searchParams.get('format');
+    const format = f === 'csv' || f === 'xlsx' ? f : 'pdf';
+    const w = wordsFor(url.searchParams.get('lang') ?? 'en');
+    const period = periodOf(url, (PACKS as readonly string[]).includes(pack) ? PACK_PRESET[pack as PackId] : 'last30');
+    if (period === null) return fail(400, 'INVALID_INPUT', ['period']);
+    const model = (PACKS as readonly string[]).includes(pack)
+      ? packFile(pack as PackId, await packData(deps!, who, pack as PackId, period), w)
+      : singleFile(pack as SingleId, await singleData(deps!, who, period), w);
     const { head, timeZone } = await letterhead(deps!, storeId);
     const day = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format((deps!.now ?? (() => new Date()))());
-    const file = `${pack}-pack-${data.range.from}`;
+    const file = `${pack}-${(PACKS as readonly string[]).includes(pack) ? 'pack-' : ''}${model.range.from}`;
     const headers = { 'cache-control': 'no-store' };
-    if (format === 'csv')
-      return new Response(packCsv(pack as PackId, data, head), {
+    const attach = (name: string) => `attachment; filename="${name}"`;
+    if (format === 'csv') return new Response(fileCsv(model, head, w), { status: 200, headers: { ...headers, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': attach(`${file}.csv`) } });
+    if (format === 'xlsx')
+      return new Response(new Uint8Array(fileXlsx(model, w)), {
         status: 200,
-        headers: { ...headers, 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="${file}.csv"` },
+        headers: { ...headers, 'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'content-disposition': attach(`${file}.xlsx`) },
       });
-    const pdf = await packPdf(pack as PackId, data, head, 150, day);
-    return new Response(new Uint8Array(pdf), { status: 200, headers: { ...headers, 'content-type': 'application/pdf', 'content-disposition': `inline; filename="${file}.pdf"` } });
+    const pdf = await filePdf(model, head, w, 150, day); // hardcode-ok: print resolution of the letterhead PDF
+    const download = url.searchParams.get('download') === '1';
+    return new Response(new Uint8Array(pdf), { status: 200, headers: { ...headers, 'content-type': 'application/pdf', 'content-disposition': `${download ? 'attachment' : 'inline'}; filename="${file}.pdf"` } });
   } catch (e) {
     return errorResponse(e);
   }

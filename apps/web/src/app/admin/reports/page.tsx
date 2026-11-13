@@ -1,11 +1,12 @@
 // S28 · PR 689 (admin prototype v5) — Reports › Report library at /admin/reports: pick a question, see the answer for a period
 // (with compare), pin cards to Home, restock and unsold lists, orders by weekday and hour, last month's review, saved views.
-// Seeing it needs `reports.read`. Words: messages/admin-reports-library.*.json (`reportsLibrary.*`). Read-only reports.
+// S28 · PR 689 follow-up: 6 months and your own dates in the period bar, Excel / PDF / Print of the report on the screen, and
+// Downloads & report packs in one place. Seeing it needs `reports.read`. Words: messages/admin-reports-library.*.json (`reportsLibrary.*`). Read-only reports.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
-import { PERIOD_PRESETS, type PeriodPreset } from '@extas/catalogue';
+import { customRange, PERIOD_PRESETS, type PeriodPreset, type PeriodRange } from '@extas/catalogue';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { LibraryScreen } from '@/components/admin/reports/LibraryScreen';
 import { moneyOf } from '@/components/admin/products/model';
@@ -47,6 +48,8 @@ export default async function ReportsLibraryPage({ searchParams }: { searchParam
   const deps = adminDeps();
   const sp = await searchParams;
   const raw = typeof sp.preset === 'string' ? sp.preset : 'month';
+  // your own dates (`from` and `to`) when they are a good pair, else a preset
+  const own: PeriodRange | null = typeof sp.from === 'string' && typeof sp.to === 'string' ? customRange(sp.from, sp.to) : null;
   const preset = ((PERIOD_PRESETS as readonly string[]).includes(raw) ? raw : 'month') as PeriodPreset;
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('reports.read', deps, MOTHER_STORE_ID)]);
   const view = withScreen(plain);
@@ -63,7 +66,7 @@ export default async function ReportsLibraryPage({ searchParams }: { searchParam
     storeId: MOTHER_STORE_ID,
     ctx: access.guard.ctx,
   };
-  const [screen, currency] = await Promise.all([libraryScreen(access.deps, who, preset), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const [screen, currency] = await Promise.all([libraryScreen(access.deps, who, own ?? preset), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
   return (
     <div className="a2-z" data-testid="library-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'reportsLibrary.title')} sub={t(view.dict, 'reportsLibrary.sub')} />
@@ -71,7 +74,8 @@ export default async function ReportsLibraryPage({ searchParams }: { searchParam
       <LibraryScreen
         dict={view.dict}
         money={moneyOf(currency, view.locale)}
-        preset={preset}
+        preset={own ? 'custom' : preset}
+        lang={view.lang}
         compare={sp.compare === '1'}
         range={screen.range}
         cards={screen.cards}

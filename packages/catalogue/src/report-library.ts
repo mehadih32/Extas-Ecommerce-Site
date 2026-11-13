@@ -18,11 +18,11 @@ const DAY_MS = 86_400_000;
 
 // ---- pure ---------------------------------------------------------------------------------------------------------------
 
-export const PERIOD_PRESETS = ['today', 'last7', 'last30', 'month', 'lastmonth'] as const;
+export const PERIOD_PRESETS = ['today', 'last7', 'last30', 'month', 'lastmonth', 'last3m', 'last6m', 'last12m'] as const;
 export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
 
 export interface PeriodRange {
-  preset: PeriodPreset;
+  preset: PeriodPreset | 'custom';
   from: string;
   to: string;
   prevFrom: string;
@@ -32,6 +32,21 @@ export interface PeriodRange {
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (day: string, n: number) => ymd(new Date(new Date(`${day}T00:00:00Z`).getTime() + n * DAY_MS));
 const spanDays = (from: string, to: string) => Math.round((new Date(`${to}T00:00:00Z`).getTime() - new Date(`${from}T00:00:00Z`).getTime()) / DAY_MS) + 1;
+
+/** The first day of the month `n` months before the month of `day`. */
+function monthStart(day: string, n: number): string {
+  const d = new Date(`${day.slice(0, 7)}-01T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() - n);
+  return ymd(d);
+}
+
+/** Your own dates (`from` to `to`, both included) with the span of the same length just before; null for a bad or backwards pair. */
+export function customRange(from: string, to: string): PeriodRange | null {
+  const ok = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(`${s}T00:00:00Z`).getTime()) && ymd(new Date(`${s}T00:00:00Z`)) === s;
+  if (!ok(from) || !ok(to) || from > to) return null;
+  const prevTo = addDays(from, -1);
+  return { preset: 'custom', from, to, prevFrom: addDays(prevTo, -(spanDays(from, to) - 1)), prevTo };
+}
 
 /** A preset as days in the shop's own calendar (`today` = the shop's today) and the span of the same length just before it. */
 export function periodRange(preset: PeriodPreset, today: string): PeriodRange {
@@ -43,6 +58,13 @@ export function periodRange(preset: PeriodPreset, today: string): PeriodRange {
   else if (preset === 'lastmonth') {
     to = addDays(`${today.slice(0, 7)}-01`, -1);
     from = `${to.slice(0, 7)}-01`;
+  }
+  const monthsBack = { last3m: 3, last6m: 6, last12m: 12 }[preset as 'last3m'];
+  if (monthsBack) {
+    // the whole months before this one, compared with the same number of months before them
+    to = addDays(`${today.slice(0, 7)}-01`, -1);
+    from = monthStart(today, monthsBack);
+    return { preset, from, to, prevFrom: monthStart(today, monthsBack * 2), prevTo: addDays(from, -1) };
   }
   const prevTo = addDays(from, -1);
   // last month is compared with the whole month before it; any other span with the span of the same length just before
@@ -147,7 +169,7 @@ const viewInput = z
   .object({
     reportKey: z.string().regex(/^[a-z][a-z0-9-]{1,39}$/),
     name: z.string().trim().min(1).max(60),
-    params: z.object({ preset: z.enum(PERIOD_PRESETS), compare: z.boolean(), filters: z.record(z.string().max(40), z.string().max(80)).default({}) }).strict(),
+    params: z.object({ preset: z.enum([...PERIOD_PRESETS, 'custom']), compare: z.boolean(), filters: z.record(z.string().max(40), z.string().max(80)).default({}) }).strict(),
   })
   .strict();
 export type SaveViewInput = z.input<typeof viewInput>;
@@ -156,7 +178,7 @@ export interface ReportViewRow {
   id: string;
   reportKey: string;
   name: string;
-  params: { preset: PeriodPreset; compare: boolean; filters: Record<string, string> };
+  params: { preset: PeriodPreset | 'custom'; compare: boolean; filters: Record<string, string> };
   createdAt: string;
 }
 
