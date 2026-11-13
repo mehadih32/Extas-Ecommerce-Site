@@ -42,6 +42,7 @@ export * from './registry-health-reopen';
 export * from './registry-login-network';
 export * from './registry-exchange-retry';
 export * from './registry-books-statement-costs';
+export * from './registry-products-finance-v5';
 export * from './registry-support-file-copy';
 export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';

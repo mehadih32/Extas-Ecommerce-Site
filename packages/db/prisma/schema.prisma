@@ -1383,6 +1383,13 @@ model Product {
   inStock          Boolean         @default(false)
   minPriceMinor    Int?
   sortRank         Int             @default(0)
+  /// S28 · PR 686 — the shop-ranking score (0–100) the nightly run works out from the owner's weights; a preview until the
+  /// owner saves the order (then `sortRank` follows it). `rankPin` = TOP (always first) or DOWN (always last), the owner's
+  /// word over the score; `rankPosition` = the place the last saved order gave it (for the ▲▼ since then).
+  rankScore        Int             @default(0)
+  rankPin          String?
+  rankPosition     Int?
+  rankedAt         DateTime?       @db.Timestamptz(3)
   /// "Some images show the garment digitally placed on a model" disclosure (C7.15).
   hasAiImagery     Boolean         @default(false)
   /// S03 · PR 571 — the "Use in combos" tick at upload: an auto combo rule takes the product in only when it is on.
