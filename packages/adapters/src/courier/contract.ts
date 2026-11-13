@@ -81,6 +81,13 @@ export interface CourierCapabilities {
    * courier's own panel and close it from there ("the courier has it: its consignment id", or "not booked: book again").
    */
   lookupByRef?: boolean;
+  /**
+   * PR 671 (S28): what the courier gives about the money it holds for the shop. `request`: the courier has its own
+   * payment-request feature (`payouts.request`) and tells the state back (`payouts.status`, `payouts.list`); `read`: the
+   * shop can only read the courier's payments (no request); `none` or left out: nothing by API (the statement import
+   * and the staff's phone call stay). The shop never has its own "ask for payment".
+   */
+  payouts?: 'request' | 'read' | 'none';
 }
 
 /** The parcel as the shop books it. Amounts in minor units (paisa); the adapter converts to the courier's own. */
@@ -166,6 +173,40 @@ export interface CourierPlace {
   name: string;
 }
 
+/** PR 671: where a payout the courier was asked for stands, in the courier's words mapped to the shop's four. */
+export const PAYOUT_STATES = ['REQUESTED', 'PROCESSING', 'PAID', 'REJECTED'] as const;
+export type CourierPayoutState = (typeof PAYOUT_STATES)[number];
+export const isFinalPayoutState = (s: CourierPayoutState): boolean => s === 'PAID' || s === 'REJECTED';
+
+/** PR 671: one payout as the courier reports it (an amount is only what the courier itself said, null when it did not). */
+export interface CourierPayoutInfo {
+  /** The courier's own id of the request or payment. */
+  ref: string;
+  state: CourierPayoutState;
+  amountMinor: number | null;
+  /** The courier's reference of the payment (a bank or bKash transaction), once it paid. */
+  paymentRef: string | null;
+  method: string | null;
+  paidAt: Date | null;
+  /** The courier's own words (kept raw), e.g. why it rejected. */
+  rawStatus: string | null;
+  note: string | null;
+  /** The consignment ids the payment covers, when the courier lists them. */
+  consignmentIds: string[];
+}
+
+export type PayoutRequestResult = { ok: true; payout: CourierPayoutInfo } | { ok: false; error: string; unknown: boolean };
+
+/** PR 671: the courier's own payment-request feature. Reading never asks for money; only `request` does. */
+export interface CourierPayoutApi {
+  /** Asks the courier to pay what it holds (its own request feature). Absent on a courier that has none (`read`). */
+  request?(input: { merchantRef: string; amountMinor: number | null; note: string | null }): Promise<PayoutRequestResult>;
+  /** One request or payment by the courier's id; null when the courier does not know it. */
+  status(ref: string): Promise<CourierPayoutInfo | null>;
+  /** The courier's recent payments and requests (newest first). */
+  list(): Promise<CourierPayoutInfo[]>;
+}
+
 export interface CourierApi {
   /** The adapter's provider key (`steadfast`, `pathao`, `mockCourier`). */
   readonly provider: string;
@@ -185,6 +226,10 @@ export interface CourierApi {
   track(ref: CourierParcelRef): Promise<CourierEvent[]>;
   /** One cheap call that proves the keys work (the Test button). */
   health(): Promise<{ ok: boolean; message: string }>;
+  /** PR 671: the courier's payment requests (only with `capabilities.payouts` of `request` or `read`). */
+  payouts?: CourierPayoutApi;
+  /** PR 671: what the courier says it holds for the shop now, in minor units; null when it gives no figure. */
+  balance?(): Promise<{ balanceMinor: number } | null>;
 }
 
 /** A courier's raw status word → the shop's state and, for an exception, its reason. */

@@ -242,6 +242,18 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     exclusive: false,
     targetMode: 'LIVE',
   },
+  // S28 · PR 672 — RedX Courier: one API access token from its merchant panel and, optionally, the pickup store the parcels go
+  // out from. Practice until the Test (a read of the store list) passes.
+  {
+    id: 'redx',
+    kind: 'COURIER',
+    provider: 'redx',
+    adapter: true,
+    secrets: [{ field: 'accessToken' }],
+    config: [{ field: 'pickupStoreId', optional: true }, { field: 'baseUrl', optional: true }],
+    exclusive: false,
+    targetMode: 'LIVE',
+  },
   // S06 · PR 567 — the courier fraud checks (kind FRAUD_CHECK): Steadfast's and Pathao's own checks and an aggregator,
   // each with its own keys (never the courier connection's, so removing one never stops the parcels) and an optional path
   // for a check that moved. Never asked until the Test passes; several may be on at once (the shop asks all of them).

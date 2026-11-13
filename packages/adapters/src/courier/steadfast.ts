@@ -17,7 +17,7 @@
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 import { API_TAKA, minorToMajor } from '../money';
-import { type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type StatusTable } from './contract';
+import { takaToMinor, type BookResult, type CourierApi, type CourierCapabilities, type CourierParcel, type CourierPayoutInfo, type CourierPayoutState, type StatusTable } from './contract';
 import { createMockCourier, type MockVocabulary } from './mock';
 
 export const STEADFAST_PROVIDER = 'steadfast';
@@ -48,7 +48,27 @@ export const steadfastCapabilities: CourierCapabilities = {
   weight: false,
   declaredValue: false,
   cancel: false,
+  // PR 671: Steadfast has its own payment request; the shop asks through it and reads the state back (never its own ask)
+  payouts: 'request',
 };
+
+/**
+ * PR 671: Steadfast's payment endpoints, as far as its merchant docs describe them (the request and the payments list;
+ * their exact answers are confirmed when the owner's keys arrive, so every field is read leniently and an unknown word
+ * leaves the request where it was). The payout feature ships OFF (`couriers.payouts.enabled`) until then.
+ */
+export const STEADFAST_PAYMENT_REQUEST_PATH = '/payment_request';
+export const STEADFAST_PAYMENTS_PATH = '/payments';
+
+/** Steadfast's payment words → the shop's four states (a word it does not know: null, the request stays as it was). */
+export function steadfastPayoutState(word: string | null | undefined): CourierPayoutState | null {
+  const w = (word ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (['requested', 'pending', 'submitted'].includes(w)) return 'REQUESTED';
+  if (['processing', 'in_progress', 'approved', 'under_review'].includes(w)) return 'PROCESSING';
+  if (['paid', 'completed', 'success', 'successful', 'disbursed'].includes(w)) return 'PAID';
+  if (['rejected', 'cancelled', 'canceled', 'declined', 'failed'].includes(w)) return 'REJECTED';
+  return null;
+}
 
 /** How the practice Steadfast says each step: in Steadfast's own words (lost, damaged: words it has none for). */
 export const steadfastVocabulary: MockVocabulary = {
@@ -105,6 +125,44 @@ interface SfBody {
   delivery_status?: string;
   current_balance?: number;
   consignment?: { consignment_id?: number | string; tracking_code?: string; status?: string };
+  /** PR 671: a payment request or a payment (one), or a list of them. */
+  payment?: SfPayment;
+  payments?: SfPayment[];
+  data?: SfPayment | SfPayment[];
+}
+
+interface SfPayment {
+  id?: number | string;
+  amount?: number | string;
+  total_amount?: number | string;
+  status?: string;
+  payment_method?: string;
+  method?: string;
+  reference?: string;
+  transaction_id?: string;
+  paid_at?: string;
+  created_at?: string;
+  note?: string;
+  consignment_ids?: (number | string)[];
+}
+
+function sfPayout(p: SfPayment | undefined, fallbackRef?: string): CourierPayoutInfo | null {
+  if (!p) return null;
+  const ref = p.id !== undefined ? String(p.id) : fallbackRef;
+  const state = steadfastPayoutState(p.status) ?? (p.paid_at ? 'PAID' : null);
+  if (!ref || !state) return null;
+  const paidAt = p.paid_at ? new Date(p.paid_at) : null;
+  return {
+    ref,
+    state,
+    amountMinor: takaToMinor(p.amount ?? p.total_amount),
+    paymentRef: (p.reference ?? p.transaction_id ?? null) || null,
+    method: (p.payment_method ?? p.method ?? null) || null,
+    paidAt: paidAt && !Number.isNaN(paidAt.getTime()) ? paidAt : null,
+    rawStatus: p.status ?? null,
+    note: p.note ?? null,
+    consignmentIds: (p.consignment_ids ?? []).map(String),
+  };
 }
 
 class SfHttpError extends Error {
@@ -203,6 +261,38 @@ export function createSteadfastClient(opts: ClientOptions): CourierApi {
           chargeMinor: null,
         },
       ];
+    },
+    async balance() {
+      const r = await call('GET', '/get_balance');
+      return typeof r.current_balance === 'number' ? { balanceMinor: takaToMinor(r.current_balance) ?? 0 } : null;
+    },
+    payouts: {
+      async request(input) {
+        try {
+          const r = await call('POST', STEADFAST_PAYMENT_REQUEST_PATH, { ...(input.amountMinor ? { amount: minorToMajor(input.amountMinor, API_TAKA) } : {}), ...(input.note ? { note: input.note } : {}) });
+          const one = r.payment ?? (Array.isArray(r.data) ? r.data[0] : r.data);
+          // an accepted request whose answer carries no state is still a request that was made
+          const payout = sfPayout(one, undefined) ?? (one?.id !== undefined ? { ref: String(one.id), state: 'REQUESTED' as const, amountMinor: input.amountMinor, paymentRef: null, method: null, paidAt: null, rawStatus: null, note: null, consignmentIds: [] } : null);
+          if (!payout) return { ok: false as const, error: 'Steadfast answered without a payment request id', unknown: true };
+          return { ok: true as const, payout };
+        } catch (e) {
+          return { ok: false as const, error: e instanceof Error ? e.message : String(e), unknown: unknownAnswer(e) };
+        }
+      },
+      async status(ref) {
+        try {
+          const r = await call('GET', `${STEADFAST_PAYMENTS_PATH}/${encodeURIComponent(ref)}`);
+          return sfPayout(r.payment ?? (Array.isArray(r.data) ? r.data[0] : r.data), ref);
+        } catch (e) {
+          if (e instanceof SfHttpError && e.httpStatus === 404) return null;
+          throw e;
+        }
+      },
+      async list() {
+        const r = await call('GET', STEADFAST_PAYMENTS_PATH);
+        const rows = r.payments ?? (Array.isArray(r.data) ? r.data : []);
+        return rows.map((p) => sfPayout(p)).filter((x): x is CourierPayoutInfo => x !== null);
+      },
     },
     async health() {
       const r = await call('GET', '/get_balance');
