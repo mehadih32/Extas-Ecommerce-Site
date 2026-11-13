@@ -7,6 +7,7 @@ import type { Key, storeTarget, Value } from '@extas/settings';
 import type { z } from 'zod';
 import type { SupportPushWiring } from './push';
 import type { ChannelAdapters } from './channels';
+import type { CommentSender } from './comments';
 
 /** Reads effective settings for a store (the app passes its SettingsResolver). */
 export interface SettingsReader {
@@ -30,6 +31,8 @@ export interface SupportDeps {
   now?: () => Date;
   /** PR 435: the support app's push notifications (a sender and the words). Missing: nobody is pushed. */
   push?: SupportPushWiring;
+  /** S28 · PR 693: what the Page's connector does for a comment (hide, private reply, public reply). Missing: a practice stand-in. */
+  comments?: CommentSender;
 }
 
 export const nowOf = (deps: Pick<SupportDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -77,6 +80,10 @@ export const SUPPORT_ERROR_CODES = [
   // S28 · PR 692: quick replies are switched off; the short name is already used
   'SAVED_REPLIES_OFF',
   'SHORTCUT_TAKEN',
+  // S28 · PR 693: the comment desk is switched off; a hidden comment is not answered; the Page did not do it
+  'COMMENT_DESK_OFF',
+  'COMMENT_HIDDEN',
+  'COMMENT_SEND_FAILED',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 

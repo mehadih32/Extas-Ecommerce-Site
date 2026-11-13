@@ -3,6 +3,10 @@
     "savedReplies": {
       "label": "Quick replies",
       "help": "Inbox › Quick replies: saved answers with a short name, in English and in Bengali. Type / and the short name in a chat's reply box to put the text in. A quick reply is never deleted, only archived. \"Longest text\" is how many letters one may hold."
+    },
+    "commentDesk": {
+      "label": "Comment desk",
+      "help": "Inbox › Comments: Facebook and Instagram comments in one list. Optional rules: hide a comment that carries a phone number, hide abusive words, and send one private message and one public reply to a comment that asks a price or size. The words and texts are yours to set. Hiding and replying go through the Page's connection (a practice stand-in until its keys are typed in)."
     }
   }
 }

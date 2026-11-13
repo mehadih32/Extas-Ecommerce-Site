@@ -6,7 +6,7 @@
 import { audit, type PermissionKey } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sp from '@extas/support';
-import { supportSavedRepliesSchema, storeTarget, type Key } from '@extas/settings';
+import { supportCommentDeskSchema, supportSavedRepliesSchema, storeTarget, type Key } from '@extas/settings';
 import type { z } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { supportDeps } from './support-api';
@@ -54,6 +54,7 @@ export const notFound = () => fail(404, 'not-found');
 /** The owner's switches of this wave: which setting, how it is checked, the permission that saves it, and why. */
 export const V5_SWITCHES = {
   'support.savedReplies': { schema: supportSavedRepliesSchema, perm: 'support.settings', reason: 'Inbox › Quick replies' },
+  'support.commentDesk': { schema: supportCommentDeskSchema, perm: 'support.settings', reason: 'Inbox › Comments' },
 } as const satisfies Record<string, { schema: z.ZodType; perm: PermissionKey; reason: string }>;
 export type V5SwitchKey = keyof typeof V5_SWITCHES;
 

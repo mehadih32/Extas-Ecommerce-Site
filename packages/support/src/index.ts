@@ -109,3 +109,6 @@ export * from './social-engagement';
 // S28 · PR 692 — Inbox › Quick replies.
 export * from './saved-replies-pure';
 export * from './saved-replies';
+// S28 · PR 693 — Inbox › Comments.
+export * from './comments-pure';
+export * from './comments';
