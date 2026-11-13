@@ -2,12 +2,13 @@
 // a live primary photo appear — Blueprint C8.1: the clip's first frame is always an already-approved still) and the
 // image-to-video job list. GET lists jobs and, once `studio.video.enabled` is on, the pickable products
 // (`marketing.studio.read`); POST {action, input | jobId} prices or requests a clip, or moves one through the
-// pipeline (`marketing.studio.write`): 'estimate' | 'request' (PR 482), then 'queue' | 'run' | 'retry' (PR 483).
-// Landing on `REVIEW_REQUIRED` and approving/rejecting from there is PR 484.
+// pipeline (`marketing.studio.write`): 'estimate' | 'request' (PR 482), then 'queue' | 'run' | 'retry' (PR 483), then
+// 'approve' | 'reject' from `REVIEW_REQUIRED` (PR 484; best-of-2 itself runs inside 'run' when the owner's own
+// `studio.video.bestOfTwo` is on — nothing new here for it).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { Actor, RequestContext } from '@extas/auth';
 import { createConnections, videoProviderAdapters, type VideoProvider } from '@extas/adapters';
-import { estimateVideoJob, listVideoJobs, queueVideoJob, requestVideoJob, retryVideoJob, runVideoJob, StudioError, type StudioDeps, type VideoJobView } from '@extas/creative-studio';
+import { approveVideoJob, estimateVideoJob, listVideoJobs, queueVideoJob, rejectVideoJob, requestVideoJob, retryVideoJob, runVideoJob, StudioError, type StudioDeps, type VideoJobView } from '@extas/creative-studio';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 
 const S = MOTHER_STORE_ID;
@@ -60,10 +61,12 @@ export async function videosHandler(request: Request, deps: AdminDeps | null): P
     if (b.action === 'estimate') return json({ ok: true, estimate: await estimateVideoJob(sd, provider, S, b.input) });
     if (b.action === 'request') return json({ ok: true, job: await requestVideoJob(sd, who, provider, b.input) });
     const jobId = typeof b.jobId === 'string' ? b.jobId : '';
-    if (!jobId && (b.action === 'queue' || b.action === 'run' || b.action === 'retry')) throw new StudioError('INVALID_INPUT', 'a job id is needed', ['jobId']);
+    if (!jobId && (b.action === 'queue' || b.action === 'run' || b.action === 'retry' || b.action === 'approve' || b.action === 'reject')) throw new StudioError('INVALID_INPUT', 'a job id is needed', ['jobId']);
     if (b.action === 'queue') return json({ ok: true, job: await queueVideoJob(sd, who, jobId) });
     if (b.action === 'run') return json({ ok: true, job: await runVideoJob(sd, who, provider, jobId) });
     if (b.action === 'retry') return json({ ok: true, job: await retryVideoJob(sd, who, jobId) });
+    if (b.action === 'approve') return json({ ok: true, job: await approveVideoJob(sd, who, jobId) });
+    if (b.action === 'reject') return json({ ok: true, job: await rejectVideoJob(sd, who, jobId) });
     throw new StudioError('INVALID_INPUT', 'unknown action', ['action']);
   } catch (e) {
     return errorResponse(e);

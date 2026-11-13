@@ -1,0 +1,8 @@
+{
+  "ads": {
+    "intel": {
+      "label": "Market & competitors (change alerts)",
+      "help": "Compare with the shops you choose, and get a highlighted note on the page when a followed shop's price or product range changes. Proposals only — a price never changes here; it changes in the ERP. A Telegram or e-mail copy of the note is not built yet."
+    }
+  }
+}

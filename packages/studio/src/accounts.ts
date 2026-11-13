@@ -33,6 +33,10 @@ export const saveAccountInput = z.discriminatedUnion('action', [
   // to the words "every post from this account goes out with no one looking at it first".
   z.object({ action: z.literal('requireApproval'), id: z.uuid(), requireApproval: z.boolean(), version: z.string().max(40).optional() }).strict(),
   z.object({ action: z.literal('dailyLimit'), id: z.uuid(), dailyLimit: z.number().int().min(1).max(500).nullable(), version: z.string().max(40).optional() }).strict(),
+  // S23 · PR 441 — TikTok only (Blueprint C5.1: "direct posting switched on when approved"); this is the owner
+  // saying the app audit approval has arrived, not a key, so it stays a plain write like `requireApproval`. On any
+  // other platform it means nothing: refused (`INVALID_INPUT`), not silently ignored.
+  z.object({ action: z.literal('directPostApproved'), id: z.uuid(), directPostApproved: z.boolean(), version: z.string().max(40).optional() }).strict(),
   z.object({ action: z.literal('archive'), id: z.uuid(), archived: z.boolean(), version: z.string().max(40).optional() }).strict(),
 ]);
 
@@ -88,6 +92,7 @@ export async function saveStudioAccount(deps: StudioDeps, who: Who, input: unkno
   const c = await deps.db.socialAccount.findFirst({ where: { id: d.id, storeId: who.storeId } });
   if (!c) throw new StudioError('NOT_FOUND', 'no such account', ['id']);
   if (d.version !== undefined && d.version !== c.updatedAt.toISOString()) throw new StudioError('STALE', 'the account changed; read it again', ['version']);
+  if (d.action === 'directPostApproved' && c.platform !== 'tiktok') throw new StudioError('INVALID_INPUT', 'only a TikTok account has direct-post approval', ['id']);
   const before = rowOf(c);
   const data =
     d.action === 'rename'
@@ -96,9 +101,11 @@ export async function saveStudioAccount(deps: StudioDeps, who: Who, input: unkno
         ? { enabled: d.enabled }
         : d.action === 'requireApproval'
           ? { requireApproval: d.requireApproval }
-          : d.action === 'dailyLimit'
-            ? { dailyLimit: d.dailyLimit }
-            : { archivedAt: d.archived ? (c.archivedAt ?? nowOf(deps)) : null, ...(d.archived ? { enabled: false } : {}) };
+          : d.action === 'directPostApproved'
+            ? { directPostApproved: d.directPostApproved }
+            : d.action === 'dailyLimit'
+              ? { dailyLimit: d.dailyLimit }
+              : { archivedAt: d.archived ? (c.archivedAt ?? nowOf(deps)) : null, ...(d.archived ? { enabled: false } : {}) };
   const after = await deps.db.socialAccount.update({ where: { id: c.id }, data });
   await logChange(deps.db, who, { action: `studio.account.${d.action}`, entityType: 'SocialAccount', entityId: c.id, before, after: rowOf(after) });
   return rowOf(after);

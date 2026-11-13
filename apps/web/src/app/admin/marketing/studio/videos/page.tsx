@@ -2,8 +2,9 @@
 // /api/admin/marketing/studio/videos (lib/studio/video-admin.ts). Seeing needs `marketing.studio.read`; pricing and
 // requesting a clip needs `marketing.studio.write`. The whole Studio tab stays hidden by `stages.closedShown.S25`
 // until the stage is finished (CN-036/CN-039). Guide: docs/admin-guide/pages/marketing/studio-videos.md.
-// S25 · PR 483 — each job row also carries its own next move (queue/run/retry, `VideoJobActions`); a job that has
-// moved on to REVIEW_REQUIRED or further has no button here (PR 484 adds the review/approve step).
+// S25 · PR 483 — each job row also carries its own next move (queue/run/retry, `VideoJobActions`).
+// S25 · PR 484 — a job on REVIEW_REQUIRED gets its own Approve / Reject there too, and a run's real cost
+// (`actualMinor`, already doubled when `studio.video.bestOfTwo` is on) shows once it has one.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -74,6 +75,11 @@ export default async function VideoJobsPage() {
     retryIt: g('retryIt'),
     retrying: g('retrying'),
     attemptOf: g('attemptOf'),
+    approveIt: g('approveIt'),
+    approving: g('approving'),
+    rejectIt: g('rejectIt'),
+    rejecting: g('rejecting'),
+    awaitingReview: g('awaitingReview'),
     money,
     noProducts: g('noProducts'),
     err: errs,
@@ -106,6 +112,7 @@ export default async function VideoJobsPage() {
                 </p>
                 <p className="a2-sm a2-mute">
                   {j.durationSec ?? '—'}s · {j.estimateMinor == null ? g('costUnset') : formatMoney(j.estimateMinor, money)}
+                  {j.actualMinor != null ? ` · ${g('actualCost')}: ${formatMoney(j.actualMinor, money)}` : ''}
                 </p>
                 {canWrite ? <VideoJobActions url={API} jobId={j.id} status={j.status} attempt={j.attempt} texts={texts} /> : null}
               </li>

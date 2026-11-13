@@ -283,6 +283,14 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
           { href: '/admin/marketing/studio/models', perm: 'photoshoot.read', keys: ['marketingStudioModels'] },
           { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
+          // S25 · PR 485/486: reel assembly — builds a reel's own recipe from approved clips, then assembles it
+          // (the honest-preview compositor, one output per chosen shape).
+          { href: '/admin/marketing/studio/reels', perm: 'marketing.studio.read', keys: ['marketingStudioReels'] },
+          // S25 · PR 487: campaign creative export, part 1 — requests an export from a real product, SKU or
+          // category that already has an approved image/video; producing the sized files is PR 488.
+          { href: '/admin/marketing/studio/export', perm: 'marketing.studio.read', keys: ['marketingStudioExport'] },
+          // S25 · PR 490: the creative brief — a few short questions, then three proposed directions to pick from.
+          { href: '/admin/marketing/studio/briefs', perm: 'marketing.studio.read', keys: ['marketingStudioBriefs'] },
           { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
         ],
       },
@@ -304,6 +312,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'geoGuide', more: true, pages: [{ href: '/admin/marketing/geo-guide', perm: 'marketing.campaigns.read', keys: ['marketingGeoGuide'] }] },
       // S13 · PR 589: the Google Merchant Center product feed — address, counts, left-out reasons, the Bangladesh test (More options).
       { id: 'merchantFeed', more: true, pages: [{ href: '/admin/marketing/merchant-feed', perm: 'marketing.campaigns.read', keys: ['marketingMerchantFeed'] }] },
+      // S13 · PR 548: Market & competitors — the owner's own followed shops, the price table against ours, change alerts (More options).
+      { id: 'intel', more: true, pages: [{ href: '/admin/marketing/intel', perm: 'marketing.campaigns.read', keys: ['marketingIntel'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,
@@ -366,6 +376,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/website/blog/ads', perm: 'blog.read', keys: ['blogAds', 'blogAd'] },
           // S12 · PR 591 — the content pipeline: the pace (3 a day, then 5 while healthy), the queue, review and refresh.
           { href: '/admin/website/blog/pipeline', perm: 'blog.read', keys: ['blogPipeline'] },
+          // S12 · PR 529 — write from a link: give it a link to an article anywhere, it researches and writes an original draft.
+          { href: '/admin/website/blog/source', perm: 'blog.read', keys: ['blogSource'] },
         ],
       },
     ],

@@ -252,4 +252,6 @@ export * from './placeholder';
 export * from './registry-studio';
 // S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
 export * from './registry-photoshoot';
+// S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).
+export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

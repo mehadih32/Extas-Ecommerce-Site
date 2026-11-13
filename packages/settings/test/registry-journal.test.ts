@@ -1,7 +1,7 @@
 // S12 · PR 239 — `blog.journal`: off as it ships, every number the owner's within its range, and its words in both
 // languages.
 import { describe, expect, it } from 'vitest';
-import { blogAiDraftSchema, blogScheduleSchema, blogBriefSchema, blogJournalSchema, lookup, messages, registry } from '../src/index';
+import { blogAiDraftSchema, blogScheduleSchema, blogBriefSchema, blogJournalSchema, blogSourceWriterSchema, lookup, messages, registry } from '../src/index';
 
 describe('blog.journal (PR 239)', () => {
   const spec = registry['blog.journal'];
@@ -98,6 +98,35 @@ describe('blog.aiDraft (PR 243)', () => {
     expect(ok({ dailyMax: 0 })).toBe(false);
     expect(ok({ dailyMax: 51 })).toBe(false);
     expect(ok({ enabled: true, dailyMax: 50 })).toBe(true);
+    expect(ok({ extra: 1 })).toBe(false);
+  });
+
+  it('has its words in English and Bengali', () => {
+    for (const k of [spec.labelKey, spec.helpKey ?? '']) {
+      expect(lookup(messages.en, k), k).toBeTruthy();
+      expect(lookup(messages.bn, k), k).toBeTruthy();
+    }
+  });
+});
+
+describe('blog.sourceWriter (PR 529)', () => {
+  const spec = registry['blog.sourceWriter'];
+
+  it('ships off, per store, at version 288, any host allowed, with a default the schema accepts', () => {
+    expect(spec.scope).toBe('store');
+    expect(spec.version).toBe(288);
+    expect(spec.default).toEqual({ enabled: false, dailyMax: 6, allowedHosts: [] });
+    expect(blogSourceWriterSchema.safeParse(spec.default).success).toBe(true);
+    expect(spec.isOwnerData).toBe(false);
+  });
+
+  it('keeps the daily number in range, keeps allowedHosts to real host names, and refuses unknown fields', () => {
+    const ok = (v: object) => blogSourceWriterSchema.safeParse({ ...spec.default, ...v }).success;
+    expect(ok({ dailyMax: 0 })).toBe(false);
+    expect(ok({ dailyMax: 51 })).toBe(false);
+    expect(ok({ enabled: true, dailyMax: 50 })).toBe(true);
+    expect(ok({ allowedHosts: ['example.com', 'sub.example.com'] })).toBe(true);
+    expect(ok({ allowedHosts: ['not a host'] })).toBe(false);
     expect(ok({ extra: 1 })).toBe(false);
   });
 

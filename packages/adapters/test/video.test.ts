@@ -15,6 +15,21 @@ describe('estimateFromRate (pure)', () => {
   it('is null for a non-positive duration', () => {
     expect(estimateFromRate({ durationSec: 0, aspect: '1:1', ratePerSecondMinor: 150 }).costMinor).toBeNull();
   });
+
+  it('leaving passes out prices a single pass, same as passes: 1', () => {
+    const noPasses = estimateFromRate({ durationSec: 8, aspect: '9:16', ratePerSecondMinor: 150 });
+    const onePass = estimateFromRate({ durationSec: 8, aspect: '9:16', ratePerSecondMinor: 150, passes: 1 });
+    expect(noPasses).toEqual(onePass);
+    expect(noPasses.costMinor).toBe(1200);
+  });
+
+  it('best-of-2 (passes: 2) costs exactly twice a single pass (Blueprint C8.2)', () => {
+    expect(estimateFromRate({ durationSec: 8, aspect: '9:16', ratePerSecondMinor: 150, passes: 2 }).costMinor).toBe(2400);
+  });
+
+  it('is null for a non-positive passes count', () => {
+    expect(estimateFromRate({ durationSec: 8, aspect: '9:16', ratePerSecondMinor: 150, passes: 0 }).costMinor).toBeNull();
+  });
 });
 
 describe('mockVideoProviderAdapter', () => {
