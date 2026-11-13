@@ -36,6 +36,24 @@ export const startFreshSchema = z
   .strict();
 export type StartFreshSettings = z.output<typeof startFreshSchema>;
 
+/**
+ * PR 704 — the bulk and corporate orders screen. Off until the owner turns it on; every number is the owner's:
+ * the advance percent a new quote starts with, how many days a quote stands, how many batches at most, and the days
+ * between a quote's planned batches.
+ */
+export const bulkOrdersSchema = z
+  .object({
+    enabled: z.boolean(),
+    defaultAdvancePct: z.number().int().min(0).max(100),
+    quoteValidDays: z.number().int().min(1).max(365),
+    maxBatches: z.number().int().min(1).max(12),
+    batchGapDays: z.number().int().min(1).max(60),
+    firstBatchAfterDays: z.number().int().min(0).max(120),
+    refPrefix: z.string().max(8),
+  })
+  .strict();
+export type BulkOrdersSettings = z.output<typeof bulkOrdersSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -54,5 +72,14 @@ export const s28W5bSettings = {
     helpKey: 'startFresh.settings.help',
     sortOrder: 726,
     version: 706,
+  }),
+  'bulk.orders': setting({
+    ...base,
+    schema: bulkOrdersSchema,
+    default: { enabled: false, defaultAdvancePct: 50, quoteValidDays: 15, maxBatches: 4, batchGapDays: 4, firstBatchAfterDays: 3, refPrefix: 'QT-' },
+    labelKey: 'bulk.orders.label',
+    helpKey: 'bulk.orders.help',
+    sortOrder: 724,
+    version: 704,
   }),
 };

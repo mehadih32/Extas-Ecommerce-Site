@@ -23,3 +23,9 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
   (setting `startFresh.settings`); runs once. The site clears carts, reviews and returns itself; orders, customers, chats,
   coupon uses, analytics and customer problems sit on append-only tables and are HANDED_OFF (recorded in `StartFreshRun.kinds`)
   to the server's purge job, which is not built here. The ERP-side clear is a mock (`erpStatus` MOCK_NOT_SENT).
+
+## PR 704 Bulk and corporate orders
+- Page `/admin/orders/bulk` (perm `orders.read`; quotes, batches and marks `orders.notes`; settings `settings.write`), a tab "Bulk" in the
+  Orders section after Returns (the prototype's "Bulk / corporate" chip on All orders may also link here). Key `ordersBulk`, guide `orders/bulk`.
+  Off until the owner turns `bulk.orders` on (screen has the switch). Quote numbers use the setting's prefix (QT-). Advance and balance are
+  marks with the owner's PIN; no Payment row is made (Money and Accounts own that).

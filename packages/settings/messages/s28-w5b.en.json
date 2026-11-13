@@ -10,5 +10,11 @@
       "label": "Start fresh",
       "help": "One time only, on go-live day: clears the test and sample business data and asks for a full backup, the words START FRESH and your PIN first. Off until you turn it on. 'Backup no older than' is how many minutes old the backup may be when it runs."
     }
+  },
+  "bulk": {
+    "orders": {
+      "label": "Bulk and corporate orders",
+      "help": "The Orders > Bulk screen: quotes with an agreed price, advance and balance marks, a company invoice and delivery in batches. Off until you turn it on. Numbers: the advance percent a new quote starts with, how many days a quote stands, the most batches, days to the first batch and between batches, and the quote number prefix."
+    }
   }
 }

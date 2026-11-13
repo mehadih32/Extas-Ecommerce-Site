@@ -202,6 +202,7 @@
     { "id": "orders/batch", "route": "/admin/orders/batch" },
     { "id": "orders/incomplete", "route": "/admin/orders/incomplete" },
     { "id": "orders/calls", "route": "/admin/orders/confirm/calls" },
+    { "id": "orders/bulk", "route": "/admin/orders/bulk" },
     { "id": "reports/delivery", "route": "/admin/reports/delivery" },
     { "id": "reports/customers", "route": "/admin/reports/customers" },
     { "id": "reports/searches", "route": "/admin/reports/searches" },

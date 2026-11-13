@@ -198,6 +198,8 @@ model Store {
   bulkEnquiries           BulkEnquiry[]
   cashHandovers           CashHandover[]
   startFreshRuns          StartFreshRun[]
+  bulkQuotes              BulkQuote[]
+  bulkBatches             BulkBatch[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -3055,6 +3057,8 @@ model BulkEnquiry {
   orderId    String?   @db.Uuid
   createdAt  DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  quotes BulkQuote[]
 
   @@unique([storeId, refNo])
   @@index([storeId, status, createdAt])
@@ -11684,4 +11688,77 @@ model StartFreshRun {
   updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([storeId, createdAt])
+}
+
+enum BulkPricing {
+  PIECE
+  TIER
+}
+
+enum BulkBatchStatus {
+  WAITING
+  PACKED
+  SHIPPED
+  DELIVERED
+}
+
+/// @stage S28 · PR 704 (admin prototype v5, GAP-MAP part 1 O-35 / N17) — a quote for a bulk or corporate order, over the
+/// enquiry PR 606 built (`enquiryId`, optional: a quote may also be made from a call). Lines are the styles and the pieces
+/// per size; the price is one agreed price per piece or a price by quantity (tiers); the advance is a percent of the total.
+/// Every figure is saved as minor units so a printed quotation and invoice never differ from the screen. "Advance received"
+/// and "Balance received" are marks the team puts with the owner's PIN: they record that the company paid, they never move
+/// money and never make a Payment row (Accounts/Money own that). Delivery is in batches (`BulkBatch`).
+model BulkQuote {
+  id                String       @id @default(uuid(7)) @db.Uuid
+  storeId           Int
+  store             Store        @relation(fields: [storeId], references: [id])
+  /// The store's running quote number (shown with the setting's prefix).
+  refNo             Int
+  enquiryId         String?      @db.Uuid
+  enquiry           BulkEnquiry? @relation(fields: [enquiryId], references: [id])
+  company           String
+  contact           String
+  phone             String
+  /// [{ name, colour, sizes: { S: 10, M: 20 } }]
+  lines             Json
+  pricing           BulkPricing  @default(PIECE)
+  pieceMinor        Int          @default(0)
+  /// [{ from: 50, minor: 72000 }] for TIER.
+  tiers             Json         @default("[]")
+  advancePct        Int
+  pieces            Int
+  unitMinor         Int
+  totalMinor        Int
+  advanceMinor      Int
+  note              String?
+  advanceReceivedAt DateTime?    @db.Timestamptz(3)
+  balanceReceivedAt DateTime?    @db.Timestamptz(3)
+  createdById       String?      @db.Uuid
+  createdAt         DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+  batches           BulkBatch[]
+
+  @@unique([storeId, refNo])
+  @@index([storeId, createdAt])
+  @@index([enquiryId])
+}
+
+/// @stage S28 · PR 704 — one delivery batch of a bulk quote: its pieces, the planned day and where it is (waiting, packed,
+/// with the courier, delivered) with the courier's tracking once shipped.
+model BulkBatch {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store           @relation(fields: [storeId], references: [id])
+  quoteId   String          @db.Uuid
+  quote     BulkQuote       @relation(fields: [quoteId], references: [id])
+  no        Int
+  pieces    Int
+  plannedOn DateTime        @db.Date
+  status    BulkBatchStatus @default(WAITING)
+  tracking  String?
+  createdAt DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime        @updatedAt @db.Timestamptz(3)
+
+  @@unique([quoteId, no])
+  @@index([storeId, status])
 }
