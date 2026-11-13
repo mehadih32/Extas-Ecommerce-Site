@@ -686,6 +686,24 @@
         "notBooked": "Not booked: {list}",
         "print": "Print selected ({n})",
         "note": "Book first, then print. A print makes what \"What to print\" on the print run page says, in packing order. Nothing is booked or printed by itself."
+      },
+      "chips": {
+        "label": "Where the orders are",
+        "confirmed": "Confirmed",
+        "booked": "Booked",
+        "packed": "Packed",
+        "confirmedHelp": "Confirmed, no courier booked yet",
+        "bookedHelp": "A courier is booked, the sticker is not printed yet",
+        "packedHelp": "Sticker printed, ready for the courier's rider",
+        "log": "Print log",
+        "set": {
+          "h": "To ship switches",
+          "d": "Two switches for printing stickers. Both are off as shipped.",
+          "reprintPin": "A second print needs the owner's PIN",
+          "reprintPinHelp": "Off: a reprint needs only its reason. On: it also needs the PIN, and the print log marks it.",
+          "packOnPrint": "A printed sticker means packed",
+          "packOnPrintHelp": "Off: packing is its own step. On: printing a confirmed order's sticker marks it Packed (no piece scan)."
+        }
       }
     },
     "printRun": {
@@ -832,6 +850,15 @@
         "edgeMm": "Edge the printer cannot reach (mm)",
         "edgeMmHelp": "0 to 5. The print check wants no ink in this band."
       }
+    },
+    "pin": {
+      "label": "Owner's PIN",
+      "placeholder": "PIN",
+      "needed": "A second print needs the owner's PIN. Type it, then press Print again.",
+      "wrong": "That PIN is not right.",
+      "notSet": "The owner has not set a PIN yet.",
+      "locked": "Too many wrong tries. Wait a while and try again.",
+      "logged": "PIN checked"
     }
   }
 }

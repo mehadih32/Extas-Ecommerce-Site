@@ -344,6 +344,7 @@ export default async function PrintRunPage({ searchParams }: { searchParams: Sea
                   </>
                 ) : null}
                 {j.reason ? <span className="a2-mute"> · {t(d, 'ful.recent.reason', { reason: j.reason })}</span> : null}
+                {j.pinChecked ? <span className="a2-pill line"> {t(d, 'ful.pin.logged')}</span> : null}
                 {j.orderNumbers.length ? <span className="a2-mute"> · {listed(j.orderNumbers)}</span> : null}
               </li>
             ))}

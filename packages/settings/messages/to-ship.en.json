@@ -1,0 +1,8 @@
+{
+  "fulfilment": {
+    "toShip": {
+      "label": "To ship: reprint PIN and packed on print",
+      "help": "Both off as shipped. Reprint needs PIN: a second print of a parcel's sticker needs the owner's PIN as well as a reason. Packed when the sticker is printed: printing a confirmed order's sticker marks it Packed (no piece scan)."
+    }
+  }
+}
