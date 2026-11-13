@@ -16,14 +16,14 @@ import type { JobDeps } from './context';
 import { runEmailSends, runJourneys, runWinbacks } from '@extas/customers';
 import { runMessages } from '@extas/messages';
 import { indexStore } from '@extas/search';
-import { sweepPending } from '@extas/payments';
+import { pollPayouts, sweepPending } from '@extas/payments';
 import { MESSAGES_JOB, MESSAGES_QUEUE, messagesDeps } from './messages';
 import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { INVOICE_ISSUE_JOB, INVOICE_QUEUE, runInvoiceIssue } from './invoices';
 import { runSupportEscalation, SUPPORT_ESCALATE_JOB, SUPPORT_QUEUE } from './support-escalation';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
 import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
-import { COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB } from './courier';
+import { COURIER_PAYOUTS_JOB, COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB, payoutDeps } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
 import { RETURNS_ERP_JOB, RETURNS_ERP_QUEUE, runReturnsErp } from './returns-erp';
 import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportPayload } from './money-report';
@@ -263,6 +263,27 @@ const courierZonesJob: JobDefinition<{ storeId: number }> = {
 };
 
 /**
+ * S28 · PR 671 — one store's open courier payout requests read back from the couriers, and the PAID ones settled in the name of
+ * the person who asked (packages/payments `pollPayouts`; planned by courier.ts `courierPayoutsPlanner`). Safe to run twice: a
+ * request already settled is left as it is, and a statement is imported once. A courier that does not answer is counted.
+ */
+const courierPayoutsJob: JobDefinition<{ storeId: number }> = {
+  key: COURIER_PAYOUTS_JOB,
+  queue: COURIER_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${COURIER_PAYOUTS_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => {
+    const d = payoutDeps(deps);
+    if (!d) return { ok: true, stats: { skipped: 'no couriers' } };
+    return { ok: true, stats: compactStats(await pollPayouts(d, p.storeId)) };
+  },
+};
+
+/**
  * PR 182 — one store's packing photos past the owner's days to keep, archived (packages/shipping `expirePackingPhotos`;
  * planned by courier.ts `packingPhotosPlanner` once per day slot). Safe to run twice: an archived photo is left as it is.
  * Nothing is deleted: the file stays in the media library.
@@ -455,6 +476,7 @@ const definitions: JobDefinition<never>[] = [
   paymentsSweepJob as unknown as JobDefinition<never>,
   courierTrackJob as unknown as JobDefinition<never>,
   courierZonesJob as unknown as JobDefinition<never>,
+  courierPayoutsJob as unknown as JobDefinition<never>,
   packingPhotosJob as unknown as JobDefinition<never>,
   invoiceIssueJob as unknown as JobDefinition<never>,
   returnsErpJob as unknown as JobDefinition<never>,

@@ -25,3 +25,21 @@ describe('couriers setting (v310)', () => {
     expect(s.safeParse({ defaultCourierId: '', extra: 1 }).success).toBe(false);
   });
 });
+
+describe("courier payouts setting (v311)", () => {
+  it("delivery.courier.payouts ships off, labelled in both languages, with the owner's own numbers", () => {
+    const spec = couriersV5Settings["delivery.courier.payouts"];
+    expect(registry["delivery.courier.payouts"]).toBe(spec);
+    expect(spec.version).toBe(311);
+    expect(spec.isOwnerData).toBe(false);
+    expect(spec.default).toEqual({ enabled: false, pollMinutes: 30, minAmountMinor: 0 });
+    for (const lang of ["en", "bn"] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    const s = spec.schema;
+    expect(s.safeParse({ enabled: true, pollMinutes: 5, minAmountMinor: 0 }).success).toBe(true);
+    expect(s.safeParse({ enabled: true, pollMinutes: 4, minAmountMinor: 0 }).success).toBe(false);
+    expect(s.safeParse({ enabled: true, pollMinutes: 30, minAmountMinor: -1 }).success).toBe(false);
+  });
+});

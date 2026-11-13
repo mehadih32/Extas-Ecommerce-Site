@@ -166,6 +166,16 @@
         "h": "Default courier",
         "d": "The courier a booking offers first and the one listed first.",
         "first": "The first courier in the list"
+      },
+      "payouts": {
+        "h": "Courier payouts",
+        "d": "Ask a courier to pay what it holds, through the courier's own payment request. Off until you switch it on.",
+        "enabled": "Allow payout requests",
+        "enabledHelp": "When on, a person with the right and the owner's PIN can ask a courier to pay. Nothing is ever asked by itself.",
+        "pollMinutes": "Check an open request every (minutes)",
+        "pollMinutesHelp": "How often the courier is asked where a request stands.",
+        "minAmountMinor": "Smallest amount to ask for",
+        "minAmountMinorHelp": "In the smallest unit of the currency (100 = one whole unit). 0 means no minimum."
       }
     },
     "t": {
@@ -182,6 +192,72 @@
       "sub": "Every courier's numbers, parcels and money in one place.",
       "reports": "Courier 360 in Reports",
       "finance": "Courier 360 in Finance"
+    },
+    "y": {
+      "title": "Payouts",
+      "sub": "Ask the courier to pay what it holds, through the courier's own payment request.",
+      "off": "Payouts are switched off. Turn them on in Delivery settings.",
+      "read": "This courier only shows what it paid; we cannot ask it from here.",
+      "noneCourier": "This courier has no payment request of its own. Its money comes on its statement.",
+      "holds": "What it holds for us now",
+      "holdsBody": "{cash} collected on {n} parcels, less its charges {charges}: {net} to ask for.",
+      "balance": "The courier says it holds",
+      "minimum": "Smallest amount to ask for: {amount}.",
+      "ask": "Ask the courier to pay",
+      "pin": "Owner's PIN",
+      "confirm": "Ask now",
+      "asking": "Asking…",
+      "asked": "Asked. The courier's answer is read back by itself.",
+      "blocked": {
+        "OPEN": "An earlier request is still open.",
+        "NOTHING": "It holds nothing to ask for.",
+        "BELOW_MINIMUM": "Less than the smallest amount to ask for."
+      },
+      "open": "Open request",
+      "history": "Requests",
+      "noRows": "No request yet.",
+      "requested": "Asked",
+      "amount": "Asked for",
+      "covers": "Covers",
+      "coversN": "{n} parcels",
+      "paid": "Paid",
+      "state": {
+        "REQUESTED": "Requested",
+        "PROCESSING": "Processing",
+        "PAID": "Paid",
+        "REJECTED": "Rejected"
+      },
+      "settled": "Orders marked settled",
+      "notSettled": "Orders not marked settled yet",
+      "diff": "The courier paid {diff} {dir} what the parcels come to. Check its statement.",
+      "dir": {
+        "more": "more than",
+        "less": "less than"
+      },
+      "unconfirmed": "The courier did not confirm this request. Check its panel before asking again.",
+      "check": "Check now",
+      "checked": "Checked",
+      "settle": "Mark orders settled",
+      "close": "Close this request",
+      "closeNote": "Why (what you saw in the courier's panel)",
+      "closeGo": "Close request",
+      "closed": "Closed",
+      "noPerm": "You can see this but not ask. Asking needs the payments settle permission.",
+      "reason": "The courier's words",
+      "mode": "Mode",
+      "err": {
+        "PIN_REQUIRED": "Type the owner's PIN.",
+        "WRONG_PIN": "The PIN is not right.",
+        "PIN_LOCKED": "Too many wrong tries. Wait and try again.",
+        "PIN_NOT_SET": "The owner has not set a PIN yet.",
+        "PAYOUTS_OFF": "Payouts are switched off.",
+        "PAYOUT_NOT_SUPPORTED": "This courier has no payment request of its own.",
+        "PAYOUT_OPEN": "An earlier request is still open.",
+        "PAYOUT_NOTHING": "Nothing to ask for, or less than the smallest amount.",
+        "PAYOUT_REFUSED": "The courier refused the request.",
+        "FORBIDDEN": "You may not do this.",
+        "other": "Something went wrong. Nothing was asked twice; look at the list and try again."
+      }
     }
   }
 }
