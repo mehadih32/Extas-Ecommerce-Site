@@ -23,6 +23,9 @@
 //   POST  /api/admin/returns/orders/:orderId/exchange           {reason, reasonNote?, rootCause?, photoAssetIds?, items:
 //                                                               [{orderItemId, quantity?, newVariantId, receivedSku?}]}
 //                                                               (returns.decide)
+//   POST  /api/admin/returns/orders/:orderId/replacement        S28 · PR 669 {reason: defect|damage|wrong, reasonNote?, rootCause?, photoAssetIds?, items: [{orderItemId, quantity?}]}
+//                                                               a defective or wrong piece sent again free (returns.decide; off as shipped)
+//   GET   /api/admin/returns/orders/:orderId/replacement-view   the rule, whether it is open for this order, the lines (returns.view)
 //   POST  /api/admin/returns/exchanges/:id/complete             {note?, version?} — after the old piece is checked (PR 187)
 //   GET   /api/admin/returns/exchanges/:id/sizes                the other sizes of each piece going out (same product and
 //                                                               colour), with stock and price now (PR 188, returns.view)
@@ -51,6 +54,7 @@
 //   POST  /api/admin/returns/refused/:id/decide                 {state: LISTED | DISMISSED | REMOVED, note?, version?} —
 //                                                               a person decides one number; taking it off needs a note
 //                                                               (PR 191, returns.decide). Nothing blocks an order.
+import { replaceBody } from './admin-orders/replace';
 import * as od from '@extas/orders';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './orders-api';
@@ -213,6 +217,15 @@ export async function returnsRoute(request: Request, deps: AdminDeps | null, pat
     if (c === 'exchange') {
       if (m !== 'POST') return notAllowed();
       return handle(request, deps, 'returns.decide', async (x) => ({ exchange: await od.openExchange(x.deps, x.who, b, await body(request), x.opts) }), 201);
+    }
+    // S28 · PR 669: a defective or wrong piece sent again free (returns.decide; switch `returns.replacement`, off as shipped)
+    if (c === 'replacement') {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'returns.decide', async (x) => ({ exchange: await od.openReplacement(x.deps, x.who, b, replaceBody(await body(request)), x.opts) }), 201);
+    }
+    if (c === 'replacement-view') {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'returns.view', async (x) => ({ replacement: await od.replacementView(x.deps, x.who, b) }));
     }
     if (c === 'return-choices') {
       if (m !== 'GET') return notAllowed();

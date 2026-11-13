@@ -468,6 +468,12 @@ async function nextExchangeNumber(tx: Tx, storeId: number, prefix: string, start
 export interface OpenHooks {
   /** May the order take an exchange in this state? (null: the default rule) */
   allowState?: (status: string, refusalKey: string | null) => boolean;
+  /**
+   * S28 · PR 669: a replacement, not a swap. Its own window (`hours` from the delivered mark) and rule instead of the exchange
+   * rule; the same piece comes again, so no price difference, no wallet credit and no charge; the old piece is due back in
+   * `oldPieceDays`. The exchange's reasons list, per-piece limit and tiers do not apply.
+   */
+  replacement?: { hours: number; oldPieceDays: number; reasons: readonly string[] };
 }
 
 /**
@@ -528,18 +534,30 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
           if (quantity > item.quantity) throw new OrdersError('INVALID_INPUT', 'more pieces than the line has', ['quantity']);
           const piece = await pieceOf(tx, storeId, item);
           const policy = await exchangePolicyFor(deps, storeId, piece?.productId ?? item.productId ?? '', o.deliveryBand?.key ?? null);
-          const window = exchangeWindow(o.deliveredAt, policy.windowHours, now);
-          if (!policy.enabled) throw new OrdersError('EXCHANGE_CLOSED', 'exchanges are switched off', [], { why: 'OFF' });
+          const rep = meta.hooks?.replacement ?? null;
+          const window = exchangeWindow(o.deliveredAt, rep ? rep.hours : policy.windowHours, now);
+          if (!rep && !policy.enabled) throw new OrdersError('EXCHANGE_CLOSED', 'exchanges are switched off', [], { why: 'OFF' });
           // a re-ship after a try-on (PR 190) counts from the refusal, the parcel never reached him
-          const opened = allowed && o.status === 'RETURNED' ? exchangeWindow(o.returnedAt, policy.windowHours, now) : window;
+          const opened = allowed && o.status === 'RETURNED' ? exchangeWindow(o.returnedAt, rep ? rep.hours : policy.windowHours, now) : window;
           if (opened.state !== 'OPEN') throw new OrdersError('EXCHANGE_CLOSED', opened.state === 'UNKNOWN' ? 'the delivered mark is missing; check the courier' : 'the exchange window has passed', ['deliveredAt'], { why: opened.state === 'UNKNOWN' ? 'UNKNOWN' : 'WINDOW' });
           windowEndsAt = opened.endsAt;
-          if (!piece || piece.categoryIds.some((c) => excluded.has(c))) throw new OrdersError('NOT_EXCHANGEABLE', 'this piece is in a category that is not exchanged', ['orderItemId'], { why: 'EXCLUDED' });
-          if (!policy.covered) throw new OrdersError('NOT_EXCHANGEABLE', 'the exchange rule does not cover this piece', ['orderItemId'], { why: 'NOT_COVERED' });
-          if (!policy.reasons.includes(d.reason)) throw new OrdersError('NOT_EXCHANGEABLE', 'the exchange rule does not take this reason', ['reason'], { why: 'REASON' });
+          if (!piece) throw new OrdersError('NOT_EXCHANGEABLE', 'this line has no piece to send again', ['orderItemId'], { why: 'NOT_COVERED' });
+          if (!rep && piece.categoryIds.some((c) => excluded.has(c))) throw new OrdersError('NOT_EXCHANGEABLE', 'this piece is in a category that is not exchanged', ['orderItemId'], { why: 'EXCLUDED' });
+          if (!rep && !policy.covered) throw new OrdersError('NOT_EXCHANGEABLE', 'the exchange rule does not cover this piece', ['orderItemId'], { why: 'NOT_COVERED' });
+          if (!rep && !policy.reasons.includes(d.reason)) throw new OrdersError('NOT_EXCHANGEABLE', 'the exchange rule does not take this reason', ['reason'], { why: 'REASON' });
+          if (rep && !rep.reasons.includes(d.reason)) throw new OrdersError('NOT_EXCHANGEABLE', 'the replacement rule does not take this reason', ['reason'], { why: 'REASON' });
           const used = await usedOn(tx, storeId, item.id);
           if (used.open) throw new OrdersError('EXCHANGE_LIMIT', 'this piece already has an exchange open', ['orderItemId'], { why: 'OPEN' });
-          if (perItemLeft(policy.perItem, used.counted) === 0) throw new OrdersError('EXCHANGE_LIMIT', 'this piece has no exchanges left', ['orderItemId'], { why: 'LIMIT', perItem: policy.perItem });
+          if (!rep && perItemLeft(policy.perItem, used.counted) === 0) throw new OrdersError('EXCHANGE_LIMIT', 'this piece has no exchanges left', ['orderItemId'], { why: 'LIMIT', perItem: policy.perItem });
+          if (rep) {
+            // the same piece again: its own price (so nothing differs), the same variant (the tiers do not apply)
+            if (x.newVariantId !== item.variantId) throw new OrdersError('NOT_OFFERED', 'a replacement is the same piece', ['newVariantId']);
+            const v = await tx.productVariant.findFirst({ where: { id: x.newVariantId, storeId }, select: { sku: true, productId: true, product: { select: { nameEn: true } }, colour: { select: { nameEn: true } }, size: { select: { key: true, label: true } } } });
+            if (!v) throw new OrdersError('NOT_OFFERED', 'this piece is not offered', ['newVariantId']);
+            const option: ExchangeOption = { variantId: x.newVariantId, sku: v.sku, productId: v.productId, productName: v.product.nameEn, colourName: v.colour?.nameEn ?? null, sizeKey: v.size?.key ?? null, sizeLabel: v.size?.label ?? null, tier: 1, priceMinor: coveredPerPiece(item, o), sellable: 0 };
+            lines.push({ item, quantity, newVariantId: x.newVariantId, receivedSku: x.receivedSku ?? null, option, policy });
+            continue;
+          }
           const target = await tx.productVariant.findFirst({ where: { id: x.newVariantId, storeId }, select: { size: { select: { key: true } } } });
           if (!target) throw new OrdersError('NOT_OFFERED', 'this piece is not offered', ['newVariantId']);
           const sizeKey = target.size?.key ?? null;
@@ -549,14 +567,16 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
           if (!option) throw new OrdersError('NOT_OFFERED', 'this piece is not among the ones offered (the tiers are strictly in order)', ['newVariantId'], { tier: offer.tier, offered: offer.options.map((op) => op.variantId) });
           lines.push({ item, quantity, newVariantId: x.newVariantId, receivedSku: x.receivedSku ?? null, option, policy });
         }
-        const ourMistake = ourMistakeReason && lines.every((l) => l.policy.freeWhenOurMistake);
+        const replacement = meta.hooks?.replacement ?? null;
+        const ourMistake = replacement ? true : ourMistakeReason && lines.every((l) => l.policy.freeWhenOurMistake);
         const box = moneyBox(
           lines.map((l) => ({ oldUnitMinor: coveredPerPiece(l.item, o), newUnitMinor: l.option.priceMinor, quantity: l.quantity })),
           { ourMistake, ...exchangeCharge({ reason: d.reason, ruleChargeMinor: lines[0]!.policy.chargeMinor, rules: cs.rules, reship, oneTrip }) },
         );
         // CN-028 · PR 614: on ERP contract v6 there are no refunds after delivery (no credit), and a dearer piece is the
         // customer's only with `exchange.passPriceRiseToCustomer` (exchange-v6.ts v6MoneyBox).
-        const money = v6 ? v6MoneyBox(box, v6.passRise) : box;
+        // S28 · PR 669: a replacement never carries money: no difference, no credit, no charge, nothing to collect
+        const money = replacement ? { ...box, differenceMinor: 0, owedMinor: 0, creditMinor: 0, chargeMinor: 0, codMinor: 0, chargeState: 'FREE_OUR_MISTAKE' as const } : v6 ? v6MoneyBox(box, v6.passRise) : box;
         const number = await nextExchangeNumber(tx, storeId, engine.numberPrefix, engine.numberStart);
         const ex = await tx.exchange.create({
           data: {
@@ -577,6 +597,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
             chargeState: money.chargeState,
             chargePayer: money.chargeMinor > 0 ? 'CUSTOMER' : money.chargeState === 'STORE' || money.chargeState === 'FREE_OUR_MISTAKE' ? 'STORE' : null,
             oneTrip: !!oneTrip,
+            ...(replacement ? { kind: 'REPLACEMENT', oldPieceDueAt: new Date(now.getTime() + replacement.oldPieceDays * 86_400_000) } : {}),
             photoAssetIds: d.photoAssetIds ?? [],
             windowEndsAt,
             bandKey: o.deliveryBand?.key ?? null,
@@ -940,6 +961,9 @@ export interface ExchangeView {
   claimNote: string | null;
   waiveReason: string | null;
   oneTrip: boolean;
+  /** S28 · PR 669: EXCHANGE or REPLACEMENT (free, the same piece; its old piece is due back by `oldPieceDueAt`). */
+  kind: string;
+  oldPieceDueAt: string | null;
   windowEndsAt: string | null;
   newOrderId: string | null;
   newOrderNumber: string | null;
@@ -985,6 +1009,8 @@ async function viewsOf(db: Db, rows: Prisma.ExchangeGetPayload<{ include: typeof
     claimNote: e.claimNote,
     waiveReason: e.waiveReason,
     oneTrip: e.oneTrip,
+    kind: e.kind,
+    oldPieceDueAt: e.oldPieceDueAt?.toISOString() ?? null,
     windowEndsAt: e.windowEndsAt?.toISOString() ?? null,
     newOrderId: e.newOrderId,
     newOrderNumber: e.newOrderId ? (orders.get(e.newOrderId)?.number ?? null) : null,
