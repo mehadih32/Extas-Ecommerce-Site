@@ -22,6 +22,8 @@ import {
   type AiSizeAdviceInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
+  type AiStudioDetailDraft,
+  type AiStudioDetailInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
 } from './shared';
@@ -327,5 +329,35 @@ const socialCaptionAnswer = z.object({ body: z.string() });
 export function parseSocialReelCaptionJson(text: string, input: AiSocialCaptionInput, usage?: { inputTokens: number; outputTokens: number }): AiSocialCaptionDraft {
   const parsed = socialCaptionAnswer.safeParse(firstJsonObject(text));
   if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a caption');
+  return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// S15 · PR 332 — the photoshoot studio's own job: one grounded note on which of a garment's own already-saved
+// attributes a generated photo must keep accurate, never a decision about the shoot itself
+// ---------------------------------------------------------------------------------------------------------------------
+
+const STUDIO_DETAIL_RULE =
+  "Write only from the garment's own attributes given. Never invent a stitch, print, logo, pattern or any other detail that is not already named in these attributes. Never propose or decide anything about the photoshoot itself — not which photo to keep, not whether to regenerate, not which detail matters more; a person preparing the shot decides that. Only point out, in plain words, which of this garment's own already-recorded attributes (its fabric, its colours, its care) a generated photo must keep accurate.";
+
+export function studioDetailPrompt(input: AiStudioDetailInput): Prompt {
+  const f = input.facts;
+  const facts = Object.entries({ name: f.name, brand: f.brand, category: f.category, colours: f.colours?.join(', '), sizes: f.sizes?.join(', '), fabric: f.fabric, care: f.care })
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('\n');
+  const lang = input.locale === 'bn' ? 'Bengali (বাংলা)' : 'English';
+  return {
+    system: `${SYSTEM_RULE} ${STUDIO_DETAIL_RULE}`,
+    user: `A Bangladeshi menswear shop's Photoshoot Studio is about to generate photos of the garment below. From only its own already-recorded attributes, write one short, plain note, in ${lang}, pointing out which of them a generated photo must keep accurate. Never invent a detail not listed. Never decide anything about the shoot itself.\n\n${facts}\n\nAt most ${input.max.body} characters.\n\nReply as {"body": "..."}.`,
+    maxTokens: 250,
+  };
+}
+
+const studioDetailAnswer = z.object({ body: z.string() });
+
+export function parseStudioDetailJson(text: string, input: AiStudioDetailInput, usage?: { inputTokens: number; outputTokens: number }): AiStudioDetailDraft {
+  const parsed = studioDetailAnswer.safeParse(firstJsonObject(text));
+  if (!parsed.success || !parsed.data.body.trim()) throw new AdapterError('the model did not answer with a detail note');
   return { body: cutTo(parsed.data.body, input.max.body), practice: false, ...(usage ? { usage } : {}) };
 }

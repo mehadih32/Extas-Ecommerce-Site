@@ -16,7 +16,10 @@ import { productDescriptionDraft, type ProductDescriptionFacts } from './product
  * `composition` JSON does not give for free): a real, honest scope decision for this PR, the fabric's own plain
  * name standing in until a shared composition-to-text formatter exists for every caller (PDP, filters, this one —
  * `fabrics.ts`'s own header comment already names that as the eventual single source). */
-function factsOf(product: cat.ProductView): ProductDescriptionFacts {
+// Exported (additive, PR 332) so `studio-detail-api.ts` can reuse this exact same loader rather than rebuild it —
+// the photoshoot studio's own detail-finder job (PR 332) is grounded on the identical `ProductDescriptionFacts`
+// shape this job already uses.
+export function factsOf(product: cat.ProductView): ProductDescriptionFacts {
   return {
     nameEn: product.nameEn,
     brand: product.brand.name || null,

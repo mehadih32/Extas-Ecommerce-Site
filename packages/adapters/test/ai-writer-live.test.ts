@@ -178,6 +178,25 @@ describe('shared live AiWriter (PR 306)', () => {
     expect(d.usage).toBeUndefined();
   });
 
+  // S15 · PR 332 — draftStudioDetailNote: one grounded note on which of a garment's own already-saved attributes a
+  // generated photo must keep accurate, never a decision about the shoot itself, carrying the provider's own usage
+  // through the same generic `complete()` plumbing PR 325 built.
+  it('draftStudioDetailNote writes from the garment\'s own already-saved attributes, practice: false, carrying the provider\'s own usage', async () => {
+    const complete = vi.fn(async () => ({ text: '{"body": "Keep the cotton pique texture and the navy/white colours true to the sample."}', usage: { inputTokens: 55, outputTokens: 20 } }));
+    const w = liveAiWriter(complete);
+    const d = await w.draftStudioDetailNote({ locale: 'en', facts: { name: 'Sample Pique Polo', fabric: 'Cotton pique', colours: ['Navy', 'White'] }, max: { body: 240 } });
+    expect(d).toEqual({ body: 'Keep the cotton pique texture and the navy/white colours true to the sample.', practice: false, usage: { inputTokens: 55, outputTokens: 20 } });
+  });
+
+  it('draftStudioDetailNote throws cleanly when the model answers with no body, and carries no usage when the provider reported none', async () => {
+    const facts = { name: 'Sample Pique Polo' };
+    const w = liveAiWriter(async () => ({ text: '{"notBody": "x"}' }));
+    await expect(w.draftStudioDetailNote({ locale: 'en', facts, max: { body: 240 } })).rejects.toThrow('detail note');
+    const w2 = liveAiWriter(async () => ({ text: '{"body": "ok"}' }));
+    const d = await w2.draftStudioDetailNote({ locale: 'en', facts, max: { body: 240 } });
+    expect(d.usage).toBeUndefined();
+  });
+
   // S15 · PR 327 — draftSeo now carries the provider's own real usage too, the same way PR 325/326 already thread
   // it through `complete()` — the SEO & meta agent's own job dispatcher (seo-meta-dispatch.ts) records it to the
   // ledger exactly like support's and the product content agent's.
