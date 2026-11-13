@@ -55,6 +55,8 @@ import adminCostsEn from '../../../messages/admin-costs.en.json';
 import adminCostsBn from '../../../messages/admin-costs.bn.json';
 import adminCourierReportEn from '../../../messages/admin-courier-report.en.json';
 import adminCourierReportBn from '../../../messages/admin-courier-report.bn.json';
+import adminCouriersEn from '../../../messages/admin-couriers.en.json';
+import adminCouriersBn from '../../../messages/admin-couriers.bn.json';
 import adminCustomersEn from '../../../messages/admin-customers.en.json';
 import adminCustomersBn from '../../../messages/admin-customers.bn.json';
 import adminDeliveryEn from '../../../messages/admin-delivery.en.json';
@@ -207,6 +209,8 @@ import adminMerchantFeedEn from '../../../messages/admin-merchant-feed.en.json';
 import adminMerchantFeedBn from '../../../messages/admin-merchant-feed.bn.json';
 import adminIntelEn from '../../../messages/admin-intel.en.json';
 import adminIntelBn from '../../../messages/admin-intel.bn.json';
+import adminRulesHubEn from '../../../messages/admin-rules-hub.en.json';
+import adminRulesHubBn from '../../../messages/admin-rules-hub.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -240,6 +244,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-cost-report': { en: adminCostReportEn, bn: adminCostReportBn },
   'admin-costs': { en: adminCostsEn, bn: adminCostsBn },
   'admin-courier-report': { en: adminCourierReportEn, bn: adminCourierReportBn },
+  'admin-couriers': { en: adminCouriersEn, bn: adminCouriersBn },
   'admin-customers': { en: adminCustomersEn, bn: adminCustomersBn },
   'admin-delivery': { en: adminDeliveryEn, bn: adminDeliveryBn },
   'admin-digest': { en: adminDigestEn, bn: adminDigestBn },
@@ -291,6 +296,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-returns': { en: adminReturnsEn, bn: adminReturnsBn },
   'admin-reviews': { en: adminReviewsEn, bn: adminReviewsBn },
   'admin-rules': { en: adminRulesEn, bn: adminRulesBn },
+  'admin-rules-hub': { en: adminRulesHubEn, bn: adminRulesHubBn },
   'admin-searches': { en: adminSearchesEn, bn: adminSearchesBn },
   'admin-seasonal': { en: adminSeasonalEn, bn: adminSeasonalBn },
   'admin-seasonal-home': { en: adminSeasonalHomeEn, bn: adminSeasonalHomeBn },

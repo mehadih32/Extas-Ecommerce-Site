@@ -361,7 +361,12 @@
       "COUPON_CODE_INVALID": "That code will not do: {fields}",
       "COUPON_RULE_INVALID": "Coupons work only with an offer that asks for a coupon.",
       "COUPON_NOT_USABLE": "This coupon cannot be used.",
-      "CANNOT_FIX": "This clash cannot be fixed by itself — change the text by hand."
+      "CANNOT_FIX": "This clash cannot be fixed by itself — change the text by hand.",
+      "OFFER_INVALID": "The offer cannot go on as it is: {fields}.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_LOCKED": "Too many wrong PIN tries. Wait a little and try again.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet."
     },
     "notices": {
       "metaTitle": "Notices & pop-ups",

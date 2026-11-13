@@ -21,6 +21,8 @@ import stockBn from '../../messages/admin-stock.bn.json';
 import stockEn from '../../messages/admin-stock.en.json';
 import rulesBn from '../../messages/admin-rules.bn.json';
 import rulesEn from '../../messages/admin-rules.en.json';
+import rulesHubBn from '../../messages/admin-rules-hub.bn.json';
+import rulesHubEn from '../../messages/admin-rules-hub.en.json';
 import combosBn from '../../messages/admin-combos.bn.json';
 import combosEn from '../../messages/admin-combos.en.json';
 import serverBn from '../../messages/admin-server.bn.json';
@@ -50,8 +52,8 @@ export function mergeDicts(a: Dict, b: Dict): Dict {
 }
 
 export const adminDicts: Record<AdminLang, Dict> = {
-  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), combosBn), serverBn), shellBn), ordersBn), supportBn), erpOrdersBn),
-  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), combosEn), serverEn), shellEn), ordersEn), supportEn), erpOrdersEn),
+  bn: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(bn, productsBn), toolsBn), stockBn), rulesBn), rulesHubBn), combosBn), serverBn), shellBn), ordersBn), supportBn), erpOrdersBn),
+  en: mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(mergeDicts(en, productsEn), toolsEn), stockEn), rulesEn), rulesHubEn), combosEn), serverEn), shellEn), ordersEn), supportEn), erpOrdersEn),
 };
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);

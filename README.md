@@ -4162,6 +4162,10 @@ Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking
 
 In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 — the new menu with Rules as its own section and Messages inside Marketing, the Orders tabs and Processing view, the Batch page, the To ship chips and the With courier screen) — register PRs 659–707 (49 PRs, 5 build waves), filed 13 Nov 2026 (CN-048): the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look. Gap map: [`docs/demo/admin-proto-v5/GAP-MAP.md`](docs/demo/admin-proto-v5/GAP-MAP.md). *বাংলায়: আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ আসল অ্যাডমিন হবে; ৪৯টা নতুন PR, পাঁচটা ওয়েভে।*
 
+**Wave 2 (couriers), PR 670–675 and 672, built:** Couriers section and Courier 360; RedX adapter; courier payouts through the courier's own payment request (migration `0220`, switch ON by the owner's decision of 13 Nov); courier claims ledger v5 (migration `0221`; compensation posts to the books, switch ON by the owner's decision of 13 Nov); courier messages; monthly statement match screen. *বাংলায়: কুরিয়ার সেকশন, RedX, পেআউট রিকোয়েস্ট, ক্লেইম লেজার, মেসেজ আর স্টেটমেন্ট মেলানো তৈরি।*
+
+**Wave 3 (rules and offers), PR 676–679, built:** Rules is one page (`/admin/rules`) with every rule as a sentence and a right-side editor; the Smart Rules editor is at `/admin/rules/smart`; Offers & discounts (`/admin/rules/offers`, seven-step wizard, results per offer, online-payment reward as an offer); Pop-ups & notices hub (12 placements, `/admin/rules/notices`); Peak and Eid mode settings and helpers. Migration `0230_offers`, registry version 320. Money changes and every offer go live only by the owner's OK and PIN. *বাংলায়: নিয়ম এখন এক পাতায়; অফার বানানোর ধাপ আছে; পপ-আপের হাব আছে। টাকার বদল আপনার OK আর PIN ছাড়া চালু হয় না।* Not yet: points and wallet-credit offers cannot go live; the owner's pop-up words are stored but the shop does not show them yet; the delivery promise and print run do not read the Peak cap yet.
+
 ---
 
 ## PR log

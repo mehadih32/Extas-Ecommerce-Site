@@ -168,6 +168,7 @@ import { handoverCheckSettings } from './registry-handover-check';
 import { toShipSettings } from './registry-to-ship';
 import { courierWatchSettings } from './registry-courier-watch';
 import { couriersV5Settings } from './registry-couriers-v5';
+import { rulesHubSettings } from './registry-rules-hub';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
@@ -1500,6 +1501,7 @@ export const registry = {
   ...toShipSettings,
   ...courierWatchSettings,
   ...couriersV5Settings,
+  ...rulesHubSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).
