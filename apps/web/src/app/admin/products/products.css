@@ -53,7 +53,7 @@
 .pa-th-none { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--ad-muted); }
 .pa-main { min-width: 0; }
 /* follow-up 5 of PR 85: a long name wraps; a name cut with "…" hides which product it is (the device gate fails it) */
-.pa-nm { font-weight: 700; font-size: 14px; line-height: 24px; color: var(--ad-ink); display: block; overflow-wrap: anywhere; }
+.pa-nm { font-weight: 700; font-size: 14px; line-height: 24px; color: var(--ad-ink); display: block; min-width: 44px; overflow-wrap: anywhere; }
 .pa-nm:hover { text-decoration: underline; }
 /* follow-up 75: a sub-category's path ("Polos › Knit polos") wraps like the name; cut with "…" it hid where it sits */
 .pa-path { overflow-wrap: anywhere; }
@@ -72,7 +72,7 @@
 .pa-pick { gap: 8px; cursor: pointer; }
 .pa-pick.on { border-color: var(--ad-brand); background: var(--ad-surface); }
 @media (min-width: 1024px) {
-  .pa-row { grid-template-columns: 56px minmax(0, 1fr) 120px 230px auto; }
+  .pa-row { grid-template-columns: 56px minmax(140px, 1fr) minmax(0, 120px) minmax(0, 230px) minmax(0, auto); }
   .pa-th { grid-row: auto; }
   .pa-st, .pa-act { grid-column: auto; }
   .pa-st { flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -189,7 +189,7 @@
 .pa-savebar { position: sticky; bottom: 0; z-index: 5; margin: 16px -4px 0; padding: 10px 4px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(to bottom, transparent, var(--ad-bg) 30%); }
 .pa-savein { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; background: var(--ad-surface); border: 1px solid var(--ad-line); border-radius: var(--ad-btn-radius); padding: 8px 10px; box-shadow: var(--ad-toast-shadow); }
 .pa-savemsg { margin-right: auto; min-width: 0; flex: 1 1 180px; }
-@media (max-width: 600px) { .pa-savein { flex-wrap: nowrap; } .pa-savein .ad-btn { flex: 1 1 0; } .pa-savemsg { display: none; } }
+@media (max-width: 600px) { .pa-savein { flex-wrap: wrap; } .pa-savein .ad-btn { flex: 1 1 0; min-width: 0; padding-left: 10px; padding-right: 10px; } .pa-savemsg { display: none; } .pa-newform .pa-savebar { margin-left: 0; margin-right: 0; } }
 .pa-newform .pa-savebar { margin: 16px -16px -16px; }
 
 /* publish queue */
