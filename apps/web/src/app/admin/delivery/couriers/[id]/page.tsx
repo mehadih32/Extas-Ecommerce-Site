@@ -15,6 +15,7 @@ import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { RaiseClaim } from '@/components/admin/couriers/ClaimPanel';
 import { CopyText } from '@/components/admin/couriers/CopyText';
+import { OpenLines } from '@/components/admin/couriers/OpenLines';
 import { AskPayout, PayoutRowActions } from '@/components/admin/couriers/PayoutPanel';
 import { StepButton } from '@/components/admin/courier-report/Parts';
 import { PerfTable } from '@/components/admin/courier-report/PerfTable';
@@ -328,22 +329,16 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
                 {cr('m.monthBody', { n: n(mo.month.statements), ym: mo.month.ym, cod: m(mo.month.totalCodMinor), charges: m(mo.month.chargesMinor), net: m(mo.month.netMinor) })}
               </p>
             ) : null}
+            <Link className="a2-btn sm a2-mt6" href={`/admin/delivery/couriers/${id}/statement`} data-testid="c360-month-link">
+              {cr('z.monthLink')}
+            </Link>
           </section>
           <section className="a2-card a2-mt12" data-testid="c360-open-lines">
             <h2 className="a2-h3">{cr('m.open')}</h2>
             <p className="a2-xs a2-mute">{cr('m.openSub')}</p>
             {mo.open.length ? (
               <>
-                <ul className="a2-stack a2-mt12" style={{ listStyle: 'none', padding: 0 }}>
-                  {mo.open.map((l) => (
-                    <li key={l.lineId} className="a2-sm" data-testid="c360-open-line">
-                      <b>{l.orderNumber ?? l.consignmentId ?? l.reference}</b> · {l.reasonCode ? cr(`m.reasons.${l.reasonCode}`) : l.matchState === 'LATE' ? cr('m.late') : ''}
-                      <span className="a2-xs a2-mute a2-blk">
-                        {cr('m.expected')}: {l.expectedMinor === null ? '—' : m(l.expectedMinor)} · {cr('m.got')}: {m(l.codMinor)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} lines={mo.open.map((l) => ({ ...l, extraChargeMinor: pay.extraChargeOf({ matchState: l.matchState, reasonCode: l.reasonCode, chargeMinor: l.chargeMinor, expectedChargeMinor: l.expectedChargeMinor }) }))} />
                 {moreLines ? <p className="a2-xs a2-mute">{cr('m.openMore', { n: n(moreLines) })}</p> : null}
                 <p className="a2-xs a2-mute a2-mt6">{cr('m.openDetail')}</p>
               </>

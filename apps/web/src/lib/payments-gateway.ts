@@ -61,7 +61,11 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
     // PR 564: a statement's charges go to the charge mismatch log (record only, off until the owner's switch)
     courier: { statementCharges: (storeId, lines) => noteStatementCharges({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, lines) },
     // follow-up 565: an imported statement's courier charges or gateway fees as the day's cost line (only while the books' switch is on)
-    books: { statementCost: async (who, cost) => recordStatementCost(await inventoryDeps(deps), who, cost) },
+    books: {
+      statementCost: async (who, cost) => recordStatementCost(await inventoryDeps(deps), who, cost),
+      // S28 · PR 675: "Accept the courier figure" books the charge above ours on the delivery line (once per statement line)
+      courierDifference: async (who, c) => recordStatementCost(await inventoryDeps(deps), who, { kind: 'COURIER_DIFFERENCE', statementId: c.lineId, reference: c.reference, amountMinor: c.amountMinor }),
+    },
     // CN-018 (4): a split flexible set's kept part under the free-delivery limit owes the band charge (only while the owner's switch is on)
     door: { keptChargeMinor: (storeId, orderId, kept) => keptDeliveryCharge({ db: deps.db, settings: deps.resolver, now: deps.now }, storeId, orderId, kept) },
   };
