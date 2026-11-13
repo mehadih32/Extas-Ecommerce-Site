@@ -1,0 +1,73 @@
+{
+  "staffControls": {
+    "metaTitle": "Staff controls",
+    "title": "Staff controls",
+    "sub": "Discount, export and what each role may see; and the end-of-day cash and bKash sheet.",
+    "limits": {
+      "title": "Staff limits",
+      "sub": "Discount, export and what each role may see",
+      "role": "Role",
+      "people": "{n} people",
+      "maxAmount": "Max discount (Tk)",
+      "maxPct": "Max discount %",
+      "export": "Can export",
+      "exportNone": "—",
+      "hide": "Hide phone & address",
+      "none": "No limit",
+      "hint": "A bigger discount than the limit goes to the owner for OK. Hidden phone and address show as “01•••••4521” and “Dhanmondi, Dhaka” — enough to pack, never enough to copy. Empty means no limit.",
+      "pin": "Owner PIN",
+      "save": "Save limits",
+      "saving": "Saving…",
+      "saved": "Staff limits saved.",
+      "ownerNote": "The owner has no limit.",
+      "packerTitle": "Packer role",
+      "packerText": "A role with only packing and printing keys, whose phone and address are hidden.",
+      "packerMake": "Make the packer role",
+      "packerHave": "The packer role is ready."
+    },
+    "export": {
+      "orders.export": "Orders file",
+      "orders.exportPersonal": "Orders file with personal details",
+      "catalogue.export": "Products file",
+      "customers.export": "Customers file"
+    },
+    "handover": {
+      "title": "End-of-day cash & bKash handover",
+      "sub": "Counter cash and mobile wallet money each desk staff member took today",
+      "on": "Ask each desk staff member for a handover sheet",
+      "time": "Time",
+      "day": "Day",
+      "method": "Money",
+      "CASH": "Counter cash",
+      "WALLET": "bKash / Nagad",
+      "expected": "Expected",
+      "counted": "Counted",
+      "difference": "Difference",
+      "who": "Who",
+      "note": "Note (optional)",
+      "write": "Hand over",
+      "written": "Written. The sheet below is updated.",
+      "off": "The handover sheet is switched off. Turn it on above.",
+      "empty": "Nobody has handed over for this day yet.",
+      "match": "Matches",
+      "short": "Short",
+      "over": "Over",
+      "history": "A newer count for the same day and money replaces the older one here; the older stays as history."
+    },
+    "errors": {
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "UNKNOWN_ROLE": "A role in the list does not exist.",
+      "OWNER_UNLIMITED": "The owner cannot be limited.",
+      "INVALID_INPUT": "Check the numbers: amounts are whole numbers, percent is 0 to 100.",
+      "HANDOVER_OFF": "The handover sheet is off.",
+      "FUTURE_DAY": "A day that has not come yet.",
+      "FORBIDDEN": "You may not do that.",
+      "EXISTS": "That role exists already.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}

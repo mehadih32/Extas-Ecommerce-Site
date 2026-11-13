@@ -196,6 +196,7 @@ model Store {
   checkoutParameterLayers CheckoutParameterLayer[]
   checkoutFlagEvents      CheckoutFlagEvent[]
   bulkEnquiries           BulkEnquiry[]
+  cashHandovers           CashHandover[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -11626,4 +11627,27 @@ model AdCreativeDay {
 
   @@unique([adId, date])
   @@index([storeId, date])
+/// @stage S28 · PR 702 — the end-of-day cash / bKash sheet one staff member hands over (admin prototype v5, Settings →
+/// Staff controls). One row per count; a wrong count is put right with a newer row for the same day, method and person
+/// (the newest counts, the older stay as history). The "expected" figure is what the shop's own payments record says
+/// that person took that day; the counted figure is what they hand over. Nothing here moves money.
+/// @append-only
+model CashHandover {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  storeId       Int
+  store         Store    @relation(fields: [storeId], references: [id])
+  /// The shop's day (its own time zone), as a date.
+  day           DateTime @db.Date
+  staffUserId   String   @db.Uuid
+  /// CASH (counter cash) or WALLET (bKash, Nagad and the other mobile wallets taken to the shop's own numbers).
+  method        String
+  expectedMinor Int
+  countedMinor  Int
+  note          String?
+  /// Who wrote the row (the staff member, or the owner for them).
+  createdById   String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, day])
+  @@index([storeId, staffUserId, day])
 }

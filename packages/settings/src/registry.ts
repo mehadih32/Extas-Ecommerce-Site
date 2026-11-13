@@ -145,6 +145,7 @@ import { statementCostsSettings } from './registry-books-statement-costs';
 import { productsFinanceV5Settings } from './registry-products-finance-v5';
 import { studioSettings } from './registry-studio';
 import { analyticsSettings } from './registry-analytics';
+import { s28W5bSettings } from './registry-s28-w5b';
 import { reportsDigestSettings } from './registry-reports-digest';
 import { photoshootSettings } from './registry-photoshoot';
 import { studioVideoSettings } from './registry-creative-studio-video';
@@ -1628,6 +1629,8 @@ export const registry = {
   ...studioVideoSettings,
   // ---- S15 · PR 338 (Blueprint D5) · the site-wide analytics event layer's master switch, on (registry-analytics.ts, version 288). ----
   ...analyticsSettings,
+  // ---- S28 · PR 700-707 (admin prototype v5, wave 5b) · visitor analytics, staff controls, Telegram approvals, bulk orders, people and Start fresh, all off (registry-s28-w5b.ts, versions 700-707). ----
+  ...s28W5bSettings,
   // ---- S15 · PR 341 (Blueprint D5.3) · weekly/monthly digests to Telegram and e-mail, off (registry-reports-digest.ts, version 289). ----
   ...reportsDigestSettings,
   // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----

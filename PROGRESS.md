@@ -355,6 +355,7 @@
 | 2026-11-13 | **PR 684 · S28 (wave 4, lane w4a) — demo products built, switch off** |
 | 2026-11-13 | **PR 685 · S28 (wave 4, lane w4a) — add-product wizard built (8 steps)** |
 | 2026-11-13 | **PR 707 · S28 — Admin map (/admin/map)** (w5b, local commit, not pushed). Searchable map of every menu page and everyday tasks, built from the menu model (lib/admin-map.ts), one en/bn line per page, shows only pages the person may open; guide help/admin-map; nav patch NAV-PATCH-w5b.md; tests admin-map.test.ts. |
+| 2026-11-13 | **PR 702 · S28 — Staff controls** (w5b, local commit, not pushed). Discount limit per role (off until set, PIN to save), phone and address hidden for chosen roles on order answers, packer role preset, end-of-day cash and wallet handover sheet (append-only CashHandover, migration 0272). Tests: staff-controls 12 (8 pure, 4 DB), db guards. |
 
 ## Parked
 
