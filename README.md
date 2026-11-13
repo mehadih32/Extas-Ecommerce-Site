@@ -4193,6 +4193,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | PR [585](docs/stages/S15.md#pr-585) | 13 Nov | S15: Continuous learning engine for Tirondaj (ads) and Doot (SEO/marketing) — off by default, source list, official-docs-or-two-sources quality gate, verified tips become skills, graded practice tasks, paid-tool proposals through the approvals queue. |
 | pending | PR [584](docs/stages/S15.md#pr-584) | 13 Nov | S15: Telegram identity and command routing — off by default, gated by the owner's switch and the Telegram connection's webhook secret. |
 | pending | PR [580](docs/stages/S15.md#pr-580) | 13 Nov | S15: Model auto-suggest with free-model qualification. |
 | pending | PR [665](docs/stages/S28.md#pr-665) | 13 Nov | S28 wave 1 (builder C): merge orders into one. `orders.mergeOrders` v331 (off), "Merge" and "Merge + call" on the kept order, append-only `OrderMerge` record (migration 0201), auto-merge hook (off), guide updated. |
