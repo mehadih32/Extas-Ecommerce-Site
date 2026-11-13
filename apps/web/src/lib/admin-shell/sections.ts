@@ -122,6 +122,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'all', pages: [{ href: '/admin/products', perm: 'catalogue.read', keys: ['products', 'productNew', 'product'] }] },
       { id: 'queue', pages: [{ href: '/admin/products/queue', perm: 'catalogue.read', keys: ['publishQueue'] }] },
+      // S28 · PR 686: Products → Shop ranking — the score of each product by the owner's weights and the order the shop shows.
+      { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
       // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
       { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
       {
@@ -416,6 +418,10 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] },
       // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only); second, so Money still opens Books (CN-028 · PR 615).
       { id: 'overview', pages: [{ href: '/admin/money', perm: 'payments.view', keys: ['moneyOverview'] }] },
+      // S28 · PR 687: Money → Money in & out — the cashbook and the cash forecast (the owner's PIN for every entry).
+      { id: 'cash', pages: [{ href: '/admin/money/cash', perm: 'books.read', keys: ['moneyCash'] }] },
+      // S28 · PR 688: Money → Budgets & profit — a monthly budget per cost head and the profit snapshot.
+      { id: 'budgets', pages: [{ href: '/admin/money/budgets', perm: 'books.read', keys: ['moneyBudgets'] }] },
       // S16 · PR 349: Money → Profit & loss (MNY-01) — Sales beside Ordered value, gross profit, contribution, net profit for any period.
       // S16 · PR 504: its second page, Profit by group — by category or by style, ad spend spread in.
       {
@@ -463,6 +469,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'analytics',
     // S21 · PR 413 — REP-07 the Site health hub first; the Server page (REP-07b) beside it.
     tabs: [
+      // S28 · PR 689: Reports → Report library first (the prototype opens Reports on it); PR 690: Report packs beside it.
+      { id: 'library', guide: 'analytics', pages: [{ href: '/admin/reports', perm: 'reports.read', keys: ['reportsLibrary'] }] },
+      { id: 'packs', guide: 'analytics', pages: [{ href: '/admin/reports/packs', perm: 'reports.read', keys: ['reportsPacks'] }] },
       {
         id: 'health',
         guide: 'server',
