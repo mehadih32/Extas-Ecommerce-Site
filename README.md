@@ -4212,6 +4212,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
 | pending | PR [708](docs/stages/S28.md#pr-708) | 14 Nov | Demo catalogue: the 72 demo products are available as demo products (export tool and catalogue module). |
+| pending | PR 710 | 14 Nov | Admin v5 checks: demo products no longer count in location totals, low stock, shortage and stock counts; readiness report added (docs/reports/2026-11-14-admin-v5.md). |
 | pending | PR 709 | 14 Nov | Device-gate fixes: status pills, small buttons and landing chips wrap at every width (size charts, tracking, landing templates). CSS only. |
 | pending | PR [699](docs/stages/S28.md#pr-699) | 13 Nov | S28 wave 5a: Marketing overview and Plan and ideas. Overview with spend, delivered sales per Tk 1, profit after ads, Scale/Keep/Fix/Stop chips from settings; Ad campaigns table with ad-level rows (tired ads); Plan page with a channel budget plan (advice only) and overlap and low-stock warnings; migration 0264 |
 | pending | PR [698](docs/stages/S28.md#pr-698) | 13 Nov | S28 wave 5a: Message cost ceilings. Monthly SMS and WhatsApp ceiling (owner sets; off by default), warning at a share, further messages on a channel at its ceiling wait in the log (order's first message never held), cheapest-channel fallback to the step's fallback channel; card on the new Messages page and on the AI Center cost book. |

@@ -59,7 +59,7 @@ const EMPTY: StockTotals = { onHand: 0, reserved: 0, available: 0, cartReserved:
 
 async function totalsByLocation(db: Db, locationIds: string[]): Promise<Map<string, StockTotals>> {
   if (!locationIds.length) return new Map();
-  const rows = await db.stockLevel.groupBy({ by: ['locationId'], where: { locationId: { in: locationIds } }, _sum: { onHand: true, reserved: true, available: true, cartReserved: true }, _count: { _all: true } });
+  const rows = await db.stockLevel.groupBy({ by: ['locationId'], where: { locationId: { in: locationIds }, variant: { product: { isDemo: false } } }, _sum: { onHand: true, reserved: true, available: true, cartReserved: true }, _count: { _all: true } });
   return new Map(rows.map((r) => [r.locationId, { onHand: r._sum.onHand ?? 0, reserved: r._sum.reserved ?? 0, available: r._sum.available ?? 0, cartReserved: r._sum.cartReserved ?? 0, variants: r._count._all }]));
 }
 
