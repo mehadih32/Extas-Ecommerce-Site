@@ -3,6 +3,9 @@
 // never ask for a number). Labels: messages/w5a.<lang>.json. Nothing here moves money or changes a price.
 //
 // - `support.savedReplies` (PR 692): Inbox › Quick replies; `maxChars` is the longest text a quick reply may hold.
+// - `support.liveSelling` (PR 694): Inbox › Comments › Live selling. While a live session runs, a comment such as "P1 L 2 pcs"
+//   is read as an order line and, on "Make draft", put in that person's chat bag (staff always confirm by call, then
+//   "Create order" in the chat). `maxQty`: the most pieces one comment may ask. Off as shipped.
 // - `support.commentDesk` (PR 693): Inbox › Comments rules. `hidePhone`: a comment that carries a phone number is hidden
 //   (others cannot copy it); `hideAbuse`: a comment with one of `abuseWords` is hidden; `autoPrivate`: a comment that asks
 //   a price or size (one of `keywords`) gets one private message and one public reply, once. Off as shipped; the words and
@@ -16,6 +19,9 @@ const store = { scope: 'store', isOwnerData: false, isPublic: false, version: V 
 
 export const supportSavedRepliesSchema = z.object({ enabled: z.boolean(), maxChars: z.number().int().min(50).max(4000) }).strict();
 export type SupportSavedRepliesSettings = z.output<typeof supportSavedRepliesSchema>;
+
+export const supportLiveSellingSchema = z.object({ enabled: z.boolean(), maxQty: z.number().int().min(1).max(50) }).strict();
+export type SupportLiveSellingSettings = z.output<typeof supportLiveSellingSchema>;
 
 const word = z.string().trim().min(1).max(40);
 const text = z.string().trim().max(500);
@@ -67,5 +73,15 @@ export const w5aSettings = {
     labelKey: 'support.commentDesk.label',
     helpKey: 'support.commentDesk.help',
     sortOrder: 701,
+  }),
+  'support.liveSelling': setting({
+    ...store,
+    group: 'support',
+    valueType: 'JSON',
+    schema: supportLiveSellingSchema,
+    default: { enabled: false, maxQty: 10 },
+    labelKey: 'support.liveSelling.label',
+    helpKey: 'support.liveSelling.help',
+    sortOrder: 702,
   }),
 };

@@ -7,6 +7,10 @@
     "commentDesk": {
       "label": "Comment desk",
       "help": "Inbox › Comments: Facebook and Instagram comments in one list. Optional rules: hide a comment that carries a phone number, hide abusive words, and send one private message and one public reply to a comment that asks a price or size. The words and texts are yours to set. Hiding and replying go through the Page's connection (a practice stand-in until its keys are typed in)."
+    },
+    "liveSelling": {
+      "label": "Live selling",
+      "help": "Inbox › Comments › Live selling: while a live session runs, a comment like \"P1 L 2 pcs\" is read as a product code, a size and a quantity. \"Make draft\" puts the piece in that person's chat bag; staff always confirm by a call, then press Create order in the chat. \"Most pieces in one comment\" is the largest quantity read as an order."
     }
   }
 }

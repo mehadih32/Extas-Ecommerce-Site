@@ -16,6 +16,7 @@
 // covers it without new code).
 import { receiveMessage, type ReceiveResult } from './inbound';
 import { applyCommentRules } from './comments';
+import { captureLiveComment } from './live-selling';
 import { SupportError, type SupportDeps } from './context';
 
 /** Marks a public comment's words in the conversation, ahead of the commenter's own text. */
@@ -70,7 +71,11 @@ export async function receiveSocialEngagement(deps: Pick<SupportDeps, 'db' | 'se
     else {
       out.received++;
       // S28 · PR 693: the comment desk's own rules (hide a phone number or abuse, the optional automatic reply); never fails the webhook
-      if (m.isPublicComment) await applyCommentRules(deps as SupportDeps, storeId, r.messageId);
+      if (m.isPublicComment) {
+        await applyCommentRules(deps as SupportDeps, storeId, r.messageId);
+        // S28 · PR 694: while a live session of this Page runs, the comment is read as a live order line
+        await captureLiveComment(deps, storeId, { kind, commentId: m.messageId, commenter: m.from, name: m.name?.trim() || null, text: m.text, conversationId: r.conversationId }).catch(() => null);
+      }
     }
     // No reply window to extend here: comments carry none in Meta's own rules, and Instagram's own DM window is
     // moot until a real Instagram sender exists (channels.ts's fallback already keeps a reply NOT_SENT without one).

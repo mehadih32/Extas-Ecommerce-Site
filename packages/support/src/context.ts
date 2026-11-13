@@ -84,6 +84,10 @@ export const SUPPORT_ERROR_CODES = [
   'COMMENT_DESK_OFF',
   'COMMENT_HIDDEN',
   'COMMENT_SEND_FAILED',
+  // S28 · PR 694: live selling is off; a session already runs; none runs
+  'LIVE_OFF',
+  'LIVE_RUNNING',
+  'NO_LIVE',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 
