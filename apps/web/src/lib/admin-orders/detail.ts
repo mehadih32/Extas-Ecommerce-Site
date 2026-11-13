@@ -26,6 +26,7 @@ import { levelSummary, riskSummary } from './risk';
 import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 import { giftRows } from './gift-card';
 import { lineSpecs } from './lines';
+import { mergeEventLine, mergeSpecs } from './merge';
 import { priceAdjustSpec, priceEventLine, priceRequestBands } from './price-adjust';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
@@ -70,6 +71,8 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   addLine: 'orders.lines',
   // S28 · PR 664: price adjust and the owner's answers
   priceAdjust: 'orders.priceAdjust',
+  merge: 'orders.merge',
+  mergeCall: 'orders.merge',
   priceApprove: 'orders.priceApprove',
   priceRefuse: 'orders.priceApprove',
 };
@@ -749,6 +752,8 @@ const EVENT_TONE: Readonly<Record<string, TimelineItem['tone']>> = {
   'order.edit': 'warn',
   // S28 · PR 664: a ledger line applied, a request above someone's limit waiting, and one refused
   'order.priceAdjust': 'warn',
+  'order.mergedInto': 'bad',
+  'order.mergedFrom': 'mute',
   'order.priceAdjustAsked': 'warn',
   'order.priceAdjustRefused': 'mute',
   'order.twoSizeCheck': 'warn',
@@ -945,6 +950,9 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   const adj = await od.priceAdjustView(deps, who, o.id);
   const adjSpec = adj ? priceAdjustSpec(view, { id: o.id, number: o.number, version: o.version, currency: o.currency }, adj) : null;
   if (adjSpec) specs.more.push(adjSpec);
+  // S28 · PR 665: "Merge" and "Merge + call" on the order that stays (the owner's switch, `orders.merge`, another open order of the person to fold in)
+  const mrg = perms.has('orders.merge') ? await od.mergeView(deps, who, o.id) : null;
+  if (mrg) specs.more.push(...mergeSpecs(view, { id: o.id, number: o.number, currency: o.currency }, mrg));
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
   const lines = lineSpecs(view, o, detail.allowed, perms, detail.items.map((i) => ({ id: i.id, status: i.status, isAddOn: i.isAddOn, productName: i.productName, lineTotal: m(i.lineTotalMinor) })));
   const units = active.reduce((s, i) => s + i.quantity, 0);
@@ -1048,7 +1056,7 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
       const reason = e.type === 'order.riskAssess' || e.type === 'order.riskSection' || e.type === 'order.riskLevel' || e.type === 'order.awaitAdvance' || e.type === od.BLOCKLIST_EVENT || e.type === od.REFUSER_EVENT || e.type === od.GOOD_CUSTOMER_EVENT || e.type === od.HOLD_PROPOSED_EVENT || e.type === od.HOLD_DECIDED_EVENT || e.type === od.NEW_CUSTOMER_EVENT || e.type === od.CALL_OUTCOME_EVENT || e.type === 'shipment.rebook' || ruled ? null : e.reasonCode ? (holdName.get(e.reasonCode) ?? cancelName.get(e.reasonCode) ?? refusalName.get(e.reasonCode) ?? e.reasonCode) : null;
       const move = e.fromStatus && e.toStatus && e.fromStatus !== e.toStatus ? t(d, 'orders.ev.move', { from: t(d, `orders.st.${e.fromStatus}`), to: t(d, `orders.st.${e.toStatus}`) }) : null;
       const asked = e.type === 'order.awaitAdvance' || e.type === 'order.advanceResend' ? advanceSummary(view, e.type, e.data, o.currency) : null;
-      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.PRICE_ADJUSTED_EVENT || e.type === od.PRICE_ASKED_EVENT || e.type === od.PRICE_REFUSED_EVENT ? priceEventLine(view, e.data, o.currency) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : e.type === od.EXCHANGE_INTENT_EVENT ? exchangeIntentLine(view, e.data) : ruled);
+      const two = asked ?? (e.type === 'order.twoSizeCheck' || e.type === 'order.twoSizeAnswer' ? twoSizeSummary(view, e.type, e.data) : e.type === 'order.riskAssess' ? riskSummary(view, e.data) : e.type === 'order.riskSection' ? sectionSummary(view, e.data) : e.type === 'order.identityLinked' ? identitySummary(view, e.data) : e.type === 'order.riskLevel' ? levelSummary(view, e.data, scoredBands) : e.type === od.BLOCKLIST_EVENT ? blocklistSummary(view, e.data) : e.type === od.REFUSER_EVENT ? refuserSummary(view, e.data) : e.type === od.BUNDLE_PROPOSED_EVENT || e.type === od.BUNDLED_EVENT ? bundleSummary(view, e.data) : e.type === od.MERGED_INTO_EVENT || e.type === od.MERGED_FROM_EVENT ? mergeEventLine(view, e.type, e.data, o.currency) : e.type === od.PRICE_ADJUSTED_EVENT || e.type === od.PRICE_ASKED_EVENT || e.type === od.PRICE_REFUSED_EVENT ? priceEventLine(view, e.data, o.currency) : e.type === od.BLOCK_PROPOSAL_EVENT ? proposalLine(view, e.data) : e.type === od.GOOD_CUSTOMER_EVENT ? goodCustomerLine(view, e.data) : e.type === od.HOLD_PROPOSED_EVENT ? holdProposedLine(view, e.data, holdName) : e.type === od.NEW_CUSTOMER_EVENT ? t(d, 'orders.ev.newCustomer') : e.type === od.CALL_OUTCOME_EVENT ? callOutcomeLine(view, e.data, outcomes) : e.type === od.EXCHANGE_INTENT_EVENT ? exchangeIntentLine(view, e.data) : ruled);
       const detailText = [move, two, e.type === 'order.edit' ? (editReason.get(e.reasonCode ?? '') ?? (e.actorType === 'CUSTOMER' ? null : reason)) : reason, e.type === 'order.edit' ? editSummary(view, e.data) : null, e.message].filter(Boolean).join(' · ');
       return { id: e.id, title: named === key ? e.type : named, detail: detailText || null, at: dt.format(e.createdAt), who: actor(e.actorType, e.actorId), tone: EVENT_TONE[e.type] ?? '' };
     })

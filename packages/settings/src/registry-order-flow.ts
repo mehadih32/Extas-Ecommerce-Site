@@ -12,6 +12,7 @@ import { setting } from './define';
 import { dictionarySchema } from './schemas';
 
 const V664 = 300;
+const V665 = 301;
 
 /** Role keys are lower-case words and dots or hyphens (`order-manager`). */
 const roleKeySchema = z
@@ -55,6 +56,23 @@ export const PRICE_ADJUST_DEFAULT: PriceAdjustRule = {
 /** The key of the reason that asks for a note. */
 export const PRICE_ADJUST_OTHER_KEY = 'other';
 
+// PR 665 — `orders.mergeOrders`: fold one open order of a customer into another (the "Merge" button on a Merge-needed row).
+// Off as shipped. `lookBackDays` is how many days before the kept order another order may have been placed (5 as shipped);
+// `autoMerge` (off) lets the system do it the moment an order lands, only when the addresses match; `differentAddress` is what
+// happens when they do not: "ask" (a person confirms the kept order's address) or "refuse". An order that is Packed or with a
+// courier is never merged (fixed, not a setting): only orders still open can be.
+export const mergeOrdersSchema = z
+  .object({
+    enabled: z.boolean(),
+    lookBackDays: z.int().min(1).max(60),
+    autoMerge: z.boolean(),
+    differentAddress: z.enum(['ask', 'refuse']),
+  })
+  .strict();
+export type MergeOrdersRule = z.output<typeof mergeOrdersSchema>;
+
+export const MERGE_ORDERS_DEFAULT: MergeOrdersRule = { enabled: false, lookBackDays: 5, autoMerge: false, differentAddress: 'ask' };
+
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders' } as const;
 
 export const orderFlowSettings = {
@@ -67,5 +85,15 @@ export const orderFlowSettings = {
     labelKey: 'orders.priceAdjust.label',
     helpKey: 'orders.priceAdjust.help',
     sortOrder: 340,
+  }),
+  'orders.mergeOrders': setting({
+    ...base,
+    version: V665,
+    schema: mergeOrdersSchema,
+    default: MERGE_ORDERS_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'orders.mergeOrders.label',
+    helpKey: 'orders.mergeOrders.help',
+    sortOrder: 341,
   }),
 } as const;
