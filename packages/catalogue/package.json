@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./sku": "./src/sku.ts",
+    "./video-link": "./src/video-link.ts",
     "./size-chart-math": "./src/size-chart-math.ts",
     "./size-finder": "./src/size-finder.ts"
   },

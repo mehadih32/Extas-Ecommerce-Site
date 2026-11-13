@@ -356,6 +356,57 @@
           }
         }
       }
+    },
+    "vid": {
+      "title": "Video (optional)",
+      "help": "A short clip on the model sells better. The product page shows a picture with a play button; the player loads only when a customer taps.",
+      "off": "Product videos are off.",
+      "turnOn": "Turn them on",
+      "yourClip": "Your clip",
+      "length": "Length (seconds)",
+      "remove": "Remove video",
+      "confirmRemove": "Take this video off the product? The file stays in the library.",
+      "paste": "Paste a link",
+      "uploadClip": "Upload a clip",
+      "useLink": "Use this link",
+      "badLink": "This is not a YouTube, Vimeo or Facebook link.",
+      "providers": "YouTube, Vimeo or Facebook. Google needs the length.",
+      "chooseClip": "Choose a clip",
+      "clipHelp": "MP4, MOV or WebM, up to {mb} MB. It is stored as it is.",
+      "saved": "Video saved",
+      "lengthSaved": "Length saved",
+      "removed": "Video taken off",
+      "checks": {
+        "h": "Product video",
+        "d": "Whether a video can be added to a product and which kinds.",
+        "on": "Product videos on",
+        "onHelp": "While off, no video can be added and none shows on the product page.",
+        "allowUpload": "Allow uploading a clip",
+        "allowUploadHelp": "Off means links only.",
+        "maxUploadMb": "Largest clip (MB)",
+        "maxUploadMbHelp": "Bigger clips are refused.",
+        "playOnTap": "Load the player only on tap",
+        "playOnTapHelp": "Keeps the product page fast. Recommended.",
+        "providers": "Links taken",
+        "providersHelp": "Which sites a link may come from.",
+        "more": "Video settings",
+        "ui": {
+          "save": "Save",
+          "saving": "Saving…",
+          "saved": "Saved",
+          "discard": "Discard",
+          "unsaved": "You have unsaved changes",
+          "readOnly": "You can look but not change these.",
+          "err": {
+            "STALE": "Someone changed this meanwhile. The page was refreshed.",
+            "INVALID_INPUT": "Check the numbers.",
+            "forbidden": "You may not change this.",
+            "unauthorized": "Please sign in again.",
+            "network": "No connection.",
+            "other": "Could not save."
+          }
+        }
+      }
     }
   },
   "checks": {

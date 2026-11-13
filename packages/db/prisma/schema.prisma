@@ -466,6 +466,7 @@ model Store {
   riderIssues             RiderIssue[]
   /// CN-020 (4): the addresses spoken into the checkout's mic (SIM-F-047).
   checkoutVoices          CheckoutVoice[]
+  productVideos           ProductVideo[]
 }
 
 enum StoreStatus {
@@ -1637,6 +1638,37 @@ model ProductMedia {
   updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([productId, colourId, sortOrder])
+}
+
+/// @stage S28 · PR 681 — a product's video: a link (YouTube, Vimeo, Facebook) or an uploaded file; one active per product.
+model ProductVideo {
+  id            String      @id @default(uuid(7)) @db.Uuid
+  storeId       Int
+  store         Store       @relation(fields: [storeId], references: [id])
+  productId     String      @db.Uuid
+  source        VideoSource
+  /// YOUTUBE, VIMEO, FACEBOOK for a link; FILE for an upload.
+  provider      String
+  /// The link as pasted (never shown as a raw address to a customer).
+  url           String?
+  /// The provider's own id (YouTube / Vimeo); for Facebook the full address.
+  embedId       String?
+  fileAssetId   String?     @db.Uuid
+  /// The picture shown before play; empty = the product's main photo.
+  posterAssetId String?     @db.Uuid
+  durationSec   Int?
+  titleEn       String?
+  titleBn       String?
+  archivedAt    DateTime?   @db.Timestamptz(3)
+  createdAt     DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime    @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, productId, archivedAt])
+}
+
+enum VideoSource {
+  LINK
+  FILE
 }
 
 enum ProductMediaRole {

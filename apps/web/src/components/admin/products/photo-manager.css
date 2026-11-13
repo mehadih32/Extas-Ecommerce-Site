@@ -23,3 +23,50 @@
 .pm-alt { font-size: 12.5px; padding: 6px 8px; min-width: 0; }
 .pm-acts { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .pm-empty { padding: 12px 0; }
+
+/* S28 · PR 681 — the video panel under the photos */
+.pm-video {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.pm-vcur {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-radius);
+  background: var(--ad-surface2);
+}
+.pm-vurl {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.pm-vlen {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pm-vlen .ad-input,
+.pm-vnum {
+  width: 110px;
+}
+.pm-vadd {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pm-vrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.pm-vrow > .ad-input:first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}
