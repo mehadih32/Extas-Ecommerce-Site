@@ -58,8 +58,8 @@ FROM deps AS build
 COPY . .
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA
-# The build type-checks against the full Prisma client (over 4 GB of heap since the 31 Oct Launch batch 3), above Node's default limit.
-RUN NODE_OPTIONS=--max-old-space-size=6144 pnpm status:gen && NODE_OPTIONS=--max-old-space-size=6144 pnpm --filter @extas/web build
+# The build type-checks against the full Prisma client (over 4 GB of heap since the 31 Oct Launch batch 3, over 6 GB since Wave 5B), above Node's default limit.
+RUN NODE_OPTIONS=--max-old-space-size=8192 pnpm status:gen && NODE_OPTIONS=--max-old-space-size=8192 pnpm --filter @extas/web build
 
 # CI only (never a deploy target): the build's Next.js cache (Turbopack's file-system cache), for the next run.
 FROM scratch AS next-cache
