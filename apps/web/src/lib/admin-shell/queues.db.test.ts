@@ -39,6 +39,11 @@ describe.skipIf(!HAS_TEST_DB)('I4 · the ERP hold in "Needs you now" (PostgreSQL
     await t?.drop();
   });
 
+  it('S28 · PR 691: the stuck-batch and courier-mismatch queries run on the real tables (an empty store: both 0, nothing broken)', async () => {
+    const counts = await countQueues(deps, S);
+    for (const id of ['batchStuck', 'courierMismatch'] as const) expect(counts.find((q) => q.id === id), id).toEqual({ id, n: 0, oldest: null });
+  });
+
   it('is an urgent row that opens the books, for those who may read the ERP account', () => {
     expect(QUEUES.find((q) => q.id === 'erpHold')).toMatchObject({ perm: 'erp.account.read', href: '/admin/money/books', section: 'money', tone: 'bad', group: 'urgent' });
   });
