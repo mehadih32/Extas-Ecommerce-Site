@@ -1,4 +1,4 @@
--- S28 · PR 668 (Admin v5, Orders › Incomplete orders): the recovered-by-phone mark on a draft (who and when), the "Possible match" flag for the same connection as an earlier customer (never attached), and the call log (one row per call and what it found, append-only). Additive only; nothing is dropped, renamed or retyped.
+-- PR 668 (S28 wave 1) (Admin v5, Orders › Incomplete orders): the recovered-by-phone mark on a draft (who and when), the "Possible match" flag for the same connection as an earlier customer (never attached), and the call log (one row per call and what it found, append-only). Additive only; nothing is dropped, renamed or retyped.
 -- AlterTable
 ALTER TABLE "CheckoutDraft" ADD COLUMN     "possibleMatch" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "possibleMatchCustomerId" UUID,

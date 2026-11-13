@@ -2834,8 +2834,9 @@ model CheckoutDraft {
   @@index([storeId, assignedToId])
 }
 
-/// @stage S28 · PR 668 — one call to an incomplete-order customer and what it found (the call log on Orders › Incomplete).
+/// @stage S13 · PR 668 — one call to an incomplete-order customer and what it found (the call log on Orders › Incomplete; S28 wave 1).
 /// Append-only: a later call is a new row.
+/// @append-only
 model CheckoutDraftCall {
   id        String        @id @default(uuid(7)) @db.Uuid
   storeId   Int
