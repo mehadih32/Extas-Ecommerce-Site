@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-13 11:59 (Asia/Dhaka)
+# Smoke test · 2026-11-13 13:06 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (576টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (594টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `9f4dbd010ba9` · after deploy · result **PASS** (576 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `f35f87919395` · after deploy · result **PASS** (594 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -233,7 +233,8 @@ Site: https://new.extas.com.bd · commit `9f4dbd010ba9` · after deploy · resul
 | `/admin/marketing/studio/motion` | phone | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/marketing/studio/models` | phone | 200 | `/admin/marketing/studio/models` | ok | — |
 | `/admin/marketing/studio/videos` | phone | 200 | `/admin/marketing/studio/videos` | ok | — |
-| `/admin/marketing/studio/briefs` | phone | 200 | `/admin/marketing/studio/briefs` | ok | — |
+| `/admin/marketing/studio/reels` | phone | 200 | `/admin/marketing/studio/reels` | ok | — |
+| `/admin/marketing/studio/export` | phone | 200 | `/admin/marketing/studio/export` | ok | — |
 | `/admin/marketing/studio/overlay` | phone | 200 | `/admin/marketing/studio/overlay` | ok | — |
 | `/admin/website/words` | phone | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | phone | 200 | `/admin/website/eye-toggles` | ok | — |
@@ -284,13 +285,21 @@ Site: https://new.extas.com.bd · commit `9f4dbd010ba9` · after deploy · resul
 | `/admin/website/blog/ads` | phone | 200 | `/admin/website/blog/ads` | ok | — |
 | `/admin/website/blog/ads/new` | phone | 200 | `/admin/website/blog/ads/new` | ok | — |
 | `/admin/website/blog/pipeline` | phone | 200 | `/admin/website/blog/pipeline` | ok | — |
-| `/admin/website/blog/source` | phone | 200 | `/admin/website/blog/source` | ok | — |
 | `/admin/marketing/geo-guide` | phone | 200 | `/admin/marketing/geo-guide` | ok | — |
 | `/admin/marketing/merchant-feed` | phone | 200 | `/admin/marketing/merchant-feed` | ok | — |
+| `/admin/marketing/studio/briefs` | phone | 200 | `/admin/marketing/studio/briefs` | ok | — |
+| `/admin/website/blog/source` | phone | 200 | `/admin/website/blog/source` | ok | — |
 | `/admin/marketing/intel` | phone | 200 | `/admin/marketing/intel` | ok | — |
+| `/admin/ai/cost-book` | phone | 200 | `/admin/ai/cost-book` | ok | — |
+| `/admin/ai/approvals` | phone | 200 | `/admin/ai/approvals` | ok | — |
+| `/admin/ai/permissions` | phone | 200 | `/admin/ai/permissions` | ok | — |
+| `/admin/ai/diary` | phone | 200 | `/admin/ai/diary` | ok | — |
+| `/admin/ai/skills` | phone | 200 | `/admin/ai/skills` | ok | — |
+| `/admin/ai/skills/sandbox` | phone | 200 | `/admin/ai/skills/sandbox` | ok | — |
+| `/admin/reports/funnels` | phone | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d379-9b53-7151-8f65-769efd0745f2` | phone | 200 | `/admin/reports/health/history/01a1d379-9b53-7151-8f65-769efd0745f2` | ok | — |
+| `/admin/reports/health/history/01a1d385-f6eb-7991-9c07-ba436a818b5c` | phone | 200 | `/admin/reports/health/history/01a1d385-f6eb-7991-9c07-ba436a818b5c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -521,7 +530,8 @@ Site: https://new.extas.com.bd · commit `9f4dbd010ba9` · after deploy · resul
 | `/admin/marketing/studio/motion` | desktop | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/marketing/studio/models` | desktop | 200 | `/admin/marketing/studio/models` | ok | — |
 | `/admin/marketing/studio/videos` | desktop | 200 | `/admin/marketing/studio/videos` | ok | — |
-| `/admin/marketing/studio/briefs` | desktop | 200 | `/admin/marketing/studio/briefs` | ok | — |
+| `/admin/marketing/studio/reels` | desktop | 200 | `/admin/marketing/studio/reels` | ok | — |
+| `/admin/marketing/studio/export` | desktop | 200 | `/admin/marketing/studio/export` | ok | — |
 | `/admin/marketing/studio/overlay` | desktop | 200 | `/admin/marketing/studio/overlay` | ok | — |
 | `/admin/website/words` | desktop | 200 | `/admin/website/words` | ok | — |
 | `/admin/website/eye-toggles` | desktop | 200 | `/admin/website/eye-toggles` | ok | — |
@@ -572,13 +582,21 @@ Site: https://new.extas.com.bd · commit `9f4dbd010ba9` · after deploy · resul
 | `/admin/website/blog/ads` | desktop | 200 | `/admin/website/blog/ads` | ok | — |
 | `/admin/website/blog/ads/new` | desktop | 200 | `/admin/website/blog/ads/new` | ok | — |
 | `/admin/website/blog/pipeline` | desktop | 200 | `/admin/website/blog/pipeline` | ok | — |
-| `/admin/website/blog/source` | desktop | 200 | `/admin/website/blog/source` | ok | — |
 | `/admin/marketing/geo-guide` | desktop | 200 | `/admin/marketing/geo-guide` | ok | — |
 | `/admin/marketing/merchant-feed` | desktop | 200 | `/admin/marketing/merchant-feed` | ok | — |
+| `/admin/marketing/studio/briefs` | desktop | 200 | `/admin/marketing/studio/briefs` | ok | — |
+| `/admin/website/blog/source` | desktop | 200 | `/admin/website/blog/source` | ok | — |
 | `/admin/marketing/intel` | desktop | 200 | `/admin/marketing/intel` | ok | — |
+| `/admin/ai/cost-book` | desktop | 200 | `/admin/ai/cost-book` | ok | — |
+| `/admin/ai/approvals` | desktop | 200 | `/admin/ai/approvals` | ok | — |
+| `/admin/ai/permissions` | desktop | 200 | `/admin/ai/permissions` | ok | — |
+| `/admin/ai/diary` | desktop | 200 | `/admin/ai/diary` | ok | — |
+| `/admin/ai/skills` | desktop | 200 | `/admin/ai/skills` | ok | — |
+| `/admin/ai/skills/sandbox` | desktop | 200 | `/admin/ai/skills/sandbox` | ok | — |
+| `/admin/reports/funnels` | desktop | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d379-9b53-7151-8f65-769efd0745f2` | desktop | 200 | `/admin/reports/health/history/01a1d379-9b53-7151-8f65-769efd0745f2` | ok | — |
+| `/admin/reports/health/history/01a1d385-f6eb-7991-9c07-ba436a818b5c` | desktop | 200 | `/admin/reports/health/history/01a1d385-f6eb-7991-9c07-ba436a818b5c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
