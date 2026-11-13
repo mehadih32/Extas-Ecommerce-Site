@@ -4,13 +4,13 @@ Written by `deploy.yml` after every deploy (`infra/deploy/deploy-report.sh`). Hi
 
 | | |
 |---|---|
-| Commit | `5dcf34034787` |
-| Time (Asia/Dhaka) | 2026-11-13 14:15 |
-| Result | **OK** |
+| Commit | `bee4f44ed376` |
+| Time (Asia/Dhaka) | 2026-11-13 15:37 |
+| Result | **FAILED, ROLLED BACK** |
 | Database migration | ok |
-| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version 5dcf34034787, colour green |
-| Smoke test (every page) | OK — 594 page views, signed out and as the admin, phone and desktop (storefront pictures: `docs/reports/smoke/latest/`; the admin pictures stay on the server) |
-| Docs on the server | `5dcf34034787` — README.md + docs/ (2506 files) |
+| Health check on new.extas.com.bd | OK — HTTP 200 from https://new.extas.com.bd/api/health, version bee4f44ed376, colour blue |
+| Smoke test (every page) | FAILED — /admin/ai/permissions: request failed: /admin (net::ERR_CONNECTION_CLOSED) (desktop); /admin/ai/permissions: console error: Failed to load resource: net::ERR_CONNECTION_CLOSED (/admin?home=1&_rsc=j7eaihOMoi9gF7ez) (desktop) |
+| Docs on the server | `bee4f44ed376` — README.md + docs/ (2509 files) |
 | Main disk (/) | 118 GB free after the clean-up (was 118 GB), at least 15 GB needed |
-| Live colour | green |
-| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43390010101 |
+| What failed | The new version went live, but the smoke test found a problem (/admin/ai/permissions: request failed: /admin (net::ERR_CONNECTION_CLOSED) (desktop); /admin/ai/permissions: console error: Failed to load resource: net::ERR_CONNECTION_CLOSED (/admin?home=1&_rsc=j7eaihOMoi9gF7ez) (desktop)), so the previous version was put back automatically. The fix comes before any new work. |
+| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43400652530 |
