@@ -1,15 +1,15 @@
-// S28 · PR 664 (registry v300): the Order flow rules — price adjust on orders. Off as shipped, labelled in English and
+// S28 · PR 664 (registry v310): the Order flow rules — price adjust on orders. Off as shipped, labelled in English and
 // Bengali, its default valid, a role not listed has no limit of its own (the service reads that as "everything waits").
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { REPLACEMENT_DEFAULT, replacementSchema, MERGE_ORDERS_DEFAULT, mergeOrdersSchema, orderFlowSettings, priceAdjustSchema, PRICE_ADJUST_DEFAULT, PRICE_ADJUST_OTHER_KEY } from '../src/registry-order-flow';
 
-describe('order flow settings (v300 to v302)', () => {
+describe('order flow settings (v310 to v312)', () => {
   it('every key is in the registry at its version, never owner data, labelled in both languages, its default valid', () => {
     for (const [key, spec] of Object.entries(orderFlowSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect([300, 301, 302], key).toContain(spec.version);
+      expect([310, 311, 312], key).toContain(spec.version);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -36,10 +36,10 @@ describe('order flow settings (v300 to v302)', () => {
   });
 });
 
-describe('PR 665 (v301): merge orders', () => {
+describe('PR 665 (v311): merge orders', () => {
   it('ships off: look-back 5 days, auto-merge off, a different address asks', () => {
     expect(MERGE_ORDERS_DEFAULT).toEqual({ enabled: false, lookBackDays: 5, autoMerge: false, differentAddress: 'ask' });
-    expect(orderFlowSettings['orders.mergeOrders'].version).toBe(301);
+    expect(orderFlowSettings['orders.mergeOrders'].version).toBe(311);
   });
   it('look-back is whole days from 1 to 60; the address rule is ask or refuse', () => {
     const ok = (v: object) => mergeOrdersSchema.safeParse({ ...MERGE_ORDERS_DEFAULT, ...v }).success;
@@ -51,7 +51,7 @@ describe('PR 665 (v301): merge orders', () => {
   });
 });
 
-describe('PR 669 (v302): replacement', () => {
+describe('PR 669 (v312): replacement', () => {
   it('ships off with its own hours and old-piece days', () => {
     expect(REPLACEMENT_DEFAULT).toEqual({ enabled: false, hours: 168, oldPieceDays: 7, reasons: ['defect', 'damage', 'wrong'] });
   });
