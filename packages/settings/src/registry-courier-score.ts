@@ -1,4 +1,4 @@
-// S28 · PR 662 (Admin v5; prototype Rules › Order flow › Courier score) — registry version 293.
+// S28 · PR 662 (Admin v5; prototype Rules › Order flow › Courier score) — registry version 296.
 //
 // - `risk.courierScore`: the courier-record score out of 10 (higher is better). Six checks read from the courier history
 //   of a customer's number — the delivery success rate, the parcels taken, the returns, the worst courier's success
@@ -12,7 +12,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V662 = 293;
+const V662 = 296;
 
 /** The six checks, in the order the prototype shows them. */
 export const COURIER_SCORE_METRICS = ['success', 'parcels', 'returns', 'worst', 'couriers', 'fraud'] as const;
