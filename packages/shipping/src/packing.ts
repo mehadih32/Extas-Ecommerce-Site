@@ -219,6 +219,37 @@ export async function packingQueue(deps: ShippingDeps, who: Who, query: unknown 
   return { step: q.step, filter, counts, rows: rows.map((r) => rowOf(r, issues, photos, docs)), more: Math.max(0, counts[q.step] - rows.length) };
 }
 
+/**
+ * S28 · PR 666 (CN-048, O-18) — the To ship screen's three chips: Confirmed (confirmed or being picked, no courier booked
+ * yet), Booked (a courier booked, sticker not yet through to Packed) and Packed (ready for the courier's rider). The same
+ * orders, filters and rules as the steps; read only (`fulfilment.read`).
+ */
+const chipsQuery = z
+  .object({ from: z.string().regex(DAY).optional(), to: z.string().regex(DAY).optional(), docs: z.enum(PACK_DOC_FILTERS).default('all') })
+  .strict()
+  .refine((q) => !q.from || !q.to || q.from <= q.to, { message: 'from after to', path: ['to'] });
+export interface ShipChips {
+  confirmed: number;
+  booked: number;
+  packed: number;
+}
+export async function shipChips(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<ShipChips> {
+  await allow(deps, who, 'fulfilment.read');
+  const q = parse(chipsQuery, query, 'ship chips');
+  const [base, timeZone] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'store.timeZone')]);
+  const narrow = filterWhere(who.storeId, { from: q.from ?? null, to: q.to ?? null, docs: q.docs }, timeZone);
+  const count = (step: PackStep, extra: Prisma.OrderWhereInput[] = []) => deps.db.order.count({ where: { AND: [base, STEP_WHERE[step], ...narrow, ...extra] } });
+  const [pick, pack, notBookedPick, notBookedPack, packed] = await Promise.all([
+    count('pick'),
+    count('pack'),
+    count('pick', [{ shipments: { none: LIVE_SHIPMENT } }]),
+    count('pack', [{ shipments: { none: LIVE_SHIPMENT } }]),
+    count('ready'),
+  ]);
+  const confirmed = notBookedPick + notBookedPack;
+  return { confirmed, booked: pick + pack - confirmed, packed };
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 // One order at the packing table
 // ---------------------------------------------------------------------------------------------------------------------

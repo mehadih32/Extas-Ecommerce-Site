@@ -11,7 +11,7 @@ import { createRole, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { cancelOrder, confirmOrder, holdOrder } from '@extas/orders';
 import { fulfilmentSettings } from '@extas/settings';
-import { addPackingPhoto, bookOrders, checkPiece, documentsOf, expirePackingPhotos, handoverList, markPacked, packingOrder, packingQueue, printStickers, startPicking, startPickingAll, waivePackingPhoto } from './index';
+import { addPackingPhoto, bookOrders, checkPiece, documentsOf, expirePackingPhotos, handoverList, markPacked, packingOrder, packingQueue, printStickers, shipChips, startPicking, startPickingAll, waivePackingPhoto } from './index';
 import { setUpShipping, type ShippingFixture } from './testing';
 import type { Who } from './context';
 
@@ -303,6 +303,34 @@ describe.skipIf(!HAS_TEST_DB)('PR 182 · the packing step (PostgreSQL)', () => {
       expect((await refusal(packingQueue(d(), packer, { step: 'pick', docs: 'everything' }))).code).toBe('INVALID_INPUT');
     } finally {
       f.overrides.delete('store.timeZone');
+    }
+  });
+});
+
+describe.skipIf(!HAS_TEST_DB)('PR 666 · the To ship chips (PostgreSQL)', () => {
+  it('counts Confirmed, Booked and Packed with the same rules as the steps', async () => {
+    const f = await setUpShipping('shipping_chips');
+    try {
+      const courierId = await f.courier(STEADFAST_PROVIDER, 'Steadfast main');
+      const place = async (name: string, n: number) => {
+        const o = await f.place(name, { phone: `0170000${String(2700 + n).padStart(4, '0')}` });
+        await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
+        return o;
+      };
+      const before = await shipChips(f.shippingDeps(), f.shipper);
+      const a = await place('chip-a', 1);
+      const b = await place('chip-b', 2);
+      await bookOrders(f.shippingDeps(), f.shipper, { courierAccountId: courierId, orderIds: [b.orderId] });
+      const mid = await shipChips(f.shippingDeps(), f.shipper);
+      expect(mid.confirmed - before.confirmed).toBe(1);
+      expect(mid.booked - before.booked).toBe(1);
+      await f.t.prisma.order.update({ where: { id: a.orderId }, data: { status: 'PACKED' } });
+      const after = await shipChips(f.shippingDeps(), f.shipper);
+      expect(after.packed - mid.packed).toBe(1);
+      expect(after.confirmed - mid.confirmed).toBe(-1);
+      expect(await shipChips(f.shippingDeps(), f.shipper, { docs: 'noSticker', from: '2020-01-01' })).toMatchObject({ packed: expect.any(Number) });
+    } finally {
+      await f.t.drop();
     }
   });
 });

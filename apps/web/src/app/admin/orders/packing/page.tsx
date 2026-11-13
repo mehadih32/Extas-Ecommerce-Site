@@ -34,6 +34,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { Act } from '@/components/admin/fulfil/Act';
 import { BookOne, PackButton, PhotoUpload, ReportIssue, ScanBox, StartAll, SwapPick, TickLine } from '@/components/admin/fulfil/Pack';
 import { PdfButton } from '@/components/admin/fulfil/Print';
+import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PackSelect, type PackSelectRow } from '@/components/admin/fulfil/PackSelect';
 import { invoiceHref } from '@/lib/admin-orders/model';
 import { formatNumber } from '@/components/admin/products/model';
@@ -45,8 +46,10 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { packingSettingCards } from '@/lib/packing-settings-api';
 import { shippingDeps } from '@/lib/shipping-api';
 import { moneyText } from '@/lib/admin-messages/i18n';
+import '../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,12 +95,15 @@ export default async function PackPage({ searchParams }: Props) {
   const can = (p: string) => perms.has(p);
   const sd = await shippingDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
-  const [queue, check, photoCfg, weightCfg, picking] = await Promise.all([
+  const [queue, check, photoCfg, weightCfg, picking, chips, cards] = await Promise.all([
     sh.packingQueue(sd, who, { step, ...(from ? { from } : {}), ...(to ? { to } : {}), docs: docsFilter }),
     sd.settings.value('fulfilment.packing.check', at),
     sd.settings.value('fulfilment.packing.photo', at),
     sd.settings.value('fulfilment.packing.weight', at),
     sh.pickingList(sd, who),
+    // S28 · PR 666: the three chips (Confirmed, Booked, Packed) and the two switches' card
+    sh.shipChips(sd, who, { ...(from ? { from } : {}), ...(to ? { to } : {}), docs: docsFilter }),
+    packingSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx }),
   ]);
   // PR 410: the documents an order has, in words (B&W: words, never a colour)
   const docsLine = (x: sh.PackDocs) => {
@@ -164,6 +170,25 @@ export default async function PackPage({ searchParams }: Props) {
     }
   }
   const fd: Dict = { ful: d.ful as Dict };
+  // S28 · PR 666: the switches' card, on the page where they are used (CN-018)
+  const ps = (k: string) => t(d, `ful.printRun.set.${k}`);
+  const canSettings = can('fulfilment.printSettings');
+  const shipTexts: FieldsCardTexts = {
+    h: t(d, 'ful.pack.chips.set.h'),
+    d: t(d, 'ful.pack.chips.set.d'),
+    save: ps('save'),
+    saving: ps('saving'),
+    saved: ps('saved'),
+    discard: ps('discard'),
+    unsaved: ps('unsaved'),
+    readOnly: ps('readOnly'),
+    pairHelp: ps('readOnly'),
+    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, ps(`err.${c}`)])),
+  };
+  const shipFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'reprintPin', label: t(d, 'ful.pack.chips.set.reprintPin'), help: t(d, 'ful.pack.chips.set.reprintPinHelp') },
+    { kind: 'switch', path: 'packOnPrint', label: t(d, 'ful.pack.chips.set.packOnPrint'), help: t(d, 'ful.pack.chips.set.packOnPrintHelp') },
+  ];
   const n = (x: number) => formatNumber(x, view.locale);
   const keep = `${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}${docsFilter !== 'all' ? `&docs=${docsFilter}` : ''}`;
   const href = (s: Step, id?: string) => `${HERE}?step=${s}${keep}${id ? `&id=${id}` : ''}`;
@@ -228,6 +253,23 @@ export default async function PackPage({ searchParams }: Props) {
           </Link>
         ) : null}
       </form>
+      <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.chips.label')} data-testid="ship-chips">
+        {(
+          [
+            ['confirmed', `${HERE}?step=pick&docs=notBooked`, step === 'pick' && docsFilter === 'notBooked', chips.confirmed],
+            ['booked', `${HERE}?step=pick&docs=noSticker`, step === 'pick' && docsFilter === 'noSticker', chips.booked],
+            ['packed', `${HERE}?step=ready`, step === 'ready' && docsFilter === 'all', chips.packed],
+          ] as const
+        ).map(([k, to_, on, count]) => (
+          <Link key={k} className={`a2-view${on ? ' on' : ''}`} href={to_} aria-current={on ? 'page' : undefined} data-testid={`ship-chip-${k}`} title={t(d, `ful.pack.chips.${k}Help`)}>
+            {t(d, `ful.pack.chips.${k}`)}
+            <span className="a2-cnt">{n(count)}</span>
+          </Link>
+        ))}
+        <Link className="a2-btn ghost sm" href="/admin/orders/packing/print" data-testid="ship-log-link">
+          {t(d, 'ful.pack.chips.log')}
+        </Link>
+      </div>
       <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.stepsLabel')} data-testid="pack-steps">
         {STEPS.map((s, i) => (
           <Link key={s} className={`a2-view${s === step ? ' on' : ''}`} href={href(s)} aria-current={s === step ? 'page' : undefined} data-testid={`pack-step-${s}`}>
@@ -495,6 +537,7 @@ export default async function PackPage({ searchParams }: Props) {
           )}
         </div>
       </div>
+      <FieldsCard url="/api/admin/packing/settings" screen={cards['fulfilment.toShip']} fields={shipFields} texts={shipTexts} canEdit={canSettings} testId="ship-switches" />
     </div>
   );
 }
