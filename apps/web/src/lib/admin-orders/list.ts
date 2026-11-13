@@ -98,6 +98,8 @@ export interface OrderRowView {
   /** Follow-up 435: the documents the order already has (sticker, invoice, picking list, handover sheet). */
   docs: Chip[];
   facts: BulkFacts;
+  /** PR 706 (CN-049): a practice order (shows a small Practice mark). */
+  practice?: boolean;
 }
 
 export interface OrderListData {
@@ -245,6 +247,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
       flags,
       risk: riskChips(view, r, riskBands),
       docs: docChips(view, docsOf(r.id)),
+      ...(r.isPractice ? { practice: true } : {}),
       facts: {
         status: r.status,
         version: r.version,

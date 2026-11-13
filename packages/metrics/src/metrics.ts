@@ -41,8 +41,14 @@ export function basisWhere(basis: Basis, storeId: number, period: Period): Prism
   const at = Prisma.raw(`o."${r.at}"`);
   const statuses = [...r.statuses];
   const status = r.include ? Prisma.sql`o."status"::text = ANY(${statuses})` : Prisma.sql`NOT (o."status"::text = ANY(${statuses}))`;
-  return Prisma.sql`o."storeId" = ${storeId} AND o."archivedAt" IS NULL AND ${status} AND ${at} >= ${period.from} AND ${at} < ${period.to}`;
+  return Prisma.sql`o."storeId" = ${storeId} AND o."archivedAt" IS NULL AND ${practiceVisible} AND ${status} AND ${at} >= ${period.from} AND ${at} < ${period.to}`;
 }
+
+/**
+ * PR 706 (CN-049): a practice order counts in a figure only while practice mode (`practice.enabled`) is on for its store;
+ * off, no figure of any screen counts it. Read in the same statement, so every figure built on `basisWhere` agrees.
+ */
+export const practiceVisible = Prisma.sql`(o."isPractice" = false OR EXISTS (SELECT 1 FROM "StoreSettingValue" sv WHERE sv."storeId" = o."storeId" AND sv."key" = 'practice.enabled' AND sv."value" @> '{"on": true}'::jsonb))`;
 
 const dayExpr = (basis: Basis, timeZone: string) => Prisma.sql`to_char((${Prisma.raw(`o."${BASIS_RULE[basis].at}"`)} AT TIME ZONE ${timeZone}), 'YYYY-MM-DD')`;
 

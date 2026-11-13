@@ -43998,7 +43998,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "Admin shell alignment (CN-048; no migration, no new permission; `admin.startPages` accepts the new `rules` section): the left menu as the prototype's `A.NAV` inside the Lumen look — Daily = Home, Orders, Couriers, Products, Customers, Inbox, Rules; Grow = Marketing, Website; Business = Finance, Reports; System = AI Center, Settings, Help. Renames by label only (ids, routes and permissions unchanged): Today to Home, Delivery to Couriers, Support to Inbox, Money to Finance. **Rules is its own section** (`rules`, tab All rules: `/admin/rules`, `/notices`, `/eid`; its guide pages moved to `docs/admin-guide/pages/rules/`). **Messages is folded into Marketing › Message campaigns** (all 8 pages and addresses unchanged; the `messages` section id stays as a `folded` entry with no menu item, so saved settings and its manual chapter live on). A click on the open section's name folds or opens its pages (a double-click folds once); the Orders badge reads \"in Processing\"; icons: Home, Inbox and a new Rules glyph. Bottom bar stays the superset (the prototype's 5-item bar is a phone subset). 3 new test cases, admin guide updated.",
+    "note": "Admin shell alignment (CN-048; no migration, no new permission; `admin.startPages` accepts the new `rules` section): the left menu as the prototype's `A.NAV` inside the Lumen look — Daily = Home, Orders, Couriers, Products, Customers, Inbox, Rules; Grow = Marketing, Website; Business = Finance, Reports; System = AI Center, Settings, Help. Renames by label only (ids, routes and permissions unchanged): Today to Home, Delivery to Couriers, Support to Inbox, Money to Finance. **Rules is its own section** (`rules`, tab All rules: `/admin/rules`, `/notices`, `/eid`; its guide pages moved to `docs/admin-guide/pages/rules/`). **Messages is folded into Marketing › Message campaigns** (all 8 pages and addresses unchanged; the `messages` section id stays as a `folded` entry with no menu item, so saved settings and its manual chapter live on). A click on the open section's name folds or opens its pages (a double-click folds once); the Orders badge reads \"in Processing\"; icons: Home, Inbox and a new Rules glyph. Bottom bar stays the superset (the prototype's 5-item bar is a phone subset). 3 new test cases, admin guide updated. Updated 13 Nov 2026 (owner decision, binding): the admin opens in English on first open and Bengali only through the EN/বাং switch, like the prototype; a stored cookie choice still wins, and the store's locale no longer decides the admin language (it only sets date and number style). Storefront language untouched.",
     "github": []
    },
    "builtFacts": {
@@ -44023,7 +44023,15 @@
      "3 new test cases, admin guide updated"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 13 Nov 2026 (CN-048; new PR 659–707)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 659** — Updated 13 Nov 2026 (CN-048, follow-up): the real menu equals the prototype's `A.NAV` exactly. `apps/web/src/lib/admin-shell/nav-v5.ts` says, per section, the prototype's tabs in its order and words (a real tab with no prototype tab sits under \"More\"; nothing deleted, no address changes); `sections.ts` keeps every built page in `RAW_SECTIONS` and `SHELL_SECTIONS` applies it. Entries for pages built in the not-yet-merged lanes (NAV-PATCH of waves 4A, 4B, 5A, 5B: 25 pages, listed in `nav-pending.json`) stay hidden until their `page.tsx` is merged: run `node tools/nav/activate-pending.mjs` after each of those merges (a test fails with that instruction when a page landed and the list is stale). \"Add product\" is its own Products tab. Tests: `nav-v5.test.ts` (14)."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "শেলের মেনু প্রোটোটাইপের মতো সাজানো: Home, Orders, Couriers, Inbox, Rules, Finance — Lumen ডিজাইনই থাকছে, কিছু মোছা হচ্ছে না।",
@@ -44213,7 +44221,7 @@
    "title": "Price adjust on orders —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Price adjust on orders** — Per order: amount, percent, wallet, free delivery; reason required and logged; only before booking; per-role limit, above it the owner approves (Telegram works later); money change needs the owner PIN and the owner written OK (BLOCKED row). Size L; depends on —; shared files: Prisma (OrderPriceAdjustment); order totals service.",
+   "scope": "**Price adjust on orders** — Per order: amount, percent, wallet, free delivery; reason required and logged; only before booking; per-role limit, above it the owner approves (Telegram works later); money change needs the owner PIN and the owner written OK (BLOCKED row). Size L; depends on —; shared files: Prisma (OrderPriceAdjustment); order totals service. Updated 13 Nov 2026 (owner decisions): ships ON; the per-role limits come from the staff controls (702) and the settings `approvals.gates` (v333): an empty limit means every adjustment waits for one approver; a waiting adjustment is also asked on Telegram (703). Call site applied when this lane meets 702/703 (`gap/NAV-PATCH-w5b.md`).",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 1 — shell and orders",
    "registerAnchor": "s28-wave-1--shell-and-orders",
@@ -44504,7 +44512,15 @@
      "Tests: 6 shipping, 2 payments, 2 settings, 2 words and 1 settings-API test"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 13 Nov 2026 (CN-048; new PR 659–707)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 670** — Updated 13 Nov 2026 (owner decision 13 Nov, binding): Steadfast is the default courier, always. `ensureSteadfastCourier` (adapter key `steadfast`, practice world until the keys are typed in) runs when the default pack is applied (setup/seed), idempotent, never changes or removes a courier; while the setting `delivery.couriers.defaultCourierId` is empty or stale, Steadfast is the default (`defaultCourierIdOf`). Tests: `packages/seed/test/couriers.test.ts`, `packages/shipping/src/default-courier.test.ts`."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "কুরিয়ার সেকশন আর Courier 360: ওভারভিউ, পার্সেল, টাকা, পারফরম্যান্স, সেটআপ।",
@@ -45200,7 +45216,7 @@
    "title": "Cashbook and cash forecast —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Cashbook and cash forecast** — Accounts (Cash, Bank, bKash, Nagad), record money in and out, move between accounts, owner put in / took (PIN), append-only with reversals; 14-day forecast, tightest day. Money is only recorded, never sent. Size L; depends on —; shared files: Prisma (CashAccount, CashEntry); permission key.",
+   "scope": "**Cashbook and cash forecast** — Accounts (Cash, Bank, bKash, Nagad), record money in and out, move between accounts, owner put in / took (PIN), append-only with reversals; 14-day forecast, tightest day. Money is only recorded, never sent. Size L; depends on —; shared files: Prisma (CashAccount, CashEntry); permission key. Updated 13 Nov 2026 (owner decisions): cash in/out ships ON; a cash entry above the role's cash limit (or with none set) waits for one approver (settings `approvals.gates`, v333; Telegram kind `cash`, v334), money only recorded. Call site applied when this lane meets 702/703.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 4 — products, finance, reports",
    "registerAnchor": "s28-wave-4--products-finance-reports",
@@ -45768,7 +45784,7 @@
    "title": "Staff controls —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Staff controls** — Discount limit per role (Tk and percent, empty means no limit), export permission rows, packer role without phone and address on pack and print screens, end-of-day cash and bKash handover per staff. Size M; depends on 664, 687; shared files: Prisma (CashHandover); permission catalogue.",
+   "scope": "**Staff controls** — Discount limit per role (Tk and percent, empty means no limit), export permission rows, packer role without phone and address on pack and print screens, end-of-day cash and bKash handover per staff. Size M; depends on 664, 687; shared files: Prisma (CashHandover); permission catalogue. Updated 13 Nov 2026: the limits are read by price adjust (664) and cash in/out (687) through `lib/approval-gates.ts`; the owner has no limit.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -45797,7 +45813,7 @@
    "title": "Telegram approvals —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Telegram approvals** — Inbound bot, approve or reject urgent items (price adjust, budget raise) with a button, audited, checked by the owner existing confirm step; mock until the bot key. Size L; depends on 664; shared files: Telegram adapter.",
+   "scope": "**Telegram approvals** — Inbound bot, approve or reject urgent items (price adjust, budget raise) with a button, audited, checked by the owner existing confirm step; mock until the bot key. Size L; depends on 664; shared files: Telegram adapter. Updated 13 Nov 2026: new approval kind `cash` (PR 687) with its own box; the asker may keep one kind off Telegram.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -45813,7 +45829,9 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    687
+   ],
    "blueprint": [],
    "bn": "টেলিগ্রামে জরুরি অনুমোদন: বাটনে Approve/Reject, লগসহ।",
    "bnAuto": false,
@@ -45884,7 +45902,7 @@
    "title": "Start fresh (one time) —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Start fresh (one time)** — Preview of what is cleared, kept and chosen; full Drive backup first; type START FRESH and the PIN; clears test and sample entries on the site and, by an ERP call, the ERP-side test entries; never real data; one-time lock; audited. Built now, but its run action stays behind the owner written OK (BLOCKED.md) and never blocks other work. Size L; depends on 684; shared files: Prisma (test marks on orders, customers, payments, stock moves); ERP contract (mock).",
+   "scope": "**Start fresh (one time)** — Preview of what is cleared, kept and chosen; full Drive backup first; type START FRESH and the PIN; clears test and sample entries on the site and, by an ERP call, the ERP-side test entries; never real data; one-time lock; audited. Built now, but its run action stays behind the owner written OK (BLOCKED.md) and never blocks other work. Size L; depends on 684; shared files: Prisma (test marks on orders, customers, payments, stock moves); ERP contract (mock). Updated 13 Nov 2026 (owner decisions): the server's purge job `startFresh.purge` (migration 0277, a database function that refuses any run the owner did not make) removes the handed-off kinds; customer problems are never deleted; products the owner uploaded are always kept and only demo products go when the box is ticked; the ERP contract names no clear call, so that part stays a mock.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -45899,7 +45917,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row (also under \"S28 Wave 5 — the rest\")",
+     "sourceLink": "../MASTER-REGISTER.md#s28-wave-5--the-rest",
+     "text": "**Start fresh (one time)** — Preview of what is cleared, kept and chosen; full Drive backup first; type START FRESH and the PIN; clears test and sample entries on the site and, by an ERP call, the ERP-side test entries; never real data; one-time lock; audited. Built now, but its run action stays behind the owner written OK (BLOCKED.md) and never blocks other work. Size L; depends on 684; shared files: Prisma (test marks on orders, customers, payments, stock moves); ERP contract (mock). **Updated 13 Nov 2026 (CN-049):** adds practice data to the same Settings area: `practice.enabled` and `practice.showReset`, an `isPractice` flag on orders, customers, parcels, payments, courier payouts, claims, incomplete orders, courier accounts and products (migrations 0280, 0281), the sample-data seeder, Settings › Practice data (`/admin/settings/practice`) and a PIN-guarded reset that keeps products the owner uploaded and demo products unless ticked. Start fresh calls the same reset."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "একবারের \"Start fresh\": আগে ব্যাকআপ, টেস্ট ডাটাই মোছে, আসল নয় — চালানোর আগে আপনার লিখিত OK লাগবে।",

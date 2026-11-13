@@ -8,7 +8,7 @@
 // never counted in a figure; they are counted aside. Nothing is booked, moved or paid here (`delivery.read`).
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, type ShippingDeps, type Who } from './context';
-import { listCouriers, type CourierAccountView } from './accounts';
+import { defaultCourierIdOf, listCouriers, type CourierAccountView } from './accounts';
 import { courierChoicesOf } from './courier-choice';
 import { ShippingError } from './errors';
 import { ACTIVE_STATES, EXCEPTION_STATUSES } from './pure';
@@ -163,9 +163,10 @@ export async function couriersOverview(deps: ShippingDeps, who: Who): Promise<Co
     const moved = s.events[0]?.occurredAt ?? s.pickedAt ?? s.bookedAt;
     if (moved && now.getTime() - moved.getTime() > limit) stuckBy.set(s.courierAccountId, (stuckBy.get(s.courierAccountId) ?? 0) + 1);
   }
-  const cards: CourierCard[] = defaultFirst(live, setup.defaultCourierId || live[0]?.id || '').map((c) => ({
+  const defaultId = defaultCourierIdOf(live.map((c) => ({ ...c, archivedAt: null })), setup.defaultCourierId);
+  const cards: CourierCard[] = defaultFirst(live, defaultId).map((c) => ({
     ...c,
-    isDefault: c.id === (setup.defaultCourierId || live[0]?.id),
+    isDefault: c.id === defaultId,
     isBackup: !!watch.backupCourierId && c.id === watch.backupCourierId,
     onTheWay: { parcels: onWay.find((x) => x.courierAccountId === c.id)?._count._all ?? 0, codMinor: onWay.find((x) => x.courierAccountId === c.id)?._sum.codAmountMinor ?? 0 },
     stuck: stuckBy.get(c.id) ?? 0,
@@ -177,7 +178,7 @@ export async function couriersOverview(deps: ShippingDeps, who: Who): Promise<Co
     ),
     practiceParcels: practice.find((x) => x.courierAccountId === c.id)?._count._all ?? 0,
   }));
-  return { cards, defaultCourierId: setup.defaultCourierId || live[0]?.id || null, savings: await routingSavings(deps, who, selection.enabled, since), watch };
+  return { cards, defaultCourierId: defaultId || null, savings: await routingSavings(deps, who, selection.enabled, since), watch };
 }
 
 /** "Money we would save with per-area routing": see the file header. Never throws on a missing rate card. */

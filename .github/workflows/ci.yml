@@ -275,13 +275,13 @@ jobs:
       # runner's memory in bounds with the higher limit.
       - name: Type-check
         env:
-          NODE_OPTIONS: --max-old-space-size=6144
+          NODE_OPTIONS: --max-old-space-size=8192
         run: pnpm -r --workspace-concurrency=2 typecheck
       # PR 414 follow-up (go-live gate): the gate's server code runs in the migrate image from inside the workspace
       # (infra/deploy/gate-*.sh mount it there), so it is type-checked from the same place, with that package's tsc.
       - name: Type-check the go-live gate's server code
         env:
-          NODE_OPTIONS: --max-old-space-size=6144
+          NODE_OPTIONS: --max-old-space-size=8192
         run: |
           cp -r tools/gate-orders apps/web/gate-orders && (cd apps/web/gate-orders/server && ../../node_modules/.bin/tsc -p tsconfig.json)
           cp -r tools/redirect-import apps/web/redirect-import && (cd apps/web/redirect-import/server && ../../node_modules/.bin/tsc -p tsconfig.json)

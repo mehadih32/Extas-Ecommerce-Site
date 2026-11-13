@@ -4,6 +4,9 @@ import { Prisma } from '@extas/db/client';
 import { customerFiguresSql, customerOrdersSql } from '@extas/metrics';
 import { PHONE_SEARCH_MIN_DIGITS, type CustomerView } from './pure';
 
+/** PR 706 (CN-049): a practice customer is in the people list only while practice mode is on for the store. */
+const practiceCustomerVisible = Prisma.sql`(c."isPractice" = false OR EXISTS (SELECT 1 FROM "StoreSettingValue" sv WHERE sv."storeId" = c."storeId" AND sv."key" = 'practice.enabled' AND sv."value" @> '{"on": true}'::jsonb))`;
+
 /**
  * The list's people as one SQL `WITH … base AS (…)`: one row `b` per person (the profile he stays under, never a merged
  * or erased or archived one) with his figures — orders, ordered_value, delivered, sales_value, refused (not the shop's
@@ -14,7 +17,7 @@ import { PHONE_SEARCH_MIN_DIGITS, type CustomerView } from './pure';
 export function peopleBaseSql(S: number, ourFault: readonly string[], filter: Prisma.Sql = Prisma.empty, only: readonly string[] | null = null): Prisma.Sql {
   const narrow = only ? Prisma.sql`AND COALESCE(c."mergedIntoId", c."id") = ANY(${[...only]}::uuid[])` : Prisma.empty;
   // every live profile under the person it belongs to (a merged profile under its survivor); orders carry E.164
-  const people = Prisma.sql`SELECT COALESCE(c."mergedIntoId", c."id")::text AS k, c."id" AS cid, c."phone" AS phone FROM "Customer" c WHERE c."storeId" = ${S} AND c."erasedAt" IS NULL ${narrow}`;
+  const people = Prisma.sql`SELECT COALESCE(c."mergedIntoId", c."id")::text AS k, c."id" AS cid, c."phone" AS phone FROM "Customer" c WHERE c."storeId" = ${S} AND c."erasedAt" IS NULL AND ${practiceCustomerVisible} ${narrow}`;
   const refusal = Prisma.sql`COALESCE(
       (SELECT e."reasonCode" FROM "OrderEvent" e WHERE e."storeId" = ${S} AND e."orderId" = o."id" AND e."type" = 'order.returned' AND e."reasonCode" IS NOT NULL ORDER BY e."createdAt" DESC, e."id" DESC LIMIT 1),
       (SELECT r."reasonCode" FROM "ReturnRecord" r WHERE r."storeId" = ${S} AND r."orderId" = o."id" AND r."kind"::text = 'REFUSED_AT_DOOR' AND r."reasonCode" IS NOT NULL ORDER BY r."createdAt" DESC LIMIT 1),
@@ -42,6 +45,7 @@ export function peopleBaseSql(S: number, ourFault: readonly string[], filter: Pr
       LEFT JOIN cnt ON cnt.k = r."id"::text
       LEFT JOIN mem ON mem.k = r."id"::text
       WHERE r."storeId" = ${S} AND r."mergedIntoId" IS NULL AND r."erasedAt" IS NULL AND r."archivedAt" IS NULL
+        AND (r."isPractice" = false OR EXISTS (SELECT 1 FROM "StoreSettingValue" sv WHERE sv."storeId" = r."storeId" AND sv."key" = 'practice.enabled' AND sv."value" @> '{"on": true}'::jsonb))
         ${only ? Prisma.sql`AND r."id" = ANY(${[...only]}::uuid[])` : Prisma.empty}
         ${filter}
     )`;

@@ -50,7 +50,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { currencyDigits, ERP_ORDER_CHANNEL, ERP_ORDER_CONFIRMED, ERP_ORDER_STATUSES, ERP_RETURN_QC_GOOD, toErpError, type ErpDocument, type ErpDocumentType, type ErpOrderGift } from '@extas/adapters';
-import type { Prisma } from '@extas/db/client';
+import { isPracticeOrder, PRACTICE_SKIPPED, practiceOrderIds, type Prisma } from '@extas/db/client';
 import { allow, logChange, nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx, type Who } from './context';
 import { InventoryError } from './errors';
 import { pushDisposition, resolveErp } from './guard';
@@ -203,8 +203,10 @@ export async function enqueueErpDocument(deps: InventoryDeps, storeId: number, r
 async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string, key: string, doc: ErpDocument, tx?: Tx): Promise<EnqueueResult> {
   assertNoJournal(doc);
   const retired = await retiredFor(deps, storeId, doc);
-  const pushStatus = retired ? 'RETIRED' : (await pushDisposition(deps, storeId)).pushStatus;
   const db: Db = tx ?? deps.db;
+  // PR 706 (CN-049): a practice order's document is kept as a row (the screens stay whole) but never goes to the ERP.
+  const practice = await isPracticeOrder(db, referenceId);
+  const pushStatus = practice ? 'SKIPPED_NO_ERP' : retired ? 'RETIRED' : (await pushDisposition(deps, storeId)).pushStatus;
   const requestBody = { ...doc, hash: hashOf(doc) } as unknown as Prisma.InputJsonValue;
   const existing = await db.erpPush.findUnique({ where: { storeId_idempotencyKey: { storeId, idempotencyKey: key } } });
   const same = (row: { requestBody: Prisma.JsonValue }) => (row.requestBody as { hash?: string } | null)?.hash === hashOf(doc);
@@ -213,7 +215,7 @@ async function enqueue(deps: InventoryDeps, storeId: number, referenceId: string
     return { pushId: existing.id, status: existing.status, created: false };
   }
   try {
-    const lastError = pushStatus === 'SKIPPED_NO_ERP' ? 'SKIPPED_NO_ERP' : pushStatus === 'RETIRED' ? RETIRED_V6 : null;
+    const lastError = practice ? PRACTICE_SKIPPED : pushStatus === 'SKIPPED_NO_ERP' ? 'SKIPPED_NO_ERP' : pushStatus === 'RETIRED' ? RETIRED_V6 : null;
     const row = await db.erpPush.create({ data: { storeId, documentType: doc.type, referenceId, idempotencyKey: key, status: pushStatus, requestBody, ...(lastError ? { lastError } : {}) } });
     return { pushId: row.id, status: row.status, created: true };
   } catch (e) {
@@ -391,7 +393,13 @@ export async function relayErpPushes(deps: InventoryDeps, opts: { storeId?: numb
 
   for (const { storeId } of stores) {
     const link = await resolveErp(deps, storeId);
-    const rows = await db.erpPush.findMany({ where: { storeId, ...due }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: batch });
+    let rows = await db.erpPush.findMany({ where: { storeId, ...due }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], take: batch });
+    // PR 706 (CN-049): the last gate before the wire: a document of a practice order is never sent.
+    const practiceIds = await practiceOrderIds(db, rows.map((r) => r.referenceId));
+    if (practiceIds.size) {
+      await db.erpPush.updateMany({ where: { id: { in: rows.filter((r) => practiceIds.has(r.referenceId)).map((r) => r.id) }, status: 'PENDING' }, data: { status: 'SKIPPED_NO_ERP', lastError: PRACTICE_SKIPPED } });
+      rows = rows.filter((r) => !practiceIds.has(r.referenceId));
+    }
     if (!rows.length) continue;
     out.stores++;
     const { disposition } = await pushDisposition(deps, storeId);
