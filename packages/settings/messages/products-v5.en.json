@@ -1,0 +1,8 @@
+{
+  "media": {
+    "quality": {
+      "label": "Photo quality checks",
+      "help": "Plain checks on each product photo: too small, blurry, too dark, wrong shape, cut off. Nothing is sent anywhere. Off until you turn it on."
+    }
+  }
+}
