@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-13 18:35 (Asia/Dhaka)
+# Smoke test · 2026-11-13 20:19 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (608টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `4a6a2c9784ea` · after deploy · result **PASS** (608 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `44c1fc7b1c3b` · after deploy · result **PASS** (608 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -306,7 +306,7 @@ Site: https://new.extas.com.bd · commit `4a6a2c9784ea` · after deploy · resul
 | `/admin/reports/funnels` | phone | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | phone | 200 | `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | ok | — |
+| `/admin/reports/health/history/01a1d4f1-78f9-75a1-9950-a32f13f65593` | phone | 200 | `/admin/reports/health/history/01a1d4f1-78f9-75a1-9950-a32f13f65593` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -610,7 +610,7 @@ Site: https://new.extas.com.bd · commit `4a6a2c9784ea` · after deploy · resul
 | `/admin/reports/funnels` | desktop | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | desktop | 200 | `/admin/reports/health/history/01a1d4d2-ab38-7b51-92fe-294c634a206e` | ok | — |
+| `/admin/reports/health/history/01a1d4f1-78f9-75a1-9950-a32f13f65593` | desktop | 200 | `/admin/reports/health/history/01a1d4f1-78f9-75a1-9950-a32f13f65593` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
