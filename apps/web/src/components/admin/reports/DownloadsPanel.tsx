@@ -4,7 +4,9 @@
 // reports (Excel / PDF / Print, for the period picked in the period bar). Words: messages/admin-reports-library.*.json
 // (`reportsLibrary.dl.*`). Read-only: a file reads the same figures as the library and changes nothing.
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { fileUrl, type FileFormat, type FilePeriod } from '@/lib/report-file-links';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -13,6 +15,13 @@ const SINGLES = ['figures', 'products', 'timing', 'review', 'courier', 'areas', 
 const PACK_PERIODS = ['lastmonth', 'month', 'last3m', 'last6m', 'last12m'] as const;
 /** The period each pack opens with. */
 const PACK_FIRST: Record<(typeof PACKS)[number], (typeof PACK_PERIODS)[number]> = { monthly: 'lastmonth', bank: 'last12m', stock: 'month', sales: 'lastmonth' };
+
+const DAILY_TIMES = ['20:00', '21:00', '22:00', '23:00'] as const;
+interface Daily {
+  enabled: boolean;
+  time: string;
+  channels: string[];
+}
 
 /** Opens a PDF in a hidden frame and prints it; when the browser will not, the PDF opens in a new tab. */
 export function printPdf(url: string, onFail: () => void): void {
@@ -39,6 +48,27 @@ export function DownloadsPanel(p: { dict: Dict; lang: string; period: FilePeriod
   const [said, setSaid] = useState<string | null>(null);
   const format = (pack: string): FileFormat => fmt[pack] ?? 'pdf';
   const print = (url: string) => printPdf(url, () => setSaid(c('printFail')));
+  // The daily business report: its switch, hour and channels live on the server (the nightly job sends the owner a short summary).
+  const [daily, setDaily] = useState<Daily | null>(null);
+  useEffect(() => {
+    let live = true;
+    void call('GET', '/api/admin/reports/packs').then((a) => {
+      const d = (a.data as { daily?: Daily }).daily;
+      if (live && a.status === 200 && d) setDaily(d);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  async function saveDaily(next: Daily) {
+    const was = daily;
+    setDaily(next);
+    const a = await call('POST', '/api/admin/reports/packs', { daily: { enabled: next.enabled, time: next.time, channels: next.channels } });
+    if (a.status === 200) return showToast({ text: c('daily.saved'), tone: 'ok' });
+    setDaily(was);
+    setSaid(a.status === 403 ? c('daily.forbidden') : c('daily.failed'));
+  }
+  const toggleCh = (d: Daily, ch: string): Daily => ({ ...d, channels: d.channels.includes(ch) ? d.channels.filter((x) => x !== ch) : [...d.channels, ch] });
 
   return (
     <section className="a2-card" id="rep-downloads" data-testid="lib-downloads">
@@ -107,6 +137,27 @@ export function DownloadsPanel(p: { dict: Dict; lang: string; period: FilePeriod
           </li>
         ))}
       </ul>
+      <h3 className="a2-h4 a2-mt12">{c('daily.title')}</h3>
+      <p className="a2-cs">{c('daily.note')}</p>
+      {daily ? (
+        <div className="w4-row a2-mt6" data-testid="dl-daily">
+          <label className="a2-sm">
+            <input type="checkbox" checked={daily.enabled} onChange={(e) => void saveDaily({ ...daily, enabled: e.target.checked })} data-testid="dr-on" /> {c('daily.on')}
+          </label>
+          <select className="a2-inp" value={daily.time} aria-label={c('daily.on')} onChange={(e) => void saveDaily({ ...daily, time: e.target.value })} data-testid="dr-time">
+            {(DAILY_TIMES as readonly string[]).includes(daily.time) ? DAILY_TIMES.map((x) => <option key={x}>{x}</option>) : [daily.time, ...DAILY_TIMES].map((x) => <option key={x}>{x}</option>)}
+          </select>
+          <label className="a2-sm">
+            <input type="checkbox" checked={daily.channels.includes('telegram')} onChange={() => void saveDaily(toggleCh(daily, 'telegram'))} data-testid="dr-tg" /> {c('daily.telegram')}
+          </label>
+          <label className="a2-sm">
+            <input type="checkbox" checked={daily.channels.includes('email')} onChange={() => void saveDaily(toggleCh(daily, 'email'))} data-testid="dr-em" /> {c('daily.email')}
+          </label>
+          <a className="a2-btn sm" href={fileUrl('daily', 'pdf', { preset: 'today' }, p.lang)} target="_blank" rel="noreferrer" data-testid="dr-pv">
+            {c('daily.see')}
+          </a>
+        </div>
+      ) : null}
       {said ? (
         <p className="a2-sm bk-warn a2-mt6" role="alert">
           {said}

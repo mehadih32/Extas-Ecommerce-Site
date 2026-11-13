@@ -1,6 +1,6 @@
 // S28 · PR 689 — the report library's rules without a database: the period bar, the change, the restock verdict.
 import { describe, expect, it } from 'vitest';
-import { scheduleDue, changePct, customRange, periodRange, restockVerdict } from '../src';
+import { dailyDue, DAILY_PACK, DAILY_TIME_PATTERN, scheduleDue, changePct, customRange, periodRange, restockVerdict } from '../src';
 
 describe('report library rules (PR 689)', () => {
   it('periods are whole days with the span just before for compare', () => {
@@ -45,5 +45,17 @@ describe('report library rules (PR 689)', () => {
     expect(scheduleDue('weekly', '2026-11-17')).toBeNull();
     expect(scheduleDue('monthly', '2026-12-01')).toBe('M:2026-12');
     expect(scheduleDue('monthly', '2026-12-02')).toBeNull();
+  });
+
+  it('the daily business report is due every night from its time, in the shop clock; the period is the day', () => {
+    expect(DAILY_PACK).toBe('daily');
+    expect(scheduleDue('daily', '2026-11-13')).toBe('D:2026-11-13');
+    expect(dailyDue('22:00', '21:59')).toBe(false);
+    expect(dailyDue('22:00', '22:00')).toBe(true);
+    expect(dailyDue('22:00', '23:30')).toBe(true);
+    expect(dailyDue('bad', '23:30')).toBe(false);
+    expect(DAILY_TIME_PATTERN.test('20:00')).toBe(true);
+    expect(DAILY_TIME_PATTERN.test('24:00')).toBe(false);
+    expect(DAILY_TIME_PATTERN.test('9:00')).toBe(false);
   });
 });

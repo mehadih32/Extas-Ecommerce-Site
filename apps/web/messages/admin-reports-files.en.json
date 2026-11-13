@@ -12,7 +12,8 @@
       "courier": "Courier performance",
       "areas": "Sales by area",
       "customers": "Customers",
-      "team": "Team"
+      "team": "Team",
+      "daily": "Daily business report"
     },
     "cards": {
       "sales": "Sales",

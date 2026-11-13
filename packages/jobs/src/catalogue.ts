@@ -395,8 +395,9 @@ const reportPackJob: JobDefinition<ReportPackPayload> = {
     const p = (payload ?? {}) as { storeId?: unknown; pack?: unknown; period?: unknown };
     if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${REPORT_PACK_JOB}: storeId must be a positive integer`);
     if (typeof p.pack !== 'string' || !/^[a-z]{3,20}$/.test(p.pack)) throw new Error(`${REPORT_PACK_JOB}: pack must be a pack id`);
-    if (typeof p.period !== 'string' || !/^(W:\d{4}-\d{2}-\d{2}|M:\d{4}-\d{2})$/.test(p.period)) throw new Error(`${REPORT_PACK_JOB}: period must be W:YYYY-MM-DD or M:YYYY-MM`);
-    return { storeId: p.storeId as number, pack: p.pack, period: p.period };
+    const periodOk = typeof p.period === 'string' && (/^(W:\d{4}-\d{2}-\d{2}|M:\d{4}-\d{2})$/.test(p.period) || (p.pack === 'daily' && /^D:\d{4}-\d{2}-\d{2}$/.test(p.period)));
+    if (!periodOk) throw new Error(`${REPORT_PACK_JOB}: period must be W:YYYY-MM-DD or M:YYYY-MM (D:YYYY-MM-DD for the daily report)`);
+    return { storeId: p.storeId as number, pack: p.pack as string, period: p.period as string };
   },
   storeOf: (p) => p.storeId,
   run: async (deps, p) => ({ ok: true, stats: compactStats(await runReportPack(deps, p)) }),

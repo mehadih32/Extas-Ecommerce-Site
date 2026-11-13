@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
-import { listSchedules, saveSchedule, archiveView, listPins, listViews, restockReport, salesByTime, saveView, setPin, type CatalogueDeps, type SettingsReader, type Who } from '../src';
+import { dailyReport, listSchedules, saveDailyReport, saveSchedule, archiveView, listPins, listViews, restockReport, salesByTime, saveView, setPin, type CatalogueDeps, type SettingsReader, type Who } from '../src';
 
 const code = async (p: Promise<unknown>) => {
   try {
@@ -146,5 +146,16 @@ describe.skipIf(!HAS_TEST_DB)('report library on PostgreSQL (PR 689)', () => {
     expect((await listSchedules(deps(), sys(A))).find((x) => x.pack === 'bank')).toMatchObject({ enabled: false, frequency: 'weekly' });
     expect((await listSchedules(deps(), sys(B))).every((x) => !x.enabled)).toBe(true);
     expect(await code(listSchedules(deps(), { actor: stranger, storeId: A }))).toBe('FORBIDDEN');
+  });
+
+  it('daily business report: off at 22:00 as shipped, hour and channels saved, a bad hour or no channel refused, not listed with the packs, per store', async () => {
+    expect(await dailyReport(deps(), sys(A))).toEqual({ enabled: false, time: '22:00', channels: ['telegram'], lastSentAt: null });
+    const row = await saveDailyReport(deps(), sys(A), { enabled: true, time: '21:00', channels: ['telegram', 'email'] });
+    expect(row).toMatchObject({ enabled: true, time: '21:00', channels: ['telegram', 'email'] });
+    expect(await code(saveDailyReport(deps(), sys(A), { enabled: true, time: '25:00', channels: ['telegram'] }))).toBe('INVALID_INPUT');
+    expect(await code(saveDailyReport(deps(), sys(A), { enabled: true, time: '21:00', channels: [] }))).toBe('INVALID_INPUT');
+    expect((await listSchedules(deps(), sys(A))).map((x) => x.pack)).not.toContain('daily');
+    expect((await dailyReport(deps(), sys(B))).enabled).toBe(false);
+    expect(await code(dailyReport(deps(), { actor: stranger, storeId: A }))).toBe('FORBIDDEN');
   });
 });

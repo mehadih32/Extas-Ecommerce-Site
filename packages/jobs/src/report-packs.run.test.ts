@@ -46,4 +46,15 @@ describe('S28 · PR 690 · a scheduled pack reaches the owner', () => {
     expect(await runReportPack(again.d, payload)).toEqual({ sent: false, reason: 'already' });
     expect(again.sent).toHaveLength(0);
   });
+
+  it('the daily business report tells the day: sales, net profit and the orders waiting for tomorrow', async () => {
+    const { d, update } = deps({ channels: ['telegram'] });
+    (d as unknown as { db: Record<string, unknown> }).db.order = { count: async () => 3 };
+    expect(await runReportPack(d, { storeId: 1, pack: 'daily', period: 'D:2026-12-01' })).toEqual({ sent: true });
+    const text = vi.mocked(sendOwnerAlert).mock.calls.at(-1)![1] as string;
+    expect(text).toContain('Daily business report');
+    expect(text).toContain('2026-12-01');
+    expect(text).toContain('Orders waiting for confirmation: 3');
+    expect(update).toHaveBeenCalledTimes(1);
+  });
 });

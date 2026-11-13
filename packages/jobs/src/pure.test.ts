@@ -439,4 +439,14 @@ describe('S28 · PR 690 · the report pack planner', () => {
     expect(await reportPackPlanner(deps(rows), new Date('2026-11-18T05:00:00Z'))).toEqual([]);
     expect(() => JOBS.get('reports.pack.send')!.parse({ storeId: 1, pack: 'bank', period: 'D:2026-11-01' })).toThrow(/period/);
   });
+  it('the daily business report is planned every night from the owner\'s time (shop clock), once a day', async () => {
+    const rows = [{ storeId: 1, reportKey: 'pack:daily', frequency: 'daily', channels: ['telegram'], recipients: { time: '22:00' } }];
+    // 15:00 UTC = 21:00 in Dhaka: too early; 16:30 UTC = 22:30: due
+    expect(await reportPackPlanner(deps(rows), new Date('2026-11-13T15:00:00Z'))).toEqual([]);
+    const due = await reportPackPlanner(deps(rows), new Date('2026-11-13T16:30:00Z'));
+    expect(due.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'daily', period: 'D:2026-11-13' }]);
+    expect(JOBS.get('reports.pack.send')!.parse({ storeId: 1, pack: 'daily', period: 'D:2026-11-13' })).toEqual({ storeId: 1, pack: 'daily', period: 'D:2026-11-13' });
+    const again = await reportPackPlanner(deps(rows), new Date('2026-11-13T17:30:00Z'));
+    expect(again[0]!.key).toBe(due[0]!.key);
+  });
 });
