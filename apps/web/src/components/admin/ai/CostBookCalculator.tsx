@@ -6,6 +6,7 @@
 import { useId, useState } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
+import { formatMoney, type Money } from '../products/model';
 
 export interface CalcJobOption {
   key: string;
@@ -50,12 +51,14 @@ function newLine(jobTypeKey: string): Line {
 
 export function CostBookCalculator({
   jobs,
-  money,
+  storeMoney,
+  usdMoney,
   lang,
   labels,
 }: {
   jobs: CalcJobOption[];
-  money: (storeMinor: number | null, usdMinor: number) => string;
+  storeMoney: Money;
+  usdMoney: Money;
   lang: 'en' | 'bn';
   labels: {
     title: string;
@@ -85,6 +88,8 @@ export function CostBookCalculator({
   const [busy, setBusy] = useState(false);
   const [desc, setDesc] = useState('');
   const [saving, setSaving] = useState(false);
+  const money = (storeMinor: number | null, usdMinor: number) =>
+    storeMinor !== null ? formatMoney(storeMinor, storeMoney) : formatMoney(usdMinor, usdMoney);
 
   const nameOf = (j: CalcJobOption) => j.name;
   const jobsByKey = new Map(jobs.map((j) => [j.key, j]));

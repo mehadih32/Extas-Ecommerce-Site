@@ -45,13 +45,17 @@ describe('practice AI writer (PR 221)', () => {
     expect(await mockAiWriterAdapter.test(await mockAiWriterAdapter.mock(ctx), ctx)).toMatchObject({ ok: true });
   });
 
-  // S15 · PR 306 — now that a live AI provider exists, AI_PROVIDER rows do appear in Keys & connections.
-  it('S15 · PR 306: every live provider (Anthropic, OpenAI, Google, OpenRouter) is an AI_PROVIDER row with keys', () => {
-    const live = allAdapters.filter((a) => a.kind === 'AI_PROVIDER');
+  // S15 · PR 306 — now that a live AI provider exists, AI_PROVIDER rows do appear in Keys & connections. S24 · PR
+  // 449 adds its own AI_PROVIDER-kind adapters (FASHN, Fitroom) for the Photoshoot Studio — a different family
+  // behind the same Keys & connections kind, so this checks the AI writer's own list, not every AI_PROVIDER row.
+  it('S15 · PR 306: every live AI writer (Anthropic, OpenAI, Google, OpenRouter) is an AI_PROVIDER row with keys', () => {
+    const live = aiWriterAdapters.filter((a) => a.modes.length > 0);
     expect(live.map((a) => a.provider).sort()).toEqual(['anthropic', 'googleAi', 'openAi', 'openRouter']);
     for (const a of live) {
+      expect(a.kind).toBe('AI_PROVIDER');
       expect(a.modes).toEqual(['LIVE']);
       expect(a.secrets).toContain('apiKey');
+      expect(allAdapters).toContain(a);
     }
   });
 });

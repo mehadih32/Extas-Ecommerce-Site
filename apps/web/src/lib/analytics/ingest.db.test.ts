@@ -25,7 +25,7 @@ describe.skipIf(!HAS_TEST_DB)('the analytics beacon on PostgreSQL (PR 338)', () 
     new Request(`${ORIGIN}/api/shop/analytics`, {
       method: o.method ?? 'POST',
       headers: { 'sec-fetch-site': o.site ?? 'same-origin', ...(o.cookie ? { cookie: o.cookie } : {}), 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || ['GET', 'HEAD'].includes((o.method ?? 'POST').toUpperCase()) ? undefined : JSON.stringify(body), // a GET carries no body
     });
   const visitorOf = (r: Response) =>
     r.headers

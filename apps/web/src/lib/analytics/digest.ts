@@ -225,5 +225,7 @@ export async function runDigestNow(deps: DigestDeps, who: Who, storeId: number, 
   const { digest, created } = await getOrCreateDigest(deps, storeId, kind);
   const sent = await sendDigest(deps, storeId, digest);
   await audit(deps.db, who.actor, { storeId, action: 'analytics.digest.run', entityType: 'ReportDigest', entityId: digest.id, after: { kind, created, telegram: sent.telegram, email: sent.email } }, who.ctx);
-  return { digest, created, sent };
+  // the row as it stands after the send, so the caller sees (and a second send honours) the "sent at" it just got
+  const after = await deps.db.reportDigest.findUnique({ where: { id: digest.id } });
+  return { digest: after ? view(after) : digest, created, sent };
 }

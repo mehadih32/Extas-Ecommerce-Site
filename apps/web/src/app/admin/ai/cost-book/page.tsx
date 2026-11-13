@@ -109,18 +109,18 @@ export default async function AiCostBookPage() {
       : formatMoney(usdMinor, usdMoney);
   const num = (n: number) => formatNumber(n, view.locale);
 
+  const moneyForSelect = (minor: number) =>
+    o.hasUsdRate
+      ? formatMoney(minor, storeMoney)
+      : formatMoney(minor, usdMoney);
   const optionsFor = (job: (typeof o.jobs)[number]): CostBookModelOption[] =>
     job.choices.map((ch) => ({
       modelKey: ch.modelKey,
       label: `${ch.providerName} — ${ch.displayName}`,
       isRecommended: ch.isRecommended,
-      perRunMinor: ch.perRunStoreMinor ?? ch.perRunUsdMinor,
-      perMonthMinor: ch.perMonthStoreMinor ?? ch.perMonthUsdMinor,
+      perRunText: moneyForSelect(ch.perRunStoreMinor ?? ch.perRunUsdMinor),
+      perMonthText: moneyForSelect(ch.perMonthStoreMinor ?? ch.perMonthUsdMinor),
     }));
-  const moneyForSelect = (minor: number) =>
-    o.hasUsdRate
-      ? formatMoney(minor, storeMoney)
-      : formatMoney(minor, usdMoney);
   const nameOf = (job: (typeof o.jobs)[number]) =>
     view.lang === "bn" ? job.nameBn : job.nameEn;
   const sectionNameOf = (id: string) =>
@@ -303,7 +303,6 @@ export default async function AiCostBookPage() {
                         jobKey={job.key}
                         selected={job.selectedModelKey}
                         options={optionsFor(job)}
-                        money={moneyForSelect}
                         label={c("modelSelectLabel", { job: name })}
                         changedText={c("toastChanged")}
                         failedText={c("toastFailed")}
@@ -369,7 +368,8 @@ export default async function AiCostBookPage() {
           id: s.id,
           name: view.lang === "bn" ? s.nameBn : s.nameEn,
         }))}
-        money={amount}
+        storeMoney={storeMoney}
+        usdMoney={usdMoney}
         title={c("whatIf.title")}
         resetText={c("whatIf.reset")}
       />
@@ -406,7 +406,8 @@ export default async function AiCostBookPage() {
               })),
             }),
           )}
-          money={amount}
+          storeMoney={storeMoney}
+          usdMoney={usdMoney}
           lang={view.lang}
           labels={{
             title: c("calc.title"),

@@ -142,6 +142,11 @@ import analyticsBn from '../messages/analytics.bn.json';
 import analyticsEn from '../messages/analytics.en.json';
 import reportsDigestBn from '../messages/reports-digest.bn.json';
 import reportsDigestEn from '../messages/reports-digest.en.json';
+import photoshootBn from '../messages/photoshoot.bn.json';
+import photoshootEn from '../messages/photoshoot.en.json';
+// S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
+import photoshootCostBn from '../messages/photoshoot-cost.bn.json';
+import photoshootCostEn from '../messages/photoshoot-cost.en.json';
 import blogCommentsBn from '../messages/blog-comments.bn.json';
 import blogCommentsEn from '../messages/blog-comments.en.json';
 import blogImagesBn from '../messages/blog-images.bn.json';
@@ -454,6 +459,12 @@ messages.bn = mergeMessages(messages.bn, analyticsBn);
 // S15 · PR 341 (registry v289): weekly/monthly digests to Telegram and e-mail.
 messages.en = mergeMessages(messages.en, reportsDigestEn);
 messages.bn = mergeMessages(messages.bn, reportsDigestBn);
+// S24 · PR 447 (registry v292): the garment-prep/standardisation colour-drift tolerance.
+messages.en = mergeMessages(messages.en, photoshootEn);
+messages.bn = mergeMessages(messages.bn, photoshootBn);
+// S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
+messages.en = mergeMessages(messages.en, photoshootCostEn);
+messages.bn = mergeMessages(messages.bn, photoshootCostBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

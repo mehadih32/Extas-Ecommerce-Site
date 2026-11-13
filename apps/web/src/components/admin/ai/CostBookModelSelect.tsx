@@ -15,15 +15,14 @@ export interface CostBookModelOption {
   modelKey: string;
   label: string;
   isRecommended: boolean;
-  perRunMinor: number;
-  perMonthMinor: number;
+  perRunText: string;
+  perMonthText: string;
 }
 
 export function CostBookModelSelect({
   jobKey,
   selected,
   options,
-  money,
   label,
   changedText,
   failedText,
@@ -33,7 +32,6 @@ export function CostBookModelSelect({
   jobKey: string;
   selected: string;
   options: CostBookModelOption[];
-  money: (minor: number) => string;
   label: string;
   changedText: string;
   failedText: string;
@@ -85,7 +83,7 @@ export function CostBookModelSelect({
       </select>
       {current ? (
         <span className="a2-xs a2-mute cb-sel-cost">
-          {money(current.perRunMinor)}/run · {money(current.perMonthMinor)}/mo
+          {current.perRunText}/run · {current.perMonthText}/mo
           {current.isRecommended ? ` · ${recommendedText}` : ''}
         </span>
       ) : null}

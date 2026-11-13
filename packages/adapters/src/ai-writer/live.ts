@@ -3,7 +3,12 @@
 // Anthropic, OpenAI, Google and OpenRouter write to exactly the same shape, the same limits and the same "only the
 // facts given" rule. A provider only has to answer `complete({system, user, maxTokens}) -> {text}` (anthropic.ts,
 // openai-compatible.ts, google.ts); everything about what to ask and how to read the answer lives here once.
+//
+// S15 · PR 311 — every `system`/`user` string built here passes through `maskPersonalData` (masking.ts) before it
+// reaches `complete`, the one call in this whole package that actually leaves the server over HTTP. See masking.ts's
+// own header for why this is a safety net on top of PR 310's provider routing, not a replacement for it.
 import type { TestResult } from '../define';
+import { maskPersonalData } from './masking';
 import { approvalExplainPrompt, articlePrompt, campaignPrompt, competitorComparisonPrompt, competitorStepPrompt, fraudReviewPrompt, guideQaPrompt, parseApprovalExplainJson, parseArticleJson, parseCampaignJson, parseCompetitorComparisonJson, parseCompetitorStepJson, parseFraudReviewJson, parseGuideQaJson, parseProductDescriptionJson, parseSeoJson, parseSizeAdviceJson, parseSocialReelCaptionJson, parseStockAlertJson, parseStudioDetailJson, parseSupportReplyJson, productDescriptionPrompt, seoPrompt, sizeAdvicePrompt, socialReelCaptionPrompt, stockAlertPrompt, studioDetailPrompt, supportReplyPrompt } from './prompts';
 import type { AiApprovalExplainDraft, AiApprovalExplainInput, AiArticleDraft, AiArticleInput, AiCampaignDraft, AiCampaignInput, AiCompetitorComparisonDraft, AiCompetitorComparisonInput, AiCompetitorStepDraft, AiCompetitorStepInput, AiFraudReviewDraft, AiFraudReviewInput, AiGuideQaDraft, AiGuideQaInput, AiProductDescriptionDraft, AiProductDescriptionInput, AiSeoDraft, AiSeoInput, AiSizeAdviceDraft, AiSizeAdviceInput, AiSocialCaptionDraft, AiSocialCaptionInput, AiStockAlertDraft, AiStockAlertInput, AiStudioDetailDraft, AiStudioDetailInput, AiSupportReplyDraft, AiSupportReplyInput, AiWriter } from './shared';
 
@@ -23,77 +28,87 @@ export interface CompleteResult {
 /** What every live provider gives: one plain-text completion. The rest — prompts, JSON, limits — is shared here. */
 export type Completer = (input: CompleteInput) => Promise<CompleteResult>;
 
+/**
+ * Wraps a `Completer` so every request it makes has already had `maskPersonalData` run on `system` and `user` —
+ * the one spot shared by every draft kind and every provider, so a future prompt builder gets the safety net for
+ * free without having to remember to call it itself.
+ */
+function maskedCompleter(complete: Completer): Completer {
+  return async (input) => complete({ ...input, system: maskPersonalData(input.system).masked, user: maskPersonalData(input.user).masked });
+}
+
 /** Builds a real `AiWriter` from any provider's `Completer` (PR 306). Every draft it returns is `practice: false`. */
 export function liveAiWriter(complete: Completer): AiWriter {
+  const send = maskedCompleter(complete);
   return {
     async draftSeo(input: AiSeoInput): Promise<AiSeoDraft> {
       const { system, user, maxTokens } = seoPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseSeoJson(text, input, usage);
     },
     async draftCampaign(input: AiCampaignInput): Promise<AiCampaignDraft> {
       const { system, user, maxTokens } = campaignPrompt(input);
-      const { text } = await complete({ system, user, maxTokens });
+      const { text } = await send({ system, user, maxTokens });
       return parseCampaignJson(text, input);
     },
     async draftArticle(input: AiArticleInput): Promise<AiArticleDraft> {
       const { system, user, maxTokens } = articlePrompt(input);
-      const { text } = await complete({ system, user, maxTokens });
+      const { text } = await send({ system, user, maxTokens });
       return parseArticleJson(text);
     },
     async draftSupportReply(input: AiSupportReplyInput): Promise<AiSupportReplyDraft> {
       const { system, user, maxTokens } = supportReplyPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseSupportReplyJson(text, input, usage);
     },
     async draftProductDescription(input: AiProductDescriptionInput): Promise<AiProductDescriptionDraft> {
       const { system, user, maxTokens } = productDescriptionPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseProductDescriptionJson(text, input, usage);
     },
     async draftSizeAdvice(input: AiSizeAdviceInput): Promise<AiSizeAdviceDraft> {
       const { system, user, maxTokens } = sizeAdvicePrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseSizeAdviceJson(text, input, usage);
     },
     async draftFraudReviewNote(input: AiFraudReviewInput): Promise<AiFraudReviewDraft> {
       const { system, user, maxTokens } = fraudReviewPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseFraudReviewJson(text, input, usage);
     },
     async draftApprovalExplainNote(input: AiApprovalExplainInput): Promise<AiApprovalExplainDraft> {
       const { system, user, maxTokens } = approvalExplainPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseApprovalExplainJson(text, input, usage);
     },
     async draftSocialReelCaption(input: AiSocialCaptionInput): Promise<AiSocialCaptionDraft> {
       const { system, user, maxTokens } = socialReelCaptionPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseSocialReelCaptionJson(text, input, usage);
     },
     async draftStudioDetailNote(input: AiStudioDetailInput): Promise<AiStudioDetailDraft> {
       const { system, user, maxTokens } = studioDetailPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseStudioDetailJson(text, input, usage);
     },
     async draftStockAlertNote(input: AiStockAlertInput): Promise<AiStockAlertDraft> {
       const { system, user, maxTokens } = stockAlertPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseStockAlertJson(text, input, usage);
     },
     async draftGuideQaAnswer(input: AiGuideQaInput): Promise<AiGuideQaDraft> {
       const { system, user, maxTokens } = guideQaPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseGuideQaJson(text, input, usage);
     },
     async draftCompetitorStep(input: AiCompetitorStepInput): Promise<AiCompetitorStepDraft> {
       const { system, user, maxTokens } = competitorStepPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseCompetitorStepJson(text, input, usage);
     },
     async draftCompetitorComparison(input: AiCompetitorComparisonInput): Promise<AiCompetitorComparisonDraft> {
       const { system, user, maxTokens } = competitorComparisonPrompt(input);
-      const { text, usage } = await complete({ system, user, maxTokens });
+      const { text, usage } = await send({ system, user, maxTokens });
       return parseCompetitorComparisonJson(text, input, usage);
     },
   };

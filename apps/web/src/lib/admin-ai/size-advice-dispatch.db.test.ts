@@ -86,7 +86,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the size advice job dispatcher on Postg
 
     const rows = await t.prisma.aiUsageLedger.findMany({ where: { refType: 'Conversation', refId: CONVO_ID } });
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ jobTypeKey: 'supportSizeAdvice', providerKey: 'anthropic', modelKey: 'gemini-flash', inputTokens: 70, outputTokens: 18 });
+    expect(rows[0]).toMatchObject({ jobTypeKey: 'supportSizeAdvice', providerKey: 'anthropic', modelKey: 'claude-haiku', inputTokens: 70, outputTokens: 18 });
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'gyani' } });
     expect(rows[0]!.agentId).toBe(agent.id);
     const diaryCount = await t.prisma.aiDiaryEntry.count({ where: { agentId: agent.id } });
@@ -106,7 +106,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the size advice job dispatcher on Postg
   it('the agent\'s own monthly cap stops a real call before it is made, once this month\'s spend has already crossed it', async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'gyani' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'supportSizeAdvice', providerKey: 'anthropic', modelKey: 'gemini-flash', idempotencyKey: 'c-328-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, createdAt: NOW, jobTypeKey: 'supportSizeAdvice', providerKey: 'anthropic', modelKey: 'gemini-flash', idempotencyKey: 'c-328-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'gyani', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

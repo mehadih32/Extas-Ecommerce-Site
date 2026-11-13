@@ -154,12 +154,14 @@
       },
       "ai": {
         "control": "কন্ট্রোল রুম",
+        "agents": "এজেন্ট",
         "audit": "চেকলিস্ট অডিট",
         "costBook": "কস্ট বুক",
         "approvals": "অনুমোদন",
         "permissions": "পারমিশন",
         "diary": "ডায়েরি",
-        "skills": "স্কিল"
+        "skills": "স্কিল",
+        "reports": "এজেন্টের রিপোর্ট"
       }
     },
     "purpose": {
