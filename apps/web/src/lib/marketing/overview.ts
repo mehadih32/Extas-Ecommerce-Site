@@ -4,7 +4,7 @@
 // days and the delivered orders that came through each, the ad-level rows from `AdCreativeDay`. Nothing here pauses, changes
 // or sends anything; chips and the plan are advice from the owner's `marketing.verdicts` numbers.
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { daysPeriod, marketingReport, ymdIn } from '@extas/metrics';
+import { daysPeriod, deliveredSalesByCampaign, marketingReport, ymdIn } from '@extas/metrics';
 import type { MarketingVerdictsSettings, ReportChannels } from '@extas/settings';
 import type { AdminDeps } from '../admin-auth';
 import { channelProfitView } from '../channel-profit-view';
@@ -87,17 +87,17 @@ export async function marketingOverview(deps: OverviewDeps, days: number): Promi
   ]);
   const perTk = salesPerTk(report.shop.salesMinor, report.spendMinor);
 
-  const [adCampaigns, spendRows, saleRows] = await Promise.all([
+  const [adCampaigns, spendRows, saleOf] = await Promise.all([
     deps.db.adCampaign.findMany({ where: { storeId: S, archivedAt: null }, select: { id: true, name: true, status: true, adAccount: { select: { platform: true } } }, take: 500 }), // hardcode-ok: a list guard
     deps.db.adSpendDaily.groupBy({ by: ['adCampaignId'], where: { storeId: S, adCampaignId: { not: null }, date: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${today}T00:00:00Z`) } }, _sum: { spendStoreMinor: true } }),
-    deps.db.order.groupBy({ by: ['adCampaignId'], where: { storeId: S, status: 'DELIVERED', adCampaignId: { not: null }, deliveredAt: { gte: period.from, lt: period.to } }, _sum: { totalMinor: true }, _count: { _all: true } }),
+    deliveredSalesByCampaign(deps.db, S, period),
   ]);
   const spendOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.spendStoreMinor ?? 0]));
-  const saleOf = new Map(saleRows.map((r) => [r.adCampaignId, { v: r._sum.totalMinor ?? 0, n: r._count._all }]));
   const campaigns: OverviewCampaignRow[] = adCampaigns
     .map((c) => {
       const spendMinor = spendOf.get(c.id) ?? 0;
-      const s = saleOf.get(c.id) ?? { v: 0, n: 0 };
+      const sale = saleOf.get(c.id) ?? { salesMinor: 0, delivered: 0 };
+      const s = { v: sale.salesMinor, n: sale.delivered };
       const p = salesPerTk(s.v, spendMinor);
       return { id: c.id, name: c.name, platform: String(c.adAccount.platform), status: c.status, spendMinor, salesMinor: s.v, delivered: s.n, perTk: p, verdict: verdictOf(p, thresholds) };
     })
