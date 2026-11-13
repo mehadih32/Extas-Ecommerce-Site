@@ -11,14 +11,12 @@ import { Prisma } from '@extas/db/client';
 import { storeTarget } from '@extas/settings';
 import { z } from 'zod';
 import {
-  OFFER_TRIGGERS,
   offerInputSchema,
   offerIssues,
   offerLimitsSchema,
   offerScopeSchema,
   offerValueSchema,
   offerWhoSchema,
-  type OfferInput,
   type OfferIssue,
   type OfferKindName,
   type OfferStateName,
