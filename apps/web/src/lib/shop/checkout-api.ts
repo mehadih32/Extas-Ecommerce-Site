@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, noteFlagShown, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type CheckoutQuote, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, selfConfirmPrepaid, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
+import { askCheckoutAdvance, autoConfirmQuietly, noteCourierScore, systemBy, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, selfConfirmPrepaid, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { SUPPORT_REF_COOKIE, supportRefOf } from './support-ref-model';
@@ -273,6 +273,18 @@ async function selfConfirmLanded(deps: LandedDeps, orderId: string): Promise<voi
 export type LandedDeps = Pick<CheckoutApiDeps, 'checkout' | 'storeId'>;
 
 /**
+ * S28 · PR 662 — the number's courier score kept on the order's timeline the moment it lands (while the owner's
+ * `risk.courierScore` is on), so the accuracy report can compare it with what happened. A note only; never fails the order.
+ */
+async function noteScore(deps: LandedDeps, orderId: string): Promise<void> {
+  try {
+    await noteCourierScore({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId }, systemBy('courier-score'));
+  } catch (e) {
+    console.warn(`courier score: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
+/**
  * Every check the shop runs the moment an order lands, in this order (each one logs its own problem and never fails the
  * order). The checkout's Confirm runs it; PR 430's "Create order" from a support chat runs the same list.
  */
@@ -281,6 +293,7 @@ export async function orderLanded(deps: LandedDeps, orderId: string): Promise<vo
   await screenForDuplicates(deps, orderId);
   await checkTwoSizes(deps, orderId);
   await scoreRisk(deps, orderId);
+  await noteScore(deps, orderId);
   await checkBlocklist(deps, orderId);
   await checkRefuserTerms(deps, orderId);
   await checkBlockProposal(deps, orderId);
@@ -289,6 +302,8 @@ export async function orderLanded(deps: LandedDeps, orderId: string): Promise<vo
   await waitForAdvance(deps, orderId);
   await checkBundling(deps, orderId);
   await selfConfirmLanded(deps, orderId);
+  // S28 · PR 663: the auto-confirm rules table decides last (off as shipped): confirm, call list or red tag; never fails the order
+  await autoConfirmQuietly({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
 }
 
 /** Where the page goes after the order or a payment answer, in its language. */
@@ -442,7 +457,7 @@ export async function draftHandler(request: Request, deps: CheckoutApiDeps | nul
     const customerId = await customerOf(request, deps);
     // PR 274: the visit's campaign tags, read from the shop's own cookie exactly as the order reads them
     const attribution = orderAttributionOf(await keptTouch(readCookie(request, ATTRIBUTION_COOKIE), deps.storeId, deps.checkout.settings));
-    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, attribution, input: b })) });
+    return json({ ok: true, ...(await captureDraft(deps.checkout, { storeId: deps.storeId, visitorId: visitor, ip: requestContext(request).ip ?? null, customerId, attribution, input: b })) });
   } catch (e) {
     return refusal(e);
   }

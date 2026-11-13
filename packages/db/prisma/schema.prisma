@@ -192,6 +192,7 @@ model Store {
   cartItems               CartItem[]
   customerAddresses       CustomerAddress[]
   checkoutDrafts          CheckoutDraft[]
+  checkoutDraftCalls      CheckoutDraftCall[]
   checkoutParameterLayers CheckoutParameterLayer[]
   checkoutFlagEvents      CheckoutFlagEvent[]
   bulkEnquiries           BulkEnquiry[]
@@ -2793,40 +2794,67 @@ model CustomerAddress {
 
 /// @stage S04 · PR 137, 274 — a started checkout, remembered field by field (autofill, incomplete-order capture).
 model CheckoutDraft {
-  id               String    @id @default(uuid(7)) @db.Uuid
-  storeId          Int
-  store            Store     @relation(fields: [storeId], references: [id])
-  cartId           String?   @db.Uuid
-  customerId       String?   @db.Uuid
-  visitorId        String
-  phone            String?
-  name             String?
-  email            String?
-  addressText      String?
-  areaId           String?   @db.Uuid
-  data             Json?
-  lastStep         String?
-  lastActivityAt   DateTime  @default(now()) @db.Timestamptz(3)
-  convertedOrderId String?   @db.Uuid
-  followUpCount    Int       @default(0)
+  id                      String    @id @default(uuid(7)) @db.Uuid
+  storeId                 Int
+  store                   Store     @relation(fields: [storeId], references: [id])
+  cartId                  String?   @db.Uuid
+  customerId              String?   @db.Uuid
+  visitorId               String
+  phone                   String?
+  name                    String?
+  email                   String?
+  addressText             String?
+  areaId                  String?   @db.Uuid
+  data                    Json?
+  lastStep                String?
+  lastActivityAt          DateTime  @default(now()) @db.Timestamptz(3)
+  convertedOrderId        String?   @db.Uuid
+  followUpCount           Int       @default(0)
   /// PR 274 — the person it was handed to for the follow-up (Orders › Incomplete), and when.
-  assignedToId     String?   @db.Uuid
-  assignedAt       DateTime? @db.Timestamptz(3)
+  assignedToId            String?   @db.Uuid
+  assignedAt              DateTime? @db.Timestamptz(3)
   /// PR 274 — marked handled by a person (with a short note); "Open again" clears it. Nothing is deleted.
-  handledAt        DateTime? @db.Timestamptz(3)
-  handledById      String?   @db.Uuid
-  handledNote      String?
+  handledAt               DateTime? @db.Timestamptz(3)
+  handledById             String?   @db.Uuid
+  handledNote             String?
   /// PR 275 — the random code of the follow-up's link that puts this bag back in any browser (/api/bag/back/<code>).
-  restoreCode      String?
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  restoreCode             String?
+  /// S28 · PR 668 — "Confirm as order": the person who phoned and placed the order from this draft, and when (the order
+  /// itself says "Recovered by phone"). Nothing is deleted.
+  recoveredById           String?   @db.Uuid
+  recoveredAt             DateTime? @db.Timestamptz(3)
+  /// S28 · PR 668 — the same connection (IP) as an earlier customer's order: only ever a "Possible match", never attached.
+  possibleMatch           Boolean   @default(false)
+  possibleMatchCustomerId String?   @db.Uuid
+  createdAt               DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
 
   flagEvents CheckoutFlagEvent[]
+  calls      CheckoutDraftCall[]
 
   @@unique([storeId, restoreCode])
   @@index([storeId, phone])
   @@index([storeId, convertedOrderId, lastActivityAt])
   @@index([storeId, assignedToId])
+}
+
+/// @stage S13 · PR 668 — one call to an incomplete-order customer and what it found (the call log on Orders › Incomplete; S28 wave 1).
+/// Append-only: a later call is a new row.
+/// @append-only
+model CheckoutDraftCall {
+  id        String        @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store         @relation(fields: [storeId], references: [id])
+  draftId   String        @db.Uuid
+  draft     CheckoutDraft @relation(fields: [draftId], references: [id])
+  byId      String?       @db.Uuid
+  outcome   String
+  /// CALL (a phone call) or MESSAGE (a WhatsApp/SMS the team opened); append-only.
+  kind      String        @default("CALL")
+  note      String?
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, draftId, createdAt])
 }
 
 /// @stage S04 · PR 558, 560 — the Parameter for Checkout: what counts as a flag, the layers, and what each asks for.

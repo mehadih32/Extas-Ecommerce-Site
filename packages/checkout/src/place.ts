@@ -134,7 +134,7 @@ export async function landingPageOf(tx: Pick<Prisma.TransactionClient, 'page'>, 
 }
 
 /** PR 430: the order sources a support chat's channel gives an order (the database's own list). */
-export const CHAT_ORDER_SOURCES = ['WHATSAPP', 'MESSENGER', 'LIVE_CHAT', 'ADMIN'] as const satisfies readonly NonNullable<Prisma.OrderUncheckedCreateInput['source']>[];
+export const CHAT_ORDER_SOURCES = ['WHATSAPP', 'MESSENGER', 'LIVE_CHAT', 'ADMIN', 'PHONE'] as const satisfies readonly NonNullable<Prisma.OrderUncheckedCreateInput['source']>[];
 export type ChatOrderSource = (typeof CHAT_ORDER_SOURCES)[number];
 
 /** PR 430: an order an employee places from a support chat. */
@@ -855,7 +855,16 @@ export const draftInputSchema = z
  * (a handled mark is cleared: he came back and left again).
  * PR 275: and his offer ticks as the form shows them (`data.consent`), which the follow-up asks for before it messages him.
  */
-export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; visitorId: string; customerId?: string | null; attribution?: Partial<OrderAttribution> | null; input: unknown }): Promise<{ kept: boolean }> {
+/** PR 668: the earlier customer whose order came from this connection under another phone, while `orders.incompleteV5.possibleMatch` is on. */
+async function possibleMatchOf(deps: CheckoutDeps, storeId: number, ip: string | null, phone: string, customerId: string | null): Promise<{ possibleMatch: boolean; possibleMatchCustomerId: string | null }> {
+  const none = { possibleMatch: false, possibleMatchCustomerId: null };
+  if (!ip || customerId) return none;
+  if (!(await setting(deps, storeId, 'orders.incompleteV5')).possibleMatch) return none;
+  const o = await deps.db.order.findFirst({ where: { storeId, ip, phone: { not: phone }, customerId: { not: null } }, orderBy: { placedAt: 'desc' }, select: { customerId: true } });
+  return o?.customerId ? { possibleMatch: true, possibleMatchCustomerId: o.customerId } : none;
+}
+
+export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; visitorId: string; ip?: string | null; customerId?: string | null; attribution?: Partial<OrderAttribution> | null; input: unknown }): Promise<{ kept: boolean }> {
   checkStoreId(req.storeId);
   const { storeId, visitorId } = req;
   const d = parse(draftInputSchema, req.input, 'draft');
@@ -876,6 +885,9 @@ export async function captureDraft(deps: CheckoutDeps, req: { storeId: number; v
     data: { payment: d.payment ?? null, note: d.note?.trim() || null, attribution: { ...attributionData(req.attribution) }, consent: consent && (consent.sms !== null || consent.whatsapp !== null) ? { ...consent } : null },
     lastStep: d.step ?? 'details',
     lastActivityAt: now,
+    // S28 · PR 668: the same connection as an earlier customer's order under another phone is only ever MARKED "Possible
+    // match" (the owner's switch, off as shipped); nothing is attached or merged, and only the visible form is read.
+    ...(await possibleMatchOf(deps, storeId, req.ip ?? null, phone.e164, req.customerId ?? null)),
   };
   await deps.db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`checkout-draft:${storeId}:${visitorId}`}, 0))`;

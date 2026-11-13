@@ -66,8 +66,8 @@ export function channelOf(data: unknown, landing: boolean): VisitChannel | null 
   return c.platform || c.source || c.campaign || c.landing ? c : null;
 }
 
-/** The list's views: open (nobody marked it handled), given to me, handled. */
-export const INCOMPLETE_VIEWS = ['open', 'mine', 'handled'] as const;
+/** The list's views: open (nobody marked it handled), given to me, handled, and ordered later (the person came back and ordered; PR 668). */
+export const INCOMPLETE_VIEWS = ['open', 'mine', 'handled', 'later'] as const;
 export type IncompleteView = (typeof INCOMPLETE_VIEWS)[number];
 
 export function viewOf(v: unknown): IncompleteView {
@@ -77,3 +77,72 @@ export function viewOf(v: unknown): IncompleteView {
 
 /** The longest note a person leaves when marking one handled. */
 export const HANDLED_NOTE_MAX = 300; // hardcode-ok: a field-length guard, not a business number
+
+/** PR 668 — the date filter's presets; `custom` reads `from` and `to` (YYYY-MM-DD). */
+export const INCOMPLETE_RANGES = ['all', 'today', 'yesterday', 'week', 'month', 'lastMonth', 'custom'] as const;
+export type IncompleteRange = (typeof INCOMPLETE_RANGES)[number];
+export const rangeOf = (v: unknown): IncompleteRange => INCOMPLETE_RANGES.find((x) => x === (Array.isArray(v) ? v[0] : v)) ?? 'all';
+
+/** A day key (YYYY-MM-DD) in the shop's own clock: `offsetMinutes` is the shop's offset from UTC (a setting, never code). */
+export const dayKey = (at: Date, offsetMinutes: number): string => new Date(at.getTime() + offsetMinutes * 60_000).toISOString().slice(0, 10);
+
+/** The [from, to) instants of a preset in the shop's clock; null for `all` or an unreadable custom range. */
+export function rangeBounds(range: IncompleteRange, now: Date, offsetMinutes: number, custom?: { from?: string | null; to?: string | null }): { from: Date; to: Date } | null {
+  const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day
+  const local = new Date(now.getTime() + offsetMinutes * 60_000);
+  const startOf = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d) - offsetMinutes * 60_000);
+  const y = local.getUTCFullYear();
+  const m = local.getUTCMonth();
+  const d = local.getUTCDate();
+  if (range === 'today') return { from: startOf(y, m, d), to: startOf(y, m, d + 1) };
+  if (range === 'yesterday') return { from: startOf(y, m, d - 1), to: startOf(y, m, d) };
+  if (range === 'week') return { from: startOf(y, m, d - 6), to: startOf(y, m, d + 1) };
+  if (range === 'month') return { from: startOf(y, m, 1), to: startOf(y, m, d + 1) };
+  if (range === 'lastMonth') return { from: startOf(y, m - 1, 1), to: startOf(y, m, 1) };
+  if (range === 'custom') {
+    const ok = (t?: string | null) => (t && /^\d{4}-\d{2}-\d{2}$/.test(t) ? new Date(`${t}T00:00:00Z`) : null);
+    const a = ok(custom?.from);
+    const b = ok(custom?.to);
+    if (!a || !b || b < a) return null;
+    return { from: new Date(a.getTime() - offsetMinutes * 60_000), to: new Date(b.getTime() + DAY_MS - offsetMinutes * 60_000) };
+  }
+  return null;
+}
+
+/** Newest first, the order inside each day (PR 668: per day, then the hottest within the day is NOT used: the owner reads the day's newest on top). */
+export function newestFirst<T extends { lastAt: Date }>(rows: readonly T[]): T[] {
+  return [...rows].sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
+}
+
+/** The four ready messages: the words in braces are filled in (unknown words are left out, never printed as braces). */
+export function fillTemplate(text: string, vars: { name?: string | null; items?: string | null; link?: string | null; offer?: string | null }): string {
+  return text
+    .replace(/\{(name|items|link|offer)\}/g, (_m, k: 'name' | 'items' | 'link' | 'offer') => (vars[k] ?? '').trim())
+    .replace(/\s+([.,:;!?])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
+/** WhatsApp chat with a message put in the box (the person still presses send), and the same for SMS. */
+export const whatsAppTextLink = (e164: string, text: string): string => `${whatsAppLink(e164)}?text=${encodeURIComponent(text)}`;
+export const smsLink = (e164: string, text: string): string => `sms:${e164.replace(/[^\d+]/g, '')}?body=${encodeURIComponent(text)}`;
+
+/** The shop's offset from UTC (minutes) at an instant, from its IANA zone (`store.timeZone`); 0 when the zone is unreadable. */
+export function zoneOffsetMinutes(zone: string, at: Date): number {
+  try {
+    const p = new Intl.DateTimeFormat('en-US', {
+      timeZone: zone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    }).formatToParts(at);
+    const g = (t: string) => Number(p.find((x) => x.type === t)?.value);
+    return Math.round((Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) - Math.floor(at.getTime() / 1000) * 1000) / 60_000);
+  } catch {
+    return 0;
+  }
+}

@@ -1,7 +1,23 @@
 // S13 · PR 274 — the pure part of Orders › Incomplete: stages, hot-first order, the bag's worth (a set counted once at
 // its set price), the WhatsApp and call links, the visit's channel and the views. Sample values only.
 import { describe, expect, it } from 'vitest';
-import { bagValue, callLink, channelOf, hotFirst, stageOf, viewOf, whatsAppLink } from './incomplete-model';
+import {
+  bagValue,
+  callLink,
+  channelOf,
+  dayKey,
+  fillTemplate,
+  hotFirst,
+  newestFirst,
+  rangeBounds,
+  rangeOf,
+  smsLink,
+  stageOf,
+  viewOf,
+  whatsAppLink,
+  whatsAppTextLink,
+  zoneOffsetMinutes,
+} from './incomplete-model';
 
 describe('PR 274 · incomplete-order model', () => {
   it('reads the checkout step as a stage and lists the hottest first, then the newest', () => {
@@ -44,5 +60,59 @@ describe('PR 274 · incomplete-order model', () => {
 
   it('reads the view from the address, open by default', () => {
     expect([viewOf('mine'), viewOf(['handled']), viewOf('all'), viewOf(undefined)]).toEqual(['mine', 'handled', 'open', 'open']);
+  });
+});
+
+describe('PR 668 · incomplete orders v5 (pure part)', () => {
+  const DHAKA = 360; // sample offset: UTC+6
+  const now = new Date(Date.UTC(2026, 10, 13, 20, 0)); // 02:00 on the 14th in UTC+6
+  it('knows the later view and reads the range from the address', () => {
+    expect(viewOf('later')).toBe('later');
+    expect(rangeOf('yesterday')).toBe('yesterday');
+    expect(rangeOf('nonsense')).toBe('all');
+  });
+  it('cuts days in the shop clock, not in UTC', () => {
+    const today = rangeBounds('today', now, DHAKA)!;
+    expect(today.from.toISOString()).toBe('2026-11-13T18:00:00.000Z');
+    expect(today.to.toISOString()).toBe('2026-11-14T18:00:00.000Z');
+    expect(rangeBounds('yesterday', now, DHAKA)!.to.toISOString()).toBe(today.from.toISOString());
+    expect(rangeBounds('week', now, DHAKA)!.from.toISOString()).toBe('2026-11-07T18:00:00.000Z');
+    expect(rangeBounds('month', now, DHAKA)!.from.toISOString()).toBe('2026-10-31T18:00:00.000Z');
+    const last = rangeBounds('lastMonth', now, DHAKA)!;
+    expect(last.from.toISOString()).toBe('2026-09-30T18:00:00.000Z');
+    expect(last.to.toISOString()).toBe('2026-10-31T18:00:00.000Z');
+    expect(rangeBounds('all', now, DHAKA)).toBeNull();
+    expect(dayKey(new Date('2026-11-13T19:00:00Z'), DHAKA)).toBe('2026-11-14');
+  });
+  it('takes a custom range inclusive of its last day, and refuses a backwards or unreadable one', () => {
+    const r = rangeBounds('custom', now, 0, { from: '2026-11-01', to: '2026-11-03' })!;
+    expect(r.from.toISOString()).toBe('2026-11-01T00:00:00.000Z');
+    expect(r.to.toISOString()).toBe('2026-11-04T00:00:00.000Z');
+    expect(rangeBounds('custom', now, 0, { from: '2026-11-05', to: '2026-11-03' })).toBeNull();
+    expect(rangeBounds('custom', now, 0, { from: 'x', to: null })).toBeNull();
+  });
+  it('lists the newest first, whatever the stage', () => {
+    const at = (m: number) => new Date(Date.UTC(2026, 10, 6, 8, m));
+    expect(
+      newestFirst([
+        { id: 'a', lastAt: at(1) },
+        { id: 'b', lastAt: at(9) },
+        { id: 'c', lastAt: at(5) },
+      ]).map((r) => r.id),
+    ).toEqual(['b', 'c', 'a']);
+  });
+  it('fills the ready messages, drops unknown words and never prints a brace', () => {
+    expect(fillTemplate('Hello {name}, your {items} {link}', { name: 'Rafi', items: 'Polo', link: null })).toBe('Hello Rafi, your Polo');
+    expect(fillTemplate('Offer: {offer}.', { offer: '' })).toBe('Offer:.');
+    expect(fillTemplate('{name}!', { name: 'A' })).toBe('A!');
+    expect(fillTemplate('x {other}', {})).toBe('x {other}');
+  });
+  it('opens WhatsApp or SMS with the words in the box (nothing is sent)', () => {
+    expect(whatsAppTextLink('+8801700000000', 'Hi there')).toBe(`${whatsAppLink('+8801700000000')}?text=Hi%20there`);
+    expect(smsLink('+880 1700-000000', 'a b')).toBe('sms:+8801700000000?body=a%20b');
+  });
+  it('reads a shop zone as an offset', () => {
+    expect(zoneOffsetMinutes('Asia/Dhaka', now)).toBe(360);
+    expect(zoneOffsetMinutes('Not/AZone', now)).toBe(0);
   });
 });

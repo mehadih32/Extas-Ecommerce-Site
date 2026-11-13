@@ -282,6 +282,10 @@ import eyePartsEn from '../messages/eye-parts.en.json';
 import eyePartsBn from '../messages/eye-parts.bn.json';
 import prepaidConfirmEn from '../messages/prepaid-confirm.en.json';
 import prepaidConfirmBn from '../messages/prepaid-confirm.bn.json';
+import autoConfirmEn from '../messages/auto-confirm.en.json';
+import autoConfirmBn from '../messages/auto-confirm.bn.json';
+import incompleteV5En from '../messages/incomplete-v5.en.json';
+import incompleteV5Bn from '../messages/incomplete-v5.bn.json';
 import looksFoldEn from '../messages/looks-fold.en.json';
 import looksFoldBn from '../messages/looks-fold.bn.json';
 import sharedLocationEn from '../messages/shared-location.en.json';
@@ -435,6 +439,11 @@ messages.bn = mergeMessages(messages.bn, eyePartsBn);
 // S05 · PR 541 follow-up 320 (registry v266): prepaid orders confirm by themselves once paid (registry-prepaid-confirm.ts).
 messages.en = mergeMessages(messages.en, prepaidConfirmEn);
 messages.bn = mergeMessages(messages.bn, prepaidConfirmBn);
+// S28 · PR 663 (registry v294): the auto-confirm rules table (registry-auto-confirm.ts).
+messages.en = mergeMessages(messages.en, autoConfirmEn);
+messages.bn = mergeMessages(messages.bn, autoConfirmBn);
+messages.en = mergeMessages(messages.en, incompleteV5En);
+messages.bn = mergeMessages(messages.bn, incompleteV5Bn);
 // S14 · PR 286 follow-up 477 (registry v267): repeated opens fold into one line on "Who looked" (registry-looks-fold.ts).
 messages.en = mergeMessages(messages.en, looksFoldEn);
 messages.bn = mergeMessages(messages.bn, looksFoldBn);
