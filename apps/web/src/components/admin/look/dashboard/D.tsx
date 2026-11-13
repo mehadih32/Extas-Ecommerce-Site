@@ -180,6 +180,7 @@ function ScoreCard(p: DashProps) {
   const dl = data.delivery!;
   return (
     <Card title={f.t('dsh.cmd.scoreTitle')} sub={f.t('dsh.cmd.scoreSub', { n: f.n(s.courierDays) })} right={<Lnk href="/admin/delivery">{f.t('dsh.cour.title')}</Lnk>} testId="dash-score">
+      <div className="a3-tblw">
       <table className="a3-tbl">
         <thead>
           <tr>
@@ -212,6 +213,7 @@ function ScoreCard(p: DashProps) {
           ))}
         </tbody>
       </table>
+      </div>
     </Card>
   );
 }
