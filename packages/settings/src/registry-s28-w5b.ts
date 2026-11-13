@@ -107,6 +107,10 @@ export const analyticsBehaviourSchema = z
   .strict();
 export type AnalyticsBehaviourSettings = z.output<typeof analyticsBehaviourSchema>;
 
+/** S28 · PR 705: Settings > Activity log: how many rows one page of the log shows. */
+export const activityLogSchema = z.object({ pageSize: z.number().int().min(10).max(200) }).strict();
+export type ActivityLogSettings = z.output<typeof activityLogSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -161,5 +165,14 @@ export const s28W5bSettings = {
     helpKey: 'analytics.behaviour.help',
     sortOrder: 721,
     version: 701,
+  }),
+  'activity.log': setting({
+    ...base,
+    schema: activityLogSchema,
+    default: { pageSize: 50 }, // hardcode-ok: the setting's own shipped default, editable in the settings list
+    labelKey: 'activity.log.label',
+    helpKey: 'activity.log.help',
+    sortOrder: 722,
+    version: 705,
   }),
 };
