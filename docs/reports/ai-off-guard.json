@@ -1,0 +1,169 @@
+{
+  "at": "2026-11-12T12:20:09.827Z",
+  "n": 11,
+  "ok": 11,
+  "totalJobCount": 68,
+  "coveredJobCount": 30,
+  "journeyN": 6,
+  "journeyOk": 6,
+  "checks": [
+    {
+      "id": "support",
+      "nameEn": "Support replies",
+      "nameBn": "সাপোর্টের উত্তর",
+      "fallbackEn": "Rule-based draft answers: keyword rules decide the intent and fill the words — no AI call",
+      "fallbackBn": "নিয়মভিত্তিক খসড়া উত্তর: কীওয়ার্ড নিয়মে বোঝা যায় কী চাওয়া হচ্ছে, AI ছাড়াই শব্দ বসে",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [
+        "supportClassify",
+        "supportReply",
+        "supportSummarize",
+        "supportSentiment",
+        "supportTranscribeVoice",
+        "supportTranslate",
+        "supportEscalationNote",
+        "supportSizeAdvice"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "fraud",
+      "nameEn": "Fraud judgement",
+      "nameBn": "প্রতারণার ঝুঁকি বিচার",
+      "fallbackEn": "The risk score is one pure, deterministic function of the order's own facts and the owner's settings — never an AI call",
+      "fallbackBn": "ঝুঁকির স্কোর অর্ডারের নিজের তথ্য আর মালিকের সেটিংস থেকে একটা স্থির নিয়মে বের হয় — AI ছাড়াই",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [
+        "orderFraudJudge"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "productDescriptions",
+      "nameEn": "Product descriptions",
+      "nameBn": "প্রোডাক্টের বর্ণনা",
+      "fallbackEn": "Plain, owner-editable text fields on every product — writing one has never needed AI",
+      "fallbackBn": "প্রতিটা প্রোডাক্টে সাদাসিধা, মালিকের লেখা যায় এমন টেক্সট ঘর — AI ছাড়াই সবসময় লেখা গেছে",
+      "journey": false,
+      "pass": true,
+      "jobKeys": [
+        "mktProductDescription"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "blog",
+      "nameEn": "Blog writing",
+      "nameBn": "ব্লগ লেখা",
+      "fallbackEn": "The pipeline's pace, queue and health run without AI; an empty slot is never filled with an unfinished article",
+      "fallbackBn": "পাইপলাইনের গতি, লাইন আর স্বাস্থ্য AI ছাড়াই চলে; খালি সময় কখনো অসম্পূর্ণ লেখায় ভরা হয় না",
+      "journey": false,
+      "pass": true,
+      "jobKeys": [
+        "seoBlogArticle",
+        "seoRewriteOld"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "ads",
+      "nameEn": "Ads",
+      "nameBn": "বিজ্ঞাপন",
+      "fallbackEn": "A campaign keeps its last approved budget; only a practice writer exists, so nothing real changes without a person's approval",
+      "fallbackBn": "ক্যাম্পেইন তার সবশেষ অনুমোদিত বাজেটেই থাকে; এখনো প্র্যাকটিস রাইটার, কারো অনুমোদন ছাড়া আসল কিছু বদলায় না",
+      "journey": false,
+      "pass": true,
+      "jobKeys": [
+        "mktAdCopy",
+        "mktCampaignBrief"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "siteAudit",
+      "nameEn": "Site audit",
+      "nameBn": "সাইট অডিট",
+      "fallbackEn": "The e-commerce checklist's own rule-based points keep running on the hourly check; only a small agent-judged subset pauses",
+      "fallbackBn": "ই-কমার্স চেকলিস্টের নিয়মভিত্তিক অংশ ঘণ্টায় ঘণ্টায় চলতেই থাকে; শুধু এজেন্ট-বিচার করা ছোট একটা অংশ থেমে যায়",
+      "journey": false,
+      "pass": true,
+      "jobKeys": [
+        "auditPageCheck",
+        "auditScreenshotReview",
+        "auditConsoleTriage",
+        "auditA11yScan",
+        "auditBrokenLink",
+        "auditCopyReview",
+        "auditRegressionNote"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "reports",
+      "nameEn": "Chief answers",
+      "nameBn": "প্রধানের উত্তর",
+      "fallbackEn": "Report figures only — the money report's own words come from the real Profit & loss numbers, never an AI sentence",
+      "fallbackBn": "শুধু রিপোর্টের সংখ্যা — মানি রিপোর্টের লেখা আসে আসল প্রফিট অ্যান্ড লসের সংখ্যা থেকে, AI-র বানানো বাক্য কখনো না",
+      "journey": false,
+      "pass": true,
+      "jobKeys": [
+        "reportsDaily",
+        "reportsWeekly",
+        "reportsAnomalyFlag",
+        "reportsForecastNote",
+        "reportsCompetitorScan",
+        "reportsCompetitorJourneyStep",
+        "reportsCompetitorComparison",
+        "reportsStockAlert",
+        "reportsExecSummary"
+      ],
+      "reasons": []
+    },
+    {
+      "id": "checkoutCod",
+      "nameEn": "Placing a Cash-on-Delivery order",
+      "nameBn": "ক্যাশ অন ডেলিভারিতে অর্ডার করা",
+      "fallbackEn": "Not a fallback — there is no AI anywhere on this path: the order is priced and placed by the same quote/placement rules it always has been",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — এই পথে কোথাও AI নেই: অর্ডারের দাম আর বসানো সবসময়ের একই কোট/প্লেসমেন্ট নিয়মে হয়",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [],
+      "reasons": []
+    },
+    {
+      "id": "sizeExchange",
+      "nameEn": "A returning customer's size exchange",
+      "nameBn": "ফেরতের কাস্টমারের সাইজ বদল",
+      "fallbackEn": "Not a fallback — the exchange tiers, window and money box are one deterministic engine with no AI step",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — বদলের স্তর, সময়সীমা আর টাকার হিসাব একটাই স্থির নিয়মে চলে, কোথাও AI নেই",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [],
+      "reasons": []
+    },
+    {
+      "id": "orderConfirmInvoice",
+      "nameEn": "Confirming an order and printing its invoice",
+      "nameBn": "অর্ডার নিশ্চিত করা আর ইনভয়েস ছাপানো",
+      "fallbackEn": "Not a fallback — confirming an order is a plain status command and the invoice copies figures already on the order, neither ever calls AI",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — অর্ডার নিশ্চিত করা সাদাসিধা একটা অবস্থা-বদল আর ইনভয়েস অর্ডারে থাকা সংখ্যাই কপি করে, দুটোই কখনো AI ডাকে না",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [],
+      "reasons": []
+    },
+    {
+      "id": "journeyRules",
+      "nameEn": "Size finder and the delivery band it prices with",
+      "nameBn": "সাইজ ফাইন্ডার আর তার সাথে দাম করা ডেলিভারি ব্যান্ড",
+      "fallbackEn": "Not a fallback — Find My Size is rule-based by design (\"works with AI off\") and the delivery band's charge is always the owner's own figure for that band, never guessed",
+      "fallbackBn": "এটা কোনো বিকল্প নয় — Find My Size শুরু থেকেই নিয়মভিত্তিক (\"AI বন্ধ থাকলেও কাজ করে\") আর ডেলিভারি ব্যান্ডের খরচ সবসময় মালিকের নিজের বসানো অঙ্ক, কখনো আন্দাজ না",
+      "journey": true,
+      "pass": true,
+      "jobKeys": [],
+      "reasons": []
+    }
+  ]
+}

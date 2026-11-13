@@ -1,0 +1,37 @@
+{
+  "digest": {
+    "title": { "weekly": "Weekly report", "monthly": "Monthly report" },
+    "head": "{title} ({from} to {to}), vs the {days}-day period before:",
+    "eventsHead": "What shoppers did:",
+    "event": "• {label}: {count} ({change})",
+    "funnelsHead": "Funnels:",
+    "funnelStep": "  {label}: {visitors}{pct}",
+    "funnelFromFirst": " ({pct}% of step 1)",
+    "new": "new",
+    "noChange": "no change",
+    "foot": "Figures only, nothing paused or changed.",
+    "noFunnels": "No saved funnels yet.",
+    "emailSubject": "{title}, {from} to {to}",
+    "eventName": {
+      "page_view": "Page views",
+      "product_view": "Product views",
+      "search": "Searches",
+      "all_colours_click": "\"All colours\" taps",
+      "size_chart_click": "Size chart taps",
+      "whatsapp_click": "WhatsApp taps",
+      "add_to_bag": "Added to bag",
+      "order_now": "Order now taps",
+      "remove_from_bag": "Removed from bag",
+      "re_add": "Re-added to bag",
+      "new_add_after_remove": "New adds after a remove",
+      "checkout_start": "Checkouts started",
+      "purchase": "Purchases",
+      "wishlist_add": "Wishlist saves",
+      "wishlist_remove": "Wishlist removes",
+      "login": "Logins",
+      "logout": "Logouts",
+      "signup": "Sign-ups",
+      "guest_checkout": "Guest checkouts"
+    }
+  }
+}

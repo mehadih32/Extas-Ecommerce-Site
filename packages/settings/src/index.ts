@@ -250,6 +250,10 @@ export * from './eye-toggles';
 export * from './placeholder';
 // S23 · PR 437 — the social studio's cadence, voice and AI-caption switches, off as it ships (registry-studio.ts, version 281).
 export * from './registry-studio';
+// S15 · PR 338 (Blueprint D5) — the site-wide analytics event layer's master switch, on as it ships (registry-analytics.ts, version 288).
+export * from './registry-analytics';
+// S15 · PR 341 (Blueprint D5.3) — weekly/monthly digests to Telegram and e-mail, off as it ships (registry-reports-digest.ts, version 289).
+export * from './registry-reports-digest';
 // S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
 export * from './registry-photoshoot';
 // S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).

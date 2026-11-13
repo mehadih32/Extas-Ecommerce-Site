@@ -15,6 +15,7 @@ export interface OpenAiCompatibleOptions {
 
 interface ChatBody {
   choices?: { message?: { content?: string } }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
   error?: { message?: string };
 }
 
@@ -39,6 +40,7 @@ export function openAiCompatibleCompleter(o: OpenAiCompatibleOptions): Completer
     if (!res.ok) throw new AdapterError(`the AI service refused (${res.status})${body.error?.message ? `: ${body.error.message}` : ''}`);
     const text = body.choices?.[0]?.message?.content ?? '';
     if (!text.trim()) throw new AdapterError('the AI service answered with no text');
-    return { text };
+    const usage = body.usage && typeof body.usage.prompt_tokens === 'number' && typeof body.usage.completion_tokens === 'number' ? { inputTokens: body.usage.prompt_tokens, outputTokens: body.usage.completion_tokens } : undefined;
+    return { text, ...(usage ? { usage } : {}) };
   };
 }

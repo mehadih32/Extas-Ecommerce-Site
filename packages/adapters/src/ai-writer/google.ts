@@ -21,6 +21,7 @@ export type GoogleAiConfig = z.output<typeof googleAiConfig>;
 
 interface GeminiBody {
   candidates?: { content?: { parts?: { text?: string }[] } }[];
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   error?: { message?: string };
 }
 
@@ -42,7 +43,8 @@ export function googleAiCompleter(apiKey: string, model: string, baseUrl: string
     if (!res.ok) throw new AdapterError(`Google refused (${res.status})${body.error?.message ? `: ${body.error.message}` : ''}`);
     const text = (body.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('');
     if (!text.trim()) throw new AdapterError('Google answered with no text');
-    return { text };
+    const usage = body.usageMetadata && typeof body.usageMetadata.promptTokenCount === 'number' && typeof body.usageMetadata.candidatesTokenCount === 'number' ? { inputTokens: body.usageMetadata.promptTokenCount, outputTokens: body.usageMetadata.candidatesTokenCount } : undefined;
+    return { text, ...(usage ? { usage } : {}) };
   };
 }
 

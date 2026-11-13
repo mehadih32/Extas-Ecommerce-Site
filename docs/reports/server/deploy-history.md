@@ -138,3 +138,7 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-12 23:11 | `bae28b342a78` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/marketing/campaigns: answered 500 (desktop); /admin/marketing/campaigns: request 500: /admin/marketing/campaigns (desktop); /admin/marketing/campaigns: console error: Failed to load resource: the server responded with a status of 500 () (/admin/marketing/campaigns) (desktop)), so the previous version was put back automatically. The fix comes before any new work. |
 | 2026-11-13 00:55 | `b6553166bde7` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-13 04:40 | `d565d9a8b045` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-13 11:29 | `9f9236596415` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-13 11:42 | `ad3677716bfe` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-13 11:55 | `504cef80b4ac` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-13 12:08 | `9f4dbd010ba9` | deploy | OK | ok | OK, smoke OK | — |

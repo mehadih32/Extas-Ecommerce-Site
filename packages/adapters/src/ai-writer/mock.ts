@@ -4,7 +4,38 @@
 // (`practice: true`). A draft is never used on a page until a person accepts it.
 import { z } from 'zod';
 import { AdapterError, defineAdapter, type AdapterContext } from '../define';
-import { cutTo, type AiArticleDraft, type AiArticleInput, type AiCampaignDraft, type AiCampaignInput, type AiSeoDraft, type AiSeoInput, type AiWriter } from './shared';
+import {
+  cutTo,
+  type AiApprovalExplainDraft,
+  type AiApprovalExplainInput,
+  type AiArticleDraft,
+  type AiArticleInput,
+  type AiCampaignDraft,
+  type AiCampaignInput,
+  type AiCompetitorComparisonDraft,
+  type AiCompetitorComparisonInput,
+  type AiCompetitorStepDraft,
+  type AiCompetitorStepInput,
+  type AiFraudReviewDraft,
+  type AiFraudReviewInput,
+  type AiProductDescriptionDraft,
+  type AiProductDescriptionInput,
+  type AiSeoDraft,
+  type AiSeoInput,
+  type AiSizeAdviceDraft,
+  type AiSizeAdviceInput,
+  type AiGuideQaDraft,
+  type AiGuideQaInput,
+  type AiSocialCaptionDraft,
+  type AiSocialCaptionInput,
+  type AiStockAlertDraft,
+  type AiStockAlertInput,
+  type AiStudioDetailDraft,
+  type AiStudioDetailInput,
+  type AiSupportReplyDraft,
+  type AiSupportReplyInput,
+  type AiWriter,
+} from './shared';
 
 /** The mock takes no settings; every live provider's `mock()` passes this when it falls back to practice text. */
 export const emptyMockContext: AdapterContext<Record<string, never>> = { mode: 'MOCK', config: {}, storeId: null, async secret() { return null; } };
@@ -78,6 +109,109 @@ export function practiceArticle(input: AiArticleInput): AiArticleDraft {
   return { excerpt: cutTo(lead, 300), body: parts.join('\n\n'), practice: true };
 }
 
+/** S15 · PR 325 — the mock's support reply: the store's own rule-based words, unchanged (there is no real voice to
+ * borrow without a key, so the practice answer is honestly the same text the customer would get anyway). */
+export function practiceSupportReply(input: AiSupportReplyInput): AiSupportReplyDraft {
+  return { body: cutTo(input.ruleBasedBody, input.max.body), practice: true };
+}
+
+/** S15 · PR 326 — the mock's product description: only the attributes it was given, joined in order, same shape
+ * `practiceDraft` already uses for SEO text. */
+export function practiceProductDescription(input: AiProductDescriptionInput): AiProductDescriptionDraft {
+  const f = input.facts;
+  const list = (xs: (string | undefined)[], sep: string) => xs.map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(sep);
+  const body = list([list([f.name, f.category], ' · '), list(f.colours ?? [], ', '), f.sizes?.length ? `Sizes: ${f.sizes.join(', ')}` : undefined, f.fabric, f.care, f.shop], '. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 328 — the mock's size advice: only the measurements it was given, in one plain sentence (no voice to
+ * borrow without a key, so the practice answer stays honestly plain rather than invent warmth). */
+export function practiceSizeAdvice(input: AiSizeAdviceInput): AiSizeAdviceDraft {
+  const f = input.facts;
+  const body = f.covered
+    ? `Size ${f.sizeLabel}: its ${f.fieldLabel.toLowerCase()} of ${f.valueInch}" covers your estimated need of ${f.needInch}" (body ${f.bodyInch}" + ${f.easeInch}" ease).`
+    : `Size ${f.sizeLabel} is the largest size; its ${f.fieldLabel.toLowerCase()} of ${f.valueInch}" is a little short of your estimated need of ${f.needInch}", so it may still feel close.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 329 — the mock's fraud review note: only the already-decided reasons, matches and history it was given,
+ * joined in plain sentences (no voice to borrow without a key; the practice answer stays honestly plain). Never a
+ * decision word — the same facts a person already sees on the card, said back in one paragraph. */
+export function practiceFraudReviewNote(input: AiFraudReviewInput): AiFraudReviewDraft {
+  const f = input.facts;
+  const body = [f.why.length ? f.why.join('; ') : null, f.matches.length ? `Matched: ${f.matches.join('; ')}` : null, f.history.length ? f.history.join('; ') : null].filter((x): x is string => Boolean(x)).join('. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 330 — the mock's approval-explain note: only the already-decided title and reasons it was given, joined
+ * in one plain sentence (no voice to borrow without a key). Never a decision word — the same words a person already
+ * sees on the approval-queue item, said back as one paragraph. */
+export function practiceApprovalExplainNote(input: AiApprovalExplainInput): AiApprovalExplainDraft {
+  const f = input.facts;
+  const body = [f.title, f.why.length ? f.why.join('; ') : null].filter((x): x is string => Boolean(x)).join('. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 331 — the mock's reel caption: only the template's own name, notes and voice tone it was given, joined
+ * in one plain line (no voice to borrow without a key, so the practice answer stays honestly plain rather than
+ * invent a hook). */
+export function practiceSocialReelCaption(input: AiSocialCaptionInput): AiSocialCaptionDraft {
+  const f = input.facts;
+  const body = [f.templateName, f.notes, f.toneEn].map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(' — ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 332 — the mock's studio detail note: only the garment's own already-saved attributes it was given,
+ * joined in one plain line (no voice to borrow without a key, so the practice answer stays honestly plain rather
+ * than invent a stitch, print or logo detail it was not told about). */
+export function practiceStudioDetailNote(input: AiStudioDetailInput): AiStudioDetailDraft {
+  const f = input.facts;
+  const list = (xs: (string | undefined)[], sep: string) => xs.map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(sep);
+  const body = list([f.name, f.fabric ? `Fabric: ${f.fabric}` : undefined, f.colours?.length ? `Colours: ${f.colours.join(', ')}` : undefined, f.care ? `Care: ${f.care}` : undefined], '. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 333 — the mock's stock alert line: only the numbers the stock page already shows, joined in one plain
+ * line (no voice to borrow without a key, so the practice answer stays honestly plain rather than invent a reorder
+ * quantity, a supplier or a cause it was not told about). */
+/** S15 · PR 334 — the mock's guide Q&A answer: only the page's own already-written guide text it was given, cut to
+ * the store limit (no voice to borrow without a key, so the practice answer stays the guide's own words rather than
+ * invent a button or step not already in the text). */
+export function practiceGuideQaAnswer(input: AiGuideQaInput): AiGuideQaDraft {
+  const body = input.facts.guideText.trim();
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 335 — the mock's competitor-step observation: a plain, honest line naming only the step and title it
+ * was given and how much page text it read (no voice to borrow without a key, so the practice answer never invents
+ * a layout/offer/trust-signal detail it was not asked to look at). */
+export function practiceCompetitorStep(input: AiCompetitorStepInput): AiCompetitorStepDraft {
+  const f = input.facts;
+  const body = `${f.stepLabel}${f.pageTitle ? ` — ${f.pageTitle}` : ''}: read ${f.pageText.length} characters of page text. Connect a real AI provider for a grounded observation.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
+/** S15 · PR 336 — the mock's comparison-report judgement: an honest "neither_matters / pick_with_changes" line
+ * per step (no voice to borrow without a key, so the practice answer never invents a verdict it has no grounds
+ * for) naming only the step's own label; no claudesView and no extasAdvantages until a real provider is connected
+ * (inventing either here would be exactly the kind of guess this agent exists to avoid). */
+export function practiceCompetitorComparison(input: AiCompetitorComparisonInput): AiCompetitorComparisonDraft {
+  const rows = input.facts.steps.map((s) => ({
+    label: s.label,
+    verdict: 'neither_matters' as const,
+    recommendation: 'pick_with_changes' as const,
+    reason: cutTo(`Practice line for "${s.label}" — connect a real AI provider for a grounded verdict.`, input.max.reason),
+  }));
+  return { rows, claudesView: null, extasAdvantages: [], practice: true };
+}
+
+export function practiceStockAlertNote(input: AiStockAlertInput): AiStockAlertDraft {
+  const f = input.facts;
+  const where = [f.colour, f.size].filter((x): x is string => Boolean(x && x.trim())).join(' / ');
+  const body = `${f.productName}${where ? ` (${where})` : ''}, ${f.sku}: ${f.available} left, threshold ${f.threshold}, low for ${f.sinceDays} day${f.sinceDays === 1 ? '' : 's'}.`;
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -100,6 +234,51 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftArticle(input) {
         if (!input.title.trim() || !input.keywords.length || !(input.wordCount > 0)) throw new AdapterError('an article draft needs its brief');
         return practiceArticle(input);
+      },
+      async draftSupportReply(input) {
+        if (!input.ruleBasedBody.trim()) throw new AdapterError('a support reply needs the store\'s own draft to rephrase');
+        return practiceSupportReply(input);
+      },
+      async draftProductDescription(input) {
+        if (!input.facts.name.trim()) throw new AdapterError('a product description needs the product name');
+        return practiceProductDescription(input);
+      },
+      async draftSizeAdvice(input) {
+        if (!input.facts.sizeLabel.trim()) throw new AdapterError('a size advice note needs the recommended size');
+        return practiceSizeAdvice(input);
+      },
+      async draftFraudReviewNote(input) {
+        if (!input.facts.why.length && !input.facts.matches.length && !input.facts.history.length) throw new AdapterError('a fraud review note needs at least one reason, match or history line');
+        return practiceFraudReviewNote(input);
+      },
+      async draftApprovalExplainNote(input) {
+        if (!input.facts.title.trim()) throw new AdapterError('an approval explanation needs the item\'s own title');
+        return practiceApprovalExplainNote(input);
+      },
+      async draftSocialReelCaption(input) {
+        if (!input.facts.templateName.trim()) throw new AdapterError('a reel caption needs the template\'s own name');
+        return practiceSocialReelCaption(input);
+      },
+      async draftStudioDetailNote(input) {
+        if (!input.facts.name.trim()) throw new AdapterError('a studio detail note needs the garment\'s own name');
+        return practiceStudioDetailNote(input);
+      },
+      async draftStockAlertNote(input) {
+        if (!input.facts.productName.trim() || !input.facts.sku.trim()) throw new AdapterError('a stock alert note needs the SKU\'s own product name and code');
+        return practiceStockAlertNote(input);
+      },
+      async draftGuideQaAnswer(input) {
+        if (!input.facts.guideText.trim()) throw new AdapterError('a guide answer needs the page\'s own guide text');
+        if (!input.facts.question.trim()) throw new AdapterError('a guide answer needs the owner\'s own question');
+        return practiceGuideQaAnswer(input);
+      },
+      async draftCompetitorStep(input) {
+        if (!input.facts.pageText.trim()) throw new AdapterError('a competitor step needs the page\'s own text');
+        return practiceCompetitorStep(input);
+      },
+      async draftCompetitorComparison(input) {
+        if (!input.facts.steps.length) throw new AdapterError('a comparison needs at least one already-walked step');
+        return practiceCompetitorComparison(input);
       },
     };
   },

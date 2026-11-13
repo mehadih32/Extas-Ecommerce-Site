@@ -564,6 +564,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
           request={guide}
           mode={guideAs}
           here={pathname}
+          lang={model.lang}
           onOpen={(g) => setGuide(g)}
           onClose={() => {
             setGuide(null);

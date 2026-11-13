@@ -496,6 +496,10 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'searches', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/searches', perm: 'reports.read', keys: ['reportsSearches'] }] },
       // S02 · PR 83 — REP-08 Experiments: A/B tests of the shop's words and shown or hidden parts, with how sure each result is.
       { id: 'experiments', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/experiments', perm: 'reports.experiments.read', keys: ['reportsExperiments', 'reportsExperiment'] }] },
+      // S15 · PR 340 (Blueprint D5.2 "a funnel per product"; REP-10) — Funnels: per-step visitor counts and the
+      // conversion from one step to the next, read from the PR 338/339 event and funnel layer. Seeing only
+      // (`reports.read`); creating the one-click "shop funnel" default needs `reports.analytics.write`.
+      { id: 'funnels', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/funnels', perm: 'reports.read', keys: ['reportsFunnels'] }] },
     ],
   },
   {
@@ -511,6 +515,30 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
       // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
       { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
+      // S15 · PR 312 (C2.1, C2.2) — Cost Book: every AI job, its recommended model and why, its estimated cost, and
+      // a model selector right in the row (owner only).
+      { id: 'costBook', guide: 'ai', pages: [{ href: '/admin/ai/cost-book', perm: 'ai.read', keys: ['aiCostBook'] }] },
+      // S15 · PR 317 (C3.2) — Approvals: the single queue for everything an agent wants to do but may not do alone
+      // (money, refunds, COD, prices, discounts, ad budget, blocking, deletion, skills, fixes), cleared in one pass.
+      { id: 'approvals', guide: 'ai', pages: [{ href: '/admin/ai/approvals', perm: 'ai.read', keys: ['aiApprovals'] }] },
+      // S15 · PR 318 (C3.2) — Permissions: the permission matrix — per agent, what it may decide alone, must only
+      // propose, or may not touch at all, over orders/stock/prices/courier/money/customer data/code (owner only).
+      { id: 'permissions', guide: 'ai', pages: [{ href: '/admin/ai/permissions', perm: 'ai.read', keys: ['aiPermissions'] }] },
+      // S15 · PR 319 (C1.7) — AI diary: a plain-Bengali line per agent per action, what it did, why, and what it
+      // changed — not a technical log (owner only).
+      { id: 'diary', guide: 'ai', pages: [{ href: '/admin/ai/diary', perm: 'ai.read', keys: ['aiDiary'] }] },
+      // S15 · PR 321 (C1.7 "Skill library") — every AiSkill as a card: name, agent, version, status, on/off; the
+      // owner's own "Import a skill" and one-click rollback (owner only).
+      // S15 · PR 322 adds the Sandbox sub-page (`/admin/ai/skills/sandbox`) beside the Library, matching the
+      // demo's own `A2B_SKSUB` two-page nav (AIC-04/04a).
+      {
+        id: 'skills',
+        guide: 'ai',
+        pages: [
+          { href: '/admin/ai/skills', perm: 'ai.read', keys: ['aiSkills'] },
+          { href: '/admin/ai/skills/sandbox', perm: 'ai.read', keys: ['aiSkillsSandbox'] },
+        ],
+      },
       // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
       { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
     ],

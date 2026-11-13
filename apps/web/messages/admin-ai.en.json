@@ -72,7 +72,15 @@
         "timeLabel": "{name}: clock time",
         "daysLabel": "{name}: which weekdays",
         "saveLabel": "Save",
-        "days": { "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed", "4": "Thu", "5": "Fri", "6": "Sat" },
+        "days": {
+          "0": "Sun",
+          "1": "Mon",
+          "2": "Tue",
+          "3": "Wed",
+          "4": "Thu",
+          "5": "Fri",
+          "6": "Sat"
+        },
         "always": "No time restriction — it only acts on its own triggers, any time.",
         "daily": "Daily at {time}",
         "weekly": "{days} at {time}",
@@ -110,6 +118,284 @@
         "business": { "name": "Business", "rule": "The shop's own sales, cost, stock or report figures. Paid connections only — a free one is not recommended." },
         "publicDraft": { "name": "Public / draft", "rule": "Content a person reviews before it goes out (blog, SEO, social copy). A free-capable connection is allowed, with an automatic paid fallback." }
       }
+    },
+    "offTest": {
+      "title": "AI-off test",
+      "sub": "Proves the shop runs with AI off: a static check of the code (never a live run) for a first set of features, each with its own rule or template fallback.",
+      "lastChecked": "Last checked {when} (automatically, by CI, on every change to the code)",
+      "passed": "{ok}/{n} checks passed",
+      "covers": "covering {covered} of {total} AI jobs so far",
+      "fallback": "Fallback",
+      "pass": "Pass",
+      "fail": "Fail",
+      "notAvailable": "Not available yet — no deploy has copied a result here.",
+      "note": "This is a static scan of the source code, the same method as the hardcode guard, so it has no \"Run\" button: it runs by itself in CI on every change, never live on this page.",
+      "journeyBadge": "Whole-shop journey",
+      "journeyTitle": "Proof: the shop works with AI off",
+      "journeyPassed": "{ok}/{n} whole-shop journey steps pass with AI off",
+      "journeyNote": "The master switch is {master} and the monthly spend cap is {cap} — the three safety pillars named together: the master switch, the spend cap, and this proof.",
+      "journeyMasterOn": "on",
+      "journeyMasterOff": "off",
+      "journeyCapNone": "not set yet",
+      "journeyCapSet": "set"
+    }
+  },
+  "aiCostBook": {
+    "metaTitle": "AI Cost Book",
+    "title": "AI Cost Book",
+    "sub": "What every AI job in the shop costs, and which model it uses — before any money is spent.",
+    "noRate": "No USD rate is typed yet, so costs are shown in USD. To see them in ৳, set a USD rate in Money › Costs & fees.",
+    "honestNote": "Text jobs are cheap. Image generation is far more expensive, and video assembly costs server time rather than tokens. Voice transcription is cheap too. These estimates carry a ±10–15% band for now. Once a job has 5 real runs, its own Actual column shows what it really cost, so the estimate is checked against reality instead of staying a guess.",
+    "kpis": {
+      "jobs": "Job rows",
+      "month": "This month (estimated)",
+      "top": "The 10 priciest jobs"
+    },
+    "search": {
+      "label": "Search the Cost Book",
+      "placeholder": "Search — e.g. blog, support, reel, photoshoot",
+      "none": "No job matches."
+    },
+    "col": {
+      "section": "Section",
+      "job": "Job",
+      "model": "Recommended model and why",
+      "perRun": "Estimated cost per run",
+      "perMonth": "Estimated monthly cost",
+      "runs": "Typical runs per day/month",
+      "alternatives": "Alternatives",
+      "actual": "Actual (last 30 days)"
+    },
+    "runsLine": "~{perDay}/day · ~{perMonth}/month",
+    "recommended": "Recommended",
+    "modelSelectLabel": "Which model runs {job}",
+    "toastChanged": "Model changed",
+    "toastFailed": "Could not change the model",
+    "altNone": "No cheaper alternative yet.",
+  "actualNone": "No real data yet — shown once {min} real runs exist.",
+  "actualRuns": "{runs} real runs, {perRun}/run",
+  "actualAbove": "{pct}% more than the estimate",
+  "actualBelow": "{pct}% less than the estimate",
+  "actualSame": "matches the estimate",
+  "presets": {
+    "title": "One-click presets",
+    "apply": "Use {preset}",
+    "changed": "{n} jobs would change model ({smaller} to a smaller model, {larger} to a larger one)",
+    "noChange": "Already the current pick for every job.",
+    "toastChanged": "{preset} applied",
+    "toastFailed": "Could not apply the preset"
+  },
+  "whatIf": {
+    "title": "What if…",
+    "reset": "Reset to 1×"
+  },
+  "calc": {
+    "title": "Calculator — describe a piece of work",
+    "jobLabel": "Job",
+    "quantityLabel": "How many runs",
+    "scaleLabel": "Size ×",
+    "scaleHint": "Bigger or smaller than the job's usual run, e.g. a longer article. Leave blank for 1×.",
+    "modelLabel": "Model",
+    "modelAuto": "Recommended",
+    "addLine": "+ Add another job",
+    "removeLine": "Remove",
+    "calculate": "Calculate",
+    "calculating": "Calculating…",
+    "total": "Total",
+    "altLabel": "Other models",
+    "saveLabel": "Save this estimate as",
+    "savePlaceholder": "e.g. \"10 blog posts with images, November\"",
+    "saveButton": "Save as plan",
+    "saved": "Saved",
+    "failed": "Could not calculate this",
+    "invalid": "Fill in a job and a whole number of runs for every line",
+    "needPermission": "\"AI control\" is needed to use the calculator."
+  }
+  },
+  "aiApprovals": {
+    "metaTitle": "AI Approvals",
+    "title": "Approvals",
+    "sub": "Everything an AI agent wants to do but may not do alone, in one queue — clear it in one pass.",
+    "pending": {
+      "label": "Waiting",
+      "empty": "Nothing is waiting — no agent can act on its own yet.",
+      "kind": "Kind",
+      "agent": "Agent",
+      "noAgent": "No agent — raised directly",
+      "requested": "Requested {when}",
+      "expires": "Expires {when}",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Why — for the record",
+      "approve": "Approve",
+      "reject": "Reject",
+      "toastApproved": "Approved",
+      "toastRejected": "Rejected",
+      "toastFailed": "Could not save this decision",
+      "toastAlready": "Someone already decided this one — the list below has been refreshed",
+      "needPermission": "You don't have permission to decide this one. You can still see the queue."
+    },
+    "decided": {
+      "label": "Decision history",
+      "sub": "The most recent {n} decided, expired or cancelled requests — the rest stay in the database, just not shown here.",
+      "empty": "Nothing decided yet.",
+      "status": {
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "EXPIRED": "Expired",
+        "CANCELLED": "Cancelled"
+      },
+      "decidedBy": "by {name}, {when}",
+      "note": "Note: {note}",
+      "expiredAt": "expired {when}"
+    }
+  },
+  "aiPermissions": {
+    "metaTitle": "AI Permission matrix",
+    "title": "Permission matrix",
+    "sub": "What each agent may decide alone, must only propose, or may not touch at all.",
+    "intro": "No agent can decide anything alone until you widen a cell below from \"Must ask first\" — that is the safe starting point for every agent and every resource.",
+    "level": {
+      "alone": "Decide alone",
+      "propose": "Must ask first",
+      "none": "May not touch"
+    },
+    "levelHint": {
+      "alone": "Acts on its own, no approval needed.",
+      "propose": "May only ask — lands in Approvals for your decision.",
+      "none": "May not touch this at all, not even to ask."
+    },
+    "defaultBadge": "Default",
+    "readOnly": "You can see the matrix but not change it.",
+    "selectLabel": "{resource} — {name}",
+    "toastChanged": "Saved",
+    "toastFailed": "Could not save this change",
+    "needPermission": "\"AI control\" is needed to change this matrix."
+  },
+  "aiDiary": {
+    "metaTitle": "AI diary",
+    "title": "AI diary",
+    "sub": "What each agent did, why, and what it changed — in plain Bengali, never a technical log.",
+    "empty": "Nothing yet — no agent has written to the diary.",
+    "windowNote": "The last {days} days, newest first.",
+    "filter": {
+      "agentAll": "All agents",
+      "agentLabel": "Agent",
+      "daysLabel": "Window",
+      "days7": "7 days",
+      "days14": "14 days",
+      "days30": "30 days"
+    },
+    "entry": {
+      "wholeSystem": "Whole system",
+      "ref": "About: {type} #{id}"
+    },
+    "view": {
+      "label": "Show",
+      "all": "Everything",
+      "did": "What they did",
+      "bug": "Bug box — could not do",
+      "doneTag": "Done",
+      "couldNotTag": "Could not do"
+    },
+    "bug": {
+      "why": "Why: {why}"
+    }
+  },
+  "aiSkills": {
+    "metaTitle": "AI skills",
+    "title": "Skills",
+    "sub": "What the agents know how to do. A new or imported skill needs the owner's approval before it runs.",
+    "import": "Import a skill",
+    "needPermission": "You can see the skill library, but importing, rolling back or switching a skill needs permission.",
+    "empty": "No skills yet — import one, or wait for an agent's own proposal from Site health.",
+    "dialog": {
+      "title": "Import a skill",
+      "nameLabel": "Skill name",
+      "namePlaceholder": "e.g. Eid size reminder message draft",
+      "agentLabel": "Agent",
+      "cancel": "Cancel",
+      "ok": "Import",
+      "working": "Importing…",
+      "close": "Close",
+      "effect1": "The skill is added, waiting for approval",
+      "effect2": "It goes to Approvals — it only runs once a person approves it",
+      "toastOk": "Imported — waiting for approval",
+      "toastFailed": "Could not import this skill",
+      "err": {
+        "INVALID_INPUT": "Check the skill name",
+        "UNKNOWN_AGENT": "Pick a real agent",
+        "BUSY": "Try the import again",
+        "other": "Could not import this skill"
+      }
+    },
+    "col": {
+      "skill": "Skill",
+      "version": "Version",
+      "status": "Status",
+      "updated": "Updated",
+      "action": ""
+    },
+    "older": "{n} older",
+    "status": {
+      "proposed": "Waiting approval",
+      "approvedOn": "Active",
+      "approvedOff": "Approved · off",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "rollback": {
+      "button": "Roll back to v{version}",
+      "dialogTitle": "Roll back this skill?",
+      "effect": "v{from} stays in history; v{to} becomes the current version",
+      "cancel": "Cancel",
+      "ok": "Roll back",
+      "working": "Rolling back…",
+      "close": "Close",
+      "toastOk": "Rolled back",
+      "toastFailed": "Could not roll this skill back"
+    },
+    "enable": {
+      "onLabel": "On",
+      "offLabel": "Off",
+      "toastOn": "Switched on",
+      "toastOff": "Switched off",
+      "toastFailed": "Could not change this switch"
+    }
+  },
+  "aiSkillsSandbox": {
+    "metaTitle": "Skill sandbox",
+    "title": "Sandbox",
+    "sub": "Test a skill without touching the live shop. Nothing is written, sent or charged.",
+    "formTitle": "Try a skill on a copy of real data",
+    "formSub": "Runs on a read-only copy; nothing is written, sent or charged",
+    "skillLabel": "Skill",
+    "dataLabel": "Data",
+    "data7": "Last 7 days of orders",
+    "data30": "Last 30 days of orders",
+    "run": "Run in sandbox",
+    "working": "Running…",
+    "needPermission": "You can see this page, but running a sandbox test needs permission.",
+    "empty": "No skills yet — add one on the Library tab first.",
+    "resultEmptyTitle": "Result",
+    "resultEmpty": "Run the sandbox to see what the skill would do.",
+    "resultTitle": "Result",
+    "ordersRead": "{n} real orders read — nothing written, sent or charged",
+    "passed": "Ready for approval (version {version} has real content)",
+    "notPassed": "Not ready yet — this version has no real content to test",
+    "cost": "Estimated cost: {amount}",
+    "costNote": {
+      "NO_AGENT_JOB": "Cost not estimable yet — this skill's agent has no Cost Book job to base it on",
+      "NO_EXCHANGE_RATE": "Cost not shown — no USD exchange rate has been typed yet (Money › Costs & fees)"
+    },
+    "historyTitle": "Earlier runs of this skill",
+    "historyEmpty": "No earlier runs yet.",
+    "toastOk": "Sandbox run finished",
+    "toastFailed": "Could not run the sandbox",
+    "err": {
+      "NOT_FOUND": "Pick a real skill",
+      "NO_VERSION": "This skill has no version to test yet",
+      "INVALID_INPUT": "Pick a real data window",
+      "other": "Could not run the sandbox"
     }
   }
 }

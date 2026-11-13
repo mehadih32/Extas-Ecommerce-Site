@@ -10,7 +10,7 @@ import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
 import { createVault } from '@extas/vault';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
-import { badgesHandler, guideHandler, helpHandler, notificationsHandler, queuesHandler, searchHandler } from './api';
+import { badgesHandler, guideAskHandler, guideHandler, helpHandler, notificationsHandler, queuesHandler, searchHandler } from './api';
 import type { SearchGroup } from './search';
 
 const HOST = 'admin.example.test';
@@ -62,7 +62,7 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
   });
 
   it('every shell route needs a session (401), and says when there is no database (503)', async () => {
-    for (const r of [badgesHandler(call('GET', '/api/admin/shell/badges'), deps), searchHandler(call('GET', '/api/admin/search?q=x'), deps), notificationsHandler(call('GET', '/api/admin/notifications'), deps), helpHandler(call('GET', '/api/admin/help/README'), 'README', deps), guideHandler(call('GET', '/api/admin/guide?path=/admin'), deps), queuesHandler(call('GET', '/api/admin/dashboard/queues'), deps)])
+    for (const r of [badgesHandler(call('GET', '/api/admin/shell/badges'), deps), searchHandler(call('GET', '/api/admin/search?q=x'), deps), notificationsHandler(call('GET', '/api/admin/notifications'), deps), helpHandler(call('GET', '/api/admin/help/README'), 'README', deps), guideHandler(call('GET', '/api/admin/guide?path=/admin'), deps), queuesHandler(call('GET', '/api/admin/dashboard/queues'), deps), guideAskHandler(call('POST', '/api/admin/guide/ask', { body: { page: 'products/stock', question: 'x' } }), deps)])
       expect((await r).status).toBe(401);
     expect((await badgesHandler(call('GET', '/api/admin/shell/badges'), null)).status).toBe(503);
   });
@@ -137,5 +137,14 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
     expect(overview.overview?.title).toBeTruthy();
     for (const bad of ['../../CLAUDE', 'orders/../x', 'nosection/index'])
       expect((await guideHandler(call('GET', `/api/admin/guide?page=${encodeURIComponent(bad)}`, { cookie: staff }), deps)).status, bad).toBe(404);
+  });
+
+  it('PR 334: guideAskHandler only takes POST, needs a real page guide, and answers null (AI off by default) rather than inventing anything', async () => {
+    expect((await guideAskHandler(call('GET', '/api/admin/guide/ask', { cookie: staff }), deps)).status).toBe(405);
+    for (const bad of ['../../CLAUDE', 'orders/../x', 'nosection/index', 'products/no-such-page'])
+      expect((await guideAskHandler(call('POST', '/api/admin/guide/ask', { cookie: staff, body: { page: bad, question: 'x' } }), deps)).status, bad).toBe(bad === 'products/no-such-page' ? 404 : 400);
+    const res = await guideAskHandler(call('POST', '/api/admin/guide/ask', { cookie: staff, body: { page: 'products/stock', question: 'এটা কীভাবে গোনা হয়?' } }), deps);
+    expect(res.status).toBe(200);
+    expect((await res.json()) as { ok: boolean; answer: string | null }).toMatchObject({ ok: true, answer: null }); // AI 360 is off in this fixture; the guide panel's own text stays the answer
   });
 });

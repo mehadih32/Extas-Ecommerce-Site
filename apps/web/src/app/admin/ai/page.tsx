@@ -29,6 +29,20 @@
 // and each agent card's model row now also names its own data class and, only when the policy actually moved the
 // owner's pick (`routingDowngraded`), an honest note naming what runs instead and why — never a second number this
 // page has not measured, same spirit as PR 307's model note.
+//
+// S15 · PR 324 (C1.4) — a new "AI-off test" card at the foot of the page (`o.offTest`, `./ai-off-guard.ts`): the
+// real, already-computed result of a static source scan (`tools/ai-off-guard.mjs`), never the demo's own fabricated
+// "7/7 passed". It has no "Run" button — a static scan has nothing to run live on this page, and it reads honestly
+// as "not available yet" before any deploy has copied a result here.
+//
+// S15 · PR 506 (C1.4; `docs/agents/AGENT-PROTOCOL.md` names this beside the master switch (PR 305) and the spend cap
+// (PR 309) as the third safety pillar; demo 89b-admin-agents.js's own "Proof: the shop works with AI off" card,
+// which simulates "6 of 6 passed" the instant its own button is pressed) — this page never ships that simulation
+// either. The same `o.offTest` result already carries the honest `journeyN`/`journeyOk` count and a `journey` flag
+// per check (added to `tools/ai-off-guard.json`): the AI-off test card below now marks each journey-tagged row with
+// a small "whole-shop journey" badge and a summary line naming the real count, and a short note ties the three
+// pillars together, naming the master switch's own current state and whether a monthly cap is set — read straight
+// off this same `o`, never a second source.
 // Guide: docs/admin-guide/pages/ai/control.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -285,6 +299,50 @@ export default async function AiControlRoomPage() {
           ))}
         </ul>
         <p className="a2-xs a2-mute">{c('routing.note')}</p>
+      </section>
+
+      <section className="a2-card tight ai-offtest" aria-labelledby="ai-offtest-h" data-testid="ai-offtest">
+        <h2 className="a2-h3" id="ai-offtest-h">
+          {c('offTest.title')}
+        </h2>
+        <p className="a2-cs">{c('offTest.sub')}</p>
+        {o.offTest ? (
+          <>
+            <p className="a2-xs a2-mute">{c('offTest.lastChecked', { when: dateTime(o.offTest.at, view.locale, view.timeZone) })}</p>
+            <p className="a2-sm">
+              <b>{c('offTest.passed', { ok: formatNumber(o.offTest.ok, view.locale), n: formatNumber(o.offTest.n, view.locale) })}</b>
+              {' — '}
+              {c('offTest.covers', { covered: formatNumber(o.offTest.coveredJobCount, view.locale), total: formatNumber(o.offTest.totalJobCount, view.locale) })}
+            </p>
+            <ul className="ai-offtest-list">
+              {o.offTest.checks.map((chk) => (
+                <li key={chk.id} className="ai-offtest-row" data-testid={`ai-offtest-${chk.id}`}>
+                  <span>
+                    {view.lang === 'bn' ? chk.nameBn : chk.nameEn}
+                    {chk.journey && <span className="a2-pill line ai-offtest-journey">{c('offTest.journeyBadge')}</span>}
+                    <span className="a2-xs a2-mute ai-offtest-fallback">
+                      {c('offTest.fallback')}: {view.lang === 'bn' ? chk.fallbackBn : chk.fallbackEn}
+                    </span>
+                  </span>
+                  <span className={`a2-pill ${chk.pass ? 'ok' : 'bad'}`}>{chk.pass ? c('offTest.pass') : c('offTest.fail')}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* S15 · PR 506 — the whole-shop journey summary, naming the real count and the other two safety
+                pillars (master switch, spend cap) this same page already shows, never a second source. */}
+            <div className="ai-offtest-journey-summary" data-testid="ai-offtest-journey-summary">
+              <h3 className="a2-h4">{c('offTest.journeyTitle')}</h3>
+              <p className="a2-sm">
+                <b>{c('offTest.journeyPassed', { ok: formatNumber(o.offTest.journeyOk, view.locale), n: formatNumber(o.offTest.journeyN, view.locale) })}</b>
+              </p>
+              <p className="a2-xs a2-mute">{c('offTest.journeyNote', { master: o.masterOn ? c('offTest.journeyMasterOn') : c('offTest.journeyMasterOff'), cap: o.monthlyCapMinor === null ? c('offTest.journeyCapNone') : c('offTest.journeyCapSet') })}</p>
+            </div>
+          </>
+        ) : (
+          <p className="a2-xs a2-mute">{c('offTest.notAvailable')}</p>
+        )}
+        <p className="a2-xs a2-mute">{c('offTest.note')}</p>
       </section>
     </div>
   );

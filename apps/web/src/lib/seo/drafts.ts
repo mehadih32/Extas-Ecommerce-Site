@@ -3,8 +3,15 @@
 //
 // - "Draft" writes, for up to `seo.aiDrafts.batchMax` pages, a title and description for each published product and
 //   visible category that lacks its own text in a language (English; Bengali too while Bengali is on), from the page's
-//   own facts only (the AI writer, @extas/adapters ai-writer: the practice writer until a provider is connected). A page
-//   that already has a draft waiting is skipped.
+//   own facts only. A page that already has a draft waiting is skipped.
+// - S15 · PR 327 — for each page, first tries Doot's own guarded job dispatcher (`seo-meta-dispatch.ts`: the master
+//   and per-agent switch, the routed model pick, the monthly spend cap, the usage ledger and the AI diary — PR
+//   304-324's own guardrail chain, first called in production here the way PR 325/326 already call it for support
+//   and product content). Only when that answers an honest "not now" (AI off, Doot paused, no connection ready for
+//   the routed data class, the monthly cap already reached, or the model answered with nothing usable) does a page
+//   fall back to the plain, ungated practice writer (@extas/adapters ai-writer's mock, until a provider is
+//   connected and Doot is turned on) — the batch action always produces something to review (CLAUDE.md CN-016
+//   "nothing reaches the owner broken"), it is simply not billed, capped or logged when it does.
 // - A draft waits in the shop's one approvals queue (AiApprovalRequest, kind `seo.draft`) and is never shown on a page
 //   until a person accepts it. Accepting fills only the page's empty fields (SeoMeta, marked aiDrafted, with who
 //   approved it) and never replaces text someone typed; a category's own SEO fields (`category.seo`) still come first.
@@ -15,6 +22,7 @@ import { aiWriterAdapters, createConnections, type AiDraftSubject, type AiWriter
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { namingInclude, namingSettings, sourceOf, tokenValues } from '@extas/catalogue';
 import type { AdminDeps } from '../admin-auth';
+import { seoMetaDraft } from '../admin-ai/seo-meta-dispatch';
 import { CATEGORY_SEO_ENTITY } from './page-texts';
 
 /** The approvals-queue kind of a search-text draft. */
@@ -154,12 +162,19 @@ export async function makeDrafts(deps: Deps, actor: Actor, storeId: number, ctx:
   if (!aiOn || !set.enabled) throw new SeoDraftError('AI_OFF', 409);
   const todo = (await candidates(db, deps, storeId)).slice(0, set.batchMax);
   if (!todo.length) return { made: 0 };
-  let writer: { api: AiWriter; provider: string; mode: string };
-  try {
-    writer = await (deps.writer ? deps.writer() : defaultWriter(deps, storeId));
-  } catch {
-    throw new SeoDraftError('AI_UNAVAILABLE', 503);
-  }
+  // S15 · PR 327 — the plain practice-writer fallback, resolved only once it is actually needed (a page Doot's own
+  // guarded dispatcher below could not answer for), and only once per run.
+  let fallback: { api: AiWriter; provider: string; mode: string } | null = null;
+  const fallbackWriter = async () => {
+    if (!fallback) {
+      try {
+        fallback = await (deps.writer ? deps.writer() : defaultWriter(deps, storeId));
+      } catch {
+        throw new SeoDraftError('AI_UNAVAILABLE', 503);
+      }
+    }
+    return fallback;
+  };
 
   const ns = await namingSettings({ db, settings: deps.resolver }, { storeId });
   const productIds = [...new Set(todo.filter((t) => t.subject === 'product').map((t) => t.entityId))];
@@ -174,6 +189,7 @@ export async function makeDrafts(deps: Deps, actor: Actor, storeId: number, ctx:
   const max = { title: maxT, description: maxD };
 
   let made = 0;
+  let madeReal = 0;
   for (const t of todo) {
     let facts: Parameters<AiWriter['draftSeo']>[0]['facts'] | null = null;
     if (t.subject === 'product') {
@@ -190,14 +206,33 @@ export async function makeDrafts(deps: Deps, actor: Actor, storeId: number, ctx:
       }
     }
     if (!facts?.name.trim()) continue;
-    const d = await writer.api.draftSeo({ subject: t.subject, locale: t.locale, facts, max });
-    const payload: DraftPayload = { locale: t.locale, title: d.title, description: d.description, provider: writer.provider, mode: writer.mode, practice: d.practice, name: facts.name };
+
+    let title: string, description: string, provider: string, mode: string, practice: boolean;
+    const guarded = await seoMetaDraft(deps, storeId, t.subject, t.entityId, t.locale, facts, max);
+    if (guarded.ok) {
+      ({ title, description, provider } = guarded);
+      mode = 'LIVE';
+      practice = false;
+    } else {
+      const w = await fallbackWriter();
+      const d = await w.api.draftSeo({ subject: t.subject, locale: t.locale, facts, max });
+      title = d.title;
+      description = d.description;
+      provider = w.provider;
+      mode = w.mode;
+      practice = d.practice;
+    }
+    const payload: DraftPayload = { locale: t.locale, title, description, provider, mode, practice, name: facts.name };
     await db.aiApprovalRequest.create({
-      data: { storeId, kind: SEO_DRAFT_KIND, title: d.title || facts.name, summary: d.description || null, payload: payload as unknown as Prisma.InputJsonValue, refType: t.subject, refId: t.entityId, channel: 'admin' },
+      data: { storeId, kind: SEO_DRAFT_KIND, title: title || facts.name, summary: description || null, payload: payload as unknown as Prisma.InputJsonValue, refType: t.subject, refId: t.entityId, channel: 'admin' },
     });
     made += 1;
+    if (!practice) madeReal += 1;
   }
-  await audit(db, actor, { storeId, action: 'seo.drafts.create', entityType: 'AiApprovalRequest', entityId: SEO_DRAFT_KIND, after: { made, provider: writer.provider, mode: writer.mode } }, { source: 'admin-api', ...ctx });
+  // S15 · PR 327 — `madeReal` is how many of `made` came from Doot's own guarded dispatcher (a real, billed,
+  // ledgered call) rather than the plain practice-writer fallback; the provider/mode a page actually used is kept
+  // on its own draft row (`payload`) above, since different pages in the same run can now use different ones.
+  await audit(db, actor, { storeId, action: 'seo.drafts.create', entityType: 'AiApprovalRequest', entityId: SEO_DRAFT_KIND, after: { made, madeReal } }, { source: 'admin-api', ...ctx });
   return { made };
 }
 

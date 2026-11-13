@@ -112,4 +112,61 @@ describe.skipIf(!HAS_TEST_DB)('PR 432 · draft answers (PostgreSQL)', () => {
     expect(d!.body).toContain('L সাইজ');
     expect(asked).toEqual([[productId, { heightIn: 66, weightKg: 65 }]]);
   });
+
+  // S15 · PR 328 — a second, independent AI slot: sizeAdvice only ever adds one sentence on *why*, never a new
+  // size, never called without a size already found, and folded in before aiReply's own ruleBasedBody runs.
+  it('sizeAdvice adds one sentence on why, is called only once a size is found, and any failure or empty answer leaves the plain size line exactly as it was', async () => {
+    const s = await say('sizeadvice', 'উচ্চতা ৫ ফুট ৬, ওজন ৬৫');
+    await t.prisma.supportProductShare.create({ data: { storeId: S, conversationId: s.conversationId, productId, refCode: 'r432sizeadvice', sentById: who.agent.actor.staffUserId } });
+    const sizeFor = async () => 'L';
+
+    const seen: unknown[] = [];
+    const sizeAdvice = async (pid: string, body: { heightIn: number; weightKg: number }, lang: 'en' | 'bn') => {
+      seen.push([pid, body, lang]);
+      return 'The chest room covers your estimate.';
+    };
+    const withAdvice = await supportDraft(deps(), who.agent, s.conversationId, { sizeFor, sizeAdvice });
+    expect(withAdvice).toMatchObject({ intent: 'size', size: 'L' });
+    expect(withAdvice!.body).toContain('L সাইজ');
+    expect(withAdvice!.body).toContain('The chest room covers your estimate.');
+    expect(seen).toEqual([[productId, { heightIn: 66, weightKg: 65 }, 'bn']]);
+
+    const bare = await supportDraft(deps(), who.agent, s.conversationId, { sizeFor });
+    expect(bare!.body).not.toContain('The chest room covers your estimate.'); // never called without sizeAdvice offered
+
+    const thrown = await supportDraft(deps(), who.agent, s.conversationId, { sizeFor, sizeAdvice: async () => { throw new Error('provider down'); } });
+    expect(thrown!.body).toBe(bare!.body);
+
+    const empty = await supportDraft(deps(), who.agent, s.conversationId, { sizeFor, sizeAdvice: async () => null });
+    expect(empty!.body).toBe(bare!.body);
+
+    // never called for a question with no size found yet
+    const noSize = await say('sizeadviceNoShare', 'উচ্চতা ৫ ফুট ৬, ওজন ৬৫');
+    const neverCalled = async () => { throw new Error('must not be called without a size'); };
+    await expect(supportDraft(deps(), who.agent, noSize.conversationId, { sizeFor: async () => null, sizeAdvice: neverCalled })).resolves.toMatchObject({ size: null });
+  });
+
+  // S15 · PR 325 — EXTAS AI's own rephrasing: additive only, never the facts' own source.
+  it('aiReply can rephrase the rule-based body, but any failure or empty answer leaves it exactly as it was', async () => {
+    const r = await say('aichat', 'amar order kothay?');
+    await t.prisma.conversation.update({ where: { id: r.conversationId }, data: { customerId } });
+    const ruleBased = await supportDraft(deps(), who.agent, r.conversationId);
+    expect(ruleBased!.aiUsed).toBe(false);
+
+    const seen: unknown[] = [];
+    const ok = await supportDraft(deps(), who.agent, r.conversationId, {
+      aiReply: async (facts) => {
+        seen.push(facts);
+        return 'A warmer answer, same facts.';
+      },
+    });
+    expect(ok).toMatchObject({ aiUsed: true, body: 'A warmer answer, same facts.' });
+    expect(seen).toEqual([{ intent: 'status', complaint: null, question: 'amar order kothay?', lang: 'en', ruleBasedBody: ruleBased!.body, order: { number: 'EX4320', status: 'IN_TRANSIT', late: true }, size: null, customerName: 'Rahim (sample)' }]);
+
+    const thrown = await supportDraft(deps(), who.agent, r.conversationId, { aiReply: async () => { throw new Error('provider down'); } });
+    expect(thrown).toMatchObject({ aiUsed: false, body: ruleBased!.body });
+
+    const empty = await supportDraft(deps(), who.agent, r.conversationId, { aiReply: async () => null });
+    expect(empty).toMatchObject({ aiUsed: false, body: ruleBased!.body });
+  });
 });

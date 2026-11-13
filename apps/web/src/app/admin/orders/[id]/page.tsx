@@ -46,7 +46,9 @@ export default async function OrderPage({ params, searchParams }: { params: Para
     );
   const perms = access.guard.permissions ?? new Set<string>();
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const o = await loadOrderDetail(readDeps(access.deps), who, view, id, perms);
+  // PR 329: the fraud review AI note is additive and read-only, so the page's own full deps (db/resolver/vault)
+  // are passed straight through — the same `AdminDeps` shape `access.deps` already is.
+  const o = await loadOrderDetail(readDeps(access.deps), who, view, id, perms, access.deps);
   if (!o)
     return (
       <div className="a2-z">
