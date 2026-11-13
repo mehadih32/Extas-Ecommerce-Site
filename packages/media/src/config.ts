@@ -123,3 +123,8 @@ export async function watermarkConfig(settings: Settings, storeId: number): Prom
 export function heightFor(width: number, ratio: Ratio): number {
   return Math.round((width * ratio.height) / ratio.width);
 }
+
+/** S28 · PR 680 — the photo quality checks' numbers (`media.quality`). */
+export async function qualityRules(settings: Settings, storeId: number) {
+  return settings.value('media.quality', at(storeId));
+}

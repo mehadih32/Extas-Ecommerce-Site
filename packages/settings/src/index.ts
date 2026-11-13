@@ -42,6 +42,7 @@ export * from './registry-health-reopen';
 export * from './registry-login-network';
 export * from './registry-exchange-retry';
 export * from './registry-books-statement-costs';
+export * from './registry-products-finance-v5';
 export * from './registry-support-file-copy';
 export * from './registry-admin-shell';
 export { messages, lookup, pair, type MessageTree, type SettingsMessages, type LabelPair } from './messages';
@@ -118,6 +119,8 @@ export * from './registry-support-identity';
 export * from './registry-support-context';
 // S22 · PR 429 — the catalogue drawer in a support chat (registry-support-catalogue.ts, version 157).
 export * from './registry-support-catalogue';
+// S28 · wave 5 — inbox and marketing switches of the admin prototype v5 (registry-w5a.ts, versions 360-369).
+export * from './registry-w5a';
 // S22 · PR 430 — orders from a support chat: the chat bag and its fraud gate (registry-support-cart.ts, version 158).
 export * from './registry-support-cart';
 // S22 · PR 431 — ticketing: the first-answer and solution timers of each support question (registry-support-tickets.ts, version 159).
@@ -285,3 +288,5 @@ export * from './registry-ads-intel';
 // S15 · PR 585 — the continuous learning engine's master switch and quality-gate source count, off by default (registry-learning-engine.ts, version 331).
 export * from './registry-learning-engine';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
+// S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 321).
+export * from './registry-products-v5';

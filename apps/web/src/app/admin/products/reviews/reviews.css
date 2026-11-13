@@ -27,3 +27,5 @@
 .adm2 .rev-imp{display:flex;flex-direction:column;gap:8px}
 .adm2 .rev-imp code{overflow-wrap:anywhere}
 .adm2 .rev-imp-bad{margin:6px 0 0;padding-left:18px;max-height:320px;overflow:auto}
+.adm2 .rev-faq{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center}
+.adm2 .rev-faq .a2-btn{min-height:44px}

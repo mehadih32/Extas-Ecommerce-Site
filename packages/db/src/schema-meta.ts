@@ -245,6 +245,8 @@ export const APPEND_ONLY_LOCKED = [
   'OrderPriceAdjustment',
   // S05 · PR 665 (S28; migration 0201_order_merge): one row per order folded into another; never edited.
   'OrderMerge',
+  // S28 · PR 695 (migration 0263_affiliates): each payout to an affiliate partner; a correction is a new, negative row.
+  'AffiliatePayout',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
@@ -255,6 +257,8 @@ const NOT_BUILT = 'not built yet: decided with its own register PR (lock it ther
 /** `@append-only` models that are not locked at the database, each with its reason. */
 export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   CheckoutDraftCall: 'S28 PR 668: the call log of an incomplete order; the app only appends rows, and a later correction is a new row (a trigger lock can follow with the next lock migration)',
+  CashEntry: 'S16 PR 687: the cashbook; the app only appends rows (a wrong one is reversed by a REVERSAL row that points at it, once), the database lock follows with the next lock migration',
+  CostBudget: 'S16 PR 688: budget versions; the app only appends rows (a change is a new row from a later month), the database lock follows with the next lock migration',
   SettingsMigration: RUN_ROW,
   DefaultPackApplication: RUN_ROW,
   IntegrationTestRun: RUN_ROW,

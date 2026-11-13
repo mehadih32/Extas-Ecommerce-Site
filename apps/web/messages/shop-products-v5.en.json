@@ -1,0 +1,18 @@
+{
+  "pdpx": {
+    "video": {
+      "title": "Product video",
+      "play": "Play video",
+      "frame": "Video: {name}",
+      "open": "Watch on {provider}"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "more": "See all questions"
+    },
+    "demo": {
+      "soon": "This product is coming soon.",
+      "close": "Close"
+    }
+  }
+}

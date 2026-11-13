@@ -1,0 +1,77 @@
+{
+  "moneyBudgets": {
+    "metaTitle": "Budgets & profit",
+    "title": "Budgets & profit",
+    "sub": "Profit today, this week and this month, and each cost against the budget you set. Nothing here moves money.",
+    "snap": {
+      "title": "Profit snapshot",
+      "today": "Today",
+      "week": "Last 7 days",
+      "month": "This month",
+      "sales": "Sales {amount}",
+      "fixed": "Fixed costs {amount}",
+      "unknown": "Not known yet (ad spend missing)",
+      "target": "Monthly target",
+      "targetOf": "{sales} of {target}"
+    },
+    "budgets": {
+      "title": "Costs & budgets",
+      "sub": "This month, day {day} of {days}. \"At this pace\" spreads what is spent so far over the whole month.",
+      "head": "Cost",
+      "budget": "Budget",
+      "spent": "Spent",
+      "pace": "At this pace",
+      "state": "Status",
+      "none": "No budget",
+      "edit": "Edit budgets",
+      "states": {
+        "none": "No budget",
+        "ok": "On track",
+        "pace": "At this pace it passes the budget",
+        "over": "Over the budget"
+      }
+    },
+    "edit": {
+      "title": "Edit budgets",
+      "from": "From month",
+      "hint": "A number from this month on. Leave a cost empty for no budget; 0 means none.",
+      "pin": "Owner's PIN",
+      "save": "Save with PIN",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Budgets saved",
+      "same": "Nothing changed."
+    },
+    "refunds": {
+      "title": "Who approves refunds",
+      "sub": "One approver is enough. These roles can approve a refund.",
+      "none": "No role can approve refunds yet."
+    },
+    "readOnly": "You can see the budgets. Changing them needs the permission to change fixed costs.",
+    "heads": {
+      "SALARY": "Salary",
+      "RENT": "Rent",
+      "UTILITIES": "Utilities",
+      "OTHER_FIXED": "Other fixed costs",
+      "PACKAGING": "Packaging",
+      "ACCESSORIES": "Accessories",
+      "PAYMENT_FEES": "Payment and COD fees",
+      "DELIVERY": "Courier",
+      "ADS_FACEBOOK": "Facebook ads",
+      "ADS_INSTAGRAM": "Instagram ads",
+      "ADS_GOOGLE": "Google ads",
+      "ADS_TIKTOK": "TikTok ads",
+      "ADS_OTHER": "Other ads",
+      "OTHER": "Other costs"
+    },
+    "err": {
+      "forbidden": "You do not have permission for this.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_LOCKED": "Too many wrong PINs. Wait a while and try again.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet (Closes page).",
+      "INVALID_INPUT": "Check the month and the amounts.",
+      "other": "It could not be saved. Try again."
+    }
+  }
+}

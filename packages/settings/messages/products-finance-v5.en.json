@@ -1,0 +1,30 @@
+{
+  "shop": {
+    "ranking": {
+      "label": "Shop ranking",
+      "help": "The order products show in on your own shop (category pages, collections). How much sales, visitors who buy, margin, sizes in stock and newness count; how many days count as new; how many days of stock count as healthy; and whether the new order goes live by itself each night. Google ranking is separate."
+    }
+  },
+  "books": {
+    "cash": {
+      "label": "Cashbook",
+      "help": "Whether Accounts and the owner may record money in and out of the cashbook (it is on), how many days ahead the cash forecast looks, and over how many days the cash couriers hold is expected to reach the shop. A record only: nothing is sent or paid."
+    },
+    "budget": {
+      "label": "Budget warning",
+      "help": "A cost head is flagged when this month's pace reaches this share of its budget. 100 means the whole budget."
+    }
+  },
+  "reports": {
+    "library": {
+      "label": "Report library",
+      "help": "How many days of stock make a style \"restock now\", and after how many days an unsold style counts as sitting unsold."
+    }
+  },
+  "home": {
+    "stuck": {
+      "label": "Orders stuck in the batch",
+      "help": "A new order that has waited longer than this many hours counts as stuck on Home (0 turns the age rule off). An order with an open risk alert counts as stuck whatever its age."
+    }
+  }
+}

@@ -213,6 +213,20 @@ import adminIntelEn from '../../../messages/admin-intel.en.json';
 import adminIntelBn from '../../../messages/admin-intel.bn.json';
 import adminRulesHubEn from '../../../messages/admin-rules-hub.en.json';
 import adminRulesHubBn from '../../../messages/admin-rules-hub.bn.json';
+import adminBudgetsEn from '../../../messages/admin-budgets.en.json';
+import adminBudgetsBn from '../../../messages/admin-budgets.bn.json';
+import adminCashEn from '../../../messages/admin-cash.en.json';
+import adminCashBn from '../../../messages/admin-cash.bn.json';
+import adminRankingEn from '../../../messages/admin-ranking.en.json';
+import adminRankingBn from '../../../messages/admin-ranking.bn.json';
+import adminReportsFilesEn from '../../../messages/admin-reports-files.en.json';
+import adminReportsFilesBn from '../../../messages/admin-reports-files.bn.json';
+import adminReportsLibraryEn from '../../../messages/admin-reports-library.en.json';
+import adminReportsLibraryBn from '../../../messages/admin-reports-library.bn.json';
+import adminReportsPacksEn from '../../../messages/admin-reports-packs.en.json';
+import adminReportsPacksBn from '../../../messages/admin-reports-packs.bn.json';
+import adminV5W5aEn from '../../../messages/admin-v5-w5a.en.json';
+import adminV5W5aBn from '../../../messages/admin-v5-w5a.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -300,6 +314,13 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-reviews': { en: adminReviewsEn, bn: adminReviewsBn },
   'admin-rules': { en: adminRulesEn, bn: adminRulesBn },
   'admin-rules-hub': { en: adminRulesHubEn, bn: adminRulesHubBn },
+  'admin-budgets': { en: adminBudgetsEn, bn: adminBudgetsBn },
+  'admin-cash': { en: adminCashEn, bn: adminCashBn },
+  'admin-ranking': { en: adminRankingEn, bn: adminRankingBn },
+  'admin-reports-files': { en: adminReportsFilesEn, bn: adminReportsFilesBn },
+  'admin-reports-library': { en: adminReportsLibraryEn, bn: adminReportsLibraryBn },
+  'admin-reports-packs': { en: adminReportsPacksEn, bn: adminReportsPacksBn },
+  'admin-v5-w5a': { en: adminV5W5aEn, bn: adminV5W5aBn },
   'admin-searches': { en: adminSearchesEn, bn: adminSearchesBn },
   'admin-seasonal': { en: adminSeasonalEn, bn: adminSeasonalBn },
   'admin-seasonal-home': { en: adminSeasonalHomeEn, bn: adminSeasonalHomeBn },

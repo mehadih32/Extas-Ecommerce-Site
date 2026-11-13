@@ -27,6 +27,9 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   ref('MediaAsset', 'sourceAssetId'),
   ref('ProductMedia', 'assetId', false, '"archivedAt" IS NULL'),
   ref('CatalogImportJob', 'fileAssetId'),
+  // PR 681: a product's uploaded video and its poster picture.
+  ref('ProductVideo', 'fileAssetId'),
+  ref('ProductVideo', 'posterAssetId'),
   ref('ReviewMedia', 'assetId'),
   ref('Combo', 'setPhotoAssetId'),
   ref('GatewayStatement', 'fileAssetId'),

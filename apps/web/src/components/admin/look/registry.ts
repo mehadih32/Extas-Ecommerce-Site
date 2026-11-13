@@ -25,8 +25,9 @@ export const LOOK_PAGES: readonly LookPage[] = [
     section: 'dashboard',
     icon: 'grid',
     preview: '/admin?home=1',
-    // PR 631 (CN-036): the Lumen "Today" (B) is the standard; A, the V12.4 "Calm overview", stays selectable.
-    standard: 'B',
+    // PR 631 (CN-036): the Lumen "Today" (B) was the standard. S28 · PR 691 (admin prototype v5): the Command center (D) is now the
+    // standard, so Home opens on its live KPI tiles and "Needs you now" list; B and the others stay selectable, nothing is removed.
+    standard: 'D',
     designs: [
       dashboardA,
       dashboardB,

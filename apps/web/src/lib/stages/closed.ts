@@ -85,5 +85,12 @@ export function isHiddenPath(path: string, paths: readonly string[]): boolean {
 
 /** The hidden admin parts read from the settings (unreadable: all hidden, the shipped state). */
 export async function hiddenPartsOf(deps: Pick<AdminDeps, 'resolver'>): Promise<Set<string>> {
-  return hiddenAdminParts(await deps.resolver.value('stages.closedShown', {}).catch(() => null));
+  const hidden = hiddenAdminParts(await deps.resolver.value('stages.closedShown', {}).catch(() => null));
+  // S28 · PR 688: the VAT tab of Finance shows only while the VAT system is on (`vat.system`, off as shipped; unreadable = off).
+  const vat = await deps.resolver.value('vat.system', {}).catch(() => null);
+  if (vat?.enabled !== true) hidden.add(VAT_TAB);
+  return hidden;
 }
+
+/** The Finance tab that follows the VAT switch (`<section>.<tab>`). */
+export const VAT_TAB = 'money.vat';

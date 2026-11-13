@@ -52,6 +52,7 @@ import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { chatOrderDeps, supportDeps } from '@/lib/support-api';
+import { withW5a } from '@/lib/admin-v5-w5a';
 import '../../support.css';
 
 export const dynamic = 'force-dynamic';
@@ -73,7 +74,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const here = `/admin/support/c/${id}`;
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('support.read', deps, MOTHER_STORE_ID)]);
-  const view = withInbox(plain);
+  const view = withW5a(withInbox(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportConversation" text={t(d, 'page.noDb')} />;
@@ -98,7 +99,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     throw e;
   }
   const r = access.deps.resolver;
-  const [staff, files, inbox, currency, catalogue, drafted, follow] = await Promise.all([
+  const [staff, files, inbox, currency, catalogue, drafted, follow, quick] = await Promise.all([
     th.you.assign ? sp.supportStaff(sd, who) : Promise.resolve([]),
     r.value('support.attachments', { storeId: MOTHER_STORE_ID }),
     r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
@@ -118,6 +119,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       : Promise.resolve(null),
     // PR 433: the follow-up waiting on this chat (only for someone who may reply; off as it ships)
     th.you.reply ? sp.chatFollowUp(sd, who, th.id) : Promise.resolve(null),
+    // S28 · PR 692: the quick replies for the reply box (empty while `support.savedReplies` is off)
+    th.you.reply ? sp.listSavedReplies(sd, who) : Promise.resolve(null),
   ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));
@@ -316,7 +319,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <span>{t(d, 'sup.block.note', { at: printedAt(th.blocked.at.toISOString(), view.timeZone), reason: th.blocked.reason ?? '' })}</span>
         </p>
       ) : th.you.reply ? (
-        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} texts={composer} />
+        <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} replies={quick?.enabled && quick.active.length ? { list: quick.active.map((r) => ({ id: r.id, shortcut: r.shortcut, body: sp.replyBody(r, view.lang === 'bn' ? 'bn' : 'en') })), url: `${API}/replies`, label: t(d, 'w5a.replies.picker'), placeholder: t(d, 'w5a.replies.pickerPh') } : null} texts={composer} />
       ) : (
         <p className="a2-note">
           <ShellIcon name="lock" size={15} />
