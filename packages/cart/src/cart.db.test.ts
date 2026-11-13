@@ -58,7 +58,11 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
     const choices = sum.pieces.map((p) => ({ colourId: p.defaultColourId, sizeId: p.openSizes[p.defaultColourId!]![0]! }));
     return addSetToBag(cd, { storeId: S, cartId, slug: 'sample-polo-chino-set', choices });
   };
-  const withValues = (c: RuleContent, values: Record<string, unknown>, over: Partial<RuleContent> = {}): RuleContent => ({ ...c, params: c.params.map((p) => (p.key in values ? { ...p, value: values[p.key] } : p)), ...over });
+  const withValues = (c: RuleContent, values: Record<string, unknown>, over: Partial<RuleContent> = {}): RuleContent => ({
+    ...c,
+    params: c.params.map((p) => (p.key in values ? { ...p, value: values[p.key] } : p)),
+    ...over,
+  });
   /** Switches a sample rule on (the owner's OK, as in the admin). */
   const switchOn = async (key: string) => {
     const row = await t.prisma.smartRule.findFirstOrThrow({ where: { storeId: S, key }, select: { id: true } });
@@ -72,7 +76,12 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
     t = await createTestDatabase('cart');
     S = (await seedSample(t.prisma)).storeId;
     await syncAuth(t.prisma);
-    const role = await createRole(t.prisma, SYSTEM, { key: 'test-owner', nameEn: 'owner', nameBn: 'owner', permissions: ['rules.read', 'rules.write', 'rules.publish', 'rules.approve', 'combos.read', 'combos.write', 'combos.publish', 'combos.prices'] });
+    const role = await createRole(t.prisma, SYSTEM, {
+      key: 'test-owner',
+      nameEn: 'owner',
+      nameBn: 'owner',
+      permissions: ['rules.read', 'rules.write', 'rules.publish', 'rules.approve', 'combos.read', 'combos.write', 'combos.publish', 'combos.prices'],
+    });
     const u = await t.prisma.staffUser.create({ data: { email: 'owner@example.com', displayName: 'owner', passwordHash: 'not-a-login' } });
     await t.prisma.staffRoleAssignment.create({ data: { staffUserId: u.id, roleId: role.id, storeId: S } });
     owner = { staffUserId: u.id };
@@ -135,6 +144,10 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       const polo = await t.prisma.productVariant.findUniqueOrThrow({ where: { id: v.id }, select: { productId: true } });
       await t.prisma.product.update({ where: { id: polo.productId }, data: { status: 'DRAFT' } });
       expect(await code(addItem(deps(), { storeId: S, cartId, variantId: variant('essential-pique-polo', 'navy', 'L').id }))).toBe('NOT_FOR_SALE');
+      // S28 · PR 684: a demo (sample) product is never sold, whatever its state
+      await t.prisma.product.update({ where: { id: polo.productId }, data: { isDemo: true } });
+      expect(await code(addItem(deps(), { storeId: S, cartId, variantId: variant('essential-pique-polo', 'navy', 'L').id }))).toBe('DEMO_PRODUCT');
+      await t.prisma.product.update({ where: { id: polo.productId }, data: { isDemo: false } });
       // A line whose product went off sale is marked, so it cannot go to checkout.
       expect((await bagView(deps(), { storeId: S, cartId, lang: 'en' })).blocked).toEqual([{ lineId: add.lineId, reason: 'NOT_FOR_SALE', free: 0 }]);
       await t.prisma.product.update({ where: { id: polo.productId }, data: { status: 'PUBLISHED' } });
@@ -145,7 +158,11 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       const m = await addItem(deps(), { storeId: S, cartId, variantId: variant('oxford-cotton-shirt', 'sky', 'M').id });
       const l = await addItem(deps(), { storeId: S, cartId, variantId: variant('oxford-cotton-shirt', 'sky', 'L').id });
       expect(await code(changeVariant(deps(), { storeId: S, cartId, lineId: m.lineId, variantId: variant('essential-pique-polo', 'navy', 'M').id }))).toBe('INVALID_INPUT');
-      expect(await changeVariant(deps(), { storeId: S, cartId, lineId: m.lineId, variantId: variant('oxford-cotton-shirt', 'sky', 'L').id })).toEqual({ lineId: l.lineId, quantity: 2, joined: true });
+      expect(await changeVariant(deps(), { storeId: S, cartId, lineId: m.lineId, variantId: variant('oxford-cotton-shirt', 'sky', 'L').id })).toEqual({
+        lineId: l.lineId,
+        quantity: 2,
+        joined: true,
+      });
       // The joined-away line is archived, never deleted.
       expect(await t.prisma.cartItem.findUniqueOrThrow({ where: { id: m.lineId } })).toMatchObject({ removedAt: expect.any(Date) });
     });
@@ -236,7 +253,17 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       expect((await bagView(deps(), { storeId: S, cartId: id, lang: 'en' })).tiers).toBeNull(); // the sample tier is a draft
       await switchOn('any-polos');
       const bag = await bagView(deps(), { storeId: S, cartId: id, lang: 'en' });
-      expect(bag.tiers).toMatchObject({ ruleKey: 'any-polos', inBag: 1, ladder: { rows: [{ quantity: 2, priceMinor: 150000 }, { quantity: 3, priceMinor: 210000 }], next: { quantity: 2, more: 1 } } });
+      expect(bag.tiers).toMatchObject({
+        ruleKey: 'any-polos',
+        inBag: 1,
+        ladder: {
+          rows: [
+            { quantity: 2, priceMinor: 150000 },
+            { quantity: 3, priceMinor: 210000 },
+          ],
+          next: { quantity: 2, more: 1 },
+        },
+      });
       overrides.set('bag.tiers.endsOn', '2026-10-22');
       expect((await bagView(deps(), { storeId: S, cartId: id, lang: 'en' })).tiers).toBeNull();
       overrides.delete('bag.tiers.endsOn');
@@ -257,7 +284,9 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
 
     it('SIM-F-009: a public code works for a guest; a members-only code says so; better-offer and too-small reasons', async () => {
       const rule = await createRule({ db: t.prisma, settings, now: () => clock }, who(), { templateId: 'coupon', key: 'test-eid-coupon' });
-      await saveDraft({ db: t.prisma, settings, now: () => clock }, who(), rule.id, { content: withValues(rule.live!, { amountOff: 10000, minOrder: 300000 }, { status: 'ACTIVE' }) });
+      await saveDraft({ db: t.prisma, settings, now: () => clock }, who(), rule.id, {
+        content: withValues(rule.live!, { amountOff: 10000, minOrder: 300000 }, { status: 'ACTIVE' }),
+      });
       await publishRule({ db: t.prisma, settings, now: () => clock }, who(), rule.id);
       bustAll();
       const rulesDeps = { db: t.prisma, settings, now: () => clock };
@@ -280,7 +309,10 @@ describe.skipIf(!HAS_TEST_DB)('the bag on PostgreSQL (S04)', () => {
       // The members-only code says so in words (the shop's dictionary turns the reason into "for members — log in").
       await setBagCode(deps(), { storeId: S, cartId, code: 'test-vip' });
       expect((await bagView(deps(), { storeId: S, cartId, lang: 'en' })).code).toEqual({ state: 'refused', code: 'TEST-VIP', reason: 'MEMBERS_ONLY' });
-      expect((await bagView(deps(), { storeId: S, cartId, lang: 'en', customerId: '00000000-0000-4000-8000-000000000105' })).code).toMatchObject({ state: 'applied', code: 'TEST-VIP' });
+      expect((await bagView(deps(), { storeId: S, cartId, lang: 'en', customerId: '00000000-0000-4000-8000-000000000105' })).code).toMatchObject({
+        state: 'applied',
+        code: 'TEST-VIP',
+      });
       // A friend's invite code is told apart from a code that does not exist.
       const referrer = await t.prisma.customer.findFirst({ where: { storeId: S }, select: { id: true } });
       if (referrer) {

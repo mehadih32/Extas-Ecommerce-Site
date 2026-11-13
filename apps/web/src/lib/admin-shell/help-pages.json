@@ -38,6 +38,7 @@
     { "id": "products/reviews", "route": "/admin/products/reviews" },
     { "id": "products/questions", "route": "/admin/products/questions" },
     { "id": "products/faqs", "route": "/admin/products/faqs" },
+    { "id": "products/demo", "route": "/admin/products/demo" },
     { "id": "products/import", "route": "/admin/products/import" },
     { "id": "products/erp-import", "route": "/admin/products/erp-import" },
     { "id": "products/audit", "route": "/admin/products/audit" },

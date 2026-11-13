@@ -55,7 +55,7 @@ export async function videoSitemapItems(storeId: number, origin: URL): Promise<V
   const videos = await db.productVideo.findMany({ where: { storeId, archivedAt: null, durationSec: { not: null } }, orderBy: { createdAt: 'desc' }, take: 5000 });
   if (!videos.length) return [];
   const products = await db.product.findMany({
-    where: { storeId, id: { in: videos.map((v) => v.productId) }, status: 'PUBLISHED', archivedAt: null },
+    where: { storeId, id: { in: videos.map((v) => v.productId) }, status: 'PUBLISHED', isDemo: false, archivedAt: null },
     select: { id: true, slug: true, nameEn: true, descriptionEn: true },
   });
   const byId = new Map(products.map((p) => [p.id, p]));
