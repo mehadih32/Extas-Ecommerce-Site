@@ -14,6 +14,9 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import * as inv from '@extas/inventory';
 import { requirePermission } from '@extas/auth';
+import * as cu from '@extas/customers';
+import { salesByArea } from '@extas/metrics';
+import * as sh from '@extas/shipping';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 import { libraryScreen, periodOf } from './report-library-api';
@@ -21,6 +24,9 @@ import { fileCsv, filePdf, fileXlsx, wordsFor } from './report-files';
 import { PACKS, PACK_PRESET, packFile, type PackData, type PackId } from './report-packs';
 import { SINGLE_REPORTS, singleFile, type SingleData, type SingleId } from './report-singles';
 import { sellableReader } from './shop/sellable';
+import { customersDeps } from './customers-api';
+import { shippingDeps } from './shipping-api';
+import { teamView } from './team-performance';
 
 function storeIdOf(url: URL): number | null {
   const raw = url.searchParams.get('storeId');
@@ -54,11 +60,35 @@ export async function packData(admin: AdminDeps, who: inv.Who, pack: PackId, per
   };
 }
 
-/** The numbers of one single report (the library's own screen for the period). */
-export async function singleData(admin: AdminDeps, who: inv.Who, period: Parameters<typeof libraryScreen>[2]): Promise<SingleData> {
+/** The numbers of one single report (the library's own screen for the period; Courier, Areas, Customers and Team read their own report's figures). */
+export async function singleData(admin: AdminDeps, who: inv.Who, period: Parameters<typeof libraryScreen>[2], id?: SingleId): Promise<SingleData> {
   const s = await libraryScreen(admin, who, period);
-  const currency = await admin.resolver.value('store.currency', { storeId: who.storeId });
-  return { range: { from: s.range.from, to: s.range.to }, currency, cards: s.cards, restock: s.restock, time: s.time, review: s.review };
+  const at = { storeId: who.storeId };
+  const [currency, timeZone] = await Promise.all([admin.resolver.value('store.currency', at), admin.resolver.value('store.timeZone', at)]);
+  const out: SingleData = { range: { from: s.range.from, to: s.range.to }, currency, cards: s.cards, restock: s.restock, time: s.time, review: s.review };
+  // A report the person may not open (or that is off) stays null: the file then says so, it never fails.
+  const allowed = async (perm: 'reports.read' | 'books.read' | 'staff.performance') => requirePermission(admin.db, who.actor, perm, at).then(() => true, () => false);
+  const day = 86_400_000; // hardcode-ok: milliseconds in a day
+  const from = new Date(`${s.range.from}T00:00:00Z`);
+  const to = new Date(new Date(`${s.range.to}T00:00:00Z`).getTime() + day);
+  if (id === 'courier' && (await allowed('reports.read'))) {
+    const perf = await sh.courierPerformance(await shippingDeps(admin), { actor: who.actor, storeId: who.storeId, ctx: who.ctx }, { from, to, lang: 'en', lateRows: 0 });
+    out.courier = perf.byCourier.map((c) => ({ label: c.label, parcels: c.parcels, delivered: c.delivered, successRate: c.successRate, onTimeRate: c.onTimeRate, returned: c.returned, refused: c.refused }));
+  }
+  if (id === 'areas' && (await allowed('books.read'))) {
+    const a = await salesByArea(admin.db, who.storeId, { from: s.range.from, to: s.range.to }, { timeZone, level: 'district' });
+    const fig = (x: { delivered: number; salesMinor: number; pieces: number; returned: number; returnRate: number | null }) => ({ delivered: x.delivered, salesMinor: x.salesMinor, pieces: x.pieces, returned: x.returned, returnRate: x.returnRate });
+    out.areas = { level: a.level, rows: a.rows.map((r) => ({ name: r.nameEn, parent: r.parentNameEn ?? null, ...fig(r) })), unknown: fig(a.unknown) };
+  }
+  if (id === 'customers' && (await allowed('reports.read'))) {
+    const r = await cu.customerReport(customersDeps(admin), { actor: who.actor, storeId: who.storeId, ctx: who.ctx }, { from, to });
+    out.customers = r.totals ? { enabled: true, quietDays: r.quietDays, buyers: r.totals.buyers, newBuyers: r.totals.newBuyers, returning: r.totals.returning, quiet: r.totals.quiet, repeaters: r.totals.repeaters, repeatRate: r.totals.repeatRate } : { enabled: false, quietDays: r.quietDays, buyers: 0, newBuyers: 0, returning: 0, quiet: 0, repeaters: 0, repeatRate: null };
+  }
+  if (id === 'team' && (await allowed('staff.performance'))) {
+    const v = await teamView(admin, who.storeId, 0, (admin.now ?? (() => new Date()))());
+    out.team = v.settings.value.enabled ? { from: v.from, to: v.to, rows: v.rows.map((r) => ({ name: r.name, counts: r.counts })) } : null;
+  }
+  return out;
 }
 
 const isFile = (x: string) => (PACKS as readonly string[]).includes(x) || (SINGLE_REPORTS as readonly string[]).includes(x);
@@ -94,7 +124,7 @@ export async function packsHandler(request: Request, deps: AdminDeps | null, pac
     if (period === null) return fail(400, 'INVALID_INPUT', ['period']);
     const model = (PACKS as readonly string[]).includes(pack)
       ? packFile(pack as PackId, await packData(deps!, who, pack as PackId, period), w)
-      : singleFile(pack as SingleId, await singleData(deps!, who, period), w);
+      : singleFile(pack as SingleId, await singleData(deps!, who, period, pack as SingleId), w);
     const { head, timeZone } = await letterhead(deps!, storeId);
     const day = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format((deps!.now ?? (() => new Date()))());
     const file = `${pack}-${(PACKS as readonly string[]).includes(pack) ? 'pack-' : ''}${model.range.from}`;

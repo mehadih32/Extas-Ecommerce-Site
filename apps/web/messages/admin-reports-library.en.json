@@ -149,7 +149,11 @@
         "figures": "Sales and profit",
         "products": "Products and stock",
         "timing": "When orders come in",
-        "review": "Monthly review"
+        "review": "Monthly review",
+        "courier": "Courier performance",
+        "areas": "Sales by area",
+        "customers": "Customers",
+        "team": "Team"
       },
       "printFail": "The print window did not open. The PDF is open in a new tab; print it from there."
     }

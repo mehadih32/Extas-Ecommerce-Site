@@ -9,7 +9,7 @@ import { fileUrl, type FileFormat, type FilePeriod } from '@/lib/report-file-lin
 import { t, type Dict } from '@/lib/i18n';
 
 const PACKS = ['monthly', 'bank', 'stock', 'sales'] as const;
-const SINGLES = ['figures', 'products', 'timing', 'review'] as const;
+const SINGLES = ['figures', 'products', 'timing', 'review', 'courier', 'areas', 'customers', 'team'] as const;
 const PACK_PERIODS = ['lastmonth', 'month', 'last3m', 'last6m', 'last12m'] as const;
 /** The period each pack opens with. */
 const PACK_FIRST: Record<(typeof PACKS)[number], (typeof PACK_PERIODS)[number]> = { monthly: 'lastmonth', bank: 'last12m', stock: 'month', sales: 'lastmonth' };
