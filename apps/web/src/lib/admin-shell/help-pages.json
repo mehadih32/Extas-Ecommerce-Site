@@ -226,7 +226,8 @@
     { "id": "help/build-problems", "route": "/admin/build/problems" },
     { "id": "help/build-requests", "route": "/admin/build/requests" },
     { "id": "help/build-files", "route": "/admin/build/files" },
-    { "id": "help/build-file", "route": "/admin/build/files/read" }
+    { "id": "help/build-file", "route": "/admin/build/files/read" },
+    { "id": "help/admin-map", "route": "/admin/map" }
   ],
   "notGuided": [
     { "route": "/admin/login", "why": "the sign-in page has no shell (no top bar, no guide icon); docs/admin-guide/login.md explains it" },
