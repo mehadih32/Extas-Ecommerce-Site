@@ -105,3 +105,5 @@ export * from './performance';
 // S08 · PR 564 — the charge mismatch log (record only) and its monthly figure.
 export * from './charge-mismatch';
 export * from './with-courier';
+// S28 · PR 670: the Couriers section's reads (overview cards, Courier 360 header and weeks, a courier's parcels)
+export * from './couriers-v5';

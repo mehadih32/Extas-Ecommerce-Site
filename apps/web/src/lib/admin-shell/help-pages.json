@@ -48,9 +48,11 @@
     { "id": "customers/settings", "route": "/admin/customers/settings" },
     { "id": "customers/import", "route": "/admin/customers/import" },
     { "id": "customers/customer", "route": "/admin/customers/[id]" },
+    { "id": "delivery/overview", "route": "/admin/delivery" },
+    { "id": "delivery/courier-360", "route": "/admin/delivery/couriers/[id]" },
     { "id": "delivery/zones", "route": "/admin/delivery/zones" },
     { "id": "delivery/couriers", "route": "/admin/delivery/couriers" },
-    { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]" },
+    { "id": "delivery/courier", "route": "/admin/delivery/couriers/[id]/areas" },
     { "id": "delivery/settings", "route": "/admin/delivery/settings" },
     { "id": "messages/log", "route": "/admin/messages/log" },
     { "id": "messages/channels", "route": "/admin/messages/channels" },
@@ -206,6 +208,8 @@
   "notGuided": [
     { "route": "/admin/login", "why": "the sign-in page has no shell (no top bar, no guide icon); docs/admin-guide/login.md explains it" },
     { "route": "/admin/[...rest]", "why": "the placeholder of a section with no built page: the guide shows that section's overview" },
-    { "route": "/admin/delivery", "why": "a permanent redirect to /admin/delivery/zones" }
+    { "route": "/admin/delivery/courier-360", "why": "opens the default courier's Courier 360 (a redirect, no screen of its own)" },
+    { "route": "/admin/money/couriers", "why": "the Finance tab \"Couriers\": opens the default courier's Courier 360 on its Money section (a redirect)" },
+    { "route": "/admin/reports/couriers", "why": "the Reports tab \"Couriers\": opens the default courier's Courier 360 on its Performance section (a redirect)" }
   ]
 }

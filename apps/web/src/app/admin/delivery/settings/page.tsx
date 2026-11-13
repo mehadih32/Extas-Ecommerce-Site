@@ -23,6 +23,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { adminDeps } from '@/lib/admin-auth';
 import { withEta } from '@/lib/admin-eta';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
+import { withCouriers } from '@/lib/admin-couriers';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { deliveryDistrictOptions, deliverySettingCards } from '@/lib/delivery-settings-api';
@@ -43,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DeliverySettingsPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('delivery.read', deps, MOTHER_STORE_ID)]);
-  const view = withEta(plain);
+  const view = withCouriers(withEta(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
@@ -54,11 +55,12 @@ export default async function DeliverySettingsPage() {
       </div>
     );
   const at = { storeId: MOTHER_STORE_ID };
-  const [cards, districts, holdReasons, editReasons] = await Promise.all([
+  const [cards, districts, holdReasons, editReasons, couriers] = await Promise.all([
     deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }),
     deliveryDistrictOptions(access.deps),
     access.deps.resolver.value('orders.hold.reasons', at),
     access.deps.resolver.value('orders.edit.reasons', at),
+    access.deps.db.courierAccount.findMany({ where: { storeId: MOTHER_STORE_ID, archivedAt: null }, select: { id: true, name: true }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] }),
   ]);
   const canEdit = access.guard.permissions?.has('delivery.charges') ?? false;
   const h = (k: string) => t(d, `eta.holiday.${k}`);
@@ -151,6 +153,8 @@ export default async function DeliverySettingsPage() {
     { kind: 'switch', path: 'autoMatch', label: ck('zoneSync.autoMatch'), help: ck('zoneSync.autoMatchHelp') },
     { kind: 'select', path: 'unmapped', label: ck('zoneSync.unmapped'), help: ck('zoneSync.unmappedHelp'), options: ZONE_UNMAPPED_RULES.map((v) => ({ value: v, label: ck(`zoneSync.rules.${v}`) })) },
   ];
+  // S28 · PR 670: the default courier
+  const defaultFields: FieldsCardField[] = [{ kind: 'select', path: 'defaultCourierId', label: t(d, 'cr.s.default'), options: [{ value: '', label: t(d, 'cr.s.card.first') }, ...couriers.map((x) => ({ value: x.id, label: x.name }))] }];
   // follow-up 462: the packing step's cards, under More options
   const pa = (k: string, vars?: Record<string, string>) => t(d, `eta.packing.${k}`, vars);
   const packCard = (key: 'fulfilment.packing.check' | 'fulfilment.packing.photo' | 'fulfilment.packing.weight' | 'fulfilment.packing.queue' | 'fulfilment.packing.issues') => ({ key: cards[key].key, value: cards[key].value, version: cards[key].version });
@@ -208,6 +212,7 @@ export default async function DeliverySettingsPage() {
       <FieldsCard url={API} screen={card('delivery.courier.tracking')} fields={trackingFields} texts={{ ...texts, h: ck('tracking.h'), d: ck('tracking.d') }} canEdit={canEdit} testId="delivery-courier-tracking" />
       <FieldsCard url={API} screen={card('delivery.courier.booking')} fields={bookingFields} texts={{ ...texts, h: ck('booking.h'), d: ck('booking.d') }} canEdit={canEdit} testId="delivery-courier-booking" />
       <FieldsCard url={API} screen={card('delivery.courier.selection')} fields={selectionFields} texts={{ ...texts, h: ck('selection.h'), d: ck('selection.d') }} canEdit={canEdit} testId="delivery-courier-selection" />
+      <FieldsCard url={API} screen={{ key: cards['delivery.couriers'].key, value: cards['delivery.couriers'].value, version: cards['delivery.couriers'].version }} fields={defaultFields} texts={{ ...texts, h: t(d, 'cr.s.card.h'), d: t(d, 'cr.s.card.d') }} canEdit={canEdit} testId="delivery-courier-default" />
       <FieldsCard url={API} screen={card('delivery.courier.webhooks')} fields={webhookFields} texts={{ ...texts, h: ck('webhooks.h'), d: ck('webhooks.d') }} canEdit={canEdit} testId="delivery-courier-webhooks" />
       <FieldsCard url={API} screen={card('delivery.courier.zoneSync')} fields={zoneFields} texts={{ ...texts, h: ck('zoneSync.h'), d: ck('zoneSync.d') }} canEdit={canEdit} testId="delivery-courier-zones" />
       {/* the browser opens it before hydration when the address names #packing: that `open` is expected */}
