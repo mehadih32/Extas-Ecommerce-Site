@@ -16,3 +16,10 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
   a tab "Staff controls" under Settings (People group, next to People / Roles). Key `staffControls`, guide `settings/staff-controls`.
 - The same page holds the end-of-day cash handover sheet (switch `staff.controls` handover.enabled, off by default).
 - 664 (price adjust) and 687 (cash in/out) call `checkDiscount` / `personLimits` from `lib/staff-controls.ts` when they land.
+
+## PR 706 Start fresh
+- Page `/admin/settings/start-fresh` (perm `settings.write`; the owner only inside), a tab "Start fresh" under Settings, in the
+  Data & privacy / System group, last in its row. Key `startFresh`, guide `settings/start-fresh`. Off until the owner switches it on
+  (setting `startFresh.settings`); runs once. The site clears carts, reviews and returns itself; orders, customers, chats,
+  coupon uses, analytics and customer problems sit on append-only tables and are HANDED_OFF (recorded in `StartFreshRun.kinds`)
+  to the server's purge job, which is not built here. The ERP-side clear is a mock (`erpStatus` MOCK_NOT_SENT).

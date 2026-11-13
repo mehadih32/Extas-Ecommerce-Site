@@ -27,6 +27,15 @@ export const staffControlsSchema = z
   .strict();
 export type StaffControls = z.output<typeof staffControlsSchema>;
 
+/** PR 706 — Start fresh: off until the owner switches it on; the backup must be this fresh (minutes) when it runs. */
+export const startFreshSchema = z
+  .object({
+    enabled: z.boolean(),
+    backupMaxAgeMinutes: z.number().int().min(5).max(1440),
+  })
+  .strict();
+export type StartFreshSettings = z.output<typeof startFreshSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -36,5 +45,14 @@ export const s28W5bSettings = {
     helpKey: 'staff.controls.help',
     sortOrder: 720,
     version: 702,
+  }),
+  'startFresh.settings': setting({
+    ...base,
+    schema: startFreshSchema,
+    default: { enabled: false, backupMaxAgeMinutes: 60 },
+    labelKey: 'startFresh.settings.label',
+    helpKey: 'startFresh.settings.help',
+    sortOrder: 726,
+    version: 706,
   }),
 };

@@ -4,5 +4,11 @@
       "label": "Staff controls",
       "help": "Per role: the biggest discount it may give without the owner (empty = no limit) and whether it sees a customer's phone and address in full; and the end-of-day cash and bKash sheet. Nothing is limited and no sheet is asked for until you turn it on."
     }
+  },
+  "startFresh": {
+    "settings": {
+      "label": "Start fresh",
+      "help": "One time only, on go-live day: clears the test and sample business data and asks for a full backup, the words START FRESH and your PIN first. Off until you turn it on. 'Backup no older than' is how many minutes old the backup may be when it runs."
+    }
   }
 }
