@@ -13,7 +13,7 @@ describe.skipIf(!HAS_TEST_DB)('approval gates on PostgreSQL (PR 664, 687 with 70
   let A = 0;
   let owner = '';
   let desk = '';
-  let resolver: SettingsResolver;
+  let resolver: SettingsResolver<typeof registry>;
   const deps = () => ({ db: t.prisma, resolver });
   const sent: string[] = [];
   const link = { use: async () => ({ mode: 'LIVE', api: { send: async () => ({ ok: true }), sendWithButtons: async (text: string) => (sent.push(text), { ok: true, messageId: 7 }) } }) } as never;
