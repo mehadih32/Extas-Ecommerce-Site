@@ -6,7 +6,7 @@ import { findBag, visitorIdSchema } from '@extas/cart';
 import { captureDraft, checkoutQuote, CheckoutError, noteFlagShown, payAction, payView, placeOrder, saveVoiceAddress, viewOf, type CheckoutDeps, type CheckoutQuote, type PlaceNext, type VoiceHooks } from '@extas/checkout';
 import { isPaymentsError, startPayment, type PaymentsDeps } from '@extas/payments';
 import { CartError } from '@extas/cart';
-import { askCheckoutAdvance, autoConfirmQuietly, noteCourierScore, systemBy, assessRisk, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, selfConfirmPrepaid, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
+import { askCheckoutAdvance, autoConfirmQuietly, noteCourierScore, systemBy, assessRisk, autoMergeOnOrder, blocklistOnOrder, blockProposalOnOrder, bundleOnOrder, isOrdersError, linkIdentity, newCustomerOnOrder, phoneRiskCheck, refuserTermsOnOrder, placeInSection, screenOrder, selfConfirmPrepaid, transitDuplicateAnswer, transitDuplicateCheck, twoSizeCheck, type CourierFraudSource } from '@extas/orders';
 import { body, errorResponse, fail, json, readCookie, requestContext, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE, DEVICE_COOKIE } from './bag-model';
 import { SUPPORT_REF_COOKIE, supportRefOf } from './support-ref-model';
@@ -222,6 +222,14 @@ async function checkBlockProposal(deps: LandedDeps, orderId: string): Promise<vo
  * `risk.bundling` on and sets its hours): the order is marked for a person to press "One parcel", or grouped with the same
  * person's other open orders to the same address. Lines, money and the status never change. Never stops the order.
  */
+async function checkAutoMerge(deps: LandedDeps, orderId: string): Promise<void> {
+  try {
+    await autoMergeOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
+  } catch (e) {
+    console.warn(`auto-merge: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`);
+  }
+}
+
 async function checkBundling(deps: LandedDeps, orderId: string): Promise<void> {
   try {
     await bundleOnOrder({ db: deps.checkout.db, settings: deps.checkout.settings, now: deps.checkout.now }, { storeId: deps.storeId, orderId });
@@ -300,6 +308,7 @@ export async function orderLanded(deps: LandedDeps, orderId: string): Promise<vo
   await sectionRisk(deps, orderId);
   await checkNewCustomer(deps, orderId);
   await waitForAdvance(deps, orderId);
+  await checkAutoMerge(deps, orderId);
   await checkBundling(deps, orderId);
   await selfConfirmLanded(deps, orderId);
   // S28 · PR 663: the auto-confirm rules table decides last (off as shipped): confirm, call list or red tag; never fails the order

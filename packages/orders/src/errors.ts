@@ -123,7 +123,11 @@ export type OrdersErrorCode =
   /** S28 · PR 664: nothing to take off (no delivery charge left, no wallet balance, an amount of nothing). */
   | 'NOTHING_TO_ADJUST'
   /** S28 · PR 664: the request was answered already (`data.state`). */
-  | 'ALREADY_DECIDED';
+  | 'ALREADY_DECIDED'
+  /** S28 · PR 665: merging orders is switched off (Rules › Order flow). */
+  | 'MERGE_OFF'
+  /** S28 · PR 665: the addresses differ and a person has not said go on (`data.addresses`). */
+  | 'ADDRESS_DIFFERS';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -194,6 +198,7 @@ export class OrdersError extends Error {
       case 'ADJUST_OFF':
       case 'ADJUST_TOO_MUCH':
       case 'NOTHING_TO_ADJUST':
+      case 'MERGE_OFF':
         return 422;
       case 'ERP_UNAVAILABLE':
         return 503;

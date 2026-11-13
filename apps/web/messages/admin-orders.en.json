@@ -379,7 +379,14 @@
       "priceValuePh": "e.g. 50, or 10 for 10%. Empty: all the wallet allows",
       "priceReason": "Reason (required)",
       "pricePin": "Owner PIN (only needed above your limit)",
-      "pricePinNeeded": "Owner PIN"
+      "pricePinNeeded": "Owner PIN",
+      "mergeOrders": "Orders to fold in",
+      "mergeOrderLine": "{number} · {lines} lines · {total}",
+      "mergeLeaveOut": "Lines to leave out (they stay on the cancelled order)",
+      "mergeLineLabel": "{number} · {name} ({detail}) x {quantity} · {total}",
+      "mergeAddress": "The addresses are different",
+      "mergeAddressStop": "Stop, do not merge",
+      "mergeAddressGo": "Go on with this order's address"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -436,7 +443,9 @@
       "PIN_REQUIRED": "This needs the owner's PIN.",
       "WRONG_PIN": "The PIN is not right.",
       "PIN_LOCKED": "Too many wrong PIN tries. Wait a while and try again.",
-      "PIN_NOT_SET": "The owner has not set the PIN yet."
+      "PIN_NOT_SET": "The owner has not set the PIN yet.",
+      "MERGE_OFF": "Merging orders is switched off in Rules.",
+      "ADDRESS_DIFFERS": "The addresses are different. Choose to go on with this order's address, or stop."
     },
     "cmd": {
       "confirm": {
@@ -602,6 +611,18 @@
         "title": "Refuse the price adjustment on order {n}",
         "ok": "Refuse",
         "done": "The price adjustment on order {n} is refused"
+      },
+      "merge": {
+        "label": "Merge",
+        "title": "Merge other orders into {n}",
+        "ok": "Merge",
+        "done": "The orders are merged into {n}. Check the lines, then confirm"
+      },
+      "mergeCall": {
+        "label": "Merge + call",
+        "title": "Merge other orders into {n} and call",
+        "ok": "Merge and queue a call",
+        "done": "The orders are merged into {n} and a call is queued"
       }
     },
     "eff": {
@@ -655,7 +676,12 @@
       "priceLedger": "A new line in the order's price ledger with your name and the reason; nothing is edited",
       "priceNoRefund": "No money is refunded. The total and the amount at the door change",
       "priceApprove": "The adjustment is applied to the order now. The owner's PIN is checked",
-      "priceRefuse": "The request is refused and the order stays as it is"
+      "priceRefuse": "The request is refused and the order stays as it is",
+      "mergeMove": "The lines you pick move onto this order at the price they were sold at",
+      "mergeCancel": "Each folded order is cancelled as \"duplicate order\", its stock goes free, and this order takes the pieces",
+      "mergeCharge": "This order keeps its own delivery charge and address; the folded order's charge goes with it",
+      "mergeAddress": "Different address on {numbers}. Say go on to use this order's address",
+      "mergeThenEdit": "After this you can take a line out, change a size or add a piece on this order, then confirm it"
     },
     "review": {
       "title": "Duplicate review",
@@ -921,7 +947,11 @@
       "order_priceAdjustAsked": "Price adjustment asked (above the limit)",
       "order_priceAdjustRefused": "Price adjustment refused",
       "priceLine": "{kind} · {amount} · {reason}",
-      "priceTotal": "total {before} → {after}"
+      "priceTotal": "total {before} → {after}",
+      "order_mergedInto": "Merged into another order",
+      "order_mergedFrom": "Orders merged into this one",
+      "mergedIntoLine": "Now part of {number} ({lines} lines, {total})",
+      "mergedFromOne": "took in {number} ({lines} lines, {total})"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",

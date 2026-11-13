@@ -3,13 +3,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { orderFlowSettings, priceAdjustSchema, PRICE_ADJUST_DEFAULT, PRICE_ADJUST_OTHER_KEY } from '../src/registry-order-flow';
+import { MERGE_ORDERS_DEFAULT, mergeOrdersSchema, orderFlowSettings, priceAdjustSchema, PRICE_ADJUST_DEFAULT, PRICE_ADJUST_OTHER_KEY } from '../src/registry-order-flow';
 
-describe('order flow settings (v300)', () => {
+describe('order flow settings (v300, v301)', () => {
   it('every key is in the registry at its version, never owner data, labelled in both languages, its default valid', () => {
     for (const [key, spec] of Object.entries(orderFlowSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect(spec.version, key).toBe(300);
+      expect([300, 301], key).toContain(spec.version);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -33,5 +33,20 @@ describe('order flow settings (v300)', () => {
     expect(ok({ roleLimits: { 'order-manager': { amountMinor: 100, percent: 101 } } })).toBe(false);
     expect(ok({ roleLimits: { 'Order Manager': { amountMinor: 100, percent: 10 } } })).toBe(false);
     expect(ok({ reasons: [] })).toBe(false);
+  });
+});
+
+describe('PR 665 (v301): merge orders', () => {
+  it('ships off: look-back 5 days, auto-merge off, a different address asks', () => {
+    expect(MERGE_ORDERS_DEFAULT).toEqual({ enabled: false, lookBackDays: 5, autoMerge: false, differentAddress: 'ask' });
+    expect(orderFlowSettings['orders.mergeOrders'].version).toBe(301);
+  });
+  it('look-back is whole days from 1 to 60; the address rule is ask or refuse', () => {
+    const ok = (v: object) => mergeOrdersSchema.safeParse({ ...MERGE_ORDERS_DEFAULT, ...v }).success;
+    expect(ok({ lookBackDays: 10 })).toBe(true);
+    expect(ok({ lookBackDays: 0 })).toBe(false);
+    expect(ok({ lookBackDays: 2.5 })).toBe(false);
+    expect(ok({ lookBackDays: 61 })).toBe(false);
+    expect(ok({ differentAddress: 'allow' })).toBe(false);
   });
 });
