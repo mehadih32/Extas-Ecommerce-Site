@@ -1,0 +1,8 @@
+{
+  "orders": {
+    "autoConfirm": {
+      "label": "Auto-confirm rules",
+      "help": "Decides which new orders go straight to Confirmed and which stay in Processing. One table of nine cases, each answered Confirm by itself, Call list, or Red tag (a person decides). The Low, Normal and Strict presets fill the table. It only does what a person's Confirm does: no money moves, no price or cash on delivery changes, and nothing is blocked or cancelled. A suspicious order (a duplicate, a re-order, a new identity, high risk) is never confirmed by itself. Trusted customer: the delivered parcels you set, with at most the refusals you allow. A cash order above the limit you set goes to the call list (empty: no limit). Off as shipped."
+    }
+  }
+}
