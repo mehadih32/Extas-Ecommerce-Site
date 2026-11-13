@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "styleAbTest": {
+        "label": "Photoshoot — on-model vs flat-lay live pilot",
+        "help": "The real products this pilot runs on, and what share of their visitors see the on-model photo first instead of the shop's own flat-lay order. Empty, as it ships: the pilot runs on nothing and every visitor sees the shop exactly as before. Add the owner's own 20–30 pilot products here to start it."
+      }
+    }
+  }
+}

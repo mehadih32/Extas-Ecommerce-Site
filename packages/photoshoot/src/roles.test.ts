@@ -8,11 +8,38 @@ describe('ASSET_ROLES', () => {
     for (const r of ['primary_garment', 'front_reference', 'side_reference', 'back_reference', 'detail_reference', 'context_reference']) {
       expect((ASSET_ROLES as readonly string[]).includes(r)).toBe(true);
     }
+    // S24 · PR 465: the three roles the product-only studio engine needed that no garment reference ever did.
+    for (const r of ['three_quarter_reference', 'top_reference', 'sole_reference']) {
+      expect((ASSET_ROLES as readonly string[]).includes(r)).toBe(true);
+    }
+    // S24 · PR 471: the one role the worn-accessory engine's own "worn" view needed (its "flat" view reuses
+    // front_reference instead of adding a second one).
+    expect((ASSET_ROLES as readonly string[]).includes('worn_reference')).toBe(true);
+    // S24 · PR 473: the one role the reflective/transparent engine needs — a real, unedited phone photo of a
+    // perfume bottle, watch glass or sunglass lens; C7.12's own "these are not generated" rule accepts no other
+    // source.
+    expect((ASSET_ROLES as readonly string[]).includes('reflective_reference')).toBe(true);
+    // S24 · PR 475 (C7.22 item 32): the combo/gift-set composition studio's own finished-group-image role —
+    // never a reference for any further generation.
+    expect((ASSET_ROLES as readonly string[]).includes('combo_gift_set_composition')).toBe(true);
+    // S24 · PR 476 (C7.22 item 33): the scene library's own approved-demo role — unlike combo_gift_set_composition,
+    // this one IS meant to be reused as a reference for a later, different garment set (C7.13's own "re-rendered
+    // into a seasonal scene without a new shoot").
+    expect((ASSET_ROLES as readonly string[]).includes('scene_library_demo')).toBe(true);
+    // S24 · PR 478 (C7.22 item 35): the set try-on engine's own finished two-garment render role.
+    expect((ASSET_ROLES as readonly string[]).includes('set_try_on')).toBe(true);
+    // S24 · PR 479 (C7.22 item 36): the unisex/couple composition engine's own finished composed-scene role.
+    expect((ASSET_ROLES as readonly string[]).includes('couple_composition')).toBe(true);
   });
 
-  it('REFERENCE_ROLES excludes primary_garment only', () => {
+  it('REFERENCE_ROLES excludes primary_garment, combo_gift_set_composition, set_try_on and couple_composition only', () => {
     expect(REFERENCE_ROLES.includes('primary_garment' as never)).toBe(false);
-    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 1);
+    expect(REFERENCE_ROLES.includes('combo_gift_set_composition' as never)).toBe(false);
+    expect(REFERENCE_ROLES.includes('set_try_on' as never)).toBe(false);
+    expect(REFERENCE_ROLES.includes('couple_composition' as never)).toBe(false);
+    // scene_library_demo IS a reference role (see the module comment on roles.ts) — included, not excluded.
+    expect(REFERENCE_ROLES.includes('scene_library_demo' as never)).toBe(true);
+    expect(REFERENCE_ROLES.length).toBe(ASSET_ROLES.length - 4);
   });
 });
 

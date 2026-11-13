@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "styleReferenceEnabled": {
+        "label": "Studio — style/pose reference",
+        "help": "Off by default. Turn this on so a generation can follow a real sample pose or styling image the owner supplies for it. Supplying one is always optional; a photo that is archived, AI-generated, or tagged for a different job is ignored rather than guessed at. The resulting pose set or video is reused for the same template, product and colours, never paid for twice."
+      }
+    }
+  }
+}

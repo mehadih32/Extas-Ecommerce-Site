@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "recipeOverrides": {
+        "label": "Studio — category recipe overrides",
+        "help": "Which camera style, how many angles, which detail points and which model each product family uses in the Studio. Starts empty, so every family uses the system's own defaults; change only the families you mean to — anything left out keeps its default."
+      }
+    }
+  }
+}

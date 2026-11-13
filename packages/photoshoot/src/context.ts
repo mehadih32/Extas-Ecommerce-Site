@@ -26,6 +26,9 @@ export interface PhotoshootDeps {
   db: PrismaClient;
   settings?: SettingsReader;
   now?: () => Date;
+  /** PR 452: the per-view retry's "a new seed" (C7.5 step 7). Injectable so a test can make the "different from
+   * last time" guarantee deterministic; real callers get a crypto-random one (see `jobs.ts`'s `generateSeed`). */
+  randomSeed?: () => string;
 }
 
 export const nowOf = (deps: Pick<PhotoshootDeps, 'now'>): Date => deps.now?.() ?? new Date();
@@ -45,6 +48,43 @@ export const PHOTOSHOOT_ERROR_CODES = [
   'ORIGINAL_IMMUTABLE',
   // PR 444 / C7.6 hard rule: generating a back view with no real back_reference asset on file
   'NO_BACK_REFERENCE',
+  // PR 466 / C7.12 hard rule: recording a footwear product-only studio output with no real, matching-angle
+  // reference asset on file — "never invent" the same way PR 444's own NO_BACK_REFERENCE does, generalised to
+  // all six footwear angles rather than just the one ghost mannequin needed.
+  'NO_FOOTWEAR_REFERENCE',
+  // PR 452: the store's own `studio.photoshoot.maxConcurrentJobs` is already reached — the job stays QUEUED, not failed
+  'CONCURRENCY_LIMIT',
+  // PR 452 (C7.20): the Photoshoot agent's own monthly spend cap is reached — new generations pause, the job stays QUEUED
+  'SPEND_CAP_REACHED',
+  // PR 472 / C7.12 hard rule: recording a worn-accessory studio output with no real, matching-view reference asset
+  // on file — "never invent" the same way PR 444's own NO_BACK_REFERENCE and PR 466's own NO_FOOTWEAR_REFERENCE do.
+  'NO_WORN_ACCESSORY_REFERENCE',
+  // PR 472 / C7.12: "Detail re-projection is mandatory for these families" (watches, sunglasses, bags) — a studio
+  // output for one of those three families is refused until an approved detail region (PR 454) exists on its own
+  // source reference photo; caps are deliberately not gated by this code.
+  'DETAIL_REPROJECTION_REQUIRED',
+  // PR 473 / C7.12 "Reflective and transparent goods — honest handling": recording a reflective/transparent
+  // studio output (perfume, watch glass, sunglass lens) with no real, on-file reflective_reference phone photo
+  // — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE and NO_WORN_ACCESSORY_REFERENCE do.
+  'NO_REFLECTIVE_REFERENCE',
+  // PR 475 / C7.22 item 32 hard rule: composing a combo/gift-set studio image with a named piece that has no real,
+  // on-file photo actually linked (ProductMedia) to that exact product in this store — "never invent" a piece's
+  // own likeness, the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE, NO_WORN_ACCESSORY_REFERENCE and
+  // NO_REFLECTIVE_REFERENCE already do for their own engines.
+  'NO_PIECE_REFERENCE',
+  // PR 476 / C7.13 "Scene library" hard rule: saving a scene-library entry with no real, on-file, non-archived
+  // photo it was actually demoed from — "never invent" the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
+  // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE and NO_PIECE_REFERENCE already do for their own engines.
+  'NO_SCENE_REFERENCE',
+  // PR 478 / C7.13 "the model must be wearing the complete set in one image" hard rule: recording a set try-on
+  // output with either the top or the bottom (or both) missing a real, on-file, matching-angle reference —
+  // "never invent" one half of a set the same way NO_BACK_REFERENCE, NO_FOOTWEAR_REFERENCE,
+  // NO_WORN_ACCESSORY_REFERENCE, NO_REFLECTIVE_REFERENCE, NO_PIECE_REFERENCE and NO_SCENE_REFERENCE already do.
+  'NO_SET_COMPONENT_REFERENCE',
+  // PR 479 / C7.13 "Unisex / couple shots" hard rule: composing a couple shot with the male or the female member
+  // (or both) missing a real, already-generated, on-file render to compose from — "never invent" one half of a
+  // couple shot the same way NO_SET_COMPONENT_REFERENCE already does for one half of a set.
+  'NO_COUPLE_MEMBER_REFERENCE',
 ] as const;
 export type PhotoshootErrorCode = (typeof PHOTOSHOOT_ERROR_CODES)[number];
 
@@ -61,7 +101,20 @@ export class PhotoshootError extends Error {
   get status(): number {
     if (this.code === 'NOT_FOUND') return 404;
     if (this.code === 'STALE') return 409;
-    if (this.code === 'ORIGINAL_IMMUTABLE' || this.code === 'NO_BACK_REFERENCE') return 403;
+    if (
+      this.code === 'ORIGINAL_IMMUTABLE' ||
+      this.code === 'NO_BACK_REFERENCE' ||
+      this.code === 'NO_FOOTWEAR_REFERENCE' ||
+      this.code === 'NO_WORN_ACCESSORY_REFERENCE' ||
+      this.code === 'DETAIL_REPROJECTION_REQUIRED' ||
+      this.code === 'NO_REFLECTIVE_REFERENCE' ||
+      this.code === 'NO_PIECE_REFERENCE' ||
+      this.code === 'NO_SCENE_REFERENCE' ||
+      this.code === 'NO_SET_COMPONENT_REFERENCE' ||
+      this.code === 'NO_COUPLE_MEMBER_REFERENCE'
+    )
+      return 403;
+    if (this.code === 'CONCURRENCY_LIMIT' || this.code === 'SPEND_CAP_REACHED') return 429;
     return 400;
   }
 }

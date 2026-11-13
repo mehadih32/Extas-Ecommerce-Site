@@ -1,0 +1,18 @@
+{
+  "studio": {
+    "photoshoot": {
+      "modelLibraryAssignments": {
+        "label": "Studio — model library assignments",
+        "help": "Which library each full-body model profile belongs to (Men, Ladies or Kids), one choice per model. Starts empty — a model is not in any library until you assign it here."
+      },
+      "modelStylingGuideline": {
+        "label": "Studio — model styling guideline",
+        "help": "How you want each model profile dressed and posed in generated photos (e.g. \"ladies profile 2 — modest, full sleeve, soft smile\"), one note per model. Starts empty."
+      },
+      "kidsModelEnabled": {
+        "label": "Studio — allow a kids model",
+        "help": "Off by default. Several AI providers restrict generating realistic photos of children, and ghost-mannequin/flat-lay photos of kidswear already look clean and cost less. Turn this on only if you want a real kids model profile to appear in generated photos, and also point Kidswear's own recipe at the Kids library in the category recipe settings."
+      }
+    }
+  }
+}

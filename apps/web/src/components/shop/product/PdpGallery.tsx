@@ -14,7 +14,7 @@ import type { PdpTemplate, PdpTemplatesSettings } from '@extas/settings';
 import type { OverlayBadge } from '@extas/creative-studio';
 import { Icon } from '../Icon';
 import { whenIdle } from '@/lib/shop/later';
-import { nearestTile, stepTo, thumbsShown } from '@/lib/shop/pdp-gallery';
+import { nearestTile, onModelAngles, stepTo, thumbsShown } from '@/lib/shop/pdp-gallery';
 import { lowStock } from '@/lib/shop/pdp-stock';
 import { NO_COLOUR, type PdpShot } from '@/lib/shop/product-model';
 import { usePdp } from './PdpRoot';
@@ -118,7 +118,14 @@ export function PdpGallery({
 
   const name = m.name;
   const colourName = colour?.name ?? '';
-  const altOf = (s: PdpShot) => (colourName ? w('alt', { name, colour: colourName, view: w(`view.${s.kind}`) }) : `${name}, ${w(`view.${s.kind}`)}`);
+  // PR 461 — each on-model shot by its own angle (front / three-quarter / back / walking / seated, C7.15), so two
+  // different on-model photos never sound the same to a screen reader; every other shot is unchanged.
+  const angles = onModelAngles(shots);
+  const kindLabel = (s: PdpShot, i: number) => {
+    const a = angles[i];
+    return a ? w(`view.modelAngle.${a}`) : w(`view.${s.kind}`);
+  };
+  const altOf = (s: PdpShot, i: number) => (colourName ? w('alt', { name, colour: colourName, view: kindLabel(s, i) }) : `${name}, ${kindLabel(s, i)}`);
   const low = set.stock.lowChip ? lowStock(m, choice, set.stock.lowAt) : null;
   const lowText = low ? w(low.kind === 'lowSize' ? 'stock.lowSize' : 'stock.low', { n: num(low.n), colour: colourName, size: m.sizes.find((s) => s.key === choice.size)?.label ?? '' }) : null;
   const n = shots.length;
@@ -162,7 +169,7 @@ export function PdpGallery({
                   open(i);
                 }
               }}
-              {...(set.gallery.zoom ? { tabIndex: i === idx ? 0 : -1, role: 'button', 'aria-label': `${altOf(s)} · ${w('zoom.open')}` } : {})}
+              {...(set.gallery.zoom ? { tabIndex: i === idx ? 0 : -1, role: 'button', 'aria-label': `${altOf(s, i)} · ${w('zoom.open')}` } : {})}
             >
               <ShotPicture
                 shot={s}
@@ -170,7 +177,7 @@ export function PdpGallery({
                 hex={hex}
                 slot="main"
                 sizes={stacked ? '(max-width: 1023px) 90vw, 30vw' : '(max-width: 1023px) 100vw, 50vw'}
-                alt={set.gallery.zoom ? '' : altOf(s)}
+                alt={set.gallery.zoom ? '' : altOf(s, i)}
                 lang={lang}
                 ratio={stacked ? 'ratio-34' : 'ratio-45'}
                 priority={i === 0}
@@ -231,7 +238,7 @@ export function PdpGallery({
               key={s.id}
               type="button"
               className={`pdp-thumb${i === idx ? ' on' : ''}${hid ? ' ob-hid' : ''}${more ? ' ob-more' : ''}`}
-              aria-label={more ? `${w(`view.${s.kind}`)} · ${w('morePhotos', { n: num(cut.more) })}` : w(`view.${s.kind}`)}
+              aria-label={more ? `${kindLabel(s, i)} · ${w('morePhotos', { n: num(cut.more) })}` : kindLabel(s, i)}
               aria-pressed={i === idx}
               data-more={more ? w('morePhotosTile', { n: num(cut.more) }) : undefined}
               onClick={() => go(i)}

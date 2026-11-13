@@ -1,0 +1,10 @@
+{
+  "studio": {
+    "photoshoot": {
+      "coupleCompositionEnabled": {
+        "label": "Studio — unisex/couple composition",
+        "help": "Off by default. Turn this on to let the studio compose one scene showing a male and a female model both wearing a unisex set, from two renders already produced separately. Both renders still need to exist first — nothing is ever invented."
+      }
+    }
+  }
+}
