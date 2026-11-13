@@ -89,3 +89,4 @@ export * from './erp-returns-v6';
 // CN-028 · PR 619 — the switch-over to ERP contract v6 and the per-store ERP link page's state.
 export * from './erp-switchover';
 export * from './cashbook';
+export * from './budgets';
