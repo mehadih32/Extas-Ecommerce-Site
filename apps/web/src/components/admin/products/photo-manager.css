@@ -70,3 +70,45 @@
   flex: 1 1 280px;
   min-width: 0;
 }
+
+/* S28 · PR 682 — Products › FAQs */
+.fq-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin: 12px 0;
+}
+.fq-groups {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+}
+.fq-li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--lm-line, #e5e7eb);
+  overflow-wrap: anywhere;
+}
+.fq-li:last-child {
+  border-bottom: 0;
+}
+.fq-li.off {
+  opacity: 0.65;
+}
+.fq-q {
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.fq-acts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.fq-form {
+  margin-bottom: 12px;
+}

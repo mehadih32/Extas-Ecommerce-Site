@@ -979,3 +979,13 @@
   display: inline-block;
   margin-top: 4px;
 }
+
+/* S28 · PR 682 — the product page's FAQ list reuses the questions block's rows (.pdp-qa-i) */
+.shop .pdp-faq {
+  margin-top: 16px;
+}
+.shop .pdp-faq-h {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}

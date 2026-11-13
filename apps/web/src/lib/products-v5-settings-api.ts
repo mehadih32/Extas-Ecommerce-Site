@@ -3,14 +3,15 @@
 // STALE), checked against its schema, audited and in the settings change log. Same shape as review-settings-api.ts.
 //   media.quality  Products › a product's photos › Photo checks (PR 680)
 //   catalogue.video  Products › a product › Video settings (PR 681)
+//   catalogue.faq  Products › FAQs › More options (PR 682)
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { catalogueVideoSchema, mediaQualitySchema, storeTarget } from '@extas/settings';
+import { catalogueFaqSchema, catalogueVideoSchema, mediaQualitySchema, storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
-export const PRODUCT_V5_KEYS = ['media.quality', 'catalogue.video'] as const;
+export const PRODUCT_V5_KEYS = ['media.quality', 'catalogue.video', 'catalogue.faq'] as const;
 export type ProductV5Key = (typeof PRODUCT_V5_KEYS)[number];
 
 export interface ProductV5Card {
@@ -34,9 +35,11 @@ export class ProductV5Error extends Error {
   }
 }
 
-const SCHEMAS = { 'media.quality': mediaQualitySchema, 'catalogue.video': catalogueVideoSchema } as const;
+const SCHEMAS = { 'media.quality': mediaQualitySchema, 'catalogue.video': catalogueVideoSchema, 'catalogue.faq': catalogueFaqSchema } as const;
 const WHERE: Record<ProductV5Key, string> = {
   'media.quality': "Products › a product's photos › Photo checks",
+  'catalogue.video': 'Products › a product › Video › More options',
+  'catalogue.faq': 'Products › FAQs › More options',
 };
 const isKey = (k: unknown): k is ProductV5Key => typeof k === 'string' && (PRODUCT_V5_KEYS as readonly string[]).includes(k);
 export const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
