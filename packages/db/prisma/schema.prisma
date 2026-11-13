@@ -202,6 +202,7 @@ model Store {
   orderNotes              OrderNote[]
   orderGroups             OrderGroup[]
   orderPriceAdjustments   OrderPriceAdjustment[]
+  orderMerges             OrderMerge[]
   callTasks               CallTask[]
   notificationTemplates   NotificationTemplate[]
   notificationRules       NotificationRule[]
@@ -3088,6 +3089,8 @@ model Order {
 
   /// PR 664: the price-adjust ledger lines of this order (never edited, never deleted).
   priceAdjustments OrderPriceAdjustment[]
+  mergesAsMain     OrderMerge[]           @relation("OrderMergeMain")
+  mergedAway       OrderMerge?            @relation("OrderMergeSource")
 
   @@unique([storeId, number])
   @@unique([storeId, idempotencyKey])
@@ -3304,6 +3307,39 @@ enum OrderPriceAdjustmentState {
   PENDING
   APPLIED
   REJECTED
+}
+
+/// @stage S05 · PR 665 — the record of one order folded into another ("Merge" on a Merge-needed row). One row per folded
+/// order: the order that stays, the order that was cancelled with the reason "merged", the lines moved, the lines left out
+/// by the person, whether the addresses differed and a person said go on, and whether "Merge + call" asked for a call.
+/// Never edited, never deleted: the merge is not undone, a wrong one is corrected by editing the kept order.
+/// @append-only
+model OrderMerge {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store    @relation(fields: [storeId], references: [id])
+  /// The order that stays and now holds the lines.
+  mainOrderId     String   @db.Uuid
+  mainOrder       Order    @relation("OrderMergeMain", fields: [mainOrderId], references: [id])
+  /// The order that was cancelled into it (one merge each).
+  sourceOrderId   String   @unique @db.Uuid
+  sourceOrder     Order    @relation("OrderMergeSource", fields: [sourceOrderId], references: [id])
+  /// Pieces and money moved onto the kept order, and the lines the person left out.
+  movedLines      Int
+  movedMinor      Int
+  leftOutLines    Int
+  /// The addresses differed and the person confirmed the kept order's address.
+  addressDiffered Boolean  @default(false)
+  /// "Merge + call": a call to the customer was queued.
+  callQueued      Boolean  @default(false)
+  /// The system merged them (auto-merge) instead of a person.
+  auto            Boolean  @default(false)
+  note            String?
+  mergedById      String?  @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, mainOrderId])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S05 · PR 545, 563, 146 — the call queue for the AI or an employee: unclear address, new-customer verification,

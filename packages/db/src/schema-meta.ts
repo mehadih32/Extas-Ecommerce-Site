@@ -241,6 +241,8 @@ export const APPEND_ONLY_LOCKED = [
   'HouseAdOrderClick',
   // S05 · PR 664 (S28; migration 0200_order_price_adjust): each price-adjust line of an order; an answer or a correction is a new line.
   'OrderPriceAdjustment',
+  // S05 · PR 665 (S28; migration 0201_order_merge): one row per order folded into another; never edited.
+  'OrderMerge',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
