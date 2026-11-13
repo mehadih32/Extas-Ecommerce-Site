@@ -1,4 +1,4 @@
-// S28 · PR 663 (Admin v5; prototype Rules › Order flow › Auto-confirm) — registry version 294.
+// S28 · PR 663 (Admin v5; prototype Rules › Order flow › Auto-confirm) — registry version 297.
 //
 // `orders.autoConfirm`: the rules that decide which new orders go straight to Confirmed and which stay in Processing. One
 // table of nine cases, each answered "confirm by itself" (`auto`), "call list" (`call`) or "red tag, a person decides"
@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V663 = 294;
+const V663 = 297;
 
 /** The nine cases the table decides, in the prototype's order. */
 export const AUTO_CONFIRM_CASES = ['prepaid', 'delivery', 'trusted', 'goodScore', 'brandNew', 'refused', 'refusedPaid', 'bigCod', 'suspicious'] as const;
