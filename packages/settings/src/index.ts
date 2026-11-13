@@ -65,6 +65,7 @@ export * from './registry-risk-s06';
 export * from './registry-advance-request';
 export * from './registry-wallet';
 export * from './registry-courier-sync';
+export * from './registry-couriers-v5';
 export * from './registry-fulfilment';
 export * from './registry-customers';
 // S11 · PR 220–222 — the SEO engine's settings (registry-seo.ts, version 64).

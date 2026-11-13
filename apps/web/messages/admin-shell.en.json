@@ -38,7 +38,9 @@
       "delivery": {
         "zones": "Zones & charges",
         "couriers": "Couriers",
-        "settings": "Delivery settings"
+        "settings": "Delivery settings",
+        "overview": "Overview",
+        "courier360": "Courier 360"
       },
       "marketing": {
         "campaigns": "Campaigns",
@@ -71,7 +73,8 @@
         "areas": "Sales by area",
         "experiments": "Experiments",
         "searches": "Searches",
-        "orders": "Orders"
+        "orders": "Orders",
+        "couriers": "Couriers"
       },
       "settings": {
         "store": "Store details",
@@ -155,7 +158,8 @@
         "fees": "Costs & fees",
         "vat": "VAT",
         "ledger": "Cost ledger",
-        "monthEnd": "Month-end"
+        "monthEnd": "Month-end",
+        "couriers": "Couriers"
       },
       "ai": {
         "control": "Control room",

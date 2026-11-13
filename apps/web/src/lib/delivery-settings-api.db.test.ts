@@ -161,4 +161,18 @@ describe.skipIf(!HAS_TEST_DB)('Delivery settings API on PostgreSQL (PR 193 holid
     expect(await deps.resolver.value('delivery.courier.zoneSync', { storeId: MOTHER_STORE_ID })).toMatchObject({ everyDays: 14 });
     expect(await t.prisma.auditLog.count({ where: { action: 'delivery.courier.zoneSync.save' } })).toBe(1);
   });
+  it('S28 · PR 670: the default courier card is empty as shipped; only a courier of this store is taken; audited', async () => {
+    const card = (await api('GET', { cookie: owner })).body.cards!['delivery.couriers']!;
+    expect(card.value).toEqual({ defaultCourierId: '' });
+    // a reader may not save; an id that is no courier of this store is refused
+    expect((await api('PUT', { cookie: reader, body: { key: card.key, value: { defaultCourierId: '' }, version: card.version } })).status).toBe(403);
+    expect((await api('PUT', { cookie: owner, body: { key: card.key, value: { defaultCourierId: 'not an id' }, version: card.version } })).status).toBe(400);
+    const unknown = await api('PUT', { cookie: owner, body: { key: card.key, value: { defaultCourierId: '3f0c2a52-6a5b-4a5f-9a53-2f4d8f0a1b11' }, version: card.version } });
+    expect(unknown.status).toBe(400);
+    expect(unknown.body.details).toEqual(['defaultCourierId']);
+    const courier = await t.prisma.courierAccount.create({ data: { storeId: MOTHER_STORE_ID, providerKey: 'steadfast', name: 'Sample courier' } });
+    expect((await api('PUT', { cookie: owner, body: { key: card.key, value: { defaultCourierId: courier.id }, version: card.version } })).status).toBe(200);
+    expect(await deps.resolver.value('delivery.couriers', { storeId: MOTHER_STORE_ID })).toEqual({ defaultCourierId: courier.id });
+    expect(await t.prisma.auditLog.count({ where: { action: 'delivery.couriers.save' } })).toBe(1);
+  });
 });
