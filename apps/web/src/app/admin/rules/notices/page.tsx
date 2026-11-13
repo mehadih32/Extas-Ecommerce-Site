@@ -1,3 +1,4 @@
+// S28 · PR 678: the page opens with the hub of the shop's twelve system pop-ups and notices; below it, the owner's own notices.
 // S10 · PR 216 — Notices & pop-ups (`/admin/rules/notices`): the announcement bar, banners, notes on a page and
 // pop-ups, their place, timing and frequency cap, and the rule they quote. Reading needs `rules.read`; changing
 // `rules.write`; switching on, off and archiving `rules.publish`. The API checks each again on every call.
@@ -7,6 +8,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
 import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
 import { NoticesScreen } from '@/components/admin/rules/NoticesScreen';
+import { PopupsHub } from '@/components/admin/rules/PopupsHub';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -32,12 +34,14 @@ export default async function NoticesPage() {
   if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const a = rulesAccess(access);
-  const [notices, env, places, limits, { rules }] = await Promise.all([
+  const [notices, env, places, limits, { rules }, hubScreen] = await Promise.all([
     rl.listNotices(a.deps, a.who, { includeArchived: true }),
     rulesEnv(a),
     rulePlaces(a),
     rl.noticeLimits(a.deps, a.storeId),
     rl.loadRules(a.deps.db, a.storeId),
+    // S28 · PR 678: the twelve system pop-ups and notices, above the owner's own notices
+    rl.popupsScreen({ ...a.deps, settings: deps!.resolver }, a.who),
   ]);
   const ruleOptions = rules.filter((r) => !r.archived).map((r) => ({ id: r.id, key: r.key, nameEn: r.nameEn, nameBn: r.nameBn ?? null, params: r.params }));
 
@@ -53,10 +57,18 @@ export default async function NoticesPage() {
         places={places}
         limits={{ ...limits, placements: [...limits.placements] }}
         perms={a.perms}
-        tabs={
-          <div className="pa-gtabs">
-            <SystemTabs view={view} current={KEY} group="rules" />
-          </div>
+        before={
+          <PopupsHub
+            dict={view.dict}
+            lang={view.lang}
+            screen={hubScreen}
+            perms={{ write: a.perms.write }}
+            tabs={
+              <div className="pa-gtabs">
+                <SystemTabs view={view} current={KEY} group="rules" />
+              </div>
+            }
+          />
         }
       />
     </AdminFrame>
