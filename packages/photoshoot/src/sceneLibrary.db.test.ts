@@ -27,6 +27,12 @@ describe.skipIf(!HAS_TEST_DB)('PR 476 · scene library (PostgreSQL)', () => {
     };
     writer = await staff('t476-writer', ['photoshoot.read', 'photoshoot.generate']);
     reader = await staff('t476-reader', ['photoshoot.read']);
+    // the A4.3 test below reads as `reader` from S2 on purpose, to prove a private scene from S is invisible
+    // there while a shared one is visible — which only tests that, rather than a bare permission refusal, if
+    // the same actor actually holds `photoshoot.read` in S2 too.
+    const readerStaffUserId = reader.actor.staffUserId!; // always set — this suite only ever builds staff actors
+    const readerRole = await t.prisma.staffRoleAssignment.findFirstOrThrow({ where: { staffUserId: readerStaffUserId, storeId: S } });
+    await t.prisma.staffRoleAssignment.create({ data: { staffUserId: readerStaffUserId, roleId: readerRole.roleId, storeId: S2 } });
   });
 
   afterAll(async () => t.drop());

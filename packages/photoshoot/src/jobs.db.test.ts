@@ -230,7 +230,11 @@ describe.skipIf(!HAS_TEST_DB)('PR 452 · per-view retry, concurrency limiting, s
 
   it('with no AiAgent row keyed "photoshoot" yet, the cap check never blocks — and PR 468\'s own ensure now seeds the row, still with no cap (CN-018 ships off)', async () => {
     const d = deps();
-    expect(await t.prisma.aiAgent.findUnique({ where: { key: 'photoshoot' } })).toBeNull(); // nothing yet, this test's own store is fresh
+    // `AiAgent.key` is installation-wide, not scoped to this test's own store, so an earlier test in this same
+    // describe block (which shares one `t.prisma`) may already have called `startProcessing` and seeded it —
+    // delete it first so this test proves the "nothing yet" case deterministically, regardless of run order.
+    await t.prisma.aiAgent.deleteMany({ where: { key: 'photoshoot' } });
+    expect(await t.prisma.aiAgent.findUnique({ where: { key: 'photoshoot' } })).toBeNull();
     const job = await makeQueuedJob();
     const started = await startProcessing(d, generator, job.id);
     expect(started.status).toBe('PROCESSING');
@@ -335,7 +339,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 459 · estimate and the C7.6 reuse rule (Postg
     const d = deps(fakeRates({ fashn: { baseline: 10000, premium: 20000 } }));
     const p = await makeProduct();
     const assetId = crypto.randomUUID();
-    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-1', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    const modelId = crypto.randomUUID(); // `PhotoshootJob.modelId` is a real `@db.Uuid` column, never a plain label
+    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
     expect(opened.reused).toBe(false);
     await transitionJob(d, generator, opened.job.id, 'PROCESSING');
     await transitionJob(d, generator, opened.job.id, 'REVIEW_REQUIRED');
@@ -344,7 +349,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 459 · estimate and the C7.6 reuse rule (Postg
 
     // a later, otherwise-fresh request for the exact same product/model/settings/provider — a different asset
     // list order, even, still matches (the reuse hash sorts it) — must find the approved job, never spend again
-    const again = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-1', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    const again = await createOrReuseJob(d, generator, { productId: p.id, modelId, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
     expect(again.reused).toBe(true);
     expect(again.reusedApproval).toBe(true);
     expect(again.job.id).toBe(opened.job.id);
@@ -371,16 +376,18 @@ describe.skipIf(!HAS_TEST_DB)('PR 459 · estimate and the C7.6 reuse rule (Postg
     const d = deps();
     const p = await makeProduct();
     const assetId = crypto.randomUUID();
-    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-A', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    const modelA = crypto.randomUUID(); // `PhotoshootJob.modelId` is a real `@db.Uuid` column, never a plain label
+    const modelB = crypto.randomUUID();
+    const opened = await createOrReuseJob(d, generator, { productId: p.id, modelId: modelA, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
     await transitionJob(d, generator, opened.job.id, 'PROCESSING');
     await transitionJob(d, generator, opened.job.id, 'REVIEW_REQUIRED');
     await transitionJob(d, approver, opened.job.id, 'APPROVED');
 
-    const differentModel = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-B', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
+    const differentModel = await createOrReuseJob(d, generator, { productId: p.id, modelId: modelB, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fashn' });
     expect(differentModel.reusedApproval).toBeFalsy();
     expect(differentModel.job.id).not.toBe(opened.job.id);
 
-    const differentProvider = await createOrReuseJob(d, generator, { productId: p.id, modelId: 'model-A', angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
+    const differentProvider = await createOrReuseJob(d, generator, { productId: p.id, modelId: modelA, angle: 'front', tier: 'baseline', inputAssetIds: [assetId], provider: 'fitroom' });
     expect(differentProvider.reusedApproval).toBeFalsy();
     expect(differentProvider.job.id).not.toBe(opened.job.id);
   });

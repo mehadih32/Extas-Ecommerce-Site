@@ -19,10 +19,16 @@ function fakeSettings(qualityThresholdPercent: number): SettingsReader {
   return { value: async () => qualityThresholdPercent as never };
 }
 
-/** A rate-table stand-in for `studio.photoshoot.rates` — same minimal shape `jobs.db.test.ts`'s own `fakeRates`
- * uses, ignoring the key it is asked for since this suite only ever reads the one setting. */
+/** A rate-table stand-in for `studio.photoshoot.rates`. `recordScoredOutputs` also reads
+ * `studio.photoshoot.qualityThresholdPercent` on every call (PR 453) to score candidates — a fake that ignored
+ * the key, as `jobs.db.test.ts`'s own `fakeRates` safely can (its callers never exercise that path), would hand
+ * the rate table back as the threshold too and reject every candidate on a non-numeric comparison. This one
+ * answers per key: the rate table for `rates`, and 0 ("ships off", CN-018 — never rejects) for the threshold,
+ * matching the real default every test here relies on. */
 function fakeRates(rates: { fashn?: { baseline: number; premium: number }; fitroom?: { baseline: number; premium: number } }): SettingsReader {
-  return { value: async () => rates as never };
+  return {
+    value: async (key: string) => (key === 'studio.photoshoot.rates' ? rates : 0) as never,
+  };
 }
 
 describe.skipIf(!HAS_TEST_DB)('PR 453/458/459 · best-of-2, automatic scoring, the review decision and the cost ledger (PostgreSQL)', () => {
@@ -47,6 +53,12 @@ describe.skipIf(!HAS_TEST_DB)('PR 453/458/459 · best-of-2, automatic scoring, t
     generator = await staff('t453-generator', ['photoshoot.read', 'photoshoot.write', 'photoshoot.generate']);
     approver = await staff('t458-approver', ['photoshoot.read', 'photoshoot.approve']);
     reader = await staff('t458-reader', ['photoshoot.read']);
+    // the cross-store NOT_FOUND test below swaps `approver`'s storeId to `other` on purpose, to prove a
+    // cross-store output is hidden as NOT_FOUND rather than leaking FORBIDDEN/exists-but-denied — which only
+    // tests that path if the actor actually holds `photoshoot.approve` in `other` too, same role, same staff user.
+    const approverStaffUserId = approver.actor.staffUserId!; // always set — this suite only ever builds staff actors
+    const approverRole = await t.prisma.staffRoleAssignment.findFirstOrThrow({ where: { staffUserId: approverStaffUserId, storeId: S } });
+    await t.prisma.staffRoleAssignment.create({ data: { staffUserId: approverStaffUserId, roleId: approverRole.roleId, storeId: other } });
   });
 
   afterAll(async () => t.drop());

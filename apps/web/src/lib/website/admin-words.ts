@@ -107,6 +107,10 @@ import adminManualEn from '../../../messages/admin-manual.en.json';
 import adminManualBn from '../../../messages/admin-manual.bn.json';
 import adminMarketingReportEn from '../../../messages/admin-marketing-report.en.json';
 import adminMarketingReportBn from '../../../messages/admin-marketing-report.bn.json';
+import adminMarketingPhotoshootEditorEn from '../../../messages/admin-marketing-photoshoot-editor.en.json';
+import adminMarketingPhotoshootEditorBn from '../../../messages/admin-marketing-photoshoot-editor.bn.json';
+import adminMarketingPhotoshootReviewEn from '../../../messages/admin-marketing-photoshoot-review.en.json';
+import adminMarketingPhotoshootReviewBn from '../../../messages/admin-marketing-photoshoot-review.bn.json';
 import adminMarketingStudioEn from '../../../messages/admin-marketing-studio.en.json';
 import adminMarketingStudioBn from '../../../messages/admin-marketing-studio.bn.json';
 import adminMessagesEn from '../../../messages/admin-messages.en.json';
@@ -260,6 +264,8 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-learning': { en: adminLearningEn, bn: adminLearningBn },
   'admin-manual': { en: adminManualEn, bn: adminManualBn },
   'admin-marketing-report': { en: adminMarketingReportEn, bn: adminMarketingReportBn },
+  'admin-marketing-photoshoot-editor': { en: adminMarketingPhotoshootEditorEn, bn: adminMarketingPhotoshootEditorBn },
+  'admin-marketing-photoshoot-review': { en: adminMarketingPhotoshootReviewEn, bn: adminMarketingPhotoshootReviewBn },
   'admin-marketing-studio': { en: adminMarketingStudioEn, bn: adminMarketingStudioBn },
   'admin-messages': { en: adminMessagesEn, bn: adminMessagesBn },
   'admin-money': { en: adminMoneyEn, bn: adminMoneyBn },

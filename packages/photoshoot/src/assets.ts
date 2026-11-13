@@ -84,7 +84,12 @@ const recordInput = z
     checksumSha256: z.string().min(32),
     width: z.number().int().min(1).optional(),
     height: z.number().int().min(1).optional(),
-    tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
+    // PR 448 set this at 40 for plain pipeline-step labels (`ghost_mannequin`). PR 475/478/479's own
+    // `piece:<uuid>:<uuid>` / `component:<role>:<uuid>` / `member:<role>:<uuid>` tags carry a real asset or
+    // product id (or two) to round-trip a group's members without a second query — up to 79 chars for the
+    // two-uuid case — so the cap is raised to fit those with headroom, not tightened back down (nothing here is
+    // an owner-facing limit; it is the data model's own tag-length ceiling).
+    tags: z.array(z.string().trim().min(1).max(90)).max(20).default([]),
   })
   .strict();
 

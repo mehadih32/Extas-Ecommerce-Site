@@ -36,7 +36,7 @@ import { memoryStorage } from '@extas/adapters';
 import { createRole, syncAuth, SYSTEM, type PermissionKey } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { attachToProduct, downloadCopy, renderAsset, sha256, type MediaDeps } from '@extas/media';
-import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
+import { INSTALLATION, messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { recordGeneratedAsset } from './assets';
 import type { PhotoshootDeps, Who } from './context';
 import { createOrReuseJob, transitionJob } from './jobs';
@@ -70,7 +70,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 467 · a Studio render is watermarked on downl
     await syncAuth(t.prisma);
     await syncSettings(t.prisma, { registry, messages });
     settings = new SettingsResolver(prismaBackend(t.prisma), registry, { checkIntervalMs: 0 });
-    await settings.set('media.image.avifEffort', 0, storeTarget(S)); // fast AVIF in tests
+    await settings.set('media.image.avifEffort', 0, INSTALLATION); // fast AVIF in tests — installation-scoped, same as @extas/media's own tests
     const storage = memoryStorage();
     mediaDeps = { db: t.prisma, settings, storage: async () => storage };
     photoshootDeps = { db: t.prisma, settings };
