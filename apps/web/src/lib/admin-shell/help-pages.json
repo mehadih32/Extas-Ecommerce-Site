@@ -141,6 +141,7 @@
     { "id": "website/blog-ad", "route": "/admin/website/blog/ads/[id]" },
     { "id": "website/blog-pipeline", "route": "/admin/website/blog/pipeline" },
     { "id": "website/analytics", "route": "/admin/website/analytics" },
+    { "id": "website/analytics-behaviour", "route": "/admin/website/analytics/behaviour" },
     { "id": "marketing/geo-guide", "route": "/admin/marketing/geo-guide" },
     { "id": "marketing/merchant-feed", "route": "/admin/marketing/merchant-feed" },
     { "id": "marketing/meta-feed", "route": "/admin/marketing/meta-feed" },

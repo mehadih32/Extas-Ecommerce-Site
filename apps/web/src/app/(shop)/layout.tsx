@@ -31,6 +31,7 @@ import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
 import { AnalyticsBeacon } from '@/components/shop/AnalyticsBeacon';
+import { BehaviourBeacon } from '@/components/shop/BehaviourBeacon';
 import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { WordsEditLoader } from '@/components/shop/WordsEditLoader';
 import { PageEditBar } from '@/components/shop/PageEditBar';
@@ -62,7 +63,8 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'language.frontEdit': frontEdit,
     'analytics.events': analyticsEvents,
     'analytics.visitors': analyticsVisitors,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors'] as const, c.storeId);
+    'analytics.behaviour': analyticsBehaviour,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors', 'analytics.behaviour'] as const, c.storeId);
   // PR 600: the owner's on-page edit bar (null for everyone else; nothing is read without an admin session)
   const pageEdit = await pageEditState();
   const trackView = tracking.on && tracking.events.view;
@@ -98,6 +100,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
       ) : null}
       {trackView || trackCheckout ? <TrackingBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], checkoutPath: ROUTES.checkout, view: trackView, checkout: trackCheckout }} /> : null}
       {analyticsEvents.on ? <AnalyticsBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], collect: analyticsVisitors.collect }} /> : null}
+      {analyticsBehaviour.collect ? <BehaviourBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'] }} /> : null}
       {transit.enabled ? <CampaignKeep /> : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}

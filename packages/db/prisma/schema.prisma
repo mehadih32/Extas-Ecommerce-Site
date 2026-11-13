@@ -201,6 +201,7 @@ model Store {
   bulkQuotes              BulkQuote[]
   approvalRequests        ApprovalRequest[]
   pageViewDays            PageViewDay[]
+  behaviourDays           BehaviourDay[]
   bulkBatches             BulkBatch[]
   orders                  Order[]
   orderItems              OrderItem[]
@@ -11830,4 +11831,26 @@ model PageViewDay {
 
   @@unique([storeId, day, dim, key])
   @@index([storeId, day])
+}
+
+/// @stage S28 · PR 701 (admin prototype v5, GAP-MAP part 3 W8 / N9) — what shoppers do on a page, counted, never recorded
+/// one by one: no visitor id, no value typed, no text. `kind` is CLICK (key `col,row` of a grid laid over the page),
+/// SCROLL (key 25, 50, 75 or 100: the deepest part of the page reached), FIELD (a checkout box was touched, key the box's
+/// own name) or FIELD_EMPTY (it was left empty, the drop-off). `device` is mobile, tablet or desktop. The shop's beacon adds
+/// to the count of the store's day (the store's own day); rows older than the setting's keep-days are removed.
+model BehaviourDay {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  day       DateTime @db.Date
+  kind      String
+  pageType  String
+  device    String
+  key       String
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, kind, pageType, device, key])
+  @@index([storeId, day, kind])
 }

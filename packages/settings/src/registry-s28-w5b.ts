@@ -92,6 +92,21 @@ export const analyticsVisitorsSchema = z
   .strict();
 export type AnalyticsVisitorsSettings = z.output<typeof analyticsVisitorsSchema>;
 
+/**
+ * S28 · PR 701 (Website > Analytics > Behaviour): off until the owner turns it on. On, the shop counts where visitors click
+ * (as a cell of a `grid` x `grid` map of the page, never what was clicked), how far they scroll (0/25/50/75/100%), and
+ * which form fields they touch or leave empty (the field's name only, never what was typed). `keepDays` is how long the
+ * daily counts stay.
+ */
+export const analyticsBehaviourSchema = z
+  .object({
+    collect: z.boolean(),
+    keepDays: z.number().int().min(7).max(365),
+    grid: z.number().int().min(5).max(40),
+  })
+  .strict();
+export type AnalyticsBehaviourSettings = z.output<typeof analyticsBehaviourSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -137,5 +152,14 @@ export const s28W5bSettings = {
     helpKey: 'analytics.visitors.help',
     sortOrder: 720,
     version: 700,
+  }),
+  'analytics.behaviour': setting({
+    ...base,
+    schema: analyticsBehaviourSchema,
+    default: { collect: false, keepDays: 60, grid: 20 }, // hardcode-ok: the setting's own shipped default, editable on the screen
+    labelKey: 'analytics.behaviour.label',
+    helpKey: 'analytics.behaviour.help',
+    sortOrder: 721,
+    version: 701,
   }),
 };
