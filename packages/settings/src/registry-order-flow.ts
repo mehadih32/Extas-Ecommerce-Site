@@ -13,6 +13,7 @@ import { dictionarySchema } from './schemas';
 
 const V664 = 300;
 const V665 = 301;
+const V669 = 302;
 
 /** Role keys are lower-case words and dots or hyphens (`order-manager`). */
 const roleKeySchema = z
@@ -73,6 +74,23 @@ export type MergeOrdersRule = z.output<typeof mergeOrdersSchema>;
 
 export const MERGE_ORDERS_DEFAULT: MergeOrdersRule = { enabled: false, lookBackDays: 5, autoMerge: false, differentAddress: 'ask' };
 
+// PR 669 — `returns.replacement`: a defective, damaged or wrong piece is sent again free (the same piece, no price difference,
+// no refund, no wallet credit) and the old piece comes back. Its own rule, apart from the exchange rule: `hours` after the
+// courier's delivered mark it can be opened (168 as shipped), `oldPieceDays` how many days the old piece has to come back
+// (shown on the board, never billed by itself), `reasons` which of defect, damage and wrong open one. Off as shipped.
+export const REPLACEMENT_REASONS = ['defect', 'damage', 'wrong'] as const;
+export const replacementSchema = z
+  .object({
+    enabled: z.boolean(),
+    hours: z.int().min(1).max(8_760),
+    oldPieceDays: z.int().min(1).max(90),
+    reasons: z.array(z.enum(REPLACEMENT_REASONS)).min(1).max(3),
+  })
+  .strict();
+export type ReplacementRule = z.output<typeof replacementSchema>;
+
+export const REPLACEMENT_DEFAULT: ReplacementRule = { enabled: false, hours: 168, oldPieceDays: 7, reasons: ['defect', 'damage', 'wrong'] };
+
 const base = { scope: 'store', isOwnerData: false, isPublic: false, group: 'orders' } as const;
 
 export const orderFlowSettings = {
@@ -95,5 +113,15 @@ export const orderFlowSettings = {
     labelKey: 'orders.mergeOrders.label',
     helpKey: 'orders.mergeOrders.help',
     sortOrder: 341,
+  }),
+  'returns.replacement': setting({
+    ...base,
+    version: V669,
+    schema: replacementSchema,
+    default: REPLACEMENT_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'returns.replacement.label',
+    helpKey: 'returns.replacement.help',
+    sortOrder: 342,
   }),
 } as const;
