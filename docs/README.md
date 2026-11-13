@@ -290,6 +290,7 @@ the pages are out of date.
 | [`admin-guide/pages/money/month-end.md`](admin-guide/pages/money/month-end.md) | Page guide (CN-026 six parts): Money › Month-end (`/admin/money/month-end`): the month's close sheet, read-only (PR 346) |
 | [`admin-guide/pages/marketing/tracking.md`](admin-guide/pages/marketing/tracking.md) | Page guide (CN-026 six parts): Marketing › Tracking (`/admin/marketing/tracking`): server-side events to Meta, Google and TikTok, test events, the settings (PR 257) |
 | [`admin-guide/pages/marketing/affiliates.md`](admin-guide/pages/marketing/affiliates.md) | ইনফ্লুয়েন্সার ও অ্যাফিলিয়েট: কোড, কমিশন, খাতা |
+| [`admin-guide/pages/marketing/meta-feed.md`](admin-guide/pages/marketing/meta-feed.md) | Meta ক্যাটালগ ফিড: ঠিকানা, সমস্যার তালিকা |
 | [`admin-guide/pages/support/inbox.md`](admin-guide/pages/support/inbox.md) | Page guide (CN-026 six parts): Support › Inbox (`/admin/support`): the views, search, the rows (PR 425) |
 | [`admin-guide/pages/support/conversation.md`](admin-guide/pages/support/conversation.md) | Page guide (CN-026 six parts): one conversation (`/admin/support/c/[id]`): reply, internal note, files, take / give, status, the who-did-what log (PR 425) |
 | [`admin-guide/pages/support/settings.md`](admin-guide/pages/support/settings.md) | Page guide (CN-026 six parts): Support settings (`/admin/support/settings`): inbox, files, the customer-number line (PR 425) |

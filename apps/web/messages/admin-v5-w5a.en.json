@@ -220,6 +220,38 @@
       "switchOff": "Switch off",
       "payoutsOn": "Allow the Pay action",
       "payoutsOffBtn": "Stop the Pay action"
+    },
+    "meta": {
+      "metaTitle": "Meta catalogue feed",
+      "title": "Meta catalogue feed",
+      "sub": "The product feed for the Facebook and Instagram catalogue, beside the Google feed.",
+      "back": "Google feed",
+      "off": "The Meta feed is switched off. Switch it on under More options.",
+      "address": "Feed address",
+      "noAddress": "No shop address is known yet.",
+      "copy": "Copy",
+      "kProducts": "Products",
+      "kIn": "In the feed",
+      "kItems": "Items",
+      "kLeft": "Left out",
+      "kIssues": "To fix",
+      "issueList": "Issue list",
+      "noneIssues": "Every product is in the feed and has nothing to fix.",
+      "colProduct": "Product",
+      "colWhy": "What to fix",
+      "r_noImage": "No photo — left out",
+      "r_noPrice": "No price — left out",
+      "r_noDescription": "No description — left out",
+      "r_soldOut": "Sold out — left out",
+      "i_titleTooLong": "Title is over 200 letters; it is cut",
+      "i_titleLong": "Title is over 65 letters; Meta may cut it",
+      "i_descriptionTooLong": "Description is too long; it is cut",
+      "i_descriptionShort": "Description is very short",
+      "i_noBrand": "No brand",
+      "note": "The photos, prices, sizes and colours are the Google feed's, and follow its choices. Change them on the Google feed page.",
+      "switchOn": "Switch on",
+      "switchOff": "Switch off",
+      "shown": "The first {n} products with something to fix are shown."
     }
   }
 }

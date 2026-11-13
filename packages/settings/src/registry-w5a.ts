@@ -15,6 +15,9 @@
 //   cheapest allowed channel instead). Off as shipped.
 // - `marketing.verdicts` (PR 699): delivered sales per Tk 1 of ads at or over `scale` = Scale, `keep` = Keep, `fix` = Fix,
 //   else Stop (a campaign's chip). `marketing.messageCampaigns` (PR 697): the one campaign form; `throttlePerMinute`.
+// - `marketing.metaFeed` (PR 696): the Facebook and Instagram catalogue feed, /feeds/meta.xml, beside the Google one. Off as
+//   shipped. It takes its products, photos, prices and sizes from the same loader as the Google feed and follows the
+//   Merchant feed card's choices (most items, sold-out, one item per size and colour, gender, age group).
 // - `support.commentDesk` (PR 693): Inbox › Comments rules. `hidePhone`: a comment that carries a phone number is hidden
 //   (others cannot copy it); `hideAbuse`: a comment with one of `abuseWords` is hidden; `autoPrivate`: a comment that asks
 //   a price or size (one of `keywords`) gets one private message and one public reply, once. Off as shipped; the words and
@@ -65,6 +68,9 @@ export type MessagesCostCeilingSettings = z.output<typeof messagesCostCeilingSch
 const ratio = z.number().min(0).max(1000); // hardcode-ok: a technical bound
 export const marketingVerdictsSchema = z.object({ scale: ratio, keep: ratio, fix: ratio }).strict().refine((v) => v.scale >= v.keep && v.keep >= v.fix, { message: 'scale >= keep >= fix' });
 export type MarketingVerdictsSettings = z.output<typeof marketingVerdictsSchema>;
+
+export const marketingMetaFeedSchema = z.object({ on: z.boolean() }).strict();
+export type MarketingMetaFeedSettings = z.output<typeof marketingMetaFeedSchema>;
 
 export const marketingMessageCampaignsSchema = z.object({ enabled: z.boolean(), throttlePerMinute: z.number().int().min(1).max(600) }).strict(); // hardcode-ok: a technical bound
 export type MarketingMessageCampaignsSettings = z.output<typeof marketingMessageCampaignsSchema>;
@@ -150,5 +156,15 @@ export const w5aSettings = {
     labelKey: 'marketing.messageCampaigns.label',
     helpKey: 'marketing.messageCampaigns.help',
     sortOrder: 706,
+  }),
+  'marketing.metaFeed': setting({
+    ...store,
+    group: 'marketing',
+    valueType: 'JSON',
+    schema: marketingMetaFeedSchema,
+    default: { on: false },
+    labelKey: 'marketing.metaFeed.label',
+    helpKey: 'marketing.metaFeed.help',
+    sortOrder: 707,
   }),
 };
