@@ -59,7 +59,8 @@
     "oneTrip": "One-trip size swap",
     "yes": "Yes",
     "waived": "Charge waived",
-    "claim": "“Your mistake” claim"
+    "claim": "“Your mistake” claim",
+    "oldPieceDue": "Old piece due back by"
   },
   "act": {
     "approve": "Approve (books the new parcel)",
@@ -590,5 +591,8 @@
     "windowClosed": "Closed: the {total} h ended {at}. It cannot be approved now.",
     "windowUnknown": "Not started: the courier's \"delivered\" is not in yet.",
     "resendAuto": "The ERP could not be reached, so nothing was sent yet. The shop sends it again by itself every {n} minutes until the ERP answers; you can also press \"Send to the ERP again\" now."
+  },
+  "kind": {
+    "replacement": "Replacement"
   }
 }

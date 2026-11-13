@@ -157,3 +157,4 @@ export * from './auto-confirm';
 export * from './price-adjust-pure';
 export * from './price-adjust';
 export * from './merge-into-one';
+export * from './replacement';

@@ -386,7 +386,17 @@
       "mergeLineLabel": "{number} · {name} ({detail}) x {quantity} · {total}",
       "mergeAddress": "The addresses are different",
       "mergeAddressStop": "Stop, do not merge",
-      "mergeAddressGo": "Go on with this order's address"
+      "mergeAddressGo": "Go on with this order's address",
+      "replaceLine": "Which piece",
+      "replaceLineLabel": "{name} ({detail}) x {quantity}",
+      "replaceReason": "Why",
+      "replaceReasons": {
+        "defect": "Fault in the piece",
+        "damage": "Arrived damaged",
+        "wrong": "Wrong item sent"
+      },
+      "replaceCause": "How it happened (a wrong item)",
+      "replaceCauseNone": "Not known yet"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -623,6 +633,12 @@
         "title": "Merge other orders into {n} and call",
         "ok": "Merge and queue a call",
         "done": "The orders are merged into {n} and a call is queued"
+      },
+      "replace": {
+        "label": "Send again free",
+        "title": "Send a piece of order {n} again, free",
+        "ok": "Open the case",
+        "done": "A replacement case is open for order {n}. It waits on the Returns board"
       }
     },
     "eff": {
@@ -681,7 +697,11 @@
       "mergeCancel": "Each folded order is cancelled as \"duplicate order\", its stock goes free, and this order takes the pieces",
       "mergeCharge": "This order keeps its own delivery charge and address; the folded order's charge goes with it",
       "mergeAddress": "Different address on {numbers}. Say go on to use this order's address",
-      "mergeThenEdit": "After this you can take a line out, change a size or add a piece on this order, then confirm it"
+      "mergeThenEdit": "After this you can take a line out, change a size or add a piece on this order, then confirm it",
+      "replaceFree": "The same piece goes again, free: the new parcel costs the customer nothing",
+      "replaceNoMoney": "No refund and no wallet credit is made, whatever the piece costs now",
+      "replaceBack": "The old piece has to come back within {days} days",
+      "replaceBoard": "The case waits on the Returns board to be approved; the old piece is checked when it comes back"
     },
     "review": {
       "title": "Duplicate review",
