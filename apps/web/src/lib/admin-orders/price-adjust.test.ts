@@ -64,7 +64,7 @@ describe('priceAdjustSpec', () => {
   it('hides kinds that cannot apply (no wallet money, no delivery charge)', () => {
     const spec = priceAdjustSpec(view('en'), ORDER, { ...ADJ, deliveryChargeMinor: 0 });
     const kinds = spec?.fields.find((f) => f.name === 'kind');
-    expect(kinds && 'options' in kinds ? kinds.options.map((o) => o.value) : []).toEqual(['AMOUNT', 'PERCENT']);
+    expect(kinds && 'options' in kinds ? (kinds.options ?? []).map((o) => o.value) : []).toEqual(['AMOUNT', 'PERCENT']);
   });
   it('asks for the PIN as a hidden field, in both languages', () => {
     for (const l of ['en', 'bn'] as const) {
