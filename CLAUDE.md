@@ -140,3 +140,16 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - Commit message: `PR <number>: <what it does>` (one number). Owner change notes: `CN-###: …`. README, PROGRESS,
   BLOCKED and report-only commits: `Status: …`.
 - **README.md is updated in every PR** (status table: stage counts, what is live, last deploy, what waits for the owner).
+- **Batch-PR CI gating (CN-045, 12 Nov 2026):** an individual register-PR branch targets a **batch branch**
+  (`batch-<date>-<n>`, e.g. `batch-2026-11-12-1`), never `main` directly — a lane cherry-picks finished, locally-gated
+  PRs into it (CN-044 "Batching"). Its own pull request runs CI's LIGHT set only (build, lint/type-check, unit,
+  database tests, the signed-in/out e2e, infra checks, commit-shape and README/docs guards); the device gate and
+  Lighthouse (the HEAVY set) run once on the batch branch's own pull request into `main` (10–15 PRs at a time, one
+  commit per register PR, rebase-merged) and on every push to `main` — see `.github/workflows/ci.yml`'s header
+  comment. A meta/infra PR with no batch of its own (like this kind of CI change) still targets `main` directly and
+  still gets the full gate, exactly as before CN-045. Nothing that reaches `main` ever skips a gate.
+- **Push only when locally gated (CN-045):** run the PR's own gates locally (`pnpm check`, or at least lint,
+  type-check and the tests the change touches) before the first push, and again before any push that changes code —
+  not docs-only fixes. Every push cancels and restarts that PR's whole CI run (the workflow's own concurrency
+  group), so a string of work-in-progress pushes is a large part of any CI backlog. Push once it is ready, not as a
+  remote save point.
