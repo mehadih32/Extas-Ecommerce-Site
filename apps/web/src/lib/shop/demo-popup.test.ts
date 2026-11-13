@@ -17,10 +17,10 @@ describe('catalogue.demo', () => {
 });
 
 describe('/api/shop/demo-popup', () => {
-  it('answers with the shop dictionary words when there is no database', async () => {
+  it('answers with the words (the dictionary, or the setting when there is a database)', async () => {
     const en = await (await GET(new Request('http://shop.test/api/shop/demo-popup?lang=en'))).json();
     const bn = await (await GET(new Request('http://shop.test/api/shop/demo-popup?lang=bn'))).json();
-    expect(en).toMatchObject({ ok: true, text: 'This product is coming soon.', close: 'Close' });
+    expect(en).toMatchObject({ ok: true, text: expect.stringContaining('This product is coming soon.'), close: 'Close' });
     expect(bn.ok).toBe(true);
     expect(bn.text).toContain('শিগগিরই');
   });
