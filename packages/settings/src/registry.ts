@@ -160,6 +160,7 @@ import { photoshootOccasionSceneSettings } from './registry-photoshoot-occasion-
 import { photoshootStyleReferenceSettings } from './registry-photoshoot-style-reference';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
+import { productsV5Settings } from './registry-products-v5';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
 import { festiveCutoffSettings } from './registry-festive-cutoff';
@@ -1528,6 +1529,7 @@ export const registry = {
   ...cartRecoverySettings,
   ...blastSettings,
   ...youtubeSettings,
+  ...productsV5Settings,
   ...outreachSettings,
   ...seasonalHomeSettings,
   ...festiveCutoffSettings,

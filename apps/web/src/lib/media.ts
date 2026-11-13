@@ -16,6 +16,10 @@ import {
   mediaHttpStatus,
   mediaRuntime,
   productGallery,
+  productPhotoQuality,
+  reorderProductPhotos,
+  tagProductPhotoColour,
+  fixProductPhoto,
   regenerateAll,
   renditionFile,
   restoreMedia,
@@ -210,7 +214,12 @@ export async function productPhotosHandler(request: Request, admin: AdminDeps | 
   if (isResponse(g)) return g;
   if (!media) return fail(503, 'database-not-configured');
   try {
-    if (isGet) return json({ ok: true, ...(await productGallery(media, g.actor, { storeId, productId })) });
+    if (isGet) {
+      const gal = await productGallery(media, g.actor, { storeId, productId });
+      // S28 · PR 680: ?quality=1 adds each photo's plain quality notes (empty while `media.quality` is off)
+      if (new URL(request.url).searchParams.get('quality') === '1') return json({ ok: true, ...gal, quality: await productPhotoQuality(media, g.actor, { storeId, productId }) });
+      return json({ ok: true, ...gal });
+    }
     const b = await body(request);
     if (b.action === 'attach') {
       if (!isUuid(b.assetId) || (b.colourId != null && !isUuid(b.colourId))) return fail(400, 'INVALID_INPUT', ['assetId', 'colourId']);
@@ -227,6 +236,20 @@ export async function productPhotosHandler(request: Request, admin: AdminDeps | 
       // PR 232: the photo's description, written while seo.altText.autoApply is on (never fails the add)
       await autoAltAfterAttach(storeId, productId);
       return json({ ok: true, ...attached });
+    }
+    // S28 · PR 680 — reorder (the first becomes main), tag a colour, one-click fix
+    if (b.action === 'reorder') {
+      const order = Array.isArray(b.orderedIds) ? b.orderedIds : [];
+      if (!order.every(isUuid) || (b.colourId != null && !isUuid(b.colourId))) return fail(400, 'INVALID_INPUT', ['orderedIds', 'colourId']);
+      return json({ ok: true, ...(await reorderProductPhotos(media, g.actor, { storeId, productId, colourId: (b.colourId as string | null | undefined) ?? null, orderedIds: order as string[] }, g.ctx)) });
+    }
+    if (b.action === 'tag') {
+      if (!isUuid(b.productMediaId) || (b.colourId != null && !isUuid(b.colourId))) return fail(400, 'INVALID_INPUT', ['productMediaId', 'colourId']);
+      return json({ ok: true, ...(await tagProductPhotoColour(media, g.actor, { storeId, productId, productMediaId: b.productMediaId, colourId: (b.colourId as string | null | undefined) ?? null }, g.ctx)) });
+    }
+    if (b.action === 'fix') {
+      if (!isUuid(b.productMediaId)) return fail(400, 'INVALID_INPUT', ['productMediaId']);
+      return json({ ok: true, ...(await fixProductPhoto(media, g.actor, { storeId, productId, productMediaId: b.productMediaId }, g.ctx)) });
     }
     if (b.action === 'detach') {
       if (!isUuid(b.productMediaId)) return fail(400, 'INVALID_INPUT', ['productMediaId']);

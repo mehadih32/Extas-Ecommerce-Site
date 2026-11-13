@@ -291,6 +291,71 @@
       "TOO_LARGE": "The photo is too large.",
       "TOO_SMALL": "The photo is too small for the shop.",
       "ARCHIVED": "This file is archived; restore it first."
+    },
+    "pm": {
+      "added": "{count} photo(s) added",
+      "altSaved": "Photo description saved",
+      "colour": "Colour",
+      "allColours": "All colours",
+      "dropTitle": "Add photos",
+      "dropHelp": "Drop many photos here, paste one (Ctrl+V), or choose them. They go to the colour picked above.",
+      "choose": "Choose photos",
+      "needLook": "{count} photo(s) need a look (see the notes on them).",
+      "allGood": "All photos look good.",
+      "checksOff": "The photo checks are off.",
+      "checksSet": "Turn them on",
+      "main": "Main",
+      "note": {
+        "small": "Too small",
+        "blurry": "Blurry",
+        "dark": "Too dark",
+        "ratio": "Wrong shape",
+        "cut": "Cut off"
+      },
+      "good": "Looks good",
+      "fix": "Fix",
+      "fixed": "Photo fixed. The old file stays in the library.",
+      "needNew": "This one needs a new photo.",
+      "alt": "Photo description (alt text)",
+      "setMain": "Set as main",
+      "earlier": "Move earlier",
+      "later": "Move later",
+      "dragHelp": "Drag a photo to change the order. The first one is the main photo.",
+      "empty": "No photo for this colour yet.",
+      "title": "Photos",
+      "checks": {
+        "h": "Photo checks",
+        "d": "Plain checks on each photo: too small, blurry, too dark, wrong shape, cut off. No AI is used.",
+        "on": "Photo checks on",
+        "onHelp": "Shows a note on each photo and a Fix button for the shape and the light.",
+        "minSide": "Smallest side (px)",
+        "minSideHelp": "A photo with a shorter side is \"Too small\".",
+        "sharpnessMin": "Sharpness limit (1-127)",
+        "sharpnessMinHelp": "Higher is stricter: below this the photo is \"Blurry\".",
+        "darkBelow": "Darkness limit (1-200)",
+        "darkBelowHelp": "Average brightness below this is \"Too dark\".",
+        "ratioTolerancePct": "Shape tolerance (%)",
+        "ratioTolerancePctHelp": "How far from 4:5 a photo may be.",
+        "edgeBusy": "Cut-off sensitivity (1-128)",
+        "edgeBusyHelp": "Lower notices a garment running off the frame sooner.",
+        "more": "Photo checks",
+        "ui": {
+          "save": "Save",
+          "saving": "Saving…",
+          "saved": "Saved",
+          "discard": "Discard",
+          "unsaved": "You have unsaved changes",
+          "readOnly": "You can look but not change these.",
+          "err": {
+            "STALE": "Someone changed this meanwhile. The page was refreshed.",
+            "INVALID_INPUT": "Check the numbers.",
+            "forbidden": "You may not change this.",
+            "unauthorized": "Please sign in again.",
+            "network": "No connection.",
+            "other": "Could not save."
+          }
+        }
+      }
     }
   },
   "checks": {

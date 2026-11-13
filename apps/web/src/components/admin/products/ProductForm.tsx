@@ -33,6 +33,7 @@ import {
 } from './model';
 import { statusKey } from './ProductList';
 import { say, sayBad } from './useToast';
+import { PhotoManager, type PhotoNotes } from './PhotoManager';
 
 export interface FormCan {
   write: boolean;
@@ -58,6 +59,8 @@ interface Props {
   /** The product's photos; null = this person may not see the media library. */
   gallery: ProductPhoto[] | null;
   images: Record<string, ImageSource>;
+  /** S28 · PR 680: the photo manager's notes (the plain quality checks) and where their numbers are set. */
+  photoNotes?: PhotoNotes;
   can: FormCan;
 }
 
@@ -666,6 +669,18 @@ export function ProductForm(props: Props) {
                     : null}
                 </div>
                 {!can.upload ? <p className="ad-mini pa-gap">{t(d, 'products.photos.noUpload')}</p> : null}
+                <div className="ad-label pa-gap">{t(d, 'products.pm.title')}</div>
+                <PhotoManager
+                  dict={d}
+                  lang={lang}
+                  productId={product.id}
+                  colours={savedColours.map((c) => ({ id: c.colourId, label: colourName(c.colourId), hex: colourById.get(c.colourId)?.hex ?? null }))}
+                  photos={gallery}
+                  images={images}
+                  notes={props.photoNotes ?? { on: false, byLink: {} }}
+                  canUpload={can.upload}
+                  settingsHref="#photo-checks"
+                />
               </>
             )}
           </section>
