@@ -41,3 +41,9 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
 - Page `/admin/website/analytics` (perm `reports.read`; settings `settings.write` + PIN), tab "Analytics" under Website (the Overview). Key
   `websiteAnalytics`, guide `website/analytics`. The shop layout now also reads `analytics.visitors` and passes `collect` to the beacon.
   Off until the owner turns collect on; `GET /api/admin/analytics-visitors`. The existing Reports > Analytics pages stay as they are.
+
+## PR 701 Website analytics: behaviour
+- Page `/admin/website/analytics/behaviour` (perm `reports.read`; settings `settings.write` + PIN), the "Behaviour" chip beside Overview on the
+  Analytics page (not a menu row of its own). Key `webAnalytics.behaviour`, guide `website/analytics-behaviour`. The shop layout reads
+  `analytics.behaviour` and draws `BehaviourBeacon` only when collect is on (off by default); `POST /api/shop/behaviour` is public, same-site, always 204;
+  `GET /api/admin/analytics-behaviour`. Links to the existing Reports > Funnels and Searches pages.

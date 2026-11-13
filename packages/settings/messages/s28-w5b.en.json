@@ -27,6 +27,10 @@
     "visitors": {
       "label": "Visitors (first-party analytics)",
       "help": "Counts where visitors come from, their device, the pages they open and a coarse region, on your own server. Never an IP address, a name or a phone number. Off until you turn it on. 'Keep days' is how long the daily totals are kept; 'Live now' counts people seen in the last few minutes."
+    },
+    "behaviour": {
+      "label": "Behaviour (clicks, scroll, forms)",
+      "help": "Counts where visitors click on a page (as a spot on a grid, never what was clicked), how far they scroll, and which form fields they touch or leave empty (the field's name only, never what was typed). Off until you turn it on. 'Keep days' is how long the daily counts stay; 'Grid' is how finely a page is divided for the click map."
     }
   }
 }

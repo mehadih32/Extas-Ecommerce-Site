@@ -56,7 +56,7 @@ export default async function WebsiteAnalyticsPage({ searchParams }: { searchPar
   return (
     <div className="a2-z" data-testid="web-analytics-page" data-lm-ready="">
       <PageHead view={view} place={null} title={t(view.dict, 'webAnalytics.title')} sub={t(view.dict, 'webAnalytics.sub')} />
-      <VisitorsScreen dict={view.dict} view={v} canEdit={canEdit} canBehaviour={false} span={span} />
+      <VisitorsScreen dict={view.dict} view={v} canEdit={canEdit} canBehaviour span={span} />
     </div>
   );
 }

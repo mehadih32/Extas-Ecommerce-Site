@@ -73,6 +73,69 @@
       "WRONG_PIN": "That PIN is not right.",
       "network": "No connection. Try again.",
       "server-error": "Something went wrong. Try again."
+    },
+    "behaviour": {
+      "metaTitle": "Website behaviour",
+      "title": "Website behaviour",
+      "sub": "Where visitors click, how far they scroll and which form fields they leave empty.",
+      "off": "Behaviour counting is switched off, so there is nothing to show yet. Switch it on below.",
+      "empty": "Nothing counted yet.",
+      "filters": {
+        "page": "Page",
+        "device": "Device"
+      },
+      "pages": {
+        "home": "Home",
+        "category": "Category",
+        "product": "Product",
+        "bag": "Bag",
+        "checkout": "Checkout",
+        "other": "Other"
+      },
+      "devices": {
+        "all": "All",
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Computer"
+      },
+      "heat": {
+        "title": "Click map",
+        "sub": "Darker spots are where more people clicked. The map is the whole length of the page, top to bottom.",
+        "cell": "{n} clicks",
+        "total": "{n} clicks counted on this page."
+      },
+      "reach": {
+        "title": "How far they scroll",
+        "sub": "Of everyone who opened the page, the share who got this far down. Uses the page and device chosen above.",
+        "mark": "{n}% down"
+      },
+      "fields": {
+        "title": "Form fields left empty",
+        "sub": "Only the field's name is kept, never what was typed. A high number means people stop at that field.",
+        "left": "{n} of {of} left empty"
+      },
+      "buttons": {
+        "title": "Button clicks",
+        "note": "From the events the shop already records, for the days shown.",
+        "size_chart_click": "Size chart opened",
+        "all_colours_click": "All colours opened",
+        "whatsapp_click": "WhatsApp button"
+      },
+      "more": {
+        "title": "Related reports",
+        "funnels": "Funnels: where people drop out of the order journey",
+        "searches": "Searches: what people look for on the shop"
+      },
+      "settings": {
+        "title": "Behaviour settings",
+        "collect": "Count clicks, scrolling and form fields",
+        "privacy": "No IP address, name, phone number or typed text is ever stored.",
+        "keep": "Keep the daily counts for (days)",
+        "grid": "Click map grid (cells across and down)",
+        "pin": "Owner PIN",
+        "save": "Save settings",
+        "saved": "Settings saved."
+      }
     }
   }
 }
