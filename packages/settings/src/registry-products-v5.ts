@@ -1,4 +1,4 @@
-// S28 · admin prototype v5, wave 4 (PR 680-685) — the settings of the product screens, registry version 306.
+// S28 · admin prototype v5, wave 4 (PR 680-685) — the settings of the product screens, registry version 321.
 //
 // - `media.quality` (PR 680): the plain photo checks on Products › a product's photos (too small, blurry, too dark,
 //   wrong shape, cut off). Off as it ships. No AI is called: the checks read the picture's own pixels with sharp.
@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 306;
+const V = 321;
 
 export const mediaQualitySchema = z
   .object({
