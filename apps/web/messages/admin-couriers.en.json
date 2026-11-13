@@ -343,6 +343,53 @@
     "o": {
       "note": "A note for the courier (this press only)",
       "noteHelp": "Goes first in the parcel's note, before your saved texts."
+    },
+    "z": {
+      "title": "Monthly courier statement",
+      "sub": "What this courier paid us in the month, the lines that still do not match and the claims still to receive.",
+      "back": "Courier money",
+      "months": "Months",
+      "prev": "Earlier month",
+      "next": "Later month",
+      "statements": "Statements",
+      "cod": "Cash paid",
+      "charges": "Charges taken off",
+      "net": "Net paid",
+      "list": "The month's statements",
+      "noStatements": "No statement came in this month.",
+      "openSub": "Lines of this courier that still do not match, from any month.",
+      "accepted": "Courier figures accepted this month",
+      "acceptedSub": "Where the courier charged more than we expected and the difference was booked as a courier cost.",
+      "acceptedTotal": "Booked as courier cost: {amount}",
+      "acceptedNone": "No figure accepted this month.",
+      "claims": "Claims still to receive",
+      "claimsSub": "Claims raised against this courier that it has not paid or refused yet.",
+      "claimsBody": "{n} claim(s), {amount} asked",
+      "claimsLate": "{n} past the deadline",
+      "claimsNone": "No claim waits for this courier.",
+      "claimsOpen": "Open the claims",
+      "monthLink": "Monthly statement",
+      "charge": "Charge: ours {ours}, the courier's {theirs}, {extra} more",
+      "accept": "Accept the courier figure",
+      "confirm": "Book {amount} as a courier cost and close this line? Nothing is paid; the courier's statement stays as it is.",
+      "done": "Accepted and booked.",
+      "err": {
+        "other": "That did not work. Try again.",
+        "network": "No connection. Try again.",
+        "FORBIDDEN": "You do not have permission for this.",
+        "NOT_FOUND": "This line is not there any more. Reload the page.",
+        "NOT_ACCEPTABLE": "Only a charge the courier made higher than ours can be accepted.",
+        "ALREADY_RECORDED": "This line is already closed. Reload the page.",
+        "books": {
+          "OFF": "The books are not taking courier charges from statements. Switch that on in the books settings first. Nothing was changed.",
+          "NOT_LINKED": "The books are not linked yet, so the cost could not be booked. Nothing was changed.",
+          "TOO_BIG": "The amount is above the books' limit for one line. Enter it by hand in the books. Nothing was changed.",
+          "DAY_CLOSED": "Today is closed in the books. Nothing was changed.",
+          "NO_HOOK": "The books are not connected here. Nothing was changed.",
+          "NONE": "There is nothing to book. Nothing was changed.",
+          "other": "The books did not take the cost. Nothing was changed."
+        }
+      }
     }
   }
 }

@@ -46,6 +46,9 @@ export type PaymentsErrorCode =
   | 'PAYOUT_NOTHING'
   /** S28 · PR 671: the courier refused the request (`message` has its words) or did not answer (the request stays open until a person checks). */
   | 'PAYOUT_REFUSED'
+  /** S28 · PR 675: "Accept the courier figure" is only for a charge the courier made higher than ours (`data.reason`), or the books did not take the cost (`data.status`: OFF, NOT_LINKED, TOO_BIG, DAY_CLOSED, NO_HOOK); nothing was resolved. */
+  | 'NOT_ACCEPTABLE'
+  | 'COST_NOT_BOOKED'
   /** PR 171: this entry is not put right by a reversal (money spent or refunded), or it was reversed already. */
   | 'NOT_REVERSIBLE'
   /** PR 171: the order has no customer, so there is no wallet. */

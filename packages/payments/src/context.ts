@@ -62,6 +62,12 @@ export interface BooksCostHooks {
    * S28 · PR 673: called after a courier claim is settled with money (never for a claim twice), while the owner's "post
    * money won back" switch is on; a record only, it never fails the settlement. None wired as shipped.
    */
+  /**
+   * S28 · PR 675: "Accept the courier figure" — the part of a courier's charge above ours becomes one cost entry on the books'
+   * delivery line (once per statement line, `statementId` is the line). Answers what the books did: WRITTEN or ALREADY mean the
+   * cost is there; any other answer (OFF, NONE, NOT_LINKED, TOO_BIG, DAY_CLOSED) means it is not, and nothing is resolved.
+   */
+  courierDifference?(who: Who, cost: { lineId: string; settlementId: string; reference: string | null; amountMinor: number }): Promise<{ status: string; id?: string }>;
   claimRecovered?(who: Who, won: { claimId: string; courierAccountId: string; amountMinor: number; reference: string | null }): Promise<unknown>;
 }
 
