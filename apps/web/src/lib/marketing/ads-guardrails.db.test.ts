@@ -4,6 +4,7 @@
 // campaign in the same save; "Decrease now" refuses while auto-decrease is off. A throwaway database (skipped
 // without TEST_DATABASE_ADMIN_URL). Sample values; no real platform is called.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { CampaignWriter } from '@extas/adapters';
 import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -43,12 +44,18 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms · ads guardrails on P
   let camp2 = '';
   const now = T0;
 
-  const gr = async (method: string, body?: unknown, cookie = approver) => {
-    const res = await guardrailsHandler(req(method, { body, cookie }), admin, { now: () => now });
+  // a stand-in live writer (campaign-control.db.test.ts's own pattern): records what it was asked and always
+  // succeeds, so a request that actually goes through (not refused by a guardrail) is kept as APPLIED and updates
+  // the campaign's own row — the practice writer that ships by default never does either (its own "the practice
+  // copy changes nothing" test), so a test that reads the campaign's row back needs this to tell a guardrail
+  // refusal (FAILED, row untouched) apart from a real change going through.
+  const live: CampaignWriter = { provider: 'metaCampaigns', platform: 'meta', practice: false, change: async () => ({ ok: true, value: { done: true } }) };
+  const gr = async (method: string, body?: unknown, cookie = approver, extra: { writers?: Partial<Record<'meta', CampaignWriter>> } = {}) => {
+    const res = await guardrailsHandler(req(method, { body, cookie }), admin, { now: () => now, ...extra });
     return { status: res.status, a: (await res.json()) as GuardrailOverview & { ok: boolean; error?: string; cards?: { guardrails: GuardrailOverview['card'] }; lowered?: number; skipped?: number } };
   };
-  const ctl = async (method: string, body?: unknown, cookie = approver) => {
-    const res = await campaignControlHandler(req(method, { path: '/api/admin/marketing/ad-platforms/control', body, cookie }), admin, { now: () => now });
+  const ctl = async (method: string, body?: unknown, cookie = approver, extra: { writers?: Partial<Record<'meta', CampaignWriter>> } = {}) => {
+    const res = await campaignControlHandler(req(method, { path: '/api/admin/marketing/ad-platforms/control', body, cookie }), admin, { now: () => now, ...extra });
     return { status: res.status, a: (await res.json()) as ControlOverview & { ok: boolean; error?: string; id?: string; status?: string; cards?: { control: ControlOverview['card'] } } };
   };
   const campaign = (id: string) => t.prisma.adCampaign.findUniqueOrThrow({ where: { id }, select: { status: true, dailyBudgetMinor: true } });
@@ -85,8 +92,10 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms · ads guardrails on P
     expect(g.a.card.value).toMatchObject({ on: false, killSwitch: false, dailyBudgetCeiling: 0 });
     const r = await ctl('POST', { action: 'change', adCampaignId: camp1, change: 'budget', dailyBudgetMinor: 90_000, confirm: true });
     expect(r.a.status).toBe('WAITING'); // an increase always waits for the owner's approval first; the guardrail runs when it is sent
-    const d = await ctl('POST', { action: 'decide', id: r.a.id, decision: 'approve', confirm: true });
-    expect(d.a.status).toBe('PRACTICE');
+    // a stand-in live writer so the approved increase actually goes through (the shipped practice writer sends
+    // nothing and leaves the row as it was, same as every other campaign-control change)
+    const d = await ctl('POST', { action: 'decide', id: r.a.id, decision: 'approve', confirm: true }, approver, { writers: { meta: live } });
+    expect(d.a.status).toBe('APPLIED');
     expect((await campaign(camp1)).dailyBudgetMinor).toBe(90_000);
   });
 
@@ -105,7 +114,9 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Ad platforms · ads guardrails on P
 
   it('the kill switch refuses an increase, and turning it on pauses every active campaign at once', async () => {
     const before = await gr('GET');
-    const put = await gr('PUT', { key: 'guardrails', value: { ...before.a.card.value, killSwitch: true }, version: before.a.card.version });
+    // the stand-in live writer so the kill switch's own mass pause actually reaches the campaigns' rows (the
+    // shipped practice writer sends nothing and leaves every row as it was)
+    const put = await gr('PUT', { key: 'guardrails', value: { ...before.a.card.value, killSwitch: true }, version: before.a.card.version }, approver, { writers: { meta: live } });
     expect(put.status).toBe(200);
     expect((await campaign(camp1)).status).toBe('PAUSED');
     expect((await campaign(camp2)).status).toBe('PAUSED');
