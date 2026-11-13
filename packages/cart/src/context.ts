@@ -30,6 +30,8 @@ export type CartErrorCode =
   | 'OUT_OF_STOCK'
   /** The product is not on sale (not published, no price, archived). */
   | 'NOT_FOR_SALE'
+  /** S28 · PR 684: a demo (sample) product is never sold; the shop shows its "coming soon" pop-up. */
+  | 'DEMO_PRODUCT'
   /** More than one line may hold (`inventory.reservation.maxUnitsPerLine`). */
   | 'TOO_MANY'
   /** PR 622: "Buy again" is off, or not offered on an order in this state (`account.reorder`). */
@@ -57,6 +59,7 @@ export class CartError extends Error {
       case 'CART_NOT_OPEN':
       case 'OUT_OF_STOCK':
       case 'NOT_FOR_SALE':
+      case 'DEMO_PRODUCT':
       case 'TOO_MANY':
         return 409;
       default:
@@ -79,6 +82,11 @@ export function checkStoreId(storeId: number): void {
 /** Validates input; a failure names every bad field. */
 export function parse<T extends z.ZodType>(schema: T, input: unknown, what: string): z.output<T> {
   const r = schema.safeParse(input ?? {});
-  if (!r.success) throw new CartError('INVALID_INPUT', `the ${what} is not valid`, r.error.issues.map((i) => `${i.path.join('.') || '(input)'}: ${i.message}`));
+  if (!r.success)
+    throw new CartError(
+      'INVALID_INPUT',
+      `the ${what} is not valid`,
+      r.error.issues.map((i) => `${i.path.join('.') || '(input)'}: ${i.message}`),
+    );
   return r.data;
 }

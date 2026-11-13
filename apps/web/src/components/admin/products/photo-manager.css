@@ -1,0 +1,153 @@
+/* S28 · PR 680 — the photo manager (Products › a product › Photos). Uses the admin's own colour variables. */
+.pm { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pm-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--ad-line); border-radius: 999px; background: var(--ad-surface); color: var(--ad-ink); font: inherit; font-size: var(--ad-fs-small); cursor: pointer; }
+.pm-chip.on { border-color: var(--ad-brand); background: var(--ad-surface2); font-weight: 700; }
+.pm-sw { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--ad-line); background: var(--ad-line2); }
+.pm-n { color: var(--ad-muted); font-size: 12px; }
+.pm-drop { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 16px; border: 2px dashed var(--ad-input); border-radius: var(--ad-radius); background: var(--ad-surface2); }
+.pm-drop.over { border-color: var(--ad-brand); background: var(--ad-surface); }
+.pm-sum { margin: 0; }
+.pm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+.pm-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px; border: 1px solid var(--ad-line); border-radius: var(--ad-radius); background: var(--ad-surface); }
+.pm-card.drag { opacity: 0.5; }
+.pm-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: var(--ad-line2); }
+.pm-img picture, .pm-img img, .pm-img [data-media-pending] { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pm-main { position: absolute; top: 6px; left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--ad-brand); color: var(--lm-on-ac); font-size: 11.5px; font-weight: 700; }
+.pm-px { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; background: var(--lm-scrim); color: var(--lm-on-ac); font-size: 11px; }
+.pm-notes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.pm-note { padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; border: 1px solid var(--ad-line); }
+.pm-note.ok { color: var(--ad-brand-dark); }
+.pm-note.warn { color: var(--ad-warn); border-color: var(--ad-warn); }
+.pm-note.bad { color: var(--ad-sale); border-color: var(--ad-sale); }
+.pm-alt { font-size: 12.5px; padding: 6px 8px; min-width: 0; }
+.pm-acts { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.pm-empty { padding: 12px 0; }
+
+/* S28 · PR 681 — the video panel under the photos */
+.pm-video {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.pm-vcur {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-radius);
+  background: var(--ad-surface2);
+}
+.pm-vurl {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.pm-vlen {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pm-vlen .ad-input,
+.pm-vnum {
+  width: 110px;
+}
+.pm-vadd {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pm-vrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.pm-vrow > .ad-input:first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+/* S28 · PR 682 — Products › FAQs */
+.fq-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin: 12px 0;
+}
+.fq-groups {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+}
+.fq-li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--lm-ln);
+  overflow-wrap: anywhere;
+}
+.fq-li:last-child {
+  border-bottom: 0;
+}
+.fq-li.off {
+  opacity: 0.65;
+}
+.fq-q {
+  font-weight: 600;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.fq-acts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.fq-form {
+  margin-bottom: 12px;
+}
+
+/* S28 · PR 684 — Products › Demo products */
+.dm-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+.dm-name {
+  font-weight: 600;
+  flex: 1 1 140px;
+  overflow-wrap: anywhere;
+}
+.dm-tree,
+.dm-kids {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dm-never {
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+/* S28 · PR 680-684 — touch targets of 44 px: the "More options" summaries and the Demo products tick boxes. */
+.pa-more > summary,
+.a2-more-opts > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+.dm-row input[type='checkbox'] {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  flex: none;
+}

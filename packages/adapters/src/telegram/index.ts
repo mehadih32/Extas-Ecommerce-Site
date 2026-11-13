@@ -1,7 +1,7 @@
-// S19 · PR 392 (PR 9) — Telegram alerts: the owner's one bot (Blueprint A2.9.13, PR 584 later adds the agents' identity
-// line). The owner makes a bot with @BotFather, adds it to his chat or channel, and types the bot's token and the chat's
-// id into Keys & connections. Until then, and whenever the test fails, the mock answers: it keeps the newest alerts in
-// this process and sends nothing anywhere (A1.3).
+// S19 · PR 392 (PR 9) — Telegram alerts: the owner's one bot (Blueprint A2.9.13). The owner makes a bot with
+// @BotFather, adds it to his chat or channel, and types the bot's token and the chat's id into Keys & connections.
+// Until then, and whenever the test fails, the mock answers: it keeps the newest alerts in this process and sends
+// nothing anywhere (A1.3).
 //
 // - The token lives only in the vault. It is part of the Bot API's address (`/bot<token>/…`), so no error, message or
 //   log line ever carries the address: every failure is said in words, with Telegram's own description at most.
@@ -9,6 +9,20 @@
 //   to that chat, without sending the owner a message.
 // - The same bot and chat serve the server's own alerts (`infra/server/bin/extas-monitor`): `extas-vault-sync` copies
 //   them to the server's root-only `telegram.env` once the connection is LIVE (packages/jobs/src/server-sync.ts).
+//
+// S15 · PR 584 (Blueprint C10.3) adds the agents' identity line and inbound command routing on the same one bot:
+// - `telegramIdentityLine` formats the sender line every agent message starts with — "🏹 Tirondaj তীরন্দাজ · A360-07 ·
+//   Ads" — a pure formatter; which agent, and the actual routing of an owner's command to it, is `apps/web`'s own job
+//   (`lib/admin-ai/telegram-routing.ts`), since the fixed agent catalogue lives there, not in this provider-neutral
+//   package.
+// - `approvalKeyboard` builds the Approve / Reject / Ask-why inline keyboard for an `AiApprovalRequest`; the button
+//   press comes back to the webhook as a `callback_query` update, decided the same way a tap on `/admin/ai/approvals`
+//   already is.
+// - A second, optional secret, `webhookSecret`: the value the owner also gives Telegram when registering the webhook
+//   URL (`setWebhook`'s own `secret_token`, done once outside this app — `docs/admin-guide/pages/ai/agents.md`).
+//   Telegram sends it back on every update as `X-Telegram-Bot-Api-Secret-Token`; the webhook refuses anything that
+//   does not match (never processes an unverifiable call, the same care `support-connect.ts`'s Messenger webhook
+//   takes with its own signature). Without it typed in, inbound commands stay off no matter the feature switch.
 import { z } from 'zod';
 import { defineAdapter, requireSecret } from '../define';
 
@@ -27,17 +41,36 @@ export const TELEGRAM_CHAT = /^(-?\d{1,20}|@[A-Za-z][A-Za-z0-9_]{4,31})$/;
 
 export type TelegramResult = { ok: true; messageId: number | null } | { ok: false; error: string };
 
+/** One row of Telegram's own inline keyboard (PR 584): a button that comes back as a `callback_query` update
+ * carrying this same `callback_data` (Telegram's own 64-byte limit — an approval id plus one short action word stays
+ * well inside it). */
+export interface TelegramInlineButton {
+  text: string;
+  callback_data: string;
+}
+export interface TelegramInlineKeyboard {
+  inline_keyboard: TelegramInlineButton[][];
+}
+
+export interface TelegramSendOptions {
+  /** Approve / Reject / Ask-why buttons under the message (PR 584); absent for a plain alert. */
+  keyboard?: TelegramInlineKeyboard;
+}
+
 export interface TelegramSender {
   provider: string;
-  /** Sends one plain-text message (cut to Telegram's limit) to the connection's chat. */
-  send(text: string): Promise<TelegramResult>;
+  /** Sends one plain-text message (cut to Telegram's limit) to the connection's chat, optionally with buttons. */
+  send(text: string, opts?: TelegramSendOptions): Promise<TelegramResult>;
   /** The Test button's round trip; absent on the mock. */
   check?(): Promise<{ ok: boolean; message: string }>;
+  /** Clears a pressed button's loading spinner (PR 584); a no-op where it is not needed (the mock). */
+  answerCallback?(callbackQueryId: string, text?: string): Promise<void>;
 }
 
 export interface MockTelegramMessage {
   at: Date;
   text: string;
+  keyboard?: TelegramInlineKeyboard;
 }
 
 const G = globalThis as unknown as { __extasMockTelegram?: MockTelegramMessage[] };
@@ -58,13 +91,79 @@ const cut = (text: string) => (text.length > TELEGRAM_MAX_TEXT ? `${text.slice(0
 export function mockTelegramSender(provider = TELEGRAM_PROVIDER): TelegramSender {
   return {
     provider,
-    async send(text) {
+    async send(text, opts) {
       const all = outbox();
-      all.push({ at: new Date(), text: cut(text) });
+      all.push({ at: new Date(), text: cut(text), keyboard: opts?.keyboard });
       if (all.length > MOCK_KEEP) all.splice(0, all.length - MOCK_KEEP);
       return { ok: true, messageId: null };
     },
+    async answerCallback() {
+      // nothing to clear: no real button exists in the mock
+    },
   };
+}
+
+/** The sender's identity line every agent message starts with (Blueprint C10.3) — "🏹 Tirondaj তীরন্দাজ · A360-07 ·
+ * Ads" — so the owner always knows who sent it. A pure formatter: which agent is this app's own job
+ * (`apps/web/src/lib/admin-ai/telegram-routing.ts`), not this provider-neutral package's. */
+export function telegramIdentityLine(agent: { emoji: string; nameEn: string; nameBn: string; code: string; tag: string }): string {
+  return `${agent.emoji} ${agent.nameEn} ${agent.nameBn} · ${agent.code} · ${agent.tag}`;
+}
+
+/** The owner's own Telegram header name the webhook secret comes back on (Bot API's `setWebhook` `secret_token`). */
+export const TELEGRAM_SECRET_HEADER = 'x-telegram-bot-api-secret-token';
+
+/** The Approve / Reject / Ask-why keyboard under an approval request sent to Telegram (Blueprint C10.3). */
+export function approvalKeyboard(approvalId: string, labels: { approve: string; reject: string; askWhy: string }): TelegramInlineKeyboard {
+  return {
+    inline_keyboard: [
+      [
+        { text: labels.approve, callback_data: `appr:${approvalId}:approve` },
+        { text: labels.reject, callback_data: `appr:${approvalId}:reject` },
+        { text: labels.askWhy, callback_data: `appr:${approvalId}:why` },
+      ],
+    ],
+  };
+}
+
+/** One pressed button's payload, parsed back out of its `callback_data` — `null` for anything not this shape
+ * (a stale button from before an upgrade, or noise), so the webhook can ignore it rather than guess. */
+export interface TelegramApprovalAction {
+  approvalId: string;
+  action: 'approve' | 'reject' | 'why';
+}
+export function parseApprovalCallback(data: string | undefined | null): TelegramApprovalAction | null {
+  if (!data) return null;
+  const m = /^appr:([^:]+):(approve|reject|why)$/.exec(data);
+  if (!m || !m[1] || !m[2]) return null;
+  return { approvalId: m[1], action: m[2] as TelegramApprovalAction['action'] };
+}
+
+/** The small, loosely-typed slice of a Telegram `Update` this app actually reads (Bot API's own shape is much
+ * larger); anything else in the payload is ignored, never refused — Telegram adds fields over time. */
+export interface TelegramUpdate {
+  update_id: number;
+  message?: {
+    message_id: number;
+    chat: { id: number | string };
+    text?: string;
+    from?: { id: number; username?: string; first_name?: string };
+  };
+  callback_query?: {
+    id: string;
+    data?: string;
+    message?: { chat: { id: number | string } };
+    from?: { id: number; username?: string };
+  };
+}
+
+/** Reads a webhook POST body as a `TelegramUpdate`, or `null` for anything not shaped like one (never throws on
+ * whatever Telegram's own payload turns out to carry). */
+export function parseTelegramUpdate(body: unknown): TelegramUpdate | null {
+  if (!body || typeof body !== 'object') return null;
+  const u = body as Record<string, unknown>;
+  if (typeof u.update_id !== 'number') return null;
+  return u as unknown as TelegramUpdate;
 }
 
 export const telegramConfig = z.object({
@@ -116,9 +215,9 @@ export function createTelegramClient(o: ClientOptions): TelegramSender & { check
 
   return {
     provider: TELEGRAM_PROVIDER,
-    async send(text) {
+    async send(text, opts) {
       try {
-        const r = await call('sendMessage', { chat_id: o.chatId, text: cut(text), disable_web_page_preview: true });
+        const r = await call('sendMessage', { chat_id: o.chatId, text: cut(text), disable_web_page_preview: true, ...(opts?.keyboard ? { reply_markup: opts.keyboard } : {}) });
         return { ok: true, messageId: r.result?.message_id ?? null };
       } catch (e) {
         return { ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -130,6 +229,13 @@ export function createTelegramClient(o: ClientOptions): TelegramSender & { check
       const name = chat.result?.title ?? chat.result?.first_name ?? chat.result?.username ?? o.chatId;
       return { ok: true, message: `Telegram: @${me.result?.username ?? 'the bot'} can write to ${name}` };
     },
+    async answerCallback(callbackQueryId, text) {
+      try {
+        await call('answerCallbackQuery', { callback_query_id: callbackQueryId, ...(text ? { text: text.slice(0, 200) } : {}) });
+      } catch {
+        // the button's spinner stays a moment longer; never worth failing the whole webhook over
+      }
+    },
   };
 }
 
@@ -137,7 +243,10 @@ export const telegramAdapter = defineAdapter<TelegramSender, TelegramConfig>({
   kind: 'TELEGRAM',
   provider: TELEGRAM_PROVIDER,
   modes: ['LIVE'],
-  secrets: ['botToken'],
+  // `webhookSecret` (PR 584): never read by `create()` below — sending alerts needs only the bot token — but listed
+  // here so the connection layer lets Keys & connections store it and the webhook route read it back with
+  // `connections.secretOf('TELEGRAM', 'webhookSecret', …)`.
+  secrets: ['botToken', 'webhookSecret'],
   configSchema: telegramConfig,
   async create(ctx) {
     return createTelegramClient({
@@ -174,6 +283,24 @@ export async function sendOwnerAlert(link: TelegramLink, text: string): Promise<
   try {
     const { api, mode } = await link.use<TelegramSender>('TELEGRAM');
     return { ...(await api.send(text)), mode };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e), mode: 'MOCK' };
+  }
+}
+
+/**
+ * One message from a named agent (Blueprint C10.3, PR 584): the identity line, a blank line, then the text —
+ * optionally with an approval's buttons. Same never-throws shape as `sendOwnerAlert`.
+ */
+export async function sendAsAgent(
+  link: TelegramLink,
+  agent: { emoji: string; nameEn: string; nameBn: string; code: string; tag: string },
+  text: string,
+  opts?: TelegramSendOptions,
+): Promise<TelegramResult & { mode: string }> {
+  try {
+    const { api, mode } = await link.use<TelegramSender>('TELEGRAM');
+    return { ...(await api.send(`${telegramIdentityLine(agent)}\n\n${text}`, opts)), mode };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e), mode: 'MOCK' };
   }

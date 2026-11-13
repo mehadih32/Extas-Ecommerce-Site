@@ -1,0 +1,36 @@
+{
+  "support": {
+    "savedReplies": {
+      "label": "Quick replies",
+      "help": "Inbox › Quick replies: saved answers with a short name, in English and in Bengali. Type / and the short name in a chat's reply box to put the text in. A quick reply is never deleted, only archived. \"Longest text\" is how many letters one may hold."
+    },
+    "commentDesk": {
+      "label": "Comment desk",
+      "help": "Inbox › Comments: Facebook and Instagram comments in one list. Optional rules: hide a comment that carries a phone number, hide abusive words, and send one private message and one public reply to a comment that asks a price or size. The words and texts are yours to set. Hiding and replying go through the Page's connection (a practice stand-in until its keys are typed in)."
+    },
+    "liveSelling": {
+      "label": "Live selling",
+      "help": "Inbox › Comments › Live selling: while a live session runs, a comment like \"P1 L 2 pcs\" is read as a product code, a size and a quantity. \"Make draft\" puts the piece in that person's chat bag; staff always confirm by a call, then press Create order in the chat. \"Most pieces in one comment\" is the largest quantity read as an order."
+    }
+  },
+  "marketing": {
+    "affiliates": {
+      "label": "Influencers and affiliates",
+      "help": "Marketing › Tools › Influencers & affiliates: each partner gets a personal code (the code of a coupon you made). A partner earns commission only on delivered orders that used the code, after the hold days. \"Commission\" is the default share of the goods value. The Pay action is off and stays off until the owner says so; the page keeps a ledger of what is owed and paid."
+    },
+    "verdicts": {
+      "label": "Campaign verdicts",
+      "help": "Marketing › Overview: a campaign's chip by delivered sales per Tk 1 of ads. At or over Scale = Scale, at or over Keep = Keep, at or over Fix = Fix, below that = Stop. \"Shift (%)\" is how much of a budget the Plan page suggests moving. Advice only: nothing is paused or changed by itself."
+    },
+    "metaFeed": {
+      "label": "Meta catalogue feed",
+      "help": "Marketing › Meta feed: the product feed for the Facebook and Instagram catalogue, at /feeds/meta.xml, beside the Google feed. Off as shipped. It uses the same products, photos and prices as the Google feed and follows its choices. Each product shows what keeps it out or needs a fix. Nothing is sent anywhere: Meta fetches the file on its own schedule."
+    }
+  },
+  "messages": {
+    "costCeiling": {
+      "label": "Message cost ceilings",
+      "help": "A monthly ceiling for SMS and WhatsApp spend (in the shop's money). At the warning share you are told; at the ceiling, a send either stops or, with \"cheapest channel\" on, goes by the cheapest channel that is still under its ceiling."
+    }
+  }
+}

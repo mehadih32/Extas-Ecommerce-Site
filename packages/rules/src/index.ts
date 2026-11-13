@@ -40,3 +40,5 @@ export * from './public';
 export * from './jobs';
 export * from './hub-service';
 export * from './offers-service';
+export * from './affiliates-pure';
+export * from './affiliates-service';

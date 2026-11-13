@@ -19,6 +19,7 @@
   "dependencies": {
     "@extas/adapters": "workspace:*",
     "@extas/cache": "workspace:*",
+    "@extas/catalogue": "workspace:*",
     "@extas/customers": "workspace:*",
     "@extas/db": "workspace:*",
     "@extas/inventory": "workspace:*",
@@ -36,7 +37,6 @@
   "devDependencies": {
     "@eslint/js": "9.39.5",
     "@extas/auth": "workspace:*",
-    "@extas/catalogue": "workspace:*",
     "@types/node": "^22.20.5",
     "eslint": "9.39.5",
     "tsx": "4.23.15",

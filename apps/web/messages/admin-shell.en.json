@@ -26,6 +26,7 @@
     },
     "tab": {
       "products": {
+        "ranking": "Shop ranking",
         "all": "All products",
         "queue": "Launch queue",
         "combos": "Combos & sets",
@@ -62,6 +63,8 @@
         "intel": "Market & competitors"
       },
       "reports": {
+        "library": "Report library",
+        "packs": "Report packs",
         "health": "Site health",
         "fraud": "Fraud & RTO",
         "stopped": "Stopped by the engine",
@@ -148,21 +151,24 @@
         "popups": "Pop-ups & notices"
       },
       "money": {
+        "cash": "Money in & out",
+        "budgets": "Budgets & profit",
         "books": "Books",
         "overview": "Overview",
         "profit": "Profit & loss",
-        "refunds": "Refunds & wallet",
+        "refunds": "Wallet & refunds",
         "match": "Match",
         "differences": "Differences",
         "closes": "Closes",
         "daily": "Daily summary",
-        "costs": "Costs",
+        "costs": "Costs & budgets",
         "expenses": "Expenses",
         "fees": "Costs & fees",
         "vat": "VAT",
         "ledger": "Cost ledger",
         "monthEnd": "Month-end",
-        "couriers": "Couriers"
+        "couriers": "Couriers",
+        "erp": "ERP account"
       },
       "ai": {
         "control": "Control room",
@@ -535,7 +541,10 @@
       "supportLate": "Chats past their answer time",
       "handoverWaiting": "Parcels printed, waiting for the rider's handover",
       "packingCards": "Packing cards open, waiting for a person to decide",
-      "packingCardsLate": "Packing cards past the hours to decide"
+      "packingCardsLate": "Packing cards past the hours to decide",
+      "exchangesRequested": "Exchange requests waiting for an answer",
+      "batchStuck": "Orders stuck in this batch",
+      "courierMismatch": "Packed here, not entered at the courier"
     },
     "age": {
       "now": "just now",
@@ -682,6 +691,24 @@
       "title": "Business at a glance",
       "lowTile": "Running low on stock",
       "lowSub": "sizes close to zero",
+      "profitTile": "Net profit",
+      "profitUnknown": "Not known yet",
+      "profitSub": "after ads and all costs",
+      "codTile": "Money with couriers",
+      "codSub": "{n} parcels",
+      "adsTile": "Ad spend",
+      "adsPer": "{x} sales for each {cur} 1",
+      "adsNone": "no ad spend",
+      "pinsTitle": "Pinned reports",
+      "pinsSub": "from the Report library",
+      "pinOpen": "Open the Report library",
+      "pin_sales": "Sales",
+      "pin_profit": "Net profit",
+      "pin_orders": "Orders",
+      "pin_aov": "Average order",
+      "pin_discount": "Discounts given",
+      "pin_restock": "Styles to restock",
+      "pin_unsold": "Styles sitting unsold",
       "funnelTitle": "Order funnel",
       "funnelSub": "orders placed {range} and how far they got",
       "delivered": "Delivered",

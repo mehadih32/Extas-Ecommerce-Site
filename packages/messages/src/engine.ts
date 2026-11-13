@@ -38,6 +38,7 @@
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
 import type { Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
+import { ceilingStatusOf, ceilingVerdict, type CeilingStatus } from './cost-ceiling';
 import { CAMPAIGN_BLAST_KIND, CAMPAIGN_WINBACK_KIND, CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
 import { bagsOf, orderedSinceBy, usableOffer } from './cart-recovery';
 import { consentBlock, offerConsent } from './consent';
@@ -396,6 +397,23 @@ export async function queueFallback(deps: MessagesDeps, c: RunContext, row: Row)
   });
 }
 
+/** PR 698: a message past its channel's monthly cost ceiling is not sent (or goes by the step's fallback channel). */
+const ceilingByRun = new WeakMap<RunContext, Promise<CeilingStatus>>();
+async function ceilingHold(deps: MessagesDeps, c: RunContext, row: Row): Promise<SendOutcome | null> {
+  if (!['SMS', 'WHATSAPP'].includes(row.channel) || NEVER_QUIET.has(row.step ?? '')) return null;
+  let status = ceilingByRun.get(c);
+  if (!status) {
+    status = ceilingStatusOf(deps, c.storeId);
+    ceilingByRun.set(c, status);
+  }
+  const cfg = c.journey[row.step as JourneyStep];
+  const fallback = cfg && row.orderId && cfg.channel === row.channel && cfg.fallback !== 'NONE' ? cfg.fallback : null;
+  const verdict = ceilingVerdict(await status, row.channel, fallback);
+  if (!verdict.hold) return null;
+  await close(deps, c, row, verdict.useFallback ? 'SKIPPED' : 'BLOCKED_BY_GUARD', 'COST_CEILING', {}, verdict.useFallback);
+  return verdict.useFallback ? 'SKIPPED' : 'BLOCKED';
+}
+
 /** Step 2 for one row: every check at the moment it goes, then the sender. */
 export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts: SendOptions = {}): Promise<SendOutcome> {
   // the claim: this run alone holds the row for the lease
@@ -406,6 +424,9 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   if (claimed.count !== 1) return 'WAITING';
   const step = row.step as JourneyStep;
   if (!c.master) return close(deps, c, row, 'SKIPPED', 'MASTER_OFF').then(() => 'SKIPPED');
+  // PR 698: the month's cost ceiling of this channel (SMS, WhatsApp), when the owner set one
+  const held = await ceilingHold(deps, c, row);
+  if (held) return held;
   if (row.step === CRM_MESSAGE_STEP || row.step === CRM_CAMPAIGN_STEP) return sendJourneyMessage(deps, c, row, opts);
   if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
   if (row.step === FOLLOW_UP_STEP) return sendFollowUp(deps, c, row, opts);

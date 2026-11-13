@@ -54,10 +54,20 @@ async function feedPriceRules(db: Db, resolver: Resolver, storeId: number): Prom
 }
 
 /** The feed's products, ready for the model (links and photos absolute against `origin`). */
-export async function feedProducts(db: Db, resolver: Resolver, origin: URL | string, storeId: number = S): Promise<{ set: MerchantFeedSettings; currency: string; storeName: string; products: FeedProduct[] }> {
-  const [set, currency, storeName, prefix] = await Promise.all([resolver.value(KEY, { storeId }), resolver.value('store.currency', { storeId }), resolver.value('store.name', { storeId }), resolver.value('naming.productPathPrefix', { storeId })]);
+export async function feedProducts(
+  db: Db,
+  resolver: Resolver,
+  origin: URL | string,
+  storeId: number = S,
+): Promise<{ set: MerchantFeedSettings; currency: string; storeName: string; products: FeedProduct[] }> {
+  const [set, currency, storeName, prefix] = await Promise.all([
+    resolver.value(KEY, { storeId }),
+    resolver.value('store.currency', { storeId }),
+    resolver.value('store.name', { storeId }),
+    resolver.value('naming.productPathPrefix', { storeId }),
+  ]);
   const rows = await db.product.findMany({
-    where: { storeId, status: 'PUBLISHED', archivedAt: null, category: { isVisible: true, archivedAt: null }, ...(set.outOfStock ? {} : { inStock: true }) },
+    where: { storeId, status: 'PUBLISHED', isDemo: false, archivedAt: null, category: { isVisible: true, archivedAt: null }, ...(set.outOfStock ? {} : { inStock: true }) },
     orderBy: [{ sortRank: 'desc' }, { publishedAt: 'desc' }, { slug: 'asc' }],
     take: set.maxItems,
     select: {
@@ -71,29 +81,55 @@ export async function feedProducts(db: Db, resolver: Resolver, origin: URL | str
       wasPriceSource: true,
       brand: { select: { name: true, isOwnLabel: true } },
       category: { select: { nameEn: true } },
-      variants: { where: { archivedAt: null, active: true, priceMinor: { not: null } }, orderBy: { priceMinor: 'asc' }, take: 1, select: { id: true, priceMinor: true, compareAtMinor: true } },
+      variants: {
+        where: { archivedAt: null, active: true, priceMinor: { not: null } },
+        orderBy: { priceMinor: 'asc' },
+        take: 1,
+        select: { id: true, priceMinor: true, compareAtMinor: true },
+      },
       media: { where: { archivedAt: null, role: 'FRONT' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1, select: { assetId: true } },
     },
   });
   // PR 589 follow-up: each product's live sizes and colours, and the front photo of each colour
   const ids = rows.map((p) => p.id);
-  const [sizes, colourPhotos] = set.variants && ids.length
-    ? await Promise.all([
-        db.productVariant.findMany({
-          where: { storeId, productId: { in: ids }, archivedAt: null, active: true, priceMinor: { not: null } },
-          orderBy: [{ sortOrder: 'asc' }, { sku: 'asc' }],
-          select: { id: true, productId: true, priceMinor: true, compareAtMinor: true, inStock: true, colourId: true, colour: { select: { key: true, nameEn: true } }, size: { select: { key: true, label: true, sortOrder: true } } },
-        }),
-        db.productMedia.findMany({ where: { storeId, productId: { in: ids }, archivedAt: null, role: 'FRONT', colourId: { not: null } }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], select: { productId: true, colourId: true, assetId: true } }),
-      ])
-    : [[], []];
+  const [sizes, colourPhotos] =
+    set.variants && ids.length
+      ? await Promise.all([
+          db.productVariant.findMany({
+            where: { storeId, productId: { in: ids }, archivedAt: null, active: true, priceMinor: { not: null } },
+            orderBy: [{ sortOrder: 'asc' }, { sku: 'asc' }],
+            select: {
+              id: true,
+              productId: true,
+              priceMinor: true,
+              compareAtMinor: true,
+              inStock: true,
+              colourId: true,
+              colour: { select: { key: true, nameEn: true } },
+              size: { select: { key: true, label: true, sortOrder: true } },
+            },
+          }),
+          db.productMedia.findMany({
+            where: { storeId, productId: { in: ids }, archivedAt: null, role: 'FRONT', colourId: { not: null } },
+            orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+            select: { productId: true, colourId: true, assetId: true },
+          }),
+        ])
+      : [[], []];
   // PR 589 follow-up 707: each product's struck-price source, and the recorded prices of the variants that need them
   const rules = set.salePrice && rows.length ? await feedPriceRules(db, resolver, storeId) : null;
   const sourceById = new Map(rows.map((p) => [p.id, rules ? sourceOf(rules, p) : null]));
   const historyIds = rules
-    ? [...new Set([...rows.flatMap((p) => (sourceById.get(p.id) === 'PRICE_HISTORY' ? p.variants.map((v) => v.id) : [])), ...sizes.filter((v) => sourceById.get(v.productId) === 'PRICE_HISTORY').map((v) => v.id)])]
+    ? [
+        ...new Set([
+          ...rows.flatMap((p) => (sourceById.get(p.id) === 'PRICE_HISTORY' ? p.variants.map((v) => v.id) : [])),
+          ...sizes.filter((v) => sourceById.get(v.productId) === 'PRICE_HISTORY').map((v) => v.id),
+        ]),
+      ]
     : [];
-  const history = historyIds.length ? await db.priceHistory.findMany({ where: { storeId, variantId: { in: historyIds } }, select: { variantId: true, priceMinor: true, effectiveFrom: true } }) : [];
+  const history = historyIds.length
+    ? await db.priceHistory.findMany({ where: { storeId, variantId: { in: historyIds } }, select: { variantId: true, priceMinor: true, effectiveFrom: true } })
+    : [];
   const now = new Date();
   const wasOf = (p: (typeof rows)[number], v: { id: string; priceMinor: number | null; compareAtMinor: number | null } | undefined): number | null =>
     rules && v && v.priceMinor != null
@@ -194,7 +230,14 @@ export async function feedScreen(db: Db, resolver: Resolver, origin: URL | null,
     left,
     sample: products.slice(0, SAMPLE).map((p) => {
       const first = byProduct.get(p.id)?.[0];
-      return { id: p.id, title: p.title, price: first?.salePrice ?? first?.price ?? null, availability: p.inStock ? 'in_stock' : 'out_of_stock', reasons: reasonsOf(p, set.outOfStock), items: byProduct.get(p.id)?.length ?? 0 };
+      return {
+        id: p.id,
+        title: p.title,
+        price: first?.salePrice ?? first?.price ?? null,
+        availability: p.inStock ? 'in_stock' : 'out_of_stock',
+        reasons: reasonsOf(p, set.outOfStock),
+        items: byProduct.get(p.id)?.length ?? 0,
+      };
     }),
     card: { key: KEY, value: set, version: versionOf(set) },
   };

@@ -110,6 +110,8 @@ import invoiceEn from '../messages/invoice.en.json';
 // PR 425 (S22; registry v63): the support inbox, files in a conversation and customer numbers, in messages/support.<lang>.json.
 import supportBn from '../messages/support.bn.json';
 import supportEn from '../messages/support.en.json';
+import productsV5Bn from '../messages/products-v5.bn.json';
+import productsV5En from '../messages/products-v5.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -129,6 +131,8 @@ import bhandariP1Bn from '../messages/bhandari-p1.bn.json';
 import bhandariP1En from '../messages/bhandari-p1.en.json';
 // CN-028 · PR 617, 618 (registry v69): the summary and fixed-cost jobs, the cost lines a store never has, the Books card.
 import booksSummaryBn from '../messages/books-summary.bn.json';
+import productsFinanceV5Bn from '../messages/products-finance-v5.bn.json';
+import productsFinanceV5En from '../messages/products-finance-v5.en.json';
 import booksSummaryEn from '../messages/books-summary.en.json';
 // CN-028 · PR 619, 621 (registry v70): the switch-over, the ERP link page and the acceptance suite.
 import switchoverBn from '../messages/switchover.bn.json';
@@ -239,6 +243,8 @@ import supportIdentityEn from '../messages/support-identity.en.json';
 import supportContextBn from '../messages/support-context.bn.json';
 import supportContextEn from '../messages/support-context.en.json';
 import supportCatalogueBn from '../messages/support-catalogue.bn.json';
+import w5aBn from '../messages/w5a.bn.json';
+import w5aEn from '../messages/w5a.en.json';
 import supportCatalogueEn from '../messages/support-catalogue.en.json';
 import supportCartBn from '../messages/support-cart.bn.json';
 import supportCartEn from '../messages/support-cart.en.json';
@@ -347,6 +353,8 @@ messages.en = mergeMessages(messages.en, bhandariP1En);
 messages.bn = mergeMessages(messages.bn, bhandariP1Bn);
 messages.en = mergeMessages(messages.en, booksSummaryEn);
 messages.bn = mergeMessages(messages.bn, booksSummaryBn);
+messages.en = mergeMessages(messages.en, productsFinanceV5En);
+messages.bn = mergeMessages(messages.bn, productsFinanceV5Bn);
 messages.en = mergeMessages(messages.en, switchoverEn);
 messages.bn = mergeMessages(messages.bn, switchoverBn);
 messages.en = mergeMessages(messages.en, webSecurityEn);
@@ -485,6 +493,8 @@ messages.bn = mergeMessages(messages.bn, supportContextBn);
 // S22 · PR 429 (registry v157): the catalogue drawer in a support chat.
 messages.en = mergeMessages(messages.en, supportCatalogueEn);
 messages.bn = mergeMessages(messages.bn, supportCatalogueBn);
+messages.en = mergeMessages(messages.en, w5aEn);
+messages.bn = mergeMessages(messages.bn, w5aBn);
 // S22 · PR 430 (registry v158): orders from a support chat.
 messages.en = mergeMessages(messages.en, supportCartEn);
 messages.bn = mergeMessages(messages.bn, supportCartBn);
@@ -579,3 +589,7 @@ export function pair(msgs: SettingsMessages, key: string): LabelPair {
   }
   return { en: e, bn: b };
 }
+
+// S28 · PR 680-685 (registry v321): the product screens' settings in messages/products-v5.<lang>.json.
+messages.en = mergeMessages(messages.en, productsV5En);
+messages.bn = mergeMessages(messages.bn, productsV5Bn);

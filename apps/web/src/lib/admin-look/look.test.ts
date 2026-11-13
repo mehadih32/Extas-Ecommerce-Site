@@ -162,10 +162,10 @@ describe('the look registry', () => {
       }
     }
   });
-  it('has the V12.4 Dashboard (A), the Lumen Today (B, the standard since PR 631), Classic cards (C, PR 655) and the Command center (D, PR 658), drawing only loader parts', () => {
+  it('has the V12.4 Dashboard (A), the Lumen Today (B, the standard from PR 631 to PR 691), Classic cards (C, PR 655) and the Command center (D, PR 658), drawing only loader parts', () => {
     const d = lookPage('dashboard')!;
     expect(d.designs.map((x) => x.key)).toEqual(['A', 'B', 'C', 'D']);
-    expect(d.standard).toBe('B');
+    expect(d.standard).toBe('D'); // S28 · PR 691: Home Command is the standard (B, the PR 631 standard, stays selectable)
     for (const x of d.designs) {
       expect(x.Render).toBeTypeOf('function');
       for (const part of x.parts) expect(DASH_PARTS).toContain(part);

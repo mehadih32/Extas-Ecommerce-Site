@@ -65,3 +65,4 @@ export * from './organic-sources';
 export * from './campaign-tags';
 // S13 · PR 283 — the marketing report: spend against Ordered value and Sales, by channel, by campaign and per message send.
 export * from './marketing-report';
+export * from './campaign-sales';

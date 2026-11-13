@@ -1,0 +1,70 @@
+{
+  "productRanking": {
+    "metaTitle": "Shop ranking",
+    "title": "Shop ranking",
+    "sub": "The order products show in on your own shop: category pages, collections and \"New in\". This is not Google; Google ranking is in Website › SEO.",
+    "what": {
+      "title": "What counts, and how much",
+      "sub": "Every product gets a score from 0 to 100 from five things. Move the sliders to decide how much each counts; the order on the right follows at once. Nothing goes live until you press \"Save this order\". A sold-out size lowers the score by itself."
+    },
+    "w": {
+      "sales": "Sales in 30 days",
+      "conv": "Visitors who buy",
+      "margin": "Margin",
+      "stock": "Stock health (sizes in stock)",
+      "fresh": "Newness"
+    },
+    "reset": "Back to default",
+    "save": "Save this order",
+    "saving": "Saving…",
+    "saved": "The new order is on the shop",
+    "savedAt": "Last saved {when}",
+    "neverSaved": "No order saved yet: the shop still uses the order it had.",
+    "tryNote": "You are trying other weights. Nothing is saved until you press \"Save this order\".",
+    "readOnly": "You can see the ranking. Changing it needs the permission to change products.",
+    "live": {
+      "title": "Order on the shop",
+      "sub": "▲▼ = places moved since the last saved order. \"Top\" keeps a product above everything (good for a launch); \"Down\" sends it to the end. Pins take effect when you save the order."
+    },
+    "find": "Find a product",
+    "sold": "{n} sold in 30 days",
+    "pinned": "Pinned to the top",
+    "pushed": "Pushed to the end",
+    "score": "Score {n} of 100",
+    "top": "Top",
+    "down": "Down",
+    "pinnedTop": "Pinned to the top",
+    "pinnedDown": "Pushed to the end",
+    "pinRemoved": "Back to normal",
+    "empty": "No product is live on the shop yet.",
+    "err": {
+      "forbidden": "You do not have the permission for this.",
+      "other": "Could not save. Please try again."
+    },
+    "options": {
+      "h": "More options",
+      "d": "How the score is worked out, and whether the new order goes on the shop by itself each night.",
+      "freshDays": "Days a product counts as new",
+      "freshDaysHelp": "Newness fades to 0 at this age.",
+      "coverDays": "Days of stock that count as healthy",
+      "coverDaysHelp": "Stock that lasts this long at the last 30 days' sales speed gets the full stock score.",
+      "autoApply": "Put the new order on the shop every night by itself",
+      "autoApplyHelp": "Off: the scores update every night but the order changes only when you press \"Save this order\".",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "You have unsaved changes",
+      "readOnly": "You can see these. Changing them needs the permission to change products.",
+      "err": {
+        "STALE": "Someone changed this meanwhile. The page is read again.",
+        "INVALID_INPUT": "Check the numbers.",
+        "FORBIDDEN": "You do not have the permission for this.",
+        "forbidden": "You do not have the permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Please try again."
+      }
+    }
+  }
+}

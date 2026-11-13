@@ -81,7 +81,9 @@
       "support_escalate": "Telling the owner when a customer waits with no answer",
       "ads_spend_import": "Importing each day's ad spend from the ad platforms",
       "customers_grades_run": "Working out each customer's grade",
-      "tracking_sweep": "Tracked events still waiting"
+      "tracking_sweep": "Tracked events still waiting",
+      "catalogue_ranking_run": "Nightly shop ranking of the products",
+      "reports_pack_send": "Sending the scheduled report summaries"
     },
     "workers": {
       "title": "Workers",

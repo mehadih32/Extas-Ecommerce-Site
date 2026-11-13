@@ -58,8 +58,12 @@ const nameFromUrl = (u: URL): string =>
 
 async function ourProducts(db: Db, storeId: number): Promise<OurProduct[]> {
   const rows = await db.product.findMany({
-    where: { storeId, archivedAt: null, status: 'PUBLISHED' },
-    select: { id: true, nameEn: true, variants: { where: { archivedAt: null, priceMinor: { not: null } }, orderBy: { priceMinor: 'asc' }, select: { active: true, priceMinor: true } } },
+    where: { storeId, archivedAt: null, status: 'PUBLISHED', isDemo: false },
+    select: {
+      id: true,
+      nameEn: true,
+      variants: { where: { archivedAt: null, priceMinor: { not: null } }, orderBy: { priceMinor: 'asc' }, select: { active: true, priceMinor: true } },
+    },
   });
   const out: OurProduct[] = [];
   for (const p of rows) {
@@ -134,7 +138,13 @@ async function readCompetitorNow(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vaul
 }
 
 /** POST {url} — follow a shop's own page (`marketing.campaigns.write`); reads it once, at once, like any new link. */
-export async function addCompetitorLink(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault'>, who: JournalWho, input: unknown, now: Date = new Date(), storeId: number = S): Promise<{ id: string }> {
+export async function addCompetitorLink(
+  deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault'>,
+  who: JournalWho,
+  input: unknown,
+  now: Date = new Date(),
+  storeId: number = S,
+): Promise<{ id: string }> {
   if (!(await can(deps.db, who.actor, 'marketing.campaigns.write', { storeId }))) throw new JournalError('FORBIDDEN', 403, ['marketing.campaigns.write']);
   const o = (input ?? {}) as { url?: unknown };
   const u = typeof o.url === 'string' ? publicUrl(o.url) : null;
@@ -147,7 +157,12 @@ export async function addCompetitorLink(deps: Pick<AdminDeps, 'db' | 'resolver' 
   } catch {
     // The link is still followed; "last read" stays empty and the row shows it was never read. "Check now" retries.
   }
-  await audit(deps.db, who.actor, { storeId, action: 'ads.intel.addLink', entityType: 'Competitor', entityId: created.id, after: { url: created.url, name: created.name } }, who.ctx);
+  await audit(
+    deps.db,
+    who.actor,
+    { storeId, action: 'ads.intel.addLink', entityType: 'Competitor', entityId: created.id, after: { url: created.url, name: created.name } },
+    who.ctx,
+  );
   return { id: created.id };
 }
 
@@ -157,7 +172,12 @@ async function setArchived(db: Db, who: JournalWho, id: string, archived: boolea
   const c = await db.competitor.findFirst({ where: { id, storeId } });
   if (!c) throw new JournalError('NOT_FOUND', 404, ['id']);
   await db.competitor.update({ where: { id }, data: { archivedAt: archived ? now : null } });
-  await audit(db, who.actor, { storeId, action: archived ? 'ads.intel.archiveLink' : 'ads.intel.restoreLink', entityType: 'Competitor', entityId: id, after: { archived } }, who.ctx);
+  await audit(
+    db,
+    who.actor,
+    { storeId, action: archived ? 'ads.intel.archiveLink' : 'ads.intel.restoreLink', entityType: 'Competitor', entityId: id, after: { archived } },
+    who.ctx,
+  );
 }
 
 /** Stop following a link (kept, not deleted — hard rule 3). */
@@ -166,7 +186,13 @@ export const archiveCompetitorLink = (db: Db, who: JournalWho, id: string, now: 
 export const restoreCompetitorLink = (db: Db, who: JournalWho, id: string, now: Date, storeId: number = S) => setArchived(db, who, id, false, now, storeId);
 
 /** POST {id} — "Check now": re-reads one followed link outside its `refreshHours` schedule (`marketing.campaigns.write`). */
-export async function runCompetitorIntel(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault'>, who: JournalWho, id: string, now: Date = new Date(), storeId: number = S): Promise<void> {
+export async function runCompetitorIntel(
+  deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault'>,
+  who: JournalWho,
+  id: string,
+  now: Date = new Date(),
+  storeId: number = S,
+): Promise<void> {
   if (!(await can(deps.db, who.actor, 'marketing.campaigns.write', { storeId }))) throw new JournalError('FORBIDDEN', 403, ['marketing.campaigns.write']);
   if (!isUuid(id)) throw new JournalError('INVALID_INPUT', 400, ['id']);
   const c = await deps.db.competitor.findFirst({ where: { id, storeId, archivedAt: null } });

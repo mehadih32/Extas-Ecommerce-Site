@@ -1,18 +1,29 @@
 // S19 · PR 392 — Telegram alerts: the mock until the bot is connected; the live client against a stand-in Bot API; the
 // token (part of the address) never in an answer; the Test reads the bot and the chat and sends nothing.
+// S15 · PR 584 adds the agents' identity line, the Approve/Reject/Ask-why keyboard and its callback parsing, and the
+// inbound update parser — covered below, pure and provider-neutral (the fixed agent catalogue and the actual routing
+// decision are `apps/web`'s own `lib/admin-ai/telegram-routing.ts`, tested there).
 import { describe, expect, it } from 'vitest';
 import {
+  approvalKeyboard,
   createTelegramClient,
   findConnection,
   mockTelegramOutbox,
+  mockTelegramSender,
+  parseApprovalCallback,
+  parseTelegramUpdate,
+  sendAsAgent,
   sendOwnerAlert,
   telegramAdapter,
   telegramConfig,
+  telegramIdentityLine,
   TELEGRAM_MAX_TEXT,
+  TELEGRAM_SECRET_HEADER,
   type TelegramSender,
 } from '../src';
 
 const TOKEN = '1234567:BBHdqTcvCH1vGWJxfSeofSAs0K5PALDsawZ';
+const AGENT = { key: 'gyani', code: 'A360-01', tag: 'gyani', emoji: '🧠', nameEn: 'Gyani', nameBn: 'জ্ঞানী', isChief: true } as const;
 
 function fakeBotApi(opts: { refuse?: string; chatTitle?: string } = {}) {
   const calls: { method: string; body: Record<string, unknown>; url: string }[] = [];
@@ -29,12 +40,13 @@ function fakeBotApi(opts: { refuse?: string; chatTitle?: string } = {}) {
 }
 
 describe('Telegram adapter (PR 392)', () => {
-  it('is a Keys & connections row with the bot token as its only key', () => {
+  it('is a Keys & connections row with the bot token and the optional webhook secret (PR 584)', () => {
     const row = findConnection('telegram')!;
     expect(row.adapter).toBe(true);
-    expect(row.secrets.map((s) => s.field)).toEqual(['botToken']);
+    expect(row.secrets.map((s) => s.field)).toEqual(['botToken', 'webhookSecret']);
+    expect(row.secrets.find((s) => s.field === 'webhookSecret')?.optional).toBe(true);
     expect(row.config.map((c) => c.field)).toEqual(['chatId', 'baseUrl']);
-    expect(telegramAdapter.secrets).toEqual(['botToken']);
+    expect(telegramAdapter.secrets).toEqual(['botToken', 'webhookSecret']);
   });
 
   it('accepts a numeric chat id, a channel id and @name; refuses anything else', () => {
@@ -101,5 +113,57 @@ describe('Telegram adapter (PR 392)', () => {
     const api: TelegramSender = await telegramAdapter.mock({ mode: 'MOCK', config: { chatId: '1' }, storeId: null, secret: async () => null });
     const link = { use: async () => ({ api, mode: 'MOCK' }) };
     expect(await sendOwnerAlert(link as never, 'ব্যাকআপ ঠিক আছে')).toEqual({ ok: true, messageId: null, mode: 'MOCK' });
+  });
+});
+
+describe('Telegram identity, keyboard and update parsing (PR 584)', () => {
+  it('telegramIdentityLine formats emoji, both names, code and tag', () => {
+    expect(telegramIdentityLine(AGENT)).toBe('🧠 Gyani জ্ঞানী · A360-01 · gyani');
+  });
+
+  it('sendAsAgent always leads with the identity line, even through the mock', async () => {
+    mockTelegramOutbox.clear();
+    const api = mockTelegramSender();
+    const link = { use: async () => ({ api, mode: 'MOCK' }) };
+    expect(await sendAsAgent(link as never, AGENT, 'Got it — assigned.')).toEqual({ ok: true, messageId: null, mode: 'MOCK' });
+    expect(mockTelegramOutbox.all()[0]!.text).toBe(`${telegramIdentityLine(AGENT)}\n\nGot it — assigned.`);
+  });
+
+  it('sendAsAgent passes an approval keyboard through to the sender', async () => {
+    mockTelegramOutbox.clear();
+    const api = mockTelegramSender();
+    const link = { use: async () => ({ api, mode: 'MOCK' }) };
+    const keyboard = approvalKeyboard('appr_1', { approve: 'Approve', reject: 'Reject', askWhy: 'Ask why' });
+    await sendAsAgent(link as never, AGENT, 'Needs a decision', { keyboard });
+    expect(mockTelegramOutbox.all()[0]!.keyboard).toEqual(keyboard);
+  });
+
+  it('approvalKeyboard builds one row of Approve / Reject / Ask-why, each carrying the approval id', () => {
+    const kb = approvalKeyboard('appr_9', { approve: 'Approve', reject: 'Reject', askWhy: 'Ask why' });
+    expect(kb.inline_keyboard).toEqual([
+      [
+        { text: 'Approve', callback_data: 'appr:appr_9:approve' },
+        { text: 'Reject', callback_data: 'appr:appr_9:reject' },
+        { text: 'Ask why', callback_data: 'appr:appr_9:why' },
+      ],
+    ]);
+  });
+
+  it('parseApprovalCallback reads a button press back, and null for anything else', () => {
+    expect(parseApprovalCallback('appr:appr_9:approve')).toEqual({ approvalId: 'appr_9', action: 'approve' });
+    expect(parseApprovalCallback('appr:appr_9:why')).toEqual({ approvalId: 'appr_9', action: 'why' });
+    for (const bad of [undefined, null, '', 'appr:appr_9:delete', 'not-a-callback', 'appr::approve']) expect(parseApprovalCallback(bad)).toBeNull();
+  });
+
+  it('TELEGRAM_SECRET_HEADER is the header Telegram carries its setWebhook secret_token back on', () => {
+    expect(TELEGRAM_SECRET_HEADER).toBe('x-telegram-bot-api-secret-token');
+  });
+
+  it('parseTelegramUpdate accepts a message update and a callback_query update, and null for anything unshaped', () => {
+    const msg = { update_id: 1, message: { message_id: 2, chat: { id: 42 }, text: '@gyani check orders' } };
+    expect(parseTelegramUpdate(msg)).toEqual(msg);
+    const cb = { update_id: 2, callback_query: { id: 'cb1', data: 'appr:appr_9:approve', message: { chat: { id: 42 } } } };
+    expect(parseTelegramUpdate(cb)).toEqual(cb);
+    for (const bad of [null, undefined, 'x', 42, {}, { message: {} }]) expect(parseTelegramUpdate(bad)).toBeNull();
   });
 });

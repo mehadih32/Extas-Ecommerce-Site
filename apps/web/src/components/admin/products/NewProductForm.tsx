@@ -50,7 +50,7 @@ export function NewProductForm({ dict: d, lang, categories, fabrics, cancelHref 
       }
       const id = (a.data.created as { id: string }).id;
       say(t(d, 'products.new.created'));
-      router.push(`/admin/products/${id}`);
+      router.push(`/admin/products/${id}?wizard=3`);
     } finally {
       setBusy(false);
     }
