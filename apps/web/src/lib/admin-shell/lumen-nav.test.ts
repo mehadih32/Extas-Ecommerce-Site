@@ -36,7 +36,7 @@ describe('Lumen sidebar (PR 626)', () => {
     expect(locate('/admin/messages/consent')?.tab?.id).toBe('messages');
     expect(locate('/admin/rules/eid')?.section.id).toBe('rules');
     expect(locate('/admin/rules')?.tab?.id).toBe('all');
-    expect(sectionHome(sectionById('marketing')!, owner)).toBe('/admin/marketing/campaigns');
+    expect(sectionHome(sectionById('marketing')!, owner)).toBe('/admin/marketing/overview');
     const label = (id: string) => t(en as Dict, `shell.sec.${id}`);
     expect(['dashboard', 'delivery', 'support', 'money', 'rules'].map(label)).toEqual(['Home', 'Couriers', 'Inbox', 'Finance', 'Rules']);
     expect(t(bn as Dict, 'shell.sec.rules')).toBe('নিয়ম');

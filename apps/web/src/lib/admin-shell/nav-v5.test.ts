@@ -99,9 +99,11 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
   it('nothing is dropped: every built page is in the menu exactly once, under a tab or under More', () => {
     const hrefs = (secs: readonly ShellSection[]) => secs.flatMap((s) => s.tabs.flatMap((x) => x.pages.map((p) => p.href))).sort();
     const raw = hrefs(RAW_SECTIONS);
-    expect(hrefs(SHELL_SECTIONS)).toEqual(raw);
+    // a page that landed in `sections.ts` itself (a lane that could edit the shared files) is in `raw` already and is not counted twice
+    const extra = (keep: (key: string) => boolean) => PENDING.filter((p) => keep(p.key)).map((p) => p.page.href).filter((h) => !raw.includes(h));
+    expect(hrefs(SHELL_SECTIONS)).toEqual([...raw, ...extra((k) => !stillPending().has(k))].sort());
     expect(new Set(raw).size).toBe(raw.length);
-    expect(hrefs(landed)).toEqual([...raw, ...PENDING.map((p) => p.page.href)].sort());
+    expect(hrefs(landed)).toEqual([...raw, ...extra(() => true)].sort());
   });
 
   it('a section opens on its first prototype tab', () => {
@@ -114,7 +116,7 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     const money = landed.find((x) => x.id === 'money')!;
     const costs = money.tabs.find((x) => x.id === 'costs')!;
     expect(costs.pages.map((p) => p.href)).toEqual(['/admin/money/costs', '/admin/money/expenses', '/admin/money/fees', '/admin/money/cost-ledger', '/admin/money/cost-ledger/report', '/admin/money/budgets']);
-    const erp = money.tabs.find((x) => x.id === 'books')!;
+    const erp = money.tabs.find((x) => x.id === 'erp')!;
     expect(erp.pages.map((p) => p.keys[0])).toEqual(['booksAccount', 'booksMatch', 'booksDifferences', 'booksCloses', 'booksDaily', 'moneyMonthEnd']);
     const studio = SHELL_SECTIONS.find((x) => x.id === 'marketing')!.tabs.find((x) => x.id === 'studio')!;
     expect(studio.more).toBe(true);
@@ -126,7 +128,7 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     expect(s.tabs.filter((x) => !x.more).map((x) => x.id)).toEqual(['store', 'keys']);
     expect(s.tabs.find((x) => x.id === 'store')!.pages.map((p) => p.keys[0])).toEqual(['store', 'policies', 'people', 'roles', 'staffControls', 'erpLink', 'adminLook', 'productDemo']);
     expect(s.tabs.find((x) => x.id === 'keys')!.pages.map((p) => p.keys[0])).toEqual(['integrations', 'telegramApprovals', 'cache', 'backups', 'golive', 'security', 'edge', 'activity', 'privacy', 'startFresh']);
-    expect(s.tabs.filter((x) => x.more).map((x) => x.id).sort()).toEqual(['shell', 'shimmer']);
+    expect(s.tabs.filter((x) => x.more).map((x) => x.id).sort()).toEqual(['practice', 'shell', 'shimmer']);
   });
 });
 
