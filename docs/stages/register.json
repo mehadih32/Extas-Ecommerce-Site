@@ -45827,7 +45827,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s28-wave-5--the-rest",
+     "text": "**Updated 13 Nov 2026 (CN-049):** adds practice data to the same Settings area: `practice.enabled` and `practice.showReset`, an `isPractice` flag on orders, customers, parcels, payments, courier payouts, claims, incomplete orders, courier accounts and products (migrations 0280, 0281), the sample-data seeder, Settings › Practice data (`/admin/settings/practice`) and a PIN-guarded reset that keeps products the owner uploaded and demo products unless ticked. Start fresh calls the same reset."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "একবারের \"Start fresh\": আগে ব্যাকআপ, টেস্ট ডাটাই মোছে, আসল নয় — চালানোর আগে আপনার লিখিত OK লাগবে।",
