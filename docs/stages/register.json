@@ -44438,7 +44438,15 @@
      "Tests: 6 shipping, 2 payments, 2 settings, 2 words and 1 settings-API test"
     ]
    },
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Scope added to existing PRs, 13 Nov 2026 (CN-048; new PR 659–707)",
+     "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
+     "text": "**PR 670** — Updated 13 Nov 2026 (owner decision 13 Nov, binding): Steadfast is the default courier, always. `ensureSteadfastCourier` (adapter key `steadfast`, practice world until the keys are typed in) runs when the default pack is applied (setup/seed), idempotent, never changes or removes a courier; while the setting `delivery.couriers.defaultCourierId` is empty or stale, Steadfast is the default (`defaultCourierIdOf`). Tests: `packages/seed/test/couriers.test.ts`, `packages/shipping/src/default-courier.test.ts`."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "কুরিয়ার সেকশন আর Courier 360: ওভারভিউ, পার্সেল, টাকা, পারফরম্যান্স, সেটআপ।",
