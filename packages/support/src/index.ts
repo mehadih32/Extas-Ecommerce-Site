@@ -106,3 +106,6 @@ export * from './escalation';
 export * from './taps';
 // S23 · PR 443: Facebook Page comments and Instagram comments + Direct messages into the inbox (receiveSocialEngagement).
 export * from './social-engagement';
+// S28 · PR 692 — Inbox › Quick replies.
+export * from './saved-replies-pure';
+export * from './saved-replies';

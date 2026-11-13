@@ -21,6 +21,7 @@
     { "id": "support/conversation", "route": "/admin/support/c/[id]" },
     { "id": "support/settings", "route": "/admin/support/settings" },
     { "id": "support/rider-issues", "route": "/admin/support/rider-issues" },
+    { "id": "support/replies", "route": "/admin/support/replies" },
     { "id": "support/app", "route": "/admin/support/app" },
     { "id": "support/analytics", "route": "/admin/support/analytics" },
     { "id": "products/all", "route": "/admin/products" },

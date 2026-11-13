@@ -1,0 +1,51 @@
+{
+  "w5a": {
+    "saved": "Saved",
+    "off": "This is switched off. Switch it on to use it.",
+    "turnOn": "Switch on",
+    "turnOff": "Switch off",
+    "more": "More options",
+    "back": "Back to the inbox",
+    "err": {
+      "default": "Something went wrong. Please try again.",
+      "network": "No connection. Please try again.",
+      "STALE": "Someone saved before you. Reload the page and try again.",
+      "INVALID_INPUT": "Please check: {fields}",
+      "NOT_FOUND": "This was not found.",
+      "UNAUTHENTICATED": "Please sign in again.",
+      "FORBIDDEN": "You do not have the key for this.",
+      "SAVED_REPLIES_OFF": "Quick replies are switched off.",
+      "SHORTCUT_TAKEN": "This short name is already used."
+    },
+    "replies": {
+      "metaTitle": "Quick replies",
+      "title": "Quick replies",
+      "sub": "Saved answers for the questions customers ask every day. Type / and the short name in any chat.",
+      "add": "Add a quick reply",
+      "top": "Most used: /{name} ({n} times). Keep prices and delivery words here up to date when your rules change.",
+      "inUse": "In use",
+      "archived": "Archived",
+      "colShort": "Short name",
+      "colText": "Message",
+      "colUsed": "Used",
+      "none": "No quick replies yet",
+      "noneArchived": "Nothing archived",
+      "never": "Quick replies are never deleted. Archived ones stop showing in chats and can come back any time.",
+      "edit": "Edit",
+      "archive": "Archive",
+      "restore": "Restore",
+      "confirmArchive": "Archive this quick reply? It stops showing in chats. You can restore it from Archived.",
+      "fShort": "Short name (one word)",
+      "fShortHint": "Typed as /name in the chat box. Letters and digits only.",
+      "fEn": "English text",
+      "fBn": "Bengali text",
+      "letters": "{n} of {max} letters",
+      "save": "Save",
+      "saved": "Quick reply saved",
+      "longest": "Longest text (letters)",
+      "picker": "Quick reply",
+      "pickerPh": "Quick reply…",
+      "off": "Quick replies are switched off. Switch them on to start with 8 saved answers you can edit."
+    }
+  }
+}

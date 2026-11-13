@@ -1,0 +1,8 @@
+{
+  "support": {
+    "savedReplies": {
+      "label": "Quick replies",
+      "help": "Inbox › Quick replies: saved answers with a short name, in English and in Bengali. Type / and the short name in a chat's reply box to put the text in. A quick reply is never deleted, only archived. \"Longest text\" is how many letters one may hold."
+    }
+  }
+}

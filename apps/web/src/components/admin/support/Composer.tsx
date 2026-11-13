@@ -26,6 +26,21 @@ export interface ComposerProducts {
   addUrl?: string | null;
 }
 
+/** S28 · PR 692: a quick reply for the reply box (null while `support.savedReplies` is off): the chat's own language first. */
+export interface ComposerReply {
+  id: string;
+  shortcut: string;
+  body: string;
+}
+
+export interface ComposerReplies {
+  list: ComposerReply[];
+  /** `/api/admin/support/replies` (a pick is counted at `<url>/<id>/use`). */
+  url: string;
+  label: string;
+  placeholder: string;
+}
+
 export interface ComposerTexts {
   label: string;
   reply: string;
@@ -73,6 +88,7 @@ export function Composer({
   files,
   products = null,
   draft = null,
+  replies = null,
   texts: x,
 }: {
   url: string;
@@ -82,6 +98,7 @@ export function Composer({
   files: { enabled: boolean; max: number; accept: string };
   products?: ComposerProducts | null;
   draft?: ComposerDraft | null;
+  replies?: ComposerReplies | null;
   texts: ComposerTexts;
 }) {
   const id = useId();
@@ -116,6 +133,13 @@ export function Composer({
     }
     setChosen((c) => [...c, ...added]);
     setBusy('');
+  }
+
+  /** S28 · PR 692: a quick reply puts its text in the box (a person still presses Send); the pick is counted. */
+  function pickReply(r: ComposerReply) {
+    setBody((b) => (b.trim() && !/^\/[a-z0-9]*$/i.test(b.trim()) ? `${b}\n${r.body}` : r.body).slice(0, maxChars));
+    setSaid(null);
+    if (replies) void call('POST', `${replies.url}/${r.id}/use`, {});
   }
 
   async function send() {
@@ -201,12 +225,16 @@ export function Composer({
         placeholder={note ? x.phNote : x.phReply}
         aria-label={note ? x.note : x.reply}
         onChange={(e) => {
+          // S28 · PR 692: "/name" alone becomes that quick reply's text
+          const slash = replies ? /^\/([a-z0-9]{1,24})\s?$/i.exec(e.target.value) : null;
+          const hit = slash ? replies?.list.find((r) => r.shortcut === slash[1]!.toLowerCase()) : undefined;
+          if (hit) return pickReply(hit);
           setBody(e.target.value);
           setSaid(null);
         }}
         onKeyDown={(e) => {
           // PR 429: "/" in an empty reply opens the products
-          if (products && !note && e.key === '/' && body === '' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          if (products && !replies && !note && e.key === '/' && body === '' && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
             setDrawer('slash');
             return;
@@ -249,6 +277,24 @@ export function Composer({
               data-testid="support-attach"
             />
           </label>
+        ) : null}
+        {replies && !note && replies.list.length ? (
+          <select
+            className="a2-inp"
+            aria-label={replies.label}
+            value=""
+            onChange={(e) => {
+              const r = replies.list.find((y) => y.id === e.target.value);
+              if (r) pickReply(r);
+            }}
+            style={{ maxWidth: 220 }}
+            data-testid="support-replies"
+          >
+            <option value="">{replies.placeholder}</option>
+            {replies.list.map((r) => (
+              <option key={r.id} value={r.id}>{`/${r.shortcut} · ${r.body.slice(0, 34)}${r.body.length > 34 ? '…' : ''}`}</option>
+            ))}
+          </select>
         ) : null}
         {products && !note ? (
           <button type="button" className={`a2-btn${drawer ? ' on' : ''}`} aria-expanded={drawer !== ''} onClick={() => setDrawer(drawer ? '' : 'button')} data-testid="support-products-open">

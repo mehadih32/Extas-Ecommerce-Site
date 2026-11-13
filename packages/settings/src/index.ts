@@ -119,6 +119,8 @@ export * from './registry-support-identity';
 export * from './registry-support-context';
 // S22 · PR 429 — the catalogue drawer in a support chat (registry-support-catalogue.ts, version 157).
 export * from './registry-support-catalogue';
+// S28 · wave 5 — inbox and marketing switches of the admin prototype v5 (registry-w5a.ts, versions 360-369).
+export * from './registry-w5a';
 // S22 · PR 430 — orders from a support chat: the chat bag and its fraud gate (registry-support-cart.ts, version 158).
 export * from './registry-support-cart';
 // S22 · PR 431 — ticketing: the first-answer and solution timers of each support question (registry-support-tickets.ts, version 159).

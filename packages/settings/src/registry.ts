@@ -77,6 +77,7 @@ import { printRunSettings } from './registry-print-run';
 import { supportIdentitySettings } from './registry-support-identity';
 import { supportContextSettings } from './registry-support-context';
 import { supportCatalogueSettings } from './registry-support-catalogue';
+import { w5aSettings } from './registry-w5a';
 import { supportCartSettings } from './registry-support-cart';
 import { supportTicketsSettings } from './registry-support-tickets';
 import { supportDraftsSettings } from './registry-support-drafts';
@@ -1477,6 +1478,8 @@ export const registry = {
   ...supportContextSettings,
   // ---- S22 · PR 429 · the catalogue drawer: products sent in a chat with their tracked link (off) (registry-support-catalogue.ts, version 157). ----
   ...supportCatalogueSettings,
+  // ---- S28 · wave 5 · inbox and marketing screens of the admin prototype v5 (registry-w5a.ts, versions 360-369). ----
+  ...w5aSettings,
   // ---- S22 · PR 430 · orders from a support chat: the chat bag, the channel kept, the fraud gate (off) (registry-support-cart.ts, version 158). ----
   ...supportCartSettings,
   // ---- S22 · PR 431 · ticketing: the first-answer and solution timers, the Late view, late chats in the bell (off) (registry-support-tickets.ts, version 159). ----
