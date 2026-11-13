@@ -78,7 +78,7 @@ owner's word (handover pack) · **Closed (owner, 6 Nov)** = closed until the own
 | [S12](docs/stages/S12.md) | [Content & blog](docs/stages/S12.md) | [5](docs/stages/README.md#wave-5) | [239–253](docs/stages/S12.md), [528–530](docs/stages/S12.md), [547](docs/stages/S12.md#pr-547), [591–593](docs/stages/S12.md) | 22 / 22 | **Done** |
 | [S13](docs/stages/S13.md) | [Marketing & ads](docs/stages/S13.md) | [5](docs/stages/README.md#wave-5) | [254–283](docs/stages/S13.md), [531–532](docs/stages/S13.md), [548](docs/stages/S13.md#pr-548), [569](docs/stages/S13.md#pr-569), [589](docs/stages/S13.md#pr-589) | 35 / 35 | **Done** |
 | [S14](docs/stages/S14.md) | [CRM & customers](docs/stages/S14.md) | [4](docs/stages/README.md#wave-4) | [284–303](docs/stages/S14.md), [505](docs/stages/S14.md#pr-505), [533–535](docs/stages/S14.md) | 24 / 24 | **Done** |
-| [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 43 / 48 | In progress — **reopened (owner, 11 Nov; CN-039)**; hidden behind `stages.closedShown` until finished |
+| [S15](docs/stages/S15.md) | [AI 360 Control Room](docs/stages/S15.md) | [6](docs/stages/README.md#wave-6) | [304–341](docs/stages/S15.md), [506](docs/stages/S15.md#pr-506), [577–585](docs/stages/S15.md) | 44 / 48 | In progress — **reopened (owner, 11 Nov; CN-039)**; hidden behind `stages.closedShown` until finished |
 | [S16](docs/stages/S16.md) | [Finance, costs & reports](docs/stages/S16.md) | [6](docs/stages/README.md#wave-6) | [342–355](docs/stages/S16.md), [504](docs/stages/S16.md#pr-504), [536–537](docs/stages/S16.md), [568](docs/stages/S16.md#pr-568), [615–618](docs/stages/S16.md) | 22 / 22 | **Done** |
 | [S17](docs/stages/S17.md) | [Multi-store](docs/stages/S17.md) | [8](docs/stages/README.md#wave-8) | [356–377](docs/stages/S17.md), [511–512](docs/stages/S17.md) | 1 / 24 | **Closed (owner, 6 Nov)** — 1 built part stays (PR 362) |
 | [S18](docs/stages/S18.md) | [Compliance, security, manual](docs/stages/S18.md) | [8](docs/stages/README.md#wave-8) | [378–390](docs/stages/S18.md), [620](docs/stages/S18.md#pr-620), [623](docs/stages/S18.md#pr-623) | 15 / 15 | **Done** |
@@ -92,7 +92,7 @@ owner's word (handover pack) · **Closed (owner, 6 Nov)** = closed until the own
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) · **Closed (owner, 6 Nov)** |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) · **Closed (owner, 6 Nov)** |
 | [S28](docs/stages/S28.md) | [Admin v5 (prototype alignment)](docs/stages/S28.md) | [9](docs/stages/README.md#wave-9) | [659–707](docs/stages/S28.md) | 21 / 49 | In progress — wave 1 (admin shell and orders) |
-| | **Total** | | **707 PRs** | **640 / 698 active** | 9 parked · open stages 7 to build (S00 1, S15 5, S19 1) · S28 28 to build (21/49 built) · closed stage (S17) 23 |
+| | **Total** | | **707 PRs** | **641 / 698 active** | 9 parked · open stages 6 to build (S00 1, S15 4, S19 1) · S28 28 to build (21/49 built) · closed stage (S17) 23 |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
 
