@@ -1,4 +1,4 @@
--- S28 · PR 682 — product, category and shop-wide FAQs. Additive only: a new table and enum; nothing is dropped or renamed.
+-- PR 682 (S28 Admin v5) — product, category and shop-wide FAQs. Additive only: a new table and enum; nothing is dropped or renamed.
 -- CreateEnum
 CREATE TYPE "FaqScope" AS ENUM ('PRODUCT', 'CATEGORY', 'SHOP');
 

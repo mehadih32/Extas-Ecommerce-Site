@@ -109,7 +109,7 @@ export async function rememberWizardStep(deps: CatalogueDeps, who: Who, productI
 }
 
 /** The drafts the wizard can continue, the newest first (a draft whose wizard was opened and that is still a draft). */
-export async function wizardDrafts(deps: CatalogueDeps, who: Who, limit = 20): Promise<WizardDraftRow[]> {
+export async function wizardDrafts(deps: CatalogueDeps, who: Who, limit = 20): Promise<WizardDraftRow[]> { // hardcode-ok: a page of drafts, not a business rule
   await allow(deps, who, 'catalogue.read');
   const rows = await deps.db.product.findMany({
     where: {

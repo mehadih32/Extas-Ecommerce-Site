@@ -13,8 +13,8 @@
 .pm-card.drag { opacity: 0.5; }
 .pm-img { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: var(--ad-line2); }
 .pm-img picture, .pm-img img, .pm-img [data-media-pending] { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pm-main { position: absolute; top: 6px; left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--ad-brand); color: #fff; font-size: 11.5px; font-weight: 700; }
-.pm-px { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 11px; }
+.pm-main { position: absolute; top: 6px; left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--ad-brand); color: var(--lm-on-ac); font-size: 11.5px; font-weight: 700; }
+.pm-px { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 4px; background: var(--lm-scrim); color: var(--lm-on-ac); font-size: 11px; }
 .pm-notes { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .pm-note { padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 700; border: 1px solid var(--ad-line); }
 .pm-note.ok { color: var(--ad-brand-dark); }
@@ -87,7 +87,7 @@
 }
 .fq-li {
   padding: 10px 0;
-  border-bottom: 1px solid var(--lm-line, #e5e7eb);
+  border-bottom: 1px solid var(--lm-ln);
   overflow-wrap: anywhere;
 }
 .fq-li:last-child {
