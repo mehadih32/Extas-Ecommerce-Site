@@ -13,7 +13,8 @@ import { Icon } from '@/components/admin/Icon';
 import { ProductForm } from '@/components/admin/products/ProductForm';
 import type { PhotoNotes } from '@/components/admin/products/PhotoManager';
 import { FieldsCard } from '@/components/admin/settings/FieldsCard';
-import { fieldsTexts, photoCheckFields } from '@/lib/products-v5-fields';
+import { VideoPanel } from '@/components/admin/products/VideoPanel';
+import { fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
 import { productV5Cards } from '@/lib/products-v5-settings-api';
 import { nameIn } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -68,14 +69,23 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
   const media = mediaDeps();
   let gallery: ProductPhoto[] | null = null;
   if (media && c.can('media.read')) gallery = (await productGallery(media, c.who.actor, { storeId: c.storeId, productId: id })).photos;
-  const images = await photosOf(c, (gallery ?? []).map((g) => g.assetId));
+  const images = await photosOf(
+    c,
+    (gallery ?? []).map((g) => g.assetId),
+  );
 
   // S28 · PR 680: the plain photo checks' notes (empty while `media.quality` is off) and their numbers card
   let photoNotes: PhotoNotes = { on: false, byLink: {} };
   if (media && c.can('media.read')) {
     const q = await productPhotoQuality(media, c.who.actor, { storeId: c.storeId, productId: id });
-    photoNotes = { on: q.on, byLink: Object.fromEntries(q.photos.map((x) => [x.productMediaId, x.report ? { issues: x.report.issues, fixable: x.report.fixable, width: x.report.width, height: x.report.height } : null])) };
+    photoNotes = {
+      on: q.on,
+      byLink: Object.fromEntries(
+        q.photos.map((x) => [x.productMediaId, x.report ? { issues: x.report.issues, fixable: x.report.fixable, width: x.report.width, height: x.report.height } : null]),
+      ),
+    };
   }
+  const video = await cat.getProductVideo(c.deps, c.who, id);
   const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
 
   const d = view.dict;
@@ -114,6 +124,29 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           upload: !!media && c.can('media.upload'),
         }}
       />
+      <section className="ad-card" aria-label={t(d, 'products.vid.title')}>
+        <VideoPanel
+          dict={d}
+          productId={id}
+          on={v5['catalogue.video'].value.on === true}
+          allowUpload={v5['catalogue.video'].value.allowUpload === true}
+          maxUploadMb={Number(v5['catalogue.video'].value.maxUploadMb)}
+          canWrite={c.can('catalogue.write')}
+          video={video ? { source: video.source, provider: video.provider, url: video.url, durationSec: video.durationSec, titleEn: video.titleEn } : null}
+          settingsHref="#video-settings"
+        />
+      </section>
+      <details className="ad-card pa-more" id="video-settings" data-testid="video-settings-card">
+        <summary>{t(d, 'products.vid.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['catalogue.video'].key, value: v5['catalogue.video'].value, version: v5['catalogue.video'].version }}
+          fields={videoFields(d)}
+          texts={fieldsTexts(d, 'products.vid.checks', 'products.vid.checks.h', 'products.vid.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="video-settings"
+        />
+      </details>
       <details className="ad-card pa-more" id="photo-checks" data-testid="photo-checks-card">
         <summary>{t(d, 'products.pm.checks.more')}</summary>
         <FieldsCard

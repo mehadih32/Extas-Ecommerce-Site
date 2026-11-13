@@ -918,3 +918,64 @@
 /* PR 65 follow-up 233 — the shop's public reply under a review (only while pdp.reviewReply.show). */
 .shop .pdp-page .pdp-rev-reply { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--brand); background: var(--surface2); border-radius: 8px; }
 .shop .pdp-page .pdp-rev-reply p { margin: 4px 0 0; line-height: 1.5; white-space: pre-line; }
+
+/* S28 · PR 681 — the product video: poster + play at 4:5, the player loads on tap */
+.pdp-video {
+  margin-top: 12px;
+}
+.pdp-video-box {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius, 8px);
+  background: #000;
+}
+.pdp-video-box iframe,
+.pdp-video-box video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.pdp-video-poster {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+.pdp-video-poster picture,
+.pdp-video-poster img,
+.pdp-video-poster [data-media-pending] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pdp-video-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+.pdp-video-play::after {
+  content: '';
+  position: absolute;
+  left: 26px;
+  top: 20px;
+  border-left: 18px solid #1b1b1b;
+  border-top: 12px solid transparent;
+  border-bottom: 12px solid transparent;
+}
+.pdp-video-open {
+  display: inline-block;
+  margin-top: 4px;
+}
