@@ -12,7 +12,7 @@
 // oldest first, a day with nothing is 0), for the Lumen hero chart of Money › Overview. The same rows, nothing new.
 import type { PrismaClient } from '@extas/db/client';
 
-type Db = Pick<PrismaClient, 'payment' | 'codCollection' | 'refund' | 'shipment'>;
+type Db = Pick<PrismaClient, 'payment' | 'codCollection' | 'refund' | 'shipment' | 'courierClaim' | 'courierAccount'>;
 
 const HOUR_MS = 3_600_000;
 export const RECEIVED_WINDOWS = [
@@ -49,6 +49,26 @@ export interface MoneyOverview {
   received: { windows: { key: string; minor: number; count: number }[]; byMethod: { method: string; minor: number; count: number }[]; daily?: ReceivedDay[] };
   cod: { minor: number; parcels: number; oldestDays: number | null; byCourier: { courier: string | null; minor: number; parcels: number }[] };
   refunds: { waitingMinor: number; waiting: number; oldestDays: number | null; failedMinor: number; failed: number };
+  /** S28 · PR 673: what the couriers still owe on claims the shop has raised (open and sent), from the courier claims ledger. */
+  claims?: ClaimsToReceive;
+}
+
+export interface ClaimsToReceive {
+  minor: number;
+  count: number;
+  /** Past the deadline the owner's setting gave them. */
+  late: number;
+  byCourier: { courierId: string; courier: string; minor: number; count: number }[];
+}
+
+/** The claims still open or sent, per courier (pure; the rows are only this store's open claims). */
+export function claimsToReceiveOf(now: Date, rows: readonly { courierAccountId: string; courier: string; claimedMinor: number; deadlineAt: Date | null }[]): ClaimsToReceive {
+  const by = new Map<string, { courierId: string; courier: string; minor: number; count: number }>();
+  for (const r of rows) {
+    const k = by.get(r.courierAccountId) ?? { courierId: r.courierAccountId, courier: r.courier, minor: 0, count: 0 };
+    by.set(r.courierAccountId, { ...k, minor: k.minor + r.claimedMinor, count: k.count + 1 });
+  }
+  return { minor: rows.reduce((s, r) => s + r.claimedMinor, 0), count: rows.length, late: rows.filter((r) => r.deadlineAt && r.deadlineAt.getTime() < now.getTime()).length, byCourier: sortDesc([...by.values()]) };
 }
 
 /** One calendar day (YYYY-MM-DD in the shop's time zone) of received cash. */
@@ -138,7 +158,7 @@ export function overviewOf(now: Date, payments: readonly PaymentRow[], cod: read
 /** The overview of one store now, from the database. */
 export async function moneyOverview(db: Db, storeId: number, now = new Date(), timeZone?: string): Promise<MoneyOverview> {
   const since = new Date(now.getTime() - RECEIVED_WINDOWS[2].hours * HOUR_MS);
-  const [payments, cod, refunds] = await Promise.all([
+  const [payments, cod, refunds, claimRows] = await Promise.all([
     db.payment.findMany({
       where: { storeId, status: { in: [...RECEIVED_STATES] }, paidAt: { gte: since, lte: now } },
       select: { method: true, amountMinor: true, receivedMinor: true, paidAt: true },
@@ -151,7 +171,10 @@ export async function moneyOverview(db: Db, storeId: number, now = new Date(), t
       where: { storeId, status: { in: [...REFUND_WAITING, 'FAILED'] } },
       select: { status: true, amountMinor: true, createdAt: true },
     }),
+    db.courierClaim.findMany({ where: { storeId, status: { in: ['OPEN', 'SENT'] } }, select: { courierAccountId: true, claimedMinor: true, deadlineAt: true }, take: 5000 }),
   ]);
+  const claimCouriers = claimRows.length ? await db.courierAccount.findMany({ where: { id: { in: [...new Set(claimRows.map((c) => c.courierAccountId))] } }, select: { id: true, name: true } }) : [];
+  const claimName = new Map(claimCouriers.map((c) => [c.id, c.name]));
   const owed = cod.filter((c) => c.collectedMinor + c.chargeCollectedMinor > 0);
   const shipmentIds = [...new Set(owed.map((c) => c.shipmentId).filter((v): v is string => Boolean(v)))];
   const shipments = shipmentIds.length
@@ -165,6 +188,7 @@ export async function moneyOverview(db: Db, storeId: number, now = new Date(), t
     owed.map((c) => ({ collectedMinor: c.collectedMinor, chargeCollectedMinor: c.chargeCollectedMinor, occurredAt: c.occurredAt, courier: c.shipmentId ? (courierOf.get(c.shipmentId) ?? null) : null })),
     refunds.map((r) => ({ status: r.status, amountMinor: r.amountMinor, createdAt: r.createdAt })),
   );
+  o.claims = claimsToReceiveOf(now, claimRows.map((c) => ({ ...c, courier: claimName.get(c.courierAccountId) ?? '' })));
   // 30 calendar days ending today (shop time zone), each fully inside the fetched 30 × 24 hours.
   if (timeZone) o.received.daily = receivedByDay(now, paid, RECEIVED_WINDOWS[2].hours / 24, timeZone);
   return o;

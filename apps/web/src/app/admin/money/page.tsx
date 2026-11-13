@@ -125,6 +125,35 @@ export default async function MoneyOverviewPage() {
         )}
       </section>
 
+      {o.claims ? (
+        <section className="a2-card a2-mt12" aria-labelledby="mo-claims" data-testid="mo-claims">
+          <div className="a2-ch">
+            <div>
+              <h2 className="a2-h3" id="mo-claims">{c('claims.title')}</h2>
+              <div className="a2-cs">{c('claims.sub')}</div>
+            </div>
+            <span className={`a2-pill ${o.claims.minor ? 'warn' : 'ok'}`}>{amount(o.claims.minor)}</span>
+          </div>
+          {o.claims.count ? (
+            <>
+              <p className="a2-xs a2-mute">
+                {c('claims.count', { n: o.claims.count })}
+                {o.claims.late ? ` · ${c('claims.late', { n: o.claims.late })}` : ''}
+              </p>
+              {o.claims.byCourier.map((k) => (
+                <div key={k.courierId} className="a2-rule">
+                  <Link href={`/admin/delivery/couriers/${k.courierId}?s=claims`}>{k.courier || c('cod.noCourier')}</Link>
+                  <span className="a2-xs a2-mute">{c('claims.count', { n: k.count })}</span>
+                  <b>{amount(k.minor)}</b>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="a2-xs a2-mute">{c('claims.none')}</p>
+          )}
+        </section>
+      ) : null}
+
       <section className="a2-card a2-mt12" aria-labelledby="mo-refunds" data-testid="mo-refunds">
         <div className="a2-ch">
           <div>

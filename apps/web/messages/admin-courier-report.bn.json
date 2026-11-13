@@ -84,7 +84,7 @@
       "declared": "ঘোষিত {amount}",
       "list": "ক্লেইমগুলো",
       "empty": "এখনো কোনো ক্লেইম নেই।",
-      "kind": { "LOST": "হারানো", "DAMAGED": "ভাঙা", "RIDER_OVERCHARGE": "রাইডারের বাড়তি", "OTHER": "অন্য" },
+      "kind": { "LOST": "হারানো", "DAMAGED": "ভাঙা", "RIDER_OVERCHARGE": "রাইডারের বাড়তি", "OTHER": "অন্য", "SHORT_COD": "COD কম জমা", "RETURN_SHORT": "ফেরত পার্সেল কম এসেছে" },
       "state": { "OPEN": "খোলা", "SENT": "পাঠানো", "SETTLED": "মিটেছে", "REJECTED": "নাকচ" },
       "send": "পাঠানো হয়েছে",
       "ref": "কুরিয়ারের ক্লেইম নম্বর",

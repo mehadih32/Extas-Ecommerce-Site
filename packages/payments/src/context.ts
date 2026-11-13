@@ -58,6 +58,11 @@ export interface BooksCostHooks {
    * gateway's fees in all; a record only, it never fails the import (the books' own switch decides whether it counts).
    */
   statementCost?(who: Who, cost: { kind: 'COURIER_SETTLEMENT' | 'GATEWAY_STATEMENT'; statementId: string; reference: string | null; amountMinor: number }): Promise<unknown>;
+  /**
+   * S28 · PR 673: called after a courier claim is settled with money (never for a claim twice), while the owner's "post
+   * money won back" switch is on; a record only, it never fails the settlement. None wired as shipped.
+   */
+  claimRecovered?(who: Who, won: { claimId: string; courierAccountId: string; amountMinor: number; reference: string | null }): Promise<unknown>;
 }
 
 /** CN-018 (4): what the order side knows about a partial delivery's kept part (follow-up 330). */
