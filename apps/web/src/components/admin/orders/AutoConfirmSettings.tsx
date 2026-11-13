@@ -48,7 +48,7 @@ export function AutoConfirmSettings({ url, screen, canEdit, presets, unit, t }: 
     setDraft({ ...draft, preset: 'custom', cases: { ...draft.cases, [c]: a } });
     setSaid(null);
   };
-  const usePreset = (k: 'low' | 'normal' | 'strict') => {
+  const applyPreset = (k: 'low' | 'normal' | 'strict') => {
     setDraft({ ...draft, preset: k, cases: { ...presets[k] } });
     setSaid(null);
   };
@@ -112,7 +112,7 @@ export function AutoConfirmSettings({ url, screen, canEdit, presets, unit, t }: 
               className={`a2-btn${draft.preset === k ? ' pri' : ''}`}
               aria-pressed={draft.preset === k}
               disabled={off}
-              onClick={() => usePreset(k)}
+              onClick={() => applyPreset(k)}
               data-testid={`risk-auto-confirm-preset-${k}`}
             >
               {t[`preset.${k}`]}
