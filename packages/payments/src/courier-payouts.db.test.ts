@@ -86,7 +86,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 671 · courier payouts', () => {
   });
   afterAll(async () => f?.t.drop());
 
-  it('ships off: nothing is asked and the screen says why', async () => {
+  it('when the owner switches it off: nothing is asked and the screen says why', async () => {
+    f.overrides.set('delivery.courier.payouts', { enabled: false, pollMinutes: 30, minAmountMinor: 0 });
     await parcel('P-1001');
     await parcel('P-1002');
     expect((await payoutView(deps(), f.viewer, courierId)).blockedBy).toContain('OFF');

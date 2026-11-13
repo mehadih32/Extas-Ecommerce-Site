@@ -92,8 +92,8 @@ export const couriersV5Settings = {
     group: "delivery",
     version: V671,
     schema: courierPayoutsSchema,
-    // hardcode-ok: off as shipped (CN-018); the poll interval and the minimum are the owner's to set
-    default: { enabled: false, pollMinutes: 30, minAmountMinor: 0 },
+    // hardcode-ok: ON by the owner's written OK of 13 Nov 2026 (BLOCKED W2-1); the poll interval and the minimum are the owner's to set
+    default: { enabled: true, pollMinutes: 30, minAmountMinor: 0 },
     valueType: "JSON",
     labelKey: "delivery.courier.payouts.label",
     helpKey: "delivery.courier.payouts.help",
@@ -106,8 +106,8 @@ export const couriersV5Settings = {
     group: 'delivery',
     version: V673,
     schema: courierClaimTermsSchema,
-    // hardcode-ok: off as shipped (CN-018); the days are the owner's to set
-    default: { deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: false },
+    // hardcode-ok: deadline off; money posting ON by the owner's written OK of 13 Nov 2026 (BLOCKED W2-2); the days are the owner's to set
+    default: { deadlineEnabled: false, days: 30, warnDays: 5, postRecovered: true },
     valueType: 'JSON',
     labelKey: 'delivery.courier.claimTerms.label',
     helpKey: 'delivery.courier.claimTerms.help',
