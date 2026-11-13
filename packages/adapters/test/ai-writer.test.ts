@@ -45,17 +45,13 @@ describe('practice AI writer (PR 221)', () => {
     expect(await mockAiWriterAdapter.test(await mockAiWriterAdapter.mock(ctx), ctx)).toMatchObject({ ok: true });
   });
 
-  // S15 · PR 306 — now that a live AI provider exists, AI_PROVIDER rows do appear in Keys & connections. S24 · PR
-  // 449 adds its own AI_PROVIDER-kind adapters (FASHN, Fitroom) for the Photoshoot Studio — a different family
-  // behind the same Keys & connections kind, so this checks the AI writer's own list, not every AI_PROVIDER row.
-  it('S15 · PR 306: every live AI writer (Anthropic, OpenAI, Google, OpenRouter) is an AI_PROVIDER row with keys', () => {
-    const live = aiWriterAdapters.filter((a) => a.modes.length > 0);
+  // S15 · PR 306 — now that a live AI provider exists, AI_PROVIDER rows do appear in Keys & connections.
+  it('S15 · PR 306: every live provider (Anthropic, OpenAI, Google, OpenRouter) is an AI_PROVIDER row with keys', () => {
+    const live = allAdapters.filter((a) => a.kind === 'AI_PROVIDER');
     expect(live.map((a) => a.provider).sort()).toEqual(['anthropic', 'googleAi', 'openAi', 'openRouter']);
     for (const a of live) {
-      expect(a.kind).toBe('AI_PROVIDER');
       expect(a.modes).toEqual(['LIVE']);
       expect(a.secrets).toContain('apiKey');
-      expect(allAdapters).toContain(a);
     }
   });
 });
@@ -324,5 +320,38 @@ describe('practice social reel caption (PR 331)', () => {
     const d = await w.draftSocialReelCaption(social({ max: { body: 10 } }));
     expect([...d.body].length).toBeLessThanOrEqual(10);
     await expect(w.draftSocialReelCaption(social({ facts: { templateName: ' ' } }))).rejects.toThrow();
+  });
+});
+
+// S15 · PR 332 — the practice studio detail note: only the garment's own already-saved attributes it was given,
+// joined in one plain line, marked practice — never a stitch/print/logo detail it was not told about.
+describe('practice studio detail note (PR 332)', () => {
+  const studio = (over: Partial<import('../src').AiStudioDetailInput> = {}): import('../src').AiStudioDetailInput => ({
+    locale: 'en',
+    facts: { name: 'Sample Pique Polo', fabric: 'Cotton pique', colours: ['Navy', 'White'], care: 'Machine wash cold' },
+    max: { body: 240 },
+    ...over,
+  });
+
+  it('writes from the garment\'s own attributes it was given', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStudioDetailNote(studio());
+    expect(d.practice).toBe(true);
+    expect(d.body).toContain('Sample Pique Polo');
+    expect(d.body).toContain('Cotton pique');
+    expect(d.body).toContain('Navy, White');
+  });
+
+  it('writes from the name alone when there is no fabric, colour or care text', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStudioDetailNote(studio({ facts: { name: 'Sample Pique Polo' } }));
+    expect(d.body).toBe('Sample Pique Polo');
+  });
+
+  it('cuts to the store limit and refuses a draft with no garment name', async () => {
+    const w = await mockAiWriterAdapter.mock(ctx);
+    const d = await w.draftStudioDetailNote(studio({ max: { body: 10 } }));
+    expect([...d.body].length).toBeLessThanOrEqual(10);
+    await expect(w.draftStudioDetailNote(studio({ facts: { name: ' ' } }))).rejects.toThrow();
   });
 });

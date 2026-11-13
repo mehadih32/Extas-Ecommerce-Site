@@ -276,6 +276,31 @@ export interface AiSocialCaptionDraft {
   usage?: { inputTokens: number; outputTokens: number };
 }
 
+/**
+ * S15 · PR 332 — the photoshoot studio's own job (Gyani, the existing `studioDetailFinder` Cost Book job, PR 312):
+ * one short, plain note on which of a garment's own already-saved attributes a generated photo must keep accurate
+ * before the Photoshoot Studio (S24) runs a ghost-mannequin, try-on or detail-reprojection job on it. `facts` is
+ * always a product's own already-saved catalogue attributes — the identical shape PR 326's own product-description
+ * job already reuses (`ProductDescriptionFacts`) — never a stitch, print or logo guessed from nothing: the model
+ * may only point at what is actually on the row (its fabric, its colours, its care text), never invent a detail
+ * that is not already named there, and it is never handed, and never asked for, any decision about the shoot
+ * itself (which photo to keep, whether to regenerate).
+ */
+export interface AiStudioDetailInput {
+  locale: 'en' | 'bn';
+  facts: { name: string; brand?: string; category?: string; colours?: string[]; sizes?: string[]; fabric?: string; care?: string };
+  max: { body: number };
+}
+
+export interface AiStudioDetailDraft {
+  body: string;
+  /** True for the mock's practice text. */
+  practice: boolean;
+  /** Real token counts from the provider's own answer, when it reported them — absent for the mock, and for a
+   * provider whose response carried none (same convention PR 325's `AiSupportReplyDraft` already uses). */
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
 export interface AiWriter {
   draftSeo(input: AiSeoInput): Promise<AiSeoDraft>;
   /** PR 293 — the campaign writer. */
@@ -294,6 +319,8 @@ export interface AiWriter {
   draftApprovalExplainNote(input: AiApprovalExplainInput): Promise<AiApprovalExplainDraft>;
   /** PR 331 — the social content agent's own job: one short caption with a hook for one reel/short render queue template. */
   draftSocialReelCaption(input: AiSocialCaptionInput): Promise<AiSocialCaptionDraft>;
+  /** PR 332 — the photoshoot studio's own job: one grounded note on which already-saved attributes a generated photo must keep accurate. */
+  draftStudioDetailNote(input: AiStudioDetailInput): Promise<AiStudioDetailDraft>;
 }
 
 /** Cuts `text` to `max` characters (by code point) at a word boundary where one is near. */

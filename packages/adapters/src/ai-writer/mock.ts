@@ -22,6 +22,8 @@ import {
   type AiSizeAdviceInput,
   type AiSocialCaptionDraft,
   type AiSocialCaptionInput,
+  type AiStudioDetailDraft,
+  type AiStudioDetailInput,
   type AiSupportReplyDraft,
   type AiSupportReplyInput,
   type AiWriter,
@@ -151,6 +153,16 @@ export function practiceSocialReelCaption(input: AiSocialCaptionInput): AiSocial
   return { body: cutTo(body, input.max.body), practice: true };
 }
 
+/** S15 · PR 332 — the mock's studio detail note: only the garment's own already-saved attributes it was given,
+ * joined in one plain line (no voice to borrow without a key, so the practice answer stays honestly plain rather
+ * than invent a stitch, print or logo detail it was not told about). */
+export function practiceStudioDetailNote(input: AiStudioDetailInput): AiStudioDetailDraft {
+  const f = input.facts;
+  const list = (xs: (string | undefined)[], sep: string) => xs.map((x) => x?.trim()).filter((x): x is string => Boolean(x)).join(sep);
+  const body = list([f.name, f.fabric ? `Fabric: ${f.fabric}` : undefined, f.colours?.length ? `Colours: ${f.colours.join(', ')}` : undefined, f.care ? `Care: ${f.care}` : undefined], '. ');
+  return { body: cutTo(body, input.max.body), practice: true };
+}
+
 export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>>({
   kind: 'AI_PROVIDER',
   provider: 'mockAiWriter',
@@ -197,6 +209,10 @@ export const mockAiWriterAdapter = defineAdapter<AiWriter, Record<string, never>
       async draftSocialReelCaption(input) {
         if (!input.facts.templateName.trim()) throw new AdapterError('a reel caption needs the template\'s own name');
         return practiceSocialReelCaption(input);
+      },
+      async draftStudioDetailNote(input) {
+        if (!input.facts.name.trim()) throw new AdapterError('a studio detail note needs the garment\'s own name');
+        return practiceStudioDetailNote(input);
       },
     };
   },
