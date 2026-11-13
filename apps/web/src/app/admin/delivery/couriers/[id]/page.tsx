@@ -9,10 +9,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { COURIER_MESSAGE_EVENTS, COURIER_MESSAGE_TOKENS } from '@extas/settings';
 import * as pay from '@extas/payments';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { RaiseClaim } from '@/components/admin/couriers/ClaimPanel';
+import { CopyText } from '@/components/admin/couriers/CopyText';
 import { AskPayout, PayoutRowActions } from '@/components/admin/couriers/PayoutPanel';
 import { StepButton } from '@/components/admin/courier-report/Parts';
 import { PerfTable } from '@/components/admin/courier-report/PerfTable';
@@ -38,7 +40,7 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The sections, in the order the page shows them. */
-const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'claims', 'performance', 'setup'] as const;
+const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'claims', 'performance', 'messages', 'setup'] as const;
 type Section = (typeof COURIER_SECTIONS)[number];
 /** How many claims and parcels the Claims section lists. */
 const CLAIM_ROWS = 50;
@@ -566,6 +568,46 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
           <p className="a2-sm a2-mt6">{f.perParcelMinor === null ? cr('f.chargesNone') : cr('f.chargesBody', { amount: m(f.costMinor), n: n(f.costParcels), per: m(f.perParcelMinor) })}</p>
         </section>
       </>
+    );
+  } else if (section === 'messages') {
+    const [mc, bookingCfg] = await Promise.all([access.deps.resolver.value('delivery.courier.messages', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('delivery.courier.booking', { storeId: MOTHER_STORE_ID })]);
+    const canEdit = access.guard.permissions?.has('settings.write') ?? false;
+    const where = (e: (typeof COURIER_MESSAGE_EVENTS)[number]) => (e === 'booking' || e === 'delivery' || e === 'cod' ? 'note' : e === 'payout' ? 'payout' : 'copy');
+    body = (
+      <section className="a2-card a2-mt12" data-testid="c360-messages">
+        <h2 className="a2-h3">{cr('q.title')}</h2>
+        <p className="a2-xs a2-mute">{cr('q.sub')}</p>
+        <p className="a2-xs a2-mute a2-mt6">{cr('s.msg.tokens', { tokens: COURIER_MESSAGE_TOKENS.join(', ') })}</p>
+        {!mc.enabled ? (
+          <div className="a2-note a2-mt6" data-testid="messages-off">
+            {cr('q.off')}
+          </div>
+        ) : null}
+        <ul className="a2-stack a2-mt12" style={{ listStyle: 'none', padding: 0 }}>
+          {COURIER_MESSAGE_EVENTS.map((e) => (
+            <li key={e} className="a2-card tight" data-testid="message-row" data-event={e}>
+              <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <b>{cr(`s.msg.ev.${e}`)}</b> <span className="a2-pill line">{cr(`q.where.${where(e)}`)}</span>
+                  <p className="a2-sm a2-mt6" style={{ whiteSpace: 'pre-line' }}>
+                    {mc[e][view.lang]}
+                  </p>
+                  <p className="a2-xs a2-mute">{mc[e][view.lang === 'bn' ? 'en' : 'bn']}</p>
+                </div>
+                <CopyText text={mc[e][view.lang]} label={cr('q.copy')} done={cr('q.copied')} testId="message-copy" />
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="a2-xs a2-mute a2-mt6">
+          {cr('q.langs')}: {cr(`q.lang.${bookingCfg.noteLang}`)}
+        </p>
+        {canEdit ? (
+          <Link className="a2-btn sm a2-mt6" href="/admin/delivery/settings" data-testid="messages-edit">
+            {cr('q.edit')}
+          </Link>
+        ) : null}
+      </section>
     );
   } else {
     const keys = `/admin/integrations`;

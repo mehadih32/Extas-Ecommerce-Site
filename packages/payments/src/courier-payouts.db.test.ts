@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { CourierApi, CourierPayoutInfo, PayoutRequestResult } from '@extas/adapters';
 import { hashPassword } from '@extas/auth';
 import { HAS_TEST_DB } from '@extas/auth/testing';
+import { couriersV5Settings } from '@extas/settings';
 import { closePayout, payoutDifference, payoutView, pollPayouts, requestPayout, settlePayout } from './index';
 import { setUpPayments, type PaymentsFixture } from './testing';
 
@@ -36,7 +37,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 671 · courier payouts', () => {
   let f: PaymentsFixture;
   let courierId = '';
   let n = 0;
-  const asked: { merchantRef: string; amountMinor: number | null }[] = [];
+  const asked: { merchantRef: string; amountMinor: number | null; note?: string | null }[] = [];
   let answer: PayoutRequestResult = {
     ok: true,
     payout: { ref: 'REQ-1', state: 'REQUESTED', amountMinor: null, paymentRef: null, method: null, paidAt: null, rawStatus: 'pending', note: null, consignmentIds: [] },
@@ -45,7 +46,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 671 · courier payouts', () => {
   const api = {
     provider: 'steadfast',
     payouts: {
-      request: async (i: { merchantRef: string; amountMinor: number | null }) => {
+      request: async (i: { merchantRef: string; amountMinor: number | null; note?: string | null }) => {
         asked.push(i);
         return answer;
       },
@@ -104,6 +105,7 @@ describe.skipIf(!HAS_TEST_DB)('PR 671 · courier payouts', () => {
     expect(asked).toHaveLength(0);
     const r = await requestPayout(deps(), f.staff, courierId, { pin: PIN, requestKey: k });
     expect(r).toMatchObject({ state: 'REQUESTED', providerRef: 'REQ-1', amountMinor: 188_000, coveredMinor: 188_000, parcels: 2, mode: 'MOCK', replay: false });
+    // PR 674: the owner's payout text is the request's note only while its switch is on (off here)
     expect(asked).toEqual([{ merchantRef: r.id, amountMinor: 188_000, note: null }]);
     // the same key is the same request; another key while one is open is refused
     expect(await requestPayout(deps(), f.staff, courierId, { pin: PIN, requestKey: k })).toMatchObject({ id: r.id, replay: true });
@@ -191,5 +193,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 671 · courier payouts', () => {
     expect((await payoutView(deps(), f.viewer, redx.id)).supported).toBe('none');
     expect(await code(requestPayout(deps(), f.staff, redx.id, { pin: PIN, requestKey: key() }))).toBe('PAYOUT_NOT_SUPPORTED');
     expect(await code(requestPayout(deps(), { ...f.staff, storeId: f.B }, courierId, { pin: PIN, requestKey: key() }))).toBe('FORBIDDEN');
+  });
+
+  it("PR 674: with the owner's texts on, the payout text is the request's note", async () => {
+    f.overrides.set('delivery.courier.payouts', { enabled: true, pollMinutes: 30, minAmountMinor: 0 });
+    f.overrides.set('delivery.courier.messages', { ...couriersV5Settings['delivery.courier.messages'].default, enabled: true });
+    answer = { ok: true, payout: info('REQUESTED', { ref: 'REQ-77' }) };
+    const before = asked.length;
+    await requestPayout(deps(), f.staff, courierId, { pin: PIN, requestKey: key() });
+    expect(asked[before]?.amountMinor).toBeGreaterThan(0);
+    expect(asked[before]?.note).toBe(`Please pay the cash you hold for us: ${((asked[before]?.amountMinor ?? 0) / 100).toFixed(2)}.`);
   });
 });

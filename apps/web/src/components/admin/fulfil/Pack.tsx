@@ -254,12 +254,14 @@ export function BookOne({ dict, orderId, couriers, codeWords }: { dict: Dict; or
   const router = useRouter();
   const id = useId();
   const [courierAccountId, setCourier] = useState(couriers[0]?.id ?? '');
+  // PR 674: a one-off note for the courier
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   const go = async () => {
     setBusy(true);
     setMsg(null);
-    const a = await call('POST', '/api/admin/delivery/bookings', { courierAccountId, orderIds: [orderId] });
+    const a = await call('POST', '/api/admin/delivery/bookings', { courierAccountId, orderIds: [orderId], ...(note.trim() ? { note: note.trim() } : {}) });
     setBusy(false);
     if (!a.data.ok) {
       setMsg({ ok: false, text: refusal(dict, a.status, a.data) });
@@ -283,6 +285,10 @@ export function BookOne({ dict, orderId, couriers, codeWords }: { dict: Dict; or
             </option>
           ))}
         </select>
+        <label className="a2-sr" htmlFor={`${id}-n`}>
+          {t(dict, 'ful.pack.bookNote')}
+        </label>
+        <input id={`${id}-n`} className="a2-input" value={note} maxLength={200} placeholder={t(dict, 'ful.pack.bookNote')} onChange={(e) => setNote(e.target.value)} disabled={busy} data-testid="pack-book-note" />
         <button type="button" className="a2-btn pri lg" onClick={go} disabled={busy || !courierAccountId} data-testid="pack-book">
           {busy ? t(dict, 'ful.pack.booking') : t(dict, 'ful.pack.book')}
         </button>
