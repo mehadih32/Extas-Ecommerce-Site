@@ -28,6 +28,7 @@ import {
 import { CostBookPresetButton } from "@/components/admin/ai/CostBookPresetButton";
 import { CostBookSearch } from "@/components/admin/ai/CostBookSearch";
 import { CostBookWhatIf } from "@/components/admin/ai/CostBookWhatIf";
+import { CeilingCard } from "@/components/admin/v5/CeilingCard";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import {
   PageHead,
@@ -40,6 +41,9 @@ import {
   moneyOf,
 } from "@/components/admin/products/model";
 import { adminDeps } from "@/lib/admin-auth";
+import { messagesDeps } from "@/lib/messages-api";
+import { withW5a } from "@/lib/admin-v5-w5a";
+import { readCostCeilings } from "@extas/messages";
 import { costBookView, MIN_ACTUAL_SAMPLES } from "@/lib/admin-ai/cost-book";
 import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
@@ -79,7 +83,7 @@ export default async function AiCostBookPage() {
     adminView(deps),
     pageAccess("ai.read", deps, MOTHER_STORE_ID),
   ]);
-  const view = withScreen(plain);
+  const view = withW5a(withScreen(plain));
   if (access.kind === "login" || access.kind === "password")
     redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === "unavailable")
@@ -151,6 +155,16 @@ export default async function AiCostBookPage() {
     return `${c("actualRuns", { runs: num(a.runs), perRun: amount(a.perRunStoreMinor, a.perRunUsdMinor) })} — ${dev}`;
   };
 
+  // S28 · PR 698: the month's message spend against the SMS and WhatsApp ceilings (shown to whoever may see Messages ›
+  // Channels & limits; read only, the ceilings are set on Messages › Cost ceilings)
+  const ceilings = access.guard.permissions?.has("messages.channels.read")
+    ? await readCostCeilings(await messagesDeps(access.deps), {
+        actor: access.guard.actor,
+        storeId: MOTHER_STORE_ID,
+        ctx: access.guard.ctx,
+      })
+    : null;
+
   return (
     <div
       className="a2-z"
@@ -183,6 +197,15 @@ export default async function AiCostBookPage() {
         <ShellIcon name="info" size={15} />
         <span>{c("honestNote")}</span>
       </div>
+      {ceilings ? (
+        <CeilingCard
+          dict={d}
+          status={ceilings}
+          locale={view.locale}
+          timeZone={view.timeZone}
+          link
+        />
+      ) : null}
 
       <div className="a2-kpis a2-mt12">
         <div

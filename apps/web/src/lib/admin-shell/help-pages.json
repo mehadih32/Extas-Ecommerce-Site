@@ -64,6 +64,7 @@
     { "id": "messages/log", "route": "/admin/messages/log" },
     { "id": "messages/channels", "route": "/admin/messages/channels" },
     { "id": "messages/consent", "route": "/admin/messages/consent" },
+    { "id": "messages/cost-ceilings", "route": "/admin/messages/cost-ceilings" },
     { "id": "messages/journey", "route": "/admin/messages/journey" },
     { "id": "messages/automations", "route": "/admin/messages/automations" },
     { "id": "messages/automation", "route": "/admin/messages/automations/[id]" },
