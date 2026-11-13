@@ -4931,6 +4931,10 @@ model Exchange {
   waiveReason          String?
   waivedById           String?        @db.Uuid
   waivedAt             DateTime?      @db.Timestamptz(3)
+  /// S28 · PR 669 — EXCHANGE (the swap engine as it was) or REPLACEMENT (a defective or wrong piece sent again free: same piece,
+  /// no price difference, no refund, no wallet credit). A replacement's old piece is due back by `oldPieceDueAt` (the owner's days).
+  kind                 String         @default("EXCHANGE")
+  oldPieceDueAt        DateTime?      @db.Timestamptz(3)
 
   items ExchangeItem[]
 

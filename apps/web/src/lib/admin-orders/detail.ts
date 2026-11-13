@@ -27,6 +27,7 @@ import { advanceBand, advanceSpecs, advanceSummary } from './advance';
 import { giftRows } from './gift-card';
 import { lineSpecs } from './lines';
 import { mergeEventLine, mergeSpecs } from './merge';
+import { replaceSpec } from './replace';
 import { priceAdjustSpec, priceEventLine, priceRequestBands } from './price-adjust';
 
 /** The key each command asks for (the admin API's own, lib/orders-api.ts). */
@@ -73,6 +74,7 @@ export const DO_PERM: Readonly<Record<string, PermissionKey>> = {
   priceAdjust: 'orders.priceAdjust',
   merge: 'orders.merge',
   mergeCall: 'orders.merge',
+  replace: 'returns.decide',
   priceApprove: 'orders.priceApprove',
   priceRefuse: 'orders.priceApprove',
 };
@@ -953,6 +955,10 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
   // S28 · PR 665: "Merge" and "Merge + call" on the order that stays (the owner's switch, `orders.merge`, another open order of the person to fold in)
   const mrg = perms.has('orders.merge') ? await od.mergeView(deps, who, o.id) : null;
   if (mrg) specs.more.push(...mergeSpecs(view, { id: o.id, number: o.number, currency: o.currency }, mrg));
+  // S28 · PR 669: "Send again free" (the owner's rule `returns.replacement`, a delivered order, `returns.decide`)
+  const rep = perms.has('returns.decide') && (o.status === 'DELIVERED' || o.status === 'PARTIALLY_DELIVERED') ? await od.replacementView(deps, who, o.id) : null;
+  const repSpec = rep ? replaceSpec(view, { id: o.id, number: o.number }, rep) : null;
+  if (repSpec) specs.more.push(repSpec);
   const active = detail.items.filter((i) => i.status === 'ACTIVE');
   const lines = lineSpecs(view, o, detail.allowed, perms, detail.items.map((i) => ({ id: i.id, status: i.status, isAddOn: i.isAddOn, productName: i.productName, lineTotal: m(i.lineTotalMinor) })));
   const units = active.reduce((s, i) => s + i.quantity, 0);

@@ -3,13 +3,13 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { MERGE_ORDERS_DEFAULT, mergeOrdersSchema, orderFlowSettings, priceAdjustSchema, PRICE_ADJUST_DEFAULT, PRICE_ADJUST_OTHER_KEY } from '../src/registry-order-flow';
+import { REPLACEMENT_DEFAULT, replacementSchema, MERGE_ORDERS_DEFAULT, mergeOrdersSchema, orderFlowSettings, priceAdjustSchema, PRICE_ADJUST_DEFAULT, PRICE_ADJUST_OTHER_KEY } from '../src/registry-order-flow';
 
-describe('order flow settings (v300, v301)', () => {
+describe('order flow settings (v300 to v302)', () => {
   it('every key is in the registry at its version, never owner data, labelled in both languages, its default valid', () => {
     for (const [key, spec] of Object.entries(orderFlowSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
-      expect([300, 301], key).toContain(spec.version);
+      expect([300, 301, 302], key).toContain(spec.version);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
       for (const lang of ['en', 'bn'] as const) {
@@ -48,5 +48,19 @@ describe('PR 665 (v301): merge orders', () => {
     expect(ok({ lookBackDays: 2.5 })).toBe(false);
     expect(ok({ lookBackDays: 61 })).toBe(false);
     expect(ok({ differentAddress: 'allow' })).toBe(false);
+  });
+});
+
+describe('PR 669 (v302): replacement', () => {
+  it('ships off with its own hours and old-piece days', () => {
+    expect(REPLACEMENT_DEFAULT).toEqual({ enabled: false, hours: 168, oldPieceDays: 7, reasons: ['defect', 'damage', 'wrong'] });
+  });
+  it('hours and days are whole numbers in range; reasons are defect, damage or wrong, at least one', () => {
+    const ok = (v: object) => replacementSchema.safeParse({ ...REPLACEMENT_DEFAULT, ...v }).success;
+    expect(ok({ hours: 72, oldPieceDays: 4 })).toBe(true);
+    expect(ok({ hours: 0 })).toBe(false);
+    expect(ok({ oldPieceDays: 91 })).toBe(false);
+    expect(ok({ reasons: [] })).toBe(false);
+    expect(ok({ reasons: ['size'] })).toBe(false);
   });
 });

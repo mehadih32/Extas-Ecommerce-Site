@@ -71,6 +71,11 @@ function BoardCard({ view, x, on }: { view: AdminView; x: ExchangeView; on: bool
         <b className="a2-h4">{`${x.orderNumber} · ${x.customerName ?? ''}`}</b>
         <span className={`a2-pill ${reasonTone(x.reason)}`}>{r(d, `reason.${x.reason}`)}</span>
       </div>
+      {x.kind === 'REPLACEMENT' ? (
+        <div className="a2-mt6" data-testid="exchange-replacement-pill">
+          <span className="a2-pill pri">{r(d, 'kind.replacement')}</span>
+        </div>
+      ) : null}
       {x.items.map((i) => (
         <div key={i.id} className="a2-xs a2-mt6">
           {`${i.oldSku ?? ''} → ${pieceText(i.newName, i.newColourName, i.newSizeLabel)}`}
@@ -118,6 +123,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
     [r(d, 'case.reason'), r(d, `reason.${x.reason}`)],
     ...(cause ? ([[r(d, 'case.rootCause'), cause]] as [string, string][]) : []),
     ...(x.reasonNote ? ([[r(d, 'case.note'), x.reasonNote]] as [string, string][]) : []),
+    ...(x.kind === 'REPLACEMENT' && x.oldPieceDueAt ? ([[r(d, 'case.oldPieceDue'), dt.format(new Date(x.oldPieceDueAt))]] as [string, string][]) : []),
     [r(d, 'case.diff'), m(x.money.differenceMinor)],
     ...(x.money.creditMinor ? ([[r(d, 'case.credit'), m(x.money.creditMinor)]] as [string, string][]) : []),
     [r(d, 'case.charge'), `${m(x.money.chargeMinor)}${x.money.chargeState ? ` · ${r(d, `charge.${x.money.chargeState}`)}` : ''}`],
@@ -185,6 +191,7 @@ function CaseCard({ view, x, data }: { view: AdminView; x: ExchangeView; data: R
           <div className="a2-gap8 a2-mt6">
             <span className={`a2-pill ${statusTone(x.status)}`}>{r(d, `status.${x.status}`)}</span>
             <span className={`a2-pill ${reasonTone(x.reason)}`}>{r(d, `reason.${x.reason}`)}</span>
+            {x.kind === 'REPLACEMENT' ? <span className="a2-pill pri" data-testid="exchange-replacement-pill">{r(d, 'kind.replacement')}</span> : null}
           </div>
         </div>
         <Link className="a2-btn sm" href={returnsHref()} scroll={false} aria-label={r(d, 'act.cancel')}>
