@@ -11,7 +11,8 @@
 .s28-list li{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--lm-ln)}
 .s28-list li:first-child{border-top:0}
 .s28-list a{font-weight:600}
-.s28-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--lm-ln2)}
+.s28-list a,.s28-grow>a,.s28-grid .a2-h3>a{display:inline-flex;align-items:center;min-height:44px;min-width:44px}
+.s28-chip{display:inline-flex;align-items:center;min-height:44px;min-width:44px;justify-content:center;padding:2px 12px;border-radius:999px;font-size:12px;border:1px solid var(--lm-ln2)}
 .s28-bar{height:8px;border-radius:99px;background:var(--lm-chip);overflow:hidden}
 .s28-bar>i{display:block;height:100%;background:currentColor;opacity:.7}
 .s28-heat{position:relative;border:1px solid var(--lm-ln2);border-radius:10px;overflow:hidden}

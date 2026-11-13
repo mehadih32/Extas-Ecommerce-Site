@@ -144,7 +144,7 @@ export function StaffControlsScreen(p: StaffControlsScreenProps) {
         </div>
         <p className="a2-xs a2-mute a2-mt6">{c('limits.hint')} {c('limits.ownerNote')}</p>
         <div className="s28-row a2-mt12">
-          <label className="s28-row"><input type="checkbox" checked={on} disabled={!p.canEdit || busy} onChange={(e) => setOn(e.target.checked)} data-testid="handover-on" /> {c('handover.on')}</label>
+          <label className="a2-chkl s28-row"><input type="checkbox" checked={on} disabled={!p.canEdit || busy} onChange={(e) => setOn(e.target.checked)} data-testid="handover-on" /> {c('handover.on')}</label>
           <input className="a2-inp" type="time" value={time} disabled={!p.canEdit || busy} onChange={(e) => setTime(e.target.value)} aria-label={c('handover.time')} style={{ maxWidth: 130 }} />
         </div>
         {p.canEdit ? (

@@ -114,7 +114,7 @@ export function VisitorsScreen(p: VisitorsScreenProps) {
       {p.canEdit ? (
         <section className="a2-card a2-mt12" data-testid="va-settings">
           <h2 className="a2-h3">{c('settings.title')}</h2>
-          <label className="s28-row a2-mt6"><input type="checkbox" checked={collect} onChange={(e) => setCollect(e.target.checked)} data-testid="va-collect" /> {c('settings.collect')}</label>
+          <label className="a2-chkl s28-row a2-mt6"><input type="checkbox" checked={collect} onChange={(e) => setCollect(e.target.checked)} data-testid="va-collect" /> {c('settings.collect')}</label>
           <p className="a2-xs a2-mute">{c('settings.privacy')}</p>
           <div className="s28-row a2-mt6">
             <label>{c('settings.keep')}<input className="a2-inp" inputMode="numeric" value={keep} style={{ width: 90 }} onChange={(e) => setKeep(e.target.value)} /></label>
