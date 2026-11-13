@@ -59,3 +59,4 @@ export * from './demo';
 export * from './wizard';
 export * from './ranking';
 export * from './report-library';
+export * from './report-schedules';

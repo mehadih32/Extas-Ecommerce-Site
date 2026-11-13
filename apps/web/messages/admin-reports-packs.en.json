@@ -1,0 +1,50 @@
+{
+  "reportsPacks": {
+    "metaTitle": "Report packs",
+    "title": "Report packs",
+    "sub": "Ready reports for a bank, a loan file, your partner or your own records: a PDF on your letterhead and a spreadsheet file. They read the same numbers as the library and Finance.",
+    "packs": {
+      "monthly": {
+        "name": "Monthly business",
+        "d": "Last month: sales, profit, orders, average order, discounts and fixed costs."
+      },
+      "bank": {
+        "name": "Bank",
+        "d": "Last month's sales, profit and fixed costs, and the balance of every account. For a bank or loan file."
+      },
+      "stock": {
+        "name": "Stock",
+        "d": "Styles to restock now and styles sitting unsold."
+      },
+      "sales": {
+        "name": "Sales",
+        "d": "The last 30 days: sales, profit, orders, discounts and orders by weekday."
+      }
+    },
+    "pdf": "Download PDF",
+    "csv": "Download spreadsheet",
+    "letterhead": "The PDF has your shop's name, address and phone at the top. Change them in Settings. The PDF is in English.",
+    "schedule": {
+      "title": "Send it by itself",
+      "sub": "Off until you switch it on. A short summary goes to your own Telegram. Nothing goes to a buyer or a supplier. The PDF stays here to download.",
+      "on": "Send automatically",
+      "frequency": "How often",
+      "weekly": "Every Monday",
+      "monthly": "On the 1st of each month",
+      "channels": "Where",
+      "telegram": "Telegram",
+      "email": "E-mail (not sent yet)",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Schedule saved",
+      "last": "Last sent {when}",
+      "never": "Not sent yet"
+    },
+    "readOnly": "You can download the packs.",
+    "err": {
+      "forbidden": "You do not have permission for this.",
+      "INVALID_INPUT": "Pick where it goes.",
+      "other": "It could not be saved. Try again."
+    }
+  }
+}

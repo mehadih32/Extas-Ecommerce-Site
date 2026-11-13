@@ -1,6 +1,6 @@
 // S28 · PR 689 — the report library's rules without a database: the period bar, the change, the restock verdict.
 import { describe, expect, it } from 'vitest';
-import { changePct, periodRange, restockVerdict } from '../src';
+import { scheduleDue, changePct, periodRange, restockVerdict } from '../src';
 
 describe('report library rules (PR 689)', () => {
   it('periods are whole days with the span just before for compare', () => {
@@ -28,5 +28,11 @@ describe('report library rules (PR 689)', () => {
     expect(restockVerdict({ ...base, sold30: 0, stockDays: null, ageDays: 59 }, s)).toBe('ENOUGH');
     expect(restockVerdict({ ...base, sold30: 0, stockDays: null, ageDays: 60 }, s)).toBe('UNSOLD');
     expect(restockVerdict({ ...base, sold30: 0, stockDays: null, ageDays: 90, sizesInStock: 0 }, s)).toBe('ENOUGH');
+  });
+  it('a weekly pack is due on Monday, a monthly pack on the 1st', () => {
+    expect(scheduleDue('weekly', '2026-11-16')).toBe('W:2026-11-16');
+    expect(scheduleDue('weekly', '2026-11-17')).toBeNull();
+    expect(scheduleDue('monthly', '2026-12-01')).toBe('M:2026-12');
+    expect(scheduleDue('monthly', '2026-12-02')).toBeNull();
   });
 });

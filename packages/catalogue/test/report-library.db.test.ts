@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
-import { archiveView, listPins, listViews, restockReport, salesByTime, saveView, setPin, type CatalogueDeps, type SettingsReader, type Who } from '../src';
+import { listSchedules, saveSchedule, archiveView, listPins, listViews, restockReport, salesByTime, saveView, setPin, type CatalogueDeps, type SettingsReader, type Who } from '../src';
 
 const code = async (p: Promise<unknown>) => {
   try {
@@ -135,5 +135,16 @@ describe.skipIf(!HAS_TEST_DB)('report library on PostgreSQL (PR 689)', () => {
     expect(await setPin(deps(), sys(A), 'sales', false)).toEqual(['profit']);
     expect(await listPins(deps(), sys(B))).toEqual([]);
     expect(await code(setPin(deps(), sys(A), 'Bad Id', true))).toBe('INVALID_INPUT');
+  });
+
+  it('schedules: off as shipped, saved per pack, needs a place to go, never crosses stores', async () => {
+    expect((await listSchedules(deps(), sys(A))).every((x) => !x.enabled)).toBe(true);
+    const rows = await saveSchedule(deps(), sys(A), { pack: 'bank', frequency: 'monthly', channels: ['telegram'], enabled: true });
+    expect(rows.find((x) => x.pack === 'bank')).toMatchObject({ enabled: true, frequency: 'monthly', channels: ['telegram'] });
+    expect(await code(saveSchedule(deps(), sys(A), { pack: 'bank', frequency: 'weekly', channels: [], enabled: true }))).toBe('INVALID_INPUT');
+    await saveSchedule(deps(), sys(A), { pack: 'bank', frequency: 'weekly', channels: ['telegram', 'email'], enabled: false });
+    expect((await listSchedules(deps(), sys(A))).find((x) => x.pack === 'bank')).toMatchObject({ enabled: false, frequency: 'weekly' });
+    expect((await listSchedules(deps(), sys(B))).every((x) => !x.enabled)).toBe(true);
+    expect(await code(listSchedules(deps(), { actor: stranger, storeId: A }))).toBe('FORBIDDEN');
   });
 });

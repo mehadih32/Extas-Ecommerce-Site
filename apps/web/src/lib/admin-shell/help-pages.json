@@ -149,6 +149,7 @@
     { "id": "money/fees", "route": "/admin/money/fees" },
     { "id": "money/vat", "route": "/admin/money/vat" },
     { "id": "reports/library", "route": "/admin/reports" },
+    { "id": "reports/packs", "route": "/admin/reports/packs" },
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
     { "id": "reports/experiments", "route": "/admin/reports/experiments" },
