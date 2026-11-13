@@ -75,6 +75,9 @@ import comboPagesBn from '../messages/combo-pages.bn.json';
 import comboPagesEn from '../messages/combo-pages.en.json';
 import ordersBn from '../messages/orders.bn.json';
 import ordersEn from '../messages/orders.en.json';
+// S28 · PR 664 (registry v330): the Order flow rules in messages/order-flow.<lang>.json.
+import orderFlowBn from '../messages/order-flow.bn.json';
+import orderFlowEn from '../messages/order-flow.en.json';
 import checkoutMoreBn from '../messages/checkout-more.bn.json';
 import checkoutMoreEn from '../messages/checkout-more.en.json';
 import reviewsBn from '../messages/reviews.bn.json';
@@ -282,6 +285,10 @@ import eyePartsEn from '../messages/eye-parts.en.json';
 import eyePartsBn from '../messages/eye-parts.bn.json';
 import prepaidConfirmEn from '../messages/prepaid-confirm.en.json';
 import prepaidConfirmBn from '../messages/prepaid-confirm.bn.json';
+import autoConfirmEn from '../messages/auto-confirm.en.json';
+import autoConfirmBn from '../messages/auto-confirm.bn.json';
+import incompleteV5En from '../messages/incomplete-v5.en.json';
+import incompleteV5Bn from '../messages/incomplete-v5.bn.json';
 import looksFoldEn from '../messages/looks-fold.en.json';
 import looksFoldBn from '../messages/looks-fold.bn.json';
 import sharedLocationEn from '../messages/shared-location.en.json';
@@ -435,6 +442,11 @@ messages.bn = mergeMessages(messages.bn, eyePartsBn);
 // S05 · PR 541 follow-up 320 (registry v266): prepaid orders confirm by themselves once paid (registry-prepaid-confirm.ts).
 messages.en = mergeMessages(messages.en, prepaidConfirmEn);
 messages.bn = mergeMessages(messages.bn, prepaidConfirmBn);
+// S28 · PR 663 (registry v297): the auto-confirm rules table (registry-auto-confirm.ts).
+messages.en = mergeMessages(messages.en, autoConfirmEn);
+messages.bn = mergeMessages(messages.bn, autoConfirmBn);
+messages.en = mergeMessages(messages.en, incompleteV5En);
+messages.bn = mergeMessages(messages.bn, incompleteV5Bn);
 // S14 · PR 286 follow-up 477 (registry v267): repeated opens fold into one line on "Who looked" (registry-looks-fold.ts).
 messages.en = mergeMessages(messages.en, looksFoldEn);
 messages.bn = mergeMessages(messages.bn, looksFoldBn);
@@ -540,6 +552,9 @@ messages.bn = mergeMessages(messages.bn, photoshootOccasionSceneBn);
 // S24 · PR 539 (registry v309): the style/pose reference's own feature switch.
 messages.en = mergeMessages(messages.en, photoshootStyleReferenceEn);
 messages.bn = mergeMessages(messages.bn, photoshootStyleReferenceBn);
+// S28 · PR 664 (registry v330): the Order flow rules.
+messages.en = mergeMessages(messages.en, orderFlowEn);
+messages.bn = mergeMessages(messages.bn, orderFlowBn);
 
 /** The string at a dotted key, or undefined when it is missing (a gap stays visible to the caller). */
 export function lookup(tree: MessageTree, key: string): string | undefined {

@@ -241,6 +241,10 @@ export const APPEND_ONLY_LOCKED = [
   'HouseAdOrderClick',
   // S28 · PR 677 (migration 0230_offers): the history of one offer, written once.
   'OfferEvent',
+  // S05 · PR 664 (S28; migration 0200_order_price_adjust): each price-adjust line of an order; an answer or a correction is a new line.
+  'OrderPriceAdjustment',
+  // S05 · PR 665 (S28; migration 0201_order_merge): one row per order folded into another; never edited.
+  'OrderMerge',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
@@ -250,6 +254,7 @@ const NOT_BUILT = 'not built yet: decided with its own register PR (lock it ther
 
 /** `@append-only` models that are not locked at the database, each with its reason. */
 export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
+  CheckoutDraftCall: 'S28 PR 668: the call log of an incomplete order; the app only appends rows, and a later correction is a new row (a trigger lock can follow with the next lock migration)',
   SettingsMigration: RUN_ROW,
   DefaultPackApplication: RUN_ROW,
   IntegrationTestRun: RUN_ROW,

@@ -146,3 +146,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-13 14:15 | `5dcf34034787` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-13 15:37 | `bee4f44ed376` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/ai/permissions: request failed: /admin (net::ERR_CONNECTION_CLOSED) (desktop); /admin/ai/permissions: console error: Failed to load resource: net::ERR_CONNECTION_CLOSED (/admin?home=1&_rsc=j7eaihOMoi9gF7ez) (desktop)), so the previous version was put back automatically. The fix comes before any new work. |
 | 2026-11-13 15:52 | `bee4f44ed376` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-13 17:06 | `a00b197a9d12` | deploy | OK | ok | OK, smoke OK | — |

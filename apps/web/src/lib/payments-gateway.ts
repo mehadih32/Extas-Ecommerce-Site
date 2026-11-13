@@ -5,7 +5,7 @@
 // uses. The admin API (payments-api.ts) and the checkout's payment route use these.
 import { createConnections, paymentAdapters, type Connections } from '@extas/adapters';
 import { recordStatementCost } from '@extas/inventory';
-import { keptDeliveryCharge, recordAdvance, selfConfirmPrepaid } from '@extas/orders';
+import { autoConfirmQuietly, keptDeliveryCharge, recordAdvance, selfConfirmPrepaid } from '@extas/orders';
 import { courierApi, noteStatementCharges } from '@extas/shipping';
 import { connectionGateways, type GatewayResolver, type PaymentsDeps } from '@extas/payments';
 import { adminDeps, type AdminDeps } from './admin-auth';
@@ -52,10 +52,13 @@ export async function paymentsServiceDeps(deps: AdminDeps): Promise<PaymentsDeps
       async advancePaid(storeId, orderId, by) {
         const od = { db: deps.db, settings: deps.resolver, now: deps.now, inventory: await inventoryDeps(deps) };
         await recordAdvance(od, { storeId, orderId }, { actorType: by.actorId ? 'STAFF' : 'SYSTEM', actorId: by.actorId, source: by.source });
+        // S28 · PR 663: the advance is in, the auto-confirm rules may now decide (off as shipped; never fails the payment)
+        await autoConfirmQuietly({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId });
       },
       // follow-up 320: a prepaid order nothing flagged confirms by itself once paid (the owner's switch, off; confirm only)
       async paid(storeId, orderId) {
         await selfConfirmPrepaid({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId });
+        await autoConfirmQuietly({ db: deps.db, settings: deps.resolver, now: deps.now }, { storeId, orderId });
       },
     },
     // PR 564: a statement's charges go to the charge mismatch log (record only, off until the owner's switch)

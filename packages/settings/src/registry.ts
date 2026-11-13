@@ -37,6 +37,7 @@ import { checkoutMoreSettings } from './registry-checkout-more';
 import { reviewSettings } from './registry-reviews';
 import { setBuilderSettings } from './registry-set-builder';
 import { orderEditSettings } from './registry-order-edit';
+import { orderFlowSettings } from './registry-order-flow';
 import { supportLaneSettings } from './registry-support-lane';
 import { messageSettings } from './registry-messages';
 import { messageChannelSettings } from './registry-message-channels';
@@ -99,6 +100,9 @@ import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
 import { geoGuideSettings } from './registry-geo-guide';
 import { adsIntelSettings } from './registry-ads-intel';
+import { courierScoreSettings } from './registry-courier-score';
+import { autoConfirmSettings } from './registry-auto-confirm';
+import { incompleteV5Settings } from './registry-incomplete-v5';
 import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
@@ -1338,6 +1342,8 @@ export const registry = {
   ...setBuilderSettings,
   // ---- S05 · PR 142, 143, 146 · order edits: the team's edit reasons and channels, the customer's own edit, the two-size follow-up, the refusal reasons (registry-order-edit.ts, version 37). ----
   ...orderEditSettings,
+  // ---- S28 · PR 664 · Order flow rules: price adjust on orders, ON as shipped (owner OK), no role limits (registry-order-flow.ts, version 330); PR 665, 669 add theirs. ----
+  ...orderFlowSettings,
   // ---- S04 · PR 566, 606 · the support explanation panel and the bulk / corporate lane (registry-support-lane.ts, version 38). ----
   ...supportLaneSettings,
   // ---- S05 · PR 148 · the Messages control centre: the master switch, the order journey, caps, self-confirm, language, quiet hours, the amount lines, the engine's pace (registry-messages.ts, version 40). ----
@@ -1619,6 +1625,11 @@ export const registry = {
   ...studioCreativeBriefSettings,
   // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
   ...adsIntelSettings,
+  // ---- S28 · PR 662 · the courier score out of 10 and its accuracy report, off (registry-courier-score.ts, version 296). ----
+  ...courierScoreSettings,
+  // ---- S28 · PR 663 · the auto-confirm rules table and its presets, off (registry-auto-confirm.ts, version 297). ----
+  ...autoConfirmSettings,
+  ...incompleteV5Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

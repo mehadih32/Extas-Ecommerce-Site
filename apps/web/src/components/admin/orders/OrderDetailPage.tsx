@@ -19,6 +19,7 @@ import { ArchiveNote, CommandButton, DetailGrid, MoreMenu, NoteForm } from './Or
 import { InvoicePrintMenu } from './InvoicePrintMenu';
 import { invoicePrintDict, withInvoice } from '@/lib/admin-invoices/i18n';
 import { Chips } from './OrderTable';
+import { CourierScoreCard } from './CourierScoreCard';
 import { RiskPanel } from './RiskPanel';
 import { SupportExplain } from './SupportExplain';
 
@@ -198,6 +199,8 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
     <ErpOrderPanel key="erp" orderId={o.id} currency={o.currency} view={view} />,
     // S06 · PR 160: the risk card (demo V12.3: after the courier, before the money)
     <RiskPanel key="risk" order={{ id: o.id, number: o.number, currency: o.currency }} view={view} />,
+    // S28 · PR 662: the courier score out of 10 (staff only; nothing while the switch is off)
+    <CourierScoreCard key="courier-score" order={{ id: o.id }} view={view} />,
     <SupportExplain key="explain" orderId={o.id} view={view} />,
     ...o.reviews.map((r) => (
       <Card key={r.id} testId="order-review" title={r.title} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>

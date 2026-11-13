@@ -15,7 +15,8 @@
         "SELF_CONFIRM_CHANGE": "Wants to change the order",
         "SELF_CONFIRM_CANCEL": "Wants to cancel",
         "PACKING_ISSUE": "Packing problem",
-        "NEW_CUSTOMER": "New customer"
+        "NEW_CUSTOMER": "New customer",
+        "AUTO_CONFIRM": "Auto-confirm: needs a call"
       },
       "record": {
         "label": "Record call",
@@ -255,7 +256,8 @@
       "newCustomer": "New customer",
       "preorder": "Eid pre-order",
       "voice": "Voice-entered",
-      "voiceCall": "Voice — please call"
+      "voiceCall": "Voice — please call",
+      "autoRed": "Red tag"
     },
     "page": {
       "all": "All orders",
@@ -365,7 +367,36 @@
       "blockWhyPh": "What happened, so the next person knows",
       "bundleNote": "Note for the packers (optional)",
       "propWhy": "Reason (the next person reads it)",
-      "propNote": "Why (a short note)"
+      "propNote": "Why (a short note)",
+      "priceKind": "What to take off",
+      "priceKinds": {
+        "AMOUNT": "A taka amount",
+        "PERCENT": "A percent of the price",
+        "WALLET": "The customer's wallet",
+        "FREE_DELIVERY": "The delivery charge (free delivery)"
+      },
+      "priceValue": "Amount in taka, or percent",
+      "priceValuePh": "e.g. 50, or 10 for 10%. Empty: all the wallet allows",
+      "priceReason": "Reason (required)",
+      "pricePin": "Owner PIN (only needed above your limit)",
+      "pricePinNeeded": "Owner PIN",
+      "mergeOrders": "Orders to fold in",
+      "mergeOrderLine": "{number} · {lines} lines · {total}",
+      "mergeLeaveOut": "Lines to leave out (they stay on the cancelled order)",
+      "mergeLineLabel": "{number} · {name} ({detail}) x {quantity} · {total}",
+      "mergeAddress": "The addresses are different",
+      "mergeAddressStop": "Stop, do not merge",
+      "mergeAddressGo": "Go on with this order's address",
+      "replaceLine": "Which piece",
+      "replaceLineLabel": "{name} ({detail}) x {quantity}",
+      "replaceReason": "Why",
+      "replaceReasons": {
+        "defect": "Fault in the piece",
+        "damage": "Arrived damaged",
+        "wrong": "Wrong item sent"
+      },
+      "replaceCause": "How it happened (a wrong item)",
+      "replaceCauseNone": "Not known yet"
     },
     "err": {
       "STALE": "This order changed while you were looking at it. It has been loaded again — check it and try once more.",
@@ -414,7 +445,17 @@
       "ADD_ON_ONLY": "Only a line added after the order was placed is taken out here. Use \"Edit items & address\" for the others.",
       "NOT_RETRYABLE": "This booking was closed or tried again already, or the order has a newer booking. Read the page again.",
       "LOOKUP_AVAILABLE": "This courier can be asked by our reference: press Try again instead.",
-      "DUPLICATE": "Another parcel has this consignment id already. Check the number in the courier panel."
+      "DUPLICATE": "Another parcel has this consignment id already. Check the number in the courier panel.",
+      "ADJUST_OFF": "Price adjust is switched off in Rules.",
+      "ADJUST_TOO_MUCH": "That is more than the customer still has to pay, or more than the wallet holds.",
+      "NOTHING_TO_ADJUST": "There is nothing to take off.",
+      "ALREADY_DECIDED": "This request was answered already.",
+      "PIN_REQUIRED": "This needs the owner's PIN.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_LOCKED": "Too many wrong PIN tries. Wait a while and try again.",
+      "PIN_NOT_SET": "The owner has not set the PIN yet.",
+      "MERGE_OFF": "Merging orders is switched off in Rules.",
+      "ADDRESS_DIFFERS": "The addresses are different. Choose to go on with this order's address, or stop."
     },
     "cmd": {
       "confirm": {
@@ -562,6 +603,42 @@
         "title": "Let {n} go",
         "ok": "Let it go",
         "done": "The proposed hold on {n} is let go"
+      },
+      "priceAdjust": {
+        "label": "Adjust price",
+        "title": "Take money off order {n}",
+        "ok": "Adjust price",
+        "done": "Saved on order {n}: applied, or sent for approval when it is above your limit"
+      },
+      "priceApprove": {
+        "label": "Approve",
+        "title": "Approve the price adjustment on order {n}",
+        "ok": "Approve and apply",
+        "done": "The price adjustment on order {n} is approved and applied"
+      },
+      "priceRefuse": {
+        "label": "Refuse",
+        "title": "Refuse the price adjustment on order {n}",
+        "ok": "Refuse",
+        "done": "The price adjustment on order {n} is refused"
+      },
+      "merge": {
+        "label": "Merge",
+        "title": "Merge other orders into {n}",
+        "ok": "Merge",
+        "done": "The orders are merged into {n}. Check the lines, then confirm"
+      },
+      "mergeCall": {
+        "label": "Merge + call",
+        "title": "Merge other orders into {n} and call",
+        "ok": "Merge and queue a call",
+        "done": "The orders are merged into {n} and a call is queued"
+      },
+      "replace": {
+        "label": "Send again free",
+        "title": "Send a piece of order {n} again, free",
+        "ok": "Open the case",
+        "done": "A replacement case is open for order {n}. It waits on the Returns board"
       }
     },
     "eff": {
@@ -608,7 +685,23 @@
       "propDismiss": "The number stays off the list; it is asked again only after a new rejection",
       "propHold": "The order goes on hold with the proposed reason; your note is in the timeline",
       "propLetGo": "The order goes on as it is; your note is in the timeline",
-      "propNoCancel": "Nothing is cancelled and the customer is told nothing"
+      "propNoCancel": "Nothing is cancelled and the customer is told nothing",
+      "priceDue": "Never more than the customer still has to pay: {due}",
+      "priceLimit": "Your limit: {amount} or {percent}% of the price. Above it the request waits for the owner",
+      "priceNoLimit": "You have no limit on this",
+      "priceLedger": "A new line in the order's price ledger with your name and the reason; nothing is edited",
+      "priceNoRefund": "No money is refunded. The total and the amount at the door change",
+      "priceApprove": "The adjustment is applied to the order now. The owner's PIN is checked",
+      "priceRefuse": "The request is refused and the order stays as it is",
+      "mergeMove": "The lines you pick move onto this order at the price they were sold at",
+      "mergeCancel": "Each folded order is cancelled as \"duplicate order\", its stock goes free, and this order takes the pieces",
+      "mergeCharge": "This order keeps its own delivery charge and address; the folded order's charge goes with it",
+      "mergeAddress": "Different address on {numbers}. Say go on to use this order's address",
+      "mergeThenEdit": "After this you can take a line out, change a size or add a piece on this order, then confirm it",
+      "replaceFree": "The same piece goes again, free: the new parcel costs the customer nothing",
+      "replaceNoMoney": "No refund and no wallet credit is made, whatever the piece costs now",
+      "replaceBack": "The old piece has to come back within {days} days",
+      "replaceBoard": "The case waits on the Returns board to be approved; the old piece is checked when it comes back"
     },
     "review": {
       "title": "Duplicate review",
@@ -865,7 +958,20 @@
       "shipment_rebook": "Parcel booked again (its amount or receiver had changed)",
       "order_exchangeIntent": "At checkout: may exchange on arrival",
       "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead",
-      "shipment_bookingClosed": "Courier booking closed from the courier's panel"
+      "shipment_bookingClosed": "Courier booking closed from the courier's panel",
+      "courierScore": "Courier score {score}/10 ({band}) — {why}",
+      "courierScoreNone": "Courier score: no record anywhere — call list",
+      "order_courierScore": "Courier score",
+      "order_autoConfirm": "Auto-confirm rules",
+      "order_priceAdjust": "Price adjusted",
+      "order_priceAdjustAsked": "Price adjustment asked (above the limit)",
+      "order_priceAdjustRefused": "Price adjustment refused",
+      "priceLine": "{kind} · {amount} · {reason}",
+      "priceTotal": "total {before} → {after}",
+      "order_mergedInto": "Merged into another order",
+      "order_mergedFrom": "Orders merged into this one",
+      "mergedIntoLine": "Now part of {number} ({lines} lines, {total})",
+      "mergedFromOne": "took in {number} ({lines} lines, {total})"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -886,7 +992,8 @@
       "bookingLostPanel": "{courier} did not answer when this order was booked, and {courier} cannot be asked by our reference. Look for reference {ref} in the {courier} panel, then say what you found.",
       "packingCard": "{n} open packing card ({kinds}) on {pieces}. Booking waits until a person decides it on the packing screen.",
       "packingCardNoPiece": "{n} open packing card ({kinds}). Booking waits until a person decides it on the packing screen.",
-      "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens."
+      "backAtShop": "{courier} says the parcel is on its way back. When it is in your hands, press Back at the shop: the order then shows returned and its return opens.",
+      "priceRequest": "Price adjustment waiting for approval: {what}"
     },
     "items": {
       "title": "Items",
@@ -1500,6 +1607,70 @@
         "d": "When on, a prepaid order that nothing flagged (no duplicate, re-order, new identity, high or watch level) is confirmed the moment its money is in full, instead of waiting in To confirm › Prepaid for your tap. It only confirms: no money moves. An order with anything still to pay, a payment problem, a cancel request or an open review still waits for a person. Its timeline says it was confirmed by itself.",
         "enabled": "Confirm a paid prepaid order nothing flagged by itself",
         "readOnly": "Only someone allowed to change the risk rules can change this."
+      },
+      "cs": {
+        "h": "Courier score out of 10",
+        "d": "Six checks from a number's courier history become one score out of 10 (higher is better). At or above the green limit the order can confirm by itself (Auto-confirm), below the red limit it gets a red tag for a person, and in between it goes to the call list. Shown to staff only; customers never see it.",
+        "enabled": "Work out the courier score for new orders",
+        "upperScore": "Green at or above",
+        "lowerScore": "Red tag below",
+        "check": "Check",
+        "weight": "Weight",
+        "p10": "10 points at",
+        "p5": "5 points at",
+        "lower": "lower is better",
+        "higher": "higher is better",
+        "exampleH": "Worked example",
+        "score": "Score",
+        "unknownNote": "A check nobody could answer is Unknown: the score is never red because of it, the order goes to the call list.",
+        "readOnly": "Only someone allowed to change the risk rules can change this.",
+        "unsaved": "Not saved yet",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Courier score saved",
+        "discard": "Discard",
+        "err": {
+          "STALE": "Someone else saved this first; the newest is shown. Check it and save again.",
+          "INVALID_INPUT": "Check the numbers: the red limit must not be above the green limit, at least one check needs a weight, and the 10-point limit must be at least as good as the 5-point limit.",
+          "FORBIDDEN": "You cannot change the risk rules.",
+          "forbidden": "You cannot change the risk rules.",
+          "unauthorized": "Sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
+        },
+        "band": {
+          "auto": "Green",
+          "call": "Call list",
+          "person": "Red tag"
+        },
+        "sample": {
+          "success": "86",
+          "parcels": "14",
+          "returns": "2",
+          "worst": "60",
+          "couriers": "3",
+          "fraud": "0"
+        },
+        "src": {
+          "courier": "From {names} (their own check of the number)",
+          "own": "From our own orders (no courier check connected)",
+          "courierOnly": "From the couriers' own checks; unknown when none answers"
+        },
+        "acc": {
+          "h": "Score accuracy — last {days} days",
+          "d": "What really happened to scored orders, by band.",
+          "col": {
+            "band": "Band",
+            "orders": "Orders",
+            "delivered": "Delivered",
+            "returned": "Returned",
+            "cancelled": "Cancelled",
+            "rate": "Came back"
+          },
+          "none": "No scored orders in this period yet.",
+          "unknown": "No score",
+          "sugg": "Green orders came back {pct}% of the time. Consider moving the green limit up."
+        }
       }
     },
     "adv": {
@@ -1822,6 +1993,118 @@
       "empty": "No orders in the current batch.",
       "total": "{n} orders",
       "ago": "placed {age}"
+    },
+    "cs": {
+      "title": "Courier score",
+      "noScore": "No score",
+      "unknown": "Unknown",
+      "noAnswer": "No courier answered",
+      "ownOrders": "our own orders",
+      "minAgo": "{n} min ago",
+      "hourAgo": "{n} h ago",
+      "dayAgo": "{n} days ago",
+      "points": "{n} points",
+      "staffOnly": "Shown to staff only. Customers never see it. It only informs: no order or money moves because of it.",
+      "band": {
+        "auto": "Green",
+        "call": "Call list",
+        "person": "Red tag"
+      },
+      "metric": {
+        "success": "Delivery success rate",
+        "parcels": "Total parcels",
+        "returns": "Total returns",
+        "worst": "Worst courier success rate",
+        "couriers": "Couriers with a record",
+        "fraud": "Fraud reports by other shops"
+      },
+      "reason": {
+        "noRecord": "No courier record for this number anywhere yet, so there is no score. It goes to the call list.",
+        "unknownChecks": "{score}/10 from what is known ({parcels} parcels, {success}% delivered, {returns} returned). {unknown} check(s) could not be answered, so it goes to the call list, not red.",
+        "green": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. A good record.",
+        "middle": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. In the middle, a short call helps.",
+        "red": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. A weak record, a person decides."
+      },
+      "why": {
+        "noRecord": "no record",
+        "unknownChecks": "some checks unknown",
+        "green": "good record",
+        "middle": "in the middle",
+        "red": "weak record"
+      }
+    },
+    "ac": {
+      "h": "Auto-confirm rules",
+      "d": "Decides which new orders go straight to Confirmed and which stay in Processing. Each case below is answered Confirm by itself, Call list, or Red tag (a person decides). It only does what your Confirm button does: no money moves and nothing is blocked or cancelled. Every order shows on its timeline who confirmed it (a rule or a person) and why.",
+      "enabled": "Use these rules for new orders",
+      "presetH": "Fraud level",
+      "presetHelp": "A level fills the table below. Change any row and it becomes Custom.",
+      "preset": {
+        "low": "Low",
+        "normal": "Normal",
+        "strict": "Strict",
+        "custom": "Custom"
+      },
+      "summary": "{auto} cases confirm by themselves · {call} go to the call list · {person} get a red tag",
+      "caseH": "When the order is",
+      "answerH": "We do",
+      "case": {
+        "prepaid": "Paid in full online",
+        "delivery": "Only the delivery charge paid first",
+        "trusted": "Old customer, every parcel taken",
+        "goodScore": "New to us, courier score decides (green confirms, middle calls, red is tagged)",
+        "brandNew": "Brand-new number, no record anywhere",
+        "refused": "Refused a parcel before",
+        "refusedPaid": "Refused before, paid the delivery charge first",
+        "bigCod": "Big cash order (above the limit below)",
+        "suspicious": "Looks fake or a duplicate"
+      },
+      "act": {
+        "auto": "Confirm by itself",
+        "call": "Call list",
+        "person": "Red tag · a person decides"
+      },
+      "trustedMin": "Parcels taken that make an old customer trusted",
+      "trustedMax": "Most refusals a trusted customer may have",
+      "bigCod": "Cash order limit",
+      "bigCodHelp": "A cash order above this goes to the call list. Empty: no limit.",
+      "never": "Nothing is ever blocked or cancelled by itself, and a suspicious order is never confirmed by itself.",
+      "readOnly": "Only someone allowed to change the risk rules can change this.",
+      "unsaved": "Not saved yet",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Auto-confirm rules saved",
+      "discard": "Discard",
+      "err": {
+        "STALE": "Someone else saved this first; the newest is shown. Check it and save again.",
+        "INVALID_INPUT": "Check the numbers and answers; a suspicious order cannot be confirmed by itself.",
+        "FORBIDDEN": "You cannot change the risk rules.",
+        "forbidden": "You cannot change the risk rules.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Nothing was saved; try again.",
+        "other": "Something went wrong. Nothing was saved; try again."
+      },
+      "ev": {
+        "RULE": "Confirmed by rule: {case} ({why}){score}",
+        "STAFF": "Confirmed by {who}",
+        "call": "Auto-confirm: {case} ({why}) — a call was added to the call list",
+        "person": "Auto-confirm: {case} ({why}) — red tag, a person decides",
+        "score": ", courier score {n}/10"
+      },
+      "why": {
+        "suspicious": "looks suspicious",
+        "paidFull": "paid in full",
+        "paidCharge": "delivery charge paid first",
+        "refused": "refused before",
+        "refusedPaid": "refused before, charge paid first",
+        "bigCod": "big cash order",
+        "trusted": "old customer, parcels taken",
+        "scoreGreen": "good courier score",
+        "scoreMiddle": "courier score in the middle or partly unknown",
+        "scoreRed": "weak courier score",
+        "noRecord": "no record anywhere",
+        "watch": "on watch"
+      }
     }
   }
 }

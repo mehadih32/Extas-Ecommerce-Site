@@ -115,7 +115,19 @@ export type OrdersErrorCode =
   /** PR 612, 614: the order was never sent to the store's ERP on contract v6 (`data.orderNumber`). */
   | 'NOT_IN_ERP'
   /** PR 162: this number is on the blocklist already (one listing at a time; undo it first to list it again). */
-  | 'ALREADY_LISTED';
+  | 'ALREADY_LISTED'
+  /** S28 · PR 664: price adjust is switched off (Rules › Order flow). */
+  | 'ADJUST_OFF'
+  /** S28 · PR 664: the amount is more than the order has left to pay (`data.maxMinor`), or more than the wallet holds. */
+  | 'ADJUST_TOO_MUCH'
+  /** S28 · PR 664: nothing to take off (no delivery charge left, no wallet balance, an amount of nothing). */
+  | 'NOTHING_TO_ADJUST'
+  /** S28 · PR 664: the request was answered already (`data.state`). */
+  | 'ALREADY_DECIDED'
+  /** S28 · PR 665: merging orders is switched off (Rules › Order flow). */
+  | 'MERGE_OFF'
+  /** S28 · PR 665: the addresses differ and a person has not said go on (`data.addresses`). */
+  | 'ADDRESS_DIFFERS';
 
 export class OrdersError extends Error {
   readonly code: OrdersErrorCode;
@@ -183,6 +195,10 @@ export class OrdersError extends Error {
       case 'NOT_EXPECTED':
       case 'NOT_IN_ERP':
       case 'ERP_ON_PRACTICE':
+      case 'ADJUST_OFF':
+      case 'ADJUST_TOO_MUCH':
+      case 'NOTHING_TO_ADJUST':
+      case 'MERGE_OFF':
         return 422;
       case 'ERP_UNAVAILABLE':
         return 503;

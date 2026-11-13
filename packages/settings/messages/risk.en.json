@@ -121,7 +121,12 @@
     "flagReport": {
       "label": "Flag outcome report",
       "help": "When on, every checkout the owner's layers ask to pay ahead is kept once per bag, and Reports › Flag outcomes shows, for the days you set: of the customers flagged — at checkout per layer, and after ordering per risk level — how many paid the advance, how many are still waiting, how many walked away (left the checkout, or the order was cancelled unpaid) and how many ordered without the ask; what became of those who paid, and the advance collected. A layer flagged at least the fewest flags you set that loses at least the share you set is pointed out (empty: never). It only reads: no layer, price or Cash on Delivery changes by itself. Off as shipped."
-    }
+    },
+    "courierScore": {
+      "label": "Courier score out of 10",
+      "help": "Six checks from a number's courier history (delivery success rate, parcels taken, returns, the worst courier's success rate, couriers with a record, fraud reports by other shops) are each scored 0, 5 or 10 by your two limits, weighted and averaged into one score out of 10 (higher is better). At or above the green limit is green, below the red limit is red, in between goes to the call list. A check nobody could answer is unknown: the score is never red because of it. It only informs; it moves no order and no money. Off as shipped."
+    },
+    "courierScoreReport": { "label": "Courier score accuracy report", "help": "How many days the score-accuracy report looks back and the most scored orders it reads. The report only reads." }
   },
   "defaults": {
     "risk": {

@@ -79,7 +79,7 @@ export async function selfConfirmPrepaid(deps: OrdersDeps, ref: { storeId: numbe
           late = selfConfirmSkip(again);
           if (late) throw new OrdersError('NOTHING_CHANGED', `not confirmed by itself: ${late}`, []);
           const pushId = await queueErpOrder(deps, tx, locked);
-          return { data: { confirmedAt: now }, reasonCode: SELF_CONFIRM_SOURCE, eventData: { erpPushId: pushId, selfConfirm: true } };
+          return { data: { confirmedAt: now }, reasonCode: SELF_CONFIRM_SOURCE, eventData: { erpPushId: pushId, selfConfirm: true, confirmedBy: 'RULE', rule: SELF_CONFIRM_SOURCE } };
         },
       },
       { idempotencyKey: `prepaid-confirm:${ref.orderId}` },

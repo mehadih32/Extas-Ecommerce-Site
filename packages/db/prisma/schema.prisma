@@ -192,6 +192,7 @@ model Store {
   cartItems               CartItem[]
   customerAddresses       CustomerAddress[]
   checkoutDrafts          CheckoutDraft[]
+  checkoutDraftCalls      CheckoutDraftCall[]
   checkoutParameterLayers CheckoutParameterLayer[]
   checkoutFlagEvents      CheckoutFlagEvent[]
   bulkEnquiries           BulkEnquiry[]
@@ -200,6 +201,8 @@ model Store {
   orderEvents             OrderEvent[]
   orderNotes              OrderNote[]
   orderGroups             OrderGroup[]
+  orderPriceAdjustments   OrderPriceAdjustment[]
+  orderMerges             OrderMerge[]
   callTasks               CallTask[]
   notificationTemplates   NotificationTemplate[]
   notificationRules       NotificationRule[]
@@ -2793,40 +2796,67 @@ model CustomerAddress {
 
 /// @stage S04 · PR 137, 274 — a started checkout, remembered field by field (autofill, incomplete-order capture).
 model CheckoutDraft {
-  id               String    @id @default(uuid(7)) @db.Uuid
-  storeId          Int
-  store            Store     @relation(fields: [storeId], references: [id])
-  cartId           String?   @db.Uuid
-  customerId       String?   @db.Uuid
-  visitorId        String
-  phone            String?
-  name             String?
-  email            String?
-  addressText      String?
-  areaId           String?   @db.Uuid
-  data             Json?
-  lastStep         String?
-  lastActivityAt   DateTime  @default(now()) @db.Timestamptz(3)
-  convertedOrderId String?   @db.Uuid
-  followUpCount    Int       @default(0)
+  id                      String    @id @default(uuid(7)) @db.Uuid
+  storeId                 Int
+  store                   Store     @relation(fields: [storeId], references: [id])
+  cartId                  String?   @db.Uuid
+  customerId              String?   @db.Uuid
+  visitorId               String
+  phone                   String?
+  name                    String?
+  email                   String?
+  addressText             String?
+  areaId                  String?   @db.Uuid
+  data                    Json?
+  lastStep                String?
+  lastActivityAt          DateTime  @default(now()) @db.Timestamptz(3)
+  convertedOrderId        String?   @db.Uuid
+  followUpCount           Int       @default(0)
   /// PR 274 — the person it was handed to for the follow-up (Orders › Incomplete), and when.
-  assignedToId     String?   @db.Uuid
-  assignedAt       DateTime? @db.Timestamptz(3)
+  assignedToId            String?   @db.Uuid
+  assignedAt              DateTime? @db.Timestamptz(3)
   /// PR 274 — marked handled by a person (with a short note); "Open again" clears it. Nothing is deleted.
-  handledAt        DateTime? @db.Timestamptz(3)
-  handledById      String?   @db.Uuid
-  handledNote      String?
+  handledAt               DateTime? @db.Timestamptz(3)
+  handledById             String?   @db.Uuid
+  handledNote             String?
   /// PR 275 — the random code of the follow-up's link that puts this bag back in any browser (/api/bag/back/<code>).
-  restoreCode      String?
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  restoreCode             String?
+  /// S28 · PR 668 — "Confirm as order": the person who phoned and placed the order from this draft, and when (the order
+  /// itself says "Recovered by phone"). Nothing is deleted.
+  recoveredById           String?   @db.Uuid
+  recoveredAt             DateTime? @db.Timestamptz(3)
+  /// S28 · PR 668 — the same connection (IP) as an earlier customer's order: only ever a "Possible match", never attached.
+  possibleMatch           Boolean   @default(false)
+  possibleMatchCustomerId String?   @db.Uuid
+  createdAt               DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
 
   flagEvents CheckoutFlagEvent[]
+  calls      CheckoutDraftCall[]
 
   @@unique([storeId, restoreCode])
   @@index([storeId, phone])
   @@index([storeId, convertedOrderId, lastActivityAt])
   @@index([storeId, assignedToId])
+}
+
+/// @stage S13 · PR 668 — one call to an incomplete-order customer and what it found (the call log on Orders › Incomplete; S28 wave 1).
+/// Append-only: a later call is a new row.
+/// @append-only
+model CheckoutDraftCall {
+  id        String        @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store         @relation(fields: [storeId], references: [id])
+  draftId   String        @db.Uuid
+  draft     CheckoutDraft @relation(fields: [draftId], references: [id])
+  byId      String?       @db.Uuid
+  outcome   String
+  /// CALL (a phone call) or MESSAGE (a WhatsApp/SMS the team opened); append-only.
+  kind      String        @default("CALL")
+  note      String?
+  createdAt DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, draftId, createdAt])
 }
 
 /// @stage S04 · PR 558, 560 — the Parameter for Checkout: what counts as a flag, the layers, and what each asks for.
@@ -3061,6 +3091,11 @@ model Order {
   /// Follow-up 534 (PR 610/614): the order as each ERP link has it (ErpOrder.orderId, a foreign key since 0177).
   erpOrders ErpOrder[]
 
+  /// PR 664: the price-adjust ledger lines of this order (never edited, never deleted).
+  priceAdjustments OrderPriceAdjustment[]
+  mergesAsMain     OrderMerge[]           @relation("OrderMergeMain")
+  mergedAway       OrderMerge?            @relation("OrderMergeSource")
+
   @@unique([storeId, number])
   @@unique([storeId, idempotencyKey])
   // PR 603: order by phone — runs on every order for the fraud engine.
@@ -3226,6 +3261,89 @@ model OrderGroup {
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   orders Order[]
+}
+
+/// @stage S05 · PR 664 (S28 Admin v5) — one line of an order's price-adjust ledger: a taka amount off, a percent off, the
+/// customer's wallet used, or the delivery charge taken off; with the reason, who asked, who approved and the order's
+/// total before and after. A PENDING line is a request above the asker's limit; the owner's answer is a NEW line (APPLIED
+/// or REJECTED, `requestId` pointing at the request). Never edited, never deleted; a mistake is corrected by a new line.
+/// @append-only
+model OrderPriceAdjustment {
+  id               String                    @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store                     @relation(fields: [storeId], references: [id])
+  orderId          String                    @db.Uuid
+  order            Order                     @relation(fields: [orderId], references: [id])
+  kind             OrderPriceAdjustmentKind
+  state            OrderPriceAdjustmentState
+  /// The percent typed (whole percent) for a PERCENT line; null for the others.
+  percent          Int?
+  /// The amount off (or the wallet used, or the delivery charge taken off), in minor units; always above zero.
+  amountMinor      Int
+  reasonKey        String
+  note             String?
+  /// The request this line answers (an APPLIED or REJECTED line that came after a PENDING one).
+  requestId        String?                   @db.Uuid
+  requestedById    String?                   @db.Uuid
+  /// Who applied or approved (an owner, or the asker inside his limit).
+  decidedById      String?                   @db.Uuid
+  /// The owner's PIN was checked for this line (a line above the asker's limit, or an approval).
+  pinChecked       Boolean                   @default(false)
+  totalBeforeMinor Int
+  totalAfterMinor  Int
+  /// The wallet entry a WALLET line debited.
+  walletEntryId    String?                   @db.Uuid
+  createdAt        DateTime                  @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, orderId, createdAt])
+  @@index([storeId, state, createdAt])
+  @@index([requestId])
+}
+
+enum OrderPriceAdjustmentKind {
+  AMOUNT
+  PERCENT
+  WALLET
+  FREE_DELIVERY
+}
+
+enum OrderPriceAdjustmentState {
+  PENDING
+  APPLIED
+  REJECTED
+}
+
+/// @stage S05 · PR 665 — the record of one order folded into another ("Merge" on a Merge-needed row). One row per folded
+/// order: the order that stays, the order that was cancelled with the reason "merged", the lines moved, the lines left out
+/// by the person, whether the addresses differed and a person said go on, and whether "Merge + call" asked for a call.
+/// Never edited, never deleted: the merge is not undone, a wrong one is corrected by editing the kept order.
+/// @append-only
+model OrderMerge {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store    @relation(fields: [storeId], references: [id])
+  /// The order that stays and now holds the lines.
+  mainOrderId     String   @db.Uuid
+  mainOrder       Order    @relation("OrderMergeMain", fields: [mainOrderId], references: [id])
+  /// The order that was cancelled into it (one merge each).
+  sourceOrderId   String   @unique @db.Uuid
+  sourceOrder     Order    @relation("OrderMergeSource", fields: [sourceOrderId], references: [id])
+  /// Pieces and money moved onto the kept order, and the lines the person left out.
+  movedLines      Int
+  movedMinor      Int
+  leftOutLines    Int
+  /// The addresses differed and the person confirmed the kept order's address.
+  addressDiffered Boolean  @default(false)
+  /// "Merge + call": a call to the customer was queued.
+  callQueued      Boolean  @default(false)
+  /// The system merged them (auto-merge) instead of a person.
+  auto            Boolean  @default(false)
+  note            String?
+  mergedById      String?  @db.Uuid
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, mainOrderId])
+  @@index([storeId, createdAt])
 }
 
 /// @stage S05 · PR 545, 563, 146 — the call queue for the AI or an employee: unclear address, new-customer verification,
@@ -4900,6 +5018,10 @@ model Exchange {
   waiveReason          String?
   waivedById           String?        @db.Uuid
   waivedAt             DateTime?      @db.Timestamptz(3)
+  /// S28 · PR 669 — EXCHANGE (the swap engine as it was) or REPLACEMENT (a defective or wrong piece sent again free: same piece,
+  /// no price difference, no refund, no wallet credit). A replacement's old piece is due back by `oldPieceDueAt` (the owner's days).
+  kind                 String         @default("EXCHANGE")
+  oldPieceDueAt        DateTime?      @db.Timestamptz(3)
 
   items ExchangeItem[]
 

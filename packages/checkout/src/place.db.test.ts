@@ -685,6 +685,31 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
         f.overrides.delete('checkout.capture.enabled');
       }
     });
+    it('PR 668: only the visible form is kept (a hidden extra field is refused), and a possible match is only marked, never attached, with the owner\'s switch on', async () => {
+      const s = await shown('draft-668');
+      const typed = { form: { ...FORM }, payment: { method: 'cod' as const }, step: 'details' as const };
+      set({ 'checkout.capture.enabled': true });
+      try {
+        // a field the form does not show (a hidden or off-screen one) is refused by the strict schema, so it can never be stored
+        await expect(captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, ip: '203.0.113.9', input: { ...typed, form: { ...FORM, hiddenEmail: 'x@example.com' } } })).rejects.toThrow();
+        await expect(captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, input: { ...typed, honeypot: 'x' } })).rejects.toThrow();
+        const earlier = await f.t.prisma.customer.create({ data: { storeId: f.S, phone: '+8801700000668', name: 'Earlier customer 668' } });
+        await f.t.prisma.order.create({ data: { storeId: f.S, number: 'T-668', source: 'WEBSITE', currency: 'BDT', placedAt: new Date(), paymentMethod: 'COD', subtotalMinor: 1_000, totalMinor: 1_000, idempotencyKey: 'idem-668', ip: '203.0.113.9', phone: '+8801700000668', customerId: earlier.id } });
+        // switch off (as shipped): nothing is marked
+        expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, ip: '203.0.113.9', input: typed })).toEqual({ kept: true });
+        expect(await f.t.prisma.checkoutDraft.findFirstOrThrow({ where: { visitorId: s.visitorId } })).toMatchObject({ possibleMatch: false, possibleMatchCustomerId: null });
+        set({ 'orders.incompleteV5': { ...(await f.deps().settings.value('orders.incompleteV5', { storeId: f.S })), possibleMatch: true } });
+        expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, ip: '203.0.113.9', input: typed })).toEqual({ kept: true });
+        // switched on: marked with the earlier customer, but the draft's own customer stays empty (never attached)
+        expect(await f.t.prisma.checkoutDraft.findFirstOrThrow({ where: { visitorId: s.visitorId } })).toMatchObject({ possibleMatch: true, possibleMatchCustomerId: earlier.id, customerId: null });
+        // another connection: no mark
+        expect(await captureDraft(f.deps(), { storeId: f.S, visitorId: s.visitorId, ip: '203.0.113.10', input: typed })).toEqual({ kept: true });
+        expect(await f.t.prisma.checkoutDraft.findFirstOrThrow({ where: { visitorId: s.visitorId } })).toMatchObject({ possibleMatch: false, possibleMatchCustomerId: null });
+      } finally {
+        f.overrides.delete('checkout.capture.enabled');
+        f.overrides.delete('orders.incompleteV5');
+      }
+    });
   });
 
   describe('PR 126 · the thank-you page\'s receipt', () => {

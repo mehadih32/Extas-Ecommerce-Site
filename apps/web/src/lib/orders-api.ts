@@ -60,6 +60,15 @@
 //                                                             order waits for it, the pay link, its messages and a call task
 //                                                             (orders.advance.request; nothing moves money or changes COD)
 //   POST  /api/admin/orders/:id/advance/resend                PR 542: {channels, note?, version?} "Send again" (orders.advance.request)
+//   GET   /api/admin/orders/:id/price-adjust                  S28 · PR 664: the order's price ledger, the person's limit, the reasons and what waits (orders.read)
+//   POST  /api/admin/orders/:id/price-adjust                  {kind: AMOUNT|PERCENT|WALLET|FREE_DELIVERY, value?, reasonKey, note?, pin?, version?} take money
+//                                                             off an open order (orders.priceAdjust; off as shipped); above the person's limit it
+//                                                             waits for approval, or applies with the owner's PIN for a person who may approve
+//   GET   /api/admin/orders/:id/merge-into                    S28 · PR 665: this order as the kept one and the same person's other open orders (orders.read)
+//   POST  /api/admin/orders/:id/merge-into                    {orders: [id], leaveOut?: [lineId], confirmAddress?: yes, call?: yes, note?} fold the
+//                                                             orders into this one (orders.merge; off as shipped, `orders.mergeOrders`)
+//   POST  /api/admin/orders/price-adjust/:requestId           {decision: approve|reject, pin?, note?} the answer to a waiting request (orders.priceApprove;
+//                                                             approve needs the owner's PIN)
 //   GET   /api/admin/orders/:id/erp                           PR 610, 611 (ERP contract v6): the order at the ERP — its
 //                                                             pieces, holds, bill and identification — and the Partial
 //                                                             delivery box (orders.read; the box needs delivery.read);
@@ -75,6 +84,8 @@ import * as od from '@extas/orders';
 import { partialBoxView, savePartialDelivery } from '@extas/shipping';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { addLineBody } from './admin-orders/lines';
+import { mergeBody } from './admin-orders/merge';
+import { priceAdjustBody } from './admin-orders/price-adjust';
 import { inventoryDeps } from './inventory-api';
 import { shippingFail } from './shipping-api';
 import { mediaDeps } from './media';
@@ -271,6 +282,13 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (m !== 'GET') return notAllowed();
     return handle(request, deps, 'orders.read', async (x) => ({ ...(await od.callQueue(x.deps, x.who, query(x.url, ['reason', 'status', 'cursor', 'limit']))) }));
   }
+  if (a === 'price-adjust') {
+    // S28 · PR 664: the owner's answer to a request above someone's limit (the service checks `orders.priceApprove` and the PIN again)
+    if (path.length !== 2) return notFound();
+    if (!isUuid(b)) return Promise.resolve(fail(404, 'NOT_FOUND', ['requestId']));
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'orders.priceApprove', async (x) => ({ result: await od.decidePriceAdjust(x.deps, x.who, b, await body(request)) }));
+  }
   if (a === 'merge') {
     if (path.length > 1) return notFound();
     if (m !== 'POST') return notAllowed();
@@ -320,6 +338,24 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     if (c !== 'assess' || path.length > 3) return notFound();
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'orders.risk.decide', async (x) => ({ result: await od.reassessOrder(x.deps, x.who, id) }));
+  }
+  // S28 · PR 664: price adjust — the order's ledger (GET) and a new line (POST)
+  if (b === 'price-adjust') {
+    if (path.length > 2) return notFound();
+    if (m === 'GET') return handle(request, deps, 'orders.read', async (x) => ({ priceAdjust: found(await od.priceAdjustView(x.deps, x.who, id)) }));
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'orders.priceAdjust', async (x) => {
+      const cmd = await command(request, x.opts);
+      const row = found(await x.deps.db.order.findFirst({ where: { id, storeId: x.who.storeId }, select: { currency: true } }));
+      return { result: await od.adjustPrice(x.deps, x.who, id, priceAdjustBody(cmd.input, row.currency), cmd.opts) };
+    });
+  }
+  // S28 · PR 665: merge — this order as the kept one (GET) and the fold itself (POST)
+  if (b === 'merge-into') {
+    if (path.length > 2) return notFound();
+    if (m === 'GET') return handle(request, deps, 'orders.read', async (x) => ({ merge: found(await od.mergeView(x.deps, x.who, id)) }));
+    if (m !== 'POST') return notAllowed();
+    return handle(request, deps, 'orders.merge', async (x) => ({ result: await od.mergeIntoOne(x.deps, x.who, mergeBody(id, await body(request))) }));
   }
   // PR 610, 611 (ERP contract v6): the order at the ERP, a short line's decision, the Partial delivery box
   if (b === 'erp') return erpRoute(request, deps, id, m, path.slice(2));
