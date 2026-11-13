@@ -582,6 +582,6 @@ export function pair(msgs: SettingsMessages, key: string): LabelPair {
   return { en: e, bn: b };
 }
 
-// S28 · PR 680-685 (registry v306): the product screens' settings in messages/products-v5.<lang>.json.
+// S28 · PR 680-685 (registry v321): the product screens' settings in messages/products-v5.<lang>.json.
 messages.en = mergeMessages(messages.en, productsV5En);
 messages.bn = mergeMessages(messages.bn, productsV5Bn);

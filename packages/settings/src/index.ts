@@ -283,5 +283,5 @@ export * from './registry-photoshoot-scene-library';
 // S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).
 export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
-// S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 306).
+// S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 321).
 export * from './registry-products-v5';
