@@ -425,3 +425,5 @@ describe.skipIf(!HAS_TEST_DB)('the order core on PostgreSQL (S05)', () => {
     });
   });
 });
+        'courierScore',
+        'autoConfirm',

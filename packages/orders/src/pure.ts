@@ -102,6 +102,10 @@ export const ORDER_COMMANDS = [
   // PR 540: the gate turned an engine's hold into a proposal (a mark and a timeline line); "Let it go" clears it
   'holdProposed',
   'holdProposalDecided',
+  // S28 · PR 662: the number's courier score kept on the order as a note (the status stays)
+  'courierScore',
+  // S28 · PR 663: the auto-confirm table's "call list" or "red tag" answer written on the order (the status stays)
+  'autoConfirm',
   // PR 545: a customer with no history anywhere gets one call (a mark, a call task, a timeline line; the status stays)
   'newCustomer',
   // hooks for S06 / S07 / PR 605 (risk level, gift, payments): no admin route yet
@@ -183,6 +187,10 @@ const FLAGS: Readonly<Partial<Record<OrderCommand, readonly OrderState[]>>> = {
   blockProposal: OPEN_STATES,
   // PR 524: written when the engine would have held it, while it is open
   goodCustomer: OPEN_STATES,
+  // S28 · PR 662: kept when the order lands, while it is open
+  courierScore: OPEN_STATES,
+  // S28 · PR 663: written when it lands (and again when its money comes in), while it is open
+  autoConfirm: OPEN_STATES,
   // PR 540: proposed while open; decided (let go) while open
   holdProposed: OPEN_STATES,
   holdProposalDecided: OPEN_STATES,

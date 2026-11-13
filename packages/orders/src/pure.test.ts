@@ -60,6 +60,8 @@ const SPEC: Record<OrderCommand, Partial<Record<OrderState, OrderState | typeof 
   blockProposal: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   // PR 524: the good-customer override marks an open order; the status stays
   goodCustomer: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  courierScore: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
+  autoConfirm: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   // PR 540: a proposed hold and its "Let it go" mark an open order; the status stays
   holdProposed: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
   holdProposalDecided: Object.fromEntries(OPEN_STATES.map((s) => [s, FLAG])),
@@ -177,6 +179,8 @@ describe('the guards', () => {
     expect(plan('courierCancelRefused', order('PACKED', { booked: true }))).toMatchObject({ ok: false, code: 'NO_CANCEL_PENDING' });
   });
 
+        'courierScore',
+        'autoConfirm',
   it('a parcel whose cancel is asked is not packed or handed over (§6.5.7)', () => {
     expect(plan('pack', order('PROCESSING', { cancelPending: true, booked: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
     expect(plan('handover', order('PACKED', { cancelPending: true, booked: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });

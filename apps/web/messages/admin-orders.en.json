@@ -15,7 +15,8 @@
         "SELF_CONFIRM_CHANGE": "Wants to change the order",
         "SELF_CONFIRM_CANCEL": "Wants to cancel",
         "PACKING_ISSUE": "Packing problem",
-        "NEW_CUSTOMER": "New customer"
+        "NEW_CUSTOMER": "New customer",
+        "AUTO_CONFIRM": "Auto-confirm: needs a call"
       },
       "record": {
         "label": "Record call",
@@ -242,7 +243,8 @@
       "newCustomer": "New customer",
       "preorder": "Eid pre-order",
       "voice": "Voice-entered",
-      "voiceCall": "Voice — please call"
+      "voiceCall": "Voice — please call",
+      "autoRed": "Red tag"
     },
     "page": {
       "all": "All orders",
@@ -849,7 +851,11 @@
       "shipment_rebook": "Parcel booked again (its amount or receiver had changed)",
       "order_exchangeIntent": "At checkout: may exchange on arrival",
       "exchangeIntent": "Started another order in size {size}, took it out to exchange this parcel on arrival instead",
-      "shipment_bookingClosed": "Courier booking closed from the courier's panel"
+      "shipment_bookingClosed": "Courier booking closed from the courier's panel",
+      "courierScore": "Courier score {score}/10 ({band}) — {why}",
+      "courierScoreNone": "Courier score: no record anywhere — call list",
+      "order_courierScore": "Courier score",
+      "order_autoConfirm": "Auto-confirm rules"
     },
     "band": {
       "newCustomer": "A new customer — no earlier order anywhere in the shop. Call once before confirming; nothing is held or asked in advance.",
@@ -1484,6 +1490,70 @@
         "d": "When on, a prepaid order that nothing flagged (no duplicate, re-order, new identity, high or watch level) is confirmed the moment its money is in full, instead of waiting in To confirm › Prepaid for your tap. It only confirms: no money moves. An order with anything still to pay, a payment problem, a cancel request or an open review still waits for a person. Its timeline says it was confirmed by itself.",
         "enabled": "Confirm a paid prepaid order nothing flagged by itself",
         "readOnly": "Only someone allowed to change the risk rules can change this."
+      },
+      "cs": {
+        "h": "Courier score out of 10",
+        "d": "Six checks from a number's courier history become one score out of 10 (higher is better). At or above the green limit the order can confirm by itself (Auto-confirm), below the red limit it gets a red tag for a person, and in between it goes to the call list. Shown to staff only; customers never see it.",
+        "enabled": "Work out the courier score for new orders",
+        "upperScore": "Green at or above",
+        "lowerScore": "Red tag below",
+        "check": "Check",
+        "weight": "Weight",
+        "p10": "10 points at",
+        "p5": "5 points at",
+        "lower": "lower is better",
+        "higher": "higher is better",
+        "exampleH": "Worked example",
+        "score": "Score",
+        "unknownNote": "A check nobody could answer is Unknown: the score is never red because of it, the order goes to the call list.",
+        "readOnly": "Only someone allowed to change the risk rules can change this.",
+        "unsaved": "Not saved yet",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Courier score saved",
+        "discard": "Discard",
+        "err": {
+          "STALE": "Someone else saved this first; the newest is shown. Check it and save again.",
+          "INVALID_INPUT": "Check the numbers: the red limit must not be above the green limit, at least one check needs a weight, and the 10-point limit must be at least as good as the 5-point limit.",
+          "FORBIDDEN": "You cannot change the risk rules.",
+          "forbidden": "You cannot change the risk rules.",
+          "unauthorized": "Sign in again.",
+          "network": "No connection. Nothing was saved; try again.",
+          "other": "Something went wrong. Nothing was saved; try again."
+        },
+        "band": {
+          "auto": "Green",
+          "call": "Call list",
+          "person": "Red tag"
+        },
+        "sample": {
+          "success": "86",
+          "parcels": "14",
+          "returns": "2",
+          "worst": "60",
+          "couriers": "3",
+          "fraud": "0"
+        },
+        "src": {
+          "courier": "From {names} (their own check of the number)",
+          "own": "From our own orders (no courier check connected)",
+          "courierOnly": "From the couriers' own checks; unknown when none answers"
+        },
+        "acc": {
+          "h": "Score accuracy — last {days} days",
+          "d": "What really happened to scored orders, by band.",
+          "col": {
+            "band": "Band",
+            "orders": "Orders",
+            "delivered": "Delivered",
+            "returned": "Returned",
+            "cancelled": "Cancelled",
+            "rate": "Came back"
+          },
+          "none": "No scored orders in this period yet.",
+          "unknown": "No score",
+          "sugg": "Green orders came back {pct}% of the time. Consider moving the green limit up."
+        }
       }
     },
     "adv": {
@@ -1733,6 +1803,118 @@
       "eff": {
         "returned": "The parcel is marked returned (your name and the time in the audit log); the order moves to returned.",
         "return": "The courier's return of this parcel opens, so the hand-back list and the reports expect it."
+      }
+    },
+    "cs": {
+      "title": "Courier score",
+      "noScore": "No score",
+      "unknown": "Unknown",
+      "noAnswer": "No courier answered",
+      "ownOrders": "our own orders",
+      "minAgo": "{n} min ago",
+      "hourAgo": "{n} h ago",
+      "dayAgo": "{n} days ago",
+      "points": "{n} points",
+      "staffOnly": "Shown to staff only. Customers never see it. It only informs: no order or money moves because of it.",
+      "band": {
+        "auto": "Green",
+        "call": "Call list",
+        "person": "Red tag"
+      },
+      "metric": {
+        "success": "Delivery success rate",
+        "parcels": "Total parcels",
+        "returns": "Total returns",
+        "worst": "Worst courier success rate",
+        "couriers": "Couriers with a record",
+        "fraud": "Fraud reports by other shops"
+      },
+      "reason": {
+        "noRecord": "No courier record for this number anywhere yet, so there is no score. It goes to the call list.",
+        "unknownChecks": "{score}/10 from what is known ({parcels} parcels, {success}% delivered, {returns} returned). {unknown} check(s) could not be answered, so it goes to the call list, not red.",
+        "green": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. A good record.",
+        "middle": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. In the middle, a short call helps.",
+        "red": "{score}/10: {parcels} parcels, {success}% delivered, {returns} returned. A weak record, a person decides."
+      },
+      "why": {
+        "noRecord": "no record",
+        "unknownChecks": "some checks unknown",
+        "green": "good record",
+        "middle": "in the middle",
+        "red": "weak record"
+      }
+    },
+    "ac": {
+      "h": "Auto-confirm rules",
+      "d": "Decides which new orders go straight to Confirmed and which stay in Processing. Each case below is answered Confirm by itself, Call list, or Red tag (a person decides). It only does what your Confirm button does: no money moves and nothing is blocked or cancelled. Every order shows on its timeline who confirmed it (a rule or a person) and why.",
+      "enabled": "Use these rules for new orders",
+      "presetH": "Fraud level",
+      "presetHelp": "A level fills the table below. Change any row and it becomes Custom.",
+      "preset": {
+        "low": "Low",
+        "normal": "Normal",
+        "strict": "Strict",
+        "custom": "Custom"
+      },
+      "summary": "{auto} cases confirm by themselves · {call} go to the call list · {person} get a red tag",
+      "caseH": "When the order is",
+      "answerH": "We do",
+      "case": {
+        "prepaid": "Paid in full online",
+        "delivery": "Only the delivery charge paid first",
+        "trusted": "Old customer, every parcel taken",
+        "goodScore": "New to us, courier score decides (green confirms, middle calls, red is tagged)",
+        "brandNew": "Brand-new number, no record anywhere",
+        "refused": "Refused a parcel before",
+        "refusedPaid": "Refused before, paid the delivery charge first",
+        "bigCod": "Big cash order (above the limit below)",
+        "suspicious": "Looks fake or a duplicate"
+      },
+      "act": {
+        "auto": "Confirm by itself",
+        "call": "Call list",
+        "person": "Red tag · a person decides"
+      },
+      "trustedMin": "Parcels taken that make an old customer trusted",
+      "trustedMax": "Most refusals a trusted customer may have",
+      "bigCod": "Cash order limit",
+      "bigCodHelp": "A cash order above this goes to the call list. Empty: no limit.",
+      "never": "Nothing is ever blocked or cancelled by itself, and a suspicious order is never confirmed by itself.",
+      "readOnly": "Only someone allowed to change the risk rules can change this.",
+      "unsaved": "Not saved yet",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Auto-confirm rules saved",
+      "discard": "Discard",
+      "err": {
+        "STALE": "Someone else saved this first; the newest is shown. Check it and save again.",
+        "INVALID_INPUT": "Check the numbers and answers; a suspicious order cannot be confirmed by itself.",
+        "FORBIDDEN": "You cannot change the risk rules.",
+        "forbidden": "You cannot change the risk rules.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Nothing was saved; try again.",
+        "other": "Something went wrong. Nothing was saved; try again."
+      },
+      "ev": {
+        "RULE": "Confirmed by rule: {case} ({why}){score}",
+        "STAFF": "Confirmed by {who}",
+        "call": "Auto-confirm: {case} ({why}) — a call was added to the call list",
+        "person": "Auto-confirm: {case} ({why}) — red tag, a person decides",
+        "score": ", courier score {n}/10"
+      },
+      "why": {
+        "suspicious": "looks suspicious",
+        "paidFull": "paid in full",
+        "paidCharge": "delivery charge paid first",
+        "refused": "refused before",
+        "refusedPaid": "refused before, charge paid first",
+        "bigCod": "big cash order",
+        "trusted": "old customer, parcels taken",
+        "scoreGreen": "good courier score",
+        "scoreMiddle": "courier score in the middle or partly unknown",
+        "scoreRed": "weak courier score",
+        "noRecord": "no record anywhere",
+        "watch": "on watch"
       }
     }
   }
