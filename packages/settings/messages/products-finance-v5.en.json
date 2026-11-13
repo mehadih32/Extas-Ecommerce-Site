@@ -20,5 +20,11 @@
       "label": "Report library",
       "help": "How many days of stock make a style \"restock now\", and after how many days an unsold style counts as sitting unsold."
     }
+  },
+  "home": {
+    "stuck": {
+      "label": "Orders stuck in the batch",
+      "help": "A new order that has waited longer than this many hours counts as stuck on Home (0 turns the age rule off). An order with an open risk alert counts as stuck whatever its age."
+    }
   }
 }

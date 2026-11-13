@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { budgetSchema, reportsLibrarySchema, cashbookSchema, productsFinanceV5Settings, shopRankingSchema } from '../src/registry-products-finance-v5';
+import { homeStuckSchema, budgetSchema, reportsLibrarySchema, cashbookSchema, productsFinanceV5Settings, shopRankingSchema } from '../src/registry-products-finance-v5';
 
 describe('wave 4 settings (PR 686–691)', () => {
   it('every key is in the registry, per store, owner-neutral, at a PR number, labelled in both languages, default valid', () => {
@@ -19,6 +19,14 @@ describe('wave 4 settings (PR 686–691)', () => {
         expect(lookup(messages[lang], s.helpKey!), `${key} ${lang} help`).toBeTruthy();
       }
     }
+  });
+
+  it('Home stuck orders: a day and a half by default, 0 turns the age rule off, nothing else allowed', () => {
+    const d = productsFinanceV5Settings['home.stuck'].default;
+    expect(d).toEqual({ afterHours: 36 });
+    expect(homeStuckSchema.safeParse({ afterHours: 0 }).success).toBe(true);
+    expect(homeStuckSchema.safeParse({ afterHours: -1 }).success).toBe(false);
+    expect(homeStuckSchema.safeParse({ afterHours: 12, x: 1 }).success).toBe(false);
   });
 
   it('shop ranking: the prototype weights, the nightly order off, nothing out of range', () => {

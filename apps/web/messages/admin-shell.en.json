@@ -542,7 +542,9 @@
       "handoverWaiting": "Parcels printed, waiting for the rider's handover",
       "packingCards": "Packing cards open, waiting for a person to decide",
       "packingCardsLate": "Packing cards past the hours to decide",
-      "exchangesRequested": "Exchange requests waiting for an answer"
+      "exchangesRequested": "Exchange requests waiting for an answer",
+      "batchStuck": "Orders stuck in this batch",
+      "courierMismatch": "Packed here, not entered at the courier"
     },
     "age": {
       "now": "just now",

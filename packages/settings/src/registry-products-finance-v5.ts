@@ -10,6 +10,7 @@ const V686 = 686;
 const V687 = 687;
 const V688 = 688;
 const V689 = 689;
+const V691 = 691;
 
 // ---- PR 686 · shop ranking -----------------------------------------------------------------------------------------
 
@@ -73,6 +74,16 @@ export const reportsLibrarySchema = z
   .strict();
 export type ReportsLibrarySettings = z.output<typeof reportsLibrarySchema>;
 
+// ---- PR 691 · Home "Do now" ----------------------------------------------------------------------------------------
+
+export const homeStuckSchema = z
+  .object({
+    /** A new order that waited longer than this many hours counts as stuck in the batch (0 = no age rule; open risk alerts still count). */
+    afterHours: z.number().int().min(0).max(720), // hardcode-ok: a guard (30 days)
+  })
+  .strict();
+export type HomeStuckSettings = z.output<typeof homeStuckSchema>;
+
 export const productsFinanceV5Settings = {
   'shop.ranking': setting({
     scope: 'store',
@@ -130,5 +141,18 @@ export const productsFinanceV5Settings = {
     isPublic: false,
     sortOrder: 40,
     version: V689,
+  }),
+  'home.stuck': setting({
+    scope: 'store',
+    schema: homeStuckSchema,
+    default: { afterHours: 36 }, // hardcode-ok: the prototype's day-and-a-half; the owner can change it
+    valueType: 'JSON',
+    group: 'orders',
+    labelKey: 'home.stuck.label',
+    helpKey: 'home.stuck.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 70,
+    version: V691,
   }),
 } as const;
