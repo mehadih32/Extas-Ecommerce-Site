@@ -7,18 +7,20 @@
 // customer's bag left before the checkout's number box: the same two messages, the offer under the offer rules). Seeing needs `orders.read`; acting `orders.confirm`; the card
 // `settings.write`. lib/admin-orders/incomplete.ts. Guide: docs/admin-guide/pages/orders/incomplete.md.
 import type { Metadata } from 'next';
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { IncompleteActions } from '@/components/admin/orders/IncompleteActions';
+import { IncompleteContact } from '@/components/admin/orders/IncompleteContact';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
-import { FOLLOW_UP_CHANNEL_ORDERS, incompleteOverview } from '@/lib/admin-orders/incomplete';
-import { callLink, HANDLED_NOTE_MAX, INCOMPLETE_VIEWS, viewOf, whatsAppLink } from '@/lib/admin-orders/incomplete-model';
+import { CALL_OUTCOMES, FOLLOW_UP_CHANNEL_ORDERS, incompleteOverview } from '@/lib/admin-orders/incomplete';
+import { callLink, HANDLED_NOTE_MAX, INCOMPLETE_RANGES, INCOMPLETE_VIEWS, rangeOf, viewOf, whatsAppLink } from '@/lib/admin-orders/incomplete-model';
 import { ageText, phoneText } from '@/lib/admin-orders/list';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -51,7 +53,17 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
   const view = withScreen(plain);
   const d = view.dict;
   const current = viewOf(sp.view);
-  const here = current === 'open' ? HERE : `${HERE}?view=${current}`;
+  const rangeNow = rangeOf(sp.range);
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const qs = (view_: string, range_: string, from_?: string | null, to_?: string | null) => {
+    const q = new URLSearchParams();
+    if (view_ !== 'open') q.set('view', view_);
+    if (range_ !== 'all') q.set('range', range_);
+    if (range_ === 'custom' && from_ && to_) (q.set('from', from_), q.set('to', to_));
+    const t_ = q.toString();
+    return t_ ? `${HERE}?${t_}` : HERE;
+  };
+  const here = qs(current, rangeNow, one(sp.from), one(sp.to));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -61,7 +73,7 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
       </div>
     );
   const me = access.guard.actor.staffUserId ?? null;
-  const o = await incompleteOverview({ db: access.deps.db, resolver: access.deps.resolver }, me, current);
+  const o = await incompleteOverview({ db: access.deps.db, resolver: access.deps.resolver }, me, current, { range: sp.range, from: one(sp.from), to: one(sp.to) });
   const now = (access.deps.now ?? (() => new Date()))();
   const canAct = access.guard.permissions?.has('orders.confirm') ?? false;
   const canSet = access.guard.permissions?.has('settings.write') ?? false;
@@ -92,6 +104,12 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     { kind: 'number', path: 'offerAfterHours', label: fu('offerAfterHours'), help: fu('offerAfterHoursHelp'), min: 1, max: 168 }, // hardcode-ok: the setting's own bounds
     { kind: 'text', path: 'offerCode', label: fu('offerCode'), help: fu('offerCodeHelp'), max: 40 }, // hardcode-ok: the setting's own bound
   ];
+  const v5 = (k: string) => g(`v5.${k}`);
+  const v5Texts: FieldsCardTexts = { ...cardTexts, h: v5('h'), d: v5('d') };
+  const v5Fields: FieldsCardField[] = [
+    { kind: 'switch', path: 'possibleMatch', label: v5('possibleMatch'), help: v5('possibleMatchHelp') },
+    ...(['forgot', 'size', 'delivery', 'offer'] as const).map((k) => ({ kind: 'text' as const, path: k, label: v5(k), help: v5(`${k}Help`), max: 500 })), // hardcode-ok: the setting's own bound
+  ];
   const bg = (k: string, vars?: Record<string, string | number>) => g(`bag.${k}`, vars);
   const bagTexts: FieldsCardTexts = { ...cardTexts, h: bg('h'), d: bg('d') };
   const bagFields: FieldsCardField[] = [
@@ -108,6 +126,29 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     { kind: 'number', path: 'offerOncePerDays', label: bg('offerOncePerDays'), help: bg('offerOncePerDaysHelp'), min: 1, max: 365 }, // hardcode-ok: the setting's own bounds
   ];
   const actTexts = { assign: g('assign'), nobody: g('nobody'), assignSave: g('assignSave'), assigned: g('assigned2'), markHandled: g('markHandled'), noteLabel: g('noteLabel'), notePlaceholder: g('notePlaceholder'), save: g('save'), cancel: g('cancel'), reopen: g('reopen'), done: g('done'), err };
+  const canOffer = access.guard.permissions?.has('rules.approve') ?? false;
+  const ct = (k: string) => g(`ct.${k}`);
+  const contactTexts = {
+    logCall: ct('logCall'),
+    outcomeLabel: ct('outcomeLabel'),
+    noteLabel: ct('noteLabel'),
+    save: ct('save'),
+    cancel: ct('cancel'),
+    message: ct('message'),
+    offerLabel: ct('offerLabel'),
+    offerPlaceholder: ct('offerPlaceholder'),
+    warn: ct('warn'),
+    openWhatsApp: ct('openWhatsApp'),
+    openSms: ct('openSms'),
+    confirmOrder: ct('confirmOrder'),
+    confirmAsk: ct('confirmAsk'),
+    confirmYes: ct('confirmYes'),
+    done: ct('done'),
+    ordered: ct('ordered'),
+    outcomes: Object.fromEntries(CALL_OUTCOMES.map((k) => [k, ct(`outcome.${k}`)])),
+    templates: Object.fromEntries(['forgot', 'size', 'delivery', 'offer'].map((k) => [k, ct(`tpl.${k}`)])),
+    err: { ...err, ...Object.fromEntries(['UNAVAILABLE', 'NO_BAG', 'NEEDS_PAYMENT', 'CHECKOUT'].map((k) => [k, g(`err.${k}`)])) },
+  };
   const name = (en_: string, bn_: string | null) => (view.lang === 'bn' ? bn_ || en_ : en_);
 
   return (
@@ -128,9 +169,30 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
         </Link>
       </p>
 
+      <nav className="a2-views inc-mt8" aria-label={g('filter.aria')} data-testid="inc-range">
+        {INCOMPLETE_RANGES.filter((x) => x !== 'custom').map((x) => (
+          <Link key={x} className={`a2-view${x === o.range.range ? ' on' : ''}`} href={qs(current, x)} aria-current={x === o.range.range ? 'page' : undefined} scroll={false}>
+            {g(`filter.${x}`)}
+          </Link>
+        ))}
+      </nav>
+      <form className="inc-row inc-mt8" method="get" action={HERE} data-testid="inc-custom">
+        {current !== 'open' ? <input type="hidden" name="view" value={current} /> : null}
+        <input type="hidden" name="range" value="custom" />
+        <label className="a2-lbl">
+          {g('filter.from')} <input className="a2-inp" type="date" name="from" defaultValue={o.range.from ?? ''} required />
+        </label>
+        <label className="a2-lbl">
+          {g('filter.to')} <input className="a2-inp" type="date" name="to" defaultValue={o.range.to ?? ''} required />
+        </label>
+        <button type="submit" className="a2-btn">
+          {g('filter.apply')}
+        </button>
+      </form>
+
       <nav className="a2-views inc-mt8" aria-label={g('viewsAria')} data-testid="inc-views">
         {INCOMPLETE_VIEWS.map((v) => (
-          <Link key={v} className={`a2-view${v === current ? ' on' : ''}`} href={v === 'open' ? HERE : `${HERE}?view=${v}`} aria-current={v === current ? 'page' : undefined} scroll={false} data-view={v}>
+          <Link key={v} className={`a2-view${v === current ? ' on' : ''}`} href={qs(v, o.range.range, o.range.from, o.range.to)} aria-current={v === current ? 'page' : undefined} scroll={false} data-view={v}>
             {g(`view.${v}`)}
             <span className="a2-cnt">{n(o.counts[v])}</span>
           </Link>
@@ -140,55 +202,83 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
       <section className="a2-sc" aria-label={g(`view.${current}`)} data-testid="inc-list">
         {o.rows.length ? (
           <ul className="inc-rows">
-            {o.rows.map((r) => (
-              <li key={r.id} className="inc-r" data-testid="inc-row" data-stage={r.stage}>
-                <p className="inc-top">
-                  <span className={`a2-pill ${r.stage === 'payment' ? 'warn' : r.stage === 'address' ? 'info' : 'line'}`}>{g(`stage.${r.stage}`)}</span>
-                  <span className="a2-sm a2-mute">{g('left', { age: ageText(view, new Date(r.lastAt), now) })}</span>
-                </p>
-                <p className="a2-sm inc-who">
-                  <b>{r.name ?? g('noName')}</b> · <span dir="ltr">{phoneText(r.phone)}</span>
-                </p>
-                {r.addressText ? <p className="a2-sm a2-mute inc-wrap">{r.addressText}</p> : null}
-                <p className="a2-sm inc-wrap">
-                  <span className="a2-mute">{g('bag')}: </span>
-                  {r.lines.length
-                    ? r.lines.map((l) => g('line', { qty: n(l.quantity), name: [name(l.nameEn, l.nameBn), l.size, l.colourEn ? name(l.colourEn, l.colourBn) : null].filter(Boolean).join(' · ') })).join(', ') + (r.more ? ` ${g('more', { n: n(r.more) })}` : '')
-                    : g('bagEmpty')}
-                  {r.lines.length ? ` · ${g('worth', { value: formatMoney(r.valueMinor, m) })}` : ''}
-                </p>
-                {r.channel ? (
-                  <p className="a2-sm a2-mute inc-wrap" data-testid="inc-channel">
-                    {g('channel')}: {[r.channel.platform, r.channel.source, r.channel.campaign, r.channel.landing ? g('landing') : null].filter(Boolean).join(' · ')}
-                  </p>
+            {o.rows.map((r, i) => (
+              <Fragment key={r.id}>
+                {i === 0 || o.rows[i - 1]!.day !== r.day ? (
+                  <li className="inc-day a2-sm" data-testid="inc-day" aria-hidden="false">
+                    <b>{new Intl.DateTimeFormat(view.locale, { dateStyle: 'full', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${r.day}T00:00:00Z`))}</b>
+                  </li>
                 ) : null}
-                {r.assignedTo && !r.handled ? <p className="a2-sm">{g('assigned', { name: r.assignedTo.name })}</p> : null}
-                {r.followUps.last ? (
-                  <p className="a2-sm a2-mute inc-wrap" data-testid="inc-followups">
-                    {fu(r.followUps.last.offer ? 'rowOffer' : 'row', { sent: n(r.followUps.sent), max: n(o.followUp.ceiling), when: ageText(view, new Date(r.followUps.last.at), now), channel: fu(`chName.${r.followUps.last.channel}`) })}
+                <li className="inc-r" data-testid="inc-row" data-stage={r.stage}>
+                  <p className="inc-top">
+                    <span className={`a2-pill ${r.stage === 'payment' ? 'warn' : r.stage === 'address' ? 'info' : 'line'}`}>{g(`stage.${r.stage}`)}</span>
+                    <span className="a2-sm a2-mute">{g('left', { age: ageText(view, new Date(r.lastAt), now) })}</span>
                   </p>
-                ) : null}
-                {r.handled ? (
-                  <p className="a2-sm inc-wrap" data-testid="inc-handled-line">
-                    <span className="a2-pill g">{r.handled.by ? g('handledBy', { when: when(r.handled.at), name: r.handled.by }) : g('handledOn', { when: when(r.handled.at) })}</span>
-                    {r.handled.note ? ` ${r.handled.note}` : ''}
+                  <p className="a2-sm inc-who">
+                    <b>{r.name ?? g('noName')}</b> · <span dir="ltr">{phoneText(r.phone)}</span>{' '}
+                    {r.known ? (
+                      <span className="a2-pill g" data-testid="inc-known">
+                        {g('known')}
+                      </span>
+                    ) : null}{' '}
+                    {r.possibleMatch ? (
+                      <span className="a2-pill warn" title={g('possibleHelp')} data-testid="inc-possible">
+                        {g('possible')}
+                      </span>
+                    ) : null}
                   </p>
-                ) : null}
-                <div className="inc-row">
-                  <a className="a2-btn" href={whatsAppLink(r.phone)} target="_blank" rel="noopener noreferrer" data-testid="inc-wa">
-                    {g('whatsapp')}
-                  </a>
-                  <a className="a2-btn" href={callLink(r.phone)} data-testid="inc-call">
-                    {g('call')}
-                  </a>
-                  {r.customerId && canCustomer ? (
-                    <Link className="a2-btn" href={`/admin/customers/${r.customerId}`}>
-                      {g('customer')}
-                    </Link>
+                  {r.ordered ? (
+                    <p className="a2-sm inc-wrap" data-testid="inc-ordered">
+                      <span className="a2-pill g">{r.ordered.byPhone ? g('orderedByPhone') : g('orderedAs', { number: r.ordered.number, when: ageText(view, new Date(r.ordered.at), now) })}</span> {canAct ? <Link href={`/admin/orders/${r.ordered.orderId}`}>{g('orderedOpen')}</Link> : null}
+                    </p>
                   ) : null}
-                </div>
-                {canAct ? <IncompleteActions url={API} id={r.id} handled={!!r.handled} assignedToId={r.assignedTo?.id ?? null} staff={o.staff} noteMax={HANDLED_NOTE_MAX} texts={actTexts} /> : null}
-              </li>
+                  {r.contacts.length ? (
+                    <ul className="a2-sm a2-mute inc-wrap" data-testid="inc-contacts">
+                      {r.contacts.map((x, j) => (
+                        <li key={j}>{g('contactLine', { who: x.by ?? '', kind: g(`kind.${x.kind}`), what: x.kind === 'MESSAGE' ? g(`ct.tpl.${x.outcome}`) : g(`ct.outcome.${x.outcome}`), when: when(x.at) }) + (x.note ? ` · ${x.note}` : '')}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {r.addressText ? <p className="a2-sm a2-mute inc-wrap">{r.addressText}</p> : null}
+                  <p className="a2-sm inc-wrap">
+                    <span className="a2-mute">{g('bag')}: </span>
+                    {r.lines.length ? r.lines.map((l) => g('line', { qty: n(l.quantity), name: [name(l.nameEn, l.nameBn), l.size, l.colourEn ? name(l.colourEn, l.colourBn) : null].filter(Boolean).join(' · ') })).join(', ') + (r.more ? ` ${g('more', { n: n(r.more) })}` : '') : g('bagEmpty')}
+                    {r.lines.length ? ` · ${g('worth', { value: formatMoney(r.valueMinor, m) })}` : ''}
+                  </p>
+                  {r.channel ? (
+                    <p className="a2-sm a2-mute inc-wrap" data-testid="inc-channel">
+                      {g('channel')}: {[r.channel.platform, r.channel.source, r.channel.campaign, r.channel.landing ? g('landing') : null].filter(Boolean).join(' · ')}
+                    </p>
+                  ) : null}
+                  {r.assignedTo && !r.handled ? <p className="a2-sm">{g('assigned', { name: r.assignedTo.name })}</p> : null}
+                  {r.followUps.last ? (
+                    <p className="a2-sm a2-mute inc-wrap" data-testid="inc-followups">
+                      {fu(r.followUps.last.offer ? 'rowOffer' : 'row', { sent: n(r.followUps.sent), max: n(o.followUp.ceiling), when: ageText(view, new Date(r.followUps.last.at), now), channel: fu(`chName.${r.followUps.last.channel}`) })}
+                    </p>
+                  ) : null}
+                  {r.handled ? (
+                    <p className="a2-sm inc-wrap" data-testid="inc-handled-line">
+                      <span className="a2-pill g">{r.handled.by ? g('handledBy', { when: when(r.handled.at), name: r.handled.by }) : g('handledOn', { when: when(r.handled.at) })}</span>
+                      {r.handled.note ? ` ${r.handled.note}` : ''}
+                    </p>
+                  ) : null}
+                  <div className="inc-row">
+                    <a className="a2-btn" href={whatsAppLink(r.phone)} target="_blank" rel="noopener noreferrer" data-testid="inc-wa">
+                      {g('whatsapp')}
+                    </a>
+                    <a className="a2-btn" href={callLink(r.phone)} data-testid="inc-call">
+                      {g('call')}
+                    </a>
+                    {r.customerId && canCustomer ? (
+                      <Link className="a2-btn" href={`/admin/customers/${r.customerId}`}>
+                        {g('customer')}
+                      </Link>
+                    ) : null}
+                  </div>
+                  {canAct && !r.ordered ? <IncompleteContact url={API} id={r.id} outcomes={CALL_OUTCOMES} templates={['forgot', 'size', 'delivery', 'offer']} canOffer={canOffer} noteMax={HANDLED_NOTE_MAX} texts={contactTexts} /> : null}
+                  {canAct && !r.ordered ? <IncompleteActions url={API} id={r.id} handled={!!r.handled} assignedToId={r.assignedTo?.id ?? null} staff={o.staff} noteMax={HANDLED_NOTE_MAX} texts={actTexts} /> : null}
+                </li>
+              </Fragment>
             ))}
           </ul>
         ) : (
@@ -196,6 +286,21 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
             {g(`empty.${current}`)}
           </p>
         )}
+      </section>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="inc-journey-h" data-testid="inc-journey">
+        <h2 className="a2-h3" id="inc-journey-h">
+          {g('journey.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{g('journey.d')}</p>
+        <ul className="inc-rows">
+          {(['phone', 'address', 'payment', 'orderedLater', 'recoveredByPhone'] as const).map((k) => (
+            <li key={k} className="inc-r a2-sm" data-testid={`inc-j-${k}`}>
+              {g(`journey.${k}`)}: <b>{n(o.journey[k])}</b>
+            </li>
+          ))}
+        </ul>
+        <p className="a2-sm a2-mute">{g('journey.note')}</p>
       </section>
 
       <section className="a2-sc a2-mt12" aria-labelledby="inc-unpaid-h" data-testid="inc-unpaid">
@@ -264,6 +369,9 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
           {fu('stats', { sent: n(o.followUp.sent), recovered: n(o.followUp.recovered) })}
         </p>
         <FieldsCard url={API} screen={{ key: o.followUp.card.key, value: o.followUp.card.value, version: o.followUp.card.version }} fields={fuFields} texts={fuTexts} canEdit={canSet} testId="inc-fu-card" />
+      </div>
+      <div className="a2-mt12" data-testid="inc-v5">
+        <FieldsCard url={API} screen={{ key: o.v5Card.key, value: o.v5Card.value, version: o.v5Card.version }} fields={v5Fields} texts={v5Texts} canEdit={canSet} testId="inc-v5-card" />
       </div>
       <div className="a2-mt12" data-testid="inc-bags">
         <p className="a2-sm a2-mute inc-wrap" data-testid="inc-bags-stats">

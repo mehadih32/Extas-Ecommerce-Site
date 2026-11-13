@@ -107,7 +107,8 @@ export async function confirmBy(deps: OrdersDeps, r: { storeId: number; orderId:
     command: 'confirm',
     effect: async (tx, o, _f, { now }) => {
       const pushId = await queueErpOrder(deps, tx, o);
-      return { data: { confirmedAt: now }, eventData: { erpPushId: pushId } };
+      // S28 · PR 663: who confirmed is always on the event (a person here; the auto-confirm rules write 'RULE')
+      return { data: { confirmedAt: now }, eventData: { erpPushId: pushId, confirmedBy: by.actorType } };
     },
   }, opts);
 }

@@ -2,15 +2,16 @@
   "inc": {
     "metaTitle": "Incomplete orders · Orders",
     "title": "Incomplete orders",
-    "sub": "Customers who typed their number at checkout and left without ordering, hottest first. Call or WhatsApp them, hand one to a teammate, mark it handled.",
-    "note": "Only what the customer typed is kept, and only while the switch below is on. Nothing here places an order; a follow-up message goes only while its own switch below is on, and only to customers who said yes to offers.",
+    "sub": "Customers who typed their number at checkout and left without ordering, newest first, day by day. Call or WhatsApp them, hand one to a teammate, confirm the order by phone, mark it handled.",
+    "note": "Only what the customer typed on the visible form is kept, and only while the switch below is on. Nothing is sent from here: a ready message only opens WhatsApp or SMS for you to press send. Confirm as order places a Cash on Delivery order the same way the website does; no money is asked or moved. A follow-up message goes only while its own switch below is on, and only to customers who said yes to offers.",
     "off": "Keeping unfinished checkouts is off, so nothing new is kept. Switch it on in the card at the bottom of this page.",
     "allLink": "All orders",
     "viewsAria": "Lists",
     "view": {
       "open": "Open",
       "mine": "Given to me",
-      "handled": "Handled"
+      "handled": "Handled",
+      "later": "Ordered later"
     },
     "stage": {
       "phone": "Typed phone",
@@ -66,7 +67,8 @@
     "empty": {
       "open": "No incomplete orders right now.",
       "mine": "Nothing is given to you.",
-      "handled": "Nothing handled yet."
+      "handled": "Nothing handled yet.",
+      "later": "Nobody has ordered after leaving yet."
     },
     "unpaid": {
       "h": "Payments not finished",
@@ -108,7 +110,11 @@
       "forbidden": "You do not have permission for this.",
       "unauthorized": "Please sign in again.",
       "network": "No connection. Try again.",
-      "other": "Something went wrong. Try again."
+      "other": "Something went wrong. Try again.",
+      "UNAVAILABLE": "Ordering from here is not set up.",
+      "NO_BAG": "His bag is gone, so there is nothing to order.",
+      "NEEDS_PAYMENT": "This order needs money first, so only the customer can place it.",
+      "CHECKOUT": "The checkout refused this order (stock, address or price). Check the bag and try again."
     },
     "fu": {
       "h": "Follow-up messages",
@@ -149,6 +155,87 @@
         "SMS": "SMS",
         "WHATSAPP": "WhatsApp"
       }
+    },
+    "filter": {
+      "aria": "Filter by date",
+      "all": "All days",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "Last 7 days",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom",
+      "from": "From",
+      "to": "To",
+      "apply": "Show"
+    },
+    "day": "{day}",
+    "known": "Known customer",
+    "possible": "Possible match",
+    "possibleHelp": "Same connection as an earlier customer, different phone. Check before you treat them as one person.",
+    "orderedAs": "Ordered {number} {when}",
+    "orderedByPhone": "Recovered by phone",
+    "orderedOpen": "Open order",
+    "contactLine": "{who} · {kind} · {what} · {when}",
+    "kind": {
+      "CALL": "Call",
+      "MESSAGE": "Message"
+    },
+    "journey": {
+      "h": "Journey report",
+      "d": "How far the left checkouts of these days got, and how many ordered afterwards.",
+      "phone": "Stopped at phone",
+      "address": "Stopped at address",
+      "payment": "Stopped at payment",
+      "orderedLater": "Ordered later",
+      "recoveredByPhone": "Recovered by phone",
+      "note": "Device and step-by-step timing are not kept."
+    },
+    "ct": {
+      "logCall": "Log a call",
+      "outcomeLabel": "What the call found",
+      "noteLabel": "Note",
+      "save": "Save",
+      "cancel": "Cancel",
+      "message": "Ready message",
+      "warn": "This only opens WhatsApp or SMS with the words filled in. You press send yourself. Write your own message only in the app.",
+      "offerLabel": "Offer words",
+      "offerPlaceholder": "The offer, typed by you",
+      "openWhatsApp": "Open WhatsApp",
+      "openSms": "Open SMS",
+      "confirmOrder": "Confirm as order",
+      "confirmAsk": "He agreed on the phone? This places a Cash on Delivery order from his bag, the same way the website does.",
+      "confirmYes": "Yes, place the order",
+      "done": "Saved",
+      "ordered": "Order placed",
+      "outcome": {
+        "ANSWERED": "Answered",
+        "NO_ANSWER": "No answer",
+        "WILL_ORDER": "Will order",
+        "NOT_INTERESTED": "Not interested",
+        "WRONG_NUMBER": "Wrong number",
+        "ORDERED": "Ordered by phone"
+      },
+      "tpl": {
+        "forgot": "Forgot something",
+        "size": "Size help",
+        "delivery": "Delivery",
+        "offer": "Offer"
+      }
+    },
+    "v5": {
+      "h": "Possible match and ready messages",
+      "d": "Marks an unfinished checkout whose connection matches an earlier customer under a different phone, and keeps the four ready messages the team can open in WhatsApp or SMS. Words in braces ({name}, {items}, {link}, {offer}) are filled in when the message opens.",
+      "possibleMatch": "Mark a possible match",
+      "possibleMatchHelp": "Off as shipped. It only marks; nothing is attached or merged.",
+      "forgot": "Message: forgot something",
+      "forgotHelp": "Sent by a person after opening WhatsApp or SMS.",
+      "size": "Message: size help",
+      "sizeHelp": "For a customer unsure about the size.",
+      "delivery": "Message: delivery",
+      "deliveryHelp": "Tells the customer you deliver to the area.",
+      "offer": "Message: offer",
+      "offerHelp": "Only someone who may approve a discount can open it, and types the offer words themselves."
     }
   }
 }
