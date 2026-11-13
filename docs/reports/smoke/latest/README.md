@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-13 16:56 (Asia/Dhaka)
+# Smoke test · 2026-11-13 18:02 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (606টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `a00b197a9d12` · after deploy · result **PASS** (606 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `3bb26c27cff8` · after deploy · result **PASS** (606 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -305,7 +305,7 @@ Site: https://new.extas.com.bd · commit `a00b197a9d12` · after deploy · resul
 | `/admin/reports/funnels` | phone | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d452-da44-7213-b909-9ecfd3a6f0b2` | phone | 200 | `/admin/reports/health/history/01a1d452-da44-7213-b909-9ecfd3a6f0b2` | ok | — |
+| `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | phone | 200 | `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
@@ -608,9 +608,9 @@ Site: https://new.extas.com.bd · commit `a00b197a9d12` · after deploy · resul
 | `/admin/reports/funnels` | desktop | 200 | `/admin/reports/funnels` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d452-da44-7213-b909-9ecfd3a6f0b2` | desktop | 200 | `/admin/reports/health/history/01a1d452-da44-7213-b909-9ecfd3a6f0b2` | ok | — |
+| `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | desktop | 200 | `/admin/reports/health/history/01a1d496-4e32-7322-8958-f0e5ef923a38` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 
-Database (PR 139): ok: 37 tables append-only; the app connects as extas_app.
+Database (PR 139): ok: 39 tables append-only; the app connects as extas_app.
