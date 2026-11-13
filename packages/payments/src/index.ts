@@ -38,6 +38,7 @@ export * from './cod';
 // S28 · PR 670: one courier's money for Courier 360 (cash held, statements, lines that do not match)
 export * from './courier-money';
 export * from './courier-payouts';
+export * from './courier-statement';
 export * from './set-split';
 export * from './gateway';
 export * from './advance-link';
