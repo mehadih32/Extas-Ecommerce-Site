@@ -273,6 +273,12 @@
     "monthlyCapMinor": {
       "label": "Monthly AI spending cap",
       "help": "Empty = not set, and AI stays off. Your decision: changing it needs your written OK."
+    },
+    "modelAutoSuggest": {
+      "enabled": {
+        "label": "Model auto-suggest",
+        "help": "Off by default. When on, the AI Cost Book shows a suggested model per job (including qualified free models) with its quality score, cost and a \"Re-test now\" button. It only suggests — your own model pick never changes by itself."
+      }
     }
   },
   "theme": {

@@ -888,6 +888,22 @@ export const registry = {
     sortOrder: 30,
     version: 3,
   }),
+  // ---- S15 · PR 580 · model auto-suggest with free-model qualification: off until the owner turns it on (CLAUDE.md
+  // rule — every AI feature ships off; this never flips the master switch). While off, the Cost Book shows no
+  // suggestion column and "Re-test now" is hidden; the owner's own per-job model pick (PR 312) is unaffected either
+  // way. ----
+  'ai.modelAutoSuggest.enabled': setting({
+    schema: z.boolean(),
+    default: false,
+    scope: 'installation',
+    valueType: 'BOOLEAN',
+    group: 'ai',
+    labelKey: 'ai.modelAutoSuggest.enabled.label',
+    helpKey: 'ai.modelAutoSuggest.enabled.help',
+    isOwnerData: false,
+    sortOrder: 40,
+    version: 310,
+  }),
 
   // ---- PR 508 · theme: which complete theme the shop wears (D table: Classic) and the large-text switch (off). The
   // theme's colour and font tokens belong to the design-token file (Shilpi, S02), not to this registry. ----

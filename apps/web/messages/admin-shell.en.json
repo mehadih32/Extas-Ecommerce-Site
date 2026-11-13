@@ -166,6 +166,7 @@
       },
       "ai": {
         "control": "Control room",
+        "models": "Model picks",
         "agents": "Agents",
         "audit": "Checklist audit",
         "costBook": "Cost Book",

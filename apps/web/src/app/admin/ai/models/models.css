@@ -1,0 +1,79 @@
+/* S15 · PR 580 (C2.4) — AI › Model picks (/admin/ai/models). Uses the shared --lm- and a2- theme tokens, so it
+   needs no colour literal of its own (the hardcode guard checks CSS files too). */
+.adm2 .models-off-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.adm2 .models-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.adm2 .models-switch-row {
+  align-items: center;
+  gap: 10px;
+}
+.adm2 .models-bulk {
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+}
+.adm2 .models-job {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm2 .models-job-h {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.adm2 .models-job-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .models-agent {
+  white-space: nowrap;
+}
+.adm2 .models-now-sug {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .models-why {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.adm2 .models-why.same {
+  opacity: 0.8;
+}
+.adm2 .models-saving {
+  margin-top: 2px;
+}
+.adm2 .models-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+.adm2 .models-scores {
+  margin-top: 4px;
+}
+.adm2 .models-scores summary {
+  cursor: pointer;
+}
+.adm2 .models-cand-tbl td,
+.adm2 .models-cand-tbl th {
+  white-space: nowrap;
+}

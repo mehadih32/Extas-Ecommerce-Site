@@ -1,4 +1,67 @@
 {
+  "aiModels": {
+    "metaTitle": "Model picks",
+    "title": "Model picks · free models",
+    "sub": "For every job, the cheapest model that still clears its own quality bar — free models qualify the same way as paid ones, so cost falls only when quality holds.",
+    "honestNote": "Quality is a structural estimate (how well a model's own size class matches what the job needs) — no live model-grading harness exists yet, so this is a starting point, never a claim of a real per-run measurement. Press Re-test now to write a fresh, real reading. Cost is shown in US dollars, the same way every AI vendor bills.",
+    "off": {
+      "title": "Model auto-suggest is off",
+      "body": "Off by default (every AI feature ships off). Turn it on to see a suggested model per job, including qualified free models, with its own quality score and cost.",
+      "switchLabel": "Model auto-suggest: on or off",
+      "ownerOnly": "Owner only",
+      "toastOn": "Model auto-suggest is on",
+      "toastOff": "Model auto-suggest is off",
+      "toastFailed": "Could not change the switch"
+    },
+    "kpis": {
+      "label": "At a glance",
+      "jobs": "Agent jobs",
+      "jobsSub": "each against its own quality bar",
+      "waiting": "Better picks waiting",
+      "waitingSub": "same quality, lower cost",
+      "saving": "Monthly saving",
+      "savingSub": "if every suggestion is accepted",
+      "free": "Free models in the pool",
+      "freeSub": "qualified like paid ones"
+    },
+    "actions": {
+      "acceptAll": "Accept all {n} suggestions",
+      "acceptAllNone": "Nothing to accept — every job already uses its best tested pick",
+      "acceptAllBusy": "Accepting…",
+      "acceptAllDone": "{n} job(s) switched — about {saving} saved a month, same quality",
+      "acceptAllFailed": "Could not accept the suggestions",
+      "retestAll": "Re-test all",
+      "retestAllBusy": "Testing all…",
+      "retestAllDone": "Every job re-tested against today's catalogue and routing policy",
+      "retestAllFailed": "Could not re-test every job"
+    },
+    "search": { "label": "Search jobs", "placeholder": "Search by job, section or agent…", "none": "No job matches that search." },
+    "job": {
+      "now": "Now",
+      "suggested": "Suggested",
+      "none": "—",
+      "testedAt": "Tested {when}",
+      "notTested": "Not tested yet",
+      "freeBadge": "FREE"
+    },
+    "why": {
+      "notTested": "Not tested yet — press Re-test now to see whether a cheaper model, including a free one, still clears this job's own quality bar.",
+      "none": "No candidate has been tested and passed this job's own quality bar yet.",
+      "same": "Keep {model} — it is already the cheapest tested model that passes the quality bar.",
+      "switch": "Use {model} for this job — it scores {score} (bar {bar} = {pct}% of the best, {best}), so quality stays the same, and it costs {cost} per 100 runs instead of {curCost}.",
+      "currentNotPassing": " The current model does not pass the bar."
+    },
+    "saving": { "line": "Saves about {amount} a month if accepted." },
+    "accept": { "label": "Accept", "busyLabel": "Accepting…", "toastDone": "{job} now uses {model}", "toastFailed": "Could not accept the suggestion" },
+    "pick": { "label": "Or pick for {job}", "toastChanged": "Model changed", "toastFailed": "Could not change the model", "recommended": "Claude's own pick" },
+    "retest": { "label": "Re-test now", "busyLabel": "Testing…", "toastDone": "Re-tested against today's catalogue and routing policy", "toastFailed": "Could not re-test this job" },
+    "bar": { "label": "Quality bar for {job}", "toastChanged": "Quality bar: {pct}% of the best model", "toastFailed": "Could not change the quality bar" },
+    "allScores": "All scores",
+    "col": { "model": "Model", "quality": "Quality", "cost": "US$ / 100 runs", "note": "Note" },
+    "status": { "pass": "pass", "fail": "fail", "blocked": "blocked" },
+    "blockedNote": "Blocked by data routing — personal and business data never uses a free model.",
+    "maskedNote": "Allowed, with masking (names and phone numbers hidden first)."
+  },
   "aiControl": {
     "metaTitle": "AI Center",
     "title": "AI Center",
