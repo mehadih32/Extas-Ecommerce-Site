@@ -186,7 +186,7 @@ export async function marketingPlan(deps: OverviewDeps, days: number): Promise<P
     .filter((i) => (i.lane === 'campaign' || i.lane === 'ads') && i.state !== 'ended' && i.state !== 'off')
     .map((i) => ({ id: i.id, title: i.title.en, starts: i.starts, ends: i.ends, open: i.open }));
   const pairs = overlaps(live).map(([a, b]) => ({ a: a.title, b: b.title }));
-  const low = lowStockAt > 0 ? await deps.db.stockLevel.groupBy({ by: ['variantId'], where: { variant: { storeId: S } }, _sum: { available: true }, having: { available: { _sum: { lte: lowStockAt } } }, take: 200 }) : []; // hardcode-ok: a list guard
+  const low = lowStockAt > 0 ? await deps.db.stockLevel.groupBy({ by: ['variantId'], where: { variant: { storeId: S } }, _sum: { available: true }, having: { available: { _sum: { lte: lowStockAt } } }, orderBy: { variantId: 'asc' }, take: 200 }) : []; // hardcode-ok: a list guard
   const variantIds = low.map((l) => l.variantId);
   const vs = variantIds.length ? await deps.db.productVariant.findMany({ where: { id: { in: variantIds }, storeId: S, product: { archivedAt: null } }, select: { id: true, product: { select: { id: true, nameEn: true } } } }) : [];
   const availOf = new Map(low.map((l) => [l.variantId, l._sum?.available ?? 0]));

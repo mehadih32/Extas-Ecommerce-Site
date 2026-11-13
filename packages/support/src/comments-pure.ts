@@ -36,7 +36,7 @@ export function hasWord(text: string, words: readonly string[]): boolean {
   return words.some((w) => {
     const x = plainText(w.trim());
     if (!x) return false;
-    return /[a-z0-9]/.test(x) && !/[^\x00-\x7f]/.test(x) ? new RegExp(`(?:^|[^a-z0-9])${escapeRe(x)}(?:$|[^a-z0-9])`).test(t) : t.includes(x);
+    return /[a-z0-9]/.test(x) && !/[\u0080-\uffff]/.test(x) ? new RegExp(`(?:^|[^a-z0-9])${escapeRe(x)}(?:$|[^a-z0-9])`).test(t) : t.includes(x);
   });
 }
 
