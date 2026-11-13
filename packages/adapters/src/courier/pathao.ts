@@ -71,6 +71,8 @@ export const pathaoCapabilities: CourierCapabilities = {
   cancel: false,
   // follow-up 373: no lookup by the shop's reference (a lost answer is closed by staff from the Pathao panel)
   lookupByRef: false,
+  // PR 671: Pathao pays by invoice on its own schedule: the shop only reads (no request)
+  payouts: 'read',
 };
 
 /** How the practice Pathao says each step, in Pathao's own words (lost, damaged: words it has none for). */
@@ -285,6 +287,16 @@ export function createPathaoClient(opts: ClientOptions): CourierApi {
         if ((typeof id === 'number' || typeof id === 'string') && typeof name === 'string' && name.trim()) out.push({ id: String(id), name: name.trim() });
       }
       return out;
+    },
+    // PR 671: Pathao has no payment request. Its payments are read, never asked for; the public merchant API publishes no
+    // payment list yet, so a live read says so and the payments come through the statement the shop imports.
+    payouts: {
+      async status() {
+        throw new AdapterError('Pathao gives no payment list through its API yet: its payments come on the statement the shop imports');
+      },
+      async list() {
+        throw new AdapterError('Pathao gives no payment list through its API yet: its payments come on the statement the shop imports');
+      },
     },
     async health() {
       await bearer(true);

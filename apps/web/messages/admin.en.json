@@ -425,6 +425,15 @@
         "baseUrl": "Address — only for a test server"
       }
     },
+    "redx": {
+      "name": "RedX Courier",
+      "desc": "Book parcels and read their status. Practice mode until the access token is in and the test passes",
+      "fields": {
+        "accessToken": "Access token (RedX merchant panel → API)",
+        "pickupStoreId": "RedX pickup store id — optional (RedX panel → Stores; left empty, RedX uses the account's default)",
+        "baseUrl": "Address — only for a test server"
+      }
+    },
     "steadfastFraud": {
       "name": "Steadfast fraud check",
       "desc": "How many of a number's parcels Steadfast delivered and how many were cancelled or refused, asked at checkout. Never asked until the keys are in and the test passes",
@@ -760,7 +769,8 @@
     "providers": {
       "mockCourier": "Practice courier",
       "steadfast": "Steadfast",
-      "pathao": "Pathao"
+      "pathao": "Pathao",
+      "redx": "RedX"
     },
     "practice": "Practice — nothing is sent to a courier",
     "booking": {
