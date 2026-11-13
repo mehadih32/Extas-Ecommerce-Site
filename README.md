@@ -4195,6 +4195,7 @@ In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 —
 - PR 694 — Live-selling capture. Live sessions with product codes, comments like P1 L 2 pcs read into pieces, Make draft puts the piece in the chat bag (no order), practice comments, setting off by default.
 - PR 695 — Influencers and affiliates. Partners with a personal code (a coupon's code); commission on delivered orders only after hold days; append-only payout ledger with reversal rows; the Pay action is off until the owner says so (owner decision, item 7) and writes a cost line when on. Prisma Affiliate, AffiliateCode, AffiliatePayout.
 - PR 696 — Meta catalogue feed. Facebook and Instagram catalogue feed at /feeds/meta.xml beside the Google feed (same products, photos, prices; Meta's words and limits), an issue list per product, switch off by default.
+- PR 697 — Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders.
 
 ---
 
@@ -4207,6 +4208,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | PR [697](docs/stages/S28.md#pr-697) | 13 Nov | S28 wave 5a: Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders. |
 | pending | PR [696](docs/stages/S28.md#pr-696) | 13 Nov | S28 wave 5a: Meta catalogue feed. Facebook and Instagram catalogue feed at /feeds/meta.xml beside the Google feed (same products, photos, prices; Meta's words and limits), an issue list per product, switch off by default. |
 | pending | PR [695](docs/stages/S28.md#pr-695) | 13 Nov | S28 wave 5a: Influencers and affiliates. Partners with a personal code (a coupon's code); commission on delivered orders only after hold days; append-only payout ledger with reversal rows; the Pay action is off until the owner says so (owner decision, item 7) and writes a cost line when on. Prisma Affiliate, AffiliateCode, AffiliatePayout. |
 | pending | PR [694](docs/stages/S28.md#pr-694) | 13 Nov | S28 wave 5a: Live-selling capture. Live sessions with product codes, comments like P1 L 2 pcs read into pieces, Make draft puts the piece in the chat bag (no order), practice comments, setting off by default. |

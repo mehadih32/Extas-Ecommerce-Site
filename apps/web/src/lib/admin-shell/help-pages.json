@@ -142,6 +142,7 @@
     { "id": "marketing/geo-guide", "route": "/admin/marketing/geo-guide" },
     { "id": "marketing/merchant-feed", "route": "/admin/marketing/merchant-feed" },
     { "id": "marketing/meta-feed", "route": "/admin/marketing/meta-feed" },
+    { "id": "marketing/message-campaigns", "route": "/admin/marketing/message-campaigns" },
     { "id": "marketing/intel", "route": "/admin/marketing/intel" },
     { "id": "money/overview", "route": "/admin/money" },
     { "id": "money/refunds", "route": "/admin/money/refunds" },
