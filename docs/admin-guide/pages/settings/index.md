@@ -19,5 +19,6 @@
 - [অ্যাডমিনের চেহারা](look.md) — প্রতিটা পাতার ডিজাইন (টিমের আর নিজের) আর গাইড কোথায় খুলবে (`/admin/settings/look`)
 - [স্টাফের নিয়ন্ত্রণ](staff-controls.md) — রোল ধরে ছাড়ের সীমা, ফোন-ঠিকানা লুকানো, প্যাকার রোল, দিনশেষের টাকার হিসাব (`/admin/settings/staff-controls`)
 - [নতুন করে শুরু](start-fresh.md) — লাইভে যাওয়ার দিন একবার: টেস্ট ডেটা মুছে শূন্য থেকে শুরু (`/admin/settings/start-fresh`)
+- [Telegram অনুমোদন](telegram-approvals.md) — জরুরি টাকার সিদ্ধান্ত ফোন থেকে, PIN দিয়ে (`/admin/settings/telegram-approvals`)
 
 বড় গাইড: [চাবি ও সংযোগ](../../integrations.md) · [অ্যাডমিনের চেহারা](../../admin-look.md) · পরিকল্পনা: [সেটিংস](../../settings.md)।

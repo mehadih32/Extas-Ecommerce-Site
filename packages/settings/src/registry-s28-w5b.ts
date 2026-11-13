@@ -54,6 +54,27 @@ export const bulkOrdersSchema = z
   .strict();
 export type BulkOrdersSettings = z.output<typeof bulkOrdersSchema>;
 
+/**
+ * PR 703 — urgent approvals on Telegram. Off until the owner turns them on; which kinds are asked, what a "big" COD order
+ * is, how long Telegram's buttons stay live, and the wrong-PIN limits (an alarm from the 5th in a day, a lock at the 20th
+ * until the owner unlocks it in the ERP with the PIN).
+ */
+export const telegramApprovalsSchema = z
+  .object({
+    enabled: z.boolean(),
+    refund: z.boolean(),
+    price: z.boolean(),
+    cod: z.boolean(),
+    codOverMinor: z.number().int().min(0).max(100_000_000),
+    waitMinutes: z.number().int().min(5).max(1440),
+    pinAlarmPerDay: z.number().int().min(1).max(100),
+    pinLockPerDay: z.number().int().min(1).max(1000),
+    /** Set by the server at the lock, cleared by the owner (PIN) in the ERP; null = not locked. */
+    lockedAt: z.string().nullable(),
+  })
+  .strict();
+export type TelegramApprovalsSettings = z.output<typeof telegramApprovalsSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -81,5 +102,14 @@ export const s28W5bSettings = {
     helpKey: 'bulk.orders.help',
     sortOrder: 724,
     version: 704,
+  }),
+  'telegram.approvals': setting({
+    ...base,
+    schema: telegramApprovalsSchema,
+    default: { enabled: false, refund: true, price: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 5, pinLockPerDay: 20, lockedAt: null }, // hardcode-ok: the setting's own shipped default, editable on the screen
+    labelKey: 'telegram.approvals.label',
+    helpKey: 'telegram.approvals.help',
+    sortOrder: 723,
+    version: 703,
   }),
 };

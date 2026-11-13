@@ -1,0 +1,82 @@
+{
+  "telegramApprovals": {
+    "metaTitle": "Telegram approvals",
+    "title": "Urgent approvals on Telegram",
+    "sub": "Money decisions from your phone, with your PIN.",
+    "owner": "Only the owner can use this page.",
+    "mode": {
+      "LIVE": "The bot is connected.",
+      "MOCK": "The bot is not connected yet (Keys & connections). Nothing is sent to Telegram."
+    },
+    "card": {
+      "title": "Settings",
+      "on": "Send urgent approvals to my Telegram",
+      "help": "Tap Approve or Reject, then type your PIN in the chat. The PIN message is deleted at once.",
+      "refund": "Refund of a prepaid order that was cancelled",
+      "price": "Price changes",
+      "cod": "Big COD orders",
+      "codOver": "Big COD means over (Tk)",
+      "wait": "Buttons stay live for (minutes)",
+      "wait2": "After that it waits here; nothing happens by itself.",
+      "pin": "Owner PIN",
+      "save": "Save settings",
+      "saved": "Settings saved.",
+      "connect": "Connect the buttons",
+      "connected": "The bot now sends its button taps to the ERP.",
+      "note": "Only the owner’s Telegram can approve. 5 wrong PINs in a day raise an alarm; 20 stop Telegram approvals until you unlock them here."
+    },
+    "example": {
+      "button": "See an example",
+      "title": "Example on Telegram",
+      "text": "Needs your OK\nBig COD order · 9,500 Tk\n\n[ Approve ]  [ Reject ]\nAfter Approve the bot asks: “Type your PIN”."
+    },
+    "lock": {
+      "locked": "Telegram approvals are locked after too many wrong PINs.",
+      "unlock": "Unlock",
+      "unlocked": "Unlocked.",
+      "wrong": "Wrong PINs asked for in the last day: {n}"
+    },
+    "list": {
+      "pending": "Waiting for you",
+      "recent": "Decided",
+      "none": "Nothing is waiting.",
+      "noneRecent": "Nothing decided yet.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "kind": {
+        "refund": "Refund",
+        "price": "Price change",
+        "cod": "Big COD order",
+        "other": "Other"
+      },
+      "status": {
+        "PENDING": "Waiting",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "via": {
+        "TELEGRAM": "on Telegram",
+        "ADMIN": "in the ERP"
+      },
+      "asked": "asked on Telegram",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "typePin": "Type your PIN to {what}"
+    },
+    "errors": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "NOT_FOUND": "That request is not there any more.",
+      "ALREADY_DECIDED": "It was decided already.",
+      "NOT_CONNECTED": "Connect the Telegram bot in Keys & connections first.",
+      "TELEGRAM_REFUSED": "Telegram did not accept it. Try again.",
+      "INVALID_INPUT": "Check the numbers.",
+      "FORBIDDEN": "You may not do that.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}
