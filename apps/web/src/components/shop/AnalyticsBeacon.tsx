@@ -10,12 +10,40 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { beacon } from '@/lib/shop/beacon';
+import { deviceOf } from '@/lib/analytics/visitors-pure';
 import { pageKindOf } from '@/lib/website/page-kind';
 
 export const ANALYTICS_BEACON_URL = '/api/shop/analytics';
 
 export interface AnalyticsBeaconConfig {
   productPrefix: string;
+  /** S28 · PR 700: the owner has the visitors view on, so a page view also says where it came from and on what device. */
+  collect?: boolean;
+}
+
+const SESSION_KEY = 'extas_sid';
+const newSid = () => Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+
+/** The visitor props of one page view (only sent while `collect`): the referrer, UTM tags, device size, path, session. */
+function visitorFields(): Record<string, string> {
+  const q = new URLSearchParams(window.location.search);
+  let sid = '';
+  try {
+    sid = window.sessionStorage.getItem(SESSION_KEY) ?? '';
+    if (!sid) {
+      sid = newSid();
+      window.sessionStorage.setItem(SESSION_KEY, sid);
+    }
+  } catch {
+    sid = '';
+  }
+  const out: Record<string, string> = { ref: document.referrer, device: deviceOf(window.innerWidth), path: window.location.pathname };
+  for (const k of ['utm_source', 'utm_medium', 'utm_campaign']) {
+    const v = q.get(k);
+    if (v) out[k] = v;
+  }
+  if (sid) out.sid = sid;
+  return out;
 }
 
 export function AnalyticsBeacon({ cfg }: { cfg: AnalyticsBeaconConfig }) {
@@ -26,7 +54,7 @@ export function AnalyticsBeacon({ cfg }: { cfg: AnalyticsBeaconConfig }) {
     last.current = path;
     beacon(ANALYTICS_BEACON_URL, {
       method: 'POST',
-      body: JSON.stringify({ name: 'page_view', pageType: pageKindOf(path, cfg.productPrefix) }),
+      body: JSON.stringify({ name: 'page_view', pageType: pageKindOf(path, cfg.productPrefix), ...(cfg.collect ? { props: visitorFields() } : {}) }),
       credentials: 'same-origin',
       headers: { 'content-type': 'text/plain' },
     });

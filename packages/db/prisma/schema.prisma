@@ -200,6 +200,7 @@ model Store {
   startFreshRuns          StartFreshRun[]
   bulkQuotes              BulkQuote[]
   approvalRequests        ApprovalRequest[]
+  pageViewDays            PageViewDay[]
   bulkBatches             BulkBatch[]
   orders                  Order[]
   orderItems              OrderItem[]
@@ -11805,4 +11806,28 @@ model ApprovalRequest {
 
   @@index([storeId, status, createdAt])
   @@index([refType, refId])
+}
+
+/// @stage S28 · PR 700 (admin prototype v5, GAP-MAP part 3 W6 / N8) — the daily roll-up of the shop's first-party page
+/// views (AnalyticsEvent `page_view`, privacy-safe: no IP, no name, no phone). One row per store, day (the store's own
+/// day) and dimension value: `dim` is `all` (the day's totals, key empty), `source`, `page`, `device`, `region` or
+/// `path`, `key` its value (a referrer host, a page type, mobile/tablet/desktop, a coarse region, a path without its
+/// query). `visitors` are distinct visitor cookies in that row, `sessions` distinct sessions (a visitor with no session
+/// counts one per day). Rebuilt from the events for a day whenever the Overview is read (today always, a past day once);
+/// rows older than the setting's keep-days are removed (a roll-up, never the shop's own record).
+model PageViewDay {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  day       DateTime @db.Date
+  dim       String
+  key       String   @default("")
+  views     Int      @default(0)
+  visitors  Int      @default(0)
+  sessions  Int      @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, day, dim, key])
+  @@index([storeId, day])
 }

@@ -1,0 +1,78 @@
+{
+  "webAnalytics": {
+    "metaTitle": "Website analytics",
+    "title": "Website analytics",
+    "sub": "Who visits your shop, from where, and what they open.",
+    "tabs": {
+      "overview": "Overview",
+      "behaviour": "Behaviour"
+    },
+    "off": "The visitors view is switched off, so only each page's type is counted. Switch it on below to also see sources, devices and regions.",
+    "range": {
+      "label": "Show the last",
+      "days": "{n} days"
+    },
+    "kpi": {
+      "visitors": "Visitors",
+      "sessions": "Sessions",
+      "views": "Page views",
+      "orders": "Orders",
+      "conv": "Visit to order",
+      "live": "Live now",
+      "liveSub": "in the last {n} minutes",
+      "none": "-"
+    },
+    "chart": {
+      "title": "Visitors and page views by day",
+      "visitors": "Visitors",
+      "views": "Page views"
+    },
+    "lists": {
+      "sources": "Where they come from",
+      "pages": "Pages by type",
+      "paths": "Top pages",
+      "devices": "Devices",
+      "regions": "Regions",
+      "empty": "Nothing yet.",
+      "regionHint": "Regions need your CDN to send the visitor's region.",
+      "views": "{n} views",
+      "visitors": "{n} visitors",
+      "direct": "direct",
+      "other": "other",
+      "page": {
+        "home": "Home",
+        "category": "Category",
+        "product": "Product",
+        "bag": "Bag",
+        "checkout": "Checkout",
+        "other": "Other"
+      },
+      "device": {
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Computer"
+      }
+    },
+    "settings": {
+      "title": "Visitors settings",
+      "collect": "Count where visitors come from, their device, pages and region",
+      "keep": "Keep the daily totals for (days)",
+      "live": "Live now means the last (minutes)",
+      "top": "Length of the top lists",
+      "pin": "Owner PIN",
+      "save": "Save settings",
+      "saved": "Settings saved.",
+      "privacy": "No IP address, name or phone number is ever stored."
+    },
+    "errors": {
+      "INVALID_INPUT": "Check the numbers.",
+      "FORBIDDEN": "You may not do that.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}

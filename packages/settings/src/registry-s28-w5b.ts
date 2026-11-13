@@ -75,6 +75,23 @@ export const telegramApprovalsSchema = z
   .strict();
 export type TelegramApprovalsSettings = z.output<typeof telegramApprovalsSchema>;
 
+/**
+ * PR 700 — the visitors view of Website → Analytics. Off until the owner turns it on: with `collect` off the shop's page
+ * views carry nothing beyond their page type (as before); on, they also carry where the visitor came from (the referrer's
+ * host and the UTM tags), the device size, the path without its query and the coarse region the CDN reports. Never an IP,
+ * a name or a phone. `keepDays` is how long the daily roll-ups are kept; `liveWindowMinutes` is what "live now" means;
+ * `topCount` is how long the top lists are.
+ */
+export const analyticsVisitorsSchema = z
+  .object({
+    collect: z.boolean(),
+    keepDays: z.number().int().min(7).max(730),
+    liveWindowMinutes: z.number().int().min(1).max(60),
+    topCount: z.number().int().min(3).max(50),
+  })
+  .strict();
+export type AnalyticsVisitorsSettings = z.output<typeof analyticsVisitorsSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -111,5 +128,14 @@ export const s28W5bSettings = {
     helpKey: 'telegram.approvals.help',
     sortOrder: 723,
     version: 703,
+  }),
+  'analytics.visitors': setting({
+    ...base,
+    schema: analyticsVisitorsSchema,
+    default: { collect: false, keepDays: 90, liveWindowMinutes: 5, topCount: 10 },
+    labelKey: 'analytics.visitors.label',
+    helpKey: 'analytics.visitors.help',
+    sortOrder: 720,
+    version: 700,
   }),
 };

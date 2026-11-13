@@ -22,5 +22,11 @@
       "label": "Urgent approvals on Telegram",
       "help": "Send urgent approvals (a prepaid refund, a price change, a big COD order) to your Telegram. Tap Approve or Reject, then type your PIN in the chat; the PIN message is deleted at once. Off until you turn it on. Numbers: what a big COD order is, how many minutes the buttons stay live, and the wrong-PIN alarm and lock per day."
     }
+  },
+  "analytics": {
+    "visitors": {
+      "label": "Visitors (first-party analytics)",
+      "help": "Counts where visitors come from, their device, the pages they open and a coarse region, on your own server. Never an IP address, a name or a phone number. Off until you turn it on. 'Keep days' is how long the daily totals are kept; 'Live now' counts people seen in the last few minutes."
+    }
   }
 }
