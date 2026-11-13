@@ -51,7 +51,7 @@ describe('owner spec as settings (registry v6, A2.9.7)', () => {
   });
 
   it('every new media key is registry version 6; the watermark text and the CDN address are owner data with no default', () => {
-    const keys = Object.keys(registry).filter((k) => k.startsWith('media.'));
+    const keys = Object.keys(registry).filter((k) => k.startsWith('media.') && k !== 'media.quality'); // media.quality is PR 680's own key (registry v321)
     expect(keys.length).toBeGreaterThanOrEqual(20);
     for (const k of keys) expect(registry[k as keyof typeof registry].version, k).toBe(6);
     expect(registry['media.watermark.text'].isOwnerData).toBe(true);
