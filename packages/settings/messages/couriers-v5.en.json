@@ -1,0 +1,8 @@
+{
+  "delivery": {
+    "couriers": {
+      "label": "Couriers: default courier",
+      "help": "The courier a booking offers first, and the one listed first in Couriers. Left empty, the first courier is the default."
+    }
+  }
+}

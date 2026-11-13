@@ -38,7 +38,9 @@
       "delivery": {
         "zones": "এলাকা আর চার্জ",
         "couriers": "কুরিয়ার",
-        "settings": "ডেলিভারির সেটিং"
+        "settings": "ডেলিভারির সেটিং",
+        "overview": "ওভারভিউ",
+        "courier360": "Courier 360"
       },
       "marketing": {
         "campaigns": "ক্যাম্পেইন",
@@ -72,7 +74,8 @@
         "experiments": "পরীক্ষা (A/B)",
         "funnels": "ফানেল",
         "searches": "সার্চ",
-        "orders": "অর্ডার"
+        "orders": "অর্ডার",
+        "couriers": "কুরিয়ার"
       },
       "settings": {
         "store": "দোকানের তথ্য",
@@ -156,7 +159,8 @@
         "fees": "খরচ ও ফি",
         "vat": "ভ্যাট",
         "ledger": "খরচের খাতা",
-        "monthEnd": "মাসের শেষ"
+        "monthEnd": "মাসের শেষ",
+        "couriers": "কুরিয়ার"
       },
       "ai": {
         "control": "কন্ট্রোল রুম",

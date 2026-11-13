@@ -51,11 +51,15 @@ const view = (r: Row, modes: Map<string, Mode>): CourierAccountView => ({
 /** The store's courier accounts with each one's mode (DLV-05). */
 export async function listCouriers(deps: ShippingDeps, who: Who, opts: { includeArchived?: boolean } = {}): Promise<{ couriers: CourierAccountView[]; providers: string[] }> {
   await allow(deps, who, 'delivery.read');
-  const [rows, modes] = await Promise.all([
+  const [rows, modes, setup] = await Promise.all([
     deps.db.courierAccount.findMany({ where: { storeId: who.storeId, ...(opts.includeArchived ? {} : { archivedAt: null }) }, select: SELECT, orderBy: { createdAt: 'asc' } }),
     courierModes(deps.db, who.storeId),
+    deps.settings.value('delivery.couriers', { storeId: who.storeId }),
   ]);
-  return { couriers: rows.map((r) => view(r, modes)), providers: courierProviders() };
+  // PR 670: the default courier (Setup) comes first, so a booking offers it first; the rest keep their order
+  const first = setup.defaultCourierId ? rows.findIndex((r) => r.id === setup.defaultCourierId && r.archivedAt === null) : -1;
+  const ordered = first > 0 ? [rows[first]!, ...rows.slice(0, first), ...rows.slice(first + 1)] : rows;
+  return { couriers: ordered.map((r) => view(r, modes)), providers: courierProviders() };
 }
 
 /** A courier account usable for booking: in this store, switched on, not archived. */
