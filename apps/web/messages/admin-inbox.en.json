@@ -229,7 +229,15 @@
       "BLOCK_OFF": "The support block list is switched off in Support settings.",
       "BLOCKED": "This person is on the support block list; no reply goes out.",
       "PUSH_OFF": "Notifications are switched off in Support settings.",
-      "ORDER_NOT_FOUND": "No order with this number in this shop."
+      "ORDER_NOT_FOUND": "No order with this number in this shop.",
+      "SAVED_REPLIES_OFF": "Quick replies are switched off.",
+      "SHORTCUT_TAKEN": "This short name is already used.",
+      "COMMENT_DESK_OFF": "The comment desk is switched off.",
+      "COMMENT_HIDDEN": "A hidden comment is not answered. Show it first.",
+      "COMMENT_SEND_FAILED": "The Page did not do it. Please try again.",
+      "LIVE_OFF": "Live selling is switched off.",
+      "LIVE_RUNNING": "A live session is already running. End it first.",
+      "NO_LIVE": "No live session is running."
     },
     "set": {
       "title": "Support settings",
