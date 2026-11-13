@@ -56,6 +56,7 @@ describe.skipIf(!HAS_TEST_DB)('Start fresh on PostgreSQL (PR 706)', () => {
     await t.prisma.review.createMany({ data: [{ storeId: A, rating: 5 }, { storeId: A, rating: 1 }] });
     await t.prisma.cart.create({ data: { storeId: A, visitorId: 'v-1' } });
     await t.prisma.customer.create({ data: { storeId: A } });
+    await t.prisma.customerProblem.create({ data: { storeId: A, fingerprint: 'f-1', kind: 'script_error', step: 'other', path: '/', detail: 'x', firstSeenAt: new Date(), lastSeenAt: new Date() } });
   });
   afterAll(async () => {
     vi.restoreAllMocks();
@@ -105,12 +106,22 @@ describe.skipIf(!HAS_TEST_DB)('Start fresh on PostgreSQL (PR 706)', () => {
     const run = await t.prisma.startFreshRun.findFirstOrThrow({ where: { storeId: A } });
     expect(run).toMatchObject({ status: 'PARTIAL', erpStatus: 'MOCK_NOT_SENT', removeProducts: false });
     expect((run.kinds as any[]).find((k) => k.id === 'customers')).toMatchObject({ count: 1, how: 'HANDED_OFF' });
+    // customer problems are never cleared (owner decision 16): counted as kept, left out of the total, still there
+    expect((run.kinds as any[]).find((k) => k.id === 'problems')).toMatchObject({ count: 1, how: 'KEPT' });
+    expect(await t.prisma.customerProblem.count({ where: { storeId: A } })).toBe(1);
     expect(await t.prisma.auditLog.count({ where: { action: 'startFresh.run' } })).toBe(1);
     await goodBackup();
     expect((await route('POST', [], { cookie: owner, body: { words: 'START FRESH', pin: PIN } })).body.error).toBe('ALREADY_DONE');
     expect((await route('POST', ['switch'], { cookie: owner, body: { enabled: false, pin: PIN } })).body.error).toBe('ALREADY_DONE');
     const v = await route('GET', [], { cookie: owner });
     expect(v.body.done.status).toBe('PARTIAL');
+    // the server's purge finishes it: the view then shows the handed-off kinds as cleared
+    await t.prisma.$queryRaw`SELECT extas_start_fresh_purge(${run.id}::uuid)`;
+    expect(await t.prisma.customer.count({ where: { storeId: A } })).toBe(0);
+    const after = await route('GET', [], { cookie: owner });
+    expect(after.body.done.status).toBe('DONE');
+    expect(after.body.done.kinds.find((k: any) => k.id === 'customers').how).toBe('CLEARED');
+    expect(after.body.done.kinds.find((k: any) => k.id === 'problems').how).toBe('KEPT');
   });
 
   it('a failed try rolls back, is recorded FAILED and leaves the place free', async () => {

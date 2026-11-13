@@ -40,5 +40,7 @@ export * from './invoices';
 // S22 · PR 538 — the owner told on Telegram when a customer waits and nobody answers (support-escalation.ts).
 export * from './support-escalation';
 export * from './returns-erp';
+// S28 · PR 706 — Start fresh: the server's purge of the append-only kinds, after the owner's run.
+export * from './start-fresh-purge';
 // S21 · PR 419 — run history: every smoke test and journeys run kept with its findings.
 export * from './run-history';
