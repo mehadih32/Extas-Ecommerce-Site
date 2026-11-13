@@ -18,6 +18,7 @@
 - [সাইজ চার্ট](size-charts.md) — প্রতিটা ফিটের মাপ (`/admin/size-charts`)
 - [রিভিউ](reviews.md) — ক্রেতাদের রিভিউ দেখে প্রকাশ, লুকানো, বাতিল; ডেলিভারির পর রিভিউ চাওয়ার হিসাব (`/admin/products/reviews`)
 - [প্রশ্ন](questions.md) — ক্রেতাদের প্রোডাক্টের প্রশ্নের উত্তর লেখা, প্রকাশ, লুকানো, আর্কাইভ (`/admin/products/questions`)
+- [FAQ](faqs.md) — প্রোডাক্ট, ক্যাটাগরি আর পুরো দোকানের প্রশ্ন-উত্তর, প্রোডাক্ট পেজে ট্যাপ করলে খোলা তালিকা (`/admin/products/faqs`)
 - [লিংক থেকে আনা](import.md) — অন্য সাইটের পেজ থেকে খসড়া (`/admin/products/import`)
 - [ERP থেকে আনা](erp-import.md) — স্টাইল কোড দিয়ে ERP-র সব SKU খসড়ায়, কেনা দাম বদলের তালিকা (`/admin/products/erp-import`)
 - [প্রোডাক্ট অডিট](audit.md) — কোন প্রোডাক্টে কী বাকি (`/admin/products/audit`)

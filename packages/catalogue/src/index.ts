@@ -53,3 +53,4 @@ export * from './link-import';
 export * from './ghost';
 export * from './audit';
 export * from './video';
+export * from './faq';

@@ -59,3 +59,13 @@ export function videoFields(d: Dict): FieldsCardField[] {
     },
   ];
 }
+
+/** PR 682 — FAQ settings (`catalogue.faq`). */
+export function faqFields(d: Dict): FieldsCardField[] {
+  return [
+    { kind: 'switch', path: 'on', label: t(d, 'products.faq.checks.on'), help: t(d, 'products.faq.checks.onHelp') },
+    { kind: 'switch', path: 'includeShop', label: t(d, 'products.faq.checks.includeShop'), help: t(d, 'products.faq.checks.includeShopHelp') },
+    { kind: 'number', path: 'max', label: t(d, 'products.faq.checks.max'), help: t(d, 'products.faq.checks.maxHelp'), min: 1, max: 50 },
+    { kind: 'switch', path: 'markup', label: t(d, 'products.faq.checks.markup'), help: t(d, 'products.faq.checks.markupHelp') },
+  ];
+}

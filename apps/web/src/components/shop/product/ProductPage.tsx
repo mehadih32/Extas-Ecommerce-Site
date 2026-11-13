@@ -78,6 +78,8 @@ import { PdpEffects } from './PdpEffects';
 import { FinderCard, FinderPopup } from './PdpFinder';
 import { PdpGallery } from './PdpGallery';
 import { loadPdpVideo, PdpVideoBlock, videoLdFor } from './PdpVideoBlock';
+import { PdpFaq } from './PdpFaq';
+import { pickedFaqs } from '@/lib/shop/pdp-faq-load';
 import { PdpNotify } from './PdpNotify';
 import { PdpPrice } from './PdpPrice';
 import { PdpQa } from './PdpQa';
@@ -102,6 +104,7 @@ import { shopNotFound } from '@/lib/shop/not-found';
 
 const KEYS = [
   'catalogue.video',
+  'catalogue.faq',
   // PR 77: the sections under the first screen, in the owner's order and on his screens (Website › Page layouts)
   'layout.product',
   'seo.structuredData',
@@ -471,6 +474,10 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
   const qaItems = sd.faq && qaSet.on ? qaLdItems(qaView(await answeredQuestionsOnce(c.storeId, m.productId, qaSet.max), qaSet, false)) : [];
   // S28 · PR 681: the product's video (nothing while `catalogue.video` is off), and its VideoObject from the same row
   const pdpVideo = await loadPdpVideo(c, m.productId, set['catalogue.video']);
+  // S28 · PR 682: the product's, its category's and the shop-wide FAQs (nothing while `catalogue.faq` is off)
+  const faqSet = set['catalogue.faq'];
+  const faqs = await pickedFaqs(c.storeId, m.productId, faqSet, c.lang);
+  const faqLdItems = sd.faq && faqSet.markup ? faqs.map((f) => ({ question: f.question, answer: f.answer })) : [];
   // follow-up 515: the return policy and free delivery the page states (each its own switch, off as shipped), for the
   // country the Merchant Center feed targets (one target country in the shop)
   const country = sd.product && (sd.returns || sd.shipping) ? (await readPageSettings(['ads.merchantFeed'] as const, c.storeId))['ads.merchantFeed'].country : null;
@@ -537,7 +544,7 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
                 : null,
             })
           : null,
-        sd.faq ? faqLd(here, pageHref, qaItems) : null,
+        sd.faq ? faqLd(here, pageHref, [...faqLdItems, ...qaItems]) : null,
         videoLdFor(pdpVideo, { name: m.name, description: description, pageUrl: absolute(here, pageHref) }),
       ]}
     />
@@ -555,7 +562,12 @@ export async function ProductPage({ search }: { search: ProductSearch }) {
         />
       ) : null,
     reviews: () => <PdpReviews c={c} set={revSet} data={reviewData} name={m.name} qa={set['pdp.qa'].on} reply={set['pdp.reviewReply'].show} />,
-    questions: () => <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} ask={set['pdp.qaAsk']} />,
+    questions: () => (
+      <>
+        <PdpFaq c={c} items={faqs} />
+        <PdpQa c={c} set={set['pdp.qa']} productId={m.productId} name={m.name} ask={set['pdp.qaAsk']} />
+      </>
+    ),
     // PR 624: the Messenger button under the questions (nothing while it is off)
     messenger: () => (
       <div className="container pdp-ms">

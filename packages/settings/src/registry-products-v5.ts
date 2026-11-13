@@ -45,6 +45,20 @@ export const catalogueVideoSchema = z
   .strict();
 export type CatalogueVideoSettings = z.output<typeof catalogueVideoSchema>;
 
+export const catalogueFaqSchema = z
+  .object({
+    /** The switch: while off no FAQ shows on a product page. */
+    on: z.boolean(),
+    /** Show the shop-wide questions on every product page too. */
+    includeShop: z.boolean(),
+    /** Most questions on one product page (product first, then category, then shop-wide). */
+    max: z.int().min(1).max(50),
+    /** The questions are written as FAQ markup for search engines (also needs the shop's FAQ markup switch). */
+    markup: z.boolean(),
+  })
+  .strict();
+export type CatalogueFaqSettings = z.output<typeof catalogueFaqSchema>;
+
 export const productsV5Settings = {
   'media.quality': setting({
     schema: mediaQualitySchema,
@@ -78,6 +92,20 @@ export const productsV5Settings = {
     isOwnerData: false,
     isPublic: false,
     sortOrder: 270,
+    version: V,
+  }),
+  'catalogue.faq': setting({
+    schema: catalogueFaqSchema,
+    // hardcode-ok: shipped defaults (off); edited on Products › FAQs › More options
+    default: { on: false, includeShop: true, max: 12, markup: true },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'catalogue',
+    labelKey: 'catalogue.faq.label',
+    helpKey: 'catalogue.faq.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 271,
     version: V,
   }),
 };
