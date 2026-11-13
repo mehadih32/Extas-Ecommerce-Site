@@ -100,7 +100,7 @@ export const DELIVERY_FEE: Record<Zone, number> = {
   sub: 100,
   outside: 130,
 };
-export const FREE_DELIVERY_OVER = 3000;
+export const FREE_DELIVERY_OVER = 3000; // hardcode-ok: a sample-data figure for the practice shop, never a rule of the real shop
 
 /** The prototype's categories: code, name, price range (whole taka), garment kind, sample names (two of each are made). */
 export const CATEGORIES = [
