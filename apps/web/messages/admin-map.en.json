@@ -30,6 +30,7 @@
       "ai.costBook": "What each AI model costs.",
       "ai.costs": "Monthly ceilings for AI, SMS and WhatsApp, 80% warning, caps per agent, cost-saver mode.",
       "ai.diary": "What the agents did, day by day.",
+      "ai.learning": "What the AI agents are learning, checked against real sources before it's trusted.",
       "ai.models": "Which AI model does which job.",
       "ai.permissions": "What the AI is allowed to touch.",
       "ai.reports": "Daily and weekly reports by agent.",
