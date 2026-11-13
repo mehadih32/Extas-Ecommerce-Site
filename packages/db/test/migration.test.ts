@@ -75,8 +75,8 @@ describe('0001_init migration', () => {
 });
 
 // The only migrations that may carry a DELETE FROM: the owner's one-time Start fresh purge (PR 706), run by a database
-// function that refuses any run the owner did not make. Everything else stays free of deletes.
-const PURGE_MIGRATIONS = new Set(['0277_start_fresh_purge']);
+// function that refuses any run the owner did not make; and the practice-history purge (0281, CN-049: rows of flagged practice orders only). Everything else stays free of deletes.
+const PURGE_MIGRATIONS = new Set(['0277_start_fresh_purge', '0281_practice_purge']);
 
 describe('later migrations', () => {
   it('are numbered folders after 0001_init, each with a migration.sql that says why', () => {

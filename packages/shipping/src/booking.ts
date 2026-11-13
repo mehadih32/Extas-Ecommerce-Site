@@ -269,13 +269,16 @@ export async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, or
       if (p.skip) throw new Skip(p.skip);
       const attempt = (await tx.shipment.count({ where: { storeId: who.storeId, orderId } })) + 1;
       const merchantRef = `${locked.number}-${attempt}`;
+      // PR 706 (CN-049): a practice order's parcel is a mock one, flagged, and never reaches a courier
+      const practice = (await tx.order.count({ where: { id: orderId, isPractice: true } })) > 0;
       const s = await tx.shipment.create({
         data: {
           storeId: who.storeId,
           orderId,
           courierAccountId: courier.id,
           status: 'BOOKING',
-          mode: courier.mode,
+          mode: practice ? 'MOCK' : courier.mode,
+          isPractice: practice,
           attempt,
           merchantRef,
           idempotencyKey: `book:${orderId}:${attempt}`,
@@ -322,7 +325,7 @@ async function noteAreaHeld(deps: ShippingDeps, who: Who, courierAccountId: stri
   });
 }
 
-const PARCEL_SELECT = { id: true, orderId: true, order: { select: { number: true } }, merchantRef: true, receiver: true, courierCityId: true, courierZoneId: true, courierAreaId: true, codAmountMinor: true, declaredValueMinor: true, weightGrams: true, bookingNote: true } as const;
+const PARCEL_SELECT = { id: true, orderId: true, order: { select: { number: true } }, merchantRef: true, receiver: true, courierCityId: true, courierZoneId: true, courierAreaId: true, codAmountMinor: true, declaredValueMinor: true, weightGrams: true, bookingNote: true, isPractice: true } as const;
 
 /** The parcel as the courier is sent it, from the row written under the lock. */
 function parcelOf(s: Prisma.ShipmentGetPayload<{ select: typeof PARCEL_SELECT }>, caps: CourierApi['capabilities'], lines: readonly ParcelLine[], itemNames: boolean): CourierParcel {
@@ -345,7 +348,10 @@ async function send(deps: ShippingDeps, who: Who, courier: Courier, shipmentId: 
   const s = await deps.db.shipment.findUniqueOrThrow({ where: { id: shipmentId }, select: PARCEL_SELECT });
   let answer: Awaited<ReturnType<CourierApi['book']>>;
   try {
-    answer = await courier.api.book(parcelOf(s, courier.api.capabilities, lines, itemNames));
+    // PR 706 (CN-049): a practice parcel is answered here, with no call to any courier
+    answer = s.isPractice
+      ? { ok: true, consignmentId: `PRACTICE-${s.merchantRef}`, trackingCode: `PRACTICE-${s.merchantRef}`, status: null, rawStatus: 'practice', chargeMinor: null }
+      : await courier.api.book(parcelOf(s, courier.api.capabilities, lines, itemNames));
   } catch (e) {
     answer = { ok: false, error: e instanceof Error ? e.message : String(e), unknown: true };
   }
@@ -406,7 +412,7 @@ async function fail(deps: ShippingDeps, who: Who, shipmentId: string, error: str
  */
 export async function retryBooking(deps: ShippingDeps, who: Who, shipmentId: string): Promise<BookingOutcome> {
   await allow(deps, who, 'delivery.book');
-  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { id: true, orderId: true, status: true, bookingError: true, merchantRef: true, courierAccountId: true, createdAt: true, order: { select: { number: true } } } });
+  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { id: true, orderId: true, status: true, bookingError: true, merchantRef: true, courierAccountId: true, createdAt: true, isPractice: true, order: { select: { number: true } } } });
   if (!s) throw new ShippingError('NOT_FOUND', 'no such parcel', ['shipmentId']);
   const lostAnswer = s.status === 'BOOKING' && s.bookingError !== null;
   if (!lostAnswer && s.status !== 'BOOKING_FAILED') throw new ShippingError('NOT_RETRYABLE', 'only a failed booking, or one without an answer, is tried again', ['shipmentId'], { status: s.status });
@@ -414,7 +420,8 @@ export async function retryBooking(deps: ShippingDeps, who: Who, shipmentId: str
   if (newer) throw new ShippingError('NOT_RETRYABLE', 'the order has a newer booking', ['shipmentId'], { status: s.status });
   const account = await bookableCourier(deps.db, who.storeId, s.courierAccountId);
   const conn = await courierApi(deps, who.storeId, account.providerKey);
-  if (lostAnswer) {
+  if (lostAnswer && !s.isPractice) {
+    // PR 706 (CN-049): a practice parcel is never looked up at a courier
     let found: Awaited<ReturnType<CourierApi['findByRef']>>;
     try {
       found = await conn.api.findByRef(s.merchantRef!);

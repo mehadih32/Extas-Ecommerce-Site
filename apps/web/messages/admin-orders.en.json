@@ -65,6 +65,8 @@
       "pc": "{n} pc",
       "pcs": "{n} pcs",
       "firstMore": "{name} +{n}",
+      "practice": "Practice",
+      "practiceTitle": "Practice order: sample data. Nothing goes to the ERP, a courier or a customer.",
       "open": "Open order {n}",
       "cols": {
         "order": "Order",

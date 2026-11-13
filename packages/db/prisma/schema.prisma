@@ -1415,6 +1415,8 @@ model Product {
   publishedAt      DateTime?       @db.Timestamptz(3)
   unpublishedAt    DateTime?       @db.Timestamptz(3)
   archivedAt       DateTime?       @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice       Boolean         @default(false)
   createdAt        DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime        @updatedAt @db.Timestamptz(3)
 
@@ -1428,6 +1430,7 @@ model Product {
   @@index([storeId, status, publishedAt])
   @@index([storeId, erpStyleCode])
   @@index([storeId, isDemo])
+  @@index([storeId, isPractice], map: "idx_product_practice")
 }
 
 enum ProductStatus {
@@ -2948,6 +2951,11 @@ model CheckoutDraft {
   possibleMatchCustomerId String?   @db.Uuid
   createdAt               DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
+  restoreCode      String?
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice       Boolean   @default(false)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
 
   flagEvents CheckoutFlagEvent[]
   calls      CheckoutDraftCall[]
@@ -3161,6 +3169,8 @@ model Order {
   gpsLng                   Decimal?           @db.Decimal(9, 6)
   piiExpiresAt             DateTime?          @db.Timestamptz(3)
   idempotencyKey           String
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice               Boolean            @default(false)
   erpOrderId               String?
   erpSyncStatus            String?
   shipAfter                DateTime?          @db.Timestamptz(3)
@@ -3235,6 +3245,7 @@ model Order {
   @@index([piiExpiresAt])
   // PR 407: the invoice job finds orders changed since their invoice was last compared.
   @@index([storeId, updatedAt], map: "idx_order_updated")
+  @@index([storeId, isPractice], map: "idx_order_practice")
 }
 
 enum OrderStatus {
@@ -4249,6 +4260,8 @@ model Payment {
   erpSyncedAt          DateTime?      @db.Timestamptz(3)
   createdAt            DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice           Boolean        @default(false)
   /// PR 165 (§6.5.3, §6.6 S11) — where the money stands (null while none has come in): PROVISIONAL from the gateway's
   /// answer or a staff record, RECONCILED once matched to a statement (PR 174), FINAL at the month close.
   moneyStatus          MoneyStatus?
@@ -4371,6 +4384,8 @@ model CourierSettlement {
   receivedAccountRef String?
   fileHash           String?
   importedById       String?        @db.Uuid
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice         Boolean        @default(false)
 
   lines CourierSettlementLine[]
 
@@ -4695,6 +4710,8 @@ model CourierAccount {
   integrationId String?   @db.Uuid
   enabled       Boolean   @default(false)
   archivedAt    DateTime? @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice courier made for the sample parcels (never a real connection); removed by "Reset practice data".
+  isPractice    Boolean   @default(false)
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
 
@@ -4784,6 +4801,8 @@ model Shipment {
   exceptionKey        String?
   lastTrackedAt       DateTime?      @db.Timestamptz(3)
   bookedById          String?        @db.Uuid
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice          Boolean        @default(false)
 
   events ShipmentEvent[]
 
@@ -4889,6 +4908,8 @@ model CourierClaim {
   closedAt         DateTime?         @db.Timestamptz(3)
   /// S28 · PR 673: the day the courier's time to pay runs out (set when the claim is raised, from the owner's setting).
   deadlineAt       DateTime?         @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice       Boolean           @default(false)
   createdAt        DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
 
@@ -8364,6 +8385,8 @@ model Customer {
   mergedAt                 DateTime?      @db.Timestamptz(3)
   createdAt                DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
+  /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
+  isPractice               Boolean        @default(false)
 
   credential   CustomerCredential?
   sessions     CustomerSession[]
