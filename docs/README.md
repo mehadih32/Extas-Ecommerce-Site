@@ -292,6 +292,8 @@ the pages are out of date.
 | [`admin-guide/pages/marketing/affiliates.md`](admin-guide/pages/marketing/affiliates.md) | ইনফ্লুয়েন্সার ও অ্যাফিলিয়েট: কোড, কমিশন, খাতা |
 | [`admin-guide/pages/marketing/meta-feed.md`](admin-guide/pages/marketing/meta-feed.md) | Meta ক্যাটালগ ফিড: ঠিকানা, সমস্যার তালিকা |
 | [`admin-guide/pages/marketing/message-campaigns.md`](admin-guide/pages/marketing/message-campaigns.md) | মেসেজ ক্যাম্পেইন: এক তালিকা, ফলাফল, টেস্ট |
+| [`admin-guide/pages/marketing/overview.md`](admin-guide/pages/marketing/overview.md) | Marketing › Overview and Ad campaigns (PR 699): spend, delivered sales per Tk 1, profit after ads, chips, tired ads |
+| [`admin-guide/pages/marketing/plan.md`](admin-guide/pages/marketing/plan.md) | Marketing › Plan and ideas (PR 699): channel budget plan, overlap and low-stock warnings; advice only |
 | [`admin-guide/pages/support/inbox.md`](admin-guide/pages/support/inbox.md) | Page guide (CN-026 six parts): Support › Inbox (`/admin/support`): the views, search, the rows (PR 425) |
 | [`admin-guide/pages/support/conversation.md`](admin-guide/pages/support/conversation.md) | Page guide (CN-026 six parts): one conversation (`/admin/support/c/[id]`): reply, internal note, files, take / give, status, the who-did-what log (PR 425) |
 | [`admin-guide/pages/support/settings.md`](admin-guide/pages/support/settings.md) | Page guide (CN-026 six parts): Support settings (`/admin/support/settings`): inbox, files, the customer-number line (PR 425) |

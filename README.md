@@ -4197,6 +4197,7 @@ In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 —
 - PR 696 — Meta catalogue feed. Facebook and Instagram catalogue feed at /feeds/meta.xml beside the Google feed (same products, photos, prices; Meta's words and limits), an issue list per product, switch off by default.
 - PR 697 — Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders.
 - PR 698 — Message cost ceilings. Monthly SMS and WhatsApp ceiling (owner sets; off by default), warning at a share, further messages on a channel at its ceiling wait in the log (order's first message never held), cheapest-channel fallback to the step's fallback channel; card on the new Messages page and on the AI Center cost book.
+- PR 699 — Marketing overview and Plan and ideas. Overview with spend, delivered sales per Tk 1, profit after ads, Scale/Keep/Fix/Stop chips from settings; Ad campaigns table with ad-level rows (tired ads); Plan page with a channel budget plan (advice only) and overlap and low-stock warnings; migration 0264
 
 ---
 
@@ -4209,6 +4210,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | PR [699](docs/stages/S28.md#pr-699) | 13 Nov | S28 wave 5a: Marketing overview and Plan and ideas. Overview with spend, delivered sales per Tk 1, profit after ads, Scale/Keep/Fix/Stop chips from settings; Ad campaigns table with ad-level rows (tired ads); Plan page with a channel budget plan (advice only) and overlap and low-stock warnings; migration 0264 |
 | pending | PR [698](docs/stages/S28.md#pr-698) | 13 Nov | S28 wave 5a: Message cost ceilings. Monthly SMS and WhatsApp ceiling (owner sets; off by default), warning at a share, further messages on a channel at its ceiling wait in the log (order's first message never held), cheapest-channel fallback to the step's fallback channel; card on the new Messages page and on the AI Center cost book. |
 | pending | PR [697](docs/stages/S28.md#pr-697) | 13 Nov | S28 wave 5a: Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders. |
 | pending | PR [696](docs/stages/S28.md#pr-696) | 13 Nov | S28 wave 5a: Meta catalogue feed. Facebook and Instagram catalogue feed at /feeds/meta.xml beside the Google feed (same products, photos, prices; Meta's words and limits), an issue list per product, switch off by default. |
