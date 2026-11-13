@@ -2951,11 +2951,8 @@ model CheckoutDraft {
   possibleMatchCustomerId String?   @db.Uuid
   createdAt               DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt               DateTime  @updatedAt @db.Timestamptz(3)
-  restoreCode      String?
   /// PR 706 (CN-049): a practice record (sample data for the practice period); never leaves the system, removed by "Reset practice data".
-  isPractice       Boolean   @default(false)
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+  isPractice              Boolean   @default(false)
 
   flagEvents CheckoutFlagEvent[]
   calls      CheckoutDraftCall[]
@@ -11658,6 +11655,8 @@ model AdCreativeDay {
 
   @@unique([adId, date])
   @@index([storeId, date])
+}
+
 /// @stage S28 · PR 702 — the end-of-day cash / bKash sheet one staff member hands over (admin prototype v5, Settings →
 /// Staff controls). One row per count; a wrong count is put right with a newer row for the same day, method and person
 /// (the newest counts, the older stay as history). The "expected" figure is what the shop's own payments record says
