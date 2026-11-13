@@ -168,7 +168,12 @@
     "reportsOrders": "অর্ডার রিপোর্ট",
     "messagesCampaigns": "মেসেজ ক্যাম্পেইন",
     "messagesAutomations": "অটো মেসেজ",
-    "messagesEmail": "ই-মেইল"
+    "messagesEmail": "ই-মেইল",
+    "booksAccount": "ERP হিসাব",
+    "booksMatch": "মিলিয়ে দেখা",
+    "booksDifferences": "গরমিল",
+    "booksCloses": "ক্লোজ",
+    "moneyBudgets": "বাজেট ও লাভ"
   },
   "login": {
     "metaTitle": "অ্যাডমিন লগইন",

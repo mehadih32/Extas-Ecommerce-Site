@@ -55,7 +55,7 @@ export default async function MoneyOverviewPage() {
     );
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `moneyOverview.${k}`, vars);
-  const [o, currency] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const [o, currency, vat] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('vat.system', { storeId: MOTHER_STORE_ID })]);
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const fmt: CountFormat = { kind: 'money', locale: view.locale, currency, digits: money.digits };
@@ -67,6 +67,14 @@ export default async function MoneyOverviewPage() {
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
       <p className="a2-xs a2-mute a2-mt12">{c('asOf', { at: dateTime(o.at, view.locale, view.timeZone) })}</p>
+      {vat.enabled ? null : (
+        <p className="a2-xs a2-mute" data-testid="mo-vat-off">
+          {c('vatOff')}{' '}
+          <Link className="cr-link" href="/admin/money/vat">
+            {c('vatLink')}
+          </Link>
+        </p>
+      )}
 
       {ranges.length ? (
         <div className="a2-mt12 mo-hero">

@@ -156,18 +156,19 @@
         "books": "Books",
         "overview": "Overview",
         "profit": "Profit & loss",
-        "refunds": "Refunds & wallet",
+        "refunds": "Wallet & refunds",
         "match": "Match",
         "differences": "Differences",
         "closes": "Closes",
         "daily": "Daily summary",
-        "costs": "Costs",
+        "costs": "Costs & budgets",
         "expenses": "Expenses",
         "fees": "Costs & fees",
         "vat": "VAT",
         "ledger": "Cost ledger",
         "monthEnd": "Month-end",
-        "couriers": "Couriers"
+        "couriers": "Couriers",
+        "erp": "ERP account"
       },
       "ai": {
         "control": "Control room",
