@@ -110,6 +110,8 @@ import invoiceEn from '../messages/invoice.en.json';
 // PR 425 (S22; registry v63): the support inbox, files in a conversation and customer numbers, in messages/support.<lang>.json.
 import supportBn from '../messages/support.bn.json';
 import supportEn from '../messages/support.en.json';
+import productsV5Bn from '../messages/products-v5.bn.json';
+import productsV5En from '../messages/products-v5.en.json';
 import bn from '../messages/settings.bn.json';
 import en from '../messages/settings.en.json';
 
@@ -579,3 +581,7 @@ export function pair(msgs: SettingsMessages, key: string): LabelPair {
   }
   return { en: e, bn: b };
 }
+
+// S28 · PR 680-685 (registry v306): the product screens' settings in messages/products-v5.<lang>.json.
+messages.en = mergeMessages(messages.en, productsV5En);
+messages.bn = mergeMessages(messages.bn, productsV5Bn);

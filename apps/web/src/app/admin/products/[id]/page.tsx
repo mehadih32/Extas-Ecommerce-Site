@@ -7,10 +7,14 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { productGallery, type ProductPhoto } from '@extas/media';
+import { productGallery, productPhotoQuality, type ProductPhoto } from '@extas/media';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { Icon } from '@/components/admin/Icon';
 import { ProductForm } from '@/components/admin/products/ProductForm';
+import type { PhotoNotes } from '@/components/admin/products/PhotoManager';
+import { FieldsCard } from '@/components/admin/settings/FieldsCard';
+import { fieldsTexts, photoCheckFields } from '@/lib/products-v5-fields';
+import { productV5Cards } from '@/lib/products-v5-settings-api';
 import { nameIn } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -66,6 +70,14 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
   if (media && c.can('media.read')) gallery = (await productGallery(media, c.who.actor, { storeId: c.storeId, productId: id })).photos;
   const images = await photosOf(c, (gallery ?? []).map((g) => g.assetId));
 
+  // S28 · PR 680: the plain photo checks' notes (empty while `media.quality` is off) and their numbers card
+  let photoNotes: PhotoNotes = { on: false, byLink: {} };
+  if (media && c.can('media.read')) {
+    const q = await productPhotoQuality(media, c.who.actor, { storeId: c.storeId, productId: id });
+    photoNotes = { on: q.on, byLink: Object.fromEntries(q.photos.map((x) => [x.productMediaId, x.report ? { issues: x.report.issues, fixable: x.report.fixable, width: x.report.width, height: x.report.height } : null])) };
+  }
+  const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
+
   const d = view.dict;
   return (
     <AdminFrame view={view} current={KEY} ready>
@@ -94,6 +106,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
         frontPerColour={frontPerColour}
         gallery={gallery}
         images={images}
+        photoNotes={photoNotes}
         can={{
           write: c.can('catalogue.write'),
           prices: c.can('catalogue.prices'),
@@ -101,6 +114,17 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           upload: !!media && c.can('media.upload'),
         }}
       />
+      <details className="ad-card pa-more" id="photo-checks" data-testid="photo-checks-card">
+        <summary>{t(d, 'products.pm.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['media.quality'].key, value: v5['media.quality'].value, version: v5['media.quality'].version }}
+          fields={photoCheckFields(d)}
+          texts={fieldsTexts(d, 'products.pm.checks', 'products.pm.checks.h', 'products.pm.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="photo-checks"
+        />
+      </details>
     </AdminFrame>
   );
 }

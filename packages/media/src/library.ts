@@ -8,7 +8,8 @@
 // Removing a file from storage for good is not built: it needs the owner's written OK (BLOCKED.md).
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { Prisma, type PrismaClient } from '@extas/db/client';
-import { deliveryConfig, uploadRules } from './config';
+import { deliveryConfig, qualityRules, renderConfig, uploadRules } from './config';
+import { analysePhoto, fixPhoto, type QualityReport } from './quality';
 import { nowOf, type MediaDeps } from './deps';
 import { MediaError } from './errors';
 import { dispatch } from './jobs';
@@ -681,3 +682,92 @@ export async function regenerateAll(deps: MediaDeps, actor: Actor, input: { stor
   return dispatch(deps, { name: 'media.regenerate', storeId: input.storeId }, rules.processing);
 }
 
+
+// ------------------------------------------------------------------------------- S28 · PR 680 · easy photo handling
+
+/** Puts the photos of one colour (or the colourless group) in the order given; the first becomes the main photo. */
+export async function reorderProductPhotos(deps: MediaDeps, actor: Actor, input: { storeId: number; productId: string; colourId?: string | null; orderedIds: string[] }, ctx: RequestContext = {}): Promise<GalleryResult> {
+  await requirePermission(deps.db, actor, 'media.upload', { storeId: input.storeId });
+  await requireProduct(deps.db, input.storeId, input.productId);
+  const colourId = input.colourId ?? null;
+  await deps.db.$transaction(async (tx) => {
+    const links = await tx.productMedia.findMany({ where: { storeId: input.storeId, productId: input.productId, colourId, archivedAt: null } });
+    const byId = new Map(links.map((l) => [l.id, l]));
+    if (new Set(input.orderedIds).size !== input.orderedIds.length || input.orderedIds.some((id) => !byId.has(id))) throw new MediaError('INVALID_INPUT', 'the list names a photo that is not in this group', ['orderedIds']);
+    const rest = links.filter((l) => !input.orderedIds.includes(l.id)).sort((a, b) => a.sortOrder - b.sortOrder);
+    const order = [...input.orderedIds, ...rest.map((l) => l.id)];
+    for (let i = 0; i < order.length; i++) await tx.productMedia.update({ where: { id: order[i]! }, data: { sortOrder: i, isPrimary: i === 0 } });
+    await audit(tx, actor, { storeId: input.storeId, action: 'media.reorder', entityType: 'Product', entityId: input.productId, after: { colourId, order } }, ctx);
+  });
+  return gallery(deps, input);
+}
+
+/** Moves one photo to a colour (or to none): it goes last there and is never the main photo of its new group. */
+export async function tagProductPhotoColour(deps: MediaDeps, actor: Actor, input: { storeId: number; productId: string; productMediaId: string; colourId: string | null }, ctx: RequestContext = {}): Promise<GalleryResult> {
+  await requirePermission(deps.db, actor, 'media.upload', { storeId: input.storeId });
+  await requireProduct(deps.db, input.storeId, input.productId);
+  if (input.colourId) {
+    const c = await deps.db.colour.findFirst({ where: { id: input.colourId, storeId: input.storeId }, select: { id: true } });
+    if (!c) throw new MediaError('NOT_FOUND', 'no such colour in this store', ['colourId']);
+  }
+  await deps.db.$transaction(async (tx) => {
+    const link = await tx.productMedia.findFirst({ where: { id: input.productMediaId, storeId: input.storeId, productId: input.productId, archivedAt: null } });
+    if (!link) throw new MediaError('NOT_FOUND', 'no such photo on this product');
+    if (link.colourId === input.colourId) return;
+    const last = await tx.productMedia.aggregate({ where: { productId: input.productId, colourId: input.colourId, archivedAt: null }, _max: { sortOrder: true } });
+    await tx.productMedia.update({ where: { id: link.id }, data: { colourId: input.colourId, sortOrder: (last._max.sortOrder ?? -1) + 1, isPrimary: false } });
+    await audit(tx, actor, { storeId: input.storeId, action: 'media.tagColour', entityType: 'ProductMedia', entityId: link.id, before: { colourId: link.colourId }, after: { colourId: input.colourId } }, ctx);
+  });
+  return gallery(deps, input);
+}
+
+export interface PhotoQuality {
+  productMediaId: string;
+  assetId: string;
+  report: QualityReport | null;
+}
+
+/** The quality notes of every photo on a product (null reports while the checks are off). */
+export async function productPhotoQuality(deps: MediaDeps, actor: Actor, where: { storeId: number; productId: string }): Promise<{ on: boolean; photos: PhotoQuality[] }> {
+  await requirePermission(deps.db, actor, 'media.read', { storeId: where.storeId });
+  await requireProduct(deps.db, where.storeId, where.productId);
+  const rules = await qualityRules(deps.settings, where.storeId);
+  const links = await deps.db.productMedia.findMany({ where: { storeId: where.storeId, productId: where.productId, archivedAt: null, asset: { kind: 'IMAGE' } }, include: { asset: true }, orderBy: [{ colourId: 'asc' }, { sortOrder: 'asc' }] });
+  if (!rules.on) return { on: false, photos: links.map((l) => ({ productMediaId: l.id, assetId: l.assetId, report: null })) };
+  const cfg = await renderConfig(deps.settings, where.storeId);
+  const photos: PhotoQuality[] = [];
+  for (const l of links) {
+    let report: QualityReport | null = null;
+    try {
+      const storage = await deps.storage(where.storeId, l.asset.storage);
+      const orig = await storage.get(l.asset.storageKey);
+      report = orig ? await analysePhoto(orig.body, rules, cfg.ratio) : null;
+    } catch {
+      report = null;
+    }
+    photos.push({ productMediaId: l.id, assetId: l.assetId, report });
+  }
+  return { on: true, photos };
+}
+
+/** One-click fix of a photo's fixable notes: a corrected copy is uploaded and takes the old one's place; the old file stays in the library. */
+export async function fixProductPhoto(deps: MediaDeps, actor: Actor, input: { storeId: number; productId: string; productMediaId: string }, ctx: RequestContext = {}): Promise<GalleryResult> {
+  await requirePermission(deps.db, actor, 'media.upload', { storeId: input.storeId });
+  await requireProduct(deps.db, input.storeId, input.productId);
+  const link = await deps.db.productMedia.findFirst({ where: { id: input.productMediaId, storeId: input.storeId, productId: input.productId, archivedAt: null }, include: { asset: true } });
+  if (!link || link.asset.kind !== 'IMAGE') throw new MediaError('NOT_FOUND', 'no such photo on this product');
+  const rules = { ...(await qualityRules(deps.settings, input.storeId)), on: true };
+  const cfg = await renderConfig(deps.settings, input.storeId);
+  const storage = await deps.storage(input.storeId, link.asset.storage);
+  const orig = await storage.get(link.asset.storageKey);
+  if (!orig) throw new MediaError('NOT_FOUND', 'the original file is not in storage');
+  const report = await analysePhoto(orig.body, rules, cfg.ratio);
+  const fixed = await fixPhoto(orig.body, report.issues, { ratio: cfg.ratio, background: cfg.background });
+  if (!fixed) throw new MediaError('INVALID_INPUT', 'this photo needs a new picture: nothing can be fixed in one click', ['productMediaId']);
+  const up = await uploadImage(deps, actor, { storeId: input.storeId, body: fixed, name: link.asset.originalFileName ? `${stripExtension(link.asset.originalFileName)} fixed` : 'fixed photo', altEn: link.asset.altEn, altBn: link.asset.altBn }, ctx);
+  await deps.db.$transaction(async (tx) => {
+    await tx.productMedia.update({ where: { id: link.id }, data: { assetId: up.asset.id } });
+    await audit(tx, actor, { storeId: input.storeId, action: 'media.fix', entityType: 'ProductMedia', entityId: link.id, before: { assetId: link.assetId, issues: report.issues }, after: { assetId: up.asset.id } }, ctx);
+  });
+  return gallery(deps, input);
+}
