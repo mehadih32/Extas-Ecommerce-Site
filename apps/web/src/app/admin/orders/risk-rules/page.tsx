@@ -16,12 +16,18 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { advanceSettings, blocklist, refusers, riskLevels } from '@extas/orders';
-import { BLOCK_PROPOSAL_CANCEL_CODES } from '@extas/settings';
+import { advanceSettings, blocklist, courierScoreAccuracy, refusers, riskLevels } from '@extas/orders';
+import { AUTO_CONFIRM_PRESETS, BLOCK_PROPOSAL_CANCEL_CODES } from '@extas/settings';
+import { moneyOf } from '@/components/admin/products/model';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { AdvanceRequestCard } from '@/components/admin/orders/AdvanceRequestCard';
 import { BlocklistCard } from '@/components/admin/orders/BlocklistCard';
+import { CourierScoreSettings } from '@/components/admin/orders/CourierScoreSettings';
+import { courierScoreCard } from '@/lib/admin-orders/courier-score-api';
+import { AutoConfirmSettings } from '@/components/admin/orders/AutoConfirmSettings';
+import { autoConfirmCard } from '@/lib/admin-orders/auto-confirm-api';
+import { SCORE_METRICS } from '@/lib/admin-orders/courier-score-math';
 import { RefusersCard } from '@/components/admin/orders/RefusersCard';
 import { RiskLevels } from '@/components/admin/orders/RiskLevels';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
@@ -70,7 +76,7 @@ export default async function RiskRulesPage() {
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const held = access.guard.permissions;
   const canEdit = held?.has('risk.rules.write') ?? false;
-  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr, fraudChecks, pc] = await Promise.all([
+  const [data, adv, bl, rf, bd, bp, gc, cancelReasons, td, tdReport, pr, fraudChecks, pc, cs, csAcc, ac, currency] = await Promise.all([
     riskLevels(readDeps(access.deps), who),
     advanceSettings(readDeps(access.deps), who),
     blocklist(readDeps(access.deps), who),
@@ -86,22 +92,17 @@ export default async function RiskRulesPage() {
     connectedFraudChecks(access.deps.db, MOTHER_STORE_ID),
     // follow-up 320: prepaid orders nothing flagged confirm by themselves once paid (off as shipped)
     prepaidConfirmCard(access.deps, MOTHER_STORE_ID),
+    // S28 · PR 662: the courier score out of 10 (off as shipped) and its accuracy report
+    courierScoreCard(access.deps, MOTHER_STORE_ID),
+    courierScoreAccuracy(readDeps(access.deps), who),
+    // S28 · PR 663: the auto-confirm rules table (off as shipped)
+    autoConfirmCard(access.deps, MOTHER_STORE_ID),
+    access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }),
   ]);
   const d = view.dict;
   // PR 522: one parcel for one person's orders (the setting `risk.bundling`, off as shipped)
   const bw = (k: string) => t(d, `orders.rr.bd.${k}`);
-  const bdTexts: FieldsCardTexts = {
-    h: bw('h'),
-    d: bw('d'),
-    save: bw('save'),
-    saving: bw('saving'),
-    saved: bw('saved'),
-    discard: bw('discard'),
-    unsaved: bw('unsaved'),
-    readOnly: bw('readOnly'),
-    pairHelp: '',
-    err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, bw(`err.${c}`)])),
-  };
+  const bdTexts: FieldsCardTexts = { h: bw('h'), d: bw('d'), save: bw('save'), saving: bw('saving'), saved: bw('saved'), discard: bw('discard'), unsaved: bw('unsaved'), readOnly: bw('readOnly'), pairHelp: '', err: Object.fromEntries(['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [c, bw(`err.${c}`)])) };
   const bdFields: FieldsCardField[] = [
     { kind: 'switch', path: 'enabled', label: bw('enabled') },
     { kind: 'number', path: 'windowHours', label: bw('windowHours'), help: bw('windowHoursHelp'), min: 1, max: 168 },
@@ -158,6 +159,16 @@ export default async function RiskRulesPage() {
     { kind: 'number', path: 'failPct', label: ptw('failPct'), help: ptw('failPctHelp'), min: 1, max: 100 },
     { kind: 'number', path: 'halfLifeDays', label: ptw('halfLifeDays'), help: ptw('halfLifeDaysHelp'), min: 1, max: 3_650 },
   ];
+  // S28 · PR 662: the courier score card's words and the figures of its worked example
+  const csw = (k: string, vars?: Record<string, string | number>) => t(d, `orders.rr.cs.${k}`, vars);
+  const csKeys = ['h', 'd', 'enabled', 'upperScore', 'lowerScore', 'check', 'weight', 'p10', 'p5', 'lower', 'higher', 'exampleH', 'score', 'unknownNote', 'readOnly', 'unsaved', 'save', 'saving', 'saved', 'discard', 'band.auto', 'band.call', 'band.person'];
+  const csText: Record<string, string> = Object.fromEntries([...csKeys.map((k) => [k, csw(k)]), ...SCORE_METRICS.map((k) => [`m.${k}`, t(d, `orders.cs.metric.${k}`)]), ...['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [`err.${c}`, csw(`err.${c}`)])]);
+  const csSample = Object.fromEntries(SCORE_METRICS.map((k) => [k, Number(csw(`sample.${k}`))])) as Record<(typeof SCORE_METRICS)[number], number>;
+  const csSrc = Object.fromEntries(SCORE_METRICS.map((k) => [k, fraudChecks.length ? csw('src.courier', { names: fraudChecks.map((p) => t(d, `connections.${p}.name`)).join(', ') }) : csw('src.own')])) as Record<(typeof SCORE_METRICS)[number], string>;
+  const acw = (k: string) => t(d, `orders.ac.${k}`);
+  const acKeys = ['h', 'd', 'enabled', 'presetH', 'presetHelp', 'summary', 'caseH', 'answerH', 'trustedMin', 'trustedMax', 'bigCod', 'bigCodHelp', 'never', 'readOnly', 'unsaved', 'save', 'saving', 'saved', 'discard', 'preset.low', 'preset.normal', 'preset.strict', 'preset.custom', 'act.auto', 'act.call', 'act.person'];
+  const acText: Record<string, string> = Object.fromEntries([...acKeys.map((k) => [k, acw(k)]), ...Object.keys(AUTO_CONFIRM_PRESETS.normal).map((c) => [`case.${c}`, acw(`case.${c}`)]), ...['STALE', 'INVALID_INPUT', 'FORBIDDEN', 'forbidden', 'unauthorized', 'network', 'other'].map((c) => [`err.${c}`, acw(`err.${c}`)])]);
+  const csBand = (b: string) => (b === 'unknown' ? csw('acc.unknown') : csw(`band.${b}`));
   const checkNames = fraudChecks.map((p) => t(d, `connections.${p}.name`)).join(', ');
   const count = (x: number) => String(x);
   return (
@@ -180,6 +191,55 @@ export default async function RiskRulesPage() {
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/prepaid-confirm" screen={{ key: pc.key, value: pc.value, version: pc.version }} fields={pcFields} texts={pcTexts} canEdit={canEdit} testId="risk-prepaid-confirm" />
       </div>
+      <AutoConfirmSettings url="/api/admin/risk/auto-confirm" screen={{ key: ac.key, value: ac.value, version: ac.version }} canEdit={canEdit} presets={AUTO_CONFIRM_PRESETS} unit={10 ** moneyOf(currency, view.locale).digits} t={acText} />
+      <CourierScoreSettings url="/api/admin/risk/courier-score" screen={{ key: cs.key, value: cs.value, version: cs.version }} canEdit={canEdit} sample={csSample} t={csText} sources={csSrc} />
+      {cs.value.enabled ? (
+        <div className="a2-card a2-mt12" data-testid="risk-courier-score-accuracy">
+          <h3 className="a2-h4">{csw('acc.h', { days: csAcc.days })}</h3>
+          <p className="a2-xs a2-mute">{csw('acc.d')}</p>
+          {csAcc.rows.length ? (
+            <div className="a2-tblw a2-mt6">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{csw('acc.col.band')}</th>
+                    <th className="r">{csw('acc.col.orders')}</th>
+                    <th className="r">{csw('acc.col.delivered')}</th>
+                    <th className="r">{csw('acc.col.returned')}</th>
+                    <th className="r">{csw('acc.col.cancelled')}</th>
+                    <th className="r">{csw('acc.col.rate')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {csAcc.rows.map((r) => (
+                    <tr key={r.band} data-testid="risk-courier-score-acc-row">
+                      <td className="a2-tdh">{csBand(r.band)}</td>
+                      <td className="r">
+                        <span className="a2-num">{count(r.orders)}</span>
+                      </td>
+                      <td className="r">
+                        <span className="a2-num">{count(r.delivered)}</span>
+                      </td>
+                      <td className="r">
+                        <span className="a2-num">{count(r.returned)}</span>
+                      </td>
+                      <td className="r">
+                        <span className="a2-num">{count(r.cancelled)}</span>
+                      </td>
+                      <td className="r">
+                        <span className="a2-num">{r.returnedPct === null ? '—' : `${r.returnedPct}%`}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{csw('acc.none')}</p>
+          )}
+          {csAcc.suggestion ? <p className="a2-sm a2-mt6">{csw('acc.sugg', { pct: csAcc.suggestion.values.pct })}</p> : null}
+        </div>
+      ) : null}
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/risk/transit" screen={{ key: td.key, value: td.value, version: td.version }} fields={tdFields} texts={tdTexts} canEdit={canEdit} testId="risk-transit" />
       </div>

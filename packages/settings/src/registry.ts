@@ -99,6 +99,9 @@ import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
 import { geoGuideSettings } from './registry-geo-guide';
 import { adsIntelSettings } from './registry-ads-intel';
+import { courierScoreSettings } from './registry-courier-score';
+import { autoConfirmSettings } from './registry-auto-confirm';
+import { incompleteV5Settings } from './registry-incomplete-v5';
 import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
 import { adminAccessSettings } from './registry-admin-access';
@@ -1569,6 +1572,11 @@ export const registry = {
   ...studioCreativeBriefSettings,
   // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
   ...adsIntelSettings,
+  // ---- S28 · PR 662 · the courier score out of 10 and its accuracy report, off (registry-courier-score.ts, version 293). ----
+  ...courierScoreSettings,
+  // ---- S28 · PR 663 · the auto-confirm rules table and its presets, off (registry-auto-confirm.ts, version 294). ----
+  ...autoConfirmSettings,
+  ...incompleteV5Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

@@ -70,6 +70,8 @@ import { blockProposalSettingsRoute } from './admin-orders/block-proposal-api';
 import { bundleRoute, bundlingSettingsRoute } from './admin-orders/bundling-api';
 import { goodCustomerSettingsRoute } from './admin-orders/good-customer-api';
 import { prepaidConfirmSettingsRoute } from './admin-orders/prepaid-confirm-api';
+import { courierScoreSettingsRoute } from './admin-orders/courier-score-api';
+import { autoConfirmSettingsRoute } from './admin-orders/auto-confirm-api';
 import { phoneRiskSettingsRoute } from './admin-orders/phone-risk-api';
 import { transitSettingsRoute } from './admin-orders/transit-api';
 import { digestRoute, holdProposalRoute } from './admin-orders/digest-api';
@@ -131,6 +133,8 @@ export async function riskRoute(request: Request, deps: AdminDeps | null, path: 
   if (path[0] === 'good-customer') return goodCustomerSettingsRoute(request, deps, path);
   // follow-up 320: prepaid orders nothing flagged confirm by themselves once paid (the switch, off)
   if (path[0] === 'prepaid-confirm') return prepaidConfirmSettingsRoute(request, deps, path);
+  if (path[0] === 'courier-score') return courierScoreSettingsRoute(request, deps, path);
+  if (path[0] === 'auto-confirm') return autoConfirmSettingsRoute(request, deps, path);
   if (path[0] === 'transit') return transitSettingsRoute(request, deps, path);
   if (path[0] === 'phone-risk') return phoneRiskSettingsRoute(request, deps, path);
   if (path[0] === 'stopped') return stopReportRoute(request, deps, path);

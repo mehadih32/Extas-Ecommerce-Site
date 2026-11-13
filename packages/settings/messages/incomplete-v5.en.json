@@ -1,0 +1,8 @@
+{
+  "orders": {
+    "incompleteV5": {
+      "label": "Incomplete orders: possible match and messages",
+      "help": "Possible match marks an unfinished checkout whose connection matches an earlier customer under a different phone; it never attaches or merges anything. The four ready messages (forgot, size, delivery, offer) open in WhatsApp or SMS for a person to send. Words in braces are filled in when the message opens. Off as shipped."
+    }
+  }
+}
