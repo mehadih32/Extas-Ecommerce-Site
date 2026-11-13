@@ -92,6 +92,7 @@
     { "pr": 577, "what": "the Agents team page lists the seven agent cards", "page": "/admin/agents", "selector": "[data-testid=agents-grid]", "attribute": "data-testid", "equals": "agents-grid" },
     { "pr": 577, "what": "an agent's 360 profile page loads its hero card", "page": "/admin/agents/gyani", "selector": "[data-testid=agent-hero]", "attribute": "data-testid", "equals": "agent-hero" },
     { "pr": 579, "what": "an agent's profile page loads its curriculum levels card", "page": "/admin/agents/gyani", "selector": "[data-testid=agent-curriculum]", "attribute": "data-testid", "equals": "agent-curriculum" },
+    { "pr": 582, "what": "an agent's profile page loads its memory card (off by default)", "page": "/admin/agents/gyani", "selector": "[data-testid=agent-memory]", "attribute": "data-testid", "equals": "agent-memory" },
     { "pr": 424, "what": "the Run history page shows what the server last said on Telegram", "page": "/admin/reports/health/history", "selector": "[data-testid=history-alerts-told]", "attribute": "data-testid", "equals": "history-alerts-told" },
     { "pr": 420, "what": "the Fixes to approve page shows the approval rule", "page": "/admin/reports/health/fixes", "selector": "[data-testid=fixes-rule]", "attribute": "data-testid", "equals": "fixes-rule" },
     { "pr": 418, "what": "the Smoke runs page shows its run choice (after a deploy, nightly)", "page": "/admin/reports/health/smoke", "selector": "[data-testid=smoke-runs-choice]", "attribute": "data-testid", "equals": "smoke-runs-choice" },

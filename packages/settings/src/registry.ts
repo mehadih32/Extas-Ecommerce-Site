@@ -904,6 +904,20 @@ export const registry = {
     sortOrder: 40,
     version: 310,
   }),
+  // ---- PR 582 · ai.memory: strong agent memory, off until the owner turns it on (CLAUDE.md rule 1 — every AI
+  // feature ships off by default). Shared by every agent — there is one switch, not one per agent. ----
+  'ai.memory.enabled': setting({
+    schema: z.boolean(),
+    default: false,
+    scope: 'installation',
+    valueType: 'BOOLEAN',
+    group: 'ai',
+    labelKey: 'ai.memory.enabled.label',
+    helpKey: 'ai.memory.enabled.help',
+    isOwnerData: false,
+    sortOrder: 41,
+    version: 333,
+  }),
 
   // ---- PR 508 · theme: which complete theme the shop wears (D table: Classic) and the large-text switch (off). The
   // theme's colour and font tokens belong to the design-token file (Shilpi, S02), not to this registry. ----

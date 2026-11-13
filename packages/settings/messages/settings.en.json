@@ -279,6 +279,12 @@
         "label": "Model auto-suggest",
         "help": "Off by default. When on, the AI Cost Book shows a suggested model per job (including qualified free models) with its quality score, cost and a \"Re-test now\" button. It only suggests — your own model pick never changes by itself."
       }
+    },
+    "memory": {
+      "enabled": {
+        "label": "Strong agent memory",
+        "help": "Off by default. On: every agent keeps a long-term memory (facts, decisions, your instructions, past campaigns and tasks, lessons) it can search and that is never deleted silently — only archived or corrected by you."
+      }
     }
   },
   "theme": {
