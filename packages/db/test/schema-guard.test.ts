@@ -32,8 +32,8 @@ describe('schema basics', () => {
     expect(schema.enums.length).toBeGreaterThan(30);
   });
 
-  it('gives every model a register stage S00–S27', () => {
-    const bad = schema.models.filter((m) => !m.stage || Number(m.stage.slice(1)) > 27).map((m) => m.name);
+  it('gives every model a register stage S00–S28', () => {
+    const bad = schema.models.filter((m) => !m.stage || Number(m.stage.slice(1)) > 28).map((m) => m.name);
     expect(bad).toEqual([]);
   });
 
