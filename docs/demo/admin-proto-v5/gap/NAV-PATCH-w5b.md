@@ -36,3 +36,8 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
   (secret = keyed hash of the bot token; a mock connection answers 404). Off until the owner turns `telegram.approvals` on.
 - Other screens raise one with `requestApproval(deps, storeId, { kind: refund|price|cod|other, source, title, detail?, amountMinor?, refType?, refId? })`
   from `lib/telegram-approvals.ts` (price adjust 664, prepaid refund, big COD) and read `ApprovalRequest.status` for the answer; deciding only records it.
+
+## PR 700 Website analytics: visitors
+- Page `/admin/website/analytics` (perm `reports.read`; settings `settings.write` + PIN), tab "Analytics" under Website (the Overview). Key
+  `websiteAnalytics`, guide `website/analytics`. The shop layout now also reads `analytics.visitors` and passes `collect` to the beacon.
+  Off until the owner turns collect on; `GET /api/admin/analytics-visitors`. The existing Reports > Analytics pages stay as they are.

@@ -15,6 +15,7 @@ import type { AccountsDeps } from '@extas/accounts';
 import { visitorIdSchema } from '@extas/cart';
 import { readCookie, sameOrigin } from '../admin-auth';
 import { readCapped } from '../read-capped';
+import { visitorProps } from './visitors-pure';
 import { customerOfRequest } from '../shop/account';
 import { bagCookie, BAG_COOKIE } from '../shop/bag-model';
 import type { Key, Value } from '@extas/settings';
@@ -60,6 +61,13 @@ export async function analyticsIngestHandler(request: Request, deps: AnalyticsAp
     if (!raw || typeof raw !== 'object') return noContent(headers);
     const r = raw as Record<string, unknown>;
     const me = await customerOfRequest(request, deps.accounts, deps.storeId);
+    // S28 · PR 700: a page view carries where it came from, its device and a coarse region only while the owner has the
+    // visitors view switched on, shaped and whitelisted here (never what the browser says it is); other events as before.
+    let props = r.props;
+    if (r.name === 'page_view') {
+      const vis = await deps.resolver.value('analytics.visitors', { storeId: deps.storeId });
+      props = visitorProps(r.props, { collect: vis.collect, region: request.headers.get('cf-region'), ownHost: request.headers.get('host') });
+    }
     await recordAnalyticsEvent(deps.analytics, {
       storeId: deps.storeId,
       visitorId,
@@ -71,7 +79,7 @@ export async function analyticsIngestHandler(request: Request, deps: AnalyticsAp
       categoryId: r.categoryId,
       comboId: r.comboId,
       sourceButton: r.sourceButton,
-      props: r.props,
+      props,
       occurredAt: r.occurredAt,
     });
   } catch {

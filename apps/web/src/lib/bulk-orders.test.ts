@@ -1,9 +1,9 @@
 // S28 · PR 704 — the pure side of bulk orders: pieces, the unit price (one price, or the tier the pieces reach), the total,
 // the advance rounded to a whole minor unit, the even batch split, the state a quote is in and the size-text reader.
 import { describe, expect, it } from 'vitest';
-import { figures, parseSizes, piecesOf, splitBatches, stateOf, unitMinorFor } from './bulk-orders-pure';
+import { figures, parseSizes, piecesOf, splitBatches, stateOf, unitMinorFor, type BulkLine } from './bulk-orders-pure';
 
-const lines = [
+const lines: BulkLine[] = [
   { name: 'Polo', colour: 'Navy', sizes: { M: 40, L: 60 } },
   { name: 'Tee', colour: '', sizes: { S: 25 } },
 ];

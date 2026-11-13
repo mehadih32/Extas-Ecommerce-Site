@@ -4231,6 +4231,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 | pending | PR [706](docs/stages/S28.md#pr-706) | 13 Nov | S28: Start fresh |
 | pending | PR [704](docs/stages/S28.md#pr-704) | 13 Nov | S28: Bulk and corporate orders |
 | pending | PR [703](docs/stages/S28.md#pr-703) | 13 Nov | S28: Telegram approvals |
+| pending | PR [700](docs/stages/S28.md#pr-700) | 13 Nov | S28: Website analytics: visitors |
 | pending | CN-048 (PR 659–707 filed) | 13 Nov | Status: Phase A gap map. `docs/demo/admin-proto-v5/GAP-MAP.md` joins the three part files into one list: 54 items already built, 123 small changes on existing PRs (65 dated lines in the register), 46 new items filed as 49 new PRs in the new stage S28, in 5 build waves. CN-048 adopts prototype v5 as the admin UI truth and lifts CN-046's freeze; Lumen stays the look. No app code. |
 | #177 | PR [506](docs/stages/S15.md#pr-506) | 13 Nov | S15: AI-off proof — the whole site works with AI off. |
 | #177 | PR [341](docs/stages/S15.md#pr-341) | 13 Nov | S15: Weekly and monthly digests to Telegram and e-mail. |
