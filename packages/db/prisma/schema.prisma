@@ -10522,7 +10522,7 @@ model Conversation {
   @@index([storeId, status, slaDueAt])
 }
 
-/// @stage S22 · PR 425, 538 — a message; who replied is always recorded (employee name or EXTAS AI). Links are checked.
+/// @stage S22 · PR 425, 538, 693 — a message; who replied is always recorded (employee name or EXTAS AI). Links are checked.
 model Message {
   id                String       @id @default(uuid(7)) @db.Uuid
   storeId           Int
@@ -10548,6 +10548,11 @@ model Message {
   sentAt            DateTime     @default(now()) @db.Timestamptz(3)
   createdAt         DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+  /// S28 · PR 693: a public comment hidden on the Page (`hideReason` phone | abuse | manual), and when the desk sent its
+  /// one automatic private message and public reply.
+  hiddenAt          DateTime?    @db.Timestamptz(3)
+  hideReason        String?
+  autoRepliedAt     DateTime?    @db.Timestamptz(3)
 
   attachments MessageAttachment[]
 
@@ -10556,6 +10561,7 @@ model Message {
   @@index([conversationId, sentAt])
   /// PR 436: support analytics — a store's customer messages and answers in a period.
   @@index([storeId, direction, sentAt])
+  @@index([storeId, hiddenAt])
 }
 
 /// @stage S22 · B4.8, B4.9 — chat media, copied to our storage on arrival (Drive), with the Bengali voice transcript and
