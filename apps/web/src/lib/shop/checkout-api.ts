@@ -18,6 +18,7 @@ import { clickCookieOf, creditAdOrder } from '../journal/house-ads';
 import { creditOrder } from '../journal/performance';
 import { READ_COOKIE } from '../journal/performance-model';
 import { trackPurchase } from '../tracking/shop';
+import { recordPurchaseAnalytics } from '../analytics/shop-hooks';
 import { isSupportError, requestCallBack } from '@extas/support';
 import { phoneNormalizeBD } from '../phone-bd';
 
@@ -327,6 +328,8 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
       // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
       // follow-up 605: here only for cash on delivery with nothing to pay first; a prepaid or advance order goes once paid
       await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId, at: 'placed' });
+      // S15 · PR 338: the owner's own Analytics section hears of the order too, while `analytics.events` is on (quiet)
+      await recordPurchaseAnalytics(request, { storeId: deps.storeId, orderId: r.orderId, number: r.number });
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

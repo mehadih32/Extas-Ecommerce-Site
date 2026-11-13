@@ -43,6 +43,9 @@ import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
 import { adminDeps } from '@/lib/admin-auth';
 import { draftSizeFinder } from '@/lib/admin-support/draft-size';
+import { draftSizeAdviceFacts } from '@/lib/admin-support/draft-size-advice';
+import { supportAiReplyOption } from '@/lib/admin-ai/support-dispatch';
+import { sizeAdviceOption } from '@/lib/admin-ai/size-advice-dispatch';
 import { kindName, logLine, senderLabel, withInbox } from '@/lib/admin-support/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -101,8 +104,18 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     r.value('support.inbox', { storeId: MOTHER_STORE_ID }),
     r.value('store.currency', { storeId: MOTHER_STORE_ID }),
     r.value('support.catalogue', { storeId: MOTHER_STORE_ID }),
-    // PR 432: the draft answer (only for someone who may reply; off as it ships)
-    th.you.reply ? sp.supportDraft(sd, who, th.id, { sizeFor: draftSizeFinder(access.deps.db, r, MOTHER_STORE_ID) }) : Promise.resolve(null),
+    // PR 432: the draft answer (only for someone who may reply; off as it ships). PR 325: EXTAS AI's own
+    // rephrasing of that same draft when AI 360's agent switch, model pick and spend cap allow a real call right
+    // now (aiReply) — any failure, or AI simply not being ready, ships the rule-based words unchanged either way.
+    // PR 328: a second, independent AI slot (sizeAdvice) that only ever adds one sentence on *why* a size answer
+    // was given, grounded in Find My Size's own reasoning (draftSizeAdviceFacts) — same honest fallback either way.
+    th.you.reply
+      ? sp.supportDraft(sd, who, th.id, {
+          sizeFor: draftSizeFinder(access.deps.db, r, MOTHER_STORE_ID),
+          sizeAdvice: sizeAdviceOption(access.deps, MOTHER_STORE_ID, th.id, draftSizeAdviceFacts(access.deps.db, r, MOTHER_STORE_ID)),
+          aiReply: supportAiReplyOption(access.deps, MOTHER_STORE_ID, th.id),
+        })
+      : Promise.resolve(null),
     // PR 433: the follow-up waiting on this chat (only for someone who may reply; off as it ships)
     th.you.reply ? sp.chatFollowUp(sd, who, th.id) : Promise.resolve(null),
   ]);

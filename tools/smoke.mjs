@@ -173,11 +173,17 @@ async function runChecks(page, base, checks, bare, hostKind, afterDeploy = false
     try {
       if (check.request) {
         const client = check.request.anonymous ? await bare() : page.request;
+        // `withoutCookies`: the signed-in client's own cookies, except the named ones (a browser that never opened a
+        // bag: since PR 338 the shop's analytics beacon mints the bag cookie on the first page view, so a check of
+        // "no bag" must leave that one out while the preview login still goes along).
+        const left = check.request.withoutCookies;
+        const jar = Array.isArray(left) && left.length ? await page.context().cookies(`${base}${check.request.path}`) : null;
+        const cookieHeader = jar ? { cookie: jar.filter((c) => !left.includes(c.name)).map((c) => `${c.name}=${c.value}`).join("; ") } : {};
         try {
           const r = await client.fetch(`${base}${check.request.path}`, {
             method: check.request.method ?? "GET",
             data: check.request.body,
-            headers: check.request.headers ?? {},
+            headers: { ...(check.request.headers ?? {}), ...cookieHeader },
             failOnStatusCode: false,
           });
           const json = await r.json().catch(() => null);

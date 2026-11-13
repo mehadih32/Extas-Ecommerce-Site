@@ -428,6 +428,14 @@ export const PERMISSIONS = {
   // price, a discount, COD or a delivery charge; keeping B also needs the Website permission of what B changes.
   'reports.experiments.read': { group: 'reports' },
   'reports.experiments.write': { group: 'reports' },
+  // S15 · PR 337 (Blueprint B8.4) — Reports → Competitor Teardown: add, edit, archive and restore a saved
+  // competitor page and run its recheck by hand (`reports.competitors.write`); seeing the saved list and its
+  // reports is already covered by `reports.read`. Never places a real order, never a price or policy decision.
+  'reports.competitors.write': { group: 'reports' },
+  // S15 · PR 339 (Blueprint D5.2 "a funnel per product") — Reports → Overview's own "funnel per page": create,
+  // edit, archive and restore a saved funnel definition (`reports.analytics.write`); seeing a saved funnel and
+  // running it against the stored events is already covered by `reports.read`. Never a price, discount or order.
+  'reports.analytics.write': { group: 'reports' },
   // S13 · PR 254 (Blueprint MKT-05) — Marketing › Landing pages: see the pages and the orders each brought
   // (`marketing.landing.read`); create, edit, publish, take down and archive them (`marketing.landing.write`). A page shows
   // the product's own live prices; nothing here changes a price, a discount or an order.
@@ -483,6 +491,10 @@ export const PERMISSIONS = {
   // or deleting always needs their own existing permission on top (CLAUDE.md rule 6) — this key alone never does them.
   'ai.read': { group: 'ai' },
   'ai.control': { group: 'ai' },
+  // S15 · PR 321 (C1.7 "Skill library") — importing a skill, rolling one back, and switching an approved one
+  // on or off, all from AI › Skills. Deciding the resulting approval request stays `health.fixes.approve`
+  // (fixes.ts's own single decision path for every AiSkill proposal) — this key never grants that.
+  'ai.skills.write': { group: 'ai' },
 } as const satisfies Record<string, { group: string }>;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

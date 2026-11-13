@@ -217,6 +217,16 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
         ) : null}
         {/* S06 · PR 521: one click explains the alert */}
         {r.explain ? <AlertExplain e={r.explain} /> : null}
+        {/* S15 · PR 329: a plain AI paragraph on why the alert fired, grounded only in the panel above — never a decision */}
+        {r.aiNote ? (
+          <div className="a2-note a2-mt12" role="note" data-testid="review-ai-note">
+            <ShellIcon name="spark" size={15} />
+            <span>
+              <b className="a2-blk">{t(d, 'orders.review.aiNote.label')}</b>
+              <span className="a2-blk">{r.aiNote}</span>
+            </span>
+          </div>
+        ) : null}
         {/* S06 · PR 543: what the team did with reviews like this one */}
         {r.learned ? (
           <div className="a2-note a2-mt12" role="note" data-testid="review-learned">

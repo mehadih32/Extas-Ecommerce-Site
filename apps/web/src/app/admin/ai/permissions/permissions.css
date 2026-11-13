@@ -1,0 +1,51 @@
+/* S15 · PR 318 — AI › Permissions (/admin/ai/permissions), Lumen look. Uses the shared --lm-* and a2-* tokens only, so
+   the hardcode guard finds no colour literal here. One card per agent on every width (never a wide table that
+   would need to scroll sideways on a phone), the resource rows stacking the same on phone and desktop. */
+.adm2 .ai-pm-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.adm2 .ai-pm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm2 .ai-pm-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.adm2 .ai-pm-av {
+  font-size: 20px;
+}
+.adm2 .ai-pm-name {
+  display: flex;
+  flex-direction: column;
+}
+.adm2 .ai-pm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+.adm2 .ai-pm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .ai-pm-rlabel {
+  flex: 1 1 140px;
+}
+.adm2 .ai-permsel {
+  flex: 0 0 auto;
+  min-width: 132px;
+}
+.adm2 .ai-pm-default {
+  margin-left: 6px;
+}

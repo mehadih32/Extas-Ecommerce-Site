@@ -1,0 +1,21 @@
+{
+  "fn": {
+    "metaTitle": "Funnels",
+    "title": "Funnels",
+    "sub": "Where people drop off between looking and ordering — counted from the shop's own event records, never a guess.",
+    "noneYet": "No funnel saved yet. Create the shop funnel below to see where people drop off.",
+    "createDefault": "Create the shop funnel",
+    "created": "Funnel created",
+    "createFailed": "Could not create the funnel",
+    "funnelLabel": "Funnel",
+    "period": { "label": "Window", "d7": "7 days", "d30": "30 days", "d90": "90 days" },
+    "range": "{from} to {to}",
+    "stepsTitle": "Shop funnel",
+    "stepsSub": "Unique visitors at each step",
+    "step": "Step",
+    "visitors": "Visitors",
+    "fromPrevious": "From the step before",
+    "fromFirst": "From the first step",
+    "note": "A master switch, Analytics event capture, must be on for new events to be recorded (Settings › Analytics; on as it ships). This page only reads what has already happened — nothing here changes the shop."
+  }
+}

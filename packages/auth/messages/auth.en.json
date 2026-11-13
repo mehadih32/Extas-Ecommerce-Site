@@ -333,6 +333,12 @@
       "experiments": {
         "read": "See the A/B tests of the shop and their results: visitors, who added to the bag or ordered, the difference and how sure it is (Reports → Experiments)",
         "write": "Write, start, pause and end A/B tests of the shop's words and shown or hidden parts, keep the winner, archive a test, and set the module's switch and numbers (Reports → Experiments)"
+      },
+      "competitors": {
+        "write": "Add, edit, archive and restore a saved competitor page, and run its recheck by hand (Reports → Competitor Teardown)"
+      },
+      "analytics": {
+        "write": "Create, edit, archive and restore a saved funnel of page/shop events (Reports → Overview's own funnel per page)"
       }
     },
     "marketing": {
@@ -379,7 +385,10 @@
     },
     "ai": {
       "read": "See the AI Center: every agent, what it did last and what it cost (no customer's details beyond what the agent itself worked on)",
-      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own"
+      "control": "Pause or resume one AI agent, and its switches, monthly cap and schedule — never money, refunds, prices, COD, ad budgets, blocking or deleting on its own",
+      "skills": {
+        "write": "Import a skill, roll one back, switch an approved one on or off, or run a sandbox test, from AI › Skills"
+      }
     }
   },
   "totp": {

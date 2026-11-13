@@ -261,6 +261,9 @@
         "buildAudience": "{sales} of delivered sales, ROAS {roas}: people like these buyers are worth reaching."
       },
       "expires": "runs out {when}",
+      "aiNote": {
+        "label": "AI's own words on why — "
+      },
       "approve": "Approve",
       "reject": "Reject",
       "confirmApprove": "Approve: {what}? A pause or a budget change is sent at once.",

@@ -229,7 +229,10 @@
       "title": "Low stock",
       "sub": "Counted once for all stores together, after what is held in checkout.",
       "threshold": "alert at {n}",
-      "empty": "Nothing is running low."
+      "empty": "Nothing is running low.",
+      "aiNote": {
+        "label": "AI's own words on why — "
+      }
     },
     "queue": {
       "title": "Waiting to go live, with real stock",

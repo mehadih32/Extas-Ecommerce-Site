@@ -173,3 +173,74 @@
 .adm2 .ai-routing-row span.a2-xs {
   overflow-wrap: anywhere;
 }
+/* S15 · PR 321 — AI › Skills: the on/off switch and "roll back" button share one action cell, each on its own
+   line at phone width (the shared .a2-tbl's own responsive card layout already stacks the row; this only stacks
+   the two controls inside that one cell so neither gets squeezed beside the other — CLAUDE.md's "step down, never
+   wrap" rule, applied here by giving each control the full cell width instead of fighting for one row). */
+.adm2 .ai-sk-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+/* S15 · PR 322 — AI › Skills › Sandbox: one run-history row stacks its four pieces (status pill, orders read,
+   cost note, when) at phone width instead of squeezing them onto one line — the same "step down, never wrap"
+   instinct as PR 321's own .ai-sk-actions, just for a row of plain text/pills rather than two controls. */
+.adm2 .ai-sbx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm2 .ai-sbx-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln2);
+}
+.adm2 .ai-sbx-row:last-child {
+  border-bottom: none;
+}
+/* S15 · PR 324 — the "AI-off test" card: a real, already-computed check per row (never a live run), its own
+   fallback line under the name, a pass/fail pill on the right — same shape as .ai-sbx-row above. */
+.adm2 .ai-offtest {
+  margin-top: 16px;
+}
+.adm2 .ai-offtest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.adm2 .ai-offtest-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ln2);
+}
+.adm2 .ai-offtest-row:last-child {
+  border-bottom: none;
+}
+.adm2 .ai-offtest-fallback {
+  display: block;
+}
+/* S15 · PR 506 — the "whole-shop journey" badge on a journey-tagged row, and the summary block tying the three
+   safety pillars (master switch, spend cap, this proof) together, below the check list. */
+.adm2 .ai-offtest-journey {
+  margin-left: 8px;
+  font-size: 11px;
+}
+.adm2 .ai-offtest-journey-summary {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ln2);
+}
