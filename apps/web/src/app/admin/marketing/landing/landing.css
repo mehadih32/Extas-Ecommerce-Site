@@ -39,3 +39,6 @@
 .adm2 td .lp-pn{display:inline-flex;vertical-align:middle}
 /* PR 638 (CN-036): the phone preview shows the shop, which stays light: a light island in dark mode, white inside */
 .adm2 .a2-z .lp-phone.lm-island{background:var(--lm-sf);border-radius:28px}
+/* PR 709: chips, notes and pills of the template cards wrap at every width. */
+.adm2 .lp-chips{min-width:0;max-width:100%}
+.adm2 .lp-chips>*{min-width:0;max-width:100%}
