@@ -1,0 +1,22 @@
+/* S28 (admin prototype v5) — the small shared layout of the Wave 5 screens: cards in a grid, simple tables, switch rows. */
+.s28-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px;margin-top:12px}
+.s28-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.s28-row.between{justify-content:space-between}
+.s28-grow{flex:1;min-width:0}
+.s28-tw{overflow-x:auto;max-width:100%}
+.s28-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.s28-tbl th,.s28-tbl td{text-align:left;padding:8px 10px;border-top:1px solid var(--lm-ln);vertical-align:top}
+.s28-tbl th.r,.s28-tbl td.r{text-align:right}
+.s28-list{list-style:none;margin:8px 0 0;padding:0}
+.s28-list li{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--lm-ln)}
+.s28-list li:first-child{border-top:0}
+.s28-list a{font-weight:600}
+.s28-chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--lm-ln2)}
+.s28-bar{height:8px;border-radius:99px;background:var(--lm-chip);overflow:hidden}
+.s28-bar>i{display:block;height:100%;background:currentColor;opacity:.7}
+.s28-heat{position:relative;border:1px solid var(--lm-ln2);border-radius:10px;overflow:hidden}
+.s28-heat>i{position:absolute;border-radius:50%;transform:translate(-50%,-50%);background:var(--lm-badbg)}
+.s28-warn{color:var(--lm-warn)}
+.s28-bad{color:var(--lm-bad)}
+.s28-good{color:var(--lm-ok)}
+@media (max-width:640px){.s28-tbl{font-size:13px}}

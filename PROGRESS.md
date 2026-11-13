@@ -354,6 +354,7 @@
 | 2026-11-13 | **PR 683 · S28 (wave 4, lane w4a) — ERP size chart site side built (sample source), switch off** |
 | 2026-11-13 | **PR 684 · S28 (wave 4, lane w4a) — demo products built, switch off** |
 | 2026-11-13 | **PR 685 · S28 (wave 4, lane w4a) — add-product wizard built (8 steps)** |
+| 2026-11-13 | **PR 707 · S28 — Admin map (/admin/map)** (w5b, local commit, not pushed). Searchable map of every menu page and everyday tasks, built from the menu model (lib/admin-map.ts), one en/bn line per page, shows only pages the person may open; guide help/admin-map; nav patch NAV-PATCH-w5b.md; tests admin-map.test.ts. |
 
 ## Parked
 
