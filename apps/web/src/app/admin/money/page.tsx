@@ -26,6 +26,7 @@ import { moneyOverview, type ReceivedDay } from '@/lib/money-overview';
 import bn from '../../../../messages/admin-money.bn.json';
 import en from '../../../../messages/admin-money.en.json';
 import './money.css';
+import '../reports/delivery/report.css';
 
 export const dynamic = 'force-dynamic';
 
