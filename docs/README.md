@@ -92,6 +92,7 @@ docs file (CN-011).
 | File | What it is |
 |---|---|
 | [`demo/admin-proto-v5/`](demo/admin-proto-v5/README.md) | The owner-approved admin prototype v5 (13 Nov 2026): the UI truth for the whole admin, with its decision log |
+| [`demo/admin-proto-v5/GAP-MAP.md`](demo/admin-proto-v5/GAP-MAP.md) | Phase A gap map (13 Nov 2026, CN-048): what is built, what changes, and the 49 new S28 PRs in 5 build waves; the three evidence files are in [`gap/`](demo/admin-proto-v5/gap/) |
 | [`owner/ROUND15.md`](owner/ROUND15.md) | Every owner note from review round 15 on (Note 52 is the newest on `main`) — the record of his decisions |
 | [`owner/ROUND14.md`](owner/ROUND14.md) | Round 14: the owner's points after demo version 9 |
 | [`owner/CHANGE-PROCESS.md`](owner/CHANGE-PROCESS.md) | How a new idea or change enters the build (Bengali; part of PR 594) |
