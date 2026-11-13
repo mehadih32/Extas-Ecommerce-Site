@@ -102,6 +102,7 @@ import { geoGuideSettings } from './registry-geo-guide';
 import { adsIntelSettings } from './registry-ads-intel';
 import { courierScoreSettings } from './registry-courier-score';
 import { autoConfirmSettings } from './registry-auto-confirm';
+import { learningEngineSettings } from './registry-learning-engine';
 import { incompleteV5Settings } from './registry-incomplete-v5';
 import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
@@ -1652,6 +1653,9 @@ export const registry = {
   ...courierScoreSettings,
   // ---- S28 · PR 663 · the auto-confirm rules table and its presets, off (registry-auto-confirm.ts, version 297). ----
   ...autoConfirmSettings,
+  // ---- S15 · PR 585 · the continuous learning engine's master switch and quality-gate source count, off
+  // (registry-learning-engine.ts, version 331). ----
+  ...learningEngineSettings,
   ...incompleteV5Settings,
 } satisfies RegistryShape;
 

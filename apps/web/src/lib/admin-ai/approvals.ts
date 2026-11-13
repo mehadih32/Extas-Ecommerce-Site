@@ -44,6 +44,9 @@ export const KNOWN_KINDS = [
   { key: 'adBudget', nameEn: 'Ad budget increase', nameBn: 'বিজ্ঞাপনের বাজেট বাড়ানো' },
   { key: 'block', nameEn: 'Blocking', nameBn: 'ব্লক করা' },
   { key: 'delete', nameEn: 'Deletion', nameBn: 'মুছে ফেলা' },
+  // PR 585: Tirondaj/Doot's own learning-engine proposal to buy a paid data tool (cost + reason) — decided the
+  // same way as every other non-GATE_KINDS request, here only for a proper label (`../admin-ai/learning-engine.ts`).
+  { key: 'ai.paidTool', nameEn: 'Paid data tool', nameBn: 'পেইড ডেটা টুল' },
   // The two kinds `fixes.ts` (PR 420) already owns and already writes — listed here only so this unifying view can
   // show them with a proper label too; this file never decides them (see `decideApproval` below).
   { key: FIX_KIND, nameEn: 'Site-health fix', nameBn: 'সাইট স্বাস্থ্যের সমাধান' },

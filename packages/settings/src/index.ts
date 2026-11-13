@@ -282,4 +282,6 @@ export * from './registry-photoshoot-combo-gift-set';
 export * from './registry-photoshoot-scene-library';
 // S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).
 export * from './registry-ads-intel';
+// S15 · PR 585 — the continuous learning engine's master switch and quality-gate source count, off by default (registry-learning-engine.ts, version 331).
+export * from './registry-learning-engine';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

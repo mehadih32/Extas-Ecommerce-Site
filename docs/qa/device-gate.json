@@ -361,6 +361,7 @@
       "/admin/agents/gyani",
       "/admin/ai/audit",
       "/admin/ai/reports",
+      "/admin/ai/learning",
       "/admin/money/refunds",
       "/admin/money/refunds?view=all",
       "/admin/build",
