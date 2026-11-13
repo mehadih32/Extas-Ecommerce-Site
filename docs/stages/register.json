@@ -44083,7 +44083,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "merge orders into one (`orders.mergeOrders` v301, off: look-back 5 days, auto-merge off, a different address asks; \"Merge\" and \"Merge + call\" on the kept order: lines move at their sold price, the other order is cancelled as duplicate with a note, nothing after Packed; append-only `OrderMerge` record, migration 0201)",
+    "note": "merge orders into one (`orders.mergeOrders` v311, off: look-back 5 days, auto-merge off, a different address asks; \"Merge\" and \"Merge + call\" on the kept order: lines move at their sold price, the other order is cancelled as duplicate with a note, nothing after Packed; append-only `OrderMerge` record, migration 0201)",
     "github": []
    },
    "builtFacts": {
@@ -44250,7 +44250,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "replacement path (`returns.replacement` v302, off: 168 hours, old piece back in 7 days, reasons fault, damaged, wrong): a defective or wrong piece is sent again free as an exchange row of kind REPLACEMENT on the returns board, the same piece, no price difference, no charge, no refund and no wallet credit, the old piece due back by a date; the size exchange and the 72-hour cheaper-piece-to-wallet exchange are untouched; migration 0202 adds `kind` and `oldPieceDueAt` to Exchange)",
+    "note": "replacement path (`returns.replacement` v312, off: 168 hours, old piece back in 7 days, reasons fault, damaged, wrong): a defective or wrong piece is sent again free as an exchange row of kind REPLACEMENT on the returns board, the same piece, no price difference, no charge, no refund and no wallet credit, the old piece due back by a date; the size exchange and the 72-hour cheaper-piece-to-wallet exchange are untouched; migration 0202 adds `kind` and `oldPieceDueAt` to Exchange)",
     "github": []
    },
    "builtFacts": {
