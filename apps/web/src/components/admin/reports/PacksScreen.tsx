@@ -4,6 +4,7 @@
 // reports-packs.*.json (`reportsPacks.*`). Read-only: nothing here moves money or sends to a buyer or supplier.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { fileUrl } from '@/lib/report-file-links';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -16,7 +17,7 @@ export interface PackSchedule {
   lastSentAt: string | null;
 }
 
-export function PacksScreen(p: { dict: Dict; packs: readonly string[]; schedules: PackSchedule[] }) {
+export function PacksScreen(p: { dict: Dict; packs: readonly string[]; schedules: PackSchedule[]; lang: string }) {
   const router = useRouter();
   const c = (k: string, vars?: Record<string, string | number>) => t(p.dict, `reportsPacks.${k}`, vars);
   const [rows, setRows] = useState(p.schedules);
@@ -49,10 +50,13 @@ export function PacksScreen(p: { dict: Dict; packs: readonly string[]; schedules
             <h2 className="a2-h3">{c(`packs.${id}.name`)}</h2>
             <p className="a2-cs">{c(`packs.${id}.d`)}</p>
             <div className="w4-row a2-mt12">
-              <a className="a2-btn pri" href={`/api/admin/reports/packs/${id}`} target="_blank" rel="noreferrer" data-testid={`pack-pdf-${id}`}>
+              <a className="a2-btn pri" href={fileUrl(id, 'pdf', null, p.lang)} target="_blank" rel="noreferrer" data-testid={`pack-pdf-${id}`}>
                 {c('pdf')}
               </a>
-              <a className="a2-btn" href={`/api/admin/reports/packs/${id}?format=csv`} data-testid={`pack-csv-${id}`}>
+              <a className="a2-btn" href={fileUrl(id, 'xlsx', null, p.lang)} data-testid={`pack-xlsx-${id}`}>
+                {c('xlsx')}
+              </a>
+              <a className="a2-btn" href={fileUrl(id, 'csv', null, p.lang)} data-testid={`pack-csv-${id}`}>
                 {c('csv')}
               </a>
             </div>

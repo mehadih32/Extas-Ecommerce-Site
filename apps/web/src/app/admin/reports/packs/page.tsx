@@ -66,7 +66,7 @@ export default async function ReportsPacksPage() {
     <div className="a2-z" data-testid="packs-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'reportsPacks.title')} sub={t(view.dict, 'reportsPacks.sub')} />
       <SectionTabs view={view} current={KEY} />
-      <PacksScreen dict={view.dict} packs={PACKS} schedules={schedules as PackSchedule[]} />
+      <PacksScreen dict={view.dict} packs={PACKS} schedules={schedules as PackSchedule[]} lang={view.lang} />
     </div>
   );
 }

@@ -22,8 +22,8 @@
       }
     },
     "pdf": "Download PDF",
-    "csv": "Download spreadsheet",
-    "letterhead": "The PDF has your shop's name, address and phone at the top. Change them in Settings. The PDF is in English.",
+    "csv": "Download CSV",
+    "letterhead": "The PDF has your shop's name, address and phone at the top. Change them in Settings. The files are in the language of the admin.",
     "schedule": {
       "title": "Send it by itself",
       "sub": "Off until you switch it on. A short summary goes to your own Telegram. Nothing goes to a buyer or a supplier. The PDF stays here to download.",
@@ -33,7 +33,7 @@
       "monthly": "On the 1st of each month",
       "channels": "Where",
       "telegram": "Telegram",
-      "email": "E-mail (not sent yet)",
+      "email": "E-mail (to the address in Reports settings)",
       "save": "Save",
       "saving": "Saving…",
       "saved": "Schedule saved",
@@ -45,6 +45,7 @@
       "forbidden": "You do not have permission for this.",
       "INVALID_INPUT": "Pick where it goes.",
       "other": "It could not be saved. Try again."
-    }
+    },
+    "xlsx": "Download Excel"
   }
 }
