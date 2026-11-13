@@ -20,7 +20,7 @@
 import { randomUUID } from 'node:crypto';
 import { after } from 'next/server';
 import { AD_PLATFORM_CONNECTION, AD_WITHDRAWS, adEventAdapters, createConnections, type AdEventSender, type AdPlatform, type AdUser, type Connections } from '@extas/adapters';
-import { Prisma, type PrismaClient } from '@extas/db/client';
+import { isPracticeOrder, practiceOrderIds, Prisma, type PrismaClient } from '@extas/db/client';
 import { tickedPlatforms, type ConversionFeedSettings, type TrackingSettings } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import { adminDeps } from '../admin-auth';
@@ -109,6 +109,8 @@ export function userDataOf(s: TrackingSettings, who: Shopper): AdUser {
 
 /** Records one event (once per event id) and sends it after the answer; false when it is not recorded. */
 export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promise<{ recorded: boolean; id?: string }> {
+  // PR 706 (CN-049): a practice order never reaches an ad platform or a conversion feed.
+  if (input.orderId && (await isPracticeOrder(deps.db, input.orderId))) return { recorded: false };
   const at = { storeId: input.storeId };
   const s = await deps.resolver.value('ads.tracking', at);
   const name = input.name;
@@ -243,6 +245,12 @@ export async function sendEvents(deps: TrackingDeps, o: { ids?: readonly string[
   for (const r of rows) {
     const c = await deps.db.trackedEvent.updateMany({ where: { id: r.id, updatedAt: r.updatedAt }, data: { pending: true } });
     if (c.count === 1) mine.push(r);
+  }
+  // PR 706 (CN-049): an event of a practice order is never sent; it stops waiting (nothing is deleted).
+  const practiceIds = await practiceOrderIds(deps.db, mine.map((r) => r.orderId));
+  if (practiceIds.size) {
+    await deps.db.trackedEvent.updateMany({ where: { id: { in: mine.filter((r) => r.orderId && practiceIds.has(r.orderId)).map((r) => r.id) } }, data: { pending: false } });
+    for (let i = mine.length - 1; i >= 0; i--) if (mine[i]!.orderId && practiceIds.has(mine[i]!.orderId!)) mine.splice(i, 1);
   }
   out.events = mine.length;
   const orderIds = [...new Set(mine.map((r) => r.orderId).filter((x): x is string => !!x))];

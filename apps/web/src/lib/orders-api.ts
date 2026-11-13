@@ -82,6 +82,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { decideErpLine, erpOrderView } from '@extas/inventory';
 import * as od from '@extas/orders';
 import { partialBoxView, savePartialDelivery } from '@extas/shipping';
+import { maskForPerson } from './staff-controls';
+import { askApprover, priceAdjustGate } from './approval-gates';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { addLineBody } from './admin-orders/lines';
 import { mergeBody } from './admin-orders/merge';
@@ -126,7 +128,9 @@ export async function handle(request: Request, deps: AdminDeps | null, permissio
   try {
     const key = request.headers.get('idempotency-key')?.trim() || undefined;
     const out = await fn({ deps: await ordersDeps(deps!), who: { actor: g.actor, storeId, ctx: g.ctx }, url, opts: { idempotencyKey: key } });
-    return json({ ok: true, ...out }, { status });
+    // PR 702: a role set to hide a customer's phone and address sees them hidden on every order answer it reads
+    const shown = request.method.toUpperCase() === 'GET' ? await maskForPerson(deps!, g.actor.staffUserId ?? null, storeId, out) : out;
+    return json({ ok: true, ...shown }, { status });
   } catch (e) {
     return ordersFail(e);
   }
@@ -347,7 +351,14 @@ export async function ordersRoute(request: Request, deps: AdminDeps | null, path
     return handle(request, deps, 'orders.priceAdjust', async (x) => {
       const cmd = await command(request, x.opts);
       const row = found(await x.deps.db.order.findFirst({ where: { id, storeId: x.who.storeId }, select: { currency: true } }));
-      return { result: await od.adjustPrice(x.deps, x.who, id, priceAdjustBody(cmd.input, row.currency), cmd.opts) };
+      // PR 664 wired to the staff limits (702) and the approvals (703): inside the person's limit it applies; else it waits as a request and an approver is asked
+      const staffUserId = x.who.actor.staffUserId ?? null;
+      const priceGate = async (a: { discountMinor: number; baseMinor: number }) => (await priceAdjustGate(deps!, staffUserId, x.who.storeId, a)).apply;
+      const result = await od.adjustPrice(x.deps, x.who, id, priceAdjustBody(cmd.input, row.currency), { ...cmd.opts, priceGate });
+      if (result.state === 'PENDING') {
+        await askApprover(deps!, x.who.storeId, 'price', { source: 'orders.priceAdjust', title: `Price adjust, order ${result.number}`, amountMinor: null, refType: 'OrderPriceAdjustment', refId: result.lineId });
+      }
+      return { result };
     });
   }
   // S28 · PR 665: merge — this order as the kept one (GET) and the fold itself (POST)

@@ -1,0 +1,141 @@
+{
+  "webAnalytics": {
+    "metaTitle": "Website analytics",
+    "title": "Website analytics",
+    "sub": "Who visits your shop, from where, and what they open.",
+    "tabs": {
+      "overview": "Overview",
+      "behaviour": "Behaviour"
+    },
+    "off": "The visitors view is switched off, so only each page's type is counted. Switch it on below to also see sources, devices and regions.",
+    "range": {
+      "label": "Show the last",
+      "days": "{n} days"
+    },
+    "kpi": {
+      "visitors": "Visitors",
+      "sessions": "Sessions",
+      "views": "Page views",
+      "orders": "Orders",
+      "conv": "Visit to order",
+      "live": "Live now",
+      "liveSub": "in the last {n} minutes",
+      "none": "-"
+    },
+    "chart": {
+      "title": "Visitors and page views by day",
+      "visitors": "Visitors",
+      "views": "Page views"
+    },
+    "lists": {
+      "sources": "Where they come from",
+      "pages": "Pages by type",
+      "paths": "Top pages",
+      "devices": "Devices",
+      "regions": "Regions",
+      "empty": "Nothing yet.",
+      "regionHint": "Regions need your CDN to send the visitor's region.",
+      "views": "{n} views",
+      "visitors": "{n} visitors",
+      "direct": "direct",
+      "other": "other",
+      "page": {
+        "home": "Home",
+        "category": "Category",
+        "product": "Product",
+        "bag": "Bag",
+        "checkout": "Checkout",
+        "other": "Other"
+      },
+      "device": {
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Computer"
+      }
+    },
+    "settings": {
+      "title": "Visitors settings",
+      "collect": "Count where visitors come from, their device, pages and region",
+      "keep": "Keep the daily totals for (days)",
+      "live": "Live now means the last (minutes)",
+      "top": "Length of the top lists",
+      "pin": "Owner PIN",
+      "save": "Save settings",
+      "saved": "Settings saved.",
+      "privacy": "No IP address, name or phone number is ever stored."
+    },
+    "errors": {
+      "INVALID_INPUT": "Check the numbers.",
+      "FORBIDDEN": "You may not do that.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    },
+    "behaviour": {
+      "metaTitle": "Website behaviour",
+      "title": "Website behaviour",
+      "sub": "Where visitors click, how far they scroll and which form fields they leave empty.",
+      "off": "Behaviour counting is switched off, so there is nothing to show yet. Switch it on below.",
+      "empty": "Nothing counted yet.",
+      "filters": {
+        "page": "Page",
+        "device": "Device"
+      },
+      "pages": {
+        "home": "Home",
+        "category": "Category",
+        "product": "Product",
+        "bag": "Bag",
+        "checkout": "Checkout",
+        "other": "Other"
+      },
+      "devices": {
+        "all": "All",
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Computer"
+      },
+      "heat": {
+        "title": "Click map",
+        "sub": "Darker spots are where more people clicked. The map is the whole length of the page, top to bottom.",
+        "cell": "{n} clicks",
+        "total": "{n} clicks counted on this page."
+      },
+      "reach": {
+        "title": "How far they scroll",
+        "sub": "Of everyone who opened the page, the share who got this far down. Uses the page and device chosen above.",
+        "mark": "{n}% down"
+      },
+      "fields": {
+        "title": "Form fields left empty",
+        "sub": "Only the field's name is kept, never what was typed. A high number means people stop at that field.",
+        "left": "{n} of {of} left empty"
+      },
+      "buttons": {
+        "title": "Button clicks",
+        "note": "From the events the shop already records, for the days shown.",
+        "size_chart_click": "Size chart opened",
+        "all_colours_click": "All colours opened",
+        "whatsapp_click": "WhatsApp button"
+      },
+      "more": {
+        "title": "Related reports",
+        "funnels": "Funnels: where people drop out of the order journey",
+        "searches": "Searches: what people look for on the shop"
+      },
+      "settings": {
+        "title": "Behaviour settings",
+        "collect": "Count clicks, scrolling and form fields",
+        "privacy": "No IP address, name, phone number or typed text is ever stored.",
+        "keep": "Keep the daily counts for (days)",
+        "grid": "Click map grid (cells across and down)",
+        "pin": "Owner PIN",
+        "save": "Save settings",
+        "saved": "Settings saved."
+      }
+    }
+  }
+}

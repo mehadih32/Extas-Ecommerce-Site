@@ -165,7 +165,7 @@
       "card": {
         "h": "Default courier",
         "d": "The courier a booking offers first and the one listed first.",
-        "first": "The first courier in the list"
+        "first": "Steadfast (when it is in the list), else the first courier"
       },
       "payouts": {
         "h": "Courier payouts",

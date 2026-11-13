@@ -265,7 +265,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const groups = lumenNav(viewer, { aiShown });
   const all = groups.flatMap((g) => g.sections);
   const label = (s: ShellSection) => tt(`sec.${s.id}`);
-  const tabsOf = (s: ShellSection) => visibleTabs(s, viewer).map((tb) => ({ id: tb.id, href: visiblePages(tb, viewer)[0]!.href, label: tt(`tab.${s.id}.${tb.id}`) }));
+  const tabsOf = (s: ShellSection) => visibleTabs(s, viewer).filter((tb) => !tb.more).map((tb) => ({ id: tb.id, href: visiblePages(tb, viewer)[0]!.href, label: tt(`tab.${s.id}.${tb.id}`) }));
   const badge = (s: ShellSection) => model.badges?.[s.id] ?? 0;
   const unread = (notes ?? []).filter((n) => noteUnread(n, seen)).length;
   const openHere = () => {

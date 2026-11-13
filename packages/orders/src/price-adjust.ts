@@ -172,7 +172,10 @@ export async function adjustPrice(deps: OrdersDeps, who: Who, orderId: string, i
   if (!pre) throw new OrdersError('NOT_FOUND', 'no such order', ['orderId']);
   const preCalc = calcAdjust(d.kind, d.value, moneyOf(pre), await walletBalance(deps.db, pre.customerId));
   if (!preCalc.ok) throw new OrdersError(preCalc.code, 'this adjustment cannot be made', [preCalc.field], preCalc.maxMinor === undefined ? undefined : { maxMinor: preCalc.maxMinor });
-  const preNeeds = aboveLimit(d.kind, preCalc, pre.subtotalMinor, limit);
+  // PR 664 + 702/703: when the screen layer gives a gate, it decides (a customer's own wallet never counts); else the setting's own role limit
+  const waits = async (kind: AdjustKind, c: { amountMinor: number; percent: number | null }, subtotalMinor: number): Promise<boolean> =>
+    opts.priceGate ? !(await opts.priceGate({ discountMinor: kind === 'WALLET' ? 0 : c.amountMinor, baseMinor: subtotalMinor })) : aboveLimit(kind, c, subtotalMinor, limit);
+  const preNeeds = await waits(d.kind, preCalc, pre.subtotalMinor);
   let pinChecked = false;
   if (preNeeds && me.canApprove) {
     await verifyOwnerPin(deps.db, who.actor, d.pin, await pinPolicy(deps), { action: PIN_ACTION, storeId: who.storeId, now: nowOf(deps), ctx: { source: 'admin-api', ...who.ctx } });
@@ -187,7 +190,7 @@ export async function adjustPrice(deps: OrdersDeps, who: Who, orderId: string, i
     const row = await tx.order.findUniqueOrThrow({ where: { id: o.id }, select: MONEY_SELECT });
     const c = calcAdjust(d.kind, d.value, moneyOf(row), await walletBalance(tx, row.customerId));
     if (!c.ok) throw new OrdersError(c.code, 'this adjustment cannot be made', [c.field], c.maxMinor === undefined ? undefined : { maxMinor: c.maxMinor });
-    const needs = aboveLimit(d.kind, c, row.subtotalMinor, limit);
+    const needs = await waits(d.kind, c, row.subtotalMinor);
     const base = { kind: d.kind, percent: c.percent, amountMinor: c.amountMinor, reasonKey: reason.key, note: d.note ?? null, requestId: null, requestedById: who.actor.staffUserId };
     if (needs && !me.canApprove) return writeLine(deps, tx, o, by, { ...base, state: 'PENDING', decidedById: null, pinChecked: false }, reason);
     if (needs && !pinChecked) throw new OrdersError('STALE', 'the order changed since it was read; the PIN is needed now', ['pin'], { version: o.version });

@@ -29,3 +29,4 @@ export async function disconnectPrisma(): Promise<void> {
 
 /** The mother store's id (Blueprint A4.5). A structural constant of the schema, not a business value. */
 export const MOTHER_STORE_ID = 1;
+export * from "./practice";

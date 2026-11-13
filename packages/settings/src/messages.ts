@@ -145,7 +145,12 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 // S23 · PR 437 (registry v281): the social studio's cadence, voice and AI-caption switches.
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
+// S28 · PR 706 (CN-049, registry v380): practice mode and the Reset sample data button.
+import practiceBn from '../messages/practice.bn.json';
+import practiceEn from '../messages/practice.en.json';
 import analyticsBn from '../messages/analytics.bn.json';
+import s28W5bBn from '../messages/s28-w5b.bn.json';
+import s28W5bEn from '../messages/s28-w5b.en.json';
 import analyticsEn from '../messages/analytics.en.json';
 import reportsDigestBn from '../messages/reports-digest.bn.json';
 import reportsDigestEn from '../messages/reports-digest.en.json';
@@ -478,6 +483,9 @@ messages.bn = mergeMessages(messages.bn, couriersV5Bn);
 // S28 · PR 678, 679 (registry v320): the pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts).
 messages.en = mergeMessages(messages.en, rulesHubEn);
 messages.bn = mergeMessages(messages.bn, rulesHubBn);
+// S28 · PR 706 (CN-049, registry v380): practice mode and the Reset sample data button (registry-practice.ts).
+messages.en = mergeMessages(messages.en, practiceEn);
+messages.bn = mergeMessages(messages.bn, practiceBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);
@@ -523,6 +531,9 @@ messages.bn = mergeMessages(messages.bn, studioBn);
 // S15 · PR 338 (registry v288): the site-wide analytics event layer's master switch.
 messages.en = mergeMessages(messages.en, analyticsEn);
 messages.bn = mergeMessages(messages.bn, analyticsBn);
+// S28 · PR 700-707 (registry v700-707): wave 5b's settings.
+messages.en = mergeMessages(messages.en, s28W5bEn);
+messages.bn = mergeMessages(messages.bn, s28W5bBn);
 // S15 · PR 341 (registry v289): weekly/monthly digests to Telegram and e-mail.
 messages.en = mergeMessages(messages.en, reportsDigestEn);
 messages.bn = mergeMessages(messages.bn, reportsDigestBn);

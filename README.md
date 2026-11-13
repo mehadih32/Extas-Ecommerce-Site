@@ -4202,6 +4202,7 @@ In progress (5 of 49 PRs built: wave 1 builder A, PR 659, 660, 661, 666, 667 —
 - PR 697 — Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders.
 - PR 698 — Message cost ceilings. Monthly SMS and WhatsApp ceiling (owner sets; off by default), warning at a share, further messages on a channel at its ceiling wait in the log (order's first message never held), cheapest-channel fallback to the step's fallback channel; card on the new Messages page and on the AI Center cost book.
 - PR 699 — Marketing overview and Plan and ideas. Overview with spend, delivered sales per Tk 1, profit after ads, Scale/Keep/Fix/Stop chips from settings; Ad campaigns table with ad-level rows (tired ads); Plan page with a channel budget plan (advice only) and overlap and low-stock warnings; migration 0264
+**Practice data (PR 706, CN-049; local, not merged yet).** Settings › Practice data (`/admin/settings/practice`, owner only): a practice-mode switch (`practice.enabled`, off), "Add sample data" (60 customers, about 90 orders over 6 months in every status, parcels, courier payouts, claims, incomplete orders, in the prototype's names, areas and prices), and a PIN-guarded "Reset practice data" that removes every practice record and keeps the products the owner uploaded (and demo products unless "Also remove demo products" is ticked). Practice records carry `isPractice`, never reach the ERP, a courier, a message channel or an ad feed, and stay out of every figure and list while practice mode is off. Guide: `docs/admin-guide/pages/settings/practice.md`; what is left: `docs/demo/admin-proto-v5/gap/PRACTICE-TODO.md`.
 
 ---
 
@@ -4230,6 +4231,14 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 | pending | PR [665](docs/stages/S28.md#pr-665) | 13 Nov | S28 wave 1 (builder C): merge orders into one. `orders.mergeOrders` v331 (off), "Merge" and "Merge + call" on the kept order, append-only `OrderMerge` record (migration 0201), auto-merge hook (off), guide updated. |
 | pending | PR [669](docs/stages/S28.md#pr-669) | 13 Nov | S28 wave 1 (builder C): replacement path. `returns.replacement` v332 (off), "Send again free", REPLACEMENT cases on the returns board (migration 0202), guides updated. |
 | pending | PR [664](docs/stages/S28.md#pr-664) | 13 Nov | S28 wave 1 (builder C): price adjust on every order. `orders.priceAdjust` v330 (off), append-only `OrderPriceAdjustment` ledger (migration 0200), `orders.priceAdjust` and `orders.priceApprove` keys, "Adjust price" with per-role limits and PIN approval, guide updated. |
+| pending | PR [707](docs/stages/S28.md#pr-707) | 13 Nov | S28: Admin map (/admin/map) |
+| pending | PR [702](docs/stages/S28.md#pr-702) | 13 Nov | S28: Staff controls |
+| pending | PR [706](docs/stages/S28.md#pr-706) | 13 Nov | S28: Start fresh |
+| pending | PR [704](docs/stages/S28.md#pr-704) | 13 Nov | S28: Bulk and corporate orders |
+| pending | PR [703](docs/stages/S28.md#pr-703) | 13 Nov | S28: Telegram approvals |
+| pending | PR [700](docs/stages/S28.md#pr-700) | 13 Nov | S28: Website analytics: visitors |
+| pending | PR [701](docs/stages/S28.md#pr-701) | 13 Nov | S28: Website analytics, behaviour - click map, scroll reach, form fields left empty, button counts, off until switched on |
+| pending | PR [705](docs/stages/S28.md#pr-705) | 13 Nov | S28: Settings regroup - People, Roles and Activity log screens over the existing staff, roles and audit records |
 | pending | CN-048 (PR 659–707 filed) | 13 Nov | Status: Phase A gap map. `docs/demo/admin-proto-v5/GAP-MAP.md` joins the three part files into one list: 54 items already built, 123 small changes on existing PRs (65 dated lines in the register), 46 new items filed as 49 new PRs in the new stage S28, in 5 build waves. CN-048 adopts prototype v5 as the admin UI truth and lifts CN-046's freeze; Lumen stays the look. No app code. |
 | #177 | PR [506](docs/stages/S15.md#pr-506) | 13 Nov | S15: AI-off proof — the whole site works with AI off. |
 | #177 | PR [341](docs/stages/S15.md#pr-341) | 13 Nov | S15: Weekly and monthly digests to Telegram and e-mail. |
