@@ -1,0 +1,58 @@
+# CN-045 job 3 (owner, 12 Nov 2026) — the CI backlog watcher. GitHub's own concurrent-hosted-job limit queues most
+# of a busy day's hosted runs (ci.yml; everything else runs on the VM, one job at a time by design, CN-003, and is
+# never touched here). A pull request's own concurrency group cancels an older run on a new push, but a run stuck
+# behind the account's job limit is not "superseded" that way — it just sits there, sometimes for hours, after its
+# pull request has already been merged or closed, or after a newer run on the same branch has made it pointless.
+# Every 10 minutes this cancels exactly those (tools/ci-watch.mjs), and lists whatever is left (genuinely still
+# waiting its turn) in a short report, so the next owner update can mention it in Bengali. It does not fix GitHub's
+# job limit — see BLOCKED.md for the two paid options.
+name: ci-watch
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-watch
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cancel stale/superseded hosted runs, list the rest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node tools/ci-watch.mjs --out="$RUNNER_TEMP/ci-watch/latest"
+
+      - name: Commit the report
+        if: always()
+        run: |
+          set -eu
+          [ -f "$RUNNER_TEMP/ci-watch/latest.md" ] || { echo "no report was written (see the step above)"; exit 0; }
+          git config user.name "extas-ci-watch"
+          git config user.email "extas-ci-watch@users.noreply.github.com"
+          for i in 1 2 3 4; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            mkdir -p docs/reports/ci-watch
+            cp "$RUNNER_TEMP/ci-watch/latest.md" docs/reports/ci-watch/latest.md
+            git add docs/reports/ci-watch/latest.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "Status: ci-watch report [skip ci]"
+            if git push -q origin HEAD:main; then exit 0; fi
+            sleep $((i * 2))
+          done
+          exit 1

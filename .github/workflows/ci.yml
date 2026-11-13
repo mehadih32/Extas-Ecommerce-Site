@@ -10,6 +10,24 @@
 # Lighthouse measures one page list (lighthouserc.json): on a pull request the core set plus the pages the diff
 # touches; on every push to main (what deploys: deploy.yml waits for this workflow) the full set, so a failing page
 # still blocks the deploy. Every night and by hand, nightly.yml runs this whole workflow on main with the full set.
+#
+# CN-045 job 3 (owner, 12 Nov 2026): batch-PR gating, so GitHub's own concurrent-hosted-job limit stops queueing most
+# of a busy day's runs behind the device gate's 4 shards and Lighthouse's shards. An individual register-PR branch
+# now targets an integration branch named `batch-<date>-<n>`, not `main` (CLAUDE.md "Commits"; MASTER-REGISTER.md
+# CN-045). Its pull request runs only the LIGHT set — everything here except `lh-plan`/`lighthouse` and
+# `device-gate-shard`/`device-gate` — build once, lint/type-check, unit, db, infra, the sign-in end to end, commit
+# shape and the README/docs guards. The HEAVY set (those four jobs) runs only on (i) the batch branch's own pull
+# request into `main` (which carries the whole batch, one commit per register PR, same shape as today's per-PR-to-
+# main flow moved up one level) and (ii) every push to `main`. A pull request whose base is not a batch branch (a
+# meta/infra change straight into `main`, same as before CN-045) still gets the full gate, same as a push to `main`.
+# This is decided purely by this one expression, repeated where needed rather than hidden in a job output (job-level
+# `if:` cannot read the `env` context): `github.event_name != 'pull_request' ||
+# !startsWith(github.event.pull_request.base.ref, 'batch-')` — true ("heavy") unless this is a pull request whose
+# base branch starts with `batch-`. `web` and `device-gate` keep their names and still fail on any real failure in
+# their gate; on a light run `web` also accepts `lighthouse` being skipped (never "success" turned into "skipped"
+# silently — the step says which it was), and `device-gate` itself does not run at all (nothing for it to check, and
+# a batch branch's own protection rule, if any, never names it). Nothing that reaches `main` ever skips a gate — only
+# the fan-out point moves, exactly as the owner asked.
 name: ci
 
 on:
@@ -30,6 +48,7 @@ on:
       - "docs/reports/redirect-import/**"
       - "docs/reports/simulation/**"
       - "docs/reports/acceptance/**"
+      - "docs/reports/ci-watch/**"
   # CN-023: nightly.yml (every night and by hand) calls this workflow; its run is named "nightly", so deploy.yml
   # (which follows "ci" runs) never starts for it.
   workflow_call:
@@ -350,6 +369,9 @@ jobs:
   # parent is the base and the diff is exactly what the pull request changes.
   lh-plan:
     name: lighthouse pages
+    # CN-045 job 3: HEAVY only — skipped on a pull request into a batch-<date>-<n> branch (LIGHT set; see the file
+    # header). `lighthouse` below reads this job's outputs only when it also runs, under the same condition.
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'batch-') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -373,6 +395,8 @@ jobs:
   # another's load; then PR 88's page and image weight targets (docs/qa/page-weight.json) on the same runs.
   lighthouse:
     name: lighthouse ${{ matrix.shard }}
+    # CN-045 job 3: HEAVY only (same condition as lh-plan, which this needs); skipped, not failed, on a light run.
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'batch-') }}
     needs: [build, lh-plan]
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -428,6 +452,8 @@ jobs:
   # they check every size and page. Follow-up 187 is done: Lighthouse no longer runs before the gate in this job.
   device-gate-shard:
     name: device-gate ${{ matrix.shard }}/${{ strategy.job-total }}
+    # CN-045 job 3: HEAVY only — skipped on a pull request into a batch-<date>-<n> branch (LIGHT set).
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'batch-') }}
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -481,7 +507,9 @@ jobs:
           retention-days: 7
 
   # The job names branch protection may require, kept (CN-023). Each passes only when every job of its gate passed;
-  # a failed, skipped or cancelled part fails it.
+  # a failed, skipped or cancelled part fails it — except, on a LIGHT run (CN-045 job 3), `lighthouse` itself is
+  # skipped on purpose (it is in the HEAVY set), and `web` accepts exactly that one "skipped" instead of "success".
+  # Nothing else is ever allowed to be anything but "success"; the step prints every result either way.
   web:
     if: ${{ !cancelled() }}
     needs: [build, checks, unit, deps, e2e, lighthouse]
@@ -491,12 +519,21 @@ jobs:
       - name: Build, lint and type-check, unit tests, dependency vulnerabilities, end to end and Lighthouse all passed
         env:
           NEEDS: ${{ toJSON(needs) }}
+          # CN-045 job 3: true only when `lighthouse` was deliberately skipped by the batch-PR LIGHT/HEAVY split
+          # above, never because it actually failed or was cancelled.
+          LIGHTHOUSE_OFF: ${{ github.event_name == 'pull_request' && startsWith(github.event.pull_request.base.ref, 'batch-') }}
         run: |
           echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+          if [ "$LIGHTHOUSE_OFF" = "true" ]; then
+            echo "$NEEDS" | jq -e '(.lighthouse.result == "skipped") and (to_entries | map(select(.key != "lighthouse")) | all(.value.result == "success"))' > /dev/null
+          else
+            echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+          fi
 
+  # CN-045 job 3: HEAVY only — skipped entirely on a LIGHT run (nothing for it to check: both its needs were
+  # themselves skipped on purpose, and a batch branch's own protection rule, if any, never names this check).
   device-gate:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || !startsWith(github.event.pull_request.base.ref, 'batch-')) }}
     needs: [device-gate-shard, lighthouse]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -741,12 +778,22 @@ jobs:
         with:
           fetch-depth: 0
       - name: One register PR per commit
-        run: node tools/check-commits.mjs "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+        run: |
+          # CN-045: github.event.pull_request.base.sha is a snapshot from when THIS run's event fired, not live
+          # main. A run that sits queued for a while (automated deploy/smoke/erp report commits land on main every
+          # few minutes, each [skip ci]) picks up a stale base whose range then includes those unrelated main
+          # commits, failing this check for a PR that touched nothing of its own. Recompute the merge-base against
+          # a freshly fetched main instead, so the range is always just this PR's own commits.
+          git fetch origin main
+          BASE_SHA="$(git merge-base origin/main "${{ github.event.pull_request.head.sha }}")"
+          node tools/check-commits.mjs "$BASE_SHA" "${{ github.event.pull_request.head.sha }}"
 
   # readme-guard (owner, 20 Oct, CN-011; PR 594): README.md must be current in every pull request into main — a PR log
   # row for every PR in the title, stage counts equal to the register's statuses, no touched stage "Not started".
+  # CN-045 job 3: also runs on a pull request into a batch-<date>-<n> branch (LIGHT set) — a register-PR branch must
+  # keep README.md current before it is cherry-picked into a batch, not only when the batch itself reaches main.
   readme-guard:
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: github.event_name == 'pull_request' && (github.base_ref == 'main' || startsWith(github.base_ref, 'batch-'))
     runs-on: ubuntu-24.04
     steps:
       # Its tests (tools/readme-guard.test.mjs) run with the web tests, like the other tools/ tests.
