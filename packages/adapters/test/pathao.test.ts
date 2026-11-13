@@ -196,8 +196,9 @@ describe('Pathao (PR 177)', () => {
     expect(pathaoAdapter.configSchema.safeParse({ storeId: 'main' }).success).toBe(false);
     expect(pathaoAdapter.configSchema.safeParse({ storeId: '149', baseUrl: 'http://plain.example.test' }).success).toBe(false);
     expect(connectionCatalogue.find((c) => c.provider === 'pathao')).toMatchObject({ kind: 'COURIER', secrets: [{ field: 'clientId' }, { field: 'clientSecret' }, { field: 'username' }, { field: 'password' }, { field: 'webhookSecret', optional: true }], config: [{ field: 'storeId' }, { field: 'baseUrl', optional: true }, { field: 'webhookReply', optional: true }] });
-    expect(courierAdapters.map((a) => a.provider)).toEqual(['mockCourier', 'steadfast', 'pathao']);
-    expect(keyedCourierAdapters.map((a) => a.provider)).toEqual(['steadfast', 'pathao']);
+    // PR 672: RedX is the third courier
+    expect(courierAdapters.map((a) => a.provider)).toEqual(['mockCourier', 'steadfast', 'pathao', 'redx']);
+    expect(keyedCourierAdapters.map((a) => a.provider)).toEqual(['steadfast', 'pathao', 'redx']);
     expect([PATHAO_LIVE_BASE_URL, PATHAO_SANDBOX_BASE_URL].every((u) => u.startsWith('https://'))).toBe(true);
     // the address follows the mode (the token request shows which one it reached)
     const reached: string[] = [];

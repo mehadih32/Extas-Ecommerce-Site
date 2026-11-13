@@ -21,7 +21,7 @@
 // each practice parcel's life — what was sent, its scenario, how far it got — is read from and written to the store,
 // so every process plays the same life. Without one (tests of this package), the world stays in memory as before.
 import { createHash } from 'node:crypto';
-import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierPlace, CourierPlaceLevel, CourierState, StatusTable } from './contract';
+import type { BookResult, CourierApi, CourierCapabilities, CourierEvent, CourierParcel, CourierPayoutInfo, CourierPayoutState, CourierPlace, CourierPlaceLevel, CourierState, StatusTable } from './contract';
 import { mapStatus } from './contract';
 import { practicePlaces, type MockPlaceRow } from './mock-places';
 import { AdapterError } from '../define';
@@ -81,6 +81,10 @@ interface MockState {
   failPlaces: number;
   /** PR 554: every place read, for the tests (level and parent). */
   placeReads: { level: CourierPlaceLevel; parentId: string | null }[];
+  /** PR 671: how the next payout requests end, and the next ones that fail. */
+  payoutPlan: ('paid' | 'rejected')[];
+  failPayout: ('error' | 'timeout')[];
+  balanceMinor: number | null;
 }
 
 /** Follow-up 375: where practice parcels are kept so every process plays the same life (the shop's database). */
@@ -98,7 +102,7 @@ export function usePracticeParcelStore(store: PracticeParcelStore | null): void 
 const worlds = (): Map<string, MockState> => (G.__extasMockCourier ??= new Map());
 function stateOf(provider: string): MockState {
   let s = worlds().get(provider);
-  if (!s) worlds().set(provider, (s = { parcels: new Map(), planned: new Map(), failNext: [], clock: null, places: null, failPlaces: 0, placeReads: [] }));
+  if (!s) worlds().set(provider, (s = { parcels: new Map(), planned: new Map(), failNext: [], clock: null, places: null, failPlaces: 0, placeReads: [], payoutPlan: [], failPayout: [], balanceMinor: null }));
   return s;
 }
 
@@ -153,7 +157,22 @@ export function mockCourierWorld(provider: string) {
     placeReads(): { level: CourierPlaceLevel; parentId: string | null }[] {
       return [...s.placeReads];
     },
+    /** PR 671: the next payout request ends `REJECTED` instead of `PAID` (set before asking). */
+    planPayout(outcome: 'paid' | 'rejected'): void {
+      s.payoutPlan.push(outcome);
+    },
+    /** PR 671: the next payout request is refused (`error`) or its answer is lost (`timeout`). */
+    failNextPayout(kind: 'error' | 'timeout'): void {
+      s.failPayout.push(kind);
+    },
+    /** PR 671: the figure the practice courier says it holds (null: it gives none). */
+    setBalance(minor: number | null): void {
+      s.balanceMinor = minor;
+    },
     reset(): void {
+      s.payoutPlan.length = 0;
+      s.failPayout.length = 0;
+      s.balanceMinor = null;
       s.parcels.clear();
       s.planned.clear();
       s.failNext.length = 0;
@@ -162,6 +181,36 @@ export function mockCourierWorld(provider: string) {
       s.failPlaces = 0;
       s.placeReads.length = 0;
     },
+  };
+}
+
+/**
+ * PR 671: a practice payout needs no stored state, so every process (the web app that asked, the worker that polls) reads
+ * the same life: the courier's id of the request carries when it was asked, how much, and how it will end
+ * (`MP-<prefix>-<ms in base 36>-<amount in minor units>-<p paid | r rejected>`). It reads REQUESTED for the first
+ * `PRACTICE_PAYOUT_PROCESSING_MS`, PROCESSING until `PRACTICE_PAYOUT_FINAL_MS`, then ends as planned. The practice courier
+ * never moves money and says no amount of its own: a payout's amount is what the shop asked for.
+ */
+export const PRACTICE_PAYOUT_PROCESSING_MS = 2 * MINUTE;
+export const PRACTICE_PAYOUT_FINAL_MS = 10 * MINUTE;
+
+function practicePayout(prefix: string, ref: string, at: number): CourierPayoutInfo | null {
+  const m = new RegExp(`^MP-${prefix}-([0-9a-z]+)-(\\d+)-([pr])$`).exec(ref);
+  if (!m) return null;
+  const asked = parseInt(m[1]!, 36);
+  const age = at - asked;
+  const ending: CourierPayoutState = m[3] === 'p' ? 'PAID' : 'REJECTED';
+  const state: CourierPayoutState = age < PRACTICE_PAYOUT_PROCESSING_MS ? 'REQUESTED' : age < PRACTICE_PAYOUT_FINAL_MS ? 'PROCESSING' : ending;
+  return {
+    ref,
+    state,
+    amountMinor: Number(m[2]),
+    paymentRef: state === 'PAID' ? `MOCK-PAY-${m[1]!.toUpperCase()}` : null,
+    method: state === 'PAID' ? 'practice' : null,
+    paidAt: state === 'PAID' ? new Date(asked + PRACTICE_PAYOUT_FINAL_MS) : null,
+    rawStatus: state.toLowerCase(),
+    note: state === 'REJECTED' ? 'practice courier: rejected (planned)' : null,
+    consignmentIds: [],
   };
 }
 
@@ -246,6 +295,28 @@ export function createMockCourier(provider: string, vocab: MockVocabulary, capab
       return { ok: true, message: 'practice courier: nothing leaves the server' };
     },
   };
+  if (capabilities.payouts === 'request' || capabilities.payouts === 'read') {
+    const clock = () => (s.clock ?? now)();
+    api.balance = async () => (s.balanceMinor === null ? null : { balanceMinor: s.balanceMinor });
+    api.payouts = {
+      status: async (ref) => practicePayout(vocab.prefix, ref, clock()),
+      // a practice payout is read by the id the shop holds; the practice courier keeps no list of its own
+      list: async () => [],
+      ...(capabilities.payouts === 'request'
+        ? {
+            async request(input: { merchantRef: string; amountMinor: number | null; note: string | null }) {
+              const fail = s.failPayout.shift();
+              if (fail === 'error') return { ok: false as const, error: 'practice courier: payment request refused (planned failure)', unknown: false };
+              if (input.amountMinor === null || input.amountMinor <= 0) return { ok: false as const, error: 'the practice courier needs the amount to ask for', unknown: false };
+              const ending = s.payoutPlan.shift() ?? 'paid';
+              const ref = `MP-${vocab.prefix}-${clock().toString(36)}-${input.amountMinor}-${ending === 'paid' ? 'p' : 'r'}`;
+              if (fail === 'timeout') return { ok: false as const, error: 'practice courier: no answer (planned timeout)', unknown: true };
+              return { ok: true as const, payout: practicePayout(vocab.prefix, ref, clock())! };
+            },
+          }
+        : {}),
+    };
+  }
   if (capabilities.zoneList) {
     api.places = async (level, parentId): Promise<CourierPlace[]> => {
       s.placeReads.push({ level, parentId });
