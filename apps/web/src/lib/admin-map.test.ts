@@ -30,8 +30,8 @@ describe('admin map (PR 707)', () => {
     const missing = pagesWithoutLine(buildAdminMap(owner, lines));
     // pages other PRs add to the menu bring their line with them (the nav patch lists them); today's menu has all
     expect(missing).toEqual([]);
-    // lines for the prototype's future menu ids (orders.batch, couriers.overview …) wait for the nav patch
-    expect(staleLines(lines)).toContain('orders.batch');
+    // lines for the prototype's future menu ids (ai.costs, ai.train …) wait for the nav patch
+    expect(staleLines(lines)).toContain('ai.costs');
     expect(Object.keys(bn.adminMap.lines).sort()).toEqual(Object.keys(lines).sort());
     expect(Object.keys(bn.adminMap.taskNames).sort()).toEqual(Object.keys(en.adminMap.taskNames).sort());
   });

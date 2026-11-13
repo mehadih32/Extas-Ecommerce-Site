@@ -110,7 +110,7 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
       real: ['costs', 'expenses', 'fees', 'ledger'],
       order: ['/admin/money/costs', '/admin/money/expenses', '/admin/money/fees', '/admin/money/cost-ledger', '/admin/money/cost-ledger/report', '/admin/money/budgets'],
     },
-    { proto: 'erp', real: ['books', 'match', 'differences', 'closes', 'daily', 'monthEnd'] },
+    { proto: 'erp', real: ['erp', 'books', 'match', 'differences', 'closes', 'daily', 'monthEnd'] },
     { proto: 'couriers', real: ['couriers'] },
     { proto: 'wallet', real: ['refunds'] },
     { proto: 'vat', real: ['vat'] },
