@@ -180,10 +180,10 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
         {current !== 'open' ? <input type="hidden" name="view" value={current} /> : null}
         <input type="hidden" name="range" value="custom" />
         <label className="a2-lbl">
-          {g('filter.from')} <input className="a2-in" type="date" name="from" defaultValue={o.range.from ?? ''} required />
+          {g('filter.from')} <input className="a2-inp" type="date" name="from" defaultValue={o.range.from ?? ''} required />
         </label>
         <label className="a2-lbl">
-          {g('filter.to')} <input className="a2-in" type="date" name="to" defaultValue={o.range.to ?? ''} required />
+          {g('filter.to')} <input className="a2-inp" type="date" name="to" defaultValue={o.range.to ?? ''} required />
         </label>
         <button type="submit" className="a2-btn">
           {g('filter.apply')}
