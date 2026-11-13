@@ -4138,6 +4138,37 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| #177 | PR [506](docs/stages/S15.md#pr-506) | 13 Nov | S15: AI-off proof — the whole site works with AI off. |
+| #177 | PR [341](docs/stages/S15.md#pr-341) | 13 Nov | S15: Weekly and monthly digests to Telegram and e-mail. |
+| #177 | PR [340](docs/stages/S15.md#pr-340) | 13 Nov | S15: The report section: what happened, what changed, what to do. |
+| #177 | PR [339](docs/stages/S15.md#pr-339) | 13 Nov | S15: Per-page funnels built on that layer. |
+| #177 | PR [338](docs/stages/S15.md#pr-338) | 13 Nov | S15: Site-wide analytics event layer. |
+| #177 | PR [337](docs/stages/S15.md#pr-337) | 13 Nov | S15: Saved competitors, scheduling and change alerts. |
+| #177 | PR [336](docs/stages/S15.md#pr-336) | 13 Nov | S15: Competitor Teardown agent — comparison and report engine. |
+| #177 | PR [335](docs/stages/S15.md#pr-335) | 13 Nov | S15: Competitor Teardown agent — journey walker. |
+| #177 | PR [334](docs/stages/S15.md#pr-334) | 13 Nov | S15: System Q&A agent — the owner asks the system how it works. |
+| #177 | PR [333](docs/stages/S15.md#pr-333) | 13 Nov | S15: Analytics commentary agent — explains the numbers, never invents one. |
+| #177 | PR [332](docs/stages/S15.md#pr-332) | 13 Nov | S15: Photoshoot studio AI orchestration. |
+| #177 | PR [331](docs/stages/S15.md#pr-331) | 13 Nov | S15: Social content AI agent. |
+| #177 | PR [330](docs/stages/S15.md#pr-330) | 13 Nov | S15: Growth marketing AI agent. |
+| #177 | PR [329](docs/stages/S15.md#pr-329) | 13 Nov | S15: Fraud review AI agent. |
+| #177 | PR [328](docs/stages/S15.md#pr-328) | 13 Nov | S15: Size advice AI agent. |
+| #177 | PR [327](docs/stages/S15.md#pr-327) | 13 Nov | S15: SEO and meta AI agent — the third real AI-provider job dispatcher. |
+| #177 | PR [326](docs/stages/S15.md#pr-326) | 13 Nov | S15: Product content AI agent — Doot drafts a product description from the product's own attributes. |
+| #177 | PR [325](docs/stages/S15.md#pr-325) | 13 Nov | S15: Support AI agent wiring — the first real AI-provider job dispatcher. |
+| #177 | PR [324](docs/stages/S15.md#pr-324) | 13 Nov | S15: AI-off fallback — every agent has a rule or template path that works without AI. |
+| #177 | PR [323](docs/stages/S15.md#pr-323) | 13 Nov | S15: Continuous skill training — corrections become training examples. |
+| #177 | PR [322](docs/stages/S15.md#pr-322) | 13 Nov | S15: Skill sandbox — try a skill on real data without touching production. |
+| #177 | PR [321](docs/stages/S15.md#pr-321) | 13 Nov | S15: Skill library — import a skill, version it, roll it back. |
+| #177 | PR [320](docs/stages/S15.md#pr-320) | 13 Nov | S15: bug box — the agent reports what it could not do. |
+| #177 | PR [319](docs/stages/S15.md#pr-319) | 13 Nov | S15: AI diary — what each agent did, why, and what it changed. |
+| #177 | PR [318](docs/stages/S15.md#pr-318) | 13 Nov | S15: permission matrix — what each agent may decide alone. |
+| #177 | PR [317](docs/stages/S15.md#pr-317) | 13 Nov | S15: the single approval queue. |
+| #177 | PR [316](docs/stages/S15.md#pr-316) | 13 Nov | S15: free-form cost calculator. |
+| #177 | PR [315](docs/stages/S15.md#pr-315) | 13 Nov | S15: one shared usage ledger behind every figure. |
+| #177 | PR [314](docs/stages/S15.md#pr-314) | 13 Nov | S15: what-if slider, and the Economy / Balanced / Premium presets. |
+| #177 | PR [313](docs/stages/S15.md#pr-313) | 13 Nov | S15: estimate versus actual, and the self-correction that follows. |
+| #177 | PR [312](docs/stages/S15.md#pr-312) | 13 Nov | S15: AI Cost Book — job catalogue, model selector, honest estimates. |
 | #179 | PR [488](docs/stages/S25.md#pr-488) | 12 Nov | S25: campaign creative export part 2, the producer. `produceCreativeExport` re-checks approved media fresh at production time and fills one preview output per chosen size (honest preview, never a real crop); "Produce this export" on a `DRAFT`/`FAILED` row, `READY` shows the preview note. |
 | #179 | PR [487](docs/stages/S25.md#pr-487) | 12 Nov | S25: campaign creative export part 1. `requestCreativeExport` from exactly one of a product, SKU or category that already has an approved image/video; Marketing › Studio › Export, "Request this export" leaves it `DRAFT`, "Cancel" on a `DRAFT` row. |
 | [#196](https://github.com/mehadih32/Extas-Ecommerce-Site/pull/196) | PR [658](docs/stages/S00.md#pr-658) (fix) | 12 Nov | Fixed a pre-existing `db`-check bug on `main`: PR [658](docs/stages/S00.md#pr-658)'s `funnel`/`hours` loader parts were correctly gated on `orders.read` but `api.db.test.ts`'s own assertion was never updated for them, breaking the `db` CI job for every PR — found while triaging CI failures on PR [#191](https://github.com/mehadih32/Extas-Ecommerce-Site/pull/191)/[#149](https://github.com/mehadih32/Extas-Ecommerce-Site/pull/149). |
