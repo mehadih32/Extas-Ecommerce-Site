@@ -239,6 +239,8 @@ export const APPEND_ONLY_LOCKED = [
   'BlogOrderRead',
   // S12 · PR 592 (migration 0171_house_ads): each order's credit to the house ad click before it, written once.
   'HouseAdOrderClick',
+  // S28 · PR 677 (migration 0230_offers): the history of one offer, written once.
+  'OfferEvent',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';
