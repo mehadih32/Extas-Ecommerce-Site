@@ -30,6 +30,7 @@ import { MONEY_REPORT_JOB, MONEY_REPORT_QUEUE, runMoneyReport, type MoneyReportP
 import { POINTS_JOB, POINTS_QUEUE, runPointsJob } from './rewards';
 import { ORDER_FOLLOW_UPS_JOB, ORDER_FOLLOW_UPS_QUEUE, runOrderFollowUps } from './order-followups';
 import { GRADES_JOB, GRADES_QUEUE, runGradesJob } from './grades';
+import { REPORT_PACK_JOB, REPORT_PACK_QUEUE, runReportPack, type ReportPackPayload } from './report-packs';
 import { RANKING_JOB, RANKING_QUEUE, runRankingJob } from './shop-ranking';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
@@ -384,6 +385,24 @@ const gradesJob: JobDefinition<{ storeId: number }> = {
 };
 
 /**
+ * S28 · PR 690 — one scheduled report pack for one store and period (planned by report-packs.ts): a short Telegram summary to the
+ * owner, once per period. Switched off or no bot = nothing.
+ */
+const reportPackJob: JobDefinition<ReportPackPayload> = {
+  key: REPORT_PACK_JOB,
+  queue: REPORT_PACK_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown; pack?: unknown; period?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${REPORT_PACK_JOB}: storeId must be a positive integer`);
+    if (typeof p.pack !== 'string' || !/^[a-z]{3,20}$/.test(p.pack)) throw new Error(`${REPORT_PACK_JOB}: pack must be a pack id`);
+    if (typeof p.period !== 'string' || !/^(W:\d{4}-\d{2}-\d{2}|M:\d{4}-\d{2})$/.test(p.period)) throw new Error(`${REPORT_PACK_JOB}: period must be W:YYYY-MM-DD or M:YYYY-MM`);
+    return { storeId: p.storeId as number, pack: p.pack, period: p.period };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runReportPack(deps, p)) }),
+};
+
+/**
  * S28 · PR 686 — one store's shop-ranking run (packages/catalogue `updateRankScores`; planned by shop-ranking.ts once a night).
  * Safe to run twice: only changed scores are written; the order goes on the shop only while `shop.ranking.autoApply` is on.
  */
@@ -501,6 +520,7 @@ const definitions: JobDefinition<never>[] = [
   pointsJob as unknown as JobDefinition<never>,
   gradesJob as unknown as JobDefinition<never>,
   rankingJob as unknown as JobDefinition<never>,
+  reportPackJob as unknown as JobDefinition<never>,
   audienceRefreshJob as unknown as JobDefinition<never>,
   supportEscalateJob as unknown as JobDefinition<never>,
   adSpendImportJob as unknown as JobDefinition<never>,

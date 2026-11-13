@@ -11,6 +11,7 @@ import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { pointsPlanner } from './rewards';
 import { gradesPlanner } from './grades';
 import { rankingPlanner } from './shop-ranking';
+import { reportPackPlanner } from './report-packs';
 import { searchPlanner, searchRunKey } from './search';
 import { supportEscalationPlanner } from './support-escalation';
 import { orderFollowUpsPlanner } from './order-followups';
@@ -65,7 +66,7 @@ describe('PR 6 · catalogue', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
     // Follow-up 602: + 'tracking.sweep' (the same queue). S28 PR 686: + 'catalogue.ranking.run' (queue 'catalogue').
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'catalogue.ranking.run', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'catalogue.ranking.run', 'reports.pack.send', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -417,5 +418,22 @@ describe('S28 · PR 686 · the shop-ranking planner', () => {
       { queue: 'catalogue', name: 'catalogue.ranking.run', payload: { storeId: 2 }, key: `catalogue.ranking.run/2/${day}` },
     ]);
     expect(() => JOBS.get('catalogue.ranking.run')!.parse({ storeId: 0 })).toThrow(/positive integer/);
+  });
+});
+
+describe('S28 · PR 690 · the report pack planner', () => {
+  const deps = (rows: unknown[]) => ({ db: { reportSchedule: { findMany: async () => rows } }, settings: { value: async () => 'Asia/Dhaka' } }) as unknown as Parameters<typeof reportPackPlanner>[0];
+  it('plans a monthly pack on the 1st and a weekly pack on Monday, only for telegram and only while on', async () => {
+    const rows = [
+      { storeId: 1, reportKey: 'pack:bank', frequency: 'monthly', channels: ['telegram'] },
+      { storeId: 1, reportKey: 'pack:sales', frequency: 'weekly', channels: ['telegram'] },
+      { storeId: 1, reportKey: 'pack:stock', frequency: 'monthly', channels: ['email'] },
+    ];
+    const first = await reportPackPlanner(deps(rows), new Date('2026-12-01T05:00:00Z')); // a Tuesday, the 1st
+    expect(first.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'bank', period: 'M:2026-12' }]);
+    const monday = await reportPackPlanner(deps(rows), new Date('2026-11-16T05:00:00Z'));
+    expect(monday.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'sales', period: 'W:2026-11-16' }]);
+    expect(await reportPackPlanner(deps(rows), new Date('2026-11-18T05:00:00Z'))).toEqual([]);
+    expect(() => JOBS.get('reports.pack.send')!.parse({ storeId: 1, pack: 'bank', period: 'D:2026-11-01' })).toThrow(/period/);
   });
 });
