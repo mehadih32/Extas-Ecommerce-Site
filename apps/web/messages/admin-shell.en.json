@@ -154,12 +154,14 @@
       },
       "ai": {
         "control": "Control room",
+        "agents": "Agents",
         "audit": "Checklist audit",
         "costBook": "Cost Book",
         "approvals": "Approvals",
         "permissions": "Permissions",
         "diary": "Diary",
-        "skills": "Skills"
+        "skills": "Skills",
+        "reports": "Agent reports"
       }
     },
     "purpose": {

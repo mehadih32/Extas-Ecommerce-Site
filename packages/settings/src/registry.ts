@@ -140,6 +140,7 @@ import { statementCostsSettings } from './registry-books-statement-costs';
 import { studioSettings } from './registry-studio';
 import { analyticsSettings } from './registry-analytics';
 import { reportsDigestSettings } from './registry-reports-digest';
+import { photoshootSettings } from './registry-photoshoot';
 import { studioVideoSettings } from './registry-creative-studio-video';
 import { studioCreativeBriefSettings } from './registry-creative-studio-brief';
 import { photoshootCostSettings } from './registry-photoshoot-cost';
@@ -1558,6 +1559,12 @@ export const registry = {
   ...analyticsSettings,
   // ---- S15 · PR 341 (Blueprint D5.3) · weekly/monthly digests to Telegram and e-mail, off (registry-reports-digest.ts, version 289). ----
   ...reportsDigestSettings,
+  // ---- S24 · PR 450 · the photoshoot provider adapters' per-image rate, 0/not set by default (registry-photoshoot-cost.ts, version 289). ----
+  ...photoshootCostSettings,
+  // ---- S25 · PR 490 (Blueprint C8.4) · the creative brief's master switch, off (registry-creative-studio-brief.ts, version 290). ----
+  ...studioCreativeBriefSettings,
+  // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
+  ...adsIntelSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

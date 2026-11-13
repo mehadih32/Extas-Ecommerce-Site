@@ -254,4 +254,8 @@ export * from './registry-studio';
 export * from './registry-analytics';
 // S15 · PR 341 (Blueprint D5.3) — weekly/monthly digests to Telegram and e-mail, off as it ships (registry-reports-digest.ts, version 289).
 export * from './registry-reports-digest';
+// S24 · PR 447 — the garment-prep/standardisation colour-drift tolerance, off (0) as it ships (registry-photoshoot.ts, version 288).
+export * from './registry-photoshoot';
+// S13 · PR 548 — market and competitor intelligence, proposals only (registry-ads-intel.ts, version 291).
+export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';

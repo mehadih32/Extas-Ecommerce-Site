@@ -12,23 +12,28 @@ import {
   WHAT_IF_MIN,
   type WhatIfJob,
 } from '@/lib/admin-ai/cost-book-whatif';
+import { formatMoney, type Money } from '@/components/admin/products/model';
 
 export function CostBookWhatIf({
   jobs,
   sections,
-  money,
+  storeMoney,
+  usdMoney,
   title,
   resetText,
 }: {
   jobs: WhatIfJob[];
   sections: { id: WhatIfJob['section']; name: string }[];
-  money: (storeMinor: number | null, usdMinor: number) => string;
+  storeMoney: Money;
+  usdMoney: Money;
   title: string;
   resetText: string;
 }) {
   const [mult, setMult] = useState<Partial<Record<WhatIfJob['section'], number>>>({});
   const total = useMemo(() => whatIfTotal(jobs, mult), [jobs, mult]);
   const full = fullMultiplier(mult);
+  const money = (storeMinor: number | null, usdMinor: number) =>
+    storeMinor !== null ? formatMoney(storeMinor, storeMoney) : formatMoney(usdMinor, usdMoney);
 
   return (
     <section className="a2-sc a2-mt12 cb-whatif" aria-labelledby="cb-whatif-h" data-testid="cb-whatif">

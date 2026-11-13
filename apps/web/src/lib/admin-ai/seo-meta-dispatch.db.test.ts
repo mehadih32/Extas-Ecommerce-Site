@@ -82,7 +82,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the SEO & meta job dispatcher on Postgr
 
     const productRows = await t.prisma.aiUsageLedger.findMany({ where: { refType: 'Product', refId: PRODUCT_ID } });
     expect(productRows).toHaveLength(1);
-    expect(productRows[0]).toMatchObject({ jobTypeKey: 'seoMetaTags', providerKey: 'anthropic', modelKey: 'gemini-flash', inputTokens: 70, outputTokens: 18 });
+    expect(productRows[0]).toMatchObject({ jobTypeKey: 'seoMetaTags', providerKey: 'anthropic', modelKey: 'claude-haiku', inputTokens: 70, outputTokens: 18 });
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
     expect(productRows[0]!.agentId).toBe(agent.id);
     expect(await t.prisma.aiDiaryEntry.count({ where: { agentId: agent.id, refType: 'Product', refId: PRODUCT_ID } })).toBe(1);
@@ -102,7 +102,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the SEO & meta job dispatcher on Postgr
   it("Doot's own monthly cap stops a real call before it is made, once this month's spend has already crossed it", async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'seoMetaTags', providerKey: 'anthropic', modelKey: 'gemini-flash', idempotencyKey: 'p-327-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, createdAt: NOW, jobTypeKey: 'seoMetaTags', providerKey: 'anthropic', modelKey: 'gemini-flash', idempotencyKey: 'p-327-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'doot', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

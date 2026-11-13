@@ -84,7 +84,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the social content job dispatcher on Po
 
     const rows = await t.prisma.aiUsageLedger.findMany({ where: { refType: 'StudioTemplate', refId: TEMPLATE_ID } });
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ jobTypeKey: 'socialReelCaption', providerKey: 'anthropic', modelKey: 'claude-sonnet', inputTokens: 90, outputTokens: 20 });
+    expect(rows[0]).toMatchObject({ jobTypeKey: 'socialReelCaption', providerKey: 'anthropic', modelKey: 'claude-haiku', inputTokens: 90, outputTokens: 20 });
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
     expect(rows[0]!.agentId).toBe(agent.id);
     const diaryCount = await t.prisma.aiDiaryEntry.count({ where: { agentId: agent.id } });
@@ -110,7 +110,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the social content job dispatcher on Po
   it('Doot\'s own monthly cap stops a real call before it is made, once this month\'s spend has already crossed it', async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'doot' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'socialReelCaption', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 't-331-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, createdAt: NOW, jobTypeKey: 'socialReelCaption', providerKey: 'anthropic', modelKey: 'claude-sonnet', idempotencyKey: 't-331-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'doot', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

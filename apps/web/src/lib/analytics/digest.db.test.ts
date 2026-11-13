@@ -17,6 +17,11 @@ describe.skipIf(!HAS_TEST_DB)('the weekly/monthly digest (PR 341)', () => {
   let who: Who;
   let A = 0;
   const NOW = new Date('2026-11-12T08:00:00Z');
+  // An event is recorded as the server would have seen it at `at` (the layer clamps a browser's time against its own
+  // clock, so the clock the event is recorded on is moved with it: the fixed NOW above is not the real "now").
+  const record = (at: Date, name: string, visitorId: string) =>
+    recordAnalyticsEvent({ db: t.prisma, now: () => new Date(at.getTime() + 1000) }, { storeId: A, name, visitorId, isLoggedIn: false, occurredAt: at.toISOString() });
+  const JUST_BEFORE_NOW = new Date(NOW.getTime() - 60_000); // inside the current window, which ends at NOW
 
   beforeAll(async () => {
     t = await createTestDatabase('web_digest_341');
@@ -28,10 +33,9 @@ describe.skipIf(!HAS_TEST_DB)('the weekly/monthly digest (PR 341)', () => {
   afterAll(async () => t?.drop());
 
   it('builds the current period from stored events, with the previous period for comparison', async () => {
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-341-1', isLoggedIn: false, occurredAt: NOW.toISOString() });
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-341-2', isLoggedIn: false, occurredAt: NOW.toISOString() });
-    const old = new Date(NOW.getTime() - 10 * DAY_MS);
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-341-old', isLoggedIn: false, occurredAt: old.toISOString() });
+    await record(JUST_BEFORE_NOW, 'product_view', 'v-341-1');
+    await record(JUST_BEFORE_NOW, 'product_view', 'v-341-2');
+    await record(new Date(NOW.getTime() - 10 * DAY_MS), 'product_view', 'v-341-old');
 
     const { digest, created } = await getOrCreateDigest(d, A, 'weekly');
     expect(created).toBe(true);
@@ -42,7 +46,7 @@ describe.skipIf(!HAS_TEST_DB)('the weekly/monthly digest (PR 341)', () => {
 
   it('is idempotent: a second call in the same period reuses the same row, never recounts', async () => {
     const first = await getOrCreateDigest(d, A, 'weekly');
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-341-late', isLoggedIn: false, occurredAt: NOW.toISOString() });
+    await record(JUST_BEFORE_NOW, 'product_view', 'v-341-late');
     const second = await getOrCreateDigest(d, A, 'weekly');
     expect(second.created).toBe(false);
     expect(second.digest.id).toBe(first.digest.id);

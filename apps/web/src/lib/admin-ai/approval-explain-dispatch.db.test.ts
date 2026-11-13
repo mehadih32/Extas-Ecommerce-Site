@@ -101,7 +101,7 @@ describe.skipIf(!HAS_TEST_DB)('AI 360 · the approval-explain job dispatcher on 
   it("the agent's own monthly cap stops a real call before it is made, once this month's spend has already crossed it", async () => {
     const agent = await t.prisma.aiAgent.findUniqueOrThrow({ where: { key: 'gyani' } });
     await t.prisma.aiUsageLedger.create({
-      data: { storeId: S, agentId: agent.id, jobTypeKey: 'adminApprovalExplain', providerKey: 'anthropic', modelKey: 'claude-haiku', idempotencyKey: 'approval-330-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
+      data: { storeId: S, agentId: agent.id, createdAt: NOW, jobTypeKey: 'adminApprovalExplain', providerKey: 'anthropic', modelKey: 'claude-haiku', idempotencyKey: 'approval-330-already-spent', inputTokens: 0, outputTokens: 0, costUsdMicros: 1_000_000n, costMinor: 1000 },
     });
     await setAgentMonthlyCap(deps, { actor: OWNER }, 'gyani', 1); // any cap at all — 1000 already spent this month is already over it
     const fetchMock = vi.fn();

@@ -33,11 +33,12 @@ describe.skipIf(!HAS_TEST_DB)('running a saved funnel against stored events (PR 
       ],
     });
     const now = new Date();
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-339-1', isLoggedIn: false, occurredAt: now.toISOString() });
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'add_to_bag', visitorId: 'v-339-1', isLoggedIn: false, occurredAt: now.toISOString() });
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-339-2', isLoggedIn: false, occurredAt: now.toISOString() });
+    const at = new Date(now.getTime() - 60_000).toISOString(); // inside the window, which ends at `now`
+    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-339-1', isLoggedIn: false, occurredAt: at });
+    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'add_to_bag', visitorId: 'v-339-1', isLoggedIn: false, occurredAt: at });
+    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-339-2', isLoggedIn: false, occurredAt: at });
     // never viewed, so step 2's own event does not carry this visitor into the funnel at all:
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'add_to_bag', visitorId: 'v-339-3', isLoggedIn: false, occurredAt: now.toISOString() });
+    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'add_to_bag', visitorId: 'v-339-3', isLoggedIn: false, occurredAt: at });
 
     const window = defaultFunnelWindow(now, null, null);
     const result = await runFunnel(d, A, funnel.id, window);
@@ -51,13 +52,15 @@ describe.skipIf(!HAS_TEST_DB)('running a saved funnel against stored events (PR 
     const funnel = await createFunnel(d, who, A, {
       name: 'Windowed',
       steps: [
-        { key: 'view', label: 'Viewed', eventName: 'product_view' },
         { key: 'search', label: 'Searched', eventName: 'search' },
+        { key: 'view', label: 'Viewed', eventName: 'product_view' },
       ],
     });
     const now = new Date();
     const old = new Date(now.getTime() - 10 * DAY_MS);
-    await recordAnalyticsEvent({ db: t.prisma }, { storeId: A, name: 'product_view', visitorId: 'v-339-old', isLoggedIn: false, occurredAt: old.toISOString() });
+    // recorded as the server saw it 10 days ago (the layer clamps a browser's time against its own clock); a step no
+    // other test here records, so only the window decides what is counted
+    await recordAnalyticsEvent({ db: t.prisma, now: () => new Date(old.getTime() + 1000) }, { storeId: A, name: 'search', visitorId: 'v-339-old', isLoggedIn: false, occurredAt: old.toISOString() });
     const result = await runFunnel(d, A, funnel.id, { from: new Date(now.getTime() - DAY_MS), to: now });
     expect(result.steps[0]!.visitors).toBe(0); // the old event falls outside the 1-day window
   });

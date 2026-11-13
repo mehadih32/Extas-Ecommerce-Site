@@ -539,6 +539,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/ai/skills/sandbox', perm: 'ai.read', keys: ['aiSkillsSandbox'] },
         ],
       },
+      // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
+      { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
