@@ -30,6 +30,10 @@
     "performance": {
       "label": "Content performance",
       "help": "Off as it ships. When on, each article page counts its readers (every browser once a day) by where they came from — a search engine, video site or AI assistant from the SEO organic list, the shop’s own pages, or anywhere else — and an order credits the articles that browser read in the days you set before ordering: only the last article read (totals never count an order twice) or every article read. Website › Blog & journal › Performance shows readers, orders, Ordered value and Sales (delivered orders only) per article. Only article ids and times are kept in the browser, nothing about the person."
+    },
+    "sourceWriter": {
+      "label": "Write from a link",
+      "help": "Off as it ships. When on (and AI is on for the whole shop), Website › Blog & journal offers “Write from a link”: paste a link to an article anywhere in the world, pick the language, and the writer reads that page (through the page reader connection in Keys & connections, the same one “Import from a link” uses), researches its topic from the page's own words and writes an original piece — never a copy — landing on the board as an article in writing, marked as AI-assisted with its source link kept. A person edits it and it passes the three review steps before anyone can publish it. Until an AI provider's key is entered the practice writer serves and says so. At most the number you set in a day."
     }
   }
 }

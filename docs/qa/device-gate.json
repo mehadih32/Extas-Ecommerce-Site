@@ -389,6 +389,8 @@
       "/admin/marketing/ad-platforms/campaigns",
       "/admin/marketing/studio/motion",
       "/admin/marketing/studio/videos",
+      "/admin/marketing/studio/reels",
+      "/admin/marketing/studio/export",
       "/admin/marketing/studio/overlay",
       "/admin/website/layouts",
       "/admin/website/layouts?page=category",
