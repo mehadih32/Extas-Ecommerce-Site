@@ -101,7 +101,9 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
       const when = p.contentUpdatedAt ?? p.publishedAt ?? p.scheduledAt;
       out.pages.push({ path: ROUTES.article(p.slug), lastmod: when, bn: Boolean(twin && bnOn), ...(twin && bnOn ? { bnPath: ROUTES.article(twin.slug) } : {}) });
     }
-    if (bnOn) for (const b of posts.bn) if (!paired.has(b.id)) out.pages.push({ path: ROUTES.article(b.slug), lastmod: b.contentUpdatedAt ?? b.publishedAt ?? b.scheduledAt, bn: false, only: 'bn' });
+    if (bnOn)
+      for (const b of posts.bn)
+        if (!paired.has(b.id)) out.pages.push({ path: ROUTES.article(b.slug), lastmod: b.contentUpdatedAt ?? b.publishedAt ?? b.scheduledAt, bn: false, only: 'bn' });
   }
 
   // ---- collections (and the named filter pages) ----
@@ -131,7 +133,14 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
   // ---- products ----
   if (on.product) {
     const rows = await db.product.findMany({
-      where: { storeId, status: 'PUBLISHED', archivedAt: null, category: { isVisible: true, archivedAt: null }, ...(set['seo.urlPolicy'].soldOutIndexed ? {} : { inStock: true }) },
+      where: {
+        storeId,
+        status: 'PUBLISHED',
+        isDemo: false,
+        archivedAt: null,
+        category: { isVisible: true, archivedAt: null },
+        ...(set['seo.urlPolicy'].soldOutIndexed ? {} : { inStock: true }),
+      },
       select: { slug: true, updatedAt: true },
       orderBy: [{ publishedAt: 'desc' }, { slug: 'asc' }],
       take: set['seo.sitemaps'].maxUrls,
@@ -142,7 +151,11 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
 
   // ---- combos ----
   if (on.combo) {
-    const sets = await db.combo.findMany({ where: { storeId, isFeatured: true, archivedAt: null, status: { not: 'DRAFT' } }, select: { slug: true, updatedAt: true }, orderBy: [{ sortRank: 'desc' }, { slug: 'asc' }] });
+    const sets = await db.combo.findMany({
+      where: { storeId, isFeatured: true, archivedAt: null, status: { not: 'DRAFT' } },
+      select: { slug: true, updatedAt: true },
+      orderBy: [{ sortRank: 'desc' }, { slug: 'asc' }],
+    });
     for (const s of sets) add('combos', ROUTES.combo(s.slug), `combo/${s.slug}`, s.updatedAt);
   }
   if (on.comboList && deps) {

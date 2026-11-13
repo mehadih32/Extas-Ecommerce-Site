@@ -10,6 +10,8 @@ import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { pointsPlanner } from './rewards';
 import { gradesPlanner } from './grades';
+import { rankingPlanner } from './shop-ranking';
+import { reportPackPlanner } from './report-packs';
 import { searchPlanner, searchRunKey } from './search';
 import { supportEscalationPlanner } from './support-escalation';
 import { orderFollowUpsPlanner } from './order-followups';
@@ -62,9 +64,9 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
-    // Follow-up 602: + 'tracking.sweep' (the same queue).
+    // Follow-up 602: + 'tracking.sweep' (the same queue). S28 PR 686: + 'catalogue.ranking.run' (queue 'catalogue').
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'catalogue.ranking.run', 'reports.pack.send', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -403,5 +405,48 @@ describe('PR 6 · a run key for a named period', () => {
     expect(textSlot('D:2026-11-07')).not.toBe(textSlot('W:2026-11-07'));
     expect(Number.isSafeInteger(textSlot('M:2026-10'))).toBe(true);
     expect(textSlot('M:2026-10')).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('S28 · PR 686 · the shop-ranking planner', () => {
+  it('plans one run a night for each live store', async () => {
+    const deps = { db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as unknown as Parameters<typeof rankingPlanner>[0];
+    const now = new Date('2026-11-13T21:00:00Z');
+    const day = Math.floor(now.getTime() / 86_400_000);
+    expect(await rankingPlanner(deps, now)).toEqual([
+      { queue: 'catalogue', name: 'catalogue.ranking.run', payload: { storeId: 1 }, key: `catalogue.ranking.run/1/${day}` },
+      { queue: 'catalogue', name: 'catalogue.ranking.run', payload: { storeId: 2 }, key: `catalogue.ranking.run/2/${day}` },
+    ]);
+    expect(() => JOBS.get('catalogue.ranking.run')!.parse({ storeId: 0 })).toThrow(/positive integer/);
+  });
+});
+
+describe('S28 · PR 690 · the report pack planner', () => {
+  const deps = (rows: unknown[]) => ({ db: { reportSchedule: { findMany: async () => rows } }, settings: { value: async () => 'Asia/Dhaka' } }) as unknown as Parameters<typeof reportPackPlanner>[0];
+  it('plans a monthly pack on the 1st and a weekly pack on Monday, for telegram or e-mail and only while on', async () => {
+    const rows = [
+      { storeId: 1, reportKey: 'pack:bank', frequency: 'monthly', channels: ['telegram'] },
+      { storeId: 1, reportKey: 'pack:sales', frequency: 'weekly', channels: ['telegram'] },
+      { storeId: 1, reportKey: 'pack:stock', frequency: 'monthly', channels: ['email'] },
+    ];
+    const first = await reportPackPlanner(deps(rows), new Date('2026-12-01T05:00:00Z')); // a Tuesday, the 1st
+    expect(first.map((x) => x.payload)).toEqual([
+      { storeId: 1, pack: 'bank', period: 'M:2026-12' },
+      { storeId: 1, pack: 'stock', period: 'M:2026-12' },
+    ]);
+    const monday = await reportPackPlanner(deps(rows), new Date('2026-11-16T05:00:00Z'));
+    expect(monday.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'sales', period: 'W:2026-11-16' }]);
+    expect(await reportPackPlanner(deps(rows), new Date('2026-11-18T05:00:00Z'))).toEqual([]);
+    expect(() => JOBS.get('reports.pack.send')!.parse({ storeId: 1, pack: 'bank', period: 'D:2026-11-01' })).toThrow(/period/);
+  });
+  it('the daily business report is planned every night from the owner\'s time (shop clock), once a day', async () => {
+    const rows = [{ storeId: 1, reportKey: 'pack:daily', frequency: 'daily', channels: ['telegram'], recipients: { time: '22:00' } }];
+    // 15:00 UTC = 21:00 in Dhaka: too early; 16:30 UTC = 22:30: due
+    expect(await reportPackPlanner(deps(rows), new Date('2026-11-13T15:00:00Z'))).toEqual([]);
+    const due = await reportPackPlanner(deps(rows), new Date('2026-11-13T16:30:00Z'));
+    expect(due.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'daily', period: 'D:2026-11-13' }]);
+    expect(JOBS.get('reports.pack.send')!.parse({ storeId: 1, pack: 'daily', period: 'D:2026-11-13' })).toEqual({ storeId: 1, pack: 'daily', period: 'D:2026-11-13' });
+    const again = await reportPackPlanner(deps(rows), new Date('2026-11-13T17:30:00Z'));
+    expect(again[0]!.key).toBe(due[0]!.key);
   });
 });

@@ -6,6 +6,7 @@ import { shopStoreId } from '../shop/store-id';
 import { siteAddress } from './site';
 import { filesOfSet, indexXml, parseSitemapFile, urlsetXml } from './sitemap';
 import { sitemapSet, sitemapSettings } from './sitemap-data';
+import { indexWithVideos, videoSitemapItems, videoUrlsetXml } from './video-sitemap';
 
 const xml = (body: string, minutes: number) =>
   new Response(body, {
@@ -17,6 +18,16 @@ const xml = (body: string, minutes: number) =>
     },
   });
 const missing = () => new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'x-robots-tag': 'noindex' } });
+
+/** /sitemaps/videos.xml (S28 · PR 681). */
+export async function videoSitemapResponse(): Promise<Response> {
+  const storeId = shopStoreId();
+  const set = await sitemapSettings(storeId);
+  if (!set['seo.sitemaps'].enabled) return missing();
+  const site = await siteAddress(storeId);
+  if (!site.origin) return missing();
+  return xml(videoUrlsetXml(await videoSitemapItems(storeId, site.origin).catch(() => [])), set['seo.sitemaps'].cacheMinutes);
+}
 
 /** `file`: null for the index, else the asked file name. */
 export async function sitemapResponse(file: string | null): Promise<Response> {
@@ -30,7 +41,8 @@ export async function sitemapResponse(file: string | null): Promise<Response> {
   if (!site.origin) return missing();
   const { set: entries } = await sitemapSet(storeId, set);
   const files = filesOfSet(entries, s.perFile);
-  if (!asked) return xml(indexXml(site.origin, files), s.cacheMinutes);
+  // S28 · PR 681: the video sitemap is listed while a live product has a video
+  if (!asked) return xml(indexWithVideos(indexXml(site.origin, files), site.origin, (await videoSitemapItems(storeId, site.origin).catch(() => [])).length > 0), s.cacheMinutes);
   const one = files.find((f) => f.kind === asked.kind && f.n === asked.n);
   return one ? xml(urlsetXml(site.origin, one.entries, set['seo.indexing'].xDefault, set['seo.hreflang'].inSitemaps), s.cacheMinutes) : missing();
 }

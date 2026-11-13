@@ -22,6 +22,40 @@ export interface AddWords {
   notForSale: string;
 }
 
+/** S28 · PR 684: a demo (sample) product is never sold; the customer sees the shop's "coming soon" words in a small pop-up. */
+async function demoPopup(from: HTMLElement): Promise<void> {
+  const lang = document.documentElement.lang.startsWith('bn') ? 'bn' : 'en';
+  let text = '';
+  let close = '';
+  try {
+    const r = await fetch(`/api/shop/demo-popup?lang=${lang}`, { credentials: 'same-origin' });
+    const j = (await r.json()) as { text?: string; close?: string };
+    text = j.text ?? '';
+    close = j.close ?? '';
+  } catch {
+    text = '';
+  }
+  if (!text) return;
+  const dlg = document.createElement('dialog');
+  dlg.setAttribute('data-testid', 'demo-popup');
+  dlg.style.cssText = 'max-width:min(92vw,360px);border:0;border-radius:12px;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.25)';
+  const p = document.createElement('p');
+  p.textContent = text;
+  p.style.margin = '0 0 14px';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn btn-primary';
+  b.textContent = close;
+  b.onclick = () => dlg.close();
+  dlg.append(p, b);
+  dlg.addEventListener('close', () => {
+    dlg.remove();
+    from.focus();
+  });
+  document.body.append(dlg);
+  dlg.showModal();
+}
+
 export function AddToBag({
   variantId,
   behaviour,
@@ -56,9 +90,15 @@ export function AddToBag({
     if (busy) return;
     setBusy(true);
     try {
-      const r = await fetch('/api/bag/lines', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ variantId, source }), credentials: 'same-origin' });
+      const r = await fetch('/api/bag/lines', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ variantId, source }),
+        credentials: 'same-origin',
+      });
       const d = (await r.json().catch(() => ({}))) as { ok?: boolean; added?: boolean; reason?: string; lineId?: string; error?: string };
       if (!r.ok || !d.ok || !d.lineId) {
+        if (d.error === 'DEMO_PRODUCT') return void (await demoPopup(el));
         showToast(el, d.error === 'OUT_OF_STOCK' ? words.stock : d.error === 'TOO_MANY' ? words.tooMany : d.error === 'NOT_FOR_SALE' ? words.notForSale : words.error);
         return;
       }

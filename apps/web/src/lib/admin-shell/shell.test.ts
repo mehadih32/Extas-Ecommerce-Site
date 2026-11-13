@@ -108,7 +108,7 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     expect(sectionHome(sectionById('products')!, OWNER)).toBe('/admin/products');
     // ~~expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money');~~ CN-028 · PR 615: Money opens Books.
     expect(sectionHome(sectionById('support')!, OWNER)).toBe('/admin/support');
-    expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money/books');
+    expect(sectionHome(sectionById('money')!, OWNER)).toBe('/admin/money'); // S28 · PR 688: Finance opens on Overview, as the prototype does
     expect(sectionHome(sectionById('money')!, viewer(['customers.read']))).toBe('/admin/money');
     // PR 285: the Customers section's front page is All customers
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
@@ -116,7 +116,7 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     // PR 304: /admin/ai (Control room) is now a real page, so AI Center has no placeholder left either.
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'marketing', 'website', 'reports', 'settings']);~~
     // S28 · PR 670: /admin/delivery is the Couriers Overview now, so Delivery has no placeholder left.
-    expect(placeholderSections().map((s) => s.id)).toEqual(['marketing', 'website', 'reports', 'settings']);
+    expect(placeholderSections().map((s) => s.id)).toEqual(['marketing', 'website', 'settings']); // S28 · PR 689: /admin/reports is the Report library now, so Reports has no placeholder left.
     // PR 659: Messages is folded into Marketing, so it has no placeholder either
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });

@@ -28,6 +28,10 @@
 # stale WordPress service worker answers from its own cache before our JS ever loads, or one that lost even the
 # preview cookie — so asking it for the preview password first would defeat them. None of the four routes reads
 # a cookie or any other input; /reset reads nothing either and only ever answers the same fixed page.
+# PR 584: the agents' shared Telegram bot passes the same way, POST only, on exactly /api/telegram/webhook. It has no
+# browser and no cookie, and it proves itself with the X-Telegram-Bot-Api-Secret-Token header (the app refuses every
+# update while `ai.telegram.commands.enabled` is off, as shipped, or the Telegram connection has no webhook secret in
+# the vault, or the header does not match it).
 # qa-gate (30 Oct): Caddy's `path` matcher ignores case and compares the decoded, cleaned path, while the app routes on
 # the raw one: `/ERP-API/CUSTOMER%53` or `/x%2f..%2ferp-api%2fcustomers` matched the exemption and reached the app (its
 # not-found page) with no login. Every exemption therefore matches the raw request target as it arrived
@@ -54,6 +58,7 @@ exempt GET '/sw[.]js'
 exempt GET '/service-worker[.]js'
 exempt GET '/OneSignalSDKWorker[.]js'
 exempt GET '/firebase-messaging-sw[.]js'
+exempt POST '/api/telegram/webhook'
 printf '}\n'
 printf 'route @preview_needed {\n\tbasic_auth {\n\t\t%s %s\n\t}\n' "$user" "$hash"
 printf '\theader Set-Cookie "extas_preview=%s; Path=/; Max-Age=%s; Secure; HttpOnly; SameSite=Lax"\n}\n' "$token" "$((days * 86400))"

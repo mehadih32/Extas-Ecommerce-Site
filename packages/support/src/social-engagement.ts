@@ -15,6 +15,8 @@
 // that kind (none is added by this PR — an honest gap, not a silent one: channels.ts's existing fallback already
 // covers it without new code).
 import { receiveMessage, type ReceiveResult } from './inbound';
+import { applyCommentRules } from './comments';
+import { captureLiveComment } from './live-selling';
 import { SupportError, type SupportDeps } from './context';
 
 /** Marks a public comment's words in the conversation, ahead of the commenter's own text. */
@@ -41,7 +43,7 @@ export interface SocialEngagementReceiveResult {
 }
 
 /** A webhook's comments/DMs into the inbox of the store whose channel (`kind`) they came to. Safe to call again. */
-export async function receiveSocialEngagement(deps: Pick<SupportDeps, 'db' | 'settings' | 'now' | 'push'>, storeId: number, kind: string, items: readonly SocialEngagementInbound[]): Promise<SocialEngagementReceiveResult> {
+export async function receiveSocialEngagement(deps: Pick<SupportDeps, 'db' | 'settings' | 'now' | 'push' | 'comments'>, storeId: number, kind: string, items: readonly SocialEngagementInbound[]): Promise<SocialEngagementReceiveResult> {
   const out: SocialEngagementReceiveResult = { received: 0, duplicate: 0, skipped: 0 };
   for (const m of items) {
     const channel = await deps.db.supportChannel.findUnique({ where: { storeId_kind_externalId: { storeId, kind, externalId: m.channelExternalId } }, select: { enabled: true, archivedAt: true } });
@@ -66,7 +68,15 @@ export async function receiveSocialEngagement(deps: Pick<SupportDeps, 'db' | 'se
       throw e;
     }
     if (r.duplicate) out.duplicate++;
-    else out.received++;
+    else {
+      out.received++;
+      // S28 · PR 693: the comment desk's own rules (hide a phone number or abuse, the optional automatic reply); never fails the webhook
+      if (m.isPublicComment) {
+        await applyCommentRules(deps as SupportDeps, storeId, r.messageId);
+        // S28 · PR 694: while a live session of this Page runs, the comment is read as a live order line
+        await captureLiveComment(deps, storeId, { kind, commentId: m.messageId, commenter: m.from, name: m.name?.trim() || null, text: m.text, conversationId: r.conversationId }).catch(() => null);
+      }
+    }
     // No reply window to extend here: comments carry none in Meta's own rules, and Instagram's own DM window is
     // moot until a real Instagram sender exists (channels.ts's fallback already keeps a reply NOT_SENT without one).
   }

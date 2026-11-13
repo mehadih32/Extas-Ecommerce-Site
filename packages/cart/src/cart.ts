@@ -60,10 +60,12 @@ const touch = (tx: Tx, deps: CartDeps, cartId: string) => tx.cart.update({ where
 async function saleVariant(tx: Db, storeId: number, variantId: string) {
   const v = await tx.productVariant.findFirst({
     where: { id: variantId, storeId, archivedAt: null },
-    select: { id: true, productId: true, priceMinor: true, active: true, product: { select: { status: true, archivedAt: true } } },
+    select: { id: true, productId: true, priceMinor: true, active: true, product: { select: { status: true, archivedAt: true, isDemo: true } } },
   });
   if (!v) throw new CartError('NOT_FOUND', 'no such item', ['variantId']);
-  if (!v.active || v.priceMinor === null || v.product.status !== 'PUBLISHED' || v.product.archivedAt) throw new CartError('NOT_FOR_SALE', 'this item is not on sale', ['variantId']);
+  if (v.product.isDemo) throw new CartError('DEMO_PRODUCT', 'a demo product is not for sale', ['variantId']);
+  if (!v.active || v.priceMinor === null || v.product.status !== 'PUBLISHED' || v.product.archivedAt)
+    throw new CartError('NOT_FOR_SALE', 'this item is not on sale', ['variantId']);
   return { id: v.id, productId: v.productId, priceMinor: v.priceMinor };
 }
 
@@ -94,7 +96,10 @@ export const addItemSchema = bagRef
     variantId: uuid,
     quantity: z.int().min(1).max(10_000).default(1),
     /** Where the add came from (PR 338): "product", "upsell", "saved" … */
-    source: z.string().regex(/^[a-z0-9-]{1,40}$/).optional(),
+    source: z
+      .string()
+      .regex(/^[a-z0-9-]{1,40}$/)
+      .optional(),
   })
   .strict();
 
@@ -129,11 +134,16 @@ export async function addItem(deps: CartDeps, input: z.input<typeof addItemSchem
     await checkStock(deps, tx, d.storeId, d.cartId, v, d.quantity);
     if (same) {
       // The same item saved for later comes back into the bag instead of making a second line.
-      const r = await tx.cartItem.update({ where: { id: same.id }, data: { savedForLater: false, quantity: d.quantity, unitPriceMinor: v.priceMinor, updatedAt: now, raisedAt: now } });
+      const r = await tx.cartItem.update({
+        where: { id: same.id },
+        data: { savedForLater: false, quantity: d.quantity, unitPriceMinor: v.priceMinor, updatedAt: now, raisedAt: now },
+      });
       await touch(tx, deps, d.cartId);
       return { added: true, lineId: r.id, quantity: r.quantity };
     }
-    const r = await tx.cartItem.create({ data: { storeId: d.storeId, cartId: d.cartId, variantId: v.id, quantity: d.quantity, unitPriceMinor: v.priceMinor, source: d.source ?? null, createdAt: now, updatedAt: now } });
+    const r = await tx.cartItem.create({
+      data: { storeId: d.storeId, cartId: d.cartId, variantId: v.id, quantity: d.quantity, unitPriceMinor: v.priceMinor, source: d.source ?? null, createdAt: now, updatedAt: now },
+    });
     await touch(tx, deps, d.cartId);
     return { added: true, lineId: r.id, quantity: r.quantity };
   }, TX);
@@ -193,7 +203,9 @@ export async function removeLine(deps: CartDeps, input: z.input<typeof lineRef>)
   const l = await deps.db.cartItem.findFirst({ where: lineWhere(d), select: { id: true, comboGroupKey: true, removedAt: true } });
   if (!l || l.removedAt) throw new CartError('NOT_FOUND', 'no such line in this bag', ['lineId']);
   if (l.comboGroupKey) {
-    const ids = (await deps.db.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: null }, select: { id: true } })).map((x) => x.id);
+    const ids = (await deps.db.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: null }, select: { id: true } })).map(
+      (x) => x.id,
+    );
     await removeSetFromBag({ db: deps.db, settings: deps.settings, now: deps.now }, { storeId: d.storeId, cartId: d.cartId, groupKey: l.comboGroupKey }).catch(rethrow);
     await deps.db.cart.update({ where: { id: d.cartId }, data: { lastActivityAt: nowOf(deps) } });
     return { lineIds: ids };
@@ -213,9 +225,7 @@ export async function restoreLine(deps: CartDeps, input: z.input<typeof lineRef>
     await lockBag(tx, d.storeId, d.cartId);
     const l = await lineOf(tx, d);
     if (!l.removedAt) return { lineIds: [l.id] };
-    const lines = l.comboGroupKey
-      ? await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: l.removedAt } })
-      : [l];
+    const lines = l.comboGroupKey ? await tx.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: l.removedAt } }) : [l];
     if (!l.savedForLater) {
       const need = new Map<string, number>();
       for (const x of lines) need.set(x.variantId, (need.get(x.variantId) ?? 0) + x.quantity);
@@ -236,10 +246,15 @@ export const savedSchema = lineRef.extend({ saved: z.boolean() }).strict();
 /** Moves a line to "Saved for later" or back into the bag (a set moves whole). Back into the bag checks the stock. */
 export async function saveForLater(deps: CartDeps, input: z.input<typeof savedSchema>): Promise<{ lineIds: string[] }> {
   const d = parse(savedSchema, input, 'saved');
-  const l = await deps.db.cartItem.findFirst({ where: lineWhere(d), select: { id: true, comboGroupKey: true, removedAt: true, savedForLater: true, variantId: true, quantity: true } });
+  const l = await deps.db.cartItem.findFirst({
+    where: lineWhere(d),
+    select: { id: true, comboGroupKey: true, removedAt: true, savedForLater: true, variantId: true, quantity: true },
+  });
   if (!l || l.removedAt) throw new CartError('NOT_FOUND', 'no such line in this bag', ['lineId']);
   if (l.comboGroupKey) {
-    const ids = (await deps.db.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: null }, select: { id: true } })).map((x) => x.id);
+    const ids = (await deps.db.cartItem.findMany({ where: { storeId: d.storeId, cartId: d.cartId, comboGroupKey: l.comboGroupKey, removedAt: null }, select: { id: true } })).map(
+      (x) => x.id,
+    );
     if (!d.saved) {
       // Back into the bag: every piece must still be there to sell.
       await deps.db.$transaction(async (tx) => {
@@ -253,7 +268,9 @@ export async function saveForLater(deps: CartDeps, input: z.input<typeof savedSc
         }
       }, TX);
     }
-    await saveSetForLater({ db: deps.db, settings: deps.settings, now: deps.now }, { storeId: d.storeId, cartId: d.cartId, groupKey: l.comboGroupKey, saved: d.saved }).catch(rethrow);
+    await saveSetForLater({ db: deps.db, settings: deps.settings, now: deps.now }, { storeId: d.storeId, cartId: d.cartId, groupKey: l.comboGroupKey, saved: d.saved }).catch(
+      rethrow,
+    );
     await deps.db.cart.update({ where: { id: d.cartId }, data: { lastActivityAt: nowOf(deps) } });
     return { lineIds: ids };
   }

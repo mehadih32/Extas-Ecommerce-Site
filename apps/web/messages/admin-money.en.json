@@ -65,6 +65,8 @@
       "count": "{n} claim(s)",
       "late": "{n} past the deadline",
       "none": "No courier owes the shop a claim now."
-    }
+    },
+    "vatOff": "VAT is off, so Finance has no VAT tab.",
+    "vatLink": "Turn VAT on or set rates"
   }
 }

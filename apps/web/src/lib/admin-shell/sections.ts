@@ -122,6 +122,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     tabs: [
       { id: 'all', pages: [{ href: '/admin/products', perm: 'catalogue.read', keys: ['products', 'productNew', 'product'] }] },
       { id: 'queue', pages: [{ href: '/admin/products/queue', perm: 'catalogue.read', keys: ['publishQueue'] }] },
+      // S28 · PR 686: Products → Shop ranking — the score of each product by the owner's weights and the order the shop shows.
+      { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
       // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
       { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
       {
@@ -413,47 +415,56 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     group: 'business',
     base: '/admin/money',
     guide: 'finance',
+    // S28 · PR 688 (admin prototype v5): Money is the prototype's Finance, seven tabs — Overview, Money in & out, Profit & loss,
+    // Costs & budgets, ERP account, Wallet & refunds, VAT (shown only while the VAT system is on: `vat.system`, off as shipped;
+    // lib/stages/closed.ts). The Couriers tab (PR 670) sits beside Wallet & refunds. Every page that was a tab is a page of one of them.
     tabs: [
-      { id: 'books', pages: [{ href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] }] },
-      // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only); second, so Money still opens Books (CN-028 · PR 615).
+      // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only).
       { id: 'overview', pages: [{ href: '/admin/money', perm: 'payments.view', keys: ['moneyOverview'] }] },
-      // S16 · PR 349: Money → Profit & loss (MNY-01) — Sales beside Ordered value, gross profit, contribution, net profit for any period.
-      // S16 · PR 504: its second page, Profit by group — by category or by style, ad spend spread in.
+      // S28 · PR 687: Money → Money in & out — the cashbook and the cash forecast (the owner's PIN for every entry).
+      { id: 'cash', pages: [{ href: '/admin/money/cash', perm: 'books.read', keys: ['moneyCash'] }] },
+      // S16 · PR 349: Profit & loss (MNY-01) — Sales beside Ordered value, gross profit, contribution, net profit for any period.
+      // S16 · PR 504: its second page, Profit by group; PR 355: its third, Profit by channel.
       {
         id: 'profit',
         pages: [
           { href: '/admin/money/profit', perm: 'books.read', keys: ['moneyProfit'] },
           { href: '/admin/money/profit/groups', perm: 'books.read', keys: ['moneyProfitGroups'] },
-          // S16 · PR 355: its third page, Profit by channel — ad spend per platform against the Sales each brought in.
           { href: '/admin/money/profit/channels', perm: 'books.read', keys: ['moneyProfitChannels'] },
         ],
       },
-      // Go-live gate F-041 / F-054 (PR 172, 171 follow-ups): Money → Refunds & wallet — approve and record refunds, the apology credit, the money rules.
-      { id: 'refunds', pages: [{ href: '/admin/money/refunds', perm: 'payments.view', keys: ['moneyRefunds'] }] },
-      // S28 · PR 670: Courier 360's Money section, reachable from Finance (it opens the default courier's money)
-      { id: 'couriers', pages: [{ href: '/admin/money/couriers', perm: 'payments.view', keys: ['moneyCouriers'] }] },
-      { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
-      { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
-      { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
-      { id: 'daily', pages: [{ href: '/admin/money/books/daily', perm: 'books.read', keys: ['booksDaily'] }] },
-      { id: 'costs', pages: [{ href: '/admin/money/costs', perm: 'books.read', keys: ['moneyCosts'] }] },
-      // S16 · PR 344: Money → Expenses — quick entry on the owner's own heads, through the cost lines of PR 618.
-      { id: 'expenses', pages: [{ href: '/admin/money/expenses', perm: 'books.read', keys: ['moneyExpenses'] }] },
-      // S16 · PR 345: Money → Costs & fees — gateway fees, packaging, the USD rate, courier rates (owner data).
-      { id: 'fees', pages: [{ href: '/admin/money/fees', perm: 'books.read', keys: ['moneyFees'] }] },
-      // S16 · PR 350: Money → VAT — the VAT system's switch (off) and the owner's rates: default, per category, per product.
-      { id: 'vat', pages: [{ href: '/admin/money/vat', perm: 'books.read', keys: ['moneyVat'] }] },
-      // S16 · PR 343: Money → Cost ledger — every paid call's cost row, prepaid balances, export.
-      // S16 · PR 347: its second page, the Costs report — any period by day, month or year, by service or module, AI against its cap, export.
+      // Costs & budgets: S28 · PR 688 budgets and profit snapshot; PR 618 costs; S16 · PR 344 expenses; PR 345 costs & fees;
+      // PR 343 the cost ledger and PR 347 its report.
       {
-        id: 'ledger',
+        id: 'costs',
         pages: [
+          { href: '/admin/money/budgets', perm: 'books.read', keys: ['moneyBudgets'] },
+          { href: '/admin/money/costs', perm: 'books.read', keys: ['moneyCosts'] },
+          { href: '/admin/money/expenses', perm: 'books.read', keys: ['moneyExpenses'] },
+          { href: '/admin/money/fees', perm: 'books.read', keys: ['moneyFees'] },
           { href: '/admin/money/cost-ledger', perm: 'books.read', keys: ['moneyCostLedger'] },
           { href: '/admin/money/cost-ledger/report', perm: 'books.read', keys: ['moneyCostReport'] },
         ],
       },
-      // S16 · PR 346: Money → Month-end — the close sheet of a month (read-only; sending and closing stay on Books).
-      { id: 'monthEnd', pages: [{ href: '/admin/money/month-end', perm: 'books.read', keys: ['moneyMonthEnd'] }] },
+      // ERP account: CN-028 · PR 615, 616 Books (Retail's ERP account), the match, the differences and the closes; PR 617 the
+      // daily summaries; S16 · PR 346 the month-end close sheet.
+      {
+        id: 'erp',
+        pages: [
+          { href: '/admin/money/books', perm: 'erp.account.read', keys: ['booksAccount'] },
+          { href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] },
+          { href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] },
+          { href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] },
+          { href: '/admin/money/books/daily', perm: 'books.read', keys: ['booksDaily'] },
+          { href: '/admin/money/month-end', perm: 'books.read', keys: ['moneyMonthEnd'] },
+        ],
+      },
+      // Go-live gate F-041 / F-054: Wallet & refunds — approve and record refunds, the apology credit, the money rules.
+      { id: 'refunds', pages: [{ href: '/admin/money/refunds', perm: 'payments.view', keys: ['moneyRefunds'] }] },
+      // S28 · PR 670: Courier 360's Money section, reachable from Finance (it opens the default courier's money).
+      { id: 'couriers', pages: [{ href: '/admin/money/couriers', perm: 'payments.view', keys: ['moneyCouriers'] }] },
+      // S16 · PR 350: VAT — the system's switch (off) and the owner's rates; the tab shows only while the system is on.
+      { id: 'vat', pages: [{ href: '/admin/money/vat', perm: 'books.read', keys: ['moneyVat'] }] },
     ],
   },
   {
@@ -464,6 +475,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'analytics',
     // S21 · PR 413 — REP-07 the Site health hub first; the Server page (REP-07b) beside it.
     tabs: [
+      // S28 · PR 689: Reports → Report library first (the prototype opens Reports on it); PR 690: Report packs beside it.
+      { id: 'library', guide: 'analytics', pages: [{ href: '/admin/reports', perm: 'reports.read', keys: ['reportsLibrary'] }] },
+      { id: 'packs', guide: 'analytics', pages: [{ href: '/admin/reports/packs', perm: 'reports.read', keys: ['reportsPacks'] }] },
       {
         id: 'health',
         guide: 'server',

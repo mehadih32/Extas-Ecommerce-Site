@@ -59,7 +59,8 @@ export async function buildSkuStockReport(deps: InventoryDeps, who: Who): Promis
   if (stock.status !== 'succeeded') return { status: stock.status, reason: stock.reason, error: stock.error, stock, variants: null };
 
   const link = await resolveErp(deps, who.storeId);
-  if (!('api' in link)) return { status: 'failed', reason: null, error: { code: 'ERP_UNAVAILABLE', text: 'the ERP connection was lost between the two reads' }, stock, variants: null };
+  if (!('api' in link))
+    return { status: 'failed', reason: null, error: { code: 'ERP_UNAVAILABLE', text: 'the ERP connection was lost between the two reads' }, stock, variants: null };
 
   const policy = await retryPolicy(deps);
   const [pageSize, maxPages] = await Promise.all([setting(deps, null, 'erp.sync.pageSize'), setting(deps, null, 'erp.sync.maxPagesPerRun')]);
@@ -76,8 +77,11 @@ export async function buildSkuStockReport(deps: InventoryDeps, who: Who): Promis
       break;
     }
   }
-  const shopRows = await deps.db.productVariant.findMany({ where: { storeId: who.storeId }, select: { sku: true } });
-  const cmp = compareVariants(erp, shopRows.map((r) => r.sku));
+  const shopRows = await deps.db.productVariant.findMany({ where: { storeId: who.storeId, product: { isDemo: false } }, select: { sku: true } });
+  const cmp = compareVariants(
+    erp,
+    shopRows.map((r) => r.sku),
+  );
   return { status: 'succeeded', reason: null, error: null, stock, variants: { ...cmp, complete } };
 }
 
@@ -95,10 +99,18 @@ export function skuStockStoreLines(storeId: number, r: SkuStockReport): string[]
   const lines = [
     `স্টোর ${storeId}: মিলেছে ${v.matched}টা SKU (স্টক মিলেছে ${stock.matched}টা)। পার্থক্য — স্টক ${stockDiff}টা, SKU ERP-এ আছে দোকানে নেই ${v.onlyInErp.length}টা, দোকানে আছে ERP-এ নেই ${v.onlyInShop.length}টা, দোকানের দাম নেই ${v.noShopPrice.length}টা।`,
   ];
-  if (stockDiff) lines.push(`  - স্টক: ${Object.entries(stock.counts).filter(([, n]) => n).map(([k, n]) => `${k} ×${n}`).join(' · ')}`);
+  if (stockDiff)
+    lines.push(
+      `  - স্টক: ${Object.entries(stock.counts)
+        .filter(([, n]) => n)
+        .map(([k, n]) => `${k} ×${n}`)
+        .join(' · ')}`,
+    );
   if (v.onlyInErp.length) lines.push(`  - ERP-এ আছে, দোকানে নেই: ${v.onlyInErp.slice(0, 20).join(', ')}${v.onlyInErp.length > 20 ? ` (… আরও ${v.onlyInErp.length - 20}টা)` : ''}`);
-  if (v.onlyInShop.length) lines.push(`  - দোকানে আছে, ERP-এ নেই: ${v.onlyInShop.slice(0, 20).join(', ')}${v.onlyInShop.length > 20 ? ` (… আরও ${v.onlyInShop.length - 20}টা)` : ''}`);
-  if (v.noShopPrice.length) lines.push(`  - দোকানের ক্রয়মূল্য (shop price) এখনো নেই: ${v.noShopPrice.slice(0, 20).join(', ')}${v.noShopPrice.length > 20 ? ` (… আরও ${v.noShopPrice.length - 20}টা)` : ''}`);
+  if (v.onlyInShop.length)
+    lines.push(`  - দোকানে আছে, ERP-এ নেই: ${v.onlyInShop.slice(0, 20).join(', ')}${v.onlyInShop.length > 20 ? ` (… আরও ${v.onlyInShop.length - 20}টা)` : ''}`);
+  if (v.noShopPrice.length)
+    lines.push(`  - দোকানের ক্রয়মূল্য (shop price) এখনো নেই: ${v.noShopPrice.slice(0, 20).join(', ')}${v.noShopPrice.length > 20 ? ` (… আরও ${v.noShopPrice.length - 20}টা)` : ''}`);
   if (!stock.complete || !v.complete) lines.push('  - পেজ-লিমিটের কারণে পুরো তালিকা পড়া যায়নি; পরের রানে বাকিটা দেখা যাবে।');
   return lines;
 }
@@ -117,8 +129,8 @@ export function skuStockComparePage(stores: { storeId: number; report: SkuStockR
       ? '**সারকথা:** কোনো স্টোরে আসল ERP যুক্ত নেই বা প্র্যাক্টিস ERP-তে আছে, তাই এখন তুলনা করার কিছু নেই।'
       : '**সারকথা:** ERP-এর সাথে কথা বলা যায়নি, তাই আজ তুলনা করা যায়নি। পরের রানে আবার চেষ্টা হবে।'
     : anyDiff
-    ? '**সারকথা:** দোকানের SKU আর স্টক-এর সাথে আসল ERP-এর কিছু অমিল পাওয়া গেছে — নিচে তালিকা দেওয়া আছে। এটা শুধু তথ্যের জন্য; এতে কোনো স্টক বা দাম বদলায়নি।'
-    : '**সারকথা:** দোকানের SKU আর স্টক আসল ERP-এর সাথে পুরো মিলে গেছে। কোনো অমিল নেই।';
+      ? '**সারকথা:** দোকানের SKU আর স্টক-এর সাথে আসল ERP-এর কিছু অমিল পাওয়া গেছে — নিচে তালিকা দেওয়া আছে। এটা শুধু তথ্যের জন্য; এতে কোনো স্টক বা দাম বদলায়নি।'
+      : '**সারকথা:** দোকানের SKU আর স্টক আসল ERP-এর সাথে পুরো মিলে গেছে। কোনো অমিল নেই।';
   const lines: string[] = ['# ERP SKU ও স্টক তুলনা — শুধু পড়ার জন্য (read-only)', '', bn, ''];
   for (const s of stores) lines.push(...skuStockStoreLines(s.storeId, s.report));
   lines.push('');

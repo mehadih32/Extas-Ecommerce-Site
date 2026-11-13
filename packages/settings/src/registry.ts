@@ -77,6 +77,7 @@ import { printRunSettings } from './registry-print-run';
 import { supportIdentitySettings } from './registry-support-identity';
 import { supportContextSettings } from './registry-support-context';
 import { supportCatalogueSettings } from './registry-support-catalogue';
+import { w5aSettings } from './registry-w5a';
 import { supportCartSettings } from './registry-support-cart';
 import { supportTicketsSettings } from './registry-support-tickets';
 import { supportDraftsSettings } from './registry-support-drafts';
@@ -142,6 +143,7 @@ import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
+import { productsFinanceV5Settings } from './registry-products-finance-v5';
 import { studioSettings } from './registry-studio';
 import { analyticsSettings } from './registry-analytics';
 import { reportsDigestSettings } from './registry-reports-digest';
@@ -161,6 +163,7 @@ import { photoshootOccasionSceneSettings } from './registry-photoshoot-occasion-
 import { photoshootStyleReferenceSettings } from './registry-photoshoot-style-reference';
 import { supportFileCopySettings } from './registry-support-file-copy';
 import { youtubeSettings } from './registry-youtube';
+import { productsV5Settings } from './registry-products-v5';
 import { outreachSettings } from './registry-outreach';
 import { seasonalHomeSettings } from './registry-seasonal-home';
 import { festiveCutoffSettings } from './registry-festive-cutoff';
@@ -905,6 +908,29 @@ export const registry = {
     sortOrder: 40,
     version: 310,
   }),
+  // ---- S15 · PR 584 · Telegram identity and command routing: `enabled` off until the owner turns it on (CLAUDE.md
+  // rule — every AI feature ships off). While off, an inbound Telegram update is still answered 200 OK (so Telegram
+  // does not retry it) but nothing is routed or assigned; the bot's outbound alerts (PR 392) keep working either
+  // way, off or on. Also gated on the Telegram connection's own optional `webhookSecret` being set (A1.3 "mock until
+  // a real key") — `enabled` alone is not enough. `maxBodyKb`: the largest webhook body read (one bot, one address,
+  // the same shape `support.channels.webhookMaxBodyKb` already uses for Messenger). ----
+  'ai.telegram.commands': setting({
+    schema: z
+      .object({
+        enabled: z.boolean(),
+        maxBodyKb: z.int().min(16).max(1024),
+      })
+      .strict(),
+    default: { enabled: false, maxBodyKb: 64 },
+    scope: 'installation',
+    valueType: 'JSON',
+    group: 'ai',
+    labelKey: 'ai.telegram.commands.label',
+    helpKey: 'ai.telegram.commands.help',
+    isOwnerData: false,
+    sortOrder: 41,
+    version: 350,
+  }),
 
   // ---- PR 508 · theme: which complete theme the shop wears (D table: Classic) and the large-text switch (off). The
   // theme's colour and font tokens belong to the design-token file (Shilpi, S02), not to this registry. ----
@@ -1453,6 +1479,8 @@ export const registry = {
   ...supportContextSettings,
   // ---- S22 · PR 429 · the catalogue drawer: products sent in a chat with their tracked link (off) (registry-support-catalogue.ts, version 157). ----
   ...supportCatalogueSettings,
+  // ---- S28 · wave 5 · inbox and marketing screens of the admin prototype v5 (registry-w5a.ts, versions 360-369). ----
+  ...w5aSettings,
   // ---- S22 · PR 430 · orders from a support chat: the chat bag, the channel kept, the fraud gate (off) (registry-support-cart.ts, version 158). ----
   ...supportCartSettings,
   // ---- S22 · PR 431 · ticketing: the first-answer and solution timers, the Late view, late chats in the bell (off) (registry-support-tickets.ts, version 159). ----
@@ -1507,6 +1535,7 @@ export const registry = {
   ...cartRecoverySettings,
   ...blastSettings,
   ...youtubeSettings,
+  ...productsV5Settings,
   ...outreachSettings,
   ...seasonalHomeSettings,
   ...festiveCutoffSettings,
@@ -1591,6 +1620,8 @@ export const registry = {
   ...supportFileCopySettings,
   // ---- Follow-up 565 (PR 618, 166, 174) · the courier's charges and the gateways' fees from their imported statements as cost lines, off (registry-books-statement-costs.ts, version 274). ----
   ...statementCostsSettings,
+  // ---- S28 · PR 686–691 (admin prototype v5, wave 4): shop ranking, cashbook, budgets, report library and packs, Home Command (registry-products-finance-v5.ts, versions 686–691). ----
+  ...productsFinanceV5Settings,
   // ---- S23 · PR 437 · the social studio's cadence, voice and AI-caption switches, off (registry-studio.ts, version 281). ----
   ...studioSettings,
   // ---- S24 · PR 447 · the garment-prep/standardisation colour-drift tolerance, off (registry-photoshoot.ts, version 292). ----
