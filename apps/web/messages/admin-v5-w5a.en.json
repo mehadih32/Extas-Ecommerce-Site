@@ -9,7 +9,7 @@
     "err": {
       "default": "Something went wrong. Please try again.",
       "network": "No connection. Please try again.",
-      "STALE": "Someone saved before you. Reload the page and try again.",
+      "STALE": "Someone saved this first. Reload the page.",
       "INVALID_INPUT": "Please check: {fields}",
       "NOT_FOUND": "This was not found.",
       "UNAUTHENTICATED": "Please sign in again.",
@@ -307,6 +307,35 @@
       "cost": "Cost: {amount}",
       "note": "A campaign is made and run in its own page: it checks the yes for offers, the approved template, the schedule and the speed there.",
       "switchLabel": "Marketing tab"
+    },
+    "ceil": {
+      "metaTitle": "Message cost ceilings",
+      "title": "Message cost ceilings",
+      "sub": "A monthly limit on what SMS and WhatsApp may cost. You are warned early; at the limit a further message waits instead of spending more.",
+      "back": "Messages",
+      "off": "Cost ceilings are switched off. Switch them on under More options.",
+      "month": "This month, from {at}",
+      "channel_SMS": "SMS",
+      "channel_WHATSAPP": "WhatsApp",
+      "spent": "Spent {amount}",
+      "of": "of {amount}",
+      "noCeiling": "No ceiling set",
+      "state_ok": "Under the limit",
+      "state_warn": "Close to the limit",
+      "state_over": "Limit reached: further messages on this channel wait",
+      "state_none": "No ceiling",
+      "explain": "At the limit, a message on that channel is held (nothing is lost; it stays in the message log). With the cheapest-channel switch on, a step that has a fallback channel goes by that channel while it is under its ceiling. The order's first message is never held.",
+      "openPage": "Set the ceilings",
+      "fSms": "SMS ceiling per month (blank: none)",
+      "fWa": "WhatsApp ceiling per month (blank: none)",
+      "fWarn": "Warn at (percent)",
+      "fCheapest": "Use the cheapest channel at the limit",
+      "fEnabled": "Cost ceilings on",
+      "save": "Save",
+      "saved": "Saved",
+      "unit": "In {c}",
+      "switchOn": "Switch on",
+      "switchOff": "Switch off"
     }
   }
 }

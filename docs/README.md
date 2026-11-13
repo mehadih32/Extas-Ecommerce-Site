@@ -305,6 +305,7 @@ the pages are out of date.
 | [`admin-guide/pages/messages/log.md`](admin-guide/pages/messages/log.md) | Page guide (CN-026 six parts): Messages › Message log (`/admin/messages/log`): every message, its parts and cost, Try again (PR 291) |
 | [`admin-guide/pages/messages/channels.md`](admin-guide/pages/messages/channels.md) | Page guide (CN-026 six parts): Messages › Channels & limits (`/admin/messages/channels`): each channel's service and mode, caps, quiet hours, masking, WhatsApp templates (PR 291, 292) |
 | [`admin-guide/pages/messages/consent.md`](admin-guide/pages/messages/consent.md) | Page guide (CN-026 six parts): Messages › Channels & limits › Consent (`/admin/messages/consent`): who stopped messages, the team's record, the stop words (PR 298) |
+| [`admin-guide/pages/messages/cost-ceilings.md`](admin-guide/pages/messages/cost-ceilings.md) | মেসেজ খরচের সীমা: মাসিক সীমা, সতর্কতা |
 
 ## `reports/` — what got built, in Bengali
 
