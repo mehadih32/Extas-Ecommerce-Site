@@ -1,0 +1,8 @@
+{
+  "fulfilment": {
+    "courierWatch": {
+      "label": "With courier: stuck parcels and backup courier",
+      "help": "Stuck alert is off as shipped. When on, a parcel the courier holds that has not moved for the hours set is marked stuck on the With courier page. The backup courier is where today's parcels move when the first courier is down (needs the owner's PIN)."
+    }
+  }
+}

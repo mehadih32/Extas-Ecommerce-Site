@@ -228,6 +228,19 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
     if (m !== 'GET') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, couriers: await sh.handoverHistory(x.deps, x.who) }));
   }
+  // S28 · PR 667: what the couriers hold now, one parcel's tracking history, and "Move to the backup courier" (the owner's PIN)
+  if (path[0] === 'held') {
+    if (m !== 'GET') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.withCourier(x.deps, x.who, { status: x.url.searchParams.get('status') || undefined })) }));
+  }
+  if (path[0] === 'track') {
+    if (m !== 'GET') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.parcelHistory(x.deps, x.who, x.url.searchParams.get('id') ?? '')) }));
+  }
+  if (path[0] === 'move') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.moveToBackup(x.deps, x.who, await body(request))) }));
+  }
   if (path[0] === 'copy') {
     if (m !== 'POST') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.handover', async (x) => {

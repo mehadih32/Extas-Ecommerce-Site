@@ -154,6 +154,7 @@ import { sharedLocationSettings } from './registry-shared-location';
 import { courierWebhookSettings } from './registry-courier-webhooks';
 import { handoverCheckSettings } from './registry-handover-check';
 import { toShipSettings } from './registry-to-ship';
+import { courierWatchSettings } from './registry-courier-watch';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
 import { layoutSettings } from './registry-layouts';
@@ -1484,6 +1485,7 @@ export const registry = {
   // S08 · PR 180 follow-up 437 (v275): the courier's pick-up checked against each handed-over sheet (off)
   ...handoverCheckSettings,
   ...toShipSettings,
+  ...courierWatchSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).
