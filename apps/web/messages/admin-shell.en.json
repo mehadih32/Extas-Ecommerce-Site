@@ -139,7 +139,9 @@
         "analytics": "Analytics"
       },
       "rules": {
-        "all": "All rules"
+        "all": "All rules",
+        "offers": "Offers & discounts",
+        "popups": "Pop-ups & notices"
       },
       "money": {
         "books": "Books",
@@ -189,7 +191,7 @@
       "delivery": "Overview · Ready to book · In transit · Returned & refused · Couriers · More: Charge mismatch log, Delivery settings",
       "messages": "Moved: these pages are in Marketing › Message campaigns.",
       "support": "Inbox · Rider issues · Claims & credits · Saved replies · Support settings",
-      "rules": "All rules · Notices · Eid dates",
+      "rules": "All rules · Offers & discounts · Pop-ups & notices · Eid dates",
       "marketing": "Ad campaigns · Message campaigns · Audiences · Landing pages · Creative studio · More: Market intel, YouTube",
       "website": "Site builder · Page layouts · Blog · Words · More: Eye toggles, Launch default, Effects",
       "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",

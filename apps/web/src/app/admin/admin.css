@@ -9,6 +9,7 @@
 @import './stock/stock.css';
 /* S10 · PR 209, 216, 217 — Smart Rules and Notices & pop-ups, same file for the same reason. */
 @import './rules/rules.css';
+@import './rules/hub.css';
 /* S03 · PR 90–104 — Combos & customer sets, same file for the same reason. */
 @import './combos/combos.css';
 /* S06 · PR 550, 551 — the delivery page (bands, sub-area list, address check), same file for the same reason. */

@@ -33,6 +33,8 @@ export interface RulesScreenProps {
   perms: Perms;
   aiEnabled: boolean;
   simDays: number;
+  /** S28 · PR 676: the rule the Rules page's row opened (`?rule=`). */
+  initialId?: string | null;
   /** The Rules pages' tabs (desktop), drawn under the head. */
   tabs?: ReactNode;
 }
@@ -64,7 +66,7 @@ export function RulesScreen(props: RulesScreenProps) {
   const [edits, setEdits] = useState<Record<string, RuleContent>>({});
   const [topic, setTopic] = useState<string>('all');
   const [archivedOn, setArchivedOn] = useState(false);
-  const [sel, setSel] = useState<string | null>(props.views.find((v) => !v.archived)?.id ?? null);
+  const [sel, setSel] = useState<string | null>((props.initialId && props.views.find((v) => v.id === props.initialId)?.id) || (props.views.find((v) => !v.archived)?.id ?? null));
   const [selM, setSelM] = useState<string | null>(null);
   const [textLang, setTextLang] = useState<Lang>(lang);
   const [busy, setBusy] = useState(false);

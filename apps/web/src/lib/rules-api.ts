@@ -36,6 +36,7 @@
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { hubRoute } from './rules-hub-api';
 
 export type RulesPerm = 'rules.read' | 'rules.write' | 'rules.publish' | 'rules.approve';
 
@@ -55,7 +56,7 @@ function storeIdOf(url: URL): number | null {
 
 export const rulesDeps = (deps: AdminDeps): rl.RulesDeps => ({ db: deps.db, settings: deps.resolver, now: deps.now });
 
-async function handle(request: Request, deps: AdminDeps | null, permission: RulesPerm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
+export async function handle(request: Request, deps: AdminDeps | null, permission: RulesPerm, fn: (c: Ctx) => Promise<Record<string, unknown> | Response>, status = 200): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
@@ -79,6 +80,9 @@ export async function rulesRoute(request: Request, deps: AdminDeps | null, path:
   const m = request.method.toUpperCase();
   const [a, b, c] = path;
   if (path.length > 3) return notFound();
+
+  // ---- S28 · PR 676–679: the one-page Rules screen, the pop-up hub and Offers & Discounts 360 ----
+  if (a === 'hub' || a === 'popups' || a === 'offers') return hubRoute(request, deps, path, handle);
 
   // ---- the list, templates, starters, check ----
   if (a === undefined) {
