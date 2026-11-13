@@ -810,6 +810,9 @@ importers:
       '@extas/cache':
         specifier: workspace:*
         version: link:../cache
+      '@extas/catalogue':
+        specifier: workspace:*
+        version: link:../catalogue
       '@extas/customers':
         specifier: workspace:*
         version: link:../customers
@@ -856,9 +859,6 @@ importers:
       '@extas/auth':
         specifier: workspace:*
         version: link:../auth
-      '@extas/catalogue':
-        specifier: workspace:*
-        version: link:../catalogue
       '@types/node':
         specifier: ^22.20.5
         version: 22.20.5

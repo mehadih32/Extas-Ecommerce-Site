@@ -57,3 +57,4 @@ export * from './faq';
 export * from './erp-size-chart';
 export * from './demo';
 export * from './wizard';
+export * from './ranking';

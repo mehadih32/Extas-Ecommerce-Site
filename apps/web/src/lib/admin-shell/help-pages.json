@@ -27,6 +27,7 @@
     { "id": "products/new", "route": "/admin/products/new" },
     { "id": "products/edit", "route": "/admin/products/[id]" },
     { "id": "products/queue", "route": "/admin/products/queue" },
+    { "id": "products/ranking", "route": "/admin/products/ranking" },
     { "id": "products/combos", "route": "/admin/combos" },
     { "id": "products/bag-box", "route": "/admin/combos/bag-box" },
     { "id": "products/stock", "route": "/admin/stock" },

@@ -10,6 +10,7 @@ import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
 import { pointsPlanner } from './rewards';
 import { gradesPlanner } from './grades';
+import { rankingPlanner } from './shop-ranking';
 import { searchPlanner, searchRunKey } from './search';
 import { supportEscalationPlanner } from './support-escalation';
 import { orderFollowUpsPlanner } from './order-followups';
@@ -62,9 +63,9 @@ describe('PR 6 · timetable slots', () => {
 describe('PR 6 · catalogue', () => {
   it('knows the inventory jobs and the ERP webhook job (PR 196) on one queue, and the search index (PR 72), the messages (PR 148) and the payments sweep (PR 170) on their own', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
-    // Follow-up 602: + 'tracking.sweep' (the same queue).
+    // Follow-up 602: + 'tracking.sweep' (the same queue). S28 PR 686: + 'catalogue.ranking.run' (queue 'catalogue').
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'catalogue.ranking.run', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -403,5 +404,18 @@ describe('PR 6 · a run key for a named period', () => {
     expect(textSlot('D:2026-11-07')).not.toBe(textSlot('W:2026-11-07'));
     expect(Number.isSafeInteger(textSlot('M:2026-10'))).toBe(true);
     expect(textSlot('M:2026-10')).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('S28 · PR 686 · the shop-ranking planner', () => {
+  it('plans one run a night for each live store', async () => {
+    const deps = { db: { store: { findMany: async () => [{ id: 1 }, { id: 2 }] } } } as unknown as Parameters<typeof rankingPlanner>[0];
+    const now = new Date('2026-11-13T21:00:00Z');
+    const day = Math.floor(now.getTime() / 86_400_000);
+    expect(await rankingPlanner(deps, now)).toEqual([
+      { queue: 'catalogue', name: 'catalogue.ranking.run', payload: { storeId: 1 }, key: `catalogue.ranking.run/1/${day}` },
+      { queue: 'catalogue', name: 'catalogue.ranking.run', payload: { storeId: 2 }, key: `catalogue.ranking.run/2/${day}` },
+    ]);
+    expect(() => JOBS.get('catalogue.ranking.run')!.parse({ storeId: 0 })).toThrow(/positive integer/);
   });
 });

@@ -1,0 +1,8 @@
+{
+  "shop": {
+    "ranking": {
+      "label": "Shop ranking",
+      "help": "The order products show in on your own shop (category pages, collections). How much sales, visitors who buy, margin, sizes in stock and newness count; how many days count as new; how many days of stock count as healthy; and whether the new order goes live by itself each night. Google ranking is separate."
+    }
+  }
+}
