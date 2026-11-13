@@ -7,6 +7,7 @@
 import type { PermissionKey } from '@extas/auth';
 import type { AdminSectionId } from '@extas/settings';
 import type { ShellIconName } from './icons';
+import { applyNavV5 } from './nav-v5';
 
 export interface ShellPage {
   /** The page's address; a page also owns every address under it that no other page owns. */
@@ -50,7 +51,9 @@ export interface ShellSection {
 
 export const SHELL_GROUPS: readonly Exclude<ShellGroup, 'bottom'>[] = ['daily', 'grow', 'business'];
 
-export const SHELL_SECTIONS: readonly ShellSection[] = [
+// PR 659 (CN-048): the list below is every built page in the section it was built for; `SHELL_SECTIONS` below it is the
+// same list as the prototype v5 menu draws it (nav-v5.ts: tab order and words, the rest under More).
+export const RAW_SECTIONS: readonly ShellSection[] = [
   { id: 'dashboard', icon: 'home', group: 'daily', base: '/admin', tabs: [], perms: ['dashboard.read'], guide: 'dashboard' },
   // S05 (PR 140, 141; follow-up 200): All orders (and one order's page) and the To confirm call queue. Risk review,
   // packing, returns and the order settings join as their PRs are built. `orders.invoice` alone no longer shows the
@@ -120,7 +123,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     base: '/admin/products',
     guide: 'products',
     tabs: [
-      { id: 'all', pages: [{ href: '/admin/products', perm: 'catalogue.read', keys: ['products', 'productNew', 'product'] }] },
+      { id: 'all', pages: [{ href: '/admin/products', perm: 'catalogue.read', keys: ['products', 'product'] }] },
+      // PR 659 (CN-048): "Add product" is a tab of its own (the prototype's; the 8-step wizard of PR 685 opens from it)
+      { id: 'add', pages: [{ href: '/admin/products/new', perm: 'catalogue.write', keys: ['productNew'] }] },
       { id: 'queue', pages: [{ href: '/admin/products/queue', perm: 'catalogue.read', keys: ['publishQueue'] }] },
       // S28 · PR 686: Products → Shop ranking — the score of each product by the owner's weights and the order the shop shows.
       { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
@@ -648,6 +653,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     ],
   },
 ];
+
+export const SHELL_SECTIONS: readonly ShellSection[] = RAW_SECTIONS.map((s) => applyNavV5(s));
 
 /** What the person may see: their keys in the current store and whether they are an owner. */
 export interface ShellViewer {

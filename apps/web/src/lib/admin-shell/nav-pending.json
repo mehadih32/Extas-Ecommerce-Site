@@ -1,0 +1,29 @@
+{
+  "waiting": [
+    "products.reviews.faqs",
+    "settings.store.demo",
+    "products.ranking",
+    "money.cash",
+    "money.costs.budgets",
+    "reports.library",
+    "reports.packs",
+    "support.replies",
+    "support.comments",
+    "support.comments.live",
+    "marketing.affiliates",
+    "marketing.merchantFeed.meta",
+    "marketing.messages.campaigns",
+    "marketing.messages.ceilings",
+    "marketing.overview",
+    "marketing.plan",
+    "website.analytics",
+    "website.analytics.behaviour",
+    "settings.staffControls",
+    "settings.telegramApprovals",
+    "orders.bulk",
+    "settings.people",
+    "settings.roles",
+    "settings.activity",
+    "settings.startFresh"
+  ]
+}

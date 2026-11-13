@@ -29,25 +29,26 @@
         "ranking": "Shop ranking",
         "all": "All products",
         "queue": "Launch queue",
-        "combos": "Combos & sets",
+        "combos": "Combos",
         "stock": "Stock",
         "charts": "Size charts",
-        "reviews": "Reviews",
+        "reviews": "Reviews & questions",
         "import": "Import from link",
-        "audit": "Product audit"
+        "audit": "Product audit",
+        "add": "Add product"
       },
       "delivery": {
-        "zones": "Zones & charges",
+        "zones": "Setup",
         "couriers": "Couriers",
         "settings": "Delivery settings",
         "overview": "Overview",
         "courier360": "Courier 360"
       },
       "marketing": {
-        "campaigns": "Campaigns",
+        "campaigns": "Ad campaigns",
         "messages": "Message campaigns",
         "audiences": "Audiences",
-        "adPlatforms": "Ad platforms",
+        "adPlatforms": "Accounts & tools",
         "tracking": "Tracking",
         "landing": "Landing pages",
         "studio": "Studio",
@@ -60,7 +61,9 @@
         "report": "Report",
         "geoGuide": "Where to advertise",
         "merchantFeed": "Merchant feed",
-        "intel": "Market & competitors"
+        "intel": "Market & competitors",
+        "overview": "Overview",
+        "plan": "Plan & ideas"
       },
       "reports": {
         "library": "Report library",
@@ -69,22 +72,22 @@
         "fraud": "Fraud & RTO",
         "stopped": "Stopped by the engine",
         "learning": "Decisions & learning",
-        "delivery": "Delivery & RTO",
+        "delivery": "Delivery & returns",
         "flags": "Flag outcomes",
         "customers": "Customers",
         "team": "Team",
-        "areas": "Sales by area",
+        "areas": "Areas",
         "experiments": "Experiments",
         "funnels": "Funnels",
         "searches": "Searches",
-        "orders": "Orders",
+        "orders": "Sales",
         "couriers": "Couriers"
       },
       "settings": {
-        "store": "Store details",
+        "store": "Business settings",
         "policies": "Policies & texts",
         "practice": "Practice data",
-        "keys": "Keys & connections",
+        "keys": "System (owner only)",
         "erp": "ERP link",
         "security": "Sign-in & security",
         "privacy": "Privacy & data",
@@ -110,13 +113,14 @@
         "courier": "With courier",
         "returns": "Returns & exchanges",
         "digest": "Today's digest",
-        "incomplete": "Incomplete orders"
+        "incomplete": "Incomplete orders",
+        "bulk": "Bulk"
       },
       "customers": {
         "all": "All customers",
-        "segments": "Segments",
+        "segments": "Customer groups",
         "loyalty": "Loyalty & wallet",
-        "review": "To review",
+        "review": "Duplicates to merge",
         "settings": "Customer settings",
         "import": "Import old customers"
       },
@@ -131,20 +135,23 @@
       },
       "website": {
         "layouts": "Page layouts",
-        "words": "Words & language",
+        "words": "Shop text",
         "eye": "Eye-toggles",
         "canvas": "Side canvas",
         "launch": "Launch default",
         "pageEdit": "On-page edit",
-        "seo": "SEO",
-        "blog": "Blog & journal"
+        "seo": "SEO & Google ranking",
+        "blog": "Blog",
+        "analytics": "Analytics"
       },
       "support": {
-        "inbox": "Inbox",
+        "inbox": "Conversations",
         "settings": "Support settings",
         "riderIssues": "Rider issues",
         "app": "Support app",
-        "analytics": "Analytics"
+        "analytics": "Response times",
+        "replies": "Quick replies",
+        "comments": "Comments"
       },
       "rules": {
         "all": "All rules",
@@ -154,7 +161,7 @@
       "money": {
         "cash": "Money in & out",
         "budgets": "Budgets & profit",
-        "books": "Books",
+        "books": "ERP account",
         "overview": "Overview",
         "profit": "Profit & loss",
         "refunds": "Wallet & refunds",
@@ -174,9 +181,9 @@
       "ai": {
         "control": "Control room",
         "models": "Model picks",
-        "agents": "Agents",
+        "agents": "AI agents",
         "audit": "Checklist audit",
-        "costBook": "Cost Book",
+        "costBook": "Costs & limits",
         "approvals": "Approvals",
         "permissions": "Permissions",
         "diary": "Diary",
@@ -887,5 +894,37 @@
         "green": "Green"
       }
     }
+  },
+  "nav": {
+    "productFaqs": "FAQs",
+    "productDemo": "Demo products",
+    "moneyBudgets": "Budgets & profit",
+    "supportComments": "Comments",
+    "supportCommentsLive": "Live selling",
+    "marketingAffiliates": "Influencers & affiliates",
+    "marketingMetaFeed": "Meta feed",
+    "marketingMessageCampaigns": "Message campaigns",
+    "messagesCostCeilings": "Cost ceilings",
+    "websiteAnalytics": "Overview",
+    "staffControls": "Staff controls",
+    "telegramApprovals": "Telegram approvals",
+    "people": "People",
+    "roles": "Roles",
+    "activity": "Activity log",
+    "startFresh": "Start fresh",
+    "webAnalytics": {
+      "behaviour": "Behaviour"
+    },
+    "couriers": "Couriers",
+    "marketingReferrals": "Referrals",
+    "booksAccount": "Books",
+    "booksMatch": "Match",
+    "booksDifferences": "Differences",
+    "booksCloses": "Closes",
+    "store": "Store details",
+    "policies": "Policies & texts",
+    "adminLook": "Admin look",
+    "privacy": "Privacy & data",
+    "marketingMerchantFeed": "Google feed"
   }
 }

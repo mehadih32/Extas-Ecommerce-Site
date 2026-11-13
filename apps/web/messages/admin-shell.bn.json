@@ -29,25 +29,26 @@
         "ranking": "দোকানে সাজানো",
         "all": "সব প্রোডাক্ট",
         "queue": "চালুর অপেক্ষায়",
-        "combos": "কম্বো আর সেট",
+        "combos": "কম্বো",
         "stock": "স্টক",
         "charts": "সাইজ চার্ট",
-        "reviews": "রিভিউ",
+        "reviews": "রিভিউ ও প্রশ্ন",
         "import": "লিংক থেকে আনা",
-        "audit": "প্রোডাক্ট অডিট"
+        "audit": "প্রোডাক্ট অডিট",
+        "add": "নতুন প্রোডাক্ট"
       },
       "delivery": {
-        "zones": "এলাকা আর চার্জ",
+        "zones": "সেটআপ",
         "couriers": "কুরিয়ার",
         "settings": "ডেলিভারির সেটিং",
         "overview": "ওভারভিউ",
         "courier360": "Courier 360"
       },
       "marketing": {
-        "campaigns": "ক্যাম্পেইন",
+        "campaigns": "বিজ্ঞাপন ক্যাম্পেইন",
         "messages": "মেসেজ ক্যাম্পেইন",
         "audiences": "অডিয়েন্স",
-        "adPlatforms": "বিজ্ঞাপনের প্ল্যাটফর্ম",
+        "adPlatforms": "অ্যাকাউন্ট ও টুল",
         "tracking": "ট্র্যাকিং",
         "landing": "ল্যান্ডিং পেজ",
         "studio": "স্টুডিও",
@@ -60,7 +61,9 @@
         "report": "রিপোর্ট",
         "geoGuide": "কোথায় বিজ্ঞাপন দেবেন",
         "merchantFeed": "মার্চেন্ট ফিড",
-        "intel": "বাজার আর প্রতিযোগী"
+        "intel": "বাজার আর প্রতিযোগী",
+        "overview": "সারসংক্ষেপ",
+        "plan": "পরিকল্পনা ও আইডিয়া"
       },
       "reports": {
         "library": "রিপোর্ট লাইব্রেরি",
@@ -69,22 +72,22 @@
         "fraud": "ফ্রড ও RTO",
         "stopped": "ইঞ্জিন যা থামিয়েছে",
         "learning": "সিদ্ধান্ত আর শেখা",
-        "delivery": "ডেলিভারি আর ফেরত",
+        "delivery": "ডেলিভারি ও রিটার্ন",
         "flags": "ফ্ল্যাগের ফলাফল",
         "customers": "কাস্টমার",
         "team": "টিম",
-        "areas": "এলাকা ধরে বিক্রি",
+        "areas": "এলাকা",
         "experiments": "পরীক্ষা (A/B)",
         "funnels": "ফানেল",
         "searches": "সার্চ",
-        "orders": "অর্ডার",
+        "orders": "বিক্রি",
         "couriers": "কুরিয়ার"
       },
       "settings": {
-        "store": "দোকানের তথ্য",
+        "store": "ব্যবসার সেটিংস",
         "policies": "নীতি ও লেখা",
         "practice": "প্র্যাকটিস ডেটা",
-        "keys": "চাবি ও সংযোগ",
+        "keys": "সিস্টেম (শুধু মালিক)",
         "erp": "ERP সংযোগ",
         "security": "লগইন ও নিরাপত্তা",
         "privacy": "প্রাইভেসি ও তথ্য",
@@ -108,15 +111,16 @@
         "riskrules": "ঝুঁকির নিয়ম",
         "packing": "পাঠানো বাকি",
         "courier": "কুরিয়ারে",
-        "returns": "ফেরত আর বদল",
+        "returns": "রিটার্ন ও এক্সচেঞ্জ",
         "digest": "আজকের সারাংশ",
-        "incomplete": "অসম্পূর্ণ অর্ডার"
+        "incomplete": "অসম্পূর্ণ অর্ডার",
+        "bulk": "বাল্ক"
       },
       "customers": {
         "all": "সব কাস্টমার",
-        "segments": "সেগমেন্ট",
-        "loyalty": "লয়্যালটি আর ওয়ালেট",
-        "review": "যাচাই বাকি",
+        "segments": "কাস্টমার গ্রুপ",
+        "loyalty": "লয়্যালটি ও ওয়ালেট",
+        "review": "ডুপ্লিকেট মার্জ",
         "settings": "কাস্টমার সেটিংস",
         "import": "পুরনো কাস্টমার ইমপোর্ট"
       },
@@ -130,21 +134,24 @@
         "email": "ই-মেইল"
       },
       "website": {
-        "layouts": "পেজের লেআউট",
-        "words": "লেখা আর ভাষা",
+        "layouts": "পেজ লেআউট",
+        "words": "দোকানের লেখা",
         "eye": "দেখানো-লুকানো",
         "canvas": "দুই পাশের জায়গা",
         "launch": "শুরুর চেহারা",
         "pageEdit": "পেজে এডিট",
-        "seo": "SEO",
-        "blog": "ব্লগ আর জার্নাল"
+        "seo": "SEO ও গুগল র‍্যাঙ্কিং",
+        "blog": "ব্লগ",
+        "analytics": "অ্যানালিটিক্স"
       },
       "support": {
-        "inbox": "ইনবক্স",
+        "inbox": "কথোপকথন",
         "settings": "সাপোর্ট সেটিংস",
         "riderIssues": "রাইডারের সমস্যা",
         "app": "সাপোর্ট অ্যাপ",
-        "analytics": "হিসাব"
+        "analytics": "উত্তরের সময়",
+        "replies": "দ্রুত উত্তর",
+        "comments": "কমেন্ট"
       },
       "rules": {
         "all": "সব নিয়ম",
@@ -154,7 +161,7 @@
       "money": {
         "cash": "টাকার আসা-যাওয়া",
         "budgets": "বাজেট আর লাভ",
-        "books": "হিসাবের খাতা",
+        "books": "ERP হিসাব",
         "overview": "সারসংক্ষেপ",
         "profit": "লাভ-ক্ষতি",
         "refunds": "ওয়ালেট ও রিফান্ড",
@@ -174,9 +181,9 @@
       "ai": {
         "control": "কন্ট্রোল রুম",
         "models": "মডেল পছন্দ",
-        "agents": "এজেন্ট",
+        "agents": "AI এজেন্ট",
         "audit": "চেকলিস্ট অডিট",
-        "costBook": "কস্ট বুক",
+        "costBook": "খরচ ও সীমা",
         "approvals": "অনুমোদন",
         "permissions": "পারমিশন",
         "diary": "ডায়েরি",
@@ -887,5 +894,37 @@
         "green": "সবুজ"
       }
     }
+  },
+  "nav": {
+    "productFaqs": "FAQ",
+    "productDemo": "ডেমো প্রোডাক্ট",
+    "moneyBudgets": "বাজেট আর লাভ",
+    "supportComments": "কমেন্ট",
+    "supportCommentsLive": "লাইভ সেলিং",
+    "marketingAffiliates": "ইনফ্লুয়েন্সার ও অ্যাফিলিয়েট",
+    "marketingMetaFeed": "মেটা ফিড",
+    "marketingMessageCampaigns": "মেসেজ ক্যাম্পেইন",
+    "messagesCostCeilings": "খরচের সীমা",
+    "websiteAnalytics": "সারসংক্ষেপ",
+    "staffControls": "স্টাফ কন্ট্রোল",
+    "telegramApprovals": "টেলিগ্রাম অনুমোদন",
+    "people": "মানুষজন",
+    "roles": "রোল",
+    "activity": "কাজের লগ",
+    "startFresh": "নতুন করে শুরু",
+    "webAnalytics": {
+      "behaviour": "আচরণ"
+    },
+    "couriers": "কুরিয়ার",
+    "marketingReferrals": "রেফারেল",
+    "booksAccount": "হিসাবের খাতা",
+    "booksMatch": "মেলানো",
+    "booksDifferences": "গরমিল",
+    "booksCloses": "হিসাব বন্ধ",
+    "store": "দোকানের তথ্য",
+    "policies": "নীতি ও লেখা",
+    "adminLook": "অ্যাডমিনের চেহারা",
+    "privacy": "প্রাইভেসি ও তথ্য",
+    "marketingMerchantFeed": "গুগল ফিড"
   }
 }
