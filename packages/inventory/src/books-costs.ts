@@ -357,12 +357,14 @@ export async function reverseCostEntry(deps: InventoryDeps, who: Who, entryId: s
 export const STATEMENT_COST_KINDS = {
   COURIER_SETTLEMENT: { line: 'DELIVERY', refType: 'courier.settlement', part: 'courierCharges' },
   GATEWAY_STATEMENT: { line: 'PAYMENT_FEES', refType: 'gateway.statement', part: 'gatewayFees' },
+  // S28 · PR 675: "Accept the courier figure": the part of one statement line's charge above ours (one entry per line)
+  COURIER_DIFFERENCE: { line: 'DELIVERY', refType: 'courier.figure', part: 'courierCharges' },
 } as const satisfies Record<string, { line: CostSummaryLine; refType: string; part: 'courierCharges' | 'gatewayFees' }>;
 export type StatementCostKind = keyof typeof STATEMENT_COST_KINDS;
 
 export interface StatementCostInput {
   kind: StatementCostKind;
-  /** CourierSettlement.id or GatewayStatement.id: one entry per statement, ever. */
+  /** CourierSettlement.id or GatewayStatement.id (for COURIER_DIFFERENCE the CourierSettlementLine.id): one entry per statement or line, ever. */
   statementId: string;
   /** The statement's own reference, kept as the entry's note. */
   reference: string | null;

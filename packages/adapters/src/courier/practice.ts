@@ -32,6 +32,8 @@ export const practiceCapabilities: CourierCapabilities = {
   weight: true,
   declaredValue: true,
   cancel: false,
+  // PR 671: the practice courier plays the payment request too (nothing leaves the server, no money moves)
+  payouts: 'request',
 };
 
 export const mockCourierAdapter = defineAdapter<CourierApi, Record<string, never>>({

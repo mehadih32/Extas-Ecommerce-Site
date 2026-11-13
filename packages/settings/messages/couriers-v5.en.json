@@ -1,0 +1,22 @@
+{
+  "delivery": {
+    "couriers": {
+      "label": "Couriers: default courier",
+      "help": "The courier a booking offers first, and the one listed first in Couriers. Left empty, the first courier is the default."
+    },
+    "courier": {
+      "payouts": {
+        "label": "Couriers: payouts through the courier's own payment request",
+        "help": "On as shipped (owner's OK, 13 Nov 2026). When on, a person with the right and the owner's PIN can ask a courier to pay what it holds, through the courier's own payment-request feature. The request is read back by itself; when the courier says Paid, the orders it covers are marked settled. Polling interval in minutes and the smallest amount to ask for are set here."
+      },
+      "claimTerms": {
+        "label": "Couriers: time to pay a claim",
+        "help": "The deadline is off as shipped. When on, a claim gets a deadline (the days set here) when it is raised, a claim past it is flagged late, and one close to it is flagged due soon. The last switch posts money won back from a courier to its account; it is on as shipped (owner's OK, 13 Nov 2026)."
+      },
+      "messages": {
+        "label": "Couriers: messages to the courier",
+        "help": "Off as shipped. When on, the booking, delivery and COD texts go to the courier in the parcel's note (in the note language of the booking card), and the payout text in the payout request's note. The other texts are offered to copy in Courier 360. Placeholders: order, customer, cod, courier, date, amount, consignment. Nothing is sent to a courier by itself."
+      }
+    }
+  }
+}

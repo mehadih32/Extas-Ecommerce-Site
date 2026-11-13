@@ -184,9 +184,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     base: '/admin/delivery',
     guide: 'delivery',
     tabs: [
+      // S28 · PR 670 (CN-048): the Couriers section opens on its Overview (every courier at a glance) and Courier 360 (one courier, eight sections; the default courier first)
+      { id: 'overview', pages: [{ href: '/admin/delivery', perm: 'delivery.read', keys: ['couriersOverview'] }] },
+      { id: 'courier360', pages: [{ href: '/admin/delivery/courier-360', perm: 'delivery.read', keys: ['courier', 'courierStatement'] }] },
       { id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] },
-      // PR 554: the courier accounts with their area lists (the zone sync); one courier's page is under it
-      { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courier'] }] },
+      // PR 554: the courier accounts with their area lists (the zone sync); one courier's area pairs are under it
+      { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courierAreas'] }] },
       // S08 · PR 193 — Delivery settings (demo /admin/delivery/settings): holiday mode first; the other cards join with their PRs
       { id: 'settings', pages: [{ href: '/admin/delivery/settings', perm: 'delivery.read', keys: ['deliverySettings'] }] },
     ],
@@ -213,8 +216,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'analytics', pages: [{ href: '/admin/support/analytics', perm: 'support.read', keys: ['supportAnalytics'] }] },
     ],
   },
-  // PR 659 (CN-048): Rules is its own section (it was Marketing's first tab). Same pages, same addresses; the Offers & discounts
-  // and Pop-ups tabs of the prototype join with PR 676 and PR 677.
+  // PR 659 (CN-048): Rules is its own section (it was Marketing's first tab). PR 676–678: All rules (one page), Offers & discounts, Pop-ups & notices.
   {
     id: 'rules',
     icon: 'rules',
@@ -226,12 +228,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         id: 'all',
         guide: 'rules',
         pages: [
+          // S28 · PR 676: the one-page list of every rule; the Smart Rules editor (PR 209–219) is /admin/rules/smart
           { href: '/admin/rules', perm: 'rules.read', keys: ['rules'] },
-          { href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] },
+          { href: '/admin/rules/smart', perm: 'rules.read', keys: ['rulesSmart'] },
           // S08 · PR 193 — Eid order-by dates, the "may arrive after Eid" line and Eid pre-order (CN-014 g)
           { href: '/admin/rules/eid', perm: 'rules.read', keys: ['eidDates'] },
         ],
       },
+      // S28 · PR 677: Offers & Discounts 360 (offers, coupons, built-in price rules, the online-payment reward, points, wallet)
+      { id: 'offers', pages: [{ href: '/admin/rules/offers', perm: 'rules.read', keys: ['rulesOffers'] }] },
+      // S28 · PR 678: the hub of the shop's twelve system pop-ups and notices, then the owner's own notices (PR 216)
+      { id: 'popups', pages: [{ href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] }] },
     ],
   },
   {
@@ -422,6 +429,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // Go-live gate F-041 / F-054 (PR 172, 171 follow-ups): Money → Refunds & wallet — approve and record refunds, the apology credit, the money rules.
       { id: 'refunds', pages: [{ href: '/admin/money/refunds', perm: 'payments.view', keys: ['moneyRefunds'] }] },
+      // S28 · PR 670: Courier 360's Money section, reachable from Finance (it opens the default courier's money)
+      { id: 'couriers', pages: [{ href: '/admin/money/couriers', perm: 'payments.view', keys: ['moneyCouriers'] }] },
       { id: 'match', pages: [{ href: '/admin/money/books/match', perm: 'books.read', keys: ['booksMatch'] }] },
       { id: 'differences', pages: [{ href: '/admin/money/books/differences', perm: 'books.read', keys: ['booksDifferences'] }] },
       { id: 'closes', pages: [{ href: '/admin/money/books/closes', perm: 'books.read', keys: ['booksCloses'] }] },
@@ -492,6 +501,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       },
       // S08 · PR 192 — REP-05 Delivery & RTO: courier performance by courier, zone and district, late parcels, RTO cost book.
       { id: 'delivery', pages: [{ href: '/admin/reports/delivery', perm: 'reports.read', keys: ['reportsDelivery'] }] },
+      // S28 · PR 670: Courier 360's Performance section, reachable from Reports (it opens the default courier's performance)
+      { id: 'couriers', guide: 'analytics', pages: [{ href: '/admin/reports/couriers', perm: 'reports.read', keys: ['reportsCouriers'] }] },
       // S14 · PR 303 — REP-04 Customers: new, returning and quiet (churned) buyers over a period, overall and per saved segment.
       { id: 'customers', guide: 'analytics', pages: [{ href: '/admin/reports/customers', perm: 'reports.read', keys: ['reportsCustomers'] }] },
       // S06 · PR 562 — Flag outcomes: of the customers asked to pay ahead, how many paid and how many walked away, per layer.

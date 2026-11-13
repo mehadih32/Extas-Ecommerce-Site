@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { mockCourierWorld, STEADFAST_PROVIDER } from '@extas/adapters';
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { addLine, cancelOrder, confirmOrder, editOrder, holdOrder } from '@extas/orders';
-import { shippingSettings } from '@extas/settings';
+import { couriersV5Settings, shippingSettings } from '@extas/settings';
 import { bookOrders, readyToBook, retryBooking, trackParcel, trackParcels, updateCourier } from './index';
 import { addDays, localDay } from './pure';
 import { setUpShipping, type ShippingFixture } from './testing';
@@ -143,6 +143,31 @@ describe.skipIf(!HAS_TEST_DB)('PR 176 · booking and tracking with Steadfast (Po
     } finally {
       f.overrides.delete('checkout.gift');
       f.overrides.delete('delivery.courier.booking');
+    }
+  });
+
+  it('PR 674: the owner\'s texts and a one-off note go to the courier in the parcel\'s note, only with the owner\'s switch on', async () => {
+    const cod = await confirmed('msg-cod');
+    const paid = await f.place('msg-paid', { phone: phone(), payment: { method: 'mobile', option: 'bkash' }, pay: true });
+    await confirmOrder(f.ordersDeps(), f.staff, paid.orderId);
+    const cfg = couriersV5Settings['delivery.courier.messages'].default;
+    try {
+      // off as shipped: a one-off note still goes, the owner's texts do not
+      const off = await bookOrders(f.shippingDeps(), f.shipper, { courierAccountId: courierId, orderIds: [cod.orderId], note: 'Rider: use the back gate' });
+      expect(off.results[0]).toMatchObject({ outcome: 'booked' });
+      const codOrder = await db().order.findUniqueOrThrow({ where: { id: cod.orderId } });
+      expect(world.byRef(`${codOrder.number}-1`)!.note).toBe('Rider: use the back gate');
+      // on: booking, delivery and (only for cash to collect) COD texts follow the one-off note
+      f.overrides.set('delivery.courier.messages', { ...cfg, enabled: true });
+      const on = await bookOrders(f.shippingDeps(), f.shipper, { courierAccountId: courierId, orderIds: [paid.orderId], note: 'Fragile' });
+      expect(on.results[0]).toMatchObject({ outcome: 'booked' });
+      const paidOrder = await db().order.findUniqueOrThrow({ where: { id: paid.orderId } });
+      expect(world.byRef(`${paidOrder.number}-1`)!.note).toBe(`Fragile | Order ${paidOrder.number}. Please handle with care. | Please call ${paidOrder.customerName} before delivery.`);
+      expect(world.byRef(`${paidOrder.number}-1`)!.note).not.toContain('Collect');
+      // a note longer than the courier's own limit is refused before anything is booked
+      expect(await code(bookOrders(f.shippingDeps(), f.shipper, { courierAccountId: courierId, orderIds: [paid.orderId], note: 'x'.repeat(201) }))).toBe('INVALID_INPUT');
+    } finally {
+      f.overrides.delete('delivery.courier.messages');
     }
   });
 

@@ -608,6 +608,7 @@
       "packedDone": "Packed — now book the courier.",
       "book": "Book courier",
       "bookPick": "Courier account",
+      "bookNote": "Note for the courier (optional)",
       "booking": "Booking…",
       "bookDone": "Booked: {cid}",
       "bookNot": "Not booked: {why}",

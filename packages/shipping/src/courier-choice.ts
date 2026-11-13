@@ -64,6 +64,14 @@ const ORDER_SELECT = {
 /** The courier costs of a few orders at once (the packing screen, the booking list). */
 export async function courierChoices(deps: ShippingDeps, who: Who, orderIds: readonly string[]): Promise<CourierChoice[]> {
   await allow(deps, who, 'delivery.book');
+  return courierChoicesOf(deps, who, orderIds);
+}
+
+/**
+ * The same costs without the booking permission: for a read-only figure (the Couriers overview's "money we would save"
+ * checks `delivery.read` itself). Nothing is booked from here.
+ */
+export async function courierChoicesOf(deps: ShippingDeps, who: Who, orderIds: readonly string[]): Promise<CourierChoice[]> {
   const ids = parse(z.array(z.uuid()).max(200), [...new Set(orderIds)], 'orders');
   const cfg = await setting(deps, who.storeId, 'delivery.courier.selection');
   const [orders, accounts] = await Promise.all([

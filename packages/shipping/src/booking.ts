@@ -42,7 +42,9 @@ import type { Prisma } from '@extas/db/client';
 import { assertBookable, isInventoryError } from '@extas/inventory';
 import { bookWith, DELIVERY_TARGET_SELECT, deliveryTarget, dueOf, isOrdersError, openReviewIds, staffBy, viewWhere, type OrdersDeps } from '@extas/orders';
 import { bookableCourier, courierApi } from './accounts';
-import { lookup, messages, type CourierBookingSettings } from '@extas/settings';
+import { minorToMajorText } from '@extas/adapters/money';
+import { lookup, messages, type CourierBookingSettings, type CourierMessagesSettings } from '@extas/settings';
+import { bookingMessageLines } from './courier-messages';
 import { fixedSetNoteLines, fixedSetsOf } from './set-line';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Tx, type Who } from './context';
 import { isShippingError, ShippingError } from './errors';
@@ -128,6 +130,8 @@ export const bookInput = z
     orderIds: z.array(z.uuid()).min(1).max(500).optional(),
     /** "Book all": the orders ready to book, oldest first, up to the owner's "per press". */
     all: z.literal(true).optional(),
+    /** PR 674: a one-off note for the courier, for every order of this press (it leads the parcel's note). */
+    note: z.string().trim().max(200).optional(),
   })
   .strict()
   .refine((v) => (v.all ? !v.orderIds : !!v.orderIds), { message: 'either the ticked orders or "all"', path: ['orderIds'] });
@@ -152,7 +156,7 @@ export async function bookOrders(deps: ShippingDeps, who: Who, input: unknown): 
   const conn = await courierApi(deps, who.storeId, courier.providerKey);
   const results: BookingOutcome[] = [];
   // one at a time: each order under its own lock, the courier asked once per order
-  for (const orderId of ids) results.push(await bookOne(deps, who, { id: courier.id, ...conn }, orderId));
+  for (const orderId of ids) results.push(await bookOne(deps, who, { id: courier.id, ...conn }, orderId, v.note || null));
   const counts = { booked: 0, unknown: 0, failed: 0, skipped: 0 };
   for (const r of results) counts[r.outcome] += 1;
   return { courierAccountId: courier.id, mode: conn.mode, results, counts, left };
@@ -165,6 +169,9 @@ const ORDER_SELECT = {
   number: true,
   areaId: true,
   note: true,
+  totalMinor: true,
+  walletAppliedMinor: true,
+  paidMinor: true,
   ...DELIVERY_TARGET_SELECT,
   items: { where: { status: 'ACTIVE' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true, lineTotalMinor: true, variantId: true, comboId: true }, orderBy: { createdAt: 'asc' } },
 } as const satisfies Prisma.OrderSelect;
@@ -178,7 +185,15 @@ interface Courier {
 type Db = ShippingDeps['db'] | Tx;
 
 /** The parcel's facts from the order row (read again under the order's lock before anything is written). */
-async function prepare(db: Db, settings: ShippingDeps['settings'], storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string, zoneRule: 'whenRequired' | 'always') {
+/** PR 674: what the courier's note carries besides the order's own words (the owner's texts, the person's one-off note). */
+interface NoteExtra {
+  oneOff: string | null;
+  messages: CourierMessagesSettings;
+  currency: string;
+  courierName: string;
+}
+
+async function prepare(db: Db, settings: ShippingDeps['settings'], storeId: number, courier: Courier, orderId: string, cfg: CourierBookingSettings, today: string, zoneRule: 'whenRequired' | 'always', extra: NoteExtra) {
   const o = await db.order.findFirst({ where: { id: orderId, storeId, archivedAt: null }, select: ORDER_SELECT });
   if (!o) return { skip: skipped(orderId, null, 'NOT_FOUND') } as const;
   const target = deliveryTarget(o);
@@ -205,7 +220,14 @@ async function prepare(db: Db, settings: ShippingDeps['settings'], storeId: numb
     target,
     receiver: { name: target.name!, phone: courierPhone(target.phone)!, address: target.address! },
     // CN-018 (4): a Fixed set is delivered whole — the rider reads it in the note (nothing while `combos.split` is off)
-    note: bookingNoteOf({ customerNote: o.note, gift: target.gift, giftLine: cfg.giftNote[cfg.noteLang], setLines: fixedSetNoteLines(await fixedSetsOf(db, { settings }, storeId, o.items), lookup(messages[cfg.noteLang], 'combos.split.riderLine') ?? '', cfg.noteLang) }),
+    note: bookingNoteOf({
+      customerNote: o.note,
+      gift: target.gift,
+      giftLine: cfg.giftNote[cfg.noteLang],
+      oneOff: extra.oneOff,
+      messageLines: bookingMessageLines(extra.messages, cfg.noteLang, { order: o.number, customer: target.name, courier: extra.courierName, cod: dueOf(o) > 0 ? minorToMajorText(dueOf(o), extra.currency) : null }),
+      setLines: fixedSetNoteLines(await fixedSetsOf(db, { settings }, storeId, o.items), lookup(messages[cfg.noteLang], 'combos.split.riderLine') ?? '', cfg.noteLang),
+    }),
   } as const;
 }
 
@@ -217,11 +239,19 @@ class Skip extends Error {
 }
 
 /** One order: checks, the parcel row under the order service's lock, then the courier. */
-export async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: string): Promise<BookingOutcome> {
-  const [cfg, timeZone, zones] = await Promise.all([setting(deps, who.storeId, 'delivery.courier.booking'), setting(deps, who.storeId, 'store.timeZone'), setting(deps, who.storeId, 'delivery.courier.zoneSync')]);
+export async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, orderId: string, oneOff: string | null = null): Promise<BookingOutcome> {
+  const [cfg, timeZone, zones, messagesCfg, currency, account] = await Promise.all([
+    setting(deps, who.storeId, 'delivery.courier.booking'),
+    setting(deps, who.storeId, 'store.timeZone'),
+    setting(deps, who.storeId, 'delivery.courier.zoneSync'),
+    setting(deps, who.storeId, 'delivery.courier.messages'),
+    setting(deps, who.storeId, 'store.currency'),
+    deps.db.courierAccount.findFirst({ where: { id: courier.id, storeId: who.storeId }, select: { name: true } }),
+  ]);
+  const extra: NoteExtra = { oneOff, messages: messagesCfg, currency, courierName: account?.name ?? '' };
   const today = localDay(nowOf(deps), timeZone);
   // a quick look first (no lock): most refusals need no transaction
-  const first = await prepare(deps.db, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped);
+  const first = await prepare(deps.db, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped, extra);
   if (first.skip) {
     if (first.skip.code === 'AREA_UNMAPPED' || first.skip.code === 'AREA_UNKNOWN') await noteAreaHeld(deps, who, courier.id, first.skip);
     return first.skip;
@@ -235,7 +265,7 @@ export async function bookOne(deps: ShippingDeps, who: Who, courier: Courier, or
       // PR 182 (SIM-F-010): a required packing photo that is missing waits (the owner may waive it for one order)
       await assertPackingPhoto(deps, tx, who.storeId, orderId);
       // the row as it is under the lock: an edit that raced this press is what goes to the courier, or the reason why not
-      const p = await prepare(tx, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped);
+      const p = await prepare(tx, deps.settings, who.storeId, courier, orderId, cfg, today, zones.unmapped, extra);
       if (p.skip) throw new Skip(p.skip);
       const attempt = (await tx.shipment.count({ where: { storeId: who.storeId, orderId } })) + 1;
       const merchantRef = `${locked.number}-${attempt}`;

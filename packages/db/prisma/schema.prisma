@@ -225,6 +225,7 @@ model Store {
   paymentLinks            PaymentLink[]
   courierSettlements      CourierSettlement[]
   courierSettlementLines  CourierSettlementLine[]
+  courierPayouts          CourierPayout[]
   codCollections          CodCollection[]
   walletAccounts          WalletAccount[]
   walletEntries           WalletEntry[]
@@ -342,6 +343,8 @@ model Store {
   audienceSyncs           AudienceSync[]
   coupons                 Coupon[]
   couponRedemptions       CouponRedemption[]
+  offers                  Offer[]
+  offerEvents             OfferEvent[]
   referrals               Referral[]
   referralUses            ReferralUse[]
   recoveryMessages        RecoveryMessage[]
@@ -4173,6 +4176,54 @@ model CourierSettlementLine {
   @@index([storeId, matchState])
 }
 
+/// @stage S28 · PR 671 — a payout the shop asked a courier for through the courier's OWN payment-request feature (never an
+/// "Ask for payment" of ours). REQUESTED → PROCESSING → PAID or REJECTED, read back from the courier by a poll. The parcels
+/// the request covers are the ones the courier held for us when it was asked (`shipmentIds`, a snapshot); when the courier
+/// says PAID they are put on an imported statement (`settlementId`) the way a statement file would, so the orders show
+/// the cash settled. A paid amount that differs from what those parcels come to is kept in `differenceMinor` and flagged,
+/// never corrected. Nothing is deleted; a rejected request stays with the courier's reason.
+model CourierPayout {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store          @relation(fields: [storeId], references: [id])
+  courierAccountId String         @db.Uuid
+  courierAccount   CourierAccount @relation(fields: [courierAccountId], references: [id])
+  /// The courier's own id of the request (null while the courier has not answered yet: the request is then unknown, see `note`).
+  providerRef      String?
+  /// REQUESTED, PROCESSING, PAID or REJECTED (the courier's words mapped by the adapter).
+  state            String         @default("REQUESTED")
+  /// MOCK (the practice world), SANDBOX or LIVE: the mode the courier's connection was in when asked.
+  mode             String         @default("MOCK")
+  /// What we asked for, and what the parcels it covers come to (cash collected less the courier's charge) when it was asked.
+  amountMinor      Int
+  coveredMinor     Int            @default(0)
+  /// What the courier says it paid, its payment reference and method, when it did.
+  paidMinor        Int?
+  paymentRef       String?
+  method           String?
+  paidAt           DateTime?      @db.Timestamptz(3)
+  /// The courier's own words (raw status) and the reason of a rejection.
+  rawStatus        String?
+  note             String?
+  /// paidMinor - coveredMinor when they differ (flagged on the screen); null when they agree or it is not paid yet.
+  differenceMinor  Int?
+  shipmentIds      Json           @default("[]")
+  settlementId     String?        @db.Uuid
+  settledAt        DateTime?      @db.Timestamptz(3)
+  /// Why the orders were not marked settled after PAID (e.g. the person who asked no longer holds `payments.settle`); a person presses "Mark orders settled".
+  settleError      String?
+  requestedAt      DateTime       @default(now()) @db.Timestamptz(3)
+  requestedById    String?        @db.Uuid
+  requestKey       String?
+  lastCheckedAt    DateTime?      @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, requestKey])
+  @@index([storeId, courierAccountId, requestedAt])
+  @@index([storeId, state])
+}
+
 /// PR 166 (§6.5.5; SIM-F-028) — how a settlement line stands against our records: MATCHED, MISMATCH (always with a reason
 /// code), or LATE (the money is right but came after the owner's limit).
 enum SettlementMatch {
@@ -4413,6 +4464,7 @@ model CourierAccount {
   shipments    Shipment[]
   areaMappings CourierAreaMapping[]
   settlements  CourierSettlement[]
+  payouts      CourierPayout[]
   handovers    HandoverBatch[]
   places       CourierPlace[]
   zoneSyncs    CourierZoneSync[]
@@ -4597,6 +4649,8 @@ model CourierClaim {
   decidedById      String?           @db.Uuid
   sentAt           DateTime?         @db.Timestamptz(3)
   closedAt         DateTime?         @db.Timestamptz(3)
+  /// S28 · PR 673: the day the courier's time to pay runs out (set when the claim is raised, from the owner's setting).
+  deadlineAt       DateTime?         @db.Timestamptz(3)
   createdAt        DateTime          @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
 
@@ -4611,6 +4665,10 @@ enum CourierClaimKind {
   DAMAGED
   RIDER_OVERCHARGE
   OTHER
+  /// S28 · PR 673: the courier handed in less cash than the parcel collected.
+  SHORT_COD
+  /// S28 · PR 673: a returned parcel came back short.
+  RETURN_SHORT
 }
 
 enum CourierClaimState {
@@ -7694,6 +7752,79 @@ model CouponRedemption {
 
   @@unique([couponId, orderId])
   @@index([couponId, phone])
+}
+
+/// @stage S28 · PR 677 (Admin v5) — the umbrella over the shop's offers: one row per offer the owner made in the seven-step
+/// wizard (free delivery, percent, flat taka, points, wallet credit). It is a facade: a percent, flat or free-delivery offer
+/// is carried by a Smart Rule (and a coupon when it has a code), the online-payment reward by the `checkout.prepaidReward.*`
+/// settings; the engines are not rewritten. It never changes a price by itself: going LIVE needs the owner's OK and PIN.
+model Offer {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store      @relation(fields: [storeId], references: [id])
+  kind         OfferKind
+  /// ANY (every order that fits) or PAY_ONLINE (the reward for paying online).
+  trigger      String     @default("ANY")
+  state        OfferState @default(DRAFT)
+  nameEn       String
+  nameBn       String?
+  /// What it gives: { percent?, amountMinor?, maxMinor?, points?, creditMinor? } — checked by the wizard's schema.
+  value        Json
+  /// Where: { type: 'all' | 'category' | 'collection' | 'product', id? }.
+  scope        Json
+  /// Who: { audience: 'ALL' | 'GUESTS' | 'MEMBERS', firstOrderOnly: boolean }.
+  who          Json
+  /// The coupon code, when the offer needs one.
+  code         String?
+  startsAt     DateTime?  @db.Timestamptz(3)
+  endsAt       DateTime?  @db.Timestamptz(3)
+  /// { minOrderMinor?, usageLimit?, perCustomerLimit?, budgetMinor? }.
+  limits       Json
+  /// The Smart Rule and the coupon that carry it once it is live.
+  ruleId       String?    @db.Uuid
+  couponId     String?    @db.Uuid
+  createdById  String?    @db.Uuid
+  approvedById String?    @db.Uuid
+  approvedAt   DateTime?  @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(3)
+
+  events OfferEvent[]
+
+  @@index([storeId, state, createdAt])
+}
+
+/// @stage S28 · PR 677 — the history of one offer: made, sent for the owner's OK, approved, paused, ended. Never edited.
+/// @append-only
+model OfferEvent {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store    @relation(fields: [storeId], references: [id])
+  offerId   String   @db.Uuid
+  offer     Offer    @relation(fields: [offerId], references: [id])
+  /// CREATED, EDITED, SUBMITTED, APPROVED, SENT_BACK, PAUSED, RESUMED, ENDED.
+  action    String
+  actorId   String?  @db.Uuid
+  note      String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([offerId, createdAt])
+}
+
+enum OfferKind {
+  FREE_DELIVERY
+  PERCENT
+  FLAT
+  POINTS
+  WALLET_CREDIT
+}
+
+enum OfferState {
+  DRAFT
+  AWAITING_OK
+  LIVE
+  PAUSED
+  ENDED
 }
 
 /// @stage S13 · PR 273 — a referral.

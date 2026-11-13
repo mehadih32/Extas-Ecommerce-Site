@@ -570,7 +570,7 @@
       "/admin/marketing/ad-platforms": ["[data-testid=\"adp-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/marketing/landing/new": ["[data-testid=\"landing-builder\"][data-lm-ready]", "[data-testid=\"lp-preview\"]"],
       "/admin/marketing/report": ["[data-testid=\"mr-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/rules": [".ad[data-lm-ready]", ".rl-topics"],
+      "/admin/rules": [".ad[data-lm-ready]", ".rh-nav"],
       "/admin/rules/eid": ["[data-testid=\"eid-page\"][data-lm-ready]"],
       "/admin/messages/automations": ["[data-testid=\"messages-automations\"][data-lm-ready]", "[data-testid=\"auto-more\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/messages/automations/new": ["[data-testid=\"messages-automation\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
