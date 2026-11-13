@@ -6,6 +6,15 @@
 // - `support.liveSelling` (PR 694): Inbox › Comments › Live selling. While a live session runs, a comment such as "P1 L 2 pcs"
 //   is read as an order line and, on "Make draft", put in that person's chat bag (staff always confirm by call, then
 //   "Create order" in the chat). `maxQty`: the most pieces one comment may ask. Off as shipped.
+// - `marketing.affiliates` (PR 695): Marketing › Tools › Influencers & affiliates. `commissionPct`: the default commission on
+//   the goods value of a DELIVERED order that used a partner's code (a partner may have its own); `holdDays`: days after
+//   delivery before it can be paid; `payoutsOn`: the Pay action (owner decision 13 Nov, item 7: not built; off, and it
+//   stays off until the owner says so). Off as shipped.
+// - `messages.costCeiling` (PR 698): a monthly ceiling per channel (SMS, WhatsApp; minor units, null = none), the share
+//   (`warnPct`) at which the owner is warned, and `fallbackToCheapest` (a send that would pass the ceiling goes by the
+//   cheapest allowed channel instead). Off as shipped.
+// - `marketing.verdicts` (PR 699): delivered sales per Tk 1 of ads at or over `scale` = Scale, `keep` = Keep, `fix` = Fix,
+//   else Stop (a campaign's chip). `marketing.messageCampaigns` (PR 697): the one campaign form; `throttlePerMinute`.
 // - `support.commentDesk` (PR 693): Inbox › Comments rules. `hidePhone`: a comment that carries a phone number is hidden
 //   (others cannot copy it); `hideAbuse`: a comment with one of `abuseWords` is hidden; `autoPrivate`: a comment that asks
 //   a price or size (one of `keywords`) gets one private message and one public reply, once. Off as shipped; the words and
@@ -41,6 +50,24 @@ export const supportCommentDeskSchema = z
   })
   .strict();
 export type SupportCommentDeskSettings = z.output<typeof supportCommentDeskSchema>;
+
+export const marketingAffiliatesSchema = z
+  .object({ enabled: z.boolean(), commissionPct: z.number().min(0).max(100), holdDays: z.number().int().min(0).max(90), payoutsOn: z.boolean() })
+  .strict();
+export type MarketingAffiliatesSettings = z.output<typeof marketingAffiliatesSchema>;
+
+const ceiling = z.number().int().min(0).max(1_000_000_000).nullable(); // hardcode-ok: a technical bound
+export const messagesCostCeilingSchema = z
+  .object({ enabled: z.boolean(), smsMonthlyMinor: ceiling, whatsappMonthlyMinor: ceiling, warnPct: z.number().int().min(1).max(100), fallbackToCheapest: z.boolean() })
+  .strict();
+export type MessagesCostCeilingSettings = z.output<typeof messagesCostCeilingSchema>;
+
+const ratio = z.number().min(0).max(1000); // hardcode-ok: a technical bound
+export const marketingVerdictsSchema = z.object({ scale: ratio, keep: ratio, fix: ratio }).strict().refine((v) => v.scale >= v.keep && v.keep >= v.fix, { message: 'scale >= keep >= fix' });
+export type MarketingVerdictsSettings = z.output<typeof marketingVerdictsSchema>;
+
+export const marketingMessageCampaignsSchema = z.object({ enabled: z.boolean(), throttlePerMinute: z.number().int().min(1).max(600) }).strict(); // hardcode-ok: a technical bound
+export type MarketingMessageCampaignsSettings = z.output<typeof marketingMessageCampaignsSchema>;
 
 export const w5aSettings = {
   'support.savedReplies': setting({
@@ -83,5 +110,45 @@ export const w5aSettings = {
     labelKey: 'support.liveSelling.label',
     helpKey: 'support.liveSelling.help',
     sortOrder: 702,
+  }),
+  'marketing.affiliates': setting({
+    ...store,
+    group: 'marketing',
+    valueType: 'JSON',
+    schema: marketingAffiliatesSchema,
+    default: { enabled: false, commissionPct: 5, holdDays: 7, payoutsOn: false },
+    labelKey: 'marketing.affiliates.label',
+    helpKey: 'marketing.affiliates.help',
+    sortOrder: 703,
+  }),
+  'messages.costCeiling': setting({
+    ...store,
+    group: 'messages',
+    valueType: 'JSON',
+    schema: messagesCostCeilingSchema,
+    default: { enabled: false, smsMonthlyMinor: null, whatsappMonthlyMinor: null, warnPct: 80, fallbackToCheapest: false },
+    labelKey: 'messages.costCeiling.label',
+    helpKey: 'messages.costCeiling.help',
+    sortOrder: 704,
+  }),
+  'marketing.verdicts': setting({
+    ...store,
+    group: 'marketing',
+    valueType: 'JSON',
+    schema: marketingVerdictsSchema,
+    default: { scale: 4, keep: 2.5, fix: 1.5 },
+    labelKey: 'marketing.verdicts.label',
+    helpKey: 'marketing.verdicts.help',
+    sortOrder: 705,
+  }),
+  'marketing.messageCampaigns': setting({
+    ...store,
+    group: 'marketing',
+    valueType: 'JSON',
+    schema: marketingMessageCampaignsSchema,
+    default: { enabled: false, throttlePerMinute: 30 },
+    labelKey: 'marketing.messageCampaigns.label',
+    helpKey: 'marketing.messageCampaigns.help',
+    sortOrder: 706,
   }),
 };

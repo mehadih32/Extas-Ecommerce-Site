@@ -6,7 +6,7 @@
 import { audit, type PermissionKey } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sp from '@extas/support';
-import { supportCommentDeskSchema, supportLiveSellingSchema, supportSavedRepliesSchema, storeTarget, type Key } from '@extas/settings';
+import { marketingAffiliatesSchema, marketingMessageCampaignsSchema, marketingVerdictsSchema, messagesCostCeilingSchema, supportCommentDeskSchema, supportLiveSellingSchema, supportSavedRepliesSchema, storeTarget, type Key } from '@extas/settings';
 import type { z } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 import { supportDeps } from './support-api';
@@ -56,6 +56,10 @@ export const V5_SWITCHES = {
   'support.savedReplies': { schema: supportSavedRepliesSchema, perm: 'support.settings', reason: 'Inbox › Quick replies' },
   'support.commentDesk': { schema: supportCommentDeskSchema, perm: 'support.settings', reason: 'Inbox › Comments' },
   'support.liveSelling': { schema: supportLiveSellingSchema, perm: 'support.settings', reason: 'Inbox › Comments › Live selling' },
+  'marketing.affiliates': { schema: marketingAffiliatesSchema, perm: 'rules.approve', reason: 'Marketing › Influencers & affiliates' },
+  'messages.costCeiling': { schema: messagesCostCeilingSchema, perm: 'rules.approve', reason: 'Messages › Cost ceilings' },
+  'marketing.verdicts': { schema: marketingVerdictsSchema, perm: 'marketing.campaigns.write', reason: 'Marketing › Overview verdicts' },
+  'marketing.messageCampaigns': { schema: marketingMessageCampaignsSchema, perm: 'messages.campaigns.write', reason: 'Messages › Campaigns' },
 } as const satisfies Record<string, { schema: z.ZodType; perm: PermissionKey; reason: string }>;
 export type V5SwitchKey = keyof typeof V5_SWITCHES;
 

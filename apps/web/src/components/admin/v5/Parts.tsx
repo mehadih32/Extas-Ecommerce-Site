@@ -25,13 +25,13 @@ export function Msg({ m }: { m: { ok: boolean; text: string } | null }) {
 }
 
 /** The owner's switch: sends the new value with the value the page showed. `before` is the setting's whole value. */
-export function V5Switch({ dict, url, settingKey, before, label, tone = '', testId }: { dict: Dict; url: string; settingKey?: string; before: Record<string, unknown>; label: string; tone?: '' | 'pri'; testId?: string }) {
+export function V5Switch({ dict, url, settingKey, before, label, tone = '', testId, field = 'enabled' }: { dict: Dict; url: string; settingKey?: string; before: Record<string, unknown>; label: string; tone?: '' | 'pri'; testId?: string; field?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const go = async () => {
     setBusy(true);
-    const a = await call('POST', url, { ...(settingKey ? { key: settingKey } : {}), before, value: { ...before, enabled: !before.enabled } });
+    const a = await call('POST', url, { ...(settingKey ? { key: settingKey } : {}), before, value: { ...before, [field]: !before[field] } });
     setBusy(false);
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
     router.refresh();

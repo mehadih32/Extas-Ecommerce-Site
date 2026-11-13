@@ -12,5 +12,25 @@
       "label": "Live selling",
       "help": "Inbox › Comments › Live selling: while a live session runs, a comment like \"P1 L 2 pcs\" is read as a product code, a size and a quantity. \"Make draft\" puts the piece in that person's chat bag; staff always confirm by a call, then press Create order in the chat. \"Most pieces in one comment\" is the largest quantity read as an order."
     }
+  },
+  "marketing": {
+    "affiliates": {
+      "label": "Influencers and affiliates",
+      "help": "Marketing › Tools › Influencers & affiliates: each partner gets a personal code (the code of a coupon you made). A partner earns commission only on delivered orders that used the code, after the hold days. \"Commission\" is the default share of the goods value. The Pay action is off and stays off until the owner says so; the page keeps a ledger of what is owed and paid."
+    },
+    "verdicts": {
+      "label": "Campaign verdicts",
+      "help": "Marketing › Overview: a campaign's chip by delivered sales per Tk 1 of ads. At or over Scale = Scale, at or over Keep = Keep, at or over Fix = Fix, below that = Stop. Advice only: nothing is paused or changed by itself."
+    },
+    "messageCampaigns": {
+      "label": "Message campaigns",
+      "help": "Messages › Campaigns: one form to send a template to a saved list by WhatsApp, SMS, e-mail or Messenger, only to people who agreed to get it. \"Messages per minute\" is the speed limit of one send."
+    }
+  },
+  "messages": {
+    "costCeiling": {
+      "label": "Message cost ceilings",
+      "help": "A monthly ceiling for SMS and WhatsApp spend (in the shop's money). At the warning share you are told; at the ceiling, a send either stops or, with \"cheapest channel\" on, goes by the cheapest channel that is still under its ceiling."
+    }
   }
 }
