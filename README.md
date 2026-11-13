@@ -1,7 +1,7 @@
 # EXTAS — E-commerce platform
 
 > **বাংলায় সংক্ষেপে:** এটা EXTAS-এর নতুন অনলাইন দোকানের পুরো কোড আর কাগজপত্রের ঘর। নিচে এক নজরে দেখা যায়: কোন ধাপ
-> কতটা শেষ (৬৯৮টা PR-এর মধ্যে ৬৪৬টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
+> কতটা শেষ (৬৯৮টা PR-এর মধ্যে ৬৫২টা), কী চালু হয়েছে, কী বাকি, আর আপনার কোন সিদ্ধান্ত লাগবে। প্রতিটা PR মার্জের পর এই
 > পাতা আপডেট হয়। কোড পড়তে হবে না — শুধু বাংলা লাইনগুলো পড়লেই চলবে।
 
 **EXTAS** is a Bangladeshi menswear brand (polos, T-shirts, shirts, denim, trousers, panjabi and more). This private
@@ -4199,6 +4199,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | S28 · PR 686–691 (wave 4B) | 13 Nov | Shop ranking, cashbook and forecast, budgets and profit snapshot, report library, report packs and schedules, Home Command as default. Nav patch: `docs/demo/admin-proto-v5/gap/NAV-PATCH-w4b.md`. Migrations 0250–0253; settings v686–v689; permission `cash.record`. |
 | pending | PR [584](docs/stages/S15.md#pr-584) | 13 Nov | S15: Telegram identity and command routing — off by default, gated by the owner's switch and the Telegram connection's webhook secret. |
 | pending | PR [580](docs/stages/S15.md#pr-580) | 13 Nov | S15: Model auto-suggest with free-model qualification. |
 | pending | PR [665](docs/stages/S28.md#pr-665) | 13 Nov | S28 wave 1 (builder C): merge orders into one. `orders.mergeOrders` v331 (off), "Merge" and "Merge + call" on the kept order, append-only `OrderMerge` record (migration 0201), auto-merge hook (off), guide updated. |
