@@ -366,6 +366,9 @@ export const PERMISSIONS = {
   // Follow-up 567 (PR 618): enter and reverse a cost on a day's summary line (packaging, accessories, fees, courier,
   // ads, other) on Money → Costs without the month's fixed costs; `fixedcosts.write` still covers both.
   'costlines.write': { group: 'books' },
+  // S28 · PR 687 — the cashbook: record money in or out of an account, move it between accounts, put right a wrong entry by a
+  // reversing one (`cash.record`, with the owner's PIN: Accounts and the owner only, the money rule). A record of where money is; nothing is sent.
+  'cash.record': { group: 'books' },
   // S16 · PR 343, 345 (BACKEND-ARCHITECTURE §5 MNY-06) — the cost ledger and the costs & fees inputs: record a top-up of
   // a prepaid balance (SMS credit) the shop already paid for, set its low mark, and (PR 345) the costs & fees figures.
   // Records only: nothing here pays anyone or moves money.

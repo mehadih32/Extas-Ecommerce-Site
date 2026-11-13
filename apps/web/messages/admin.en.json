@@ -168,7 +168,12 @@
     "reportsOrders": "Orders report",
     "messagesCampaigns": "Message campaigns",
     "messagesAutomations": "Automations",
-    "messagesEmail": "E-mail"
+    "messagesEmail": "E-mail",
+    "booksAccount": "ERP account",
+    "booksMatch": "Match",
+    "booksDifferences": "Differences",
+    "booksCloses": "Closes",
+    "moneyBudgets": "Budgets & profit"
   },
   "login": {
     "metaTitle": "Admin sign-in",
@@ -324,11 +329,12 @@
     },
     "telegram": {
       "name": "Telegram (AI 360 channel)",
-      "desc": "Server and backup alerts. Until the bot token and the chat are in and the test passes, alerts stay on the server",
+      "desc": "Server and backup alerts, and (once the webhook secret is in and the AI 360 team page's switch is on) the agents' identity line and Telegram commands. Until the bot token and the chat are in and the test passes, alerts stay on the server",
       "fields": {
         "chatId": "Chat ID — where the alerts go (a number like -1001234567890, or @channelname)",
         "baseUrl": "Address — only for a test server",
-        "botToken": "Bot token (from @BotFather)"
+        "botToken": "Bot token (from @BotFather)",
+        "webhookSecret": "Webhook secret — optional, only for agent commands. The same value typed into Telegram's setWebhook secret_token call (see the AI 360 team page's guide); until it is here, Telegram commands stay off"
       }
     },
     "cloudflareOrigin": {

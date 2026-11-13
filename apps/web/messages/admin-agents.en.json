@@ -118,6 +118,18 @@
       "archiveFailed": "Could not change it"
     },
     "readOnly": "You can see this page but not change it.",
-    "notFound": "No such agent."
+    "notFound": "No such agent.",
+    "telegram": {
+      "title": "Telegram commands",
+      "offBody": "Off. Message an agent by name on the shared Telegram bot and it assigns the task to itself — turn this on once the bot's webhook secret is set in Keys & connections.",
+      "onBody": "On. A Telegram message naming an agent (its name, Bengali name or code) assigns that agent a task; a message naming no one goes to Gyani. Approval buttons sent to Telegram work the same as this page's own Approve/Reject.",
+      "switchLabel": "Telegram commands",
+      "toastOn": "Telegram commands turned on",
+      "toastOff": "Telegram commands turned off",
+      "toastFailed": "Could not change the switch",
+      "ownerOnly": "Owner only",
+      "secretSet": "Webhook secret set",
+      "secretMissing": "Webhook secret not set yet — set it in Keys & connections"
+    }
   }
 }

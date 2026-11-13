@@ -42,10 +42,39 @@ export function QuestionActions({ dict: d, id, state, archived, answer, max }: Q
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch(`/api/admin/questions/${id}/${path}`, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+      const res = await fetch(`/api/admin/questions/${id}/${path}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean; error?: string };
       if (!data.ok) return setErr(t(d, 'revq.act.failed', { code: data.error ?? String(res.status) }));
       showToast({ text: t(d, 'revq.act.saved'), tone: 'ok' });
+      router.refresh();
+    } catch {
+      setErr(t(d, 'revq.act.failed', { code: 'network' }));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** S28 · PR 682 — "Make this an FAQ": copies the question and the shop's answer into an FAQ (own product, its category, or all). */
+  async function makeFaq(scope: 'PRODUCT' | 'CATEGORY' | 'SHOP') {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch('/api/admin/faqs', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ fromQuestionId: id, scope }),
+      });
+      const data = (await res.json().catch(() => ({ ok: false }))) as { ok?: boolean; error?: string; details?: string[] };
+      if (!data.ok) return setErr(data.details?.includes('ALREADY') ? t(d, 'revq.faq.already') : t(d, 'revq.act.failed', { code: data.error ?? String(res.status) }));
+      showToast({ text: t(d, 'revq.faq.made'), tone: 'ok' });
       router.refresh();
     } catch {
       setErr(t(d, 'revq.act.failed', { code: 'network' }));
@@ -59,13 +88,29 @@ export function QuestionActions({ dict: d, id, state, archived, answer, max }: Q
       {!archived ? (
         <div className="lm-fl">
           <label htmlFor={`${uid}-a`}>{t(d, 'revq.answer')}</label>
-          <textarea id={`${uid}-a`} className="lm-inp" rows={3} maxLength={max} value={text} placeholder={t(d, 'revq.answerPh')} disabled={busy} onChange={(e) => setText(e.target.value)} data-testid="question-answer" />
+          <textarea
+            id={`${uid}-a`}
+            className="lm-inp"
+            rows={3}
+            maxLength={max}
+            value={text}
+            placeholder={t(d, 'revq.answerPh')}
+            disabled={busy}
+            onChange={(e) => setText(e.target.value)}
+            data-testid="question-answer"
+          />
         </div>
       ) : null}
       <div className="rev-acts">
         {!archived ? (
           <>
-            <button type="button" className="a2-btn pri" disabled={busy || !text.trim() || (!changed && state === 'APPROVED')} onClick={() => post('answer', { answer: text, publish: true })} data-action="answer-publish">
+            <button
+              type="button"
+              className="a2-btn pri"
+              disabled={busy || !text.trim() || (!changed && state === 'APPROVED')}
+              onClick={() => post('answer', { answer: text, publish: true })}
+              data-action="answer-publish"
+            >
               {t(d, state === 'APPROVED' ? 'revq.act.update' : 'revq.act.answerPublish')}
             </button>
             {state !== 'APPROVED' ? (
@@ -82,6 +127,18 @@ export function QuestionActions({ dict: d, id, state, archived, answer, max }: Q
               {t(d, `revq.act.${m}`)}
             </button>
           ))}
+        {state === 'APPROVED' && !archived && answered && !changed ? (
+          <span className="rev-faq" data-testid="make-faq">
+            <span className="a2-xs a2-mute" title={t(d, 'revq.faq.note')}>
+              {t(d, 'revq.faq.make')}:
+            </span>
+            {(['PRODUCT', 'CATEGORY', 'SHOP'] as const).map((sc) => (
+              <button key={sc} type="button" className="a2-btn" disabled={busy} onClick={() => makeFaq(sc)} data-action={`faq-${sc.toLowerCase()}`}>
+                {t(d, `revq.faq.${sc}`)}
+              </button>
+            ))}
+          </span>
+        ) : null}
         {err ? (
           <p className="a2-xs" role="alert" style={{ color: 'var(--lm-bad)' }}>
             {err}

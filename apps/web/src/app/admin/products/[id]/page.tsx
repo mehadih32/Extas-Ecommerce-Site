@@ -7,11 +7,18 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { productGallery, type ProductPhoto } from '@extas/media';
+import { productGallery, productPhotoQuality, type ProductPhoto } from '@extas/media';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { Icon } from '@/components/admin/Icon';
 import { ProductForm } from '@/components/admin/products/ProductForm';
-import { nameIn } from '@/components/admin/products/model';
+import type { PhotoNotes } from '@/components/admin/products/PhotoManager';
+import { FieldsCard } from '@/components/admin/settings/FieldsCard';
+import { VideoPanel } from '@/components/admin/products/VideoPanel';
+import { ErpChartPanel } from '@/components/admin/products/ErpChartPanel';
+import { erpChartFields, fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
+import { productV5Cards } from '@/lib/products-v5-settings-api';
+import { formatMoney, nameIn } from '@/components/admin/products/model';
+import { WizardBar } from '@/components/admin/products/WizardBar';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -29,8 +36,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'products.edit.metaTitle'), robots: { index: false, follow: false } };
 }
 
-export default async function ProductEditPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function ProductEditPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [{ id }, sp] = await Promise.all([params, searchParams]);
+  const wizardStep = cat.parseWizardStep(sp.wizard);
   if (!UUID.test(id)) notFound();
   const deps = adminDeps();
   const view = await adminView(deps);
@@ -64,7 +78,27 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
   const media = mediaDeps();
   let gallery: ProductPhoto[] | null = null;
   if (media && c.can('media.read')) gallery = (await productGallery(media, c.who.actor, { storeId: c.storeId, productId: id })).photos;
-  const images = await photosOf(c, (gallery ?? []).map((g) => g.assetId));
+  const images = await photosOf(
+    c,
+    (gallery ?? []).map((g) => g.assetId),
+  );
+
+  // S28 · PR 680: the plain photo checks' notes (empty while `media.quality` is off) and their numbers card
+  let photoNotes: PhotoNotes = { on: false, byLink: {} };
+  if (media && c.can('media.read')) {
+    const q = await productPhotoQuality(media, c.who.actor, { storeId: c.storeId, productId: id });
+    photoNotes = {
+      on: q.on,
+      byLink: Object.fromEntries(
+        q.photos.map((x) => [x.productMediaId, x.report ? { issues: x.report.issues, fixable: x.report.fixable, width: x.report.width, height: x.report.height } : null]),
+      ),
+    };
+  }
+  const video = await cat.getProductVideo(c.deps, c.who, id);
+  const erpChart = await cat.erpChartView(c.deps, c.who, id);
+  const wizard = wizardStep ? await cat.wizardView(c.deps, c.who, id) : null;
+  const lowest = product.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
+  const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
 
   const d = view.dict;
   return (
@@ -73,6 +107,23 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
         <Icon name="back" size={14} />
         {t(d, 'products.back')}
       </Link>
+      <div className={wizardStep ? 'wiz' : undefined} data-step={wizardStep ?? undefined}>
+      {wizardStep && wizard ? (
+        <WizardBar
+          dict={d}
+          step={wizardStep}
+          productId={id}
+          done={wizard.done}
+          furthest={wizard.state?.furthest ?? wizardStep}
+          canWrite={c.can('catalogue.write')}
+          preview={{
+            name: nameIn(view.lang, product),
+            price: lowest.length ? formatMoney(Math.min(...lowest), money) : null,
+            photos: wizard.facts.photos,
+            colours: wizard.facts.colours,
+          }}
+        />
+      ) : null}
       <div className="ad-hd">
         <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
         <h1 className="ad-h1">{nameIn(view.lang, product)}</h1>
@@ -94,6 +145,7 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
         frontPerColour={frontPerColour}
         gallery={gallery}
         images={images}
+        photoNotes={photoNotes}
         can={{
           write: c.can('catalogue.write'),
           prices: c.can('catalogue.prices'),
@@ -101,6 +153,64 @@ export default async function ProductEditPage({ params }: { params: Promise<{ id
           upload: !!media && c.can('media.upload'),
         }}
       />
+      <div id="wiz-video">
+      <section className="ad-card" aria-label={t(d, 'products.vid.title')}>
+        <VideoPanel
+          dict={d}
+          productId={id}
+          on={v5['catalogue.video'].value.on === true}
+          allowUpload={v5['catalogue.video'].value.allowUpload === true}
+          maxUploadMb={Number(v5['catalogue.video'].value.maxUploadMb)}
+          canWrite={c.can('catalogue.write')}
+          video={video ? { source: video.source, provider: video.provider, url: video.url, durationSec: video.durationSec, titleEn: video.titleEn } : null}
+          settingsHref="#video-settings"
+        />
+      </section>
+      <details className="ad-card pa-more" id="video-settings" data-testid="video-settings-card">
+        <summary>{t(d, 'products.vid.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['catalogue.video'].key, value: v5['catalogue.video'].value, version: v5['catalogue.video'].version }}
+          fields={videoFields(d)}
+          texts={fieldsTexts(d, 'products.vid.checks', 'products.vid.checks.h', 'products.vid.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="video-settings"
+        />
+      </details>
+      </div>
+      <div id="wiz-size">
+      <section className="ad-card" aria-label={t(d, 'products.erpc.title')}>
+        <ErpChartPanel dict={d} productId={id} canWrite={c.can('catalogue.write')} settingsHref="#erp-chart-settings" chart={erpChart} />
+      </section>
+      <details className="ad-card pa-more" id="erp-chart-settings" data-testid="erp-chart-settings-card">
+        <summary>{t(d, 'products.erpc.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['catalogue.erpSizeChart'].key, value: v5['catalogue.erpSizeChart'].value, version: v5['catalogue.erpSizeChart'].version }}
+          fields={erpChartFields(d)}
+          texts={fieldsTexts(d, 'products.erpc.checks', 'products.erpc.checks.h', 'products.erpc.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="erp-chart-settings"
+        />
+      </details>
+      </div>
+      <details className="ad-card pa-more" id="photo-checks" data-testid="photo-checks-card">
+        <summary>{t(d, 'products.pm.checks.more')}</summary>
+        <FieldsCard
+          url="/api/admin/products-v5-settings"
+          screen={{ key: v5['media.quality'].key, value: v5['media.quality'].value, version: v5['media.quality'].version }}
+          fields={photoCheckFields(d)}
+          texts={fieldsTexts(d, 'products.pm.checks', 'products.pm.checks.h', 'products.pm.checks.d')}
+          canEdit={c.can('catalogue.write')}
+          testId="photo-checks"
+        />
+      </details>
+      {wizardStep === 8 ? (
+        <p className="ad-mini">
+          {t(d, 'products.wiz.demoNote')} <Link href="/admin/products/demo">{t(d, 'products.demo.title')}</Link>
+        </p>
+      ) : null}
+      </div>
     </AdminFrame>
   );
 }

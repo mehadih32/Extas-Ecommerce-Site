@@ -11,3 +11,5 @@
 .adm2 .cr-link{display:inline-flex;align-items:center;min-height:44px;min-width:44px;font-weight:600}
 .adm2 .cr-warn{color:var(--warn);font-weight:600}
 .adm2 details.a2-more-opts>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+/* S28 · PR 692-699: the 'More options' fold of the wave 5A pages is a card (details.a2-card), its summary also a 44 px tap target. */
+.adm2 details.a2-card>summary{display:flex;align-items:center;min-height:44px;cursor:pointer}

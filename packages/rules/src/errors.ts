@@ -33,7 +33,13 @@ export type RulesErrorCode =
   /** Eid order-by dates cannot be on as they are: details name every reason (no Eid day, no date, a date after Eid …). */
   | 'EID_INVALID'
   /** An offer cannot be sent or go live as it is: details name every reason (OfferIssue codes). */
-  | 'OFFER_INVALID';
+  | 'OFFER_INVALID'
+  /** S28 · PR 695: affiliates are switched off; the code is already used; the Pay action is off; nothing is due. */
+  | 'AFFILIATE_OFF'
+  | 'CODE_TAKEN'
+  | 'PAYOUTS_OFF'
+  | 'NOTHING_DUE'
+  | 'TOO_MUCH';
 
 export class RulesError extends Error {
   readonly code: RulesErrorCode;
@@ -66,6 +72,7 @@ export class RulesError extends Error {
       case 'CANNOT_FIX':
       case 'EID_INVALID':
       case 'OFFER_INVALID':
+      case 'CODE_TAKEN':
         return 409;
       default:
         return 400;

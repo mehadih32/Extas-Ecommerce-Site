@@ -82,12 +82,15 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
   },
   // S19 · PR 392 — Telegram alerts: the bot's token (from @BotFather) and the chat the alerts go to. The mock keeps them
   // in the process until the Test (the bot reads itself and the chat) passes; the server's own alerts use the same bot.
+  // S15 · PR 584 adds `webhookSecret`, optional: the same bot now also carries the agents' identity line and
+  // routes the owner's Telegram commands, once this secret (the `setWebhook` call's own `secret_token`, done once
+  // outside this app) and `/admin/agents`'s "Telegram commands" switch are both set.
   {
     id: 'telegram',
     kind: 'TELEGRAM',
     provider: 'telegram',
     adapter: true,
-    secrets: [{ field: 'botToken' }],
+    secrets: [{ field: 'botToken' }, { field: 'webhookSecret', optional: true }],
     config: [{ field: 'chatId' }, { field: 'baseUrl', optional: true }],
     exclusive: true,
     targetMode: 'LIVE',

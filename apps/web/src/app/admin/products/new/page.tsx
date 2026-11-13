@@ -7,6 +7,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { Icon } from '@/components/admin/Icon';
+import { WizardBar } from '@/components/admin/products/WizardBar';
 import { NewProductForm } from '@/components/admin/products/NewProductForm';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -21,7 +22,10 @@ const HERE = `${PRODUCTS_HOME}/new`;
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
-  return { title: t(view.dict, 'products.new.metaTitle'), robots: { index: false, follow: false } };
+  return {
+    title: t(view.dict, 'products.new.metaTitle'),
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function NewProductPage() {
@@ -34,6 +38,7 @@ export default async function NewProductPage() {
 
   const c = catalogueAccess(access);
   const [tree, fabrics] = await Promise.all([cat.categoryTree(c.deps, c.who), cat.listFabrics(c.deps, c.who)]);
+  const drafts = await cat.wizardDrafts(c.deps, c.who, 5);
   const d = view.dict;
   return (
     <AdminFrame view={view} current={KEY} ready>
@@ -46,13 +51,36 @@ export default async function NewProductPage() {
         <h1 className="ad-h1">{t(d, 'products.new.title')}</h1>
         <p className="ad-intro">{t(d, 'products.new.intro')}</p>
       </div>
+      <WizardBar dict={d} step={1} productId={null} done={[]} furthest={1} canWrite={c.can('catalogue.write')} preview={null} />
+      {drafts.length ? (
+        <section className="ad-card" aria-label={t(d, 'products.wiz.resume')} data-testid="wizard-resume">
+          <h2>{t(d, 'products.wiz.resume')}</h2>
+          <ul className="ad-mini">
+            {drafts.map((r) => (
+              <li key={r.productId}>
+                <Link href={`/admin/products/${r.productId}?wizard=${r.step}`}>{r.nameEn ?? r.productId}</Link>{' '}
+                {t(d, 'products.wiz.resumeAt', { n: String(r.step) })}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       <div className="pa-ed">
         <div className="pa-edmain">
           <NewProductForm
             dict={d}
             lang={view.lang}
-            categories={cat.flatten(tree).map((n) => ({ id: n.id, nameEn: n.nameEn, nameBn: n.nameBn, depth: n.depth }))}
-            fabrics={fabrics.map((f) => ({ id: f.id, nameEn: f.nameEn, nameBn: f.nameBn }))}
+            categories={cat.flatten(tree).map((n) => ({
+              id: n.id,
+              nameEn: n.nameEn,
+              nameBn: n.nameBn,
+              depth: n.depth,
+            }))}
+            fabrics={fabrics.map((f) => ({
+              id: f.id,
+              nameEn: f.nameEn,
+              nameBn: f.nameBn,
+            }))}
             cancelHref={PRODUCTS_HOME}
           />
         </div>
