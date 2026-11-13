@@ -110,7 +110,7 @@ export const w5aSettings = {
     group: 'support',
     valueType: 'JSON',
     schema: supportLiveSellingSchema,
-    default: { enabled: false, maxQty: 10 },
+    default: { enabled: false, maxQty: 10 }, // hardcode-ok: the shipped default, the owner sets it (Inbox › Live selling)
     labelKey: 'support.liveSelling.label',
     helpKey: 'support.liveSelling.help',
     sortOrder: 702,

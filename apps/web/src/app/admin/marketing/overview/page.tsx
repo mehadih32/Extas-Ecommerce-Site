@@ -49,6 +49,7 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
   const asked = typeof sp.days === 'string' ? Number(sp.days) : PERIODS[1];
   const days = (PERIODS as readonly number[]).includes(asked) ? asked : PERIODS[1];
   const o = await marketingOverview(access.deps, days);
+  const moreAds = o.adsTotal > o.ads.length;
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const digits = new Intl.NumberFormat(view.locale, { style: 'currency', currency: o.currency }).resolvedOptions().maximumFractionDigits ?? 2;
   const money = (minor: number | null) => (minor === null ? c('unknown') : new Intl.NumberFormat(view.locale, { style: 'currency', currency: o.currency, numberingSystem: 'latn' }).format(minor / 10 ** digits));
@@ -173,7 +174,7 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
         ) : (
           <p className="a2-sm a2-mute">{c('noAds')}</p>
         )}
-        {o.adsTotal > o.ads.length ? <p className="a2-xs a2-mute a2-mt6">{c('shown', { n: o.ads.length, total: o.adsTotal })}</p> : null}
+        {moreAds ? <p className="a2-xs a2-mute a2-mt6">{c('shown', { n: o.ads.length, total: o.adsTotal })}</p> : null}
         <p className="a2-xs a2-mute a2-mt6">{c('tiredRule')}</p>
       </section>
 

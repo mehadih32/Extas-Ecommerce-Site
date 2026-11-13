@@ -33,8 +33,8 @@ export function CeilingCard({ dict, status, locale, timeZone, link }: { dict: Di
                 <span className={`a2-pill ${x.state === 'over' ? 'bad' : x.state === 'warn' ? 'warn' : 'line'}`}>{c(`state_${x.state}`)}</span>
               </div>
               {x.pct !== null ? (
-                <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, x.pct)} style={{ height: 8, borderRadius: 4, background: 'var(--line, #ddd)', marginTop: 8, overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.min(100, x.pct)}%`, height: '100%', background: x.state === 'over' ? 'var(--bad, #c0392b)' : x.state === 'warn' ? 'var(--warn, #d68910)' : 'var(--ok, #2e8b57)' }} />
+                <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, x.pct)} style={{ height: 8, borderRadius: 4, background: 'var(--lm-ln)', marginTop: 8, overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(100, x.pct)}%`, height: '100%', background: x.state === 'over' ? 'var(--lm-bad)' : x.state === 'warn' ? 'var(--lm-warn)' : 'var(--lm-ok)' }} />
                 </div>
               ) : null}
             </div>
