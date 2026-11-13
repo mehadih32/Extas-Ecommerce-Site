@@ -24,7 +24,7 @@ import { requireOwnerPin } from './owner-pin';
 
 type Db = PrismaClient;
 
-export const APPROVAL_KINDS = ['refund', 'price', 'cod', 'other'] as const;
+export const APPROVAL_KINDS = ['refund', 'price', 'cash', 'cod', 'other'] as const;
 export type ApprovalKind = (typeof APPROVAL_KINDS)[number];
 
 /** The PIN a person types in the chat: digits only (never longer than a PIN can be). */
@@ -40,6 +40,7 @@ export function asksTelegram(cfg: TelegramApprovalsSettings, kind: ApprovalKind,
   if (!cfg.enabled || cfg.lockedAt) return false;
   if (kind === 'refund') return cfg.refund;
   if (kind === 'price') return cfg.price;
+  if (kind === 'cash') return cfg.cash;
   if (kind === 'cod') return cfg.cod && amountMinor !== null && amountMinor > cfg.codOverMinor;
   return false;
 }
@@ -137,7 +138,7 @@ const rowOf = (r: { id: string; kind: string; source: string; title: string; det
  * Raises one approval. The caller is a server screen (price adjust, refund, COD check); it never raises one in the AI's
  * name and never waits on the answer. Returns the saved row and whether it went to Telegram.
  */
-export async function requestApproval(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault' | 'now'>, storeId: number, raw: unknown, link?: TelegramLink): Promise<{ ok: true; row: ApprovalRow; sent: boolean } | { ok: false; error: string }> {
+export async function requestApproval(deps: Pick<AdminDeps, 'db' | 'resolver' | 'vault' | 'now'>, storeId: number, raw: unknown, link?: TelegramLink, opts: { telegram?: boolean } = {}): Promise<{ ok: true; row: ApprovalRow; sent: boolean } | { ok: false; error: string }> {
   const p = requestInput.safeParse(raw);
   if (!p.success) return { ok: false, error: 'INVALID_INPUT' };
   const d = p.data;
@@ -145,7 +146,7 @@ export async function requestApproval(deps: Pick<AdminDeps, 'db' | 'resolver' | 
   const now = deps.now ? deps.now() : new Date();
   const created = await deps.db.approvalRequest.create({ data: { storeId, kind: d.kind, source: d.source, title: d.title, detail: d.detail ?? null, amountMinor: d.amountMinor ?? null, refType: d.refType ?? null, refId: d.refId ?? null } });
   let sent = false;
-  if (asksTelegram(cfg, d.kind, d.amountMinor ?? null)) {
+  if (opts.telegram !== false && asksTelegram(cfg, d.kind, d.amountMinor ?? null)) {
     const s = await senderOf(link ?? (await linkOf(deps)));
     if (s?.api.sendWithButtons) {
       const [currency, shop] = await Promise.all([deps.resolver.value('store.currency', { storeId }), deps.resolver.value('store.name', { storeId })]);
@@ -209,7 +210,7 @@ export async function unlockTelegram(deps: AdminDeps, actor: Actor, ctx: Request
 }
 
 export async function saveApprovalSettings(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, raw: unknown): Promise<{ ok: true } | { ok: false; error: string; details?: string[] }> {
-  const p = z.object({ enabled: z.boolean(), refund: z.boolean(), price: z.boolean(), cod: z.boolean(), codOverMinor: z.number().int().min(0).max(100_000_000), waitMinutes: z.number().int().min(5).max(1440), pin: z.string() }).strict().safeParse(raw);
+  const p = z.object({ enabled: z.boolean(), refund: z.boolean(), price: z.boolean(), cash: z.boolean().optional(), cod: z.boolean(), codOverMinor: z.number().int().min(0).max(100_000_000), waitMinutes: z.number().int().min(5).max(1440), pin: z.string() }).strict().safeParse(raw);
   if (!p.success) return { ok: false, error: 'INVALID_INPUT', details: p.error.issues.map((i) => i.path.join('.')) };
   if (!actor.staffUserId || !(await isOwner(deps.db, actor.staffUserId))) return { ok: false, error: 'OWNER_ONLY' };
   await requireOwnerPin(deps, actor, ctx, p.data.pin, 'telegram.approvals.settings', storeId);

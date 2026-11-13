@@ -59,3 +59,17 @@ menu PRs (659-699) have landed. Nothing here is applied by the w5b branch.
     Privacy (`privacy`), Start fresh (`startFresh`). Under More: Shimmer, Start and search.
   - Owner-only tabs keep their own permission; the grouping is only the order and a divider, nothing else changes.
 - New setting `activity.log` {pageSize 50}. Store details extras (logo, contacts, social links) were not part of this PR: the Store page is untouched.
+
+## PR 664 and 687 wired to staff limits and approvals (settings `approvals.gates`, v333; `telegram.approvals` v334 adds `cash`)
+664 (branch w1-BC-main2) and 687 (branch w4b) are not in this branch's history, so their two call sites are applied when those
+lanes meet this one. The gate helpers they call are here, tested: `lib/approval-gates.ts`.
+- **Price adjust (664)**, in `adjustPrice` after the amount is worked out: replace its own `aboveLimit(...)` with
+  `priceAdjustGate(deps, staffUserId, storeId, { discountMinor, baseMinor: subtotalMinor })`; `apply: false` writes the PENDING line
+  as it does now and the route then calls `askApprover(deps, storeId, 'price', { source: 'orders.priceAdjust', title, amountMinor,
+  refType: 'OrderPriceAdjustment', refId: lineId })`. The setting `orders.priceAdjust.roleLimits` is no longer read (left in place,
+  nothing deleted). Ships ON; limits empty, so every adjustment waits for one approver. An approver still answers with the owner's PIN.
+- **Cash in/out (687)**, in `recordCash` before the entry is written: `cashGate(deps, staffUserId, storeId, { amountMinor })`;
+  `apply: false` keeps the entry as a waiting request (no balance change) and the route calls `askApprover(..., 'cash', { source:
+  'money.cash', refType: 'CashEntry', refId })`; when `approvalAnswer(...)` is APPROVED the approver's PIN records it. Money is only
+  recorded, never sent. Cash limits per role are in `approvals.gates` `cash.limits` (role key, minor units).
+- Telegram: the new kind `cash` has its own box on the Telegram approvals screen. An answer on Telegram only records it (703).

@@ -27,6 +27,7 @@ export function TelegramApprovalsScreen(p: TelegramApprovalsScreenProps) {
   const [on, setOn] = useState(cfg.enabled);
   const [refund, setRefund] = useState(cfg.refund);
   const [price, setPrice] = useState(cfg.price);
+  const [cash, setCash] = useState(cfg.cash);
   const [cod, setCod] = useState(cfg.cod);
   const [codOver, setCodOver] = useState(String(cfg.codOverMinor / 10 ** digits));
   const [wait, setWait] = useState(String(cfg.waitMinutes));
@@ -59,7 +60,7 @@ export function TelegramApprovalsScreen(p: TelegramApprovalsScreenProps) {
   const save = async () => {
     const over = typedMinor(codOver, digits);
     if (over === null) return setSaid({ text: c('errors.INVALID_INPUT'), bad: true });
-    if (await post('/settings', { enabled: on, refund, price, cod, codOverMinor: over, waitMinutes: Number(wait), pin }, c('card.saved'))) setPin('');
+    if (await post('/settings', { enabled: on, refund, price, cash, cod, codOverMinor: over, waitMinutes: Number(wait), pin }, c('card.saved'))) setPin('');
   };
   const decide = async () => {
     if (!deciding) return;
@@ -91,6 +92,7 @@ export function TelegramApprovalsScreen(p: TelegramApprovalsScreenProps) {
         <div className="s28-list a2-mt6">
           <label className="s28-row"><input type="checkbox" checked={refund} onChange={(e) => setRefund(e.target.checked)} /> {c('card.refund')}</label>
           <label className="s28-row"><input type="checkbox" checked={price} onChange={(e) => setPrice(e.target.checked)} /> {c('card.price')}</label>
+          <label className="s28-row"><input type="checkbox" checked={cash} onChange={(e) => setCash(e.target.checked)} /> {c('card.cash')}</label>
           <label className="s28-row"><input type="checkbox" checked={cod} onChange={(e) => setCod(e.target.checked)} /> {c('card.cod')}</label>
         </div>
         <div className="s28-row a2-mt12">
