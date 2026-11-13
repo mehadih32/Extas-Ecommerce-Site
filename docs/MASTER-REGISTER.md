@@ -1062,8 +1062,6 @@ the server.*
 | S23 | Social & content studio | 7 | 437–443 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 4/7 (437–439, 443 merged; 440–442 open as PRs, not yet on `main`); half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 7/38 (444–450 merged, FIX lane); half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 9/10 (490 remains); half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
-| S24 | Virtual Photoshoot Studio | 38 | 444–480, 539 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 7/38 (444–450 merged); half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
-| S25 | Video & Campaign Creative Studio | 10 | 481–490 | locked; **reopened (owner, 11 Nov; CN-039) — building** — 5/10 (484–488 remain); half-built parts stay hidden behind `stages.closedShown` until the stage finishes |
 | S26 | Installation, documentation & distribution | 6 | 513–518 | **parked** — handover pack; **Closed (owner, 6 Nov; CN-036)** |
 | S27 | No-ERP stock module | parked | — | **parked** — handover pack; numbered when approved; **Closed (owner, 6 Nov; CN-036)** |
 | S28 | Admin v5 (prototype alignment) | 49 | 659–707 | locked; **filed 13 Nov 2026 (CN-048)** — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look |
