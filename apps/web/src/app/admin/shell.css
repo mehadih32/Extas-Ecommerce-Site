@@ -697,3 +697,5 @@
 
 /* Wave 5B follow-up (CI device gate; the English default made the words longer): on a phone a status pill may wrap instead of pushing the page wider. */
 @media (max-width:640px){.adm2 .a2-pill{white-space:normal;max-width:100%;text-align:left;height:auto;min-height:21px}}
+/* PR 709: a status pill never pushes the page wider on any size (tracking, ad accounts, landing templates measured at 1180-1366 px in English). */
+.adm2 .a2-pill{white-space:normal;max-width:100%;overflow-wrap:anywhere;height:auto}
