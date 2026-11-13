@@ -15,7 +15,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
-import type { DashPart } from '@/lib/admin-look/dashboard-data';
+import { salesPerUnit, type DashPart } from '@/lib/admin-look/dashboard-data';
 import type { LookDesign } from '../types';
 import { LookThumb } from '../thumbs';
 import { Bar, Card, Delta, Empty, Funnel, Heat, Lnk, Spark, Tile } from '../kit';
@@ -41,28 +41,73 @@ function KTile({ href, label, value, delta, spark, color, sub, testId }: { href:
   );
 }
 
+/**
+ * S28 · PR 691 (admin prototype v5, Home Command): the prototype's six tiles in its order — Orders, Sales delivered, Net profit,
+ * Money with couriers, Return rate, Ad spend · sales per 1 — each only for a person who may read it. The tiles this design drew
+ * before (average order, delivery success, running low on stock) stay in designs A, B and C; the low-stock work is a line in "Needs you now".
+ */
 function kpis(f: Fmt, p: DashProps): ReactNode[] {
   const { data } = p;
   const m = data.money;
   const dl = data.delivery;
+  const pf = data.profit;
   const out: ReactNode[] = [];
-  if (m) {
-    const aovNow = m.cur.ordered.orders > 0 ? Math.round(m.cur.ordered.valueMinor / m.cur.ordered.orders) : null;
-    const aovPrev = m.prev.ordered.orders > 0 ? Math.round(m.prev.ordered.valueMinor / m.prev.ordered.orders) : null;
-    const aovChart = m.chart.ordered.map((v, i) => (m.chart.orders[i] ? Math.round(v / m.chart.orders[i]!) : null));
+  if (m)
     out.push(
-      <KTile key="sales" testId="dash-kt-sales" href="/admin/orders" label={f.t('dsh.sales')} value={f.money(m.cur.sales.itemsMinor)} delta={<Delta f={f} x={m.prev.sales.itemsMinor ? (m.cur.sales.itemsMinor - m.prev.sales.itemsMinor) / m.prev.sales.itemsMinor : null} />} spark={m.chart.sales} color={S1} />,
       <KTile key="orders" testId="dash-kt-orders" href="/admin/orders" label={f.t('dsh.ordersPlaced')} value={f.n(m.cur.ordered.orders)} delta={<Delta f={f} x={m.prev.ordered.orders ? (m.cur.ordered.orders - m.prev.ordered.orders) / m.prev.ordered.orders : null} />} spark={m.chart.orders} color={S2} />,
-      <KTile key="aov" testId="dash-kt-aov" href="/admin/orders" label={f.t('dsh.aov')} value={aovNow === null ? '—' : f.money(aovNow)} delta={aovNow !== null && aovPrev ? <Delta f={f} x={(aovNow - aovPrev) / aovPrev} /> : undefined} spark={aovChart} color={S3} />,
+      <KTile key="sales" testId="dash-kt-sales" href="/admin/orders" label={f.t('dsh.sales')} value={f.money(m.cur.sales.itemsMinor)} delta={<Delta f={f} x={m.prev.sales.itemsMinor ? (m.cur.sales.itemsMinor - m.prev.sales.itemsMinor) / m.prev.sales.itemsMinor : null} />} spark={m.chart.sales} color={S1} />,
+    );
+  if (pf)
+    out.push(
+      <KTile
+        key="profit"
+        testId="dash-kt-profit"
+        href="/admin/money/budgets"
+        label={f.t('dsh.cmd.profitTile')}
+        value={pf.cur.netMinor === null ? f.t('dsh.cmd.profitUnknown') : f.money(pf.cur.netMinor)}
+        delta={pf.cur.netMinor !== null && pf.prev.netMinor ? <Delta f={f} x={(pf.cur.netMinor - pf.prev.netMinor) / Math.abs(pf.prev.netMinor)} /> : undefined}
+        sub={f.t('dsh.cmd.profitSub')}
+      />,
+    );
+  if (data.cod) out.push(<KTile key="cod" testId="dash-kt-cod" href="/admin/money" label={f.t('dsh.cmd.codTile')} value={f.money(data.cod.minor)} sub={f.t('dsh.cmd.codSub', { n: f.n(data.cod.parcels) })} />);
+  if (dl) out.push(<KTile key="returned" testId="dash-kt-returned" href="/admin/delivery" label={f.t('dsh.returned')} value={f.pct(dl.returnRate)} delta={<Delta f={f} x={dl.returnRate != null && dl.prevReturnRate != null ? dl.returnRate - dl.prevReturnRate : null} good="down" pts />} color={S5} />);
+  if (pf) {
+    const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
+    out.push(
+      <KTile
+        key="ads"
+        testId="dash-kt-ads"
+        href="/admin/marketing"
+        label={f.t('dsh.cmd.adsTile')}
+        value={pf.cur.adsMinor === null ? f.t('dsh.cmd.profitUnknown') : f.money(pf.cur.adsMinor)}
+        sub={per === null ? f.t('dsh.cmd.adsNone') : f.t('dsh.cmd.adsPer', { x: per.toFixed(1), cur: f.currency })}
+      />,
     );
   }
-  if (dl)
-    out.push(
-      <KTile key="success" testId="dash-kt-success" href="/admin/delivery" label={f.t('dsh.success')} value={f.pct(dl.rate)} delta={<Delta f={f} x={dl.rate != null && dl.prevRate != null ? dl.rate - dl.prevRate : null} pts />} spark={dl.weekly} color={S4} />,
-      <KTile key="returned" testId="dash-kt-returned" href="/admin/delivery" label={f.t('dsh.returned')} value={f.pct(dl.returnRate)} delta={<Delta f={f} x={dl.returnRate != null && dl.prevReturnRate != null ? dl.returnRate - dl.prevReturnRate : null} good="down" pts />} color={S5} />,
-    );
-  if (data.lowStock) out.push(<KTile key="low" testId="dash-kt-low" href="/admin/stock#st-low" label={f.t('dsh.cmd.lowTile')} value={f.n(data.lowStock.length)} sub={f.t('dsh.cmd.lowSub')} />);
   return out;
+}
+
+/** S28 · PR 691: the library cards pinned to Home — a figure where Home has it, else a link to the Report library. */
+function PinsCard(p: DashProps) {
+  const { f, data } = p;
+  const pins = data.pins ?? [];
+  if (!pins.length) return null;
+  return (
+    <Card title={f.t('dsh.cmd.pinsTitle')} sub={f.t('dsh.cmd.pinsSub')} right={<Lnk href="/admin/reports">{f.t('dsh.cmd.pinOpen')}</Lnk>} testId="dash-pins">
+      <div className="a3-kt">
+        {pins.map((x) => (
+          <KTile
+            key={x.id}
+            testId={`dash-pin-${x.id}`}
+            href="/admin/reports"
+            label={f.t(`dsh.cmd.pin_${x.id}`)}
+            value={x.kind === 'link' ? '—' : x.now === null ? f.t('dsh.cmd.profitUnknown') : x.kind === 'money' ? f.money(x.now) : f.n(x.now)}
+            delta={x.now !== null && x.prev ? <Delta f={f} x={(x.now - x.prev) / Math.abs(x.prev)} /> : undefined}
+          />
+        ))}
+      </div>
+    </Card>
+  );
 }
 
 function FunnelCard(p: DashProps) {
@@ -190,6 +235,7 @@ function DashboardD(p: DashProps) {
     <div className="a2-z a3-dash" data-testid="dash" data-design="D">
       <DashHead p={p} title={f.t('dsh.cmd.title')} />
       {kt.length ? <div className="a3-kt">{kt}</div> : null}
+      <PinsCard {...p} />
       {g2.length ? (
         <div className="a3-dg3" style={{ ['--n' as string]: g2.length }}>
           {g2}
@@ -208,10 +254,10 @@ export const dashboardD: LookDesign<DashProps, DashPart> = {
   key: 'D',
   name: { en: 'Command center', bn: 'কমান্ড সেন্টার' },
   desc: {
-    en: 'Dense and data-rich: six live KPI tiles, the order funnel, when customers order, couriers side by side and best sellers.',
+    en: 'Dense and data-rich: six live KPI tiles (orders, sales, net profit, money with couriers, return rate, ad spend), your pinned reports, the order funnel, when customers order, couriers side by side and best sellers.',
     bn: 'ঘন আর তথ্যে ভরা: ছয়টা KPI, অর্ডারের ধাপ, কখন অর্ডার আসে, কুরিয়ার পাশাপাশি আর সেরা বিক্রি।',
   },
-  parts: ['money', 'delivery', 'top', 'lowStock', 'queues', 'funnel', 'hours'],
+  parts: ['money', 'delivery', 'top', 'lowStock', 'queues', 'funnel', 'hours', 'profit', 'cod', 'pins'],
   Render: DashboardD,
   // The demo's own key for this design is C (97z-adm2-rd2-dash.js a3Design('dashboard', 'C', …)).
   Thumb: () => <LookThumb page="dashboard" id="C" />,

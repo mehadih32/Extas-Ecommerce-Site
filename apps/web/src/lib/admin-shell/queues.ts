@@ -28,7 +28,7 @@ import type { ShellViewer } from './sections';
 import type { TodoGroup } from './todo';
 import { waitingProposals } from '../admin-health/fixes';
 
-export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate' | 'handoverWaiting' | 'packingCards' | 'packingCardsLate';
+export type QueueId = 'ordersConfirm' | 'ordersPrepaid' | 'ordersAwaitingAdvance' | 'ordersTwoSizes' | 'ordersReview' | 'ordersCancelRequests' | 'ordersCancelPending' | 'launch' | 'lowStock' | 'countsReview' | 'erpFailed' | 'jobsDead' | 'booksDifferences' | 'erpHold' | 'erpHeldLong' | 'erpKeptAtSwitch' | 'agentFixes' | 'supportWaiting' | 'supportLate' | 'handoverWaiting' | 'packingCards' | 'packingCardsLate' | 'exchangesRequested';
 
 export interface QueueDef {
   id: QueueId;
@@ -57,6 +57,8 @@ export const QUEUES: readonly QueueDef[] = [
   // follow-up 468 (PR 183): open packing cards, and those past the hours to decide (lines, no badge)
   { id: 'packingCardsLate', perm: 'fulfilment.read', href: '/admin/orders/packing', section: 'orders', tone: 'bad', icon: 'clock', badge: false, group: 'orders' },
   { id: 'packingCards', perm: 'fulfilment.read', href: '/admin/orders/packing', section: 'orders', tone: 'warn', icon: 'alert', badge: false, group: 'orders' },
+  // S28 · PR 691 (admin prototype v5, Home "Do now"): exchanges a customer asked for that nobody has answered yet (a line, no badge)
+  { id: 'exchangesRequested', perm: 'orders.read', href: '/admin/orders/returns', section: 'orders', tone: 'warn', icon: 'uturn', badge: false, group: 'orders' },
   { id: 'launch', perm: 'catalogue.read', href: '/admin/products/queue', section: 'products', tone: 'info', icon: 'shirt', badge: true, group: 'products' },
   { id: 'lowStock', perm: 'inventory.read', href: '/admin/stock#st-low', section: 'products', tone: 'warn', icon: 'box', badge: false, group: 'stock' },
   { id: 'countsReview', perm: 'inventory.read', href: '/admin/stock/counts', section: 'products', tone: 'info', icon: 'check', badge: false, group: 'stock' },
@@ -93,6 +95,13 @@ export interface QueueDeps {
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
+/** S28 · PR 691: exchanges still waiting for an answer (REQUESTED), and when the oldest one came in. */
+export async function exchangesWaiting(db: Pick<PrismaClient, 'exchange'>, storeId: number): Promise<{ n: number; oldest: Date | null }> {
+  const where = { storeId, status: 'REQUESTED' as const };
+  const [n, first] = await Promise.all([db.exchange.count({ where }), db.exchange.findFirst({ where, orderBy: { createdAt: 'asc' }, select: { createdAt: true } })]);
+  return { n, oldest: first?.createdAt ?? null };
+}
+
 /** Every queue of the store, counted now (no cache, no key filter). */
 export async function countQueues(deps: QueueDeps, storeId: number): Promise<QueueCount[]> {
   const { db } = deps;
@@ -110,7 +119,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
   const cards = open.filter((c) => kept.has(c.orderId));
   const lateBefore = now.getTime() - (issues?.decideWithinHours ?? 0) * 3_600_000;
   const lateCards = cards.filter((c) => c.createdAt.getTime() < lateBefore);
-  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld, handN, handOld] = await Promise.all([
+  const [orders, launchN, launchOld, lowN, lowOld, reviewN, reviewOld, erpN, erpOld, jobs, booksN, booksOld, hold, heldLong, keptLong, fixes, waitN, waitOld, lateN, lateOld, handN, handOld, exch] = await Promise.all([
     orderQueueCounts(db, storeId, ['toConfirm', 'prepaid', 'awaitingAdvance', 'twoSizes', 'inReview', 'cancelRequests', 'cancelPending']),
     db.publishQueueItem.count({ where: { storeId, status: 'OPEN' } }),
     db.publishQueueItem.findFirst({ where: { storeId, status: 'OPEN' }, orderBy: { createdAt: 'asc' }, select: { createdAt: true } }),
@@ -136,6 +145,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     db.conversation.findFirst({ where: lateWhere, orderBy: { waitingSince: { sort: 'asc', nulls: 'last' } }, select: { waitingSince: true, slaDueAt: true } }),
     db.shipment.count({ where: handoverWhere }),
     db.shipment.findFirst({ where: handoverWhere, orderBy: { bookedAt: { sort: 'asc', nulls: 'last' } }, select: { bookedAt: true, createdAt: true } }),
+    exchangesWaiting(db, storeId),
   ]);
   const dead = jobs.failed.filter((r) => r.status === 'DEAD_LETTERED').map((r) => r.startedAt).sort();
   const o = (id: QueueId, view: string): QueueCount => ({ id, n: orders[view]?.n ?? 0, oldest: iso(orders[view]?.oldest) });
@@ -162,6 +172,7 @@ export async function countQueues(deps: QueueDeps, storeId: number): Promise<Que
     { id: 'handoverWaiting', n: handN, oldest: iso(handOld?.bookedAt ?? handOld?.createdAt) },
     { id: 'packingCardsLate', n: lateCards.length, oldest: iso(lateCards[0]?.createdAt) },
     { id: 'packingCards', n: cards.length, oldest: iso(cards[0]?.createdAt) },
+    { id: 'exchangesRequested', n: exch.n, oldest: iso(exch.oldest) },
   ];
 }
 
