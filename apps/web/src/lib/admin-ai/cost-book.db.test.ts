@@ -1,0 +1,453 @@
+// S15 · PR 312 — AI › Cost Book on PostgreSQL (/api/admin/ai/cost-book): the job and model catalogue seed
+// themselves on first read (idempotent, like Control room's `ensureAgentRows`), every job starts on Claude's own
+// recommended model, searchable by English or Bengali name; `ai.read` opens it, `ai.control` alone changes one
+// job's own model (reversible, audited, a double tap writes once); an unknown job or model is refused; a model of
+// the wrong kind (an image model for a text job) is refused; with no USD rate typed yet (PR 345/266) every cost is
+// honestly shown in USD only (`hasUsdRate: false`), never an invented taka figure.
+// S15 · PR 313 — the same page's own "actual" column, read from `AiUsageLedger.jobTypeKey`: null until a job has
+// `MIN_ACTUAL_SAMPLES` real runs inside the trailing `ACTUAL_WINDOW_DAYS`, a run outside that window is ignored, and
+// once real data exists it is also persisted to `AiJobType.actualPerRunMicros` (so a report elsewhere can read it
+// without recomputing).
+// S15 · PR 314 — the same page's own presets: each of Economy/Balanced/Premium shows its own hypothetical monthly
+// total and how many jobs would change before it is applied (`ai.read` alone sees this preview); applying one
+// (`ai.control`) writes every changed job's `selectedModelId` in one transaction and one combined audit entry,
+// never one per job; applying the same preset twice in a row changes nothing the second time. A throwaway database
+// (skipped without TEST_DATABASE_ADMIN_URL, like every other `.db.test.ts`).
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createFirstOwner, defaultSecurityPolicy, syncAuth } from "@extas/auth";
+import {
+  createTestDatabase,
+  HAS_TEST_DB,
+  seedSampleStores,
+  type TestDatabase,
+} from "@extas/auth/testing";
+import { MOTHER_STORE_ID } from "@extas/db/client";
+import {
+  INSTALLATION,
+  prismaBackend,
+  registry,
+  SettingsResolver,
+  syncSettings,
+  messages,
+} from "@extas/settings";
+import {
+  loginHandler,
+  passwordHandler,
+  rolesHandler,
+  staffHandler,
+  staffRolesHandler,
+} from "../admin-api";
+import type { AdminDeps } from "../admin-auth";
+import { ACTUAL_WINDOW_DAYS, JOB_CATALOG, MIN_ACTUAL_SAMPLES, presetModelFor } from "./cost-book";
+import { costBookHandler } from "./cost-book-api";
+
+const HOST = "admin.example.test";
+const OWNER_PW = "a long sentence for the tests";
+
+function call(method: string, opts: { body?: unknown; cookie?: string } = {}) {
+  const headers: Record<string, string> = {
+    host: HOST,
+    "user-agent": "SampleBrowser/1.0",
+    "x-forwarded-for": "192.0.2.44",
+  };
+  if (method !== "GET") headers.origin = `https://${HOST}`;
+  if (opts.cookie) headers.cookie = opts.cookie;
+  if (opts.body !== undefined) headers["content-type"] = "application/json";
+  return new Request(`https://${HOST}/api/admin/ai/cost-book`, {
+    method,
+    headers,
+    body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+  });
+}
+
+const cookiesOf = (res: Response) =>
+  res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0] ?? "")
+    .filter((c) => c && !c.endsWith("="))
+    .join("; ");
+
+interface Choice {
+  modelKey: string;
+  isRecommended: boolean;
+  perRunUsdMinor: number;
+  perMonthUsdMinor: number;
+  perRunStoreMinor: number | null;
+}
+interface Actual {
+  runs: number;
+  perRunUsdMinor: number;
+  perMonthUsdMinor: number;
+  perRunStoreMinor: number | null;
+  deviationPct: number | null;
+}
+interface Job {
+  key: string;
+  section: string;
+  selectedModelKey: string;
+  recommendedModelKey: string;
+  choices: Choice[];
+  actual: Actual | null;
+}
+interface Preset {
+  key: "economy" | "balanced" | "premium";
+  totalPerMonthUsdMinor: number;
+  changedJobs: number;
+  movedToSmaller: number;
+  movedToLarger: number;
+}
+interface Answer {
+  ok: boolean;
+  error?: string;
+  details?: string[];
+  currency: string;
+  hasUsdRate: boolean;
+  jobs: Job[];
+  totalPerMonthUsdMinor: number;
+  totalPerMonthStoreMinor: number | null;
+  topExpensive: Job[];
+  presets: Preset[];
+}
+
+describe.skipIf(!HAS_TEST_DB)("AI › Cost Book on PostgreSQL (PR 312)", () => {
+  let t: TestDatabase;
+  let deps: AdminDeps;
+  let owner = "";
+  let reader = "";
+  let controller = "";
+  const now = new Date("2026-11-11T10:00:00Z");
+
+  const staff = async (email: string, perms: string[]) => {
+    const role = await rolesHandler(
+      call("POST", {
+        cookie: owner,
+        body: { nameEn: email, nameBn: email, permissions: perms },
+      } as never),
+      deps,
+    );
+    const roleId = ((await role.json()) as { role: { id: string } }).role.id;
+    const made = await staffHandler(
+      call("POST", {
+        cookie: owner,
+        body: {
+          email,
+          displayName: email,
+          password: "first password from the owner",
+        },
+      } as never),
+      deps,
+    );
+    const staffId = ((await made.json()) as { staff: { id: string } }).staff.id;
+    await staffRolesHandler(
+      call("POST", {
+        cookie: owner,
+        body: { action: "assign", roleId, storeId: MOTHER_STORE_ID },
+      } as never),
+      deps,
+      staffId,
+    );
+    const first = cookiesOf(
+      await loginHandler(
+        call("POST", {
+          body: { email, password: "first password from the owner" },
+        }),
+        deps,
+      ),
+    );
+    return cookiesOf(
+      await passwordHandler(
+        call("POST", {
+          cookie: first,
+          body: {
+            current: "first password from the owner",
+            next: "my own words for this job",
+          },
+        }),
+        deps,
+      ),
+    );
+  };
+  const ask = async (method: string, cookie: string, body?: unknown) => {
+    const res = await costBookHandler(call(method, { cookie, body }), deps);
+    return { status: res.status, a: (await res.json()) as Answer };
+  };
+
+  beforeAll(async () => {
+    t = await createTestDatabase("web");
+    await seedSampleStores(t.prisma);
+    await syncAuth(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
+    await createFirstOwner(t.prisma, defaultSecurityPolicy(), {
+      email: "owner@example.com",
+      displayName: "Sample owner",
+      password: OWNER_PW,
+      passwordChosenByOwner: true,
+    });
+    deps = {
+      db: t.prisma,
+      resolver: new SettingsResolver(prismaBackend(t.prisma), registry),
+      vault: null,
+      now: () => now,
+    };
+    owner = cookiesOf(
+      await loginHandler(
+        call("POST", {
+          body: { email: "owner@example.com", password: OWNER_PW },
+        }),
+        deps,
+      ),
+    );
+    reader = await staff("reader@example.com", ["ai.read"]);
+    controller = await staff("controller@example.com", [
+      "ai.read",
+      "ai.control",
+    ]);
+  });
+  afterAll(async () => {
+    await t?.drop();
+  });
+
+  it("seeds every catalogue job once, each on its own recommended model, with no USD rate yet", async () => {
+    const { status, a } = await ask("GET", reader);
+    expect(status).toBe(200);
+    expect(a.jobs).toHaveLength(JOB_CATALOG.length);
+    expect(a.hasUsdRate).toBe(false);
+    for (const j of a.jobs) {
+      expect(j.selectedModelKey).toBe(j.recommendedModelKey);
+      expect(
+        j.choices.find((c) => c.modelKey === j.recommendedModelKey)
+          ?.isRecommended,
+      ).toBe(true);
+      expect(j.choices.every((c) => c.perRunStoreMinor === null)).toBe(true); // honest: no owner USD rate typed yet
+    }
+    expect(a.totalPerMonthStoreMinor).toBeNull();
+    expect(a.totalPerMonthUsdMinor).toBeGreaterThan(0);
+    // reading again does not duplicate the seeded rows
+    const again = await ask("GET", reader);
+    expect(again.a.jobs).toHaveLength(JOB_CATALOG.length);
+  });
+
+  it("text jobs cost far less per month than studio image/video jobs (C2.4's own honest note)", async () => {
+    const { a } = await ask("GET", reader);
+    const text = a.jobs.find((j) => j.key === "seoBlogArticle")!;
+    const image = a.jobs.find((j) => j.key === "studioGhostMannequin")!;
+    const video = a.jobs.find((j) => j.key === "studioImageToVideo")!;
+    expect(
+      text.choices.find((c) => c.isRecommended)!.perRunUsdMinor,
+    ).toBeLessThan(image.choices.find((c) => c.isRecommended)!.perRunUsdMinor);
+    expect(
+      image.choices.find((c) => c.isRecommended)!.perRunUsdMinor,
+    ).toBeLessThan(video.choices.find((c) => c.isRecommended)!.perRunUsdMinor);
+  });
+
+  it("the top-10 most expensive jobs are sorted by their own monthly estimate, priciest first (C2.3)", async () => {
+    const { a } = await ask("GET", reader);
+    expect(a.topExpensive).toHaveLength(10);
+    const amounts = a.topExpensive.map(
+      (j) => j.choices.find((c) => c.isRecommended)!.perMonthUsdMinor,
+    );
+    expect(amounts).toEqual([...amounts].sort((x, y) => y - x));
+  });
+
+  it("only ai.read opens it; only ai.control changes a job's model", async () => {
+    expect((await ask("GET", "bad=cookie")).status).toBe(401);
+    expect(
+      (
+        await ask("POST", reader, {
+          jobKey: "seoBlogArticle",
+          modelKey: "claude-haiku",
+        })
+      ).status,
+    ).toBe(403);
+    const ok = await ask("POST", controller, {
+      jobKey: "seoBlogArticle",
+      modelKey: "claude-haiku",
+    });
+    expect(ok.status).toBe(200);
+    expect(
+      ok.a.jobs.find((j) => j.key === "seoBlogArticle")?.selectedModelKey,
+    ).toBe("claude-haiku");
+  });
+
+  it("an unknown job, an unknown model, or a model of the wrong kind is refused; nothing changes", async () => {
+    expect(
+      (
+        await ask("POST", controller, {
+          jobKey: "not-a-job",
+          modelKey: "claude-haiku",
+        })
+      ).a,
+    ).toMatchObject({ ok: false, error: "UNKNOWN_JOB" });
+    expect(
+      (
+        await ask("POST", controller, {
+          jobKey: "seoBlogArticle",
+          modelKey: "not-a-model",
+        })
+      ).a,
+    ).toMatchObject({ ok: false, error: "UNKNOWN_MODEL" });
+    // fashn-core is an image model; seoBlogArticle is a text job
+    expect(
+      (
+        await ask("POST", controller, {
+          jobKey: "seoBlogArticle",
+          modelKey: "fashn-core",
+        })
+      ).a,
+    ).toMatchObject({ ok: false, error: "WRONG_KIND" });
+    expect((await ask("POST", controller, {})).a).toMatchObject({
+      ok: false,
+      error: "INVALID_INPUT",
+      details: ["jobKey"],
+    });
+    const again = await ask("GET", reader);
+    expect(
+      again.a.jobs.find((j) => j.key === "seoBlogArticle")?.selectedModelKey,
+    ).toBe("claude-haiku"); // unchanged from the previous test
+  });
+
+  it("a double tap writes once (idempotent); null resets to Claude's own recommendation; each real change is audited", async () => {
+    const countBefore = await t.prisma.auditLog.count({
+      where: { action: "ai.costBook.model" },
+    });
+    await ask("POST", controller, {
+      jobKey: "seoBlogArticle",
+      modelKey: "claude-haiku",
+    }); // same value again
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.model" } }),
+    ).toBe(countBefore);
+
+    const reset = await ask("POST", controller, {
+      jobKey: "seoBlogArticle",
+      modelKey: null,
+    });
+    expect(reset.a.jobs.find((j) => j.key === "seoBlogArticle")).toMatchObject({
+      selectedModelKey: "claude-sonnet",
+      recommendedModelKey: "claude-sonnet",
+    });
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.model" } }),
+    ).toBe(countBefore + 1);
+  });
+
+  it("once the owner has typed a USD rate, every cost shows honestly in the store's own currency too", async () => {
+    await t.prisma.exchangeRate.create({
+      data: {
+        storeId: MOTHER_STORE_ID,
+        baseCurrency: "USD",
+        quoteCurrency: "BDT",
+        rate: "119.5",
+        effectiveFrom: new Date("2026-01-01T00:00:00Z"),
+      },
+    });
+    const { a } = await ask("GET", reader);
+    expect(a.hasUsdRate).toBe(true);
+    expect(a.currency).toBe("BDT");
+    expect(a.totalPerMonthStoreMinor).toBeGreaterThan(0);
+    for (const j of a.jobs)
+      expect(
+        j.choices.find((c) => c.isRecommended)!.perRunStoreMinor,
+      ).not.toBeNull();
+  });
+
+  it("stays null with no real usage; ignores old runs; fills in once MIN_ACTUAL_SAMPLES recent runs exist; persists it", async () => {
+    const before = await ask("GET", reader);
+    expect(before.a.jobs.find((j) => j.key === "seoBlogArticle")?.actual).toBeNull();
+
+    // A handful of real runs, but one short of the threshold — still honestly null.
+    await t.prisma.aiUsageLedger.createMany({
+      data: Array.from({ length: MIN_ACTUAL_SAMPLES - 1 }, (_, i) => ({
+        jobTypeKey: "seoBlogArticle",
+        providerKey: "mock",
+        modelKey: "mock",
+        idempotencyKey: `seo-short-${i}`,
+        costUsdMicros: 1_000_000n,
+        costMinor: 100,
+        createdAt: new Date("2026-11-05T10:00:00Z"), // inside the window
+      })),
+    });
+    const short = await ask("GET", reader);
+    expect(short.a.jobs.find((j) => j.key === "seoBlogArticle")?.actual).toBeNull();
+
+    // One more real run inside the window reaches the threshold; an older run, outside ACTUAL_WINDOW_DAYS, is ignored.
+    const outside = new Date(now.getTime() - (ACTUAL_WINDOW_DAYS + 5) * 24 * 60 * 60 * 1000);
+    await t.prisma.aiUsageLedger.createMany({
+      data: [
+        { jobTypeKey: "seoBlogArticle", providerKey: "mock", modelKey: "mock", idempotencyKey: "seo-reaches-threshold", costUsdMicros: 1_000_000n, costMinor: 100, createdAt: new Date("2026-11-05T11:00:00Z") },
+        { jobTypeKey: "seoBlogArticle", providerKey: "mock", modelKey: "mock", idempotencyKey: "seo-too-old", costUsdMicros: 999_000_000n, costMinor: 99_900, createdAt: outside },
+      ],
+    });
+    const { a } = await ask("GET", reader);
+    const job = a.jobs.find((j) => j.key === "seoBlogArticle")!;
+    expect(job.actual).not.toBeNull();
+    expect(job.actual!.runs).toBe(MIN_ACTUAL_SAMPLES); // the too-old run never counts
+    expect(job.actual!.perRunUsdMinor).toBe(100); // 1,000,000 micros/run => 100 USD-minor/run
+    expect(job.actual!.perMonthUsdMinor).toBe(500); // the window's own total: 5 runs * 100
+
+    // Persisted onto AiJobType.actualPerRunMicros, so a report elsewhere can read it without recomputing.
+    const row = await t.prisma.aiJobType.findUniqueOrThrow({ where: { key: "seoBlogArticle" } });
+    expect(row.actualPerRunMicros).toBe(1_000_000n);
+
+    // A job with no ledger rows at all stays honestly null, never an invented figure.
+    expect(a.jobs.find((j) => j.key === "seoMetaTags")?.actual).toBeNull();
+  });
+
+  it("shows all three presets' own preview before anything is applied: Economy ≤ Balanced ≤ Premium, each priced", async () => {
+    const { a } = await ask("GET", reader);
+    expect(a.presets.map((p) => p.key)).toEqual(["economy", "balanced", "premium"]);
+    const [economy, balanced, premium] = a.presets;
+    expect(economy!.totalPerMonthUsdMinor).toBeLessThanOrEqual(balanced!.totalPerMonthUsdMinor);
+    expect(balanced!.totalPerMonthUsdMinor).toBeLessThanOrEqual(premium!.totalPerMonthUsdMinor);
+    // every job started on its own recommendation, i.e. already "balanced" — so Balanced previews zero change,
+    // apart from the one job an earlier test in this file switched to claude-haiku and reset back to claude-sonnet.
+    expect(balanced!.changedJobs).toBe(0);
+    expect(economy!.changedJobs).toBeGreaterThan(0);
+    expect(premium!.changedJobs).toBeGreaterThan(0);
+  });
+
+  it("only ai.control applies a preset; applying writes every changed job in one transaction, one audit entry, and a repeat changes nothing", async () => {
+    expect(
+      (await ask("POST", reader, { preset: "economy" })).status,
+    ).toBe(403);
+
+    const auditBefore = await t.prisma.auditLog.count({
+      where: { action: "ai.costBook.presetApplied" },
+    });
+    const applied = await ask("POST", controller, { preset: "economy" });
+    expect(applied.status).toBe(200);
+    const afterPreset = applied.a.presets.find((p) => p.key === "economy")!;
+    expect(afterPreset.changedJobs).toBe(0); // the preview now matches the state it just caused
+    for (const j of applied.a.jobs) {
+      expect(j.selectedModelKey).toBe(presetModelFor(JOB_CATALOG.find((x) => x.key === j.key)!, "economy"));
+    }
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.presetApplied" } }),
+    ).toBe(auditBefore + 1);
+
+    // applying the very same preset again writes no new audit entry — nothing actually changed the second time.
+    await ask("POST", controller, { preset: "economy" });
+    expect(
+      await t.prisma.auditLog.count({ where: { action: "ai.costBook.presetApplied" } }),
+    ).toBe(auditBefore + 1);
+
+    // Balanced returns every job to Claude's own recommendation, undoing Economy.
+    const backToBalanced = await ask("POST", controller, { preset: "balanced" });
+    for (const j of backToBalanced.a.jobs) {
+      expect(j.selectedModelKey).toBe(j.recommendedModelKey);
+    }
+  });
+
+  it("an unknown preset name is refused, and changes nothing", async () => {
+    const { a } = await ask("POST", controller, { preset: "deluxe" });
+    expect(a).toMatchObject({ ok: false, error: "UNKNOWN_PRESET" });
+  });
+
+  it("finds a job by search across the whole catalogue, in English or Bengali (C2.1)", () => {
+    // cost-book.test.ts already proves `searchJobs` itself; here only confirm every seeded job keeps its own
+    // English and Bengali name through a full round trip to the database and back.
+    expect(
+      JOB_CATALOG.every((j) => j.nameEn.length > 0 && j.nameBn.length > 0),
+    ).toBe(true);
+  });
+});

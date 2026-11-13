@@ -138,6 +138,10 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 // S23 · PR 437 (registry v281): the social studio's cadence, voice and AI-caption switches.
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
+import analyticsBn from '../messages/analytics.bn.json';
+import analyticsEn from '../messages/analytics.en.json';
+import reportsDigestBn from '../messages/reports-digest.bn.json';
+import reportsDigestEn from '../messages/reports-digest.en.json';
 // S24 · PR 450 (registry v289): the photoshoot provider adapters' per-image rate.
 import photoshootCostBn from '../messages/photoshoot-cost.bn.json';
 import photoshootCostEn from '../messages/photoshoot-cost.en.json';
@@ -475,6 +479,12 @@ messages.bn = mergeMessages(messages.bn, privacyCustomerBn);
 // S23 · PR 437 (registry v281): the studio's cadence, voice and AI-caption switches.
 messages.en = mergeMessages(messages.en, studioEn);
 messages.bn = mergeMessages(messages.bn, studioBn);
+// S15 · PR 338 (registry v288): the site-wide analytics event layer's master switch.
+messages.en = mergeMessages(messages.en, analyticsEn);
+messages.bn = mergeMessages(messages.bn, analyticsBn);
+// S15 · PR 341 (registry v289): weekly/monthly digests to Telegram and e-mail.
+messages.en = mergeMessages(messages.en, reportsDigestEn);
+messages.bn = mergeMessages(messages.bn, reportsDigestBn);
 // S24 · PR 447 (registry v292): the garment-prep/standardisation colour-drift tolerance.
 messages.en = mergeMessages(messages.en, photoshootEn);
 messages.bn = mergeMessages(messages.bn, photoshootBn);

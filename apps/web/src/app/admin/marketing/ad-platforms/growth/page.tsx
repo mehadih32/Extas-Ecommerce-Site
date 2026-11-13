@@ -17,7 +17,9 @@ import { GrowthRun } from '@/components/admin/marketing/GrowthControls';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
+import { approvalExplainOption } from '@/lib/admin-ai/approval-explain-dispatch';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -75,6 +77,12 @@ export default async function GrowthAgentPage() {
   };
   const limitOf = (p: ProposalView) => pct(p.type === 'lowerBudget' ? o.card.value.poorRoasPercent : o.card.value.goodRoasPercent);
   const why = (p: ProposalView) => g(`why.${p.type}`, { spend: money(p.spendMinor), from: p.from, to: p.to, roas: pct(p.roasPercent), before: pct(p.beforeRoasPercent), limit: limitOf(p), delivered: formatNumber(p.delivered, view.locale), sales: money(p.deliveredSalesMinor) });
+  // PR 330: a plain AI paragraph on why each waiting proposal is asking, grounded only in this page's own `what`/
+  // `why` sentences (already localized, already decided — PR 269's own growth model); `null` (AI off, no ready
+  // connection, capped, or the model answered nothing) leaves the proposal card exactly as PR 269 already built it.
+  const aiNotes = new Map(
+    await Promise.all(o.waiting.map(async (p) => [p.id, await approvalExplainOption(access.deps, MOTHER_STORE_ID, p.id, view.lang === 'bn' ? 'bn' : 'en')({ title: what(p), why: [why(p)] })] as const)),
+  );
   const errs = Object.fromEntries(['INVALID_INPUT', 'NOT_FOUND', 'forbidden', 'unauthorized', 'network', 'other'].map((k) => [k, t(d, `adp.err.${k}`)]));
   const decideErr = { ...errs, ...Object.fromEntries(['CONTROL_OFF', 'CHANGED', 'WAITING', 'DECIDED', 'EXPIRED'].map((k) => [k, g(`err.${k}`)])) };
   const said = Object.fromEntries(['APPROVED', 'REJECTED', 'PRACTICE', 'APPLIED', 'FAILED'].map((k) => [k, g(`said.${k}`)]));
@@ -157,6 +165,15 @@ export default async function GrowthAgentPage() {
               <li key={p.id} className="adp-rule" data-testid="adg-proposal" data-type={p.type}>
                 <p className="a2-sm adp-sub">{what(p)}</p>
                 <p className="a2-sm">{why(p)}</p>
+                {aiNotes.get(p.id) ? (
+                  <div className="a2-note a2-mt12" role="note" data-testid="adg-ai-note">
+                    <ShellIcon name="spark" size={15} />
+                    <span>
+                      <b className="a2-blk">{g('aiNote.label')}</b>
+                      <span className="a2-blk">{aiNotes.get(p.id)}</span>
+                    </span>
+                  </div>
+                ) : null}
                 {p.expiresAt ? <p className="a2-sm a2-mute">{g('expires', { when: when(p.expiresAt) })}</p> : null}
                 {canApprove ? <AdControlDecide url={API} id={p.id} what={what(p)} texts={{ approve: g('approve'), reject: g('reject'), confirmApprove: g('confirmApprove'), confirmReject: g('confirmReject'), yes: g('yes'), cancel: g('cancel'), said, err: decideErr }} /> : null}
               </li>

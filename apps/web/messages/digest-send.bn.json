@@ -1,0 +1,37 @@
+{
+  "digest": {
+    "title": { "weekly": "সাপ্তাহিক রিপোর্ট", "monthly": "মাসিক রিপোর্ট" },
+    "head": "{title} ({from} থেকে {to}), আগের {days} দিনের তুলনায়:",
+    "eventsHead": "ক্রেতারা যা করলেন:",
+    "event": "• {label}: {count} ({change})",
+    "funnelsHead": "ফানেল:",
+    "funnelStep": "  {label}: {visitors}{pct}",
+    "funnelFromFirst": " (প্রথম ধাপের {pct}%)",
+    "new": "নতুন",
+    "noChange": "কোনো বদল নেই",
+    "foot": "শুধু সংখ্যা, কিছু থামানো বা বদলানো হয়নি।",
+    "noFunnels": "এখনো কোনো ফানেল সেভ করা নেই।",
+    "emailSubject": "{title}, {from} থেকে {to}",
+    "eventName": {
+      "page_view": "পেজ দেখা",
+      "product_view": "প্রোডাক্ট দেখা",
+      "search": "সার্চ",
+      "all_colours_click": "\"সব রং\" ট্যাপ",
+      "size_chart_click": "সাইজ চার্ট ট্যাপ",
+      "whatsapp_click": "হোয়াটসঅ্যাপ ট্যাপ",
+      "add_to_bag": "ব্যাগে যুক্ত",
+      "order_now": "অর্ডার নাও ট্যাপ",
+      "remove_from_bag": "ব্যাগ থেকে বাদ",
+      "re_add": "আবার ব্যাগে যুক্ত",
+      "new_add_after_remove": "বাদ দেওয়ার পর নতুন যুক্ত",
+      "checkout_start": "চেকআউট শুরু",
+      "purchase": "কেনাকাটা",
+      "wishlist_add": "উইশলিস্টে যুক্ত",
+      "wishlist_remove": "উইশলিস্ট থেকে বাদ",
+      "login": "লগইন",
+      "logout": "লগআউট",
+      "signup": "সাইনআপ",
+      "guest_checkout": "গেস্ট চেকআউট"
+    }
+  }
+}

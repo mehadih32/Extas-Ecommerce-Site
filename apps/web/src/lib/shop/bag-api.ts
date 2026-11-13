@@ -27,6 +27,7 @@ import { addBuiltSetToBag, addSetToBag, changeSetInBag, priceCell, priceSet, pro
 import { body, errorResponse, fail, isUuid, json, readCookie, sameOrigin } from '../admin-auth';
 import { BAG_COOKIE, bagCookie, COUNT_COOKIE } from './bag-model';
 import { trackAddToBag } from '../tracking/shop';
+import { recordAddToBagAnalytics } from '../analytics/shop-hooks';
 import { BN_PREFIX } from './lang';
 import { BOT } from '../experiments/edge';
 
@@ -89,6 +90,8 @@ export async function addLineHandler(request: Request, deps: BagApiDeps | null):
     const r = await addItem(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, variantId: b.variantId as string, quantity, source: (b.source as string | undefined) || undefined });
     // PR 257: the ad platforms hear of it from the server while tracking is on (quiet, never stops the add)
     if (r.added) await trackAddToBag(request, { storeId: deps.storeId, lineId: r.lineId, quantity });
+    // S15 · PR 338: the owner's own Analytics section hears of it too, while `analytics.events` is on (quiet)
+    if (r.added) await recordAddToBagAnalytics(request, { storeId: deps.storeId, variantId: b.variantId as string, quantity });
     return answer(deps, bag, { ...r }, r.added ? 201 : 200);
   } catch (e) {
     return refusal(e);

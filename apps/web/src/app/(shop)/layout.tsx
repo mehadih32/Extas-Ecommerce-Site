@@ -9,6 +9,8 @@
 // (lib/seo/verification, `seo.verification`; none while no code is set).
 // S11 · PR 234: while `seo.vitals.collect` is on, the page reports its speed (components/shop/VitalsReporter).
 // S13 · PR 257: the tracking beacon (components/shop/TrackingBeacon) while `ads.tracking` is on with a page event ticked.
+// S15 · PR 338 (Blueprint D5): the owner's own analytics beacon (components/shop/AnalyticsBeacon) while
+// `analytics.events` is on — runs beside the ad-tracking beacon, never instead of it; the two feed different readers.
 // S06 · PR 556: while the in-transit duplicate notice is on, the visit's campaign is kept in the tab (CampaignKeep).
 // S02 · PR 79: while `language.frontEdit` is on, the switch for editing the page's words (WordsEditLoader; the panel
 // itself loads only on a page opened with ?words=edit).
@@ -28,6 +30,7 @@ import { HashForwardScript } from '@/components/shop/HashForwardScript';
 import { ProblemProbe } from '@/components/shop/ProblemProbe';
 import { VitalsReporter } from '@/components/shop/VitalsReporter';
 import { TrackingBeacon } from '@/components/shop/TrackingBeacon';
+import { AnalyticsBeacon } from '@/components/shop/AnalyticsBeacon';
 import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { WordsEditLoader } from '@/components/shop/WordsEditLoader';
 import { PageEditBar } from '@/components/shop/PageEditBar';
@@ -57,7 +60,8 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'ads.tracking': tracking,
     'checkout.transitDuplicate': transit,
     'language.frontEdit': frontEdit,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit'] as const, c.storeId);
+    'analytics.events': analyticsEvents,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events'] as const, c.storeId);
   // PR 600: the owner's on-page edit bar (null for everyone else; nothing is read without an admin session)
   const pageEdit = await pageEditState();
   const trackView = tracking.on && tracking.events.view;
@@ -92,6 +96,7 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
         />
       ) : null}
       {trackView || trackCheckout ? <TrackingBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], checkoutPath: ROUTES.checkout, view: trackView, checkout: trackCheckout }} /> : null}
+      {analyticsEvents.on ? <AnalyticsBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'] }} /> : null}
       {transit.enabled ? <CampaignKeep /> : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
