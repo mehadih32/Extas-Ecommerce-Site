@@ -87,3 +87,4 @@ export * from './send-advice';
 export * from './settings';
 export * from './view';
 export * from './winback';
+export * from './campaign-overview';

@@ -14,7 +14,8 @@
 //   (`warnPct`) at which the owner is warned, and `fallbackToCheapest` (a send that would pass the ceiling goes by the
 //   cheapest allowed channel instead). Off as shipped.
 // - `marketing.verdicts` (PR 699): delivered sales per Tk 1 of ads at or over `scale` = Scale, `keep` = Keep, `fix` = Fix,
-//   else Stop (a campaign's chip). `marketing.messageCampaigns` (PR 697): the one campaign form; `throttlePerMinute`.
+//   else Stop (a campaign's chip). PR 697 has no setting of its own: it lists the sends the Messages campaign pages make and
+//   keeps their switches (`customers.winback`, `customers.blast`, the throttle, the consent and the stop line).
 // - `marketing.metaFeed` (PR 696): the Facebook and Instagram catalogue feed, /feeds/meta.xml, beside the Google one. Off as
 //   shipped. It takes its products, photos, prices and sizes from the same loader as the Google feed and follows the
 //   Merchant feed card's choices (most items, sold-out, one item per size and colour, gender, age group).
@@ -71,9 +72,6 @@ export type MarketingVerdictsSettings = z.output<typeof marketingVerdictsSchema>
 
 export const marketingMetaFeedSchema = z.object({ on: z.boolean() }).strict();
 export type MarketingMetaFeedSettings = z.output<typeof marketingMetaFeedSchema>;
-
-export const marketingMessageCampaignsSchema = z.object({ enabled: z.boolean(), throttlePerMinute: z.number().int().min(1).max(600) }).strict(); // hardcode-ok: a technical bound
-export type MarketingMessageCampaignsSettings = z.output<typeof marketingMessageCampaignsSchema>;
 
 export const w5aSettings = {
   'support.savedReplies': setting({
@@ -146,16 +144,6 @@ export const w5aSettings = {
     labelKey: 'marketing.verdicts.label',
     helpKey: 'marketing.verdicts.help',
     sortOrder: 705,
-  }),
-  'marketing.messageCampaigns': setting({
-    ...store,
-    group: 'marketing',
-    valueType: 'JSON',
-    schema: marketingMessageCampaignsSchema,
-    default: { enabled: false, throttlePerMinute: 30 },
-    labelKey: 'marketing.messageCampaigns.label',
-    helpKey: 'marketing.messageCampaigns.help',
-    sortOrder: 706,
   }),
   'marketing.metaFeed': setting({
     ...store,

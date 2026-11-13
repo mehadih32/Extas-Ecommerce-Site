@@ -22,10 +22,6 @@
       "label": "Campaign verdicts",
       "help": "Marketing › Overview: a campaign's chip by delivered sales per Tk 1 of ads. At or over Scale = Scale, at or over Keep = Keep, at or over Fix = Fix, below that = Stop. Advice only: nothing is paused or changed by itself."
     },
-    "messageCampaigns": {
-      "label": "Message campaigns",
-      "help": "Messages › Campaigns: one form to send a template to a saved list by WhatsApp, SMS, e-mail or Messenger, only to people who agreed to get it. \"Messages per minute\" is the speed limit of one send."
-    },
     "metaFeed": {
       "label": "Meta catalogue feed",
       "help": "Marketing › Meta feed: the product feed for the Facebook and Instagram catalogue, at /feeds/meta.xml, beside the Google feed. Off as shipped. It uses the same products, photos and prices as the Google feed and follows its choices. Each product shows what keeps it out or needs a fix. Nothing is sent anywhere: Meta fetches the file on its own schedule."
