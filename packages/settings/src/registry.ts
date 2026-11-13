@@ -1575,9 +1575,9 @@ export const registry = {
   ...studioCreativeBriefSettings,
   // ---- S13 · PR 548 · market and competitor intelligence: change alerts, off (registry-ads-intel.ts, version 291). ----
   ...adsIntelSettings,
-  // ---- S28 · PR 662 · the courier score out of 10 and its accuracy report, off (registry-courier-score.ts, version 293). ----
+  // ---- S28 · PR 662 · the courier score out of 10 and its accuracy report, off (registry-courier-score.ts, version 296). ----
   ...courierScoreSettings,
-  // ---- S28 · PR 663 · the auto-confirm rules table and its presets, off (registry-auto-confirm.ts, version 294). ----
+  // ---- S28 · PR 663 · the auto-confirm rules table and its presets, off (registry-auto-confirm.ts, version 297). ----
   ...autoConfirmSettings,
   ...incompleteV5Settings,
 } satisfies RegistryShape;

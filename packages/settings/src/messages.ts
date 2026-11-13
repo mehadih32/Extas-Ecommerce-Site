@@ -412,7 +412,7 @@ messages.bn = mergeMessages(messages.bn, eyePartsBn);
 // S05 · PR 541 follow-up 320 (registry v266): prepaid orders confirm by themselves once paid (registry-prepaid-confirm.ts).
 messages.en = mergeMessages(messages.en, prepaidConfirmEn);
 messages.bn = mergeMessages(messages.bn, prepaidConfirmBn);
-// S28 · PR 663 (registry v294): the auto-confirm rules table (registry-auto-confirm.ts).
+// S28 · PR 663 (registry v297): the auto-confirm rules table (registry-auto-confirm.ts).
 messages.en = mergeMessages(messages.en, autoConfirmEn);
 messages.bn = mergeMessages(messages.bn, autoConfirmBn);
 messages.en = mergeMessages(messages.en, incompleteV5En);
