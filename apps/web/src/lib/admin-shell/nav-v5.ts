@@ -156,12 +156,10 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
  * placed by `NAV_V5` at once. When one of these is built, take it off this list (`nav-v5.test.ts` says so).
  */
 export const AWAITING: readonly string[] = [
-  'delivery.overview', 'delivery.c360', 'delivery.claims',
-  'rules.coupons', 'rules.popups',
+  'delivery.claims',
   'products.sets',
   'website.policies',
-  'money.couriers',
-  'reports.profit', 'reports.products', 'reports.couriers', 'reports.marketing', 'reports.review',
+  'reports.profit', 'reports.products', 'reports.marketing', 'reports.review',
   'ai.train',
 ];
 

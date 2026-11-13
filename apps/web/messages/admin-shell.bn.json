@@ -41,8 +41,8 @@
         "zones": "সেটআপ",
         "couriers": "কুরিয়ার",
         "settings": "ডেলিভারির সেটিং",
-        "overview": "ওভারভিউ",
-        "courier360": "Courier 360"
+        "overview": "সব কুরিয়ার",
+        "courier360": "কুরিয়ার 360"
       },
       "marketing": {
         "campaigns": "বিজ্ঞাপন ক্যাম্পেইন",
@@ -155,7 +155,7 @@
       },
       "rules": {
         "all": "সব নিয়ম",
-        "offers": "অফার ও ছাড়",
+        "offers": "অফার ও ডিসকাউন্ট",
         "popups": "পপ-আপ ও নোটিশ"
       },
       "money": {
