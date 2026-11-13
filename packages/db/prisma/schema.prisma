@@ -467,6 +467,7 @@ model Store {
   /// CN-020 (4): the addresses spoken into the checkout's mic (SIM-F-047).
   checkoutVoices          CheckoutVoice[]
   productVideos           ProductVideo[]
+  productFaqs             ProductFaq[]
 }
 
 enum StoreStatus {
@@ -1638,6 +1639,37 @@ model ProductMedia {
   updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
 
   @@index([productId, colourId, sortOrder])
+}
+
+/// @stage S28 · PR 682 — a question and answer shown on the product page: on one product, on every product of a category
+/// (attached by itself), or shop-wide. Hidden or archived, never deleted.
+model ProductFaq {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store     @relation(fields: [storeId], references: [id])
+  scope            FaqScope
+  productId        String?   @db.Uuid
+  categoryId       String?   @db.Uuid
+  questionEn       String
+  questionBn       String?
+  answerEn         String
+  answerBn         String?
+  sortOrder        Int       @default(0)
+  isActive         Boolean   @default(true)
+  /// The customer question this FAQ was made from, when it was.
+  sourceQuestionId String?   @db.Uuid
+  archivedAt       DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, scope, productId])
+  @@index([storeId, scope, categoryId])
+}
+
+enum FaqScope {
+  PRODUCT
+  CATEGORY
+  SHOP
 }
 
 /// @stage S28 · PR 681 — a product's video: a link (YouTube, Vimeo, Facebook) or an uploaded file; one active per product.
