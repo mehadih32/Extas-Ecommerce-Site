@@ -18,8 +18,8 @@
 .adm2 .inc-note .a2-ta{width:100%;box-sizing:border-box}
 .adm2 .inc-bad{color:var(--bad)}
 
-.inc-day {
+.adm2 .inc-day {
   list-style: none;
   padding: 10px 0 2px;
-  border-bottom: 1px solid var(--a2-line, #e5e5e5);
+  border-bottom: 1px solid var(--ln);
 }

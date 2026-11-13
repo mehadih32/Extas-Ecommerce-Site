@@ -25,7 +25,7 @@ export const INCOMPLETE_V5_DEFAULT: IncompleteV5 = {
   templates: {
     forgot: 'Hello {name}, you left {items} in your bag. Need any help to finish your order? {link}',
     size: 'Hello {name}, not sure about the size for {items}? Tell us your height and weight and we will help you pick.',
-    delivery: 'Hello {name}, we deliver to your area. Your order of {items} is ready to place whenever you are. {link}',
+    delivery: 'Hello {name}, your bag of {items} is waiting. Want us to confirm your delivery details? {link}',
     offer: 'Hello {name}, we have an offer for your bag of {items}: {offer}. {link}',
   },
 };

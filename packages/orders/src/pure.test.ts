@@ -151,7 +151,7 @@ describe('the transition table (§6.5.1)', () => {
 
   it('a refusal lists the commands open now', () => {
     const p = plan('handover', order('PLACED'));
-    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'goodCustomer', 'holdProposed', 'holdProposalDecided', 'newCustomer', 'awaitAdvance'] });
+    expect(p).toMatchObject({ ok: false, code: 'ILLEGAL_TRANSITION', allowed: ['confirm', 'hold', 'cancel', 'requestCancel', 'setFlags', 'addLine', 'removeLine', 'edit', 'twoSizeCheck', 'twoSizeAnswer', 'riskAssess', 'riskSection', 'riskLevel', 'blocklistMatch', 'refuserTerms', 'bundleProposal', 'blockProposal', 'goodCustomer', 'holdProposed', 'holdProposalDecided', 'courierScore', 'autoConfirm', 'newCustomer', 'awaitAdvance'] });
   });
 });
 
@@ -179,8 +179,6 @@ describe('the guards', () => {
     expect(plan('courierCancelRefused', order('PACKED', { booked: true }))).toMatchObject({ ok: false, code: 'NO_CANCEL_PENDING' });
   });
 
-        'courierScore',
-        'autoConfirm',
   it('a parcel whose cancel is asked is not packed or handed over (§6.5.7)', () => {
     expect(plan('pack', order('PROCESSING', { cancelPending: true, booked: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
     expect(plan('handover', order('PACKED', { cancelPending: true, booked: true }))).toMatchObject({ ok: false, code: 'CANCEL_PENDING' });
