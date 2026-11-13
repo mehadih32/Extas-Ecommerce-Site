@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { cashbookSchema, productsFinanceV5Settings, shopRankingSchema } from '../src/registry-products-finance-v5';
+import { budgetSchema, cashbookSchema, productsFinanceV5Settings, shopRankingSchema } from '../src/registry-products-finance-v5';
 
 describe('wave 4 settings (PR 686–691)', () => {
   it('every key is in the registry, per store, owner-neutral, at a PR number, labelled in both languages, default valid', () => {
@@ -36,5 +36,12 @@ describe('wave 4 settings (PR 686–691)', () => {
     expect(cashbookSchema.safeParse({ ...d, forecastDays: 0 }).success).toBe(false);
     expect(cashbookSchema.safeParse({ ...d, codPayoutDays: 31 }).success).toBe(false);
     expect(cashbookSchema.safeParse({ ...d, other: 1 }).success).toBe(false);
+  });
+
+  it('budgets: warn when the pace reaches the whole budget by default, never below 10%', () => {
+    const d = productsFinanceV5Settings['books.budget'].default;
+    expect(d).toEqual({ warnAtPct: 100 });
+    expect(budgetSchema.safeParse({ warnAtPct: 9 }).success).toBe(false);
+    expect(budgetSchema.safeParse({ ...d, extra: 1 }).success).toBe(false);
   });
 });

@@ -280,6 +280,7 @@ model Store {
   erpFixedCostMonths      ErpFixedCostMonth[]
   cashAccounts            CashAccount[]
   cashEntries             CashEntry[]
+  costBudgets             CostBudget[]
   erpBooksSends           ErpBooksSend[]
   booksMatchRuns          BooksMatchRun[]
   booksDayCloses          BooksDayClose[]
@@ -11426,4 +11427,23 @@ model CashEntry {
   @@index([storeId, accountId, day])
   @@index([storeId, day])
   @@index([transferId])
+}
+
+/// @stage S16 · PR 688 — a monthly budget for one cost head (a fixed cost or a daily cost line), as the owner set it. Append-
+/// only versions: a change is a new row that counts from `fromMonth`; the latest row at or before a month is that month's
+/// budget (0 = no budget). Owner data: the page ships empty and asks for no number.
+/// @append-only
+model CostBudget {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store    @relation(fields: [storeId], references: [id])
+  /// SALARY, RENT, UTILITIES, OTHER_FIXED or a cost line key (PACKAGING, ADS_FACEBOOK …).
+  headKey     String
+  /// The first month it counts from, YYYY-MM.
+  fromMonth   String
+  amountMinor Int
+  createdById String?  @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, headKey, fromMonth])
 }

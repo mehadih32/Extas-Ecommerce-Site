@@ -256,6 +256,7 @@ const NOT_BUILT = 'not built yet: decided with its own register PR (lock it ther
 export const APPEND_ONLY_OPEN: Readonly<Record<string, string>> = {
   CheckoutDraftCall: 'S28 PR 668: the call log of an incomplete order; the app only appends rows, and a later correction is a new row (a trigger lock can follow with the next lock migration)',
   CashEntry: 'S16 PR 687: the cashbook; the app only appends rows (a wrong one is reversed by a REVERSAL row that points at it, once), the database lock follows with the next lock migration',
+  CostBudget: 'S16 PR 688: budget versions; the app only appends rows (a change is a new row from a later month), the database lock follows with the next lock migration',
   SettingsMigration: RUN_ROW,
   DefaultPackApplication: RUN_ROW,
   IntegrationTestRun: RUN_ROW,

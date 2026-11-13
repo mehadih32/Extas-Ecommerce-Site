@@ -8,6 +8,7 @@ import { setting } from './define';
 
 const V686 = 686;
 const V687 = 687;
+const V688 = 688;
 
 // ---- PR 686 · shop ranking -----------------------------------------------------------------------------------------
 
@@ -49,6 +50,16 @@ export const cashbookSchema = z
   .strict();
 export type CashbookSettings = z.output<typeof cashbookSchema>;
 
+// ---- PR 688 · budgets ----------------------------------------------------------------------------------------------
+
+export const budgetSchema = z
+  .object({
+    /** A cost head is flagged "at this pace" when its month's pace reaches this share of its budget (100 = the whole budget). */
+    warnAtPct: z.number().int().min(10).max(500),
+  })
+  .strict();
+export type BudgetSettings = z.output<typeof budgetSchema>;
+
 export const productsFinanceV5Settings = {
   'shop.ranking': setting({
     scope: 'store',
@@ -80,5 +91,18 @@ export const productsFinanceV5Settings = {
     isPublic: false,
     sortOrder: 20,
     version: V687,
+  }),
+  'books.budget': setting({
+    scope: 'store',
+    schema: budgetSchema,
+    default: { warnAtPct: 100 }, // hardcode-ok: warn when the month's pace passes the whole budget; the owner can lower it
+    valueType: 'JSON',
+    group: 'books',
+    labelKey: 'books.budget.label',
+    helpKey: 'books.budget.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 30,
+    version: V688,
   }),
 } as const;

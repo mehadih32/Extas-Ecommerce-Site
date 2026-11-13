@@ -9,6 +9,10 @@
     "cash": {
       "label": "Cashbook",
       "help": "Whether Accounts and the owner may record money in and out of the cashbook (it is on), how many days ahead the cash forecast looks, and over how many days the cash couriers hold is expected to reach the shop. A record only: nothing is sent or paid."
+    },
+    "budget": {
+      "label": "Budget warning",
+      "help": "A cost head is flagged when this month's pace reaches this share of its budget. 100 means the whole budget."
     }
   }
 }
