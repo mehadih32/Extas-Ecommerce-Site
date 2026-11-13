@@ -541,6 +541,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'models', guide: 'ai', pages: [{ href: '/admin/ai/models', perm: 'ai.read', keys: ['aiModels'] }] },
       // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
       { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
+      // S15 · PR 583 (C10.2) — Ask the chief: the chain of command, the chief's own investigations and the chief's
+      // own row of the PR 318 permission matrix (owner reads it here; changes any cell through Permissions too).
+      { id: 'agentsChief', guide: 'ai', pages: [{ href: '/admin/agents/chief', perm: 'ai.read', keys: ['aiAgentsChief'] }] },
       // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
       { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
       // S15 · PR 312 (C2.1, C2.2) — Cost Book: every AI job, its recommended model and why, its estimated cost, and
