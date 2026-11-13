@@ -1,0 +1,548 @@
+{
+  "rulesHub": {
+    "metaTitle": "Rules",
+    "title": "Rules",
+    "intro": "Every rule of your shop as one plain line. Press Edit to change it: the shop follows at once.",
+    "groupsLabel": "Rule groups",
+    "search": "Search rules, e.g. COD, exchange, free delivery",
+    "groups": {
+      "all": "All rules",
+      "delivery": "Delivery",
+      "payment": "Payment & COD",
+      "checkout": "Checkout & payments",
+      "flow": "Order flow",
+      "courier": "Courier",
+      "couriermsg": "Courier messages",
+      "exchange": "Exchange",
+      "customers": "Customers",
+      "discounts": "Discounts",
+      "messages": "Messages"
+    },
+    "pill": {
+      "on": "On",
+      "off": "Off",
+      "sample": "Sample",
+      "from": "From {date}",
+      "page": "Page"
+    },
+    "on": "On",
+    "off": "Off",
+    "notSet": "not set",
+    "edit": "Edit",
+    "open": "Open",
+    "noMatch": "No rule matches your search.",
+    "pickOne": "Pick a rule to change it here.",
+    "strip": {
+      "sample": "{n} rules are on with the shop's own starting numbers: check them",
+      "allOwn": "Every rule that is on uses your own numbers",
+      "last": "Last change: {rule}, {when}",
+      "showingSample": "Showing the rules that still use the starting numbers.",
+      "showAll": "Show all"
+    },
+    "rows": {
+      "free": {
+        "title": "Free delivery",
+        "sentence": "Delivery is free from {value}."
+      },
+      "eid": {
+        "title": "Eid order-by dates",
+        "sentence": "The last order days before Eid, and what the shop says after them."
+      },
+      "peak": {
+        "title": "Peak and Eid mode",
+        "sentence": "Mode is {enabled}. Orders a day: {dailyCap}. Stickers in one part: {partSize}. People on the roster: {roster}."
+      },
+      "advance": {
+        "title": "Advance payment",
+        "sentence": "When an order must pay a part first, and how many layers of rules decide it."
+      },
+      "cod": {
+        "title": "Cash on delivery limits",
+        "sentence": "The biggest cash on delivery order and where it is allowed."
+      },
+      "prepaid": {
+        "title": "Reward for paying online",
+        "sentence": "The reward is now an offer: free delivery, a percent, a flat amount. Open Offers & discounts."
+      },
+      "autoconfirm": {
+        "title": "Auto-confirm",
+        "sentence": "Rules confirm orders by themselves: {enabled}. A customer is trusted after {trustedMinDelivered} delivered parcels and at most {trustedMaxRefused} refusals."
+      },
+      "score": {
+        "title": "Courier score",
+        "sentence": "Each order gets a score out of 10 from the customer's courier record. Bands and weights are set on the risk rules page."
+      },
+      "dup": {
+        "title": "Duplicate orders",
+        "sentence": "Look back {lookbackDays} days for the same customer's earlier order: {enabled}. Put a clear duplicate on hold by itself: {autoHold}."
+      },
+      "merge": {
+        "title": "Merge orders",
+        "sentence": "Merging two open orders of one customer is {enabled}. Look back {lookBackDays} days. Different addresses: {differentAddress}. Merge by itself: {autoMerge}."
+      },
+      "adjust": {
+        "title": "Price adjust limits",
+        "sentence": "Taking money off an open order is {enabled}. Roles with their own limit: {roleLimits}. Anyone else asks the owner."
+      },
+      "advwait": {
+        "title": "Advance reminder hours",
+        "sentence": "Remind a customer about the advance after {value} hours (0 means no reminder)."
+      },
+      "courier": {
+        "title": "Default courier",
+        "sentence": "Which courier parcels go to, and whether the shop picks by area."
+      },
+      "couriermsg": {
+        "title": "Courier messages",
+        "sentence": "The words sent to the courier with a booking, a cancel, a claim or a payout. Edited under Couriers."
+      },
+      "erpcheck": {
+        "title": "ERP check of returned pieces",
+        "sentence": "A returned piece is checked in the ERP within {value} days."
+      },
+      "replace": {
+        "title": "Replacement for a faulty or wrong piece",
+        "sentence": "Replacement is {enabled}. It can be opened for {hours} hours after delivery. The old piece comes back within {oldPieceDays} days."
+      },
+      "grades": {
+        "title": "Customer grades",
+        "sentence": "Customers get a grade from what they spent and how many parcels they took."
+      },
+      "offers": {
+        "title": "Offers & discounts",
+        "sentence": "Offers, coupons, sale prices, points and wallet credit in one place, with what each cost and brought."
+      },
+      "popups": {
+        "title": "Pop-ups & notices",
+        "sentence": "The shop's twelve pop-ups and notices: where each shows, who sees it, and your own words."
+      }
+    },
+    "fields": {
+      "free": {
+        "value": "Free delivery from (amount)"
+      },
+      "peak": {
+        "enabled": "Switch Peak and Eid mode on",
+        "dailyCap": "Orders a day the shop can send",
+        "fullTextEn": "Words when the day is full (English)",
+        "fullTextBn": "Words when the day is full (Bengali)",
+        "partSize": "Stickers in one part of Print all in parts",
+        "roster": "Roster for the busy days"
+      },
+      "autoconfirm": {
+        "enabled": "Let rules confirm orders",
+        "trustedMinDelivered": "Delivered parcels that make a customer trusted",
+        "trustedMaxRefused": "Most refusals a trusted customer may have"
+      },
+      "dup": {
+        "enabled": "Look for duplicate orders",
+        "lookbackDays": "Look back (days)",
+        "autoHold": "Put a clear duplicate on hold by itself"
+      },
+      "merge": {
+        "enabled": "Allow merging orders",
+        "lookBackDays": "Look back (days)",
+        "autoMerge": "Merge by itself when the addresses match",
+        "differentAddress": "When the addresses differ"
+      },
+      "adjust": {
+        "enabled": "Allow price adjust on open orders",
+        "roleLimits": "Limits by role"
+      },
+      "advwait": {
+        "value": "Hours before the advance reminder"
+      },
+      "erpcheck": {
+        "value": "Days to check a returned piece"
+      },
+      "replace": {
+        "enabled": "Allow replacement",
+        "hours": "Hours after delivery it can be opened",
+        "oldPieceDays": "Days for the old piece to come back"
+      }
+    },
+    "opt": {
+      "merge": {
+        "ask": "ask a person",
+        "refuse": "do not merge"
+      },
+      "erpcheck": {
+        "7": "7",
+        "10": "10",
+        "15": "15"
+      }
+    },
+    "saved": "Saved.",
+    "savedBack": "Back to the starting value.",
+    "backConfirm": "Go back to the shop's starting value?",
+    "close": "Close",
+    "sampleNote": "This rule is on with the shop's own starting numbers. Check them, then press Save to make them yours.",
+    "moneyNote": "This rule changes what customers pay. It needs the owner's OK and PIN.",
+    "needsOwner": "Only the owner can change this rule.",
+    "whatChanges": "What changes",
+    "nothingYet": "Nothing yet. Change a value above.",
+    "appliesToNew": "It applies to new orders from the moment you save.",
+    "pin": "Owner's PIN",
+    "savePin": "Save with PIN",
+    "save": "Save",
+    "cancel": "Cancel",
+    "more": {
+      "title": "More options",
+      "back": "Back to the starting value",
+      "fuller": "Open the fuller page for this rule"
+    },
+    "emptyMeansOff": "Leave empty to switch it off.",
+    "roster": {
+      "name": "Name",
+      "task": "Task",
+      "from": "First day",
+      "to": "Last day",
+      "add": "Add a person",
+      "remove": "Remove"
+    },
+    "roleLimits": {
+      "hint": "Tick a role to give it its own limit. Leave a box empty for no limit on that side. A role not ticked asks the owner every time.",
+      "amount": "{role}: most taka off",
+      "percent": "{role}: most percent off",
+      "noLimit": "no limit"
+    },
+    "popups": {
+      "title": "Pop-ups & notices",
+      "intro": "Every pop-up and notice the shop can show, in four groups. Each row says where it appears, who sees it and when. The picture shows where every number appears.",
+      "showing": "{n} showing",
+      "scheduled": "{n} starting later",
+      "off": "{n} off",
+      "ownNotices": "Your own notices below",
+      "picture": "Where each number appears",
+      "pages": {
+        "home": "Home page",
+        "product": "Product page",
+        "checkout": "Checkout",
+        "thanks": "Order done page"
+      },
+      "groups": {
+        "shop": "On the shop",
+        "checkout": "At checkout",
+        "product": "Product pages",
+        "after": "After order"
+      },
+      "groupCount": "{on} of {n} showing",
+      "where": "Where",
+      "who": "Who sees it",
+      "now": "now",
+      "noEnd": "no end",
+      "always": "Always",
+      "managedIn": "Managed in",
+      "writtenBelow": "Written below, in your own notices",
+      "needs": "Needs",
+      "state": {
+        "on": "Showing",
+        "off": "Off",
+        "scheduled": "Starts later",
+        "ended": "Ended",
+        "waiting": "Waiting"
+      },
+      "showThis": "Show this",
+      "switchedOn": "Switched on.",
+      "switchedOff": "Switched off.",
+      "saved": "Saved.",
+      "pickOne": "Pick a pop-up or a number in the picture to write its words.",
+      "close": "Close",
+      "noticeNote": "This one is written in your own notices below the list: the bar and the welcome pop-up have their own timing and limits.",
+      "waitingNote": "This pop-up waits for demo products. It shows when they are built.",
+      "managedNote": "Its switch is in {rule}. Your words and dates are saved here.",
+      "needsNote": "This only shows while {rule} is on.",
+      "openIt": "Open",
+      "putDetail": "Put in a detail",
+      "textEn": "Text in English",
+      "textBn": "Text in Bengali",
+      "builtinHint": "Empty: the shop's own words",
+      "from": "Show from",
+      "until": "Until",
+      "lowN": "Show when this many are left or fewer",
+      "preview": "Preview",
+      "sampleHint": "Sample values are used for the {details}.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "items": {
+        "notice": {
+          "name": "Notice bar",
+          "where": "Top of every page",
+          "who": "Every visitor",
+          "builtin": "Your notice"
+        },
+        "popup": {
+          "name": "Welcome / offer pop-up",
+          "where": "Home page, a few seconds after opening",
+          "who": "Every visitor, once a day",
+          "builtin": "Your offer"
+        },
+        "holiday": {
+          "name": "Holiday banner",
+          "where": "Under the menu on every page",
+          "who": "Every visitor",
+          "managed": "Eid order-by dates",
+          "builtin": "Order by {date} to get it before Eid"
+        },
+        "freebar": {
+          "name": "Free-delivery bar",
+          "where": "In the bag, above the total",
+          "who": "Customers whose bag is below the free-delivery amount",
+          "needs": "Free delivery",
+          "builtin": "Add {amount} more for free delivery"
+        },
+        "dup": {
+          "name": "Duplicate-order pop-up",
+          "where": "Checkout, when pressing Place order",
+          "who": "Customers who ordered the same item recently",
+          "managed": "Duplicate look-back (Order flow)",
+          "builtin": "You ordered this {days} days ago. Add to that order {order}?"
+        },
+        "advance": {
+          "name": "Advance-payment notice",
+          "where": "Checkout, next to the payment choice",
+          "who": "Customers who must pay an advance",
+          "needs": "Advance payment",
+          "builtin": "Pay {amount} now to confirm this order"
+        },
+        "stockhold": {
+          "name": "Stock-hold notice",
+          "where": "Checkout, at the top while the customer fills the form",
+          "who": "Customers whose size is on hold",
+          "builtin": "We keep your size for {minutes} minutes"
+        },
+        "oos": {
+          "name": "Out-of-stock size notice",
+          "where": "Checkout, on the item line",
+          "who": "Customers whose size was taken meanwhile",
+          "builtin": "Size {size} is gone. Pick another size"
+        },
+        "demo": {
+          "name": "Demo product \"coming soon\" pop-up",
+          "where": "Product page, when Add to bag is tapped on a demo design",
+          "who": "Visitors who tap a demo design",
+          "builtin": "This design is coming soon"
+        },
+        "lowstock": {
+          "name": "Low-stock notice",
+          "where": "Product page, next to the size picker",
+          "who": "Everyone, when a size is nearly gone",
+          "builtin": "Only {n} left"
+        },
+        "thanks": {
+          "name": "Thank-you notice",
+          "where": "Order done page",
+          "who": "Every customer who orders",
+          "builtin": "Thank you {name}, your order {order} is placed"
+        },
+        "promise": {
+          "name": "Delivery promise",
+          "where": "Order done page, and under Order now on product pages",
+          "who": "Every customer",
+          "builtin": "Delivery in {days} days"
+        }
+      }
+    },
+    "offers": {
+      "metaTitle": "Offers & discounts",
+      "title": "Offers & discounts",
+      "intro": "Offers, coupons, built-in price rules, the reward for paying online, points and wallet credit in one place, with what each cost and brought. Nothing goes live without the owner's OK and PIN.",
+      "new": "New offer",
+      "close": "Close",
+      "kpi": {
+        "running": "Running now",
+        "given": "Discount given, 30 days",
+        "orders": "{n} orders with a code",
+        "awaiting": "Waiting for the owner's OK",
+        "best": "Best code by sales"
+      },
+      "tabs": {
+        "label": "Offer views",
+        "all": "All offers",
+        "calendar": "Calendar",
+        "awaiting": "Awaiting OK",
+        "history": "History"
+      },
+      "tabHint": {
+        "all": "Everything running, scheduled, paused or waiting.",
+        "calendar": "Offers with dates, in the order they start.",
+        "awaiting": "Offers sent for the owner's OK.",
+        "history": "Offers that have ended. They stay for good."
+      },
+      "col": {
+        "name": "Offer",
+        "type": "Type",
+        "state": "State",
+        "when": "When",
+        "orders": "Orders",
+        "given": "Discount given",
+        "delivered": "Delivered value",
+        "returned": "Returned"
+      },
+      "state": {
+        "DRAFT": "Draft",
+        "AWAITING_OK": "Awaiting OK",
+        "LIVE": "Live",
+        "PAUSED": "Paused",
+        "ENDED": "Ended",
+        "SCHEDULED": "Starts later"
+      },
+      "kinds": {
+        "FREE_DELIVERY": "Free delivery",
+        "PERCENT": "Percent off",
+        "FLAT": "Flat amount off",
+        "POINTS": "Points",
+        "WALLET_CREDIT": "Wallet credit"
+      },
+      "kindHint": {
+        "FREE_DELIVERY": "The delivery charge is not taken.",
+        "PERCENT": "A percent off the price.",
+        "FLAT": "A fixed taka amount off the order.",
+        "POINTS": "Extra points on an order.",
+        "WALLET_CREDIT": "Credit put in the customer's wallet."
+      },
+      "sources": {
+        "offer": "Offer",
+        "coupon": "Coupon",
+        "rule": "Built-in price rule",
+        "reward": "Reward for paying online",
+        "points": "Points",
+        "wallet": "Wallet credit"
+      },
+      "now": "now",
+      "noEnd": "no end",
+      "always": "Always",
+      "empty": "Nothing here yet.",
+      "resultsNote": "Orders, discount given, delivered value and returns are counted from the orders that used the code. An offer without a code, points and wallet show a dash.",
+      "wizard": {
+        "title": "New offer",
+        "edit": "Change the offer",
+        "steps": "Steps",
+        "back": "Back",
+        "next": "Next",
+        "saveDraft": "Save as draft",
+        "saveSend": "Save and send for OK"
+      },
+      "step": {
+        "type": "Type",
+        "value": "Value",
+        "where": "Where",
+        "who": "Who",
+        "when": "When",
+        "limits": "Limits",
+        "preview": "Preview"
+      },
+      "nameEn": "Name (English)",
+      "nameBn": "Name (Bengali)",
+      "trigger": {
+        "label": "When does it apply",
+        "ANY": "On any order that fits",
+        "PAY_ONLINE": "When the customer pays online",
+        "onlineHint": "This is the reward for paying online. It applies to every online payment, with no code, scope, dates or limits."
+      },
+      "value": {
+        "percent": "Percent off",
+        "percentHint": "A whole number from 1 to 90.",
+        "max": "Largest discount (amount)",
+        "maxHint": "Empty: no cap.",
+        "amount": "Amount off",
+        "points": "Extra points on an order",
+        "credit": "Wallet credit (amount)",
+        "freeDelivery": "The delivery charge is not taken. Nothing else to set."
+      },
+      "where": {
+        "label": "Applies to",
+        "all": "Everything",
+        "category": "A category",
+        "collection": "A collection",
+        "onlineAll": "The reward for paying online applies to every order paid online."
+      },
+      "who": {
+        "label": "Who can use it",
+        "ALL": "Everyone",
+        "GUESTS": "Guests (not signed in)",
+        "MEMBERS": "Signed-in members",
+        "first": "First order only",
+        "onlineAll": "The reward for paying online is for every customer who pays online."
+      },
+      "code": "Coupon code",
+      "codeHint": "Empty: it applies by itself. Who can use it and the limits of use need a code.",
+      "when": {
+        "from": "Starts",
+        "until": "Ends",
+        "onlineNow": "The reward for paying online has no dates: it runs while it is live."
+      },
+      "limits": {
+        "min": "Smallest order (amount)",
+        "uses": "Most uses in all",
+        "perCustomer": "Most uses per customer",
+        "budget": "Budget (amount)",
+        "emptyNone": "Empty: no limit.",
+        "needsCode": "Needs a code.",
+        "budgetHint": "A note for you: the offer is not stopped by it.",
+        "onlineNone": "The reward for paying online has no limits of its own."
+      },
+      "preview": {
+        "title": "What you are about to make",
+        "ok": "Nothing stops this offer. It can be sent for the owner's OK.",
+        "noName": "Give the offer a name first.",
+        "needsOk": "Saving makes a draft. Sending asks the owner; only the owner's OK and PIN make it live."
+      },
+      "sum": {
+        "percent": "{n}% off",
+        "upTo": "up to {v}",
+        "amount": "{v} off",
+        "points": "{n} extra points",
+        "credit": "{v} wallet credit",
+        "min": "Smallest order {v}",
+        "uses": "At most {n} uses",
+        "perCustomer": "At most {n} per customer",
+        "budget": "Budget {v}"
+      },
+      "issues": {
+        "NO_VALUE": "Fill in the value first.",
+        "BAD_WINDOW": "The end is before the start.",
+        "OFFER_ENGINE_PENDING": "Points and wallet credit offers cannot go live yet: the job that gives them is not built. You can keep this as a draft.",
+        "ONLINE_NEEDS_ALL": "The reward for paying online takes no scope, code, dates or limits.",
+        "ONLINE_KIND": "Paying online can give free delivery, a percent or a flat amount, not points or wallet credit.",
+        "WHO_NEEDS_CODE": "Limiting who can use it needs a coupon code.",
+        "LIMITS_NEED_CODE": "Limits of use need a coupon code.",
+        "MIN_ORDER_FREE_DELIVERY_CODE": "Free delivery with a code cannot have a smallest order. Remove the code or the amount.",
+        "ONLINE_REWARD_TAKEN": "A reward for paying online is already on. Pause it first."
+      },
+      "event": {
+        "CREATED": "Made",
+        "EDITED": "Changed",
+        "SUBMITTED": "Sent for OK",
+        "APPROVED": "Made live",
+        "SENT_BACK": "Sent back",
+        "PAUSED": "Paused",
+        "RESUMED": "Resumed",
+        "ENDED": "Ended"
+      },
+      "detail": {
+        "title": "Offer",
+        "history": "History",
+        "edit": "Change",
+        "send": "Send for OK",
+        "pin": "Owner's PIN",
+        "approve": "Approve and make live",
+        "sendBack": "Send back",
+        "sendBackNote": "What should change? (a short note)",
+        "pause": "Pause",
+        "resume": "Resume",
+        "end": "End",
+        "endConfirm": "End this offer for good? It stays in the history.",
+        "waitingOwner": "Waiting for the owner's OK."
+      },
+      "sent": "Sent for the owner's OK.",
+      "draftSaved": "Draft saved.",
+      "savedNotSent": "Saved as a draft, but not sent: {why}",
+      "approved": "The offer is live.",
+      "sentBack": "Sent back.",
+      "paused": "Paused.",
+      "resumed": "Live again.",
+      "ended": "Ended."
+    }
+  }
+}

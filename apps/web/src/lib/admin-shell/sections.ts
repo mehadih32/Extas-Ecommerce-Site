@@ -216,8 +216,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'analytics', pages: [{ href: '/admin/support/analytics', perm: 'support.read', keys: ['supportAnalytics'] }] },
     ],
   },
-  // PR 659 (CN-048): Rules is its own section (it was Marketing's first tab). Same pages, same addresses; the Offers & discounts
-  // and Pop-ups tabs of the prototype join with PR 676 and PR 677.
+  // PR 659 (CN-048): Rules is its own section (it was Marketing's first tab). PR 676–678: All rules (one page), Offers & discounts, Pop-ups & notices.
   {
     id: 'rules',
     icon: 'rules',
@@ -229,12 +228,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
         id: 'all',
         guide: 'rules',
         pages: [
+          // S28 · PR 676: the one-page list of every rule; the Smart Rules editor (PR 209–219) is /admin/rules/smart
           { href: '/admin/rules', perm: 'rules.read', keys: ['rules'] },
-          { href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] },
+          { href: '/admin/rules/smart', perm: 'rules.read', keys: ['rulesSmart'] },
           // S08 · PR 193 — Eid order-by dates, the "may arrive after Eid" line and Eid pre-order (CN-014 g)
           { href: '/admin/rules/eid', perm: 'rules.read', keys: ['eidDates'] },
         ],
       },
+      // S28 · PR 677: Offers & Discounts 360 (offers, coupons, built-in price rules, the online-payment reward, points, wallet)
+      { id: 'offers', pages: [{ href: '/admin/rules/offers', perm: 'rules.read', keys: ['rulesOffers'] }] },
+      // S28 · PR 678: the hub of the shop's twelve system pop-ups and notices, then the owner's own notices (PR 216)
+      { id: 'popups', pages: [{ href: '/admin/rules/notices', perm: 'rules.read', keys: ['notices'] }] },
     ],
   },
   {
