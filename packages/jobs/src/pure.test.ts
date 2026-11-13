@@ -423,14 +423,17 @@ describe('S28 · PR 686 · the shop-ranking planner', () => {
 
 describe('S28 · PR 690 · the report pack planner', () => {
   const deps = (rows: unknown[]) => ({ db: { reportSchedule: { findMany: async () => rows } }, settings: { value: async () => 'Asia/Dhaka' } }) as unknown as Parameters<typeof reportPackPlanner>[0];
-  it('plans a monthly pack on the 1st and a weekly pack on Monday, only for telegram and only while on', async () => {
+  it('plans a monthly pack on the 1st and a weekly pack on Monday, for telegram or e-mail and only while on', async () => {
     const rows = [
       { storeId: 1, reportKey: 'pack:bank', frequency: 'monthly', channels: ['telegram'] },
       { storeId: 1, reportKey: 'pack:sales', frequency: 'weekly', channels: ['telegram'] },
       { storeId: 1, reportKey: 'pack:stock', frequency: 'monthly', channels: ['email'] },
     ];
     const first = await reportPackPlanner(deps(rows), new Date('2026-12-01T05:00:00Z')); // a Tuesday, the 1st
-    expect(first.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'bank', period: 'M:2026-12' }]);
+    expect(first.map((x) => x.payload)).toEqual([
+      { storeId: 1, pack: 'bank', period: 'M:2026-12' },
+      { storeId: 1, pack: 'stock', period: 'M:2026-12' },
+    ]);
     const monday = await reportPackPlanner(deps(rows), new Date('2026-11-16T05:00:00Z'));
     expect(monday.map((x) => x.payload)).toEqual([{ storeId: 1, pack: 'sales', period: 'W:2026-11-16' }]);
     expect(await reportPackPlanner(deps(rows), new Date('2026-11-18T05:00:00Z'))).toEqual([]);
