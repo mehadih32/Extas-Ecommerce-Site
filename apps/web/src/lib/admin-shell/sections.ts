@@ -598,6 +598,8 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'store', guide: 'settings', pages: [{ href: '/admin/settings/store', perm: 'settings.read', keys: ['store'] }] },
       // S18 · PR 384 — SET-03 Policies & texts: the help pages' switches, rules and the owner's words.
       { id: 'policies', guide: 'settings', pages: [{ href: '/admin/settings/policies', perm: 'settings.read', keys: ['policies'] }] },
+      // S28 · PR 706 (CN-049) — Practice data: the switch, the sample data and the reset (owner only inside the page).
+      { id: 'practice', guide: 'settings', pages: [{ href: '/admin/settings/practice', perm: 'settings.write', keys: ['practice'] }] },
       { id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] },
       // CN-029 · PR 619: Settings → ERP link — one store's own ERP link, its keys, the switch-over to contract v6.
       { id: 'erp', guide: 'integrations', pages: [{ href: '/admin/settings/erp-link', perm: 'vault.read', keys: ['erpLink'] }] },

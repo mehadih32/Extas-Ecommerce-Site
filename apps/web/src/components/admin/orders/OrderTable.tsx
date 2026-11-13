@@ -88,6 +88,15 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                     <a href={r.href} className="a2-b" data-row-link="" aria-label={t(d, 'orders.list.open', { n: r.number })}>
                       {r.number}
                     </a>
+                    {r.practice ? (
+                      <span
+                        className="a2-pill"
+                        title={t(d, "orders.list.practiceTitle")}
+                        data-testid="practice-mark"
+                      >
+                        {t(d, "orders.list.practice")}
+                      </span>
+                    ) : null}
                     <span className="a2-oname">{r.name || dash}</span>
                     <span className="a2-nowrap" title={r.placed}>
                       {r.phone ? `${r.age} · ${r.phone}` : r.age}

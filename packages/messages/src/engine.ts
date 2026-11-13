@@ -36,7 +36,7 @@
 // are read from the timeline row that started the message; a row without them sends nothing (NO_EVENT).
 //
 // No message text is stored: the row keeps the step, channel, recipient, template, sender, mode and why.
-import type { Prisma } from '@extas/db/client';
+import { isPracticeRef, PRACTICE_SKIPPED, type Prisma } from '@extas/db/client';
 import { codToCollect, dueOf } from '@extas/orders/pure';
 import { ceilingStatusOf, ceilingVerdict, type CeilingStatus } from './cost-ceiling';
 import { CAMPAIGN_BLAST_KIND, CAMPAIGN_WINBACK_KIND, CRM_CAMPAIGN_STEP, CRM_EMAIL_STEP, CRM_MESSAGE_STEP, type CancelCode, type CancelNotice, type ConsentSettings, type Journey, type JourneyStep, type MessageChannel, type SmsMasking, type SmsRates, type WhatsAppSettings, type WinbackSettings } from '@extas/settings';
@@ -427,6 +427,8 @@ export async function sendOne(deps: MessagesDeps, c: RunContext, row: Row, opts:
   // PR 698: the month's cost ceiling of this channel (SMS, WhatsApp), when the owner set one
   const held = await ceilingHold(deps, c, row);
   if (held) return held;
+  // PR 706 (CN-049): a message about a practice order or customer never leaves (SMS, WhatsApp, e-mail, Telegram).
+  if (await isPracticeRef(deps.db, row)) return close(deps, c, row, 'SKIPPED', PRACTICE_SKIPPED).then(() => 'SKIPPED');
   if (row.step === CRM_MESSAGE_STEP || row.step === CRM_CAMPAIGN_STEP) return sendJourneyMessage(deps, c, row, opts);
   if (row.step === CRM_EMAIL_STEP) return sendOfferEmail(deps, c, row, opts);
   if (row.step === FOLLOW_UP_STEP) return sendFollowUp(deps, c, row, opts);
@@ -929,6 +931,7 @@ export async function sendStandalone(deps: MessagesDeps, c: RunContext, m: { cha
   if (!id) return 'WAITING';
   const skip = (reason: string, extra: Prisma.NotificationLogUpdateInput = {}) => deps.db.notificationLog.update({ where: { id }, data: { status: 'SKIPPED', reason, ...extra } }).then(() => 'SKIPPED' as const);
   if (!c.master) return skip('MASTER_OFF');
+  if (await isPracticeRef(deps.db, { customerId: m.customerId })) return skip(PRACTICE_SKIPPED);
   const t = await templateOf(deps, c.storeId, m.template, m.channel, c.locale);
   if (!t) return skip('NO_TEMPLATE');
   const lang = t.locale === 'en' ? 'en' : 'bn';

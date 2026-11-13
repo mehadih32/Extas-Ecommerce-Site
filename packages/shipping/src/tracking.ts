@@ -76,6 +76,7 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
     where: {
       storeId,
       status: { in: [...ACTIVE_STATES] },
+      isPractice: false, // PR 706 (CN-049): a practice parcel is not at any courier
       OR: [{ consignmentId: { not: null } }, { merchantRef: { not: null } }],
       AND: [{ OR: [{ lastTrackedAt: null }, { lastTrackedAt: { lte: due } }] }],
     },
@@ -111,8 +112,10 @@ export async function trackParcels(deps: ShippingDeps, storeId: number): Promise
 /** Staff read one parcel from its courier now (its order follows, PR 184). */
 export async function trackParcel(deps: ShippingDeps, who: Who, shipmentId: string): Promise<Read> {
   await allow(deps, who, 'delivery.parcels');
-  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { ...TRACK_SELECT, status: true } });
+  const s = await deps.db.shipment.findFirst({ where: { id: shipmentId, storeId: who.storeId }, select: { ...TRACK_SELECT, status: true, isPractice: true } });
   if (!s) throw new ShippingError('NOT_FOUND', 'no such parcel', ['shipmentId']);
+  // PR 706 (CN-049): a practice parcel is not at any courier, so there is nothing to ask
+  if (s.isPractice) throw new ShippingError('NOT_ACTIVE', 'a practice parcel is not at a courier', ['shipmentId']);
   if (!(ACTIVE_STATES as readonly string[]).includes(s.status) || (!s.consignmentId && !s.merchantRef)) throw new ShippingError('NOT_ACTIVE', 'the courier does not hold this parcel now', ['shipmentId'], { status: s.status });
   const { api } = await courierApi(deps, who.storeId, s.courierAccount.providerKey);
   return readOne(deps, who.storeId, api, s);

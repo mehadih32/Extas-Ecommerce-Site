@@ -290,3 +290,5 @@ export * from './registry-ads-intel';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
 // S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 321).
 export * from './registry-products-v5';
+// S28 · PR 706 (CN-049) — practice mode switches (registry-practice.ts, version 380).
+export * from './registry-practice';

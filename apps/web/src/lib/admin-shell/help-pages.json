@@ -211,6 +211,7 @@
     { "id": "reports/orders", "route": "/admin/reports/orders" },
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },
+    { "id": "settings/practice", "route": "/admin/settings/practice" },
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/erp-link", "route": "/admin/settings/erp-link" },
     { "id": "settings/security", "route": "/admin/settings/security" },
