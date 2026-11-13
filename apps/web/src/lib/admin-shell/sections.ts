@@ -416,7 +416,7 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'finance',
     // S28 · PR 688 (admin prototype v5): Money is the prototype's Finance, seven tabs — Overview, Money in & out, Profit & loss,
     // Costs & budgets, ERP account, Wallet & refunds, VAT (shown only while the VAT system is on: `vat.system`, off as shipped;
-    // lib/stages/closed.ts). The Couriers tab joins with PR 670/675. Every page that was a tab is a page of one of them.
+    // lib/stages/closed.ts). The Couriers tab (PR 670) sits beside Wallet & refunds. Every page that was a tab is a page of one of them.
     tabs: [
       // S16 · PR 342: Money → Overview — cash received, COD the couriers owe, refunds waiting (read-only).
       { id: 'overview', pages: [{ href: '/admin/money', perm: 'payments.view', keys: ['moneyOverview'] }] },
