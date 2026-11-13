@@ -576,7 +576,7 @@ export async function openExchangeBy(deps: OrdersDeps, r: { storeId: number; ord
         // CN-028 · PR 614: on ERP contract v6 there are no refunds after delivery (no credit), and a dearer piece is the
         // customer's only with `exchange.passPriceRiseToCustomer` (exchange-v6.ts v6MoneyBox).
         // S28 · PR 669: a replacement never carries money: no difference, no credit, no charge, nothing to collect
-        const money = replacement ? { ...box, differenceMinor: 0, owedMinor: 0, creditMinor: 0, chargeMinor: 0, codMinor: 0, chargeState: 'FREE_OUR_MISTAKE' as const } : v6 ? v6MoneyBox(box, v6.passRise) : box;
+        const money = replacement ? { ...box, differenceMinor: 0, owedMinor: 0, creditMinor: 0, chargeMinor: 0, codMinor: 0, chargeState: 'FREE_OUR_MISTAKE' as const } : v6 ? v6MoneyBox(box, v6.passRise) : box; // hardcode-ok: a replacement never carries money (PR 669), so its money box is all zero
         const number = await nextExchangeNumber(tx, storeId, engine.numberPrefix, engine.numberStart);
         const ex = await tx.exchange.create({
           data: {
