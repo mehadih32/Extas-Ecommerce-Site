@@ -65,7 +65,7 @@ export * from './registry-risk-s06';
 export * from './registry-courier-score';
 export * from './registry-auto-confirm';
 export * from './registry-incomplete-v5';
-// S28 · PR 664 — the Order flow rules: price adjust on orders (registry-order-flow.ts, version 310).
+// S28 · PR 664 — the Order flow rules: price adjust on orders (registry-order-flow.ts, version 330).
 export * from './registry-order-flow';
 export * from './registry-advance-request';
 export * from './registry-wallet';
