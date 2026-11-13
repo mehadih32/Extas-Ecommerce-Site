@@ -1,0 +1,84 @@
+{
+  "startFresh": {
+    "metaTitle": "Start fresh",
+    "title": "Start fresh",
+    "sub": "One time only, on go-live day: clear the test and sample business data so the live shop starts from zero.",
+    "card": {
+      "title": "Start fresh (one time only)",
+      "lead": "Clears all test and sample business data so the live shop starts from zero. Use it once, on go-live day.",
+      "guard": "Owner only · full backup first · type START FRESH + PIN"
+    },
+    "clear": "Will be cleared",
+    "keep": "Will be kept",
+    "kept": {
+      "settings": "Settings & rules",
+      "policies": "Policies & shop text",
+      "staff": "Staff accounts",
+      "keys": "Connections & keys",
+      "things": "Size charts, combos, coupons themselves"
+    },
+    "kinds": {
+      "orders": "Orders, payments and parcels",
+      "customers": "Customers",
+      "carts": "Carts",
+      "returns": "Returns & exchanges",
+      "inbox": "Inbox chats",
+      "reviews": "Reviews",
+      "coupons": "Coupon usage",
+      "reports": "Reports history (visits and clicks)",
+      "problems": "Customer problems"
+    },
+    "how": {
+      "CLEARED": "cleared by the site",
+      "HANDED_OFF": "cleared by the server's own clean-up"
+    },
+    "products": "Real products ({n})",
+    "youChoose": "You choose",
+    "preview": "Preview (nothing changes)",
+    "previewTitle": "Preview: nothing has changed",
+    "previewTotal": "{n} records would be cleared.",
+    "close": "Close",
+    "switch": {
+      "off": "Start fresh is switched off. Switch it on only on go-live day.",
+      "on": "Start fresh is switched on.",
+      "turnOn": "Switch on",
+      "turnOff": "Switch off"
+    },
+    "step1": "1 · Full backup to Google Drive",
+    "backupNow": "Back up now",
+    "backupOk": "A fresh backup is safe in Drive ({when}).",
+    "backupOld": "The newest backup is too old. Back up again.",
+    "backupOpen": "A backup is running. Wait for it, then reload.",
+    "step2": "2 · Real products",
+    "keepProducts": "Keep all {n}",
+    "removeProducts": "Remove from the shop (archived, can be brought back)",
+    "step3": "3 · Type START FRESH",
+    "step4": "4 · Owner PIN",
+    "pin": "Owner PIN",
+    "warn": "This runs once. After it, the button is gone for ever.",
+    "start": "Start fresh…",
+    "go": "Start fresh now",
+    "cancel": "Cancel",
+    "working": "Working…",
+    "doneTitle": "Started fresh",
+    "done": "Started fresh on {when}. This can only be done once.",
+    "doneNote": "Some records are cleared by the server's own clean-up: the ERP and the server finish them. The ERP's test entries are not sent yet.",
+    "ownerOnly": "Only the owner can use this page.",
+    "errors": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "SWITCHED_OFF": "Start fresh is switched off.",
+      "WORDS_MISMATCH": "Type START FRESH exactly.",
+      "BACKUP_FIRST": "Make a full backup first. It must be recent.",
+      "ALREADY_DONE": "Start fresh has already been done. It runs only once.",
+      "RUN_FAILED": "It could not finish, so nothing was cleared. Try again or ask for help.",
+      "BUSY": "A backup is waiting or running already.",
+      "INVALID_INPUT": "Check what you typed.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}

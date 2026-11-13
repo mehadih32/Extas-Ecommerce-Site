@@ -197,6 +197,7 @@ model Store {
   checkoutFlagEvents      CheckoutFlagEvent[]
   bulkEnquiries           BulkEnquiry[]
   cashHandovers           CashHandover[]
+  startFreshRuns          StartFreshRun[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -11650,4 +11651,37 @@ model CashHandover {
 
   @@index([storeId, day])
   @@index([storeId, staffUserId, day])
+}
+
+enum StartFreshStatus {
+  RUNNING
+  DONE
+  PARTIAL
+  FAILED
+}
+
+/// @stage S28 · PR 706 (admin prototype v5, GAP-MAP part 2 P2-14) — "Start fresh", the one-time clearing of the test and
+/// sample business data on go-live day. One row per try. A try that is RUNNING, DONE or PARTIAL holds the store's one
+/// place (a partial unique index, migration 0276): after it the button is gone for good; a FAILED try (nothing cleared,
+/// the whole step rolled back) may be tried again. `kinds` records, per kind, how many rows there were and whether
+/// the site cleared them (CLEARED) or handed them to the server's own purge (HANDED_OFF: tables the app may never
+/// delete from, because they are append-only). The ERP's side is a call that is a mock until the ERP ships (`erpStatus`).
+model StartFreshRun {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store            @relation(fields: [storeId], references: [id])
+  status          StartFreshStatus @default(RUNNING)
+  /// The BackupRequest that was safe in Drive before this ran (the gate).
+  backupRequestId String?          @db.Uuid
+  /// Whether the real products were archived (they can be brought back) or kept.
+  removeProducts  Boolean          @default(false)
+  kinds           Json             @default("[]")
+  erpStatus       String           @default("NOT_SENT")
+  detail          String?
+  requestedById   String?          @db.Uuid
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  finishedAt      DateTime?        @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, createdAt])
 }

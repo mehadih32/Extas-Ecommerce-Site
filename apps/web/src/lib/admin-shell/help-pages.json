@@ -220,6 +220,7 @@
     { "id": "settings/shell", "route": "/admin/settings/shell" },
     { "id": "settings/look", "route": "/admin/settings/look" },
     { "id": "settings/staff-controls", "route": "/admin/settings/staff-controls" },
+    { "id": "settings/start-fresh", "route": "/admin/settings/start-fresh" },
     { "id": "help/manual", "route": "/admin/help" },
     { "id": "help/site-manual", "route": "/admin/help/manual" },
     { "id": "help/build", "route": "/admin/build" },
