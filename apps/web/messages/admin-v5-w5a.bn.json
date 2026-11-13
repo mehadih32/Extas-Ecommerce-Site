@@ -220,6 +220,38 @@
       "switchOff": "বন্ধ করুন",
       "payoutsOn": "পেমেন্ট বোতাম চালু করুন",
       "payoutsOffBtn": "পেমেন্ট বোতাম বন্ধ করুন"
+    },
+    "meta": {
+      "metaTitle": "Meta ক্যাটালগ ফিড",
+      "title": "Meta ক্যাটালগ ফিড",
+      "sub": "Facebook আর Instagram ক্যাটালগের পণ্যের ফিড, Google ফিডের পাশে।",
+      "back": "Google ফিড",
+      "off": "Meta ফিড বন্ধ আছে। আরও অপশন থেকে চালু করুন।",
+      "address": "ফিডের ঠিকানা",
+      "noAddress": "দোকানের ঠিকানা এখনো জানা নেই।",
+      "copy": "কপি",
+      "kProducts": "পণ্য",
+      "kIn": "ফিডে আছে",
+      "kItems": "আইটেম",
+      "kLeft": "বাদ",
+      "kIssues": "ঠিক করার",
+      "issueList": "সমস্যার তালিকা",
+      "noneIssues": "সব পণ্য ফিডে আছে, ঠিক করার কিছু নেই।",
+      "colProduct": "পণ্য",
+      "colWhy": "কী ঠিক করবেন",
+      "r_noImage": "ছবি নেই — বাদ",
+      "r_noPrice": "দাম নেই — বাদ",
+      "r_noDescription": "বর্ণনা নেই — বাদ",
+      "r_soldOut": "স্টক শেষ — বাদ",
+      "i_titleTooLong": "নাম 200 অক্ষরের বেশি; কেটে যাবে",
+      "i_titleLong": "নাম 65 অক্ষরের বেশি; Meta কেটে দিতে পারে",
+      "i_descriptionTooLong": "বর্ণনা খুব বড়; কেটে যাবে",
+      "i_descriptionShort": "বর্ণনা খুব ছোট",
+      "i_noBrand": "ব্র্যান্ড নেই",
+      "note": "ছবি, দাম, সাইজ আর রং Google ফিডের, আর তার বাছাই মানে। বদলাতে Google ফিডের পাতায় যান।",
+      "switchOn": "চালু করুন",
+      "switchOff": "বন্ধ করুন",
+      "shown": "ঠিক করার মতো প্রথম {n}টা পণ্য দেখানো হলো।"
     }
   }
 }
