@@ -281,6 +281,7 @@ model Store {
   cashAccounts            CashAccount[]
   cashEntries             CashEntry[]
   costBudgets             CostBudget[]
+  reportViews             ReportView[]
   erpBooksSends           ErpBooksSend[]
   booksMatchRuns          BooksMatchRun[]
   booksDayCloses          BooksDayClose[]
@@ -11446,4 +11447,21 @@ model CostBudget {
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, headKey, fromMonth])
+}
+
+/// @stage S15 · PR 689 — a saved view of a report (its period, compare switch and filters) under the owner's own name.
+/// The owner's own view: archived, never deleted.
+model ReportView {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  reportKey   String
+  name        String
+  params      Json
+  createdById String?   @db.Uuid
+  archivedAt  DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([storeId, reportKey])
 }

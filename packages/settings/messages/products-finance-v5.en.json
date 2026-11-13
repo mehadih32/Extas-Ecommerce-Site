@@ -14,5 +14,11 @@
       "label": "Budget warning",
       "help": "A cost head is flagged when this month's pace reaches this share of its budget. 100 means the whole budget."
     }
+  },
+  "reports": {
+    "library": {
+      "label": "Report library",
+      "help": "How many days of stock make a style \"restock now\", and after how many days an unsold style counts as sitting unsold."
+    }
   }
 }

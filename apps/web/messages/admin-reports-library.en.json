@@ -1,0 +1,103 @@
+{
+  "reportsLibrary": {
+    "metaTitle": "Report library",
+    "title": "Report library",
+    "sub": "Pick a question, see the answer. Pin the numbers you want on Home. Money and the books are in Finance.",
+    "period": {
+      "label": "Period",
+      "today": "Today",
+      "last7": "Last 7 days",
+      "last30": "Last 30 days",
+      "month": "This month",
+      "lastmonth": "Last month",
+      "compare": "Compare with the period before",
+      "range": "{from} to {to}"
+    },
+    "cards": {
+      "sales": "How much did we sell?",
+      "profit": "Did we make money after all costs?",
+      "orders": "How many orders?",
+      "aov": "How big is an average order?",
+      "discount": "How much did we give in discounts?",
+      "restock": "What should I restock now?",
+      "unsold": "What is sitting unsold?"
+    },
+    "groups": {
+      "sales": "Sales & profit",
+      "products": "Products & stock"
+    },
+    "unitStyles": "{n} styles",
+    "unknown": "Not known yet",
+    "change": "{pct}% vs before",
+    "changeUp": "▲ {pct}% vs before",
+    "changeDown": "▼ {pct}% vs before",
+    "pin": "Pin to Home",
+    "unpin": "Pinned to Home",
+    "pinned": "Pinned to Home",
+    "pinnedToast": "Pinned to Home",
+    "unpinnedToast": "Removed from Home",
+    "restock": {
+      "title": "Restock now",
+      "sub": "Styles that sold in the last 30 days and a size is out or the stock is running short.",
+      "unsoldTitle": "Sitting unsold",
+      "unsoldSub": "In stock, old enough and nothing sold in the last 30 days.",
+      "style": "Style",
+      "sizes": "Sizes in stock",
+      "days": "Days of stock",
+      "sold": "Sold in 30 days",
+      "none": "Nothing to restock now.",
+      "noneUnsold": "Nothing is sitting unsold.",
+      "sizesOf": "{n} of {total}"
+    },
+    "time": {
+      "title": "When orders come in",
+      "sub": "Orders by weekday and by hour of the day, in the shop's time, for the period above.",
+      "weekday": "By weekday",
+      "hour": "By hour",
+      "discount": "Discounts given",
+      "coupons": "{n} orders used a coupon",
+      "days": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      }
+    },
+    "review": {
+      "title": "Monthly review",
+      "sub": "Last month ({from} to {to}) in a few lines, from the numbers. Nothing is guessed.",
+      "sales": "Sales were {amount}, {pct}% {dir} than the month before.",
+      "salesNoPrev": "Sales were {amount}.",
+      "profit": "Net profit was {amount}, {pct}% {dir} than the month before.",
+      "profitNoPrev": "Net profit was {amount}.",
+      "profitUnknown": "Net profit is not known yet (the ad spend is missing).",
+      "orders": "{n} orders came in.",
+      "busiest": "The busiest day was {day}.",
+      "restock": "{n} styles need restocking now.",
+      "more": "more",
+      "less": "less",
+      "none": "Nothing was sold last month."
+    },
+    "views": {
+      "title": "Saved views",
+      "sub": "Keep this period and the compare switch under a name, and open it again in one tap.",
+      "name": "Name this view",
+      "save": "Save this view",
+      "saved": "View saved",
+      "empty": "No saved views yet.",
+      "open": "Open",
+      "archive": "Remove",
+      "archived": "View removed"
+    },
+    "readOnly": "You can see the library.",
+    "err": {
+      "forbidden": "You do not have permission for this.",
+      "INVALID_INPUT": "Check the name.",
+      "CONFLICT": "Too many saved views. Remove one first.",
+      "other": "It could not be saved. Try again."
+    }
+  }
+}
