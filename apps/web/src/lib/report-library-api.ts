@@ -41,6 +41,15 @@ export interface ReviewFacts {
 
 const PRESET = new Set<string>(cat.PERIOD_PRESETS);
 
+/** The period a request asks for: your own dates (`from` and `to`) or a preset (`preset` or `period`), else `fallback`; null when it is not valid. */
+export function periodOf(url: URL, fallback: cat.PeriodPreset): cat.PeriodPreset | cat.PeriodRange | null {
+  const from = url.searchParams.get('from');
+  const to = url.searchParams.get('to');
+  if (from !== null || to !== null) return cat.customRange(from ?? '', to ?? '');
+  const preset = url.searchParams.get('preset') ?? url.searchParams.get('period') ?? fallback;
+  return PRESET.has(preset) ? (preset as cat.PeriodPreset) : null;
+}
+
 function storeIdOf(url: URL): number | null {
   const raw = url.searchParams.get('storeId');
   const n = raw === null ? MOTHER_STORE_ID : Number(raw);
@@ -77,13 +86,13 @@ export function libraryCards(
 }
 
 /** Everything the library shows, for one store and one period. */
-export async function libraryScreen(admin: AdminDeps, who: inv.Who, preset: cat.PeriodPreset) {
+export async function libraryScreen(admin: AdminDeps, who: inv.Who, period: cat.PeriodPreset | cat.PeriodRange) {
   const idep = await inventoryDeps(admin);
   const cdep: cat.CatalogueDeps = { db: admin.db, settings: admin.resolver, now: admin.now, sellable: sellableReader(admin.db, admin.resolver, who.storeId) };
   const tz = await admin.resolver.value('store.timeZone', { storeId: who.storeId });
   const now = (admin.now ?? (() => new Date()))();
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
-  const r = cat.periodRange(preset, today);
+  const r = typeof period === 'string' ? cat.periodRange(period, today) : period;
   const lm = cat.periodRange('lastmonth', today);
   const [pa, pb, restock, time, timeLm, lmA, lmB, views, pins] = await Promise.all([
     inv.profitReport(idep, who.storeId, r.from, r.to),
@@ -129,9 +138,9 @@ export async function libraryHandler(request: Request, deps: AdminDeps | null): 
   try {
     const who: inv.Who = { actor: g.actor, storeId, ctx: g.ctx };
     if (m === 'GET') {
-      const preset = url.searchParams.get('preset') ?? 'month';
-      if (!PRESET.has(preset)) return fail(400, 'INVALID_INPUT', ['preset']);
-      return json({ ok: true, ...(await libraryScreen(deps!, who, preset as cat.PeriodPreset)) });
+      const period = periodOf(url, 'month');
+      if (period === null) return fail(400, 'INVALID_INPUT', ['preset']);
+      return json({ ok: true, ...(await libraryScreen(deps!, who, period)) });
     }
     const cdep: cat.CatalogueDeps = { db: deps!.db, settings: deps!.resolver, now: deps!.now };
     const b = await body(request);

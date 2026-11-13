@@ -11,7 +11,12 @@
       "month": "This month",
       "lastmonth": "Last month",
       "compare": "Compare with the period before",
-      "range": "{from} to {to}"
+      "range": "{from} to {to}",
+      "last6m": "Last 6 months",
+      "custom": "Custom dates",
+      "from": "From",
+      "to": "To",
+      "show": "Show"
     },
     "cards": {
       "sales": "How much did we sell?",
@@ -98,6 +103,55 @@
       "INVALID_INPUT": "Check the name.",
       "CONFLICT": "Too many saved views. Remove one first.",
       "other": "It could not be saved. Try again."
+    },
+    "dl": {
+      "title": "Downloads & report packs",
+      "sub": "For a bank or loan application, a partner, or your own analysis. PDF on your letterhead, or Excel with one sheet per part.",
+      "thisReport": "This report",
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "Print",
+      "download": "Download",
+      "preview": "Preview",
+      "schedule": "Schedule",
+      "period": "Period",
+      "format": "File",
+      "fmtPdf": "PDF on letterhead",
+      "fmtXlsx": "Excel, sheet per part",
+      "periods": {
+        "lastmonth": "Last month",
+        "month": "This month",
+        "last3m": "Last 3 months",
+        "last6m": "Last 6 months",
+        "last12m": "Last 12 months"
+      },
+      "packs": {
+        "monthly": {
+          "name": "Monthly business pack",
+          "d": "For yourself or a partner, every month"
+        },
+        "bank": {
+          "name": "Bank pack",
+          "d": "For a bank loan or credit application"
+        },
+        "stock": {
+          "name": "Stock pack",
+          "d": "Stock, what to buy and what is not selling"
+        },
+        "sales": {
+          "name": "Sales pack",
+          "d": "Sales, orders by weekday, profit and discounts"
+        }
+      },
+      "single": {
+        "title": "Single reports",
+        "sub": "They use the period you picked at the top.",
+        "figures": "Sales and profit",
+        "products": "Products and stock",
+        "timing": "When orders come in",
+        "review": "Monthly review"
+      },
+      "printFail": "The print window did not open. The PDF is open in a new tab; print it from there."
     }
   }
 }
