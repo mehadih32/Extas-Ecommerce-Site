@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TelegramApprovalsSettings } from '@extas/settings';
 import { approvalText, asksTelegram, buttonsLive, secretMatches } from './telegram-approvals';
 
-const cfg = (over: Partial<TelegramApprovalsSettings> = {}): TelegramApprovalsSettings => ({ enabled: true, refund: true, price: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 5, pinLockPerDay: 20, lockedAt: null, ...over });
+const cfg = (over: Partial<TelegramApprovalsSettings> = {}): TelegramApprovalsSettings => ({ enabled: true, refund: true, price: true, cash: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 5, pinLockPerDay: 20, lockedAt: null, ...over });
 
 describe('which approvals go to Telegram', () => {
   it('nothing while the switch is off or the lock is on', () => {
@@ -20,6 +20,10 @@ describe('which approvals go to Telegram', () => {
     expect(asksTelegram(cfg(), 'cod', null)).toBe(false);
     expect(asksTelegram(cfg({ cod: false }), 'cod', 9_000_000)).toBe(false);
     expect(asksTelegram(cfg(), 'other', 9_000_000)).toBe(false);
+  });
+  it('cash entries waiting for an approver (PR 687) follow their own switch', () => {
+    expect(asksTelegram(cfg(), 'cash', 5000)).toBe(true);
+    expect(asksTelegram(cfg({ cash: false }), 'cash', 5000)).toBe(false);
   });
 });
 

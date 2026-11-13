@@ -64,6 +64,8 @@ export const telegramApprovalsSchema = z
     enabled: z.boolean(),
     refund: z.boolean(),
     price: z.boolean(),
+    /** PR 687 wiring: a cash entry waiting for an approver is asked on Telegram too. */
+    cash: z.boolean().default(true),
     cod: z.boolean(),
     codOverMinor: z.number().int().min(0).max(100_000_000),
     waitMinutes: z.number().int().min(5).max(1440),
@@ -111,6 +113,21 @@ export type AnalyticsBehaviourSettings = z.output<typeof analyticsBehaviourSchem
 export const activityLogSchema = z.object({ pageSize: z.number().int().min(10).max(200) }).strict();
 export type ActivityLogSettings = z.output<typeof activityLogSchema>;
 
+/**
+ * PR 664 and 687 wired to the staff limits (702) and the approvals (703). Owner decisions of 13 Nov 2026: price adjust and
+ * cash in/out ship ON; the role limits ship empty, and an empty limit means EVERY adjustment or cash entry waits for one
+ * approver (one is enough). `emptyLimitWaits` off makes an empty limit mean "no limit" as the staff controls screen says
+ * for discounts. A cash limit is per role (the key of the role, in minor units; null = nothing set). The owner has no
+ * limit. `askTelegram` also asks the waiting entry on Telegram when the owner turned the kind on there.
+ */
+export const approvalGatesSchema = z
+  .object({
+    priceAdjust: z.object({ emptyLimitWaits: z.boolean(), askTelegram: z.boolean() }).strict(),
+    cash: z.object({ enabled: z.boolean(), emptyLimitWaits: z.boolean(), askTelegram: z.boolean(), limits: z.record(z.string().min(1).max(64), z.number().int().min(0).nullable()) }).strict(),
+  })
+  .strict();
+export type ApprovalGatesSettings = z.output<typeof approvalGatesSchema>;
+
 export const s28W5bSettings = {
   'staff.controls': setting({
     ...base,
@@ -120,6 +137,15 @@ export const s28W5bSettings = {
     helpKey: 'staff.controls.help',
     sortOrder: 720,
     version: 702,
+  }),
+  'approvals.gates': setting({
+    ...base,
+    schema: approvalGatesSchema,
+    default: { priceAdjust: { emptyLimitWaits: true, askTelegram: true }, cash: { enabled: true, emptyLimitWaits: true, askTelegram: true, limits: {} } },
+    labelKey: 'approvals.gates.label',
+    helpKey: 'approvals.gates.help',
+    sortOrder: 727,
+    version: 333,
   }),
   'startFresh.settings': setting({
     ...base,
@@ -142,11 +168,11 @@ export const s28W5bSettings = {
   'telegram.approvals': setting({
     ...base,
     schema: telegramApprovalsSchema,
-    default: { enabled: false, refund: true, price: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 5, pinLockPerDay: 20, lockedAt: null }, // hardcode-ok: the setting's own shipped default, editable on the screen
+    default: { enabled: false, refund: true, price: true, cash: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 5, pinLockPerDay: 20, lockedAt: null }, // hardcode-ok: the setting's own shipped default, editable on the screen
     labelKey: 'telegram.approvals.label',
     helpKey: 'telegram.approvals.help',
     sortOrder: 723,
-    version: 703,
+    version: 334,
   }),
   'analytics.visitors': setting({
     ...base,

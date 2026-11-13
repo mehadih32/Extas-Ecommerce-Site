@@ -38,5 +38,11 @@
       "label": "Activity log page size",
       "help": "How many rows one page of Settings > Activity log shows (10 to 200)."
     }
+  },
+  "approvals": {
+    "gates": {
+      "label": "Approvals for price adjust and cash",
+      "help": "Price adjust and cash in/out are on. A person whose role has no limit set (or whose entry is above it) leaves the entry waiting for one approver; the owner has no limit. Turn \"empty limit waits\" off to let an empty limit mean no limit. Cash limits are per role, in minor units."
+    }
   }
 }

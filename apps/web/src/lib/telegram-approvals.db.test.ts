@@ -138,7 +138,7 @@ describe.skipIf(!HAS_TEST_DB)('Telegram approvals on PostgreSQL (PR 703)', () =>
   });
 
   it('too many wrong PINs lock Telegram until the owner unlocks it with the PIN; the ERP can decide too', async () => {
-    await deps.resolver.set('telegram.approvals', { enabled: true, refund: true, price: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 3, pinLockPerDay: 4, lockedAt: null }, storeTarget(A), { actorId: null, reason: 'test' });
+    await deps.resolver.set('telegram.approvals', { enabled: true, refund: true, price: true, cash: true, cod: true, codOverMinor: 800000, waitMinutes: 30, pinAlarmPerDay: 3, pinLockPerDay: 4, lockedAt: null }, storeTarget(A), { actorId: null, reason: 'test' });
     const fresh = (await ask({ title: 'Refund #2' })) as any;
     const r = fresh.row.id as string;
     await hook(tap(`r:${r}`));

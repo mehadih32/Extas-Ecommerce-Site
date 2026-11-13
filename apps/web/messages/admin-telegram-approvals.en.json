@@ -14,6 +14,7 @@
       "help": "Tap Approve or Reject, then type your PIN in the chat. The PIN message is deleted at once.",
       "refund": "Refund of a prepaid order that was cancelled",
       "price": "Price changes",
+      "cash": "Cash in and out waiting for an approver",
       "cod": "Big COD orders",
       "codOver": "Big COD means over (Tk)",
       "wait": "Buttons stay live for (minutes)",
@@ -46,6 +47,7 @@
       "kind": {
         "refund": "Refund",
         "price": "Price change",
+        "cash": "Cash",
         "cod": "Big COD order",
         "other": "Other"
       },
