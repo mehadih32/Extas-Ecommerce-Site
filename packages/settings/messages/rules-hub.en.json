@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "hub": {
+      "popups": {
+        "label": "Pop-ups and notices: your own words",
+        "help": "Your own text and dates for the shop's twelve pop-ups and notices. A placement you have not set keeps the shop's wording and the state of the rule that drives it. Nothing here opens by itself on the first page a visitor sees."
+      }
+    }
+  },
+  "orders": {
+    "peak": {
+      "label": "Peak and Eid mode",
+      "help": "Off as shipped. A daily order cap (the shop stops promising a delivery day when the day is full) and the words it shows then, the size of one part for Print all in parts, and the roster for the busy days. Every number is yours."
+    }
+  }
+}

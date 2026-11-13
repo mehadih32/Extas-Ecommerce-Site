@@ -31,7 +31,9 @@ export type RulesErrorCode =
   /** The conflict cannot be fixed automatically (not a text drift, or the text no longer has the stale number). */
   | 'CANNOT_FIX'
   /** Eid order-by dates cannot be on as they are: details name every reason (no Eid day, no date, a date after Eid …). */
-  | 'EID_INVALID';
+  | 'EID_INVALID'
+  /** An offer cannot be sent or go live as it is: details name every reason (OfferIssue codes). */
+  | 'OFFER_INVALID';
 
 export class RulesError extends Error {
   readonly code: RulesErrorCode;
@@ -63,6 +65,7 @@ export class RulesError extends Error {
       case 'COUPON_NOT_USABLE':
       case 'CANNOT_FIX':
       case 'EID_INVALID':
+      case 'OFFER_INVALID':
         return 409;
       default:
         return 400;

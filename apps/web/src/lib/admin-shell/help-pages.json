@@ -68,6 +68,8 @@
     { "id": "messages/email-template", "route": "/admin/messages/email/templates/[id]" },
     { "id": "messages/templates", "route": "/admin/messages/templates" },
     { "id": "rules/rules", "route": "/admin/rules" },
+    { "id": "rules/smart", "route": "/admin/rules/smart" },
+    { "id": "rules/offers", "route": "/admin/rules/offers" },
     { "id": "rules/notices", "route": "/admin/rules/notices" },
     { "id": "rules/eid", "route": "/admin/rules/eid" },
     { "id": "marketing/tracking", "route": "/admin/marketing/tracking" },

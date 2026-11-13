@@ -38,3 +38,5 @@ export * from './eid-service';
 export * from './eta-service';
 export * from './public';
 export * from './jobs';
+export * from './hub-service';
+export * from './offers-service';

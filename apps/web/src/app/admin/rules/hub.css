@@ -1,0 +1,48 @@
+/* Rules hub, Offers and Pop-ups hub (S28 wave 3). Admin tokens only. */
+.rh,.po,.of{display:grid;gap:12px}
+.rh-layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px}
+.rh-nav{display:flex;flex-direction:column;gap:2px}
+.rh-nav button{text-align:left;padding:8px 10px;border-radius:8px;border:0;background:transparent;color:inherit;cursor:pointer}
+.rh-nav button[aria-current='true']{background:var(--lm-sf2);font-weight:600}
+.rh-main{display:grid;gap:8px;min-width:0}
+.rh-search{width:100%;padding:8px 10px;border:1px solid var(--lm-ln);border-radius:8px}
+.rh-strip{padding:8px 12px;border-radius:8px;background:var(--lm-sf2)}
+.rh-row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf)}
+.rh-row h3{margin:0;font-size:1rem}
+.rh-row p{margin:2px 0 0;overflow-wrap:anywhere}
+.rh-pill,.po-pill,.of-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;background:var(--lm-sf2);white-space:nowrap}
+.rh-pill[data-tone='on'],.po-pill[data-tone='on'],.of-pill[data-tone='LIVE']{background:var(--lm-okbg)}
+.rh-pill[data-tone='sample']{background:var(--lm-warnbg)}
+.rh-editor{display:grid;gap:10px;padding:12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf)}
+.rh-field{display:grid;gap:4px}
+.rh-field input,.rh-field select,.rh-field textarea,.of-wizard input,.of-wizard select,.po-editor input,.po-editor textarea{width:100%;padding:8px 10px;border:1px solid var(--lm-ln);border-radius:8px;box-sizing:border-box}
+.rh-actions,.po-actions,.of-actions{display:flex;flex-wrap:wrap;gap:8px}
+.po-groups{display:grid;gap:12px}
+.po-item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px;border:1px solid var(--lm-ln);border-radius:10px}
+.po-frame{position:relative;border:1px solid var(--lm-ln);border-radius:10px;min-height:120px;padding:8px}
+.po-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--lm-accent);color:var(--lm-on);font-size:.75rem}
+.po-editor{display:grid;gap:8px;padding:12px;border:1px solid var(--lm-ln);border-radius:10px}
+.po-chips{display:flex;flex-wrap:wrap;gap:6px}
+.of-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.of-kpi{padding:10px;border:1px solid var(--lm-ln);border-radius:10px}
+.of-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.of-table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
+.of-table th,.of-table td{padding:8px;text-align:left;border-bottom:1px solid var(--lm-ln)}
+.of-detail,.of-wizard{display:grid;gap:10px;padding:12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf)}
+.of-steps{display:flex;flex-wrap:wrap;gap:6px}
+.of-steps [aria-current='step']{font-weight:700}
+@media (max-width:768px){.rh-layout{grid-template-columns:1fr}.rh-nav{flex-direction:row;overflow-x:auto}.rh-row{flex-direction:column}}
+.rh-card,.of-wrap>section,.of-sum,.of-pin{padding:12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf)}
+.rh-cardhd{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.rh-chips,.rh-grp,.rh-inline,.rh-filter,.of-kinds,.po-fw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.rh-fields,.rh-roster,.rh-side,.rh-prev,.rh-wc,.of-list,.of-hist,.po-main,.po-meta{display:grid;gap:8px;min-width:0}
+.rh-hint,.rh-sub,.rh-st,.rh-sp{opacity:.75;font-size:.85rem}
+.rh-sw,.rh-go,.rh-moreb{cursor:pointer}
+.rh-rrow,.rh-rr{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.rh-more{border-top:1px solid var(--lm-ln);padding-top:8px}
+.po-frames{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.po-chip{padding:2px 8px;border-radius:999px;border:1px solid var(--lm-ln);background:transparent;cursor:pointer}
+.po-n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:50%;background:var(--lm-accent);color:var(--lm-on);font-size:.75rem}
+.of-tbl{width:100%;border-collapse:collapse}
+.of-wrap{display:grid;gap:12px;min-width:0;overflow-x:auto}
+.of-code{font-family:monospace}

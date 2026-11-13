@@ -12,3 +12,6 @@ export * from './notices-model';
 export * from './eid';
 export * from './holiday';
 export * from './festive';
+export * from './peak';
+export * from './hub-catalog';
+export * from './offers-model';
