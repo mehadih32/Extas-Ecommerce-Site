@@ -547,6 +547,8 @@
       "madeTotal": "{all} made in total · {empty} categories have no real product yet",
       "seed": "Make demo products",
       "seeded": "Demo products made",
+      "catalogue": "Add the demo catalogue ({n} products)",
+      "catalogueDone": "Demo catalogue added",
       "where": "Where demo products show",
       "whereSub": "Category, then sub-category. Turn any part off; what is under it goes with it.",
       "showHere": "Show demo here",

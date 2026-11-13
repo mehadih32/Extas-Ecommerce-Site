@@ -151,3 +151,6 @@
   margin: 0;
   flex: none;
 }
+
+/* PR 708: the long "Add the demo catalogue" button wraps inside the card on a phone. */
+.adm2 .dm-hero .a2-btn[data-testid]{display:flex;box-sizing:border-box;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center;justify-content:center;height:auto;min-height:44px;margin-left:0;margin-right:0;width:100%}

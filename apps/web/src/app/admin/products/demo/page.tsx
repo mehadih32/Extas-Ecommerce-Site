@@ -71,6 +71,7 @@ export default async function DemoProductsPage() {
         showingTotal={demo.showingTotal}
         emptyCategories={demo.emptyCategories}
         minorPerMajor={10 ** money.digits}
+        catalogueSize={cat.DEMO_CATALOGUE_SIZE}
       />
     </div>
   );
