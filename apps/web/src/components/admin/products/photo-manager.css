@@ -1,7 +1,7 @@
 /* S28 · PR 680 — the photo manager (Products › a product › Photos). Uses the admin's own colour variables. */
 .pm { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .pm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.pm-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px; border: 1px solid var(--ad-line); border-radius: 999px; background: var(--ad-surface); color: var(--ad-ink); font: inherit; font-size: var(--ad-fs-small); cursor: pointer; }
+.pm-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 1px solid var(--ad-line); border-radius: 999px; background: var(--ad-surface); color: var(--ad-ink); font: inherit; font-size: var(--ad-fs-small); cursor: pointer; }
 .pm-chip.on { border-color: var(--ad-brand); background: var(--ad-surface2); font-weight: 700; }
 .pm-sw { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--ad-line); background: var(--ad-line2); }
 .pm-n { color: var(--ad-muted); font-size: 12px; }
@@ -119,7 +119,7 @@
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  min-height: 36px;
+  min-height: 44px;
 }
 .dm-name {
   font-weight: 600;
@@ -135,4 +135,19 @@
 .dm-never {
   margin: 0;
   padding-inline-start: 18px;
+}
+
+/* S28 · PR 680-684 — touch targets of 44 px: the "More options" summaries and the Demo products tick boxes. */
+.pa-more > summary,
+.a2-more-opts > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+}
+.dm-row input[type='checkbox'] {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  flex: none;
 }
