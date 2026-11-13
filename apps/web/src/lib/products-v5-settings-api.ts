@@ -43,6 +43,7 @@ const SCHEMAS = {
   'catalogue.video': catalogueVideoSchema,
   'catalogue.faq': catalogueFaqSchema,
   'catalogue.erpSizeChart': catalogueErpSizeChartSchema,
+  'catalogue.demo': catalogueDemoSchema,
 } as const;
 const WHERE: Record<ProductV5Key, string> = {
   'media.quality': "Products › a product's photos › Photo checks",
