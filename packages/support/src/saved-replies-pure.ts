@@ -47,7 +47,7 @@ export const STARTER_REPLIES: readonly SavedReplyLike[] = [
   { shortcut: 'hello', bodyEn: 'Hello! Thank you for writing to us. How can we help you today?', bodyBn: 'আসসালামু আলাইকুম! আমাদের মেসেজ করার জন্য ধন্যবাদ। আপনাকে কীভাবে সাহায্য করতে পারি?' },
   { shortcut: 'size', bodyEn: 'Our size chart is on every product page. Tell us your chest size and we will match the right size for you.', bodyBn: 'প্রতিটা প্রোডাক্টের পাতায় সাইজ চার্ট আছে। আপনার বুকের মাপ বললে সঠিক সাইজ মিলিয়ে দিই।' },
   { shortcut: 'cod', bodyEn: 'Cash on delivery is available. You pay the rider when you receive the parcel.', bodyBn: 'ক্যাশ অন ডেলিভারি আছে। পার্সেল হাতে পেয়ে রাইডারকে টাকা দেবেন।' },
-  { shortcut: 'delivery', bodyEn: 'We deliver all over Bangladesh. Please send your full address and phone number.', bodyBn: 'সারা বাংলাদেশে ডেলিভারি দিই। অনুগ্রহ করে পুরো ঠিকানা আর ফোন নম্বর পাঠান।' },
+  { shortcut: 'delivery', bodyEn: 'We deliver all over Bangladesh. Please send your full address and phone number.', bodyBn: 'সারা বাংলাদেশে ডেলিভারি দিই। অনুগ্রহ করে পুরো ঠিকানা আর ফোন নম্বর পাঠান।' }, // hardcode-ok: a starter text the shop edits in Inbox › Quick replies
   { shortcut: 'exchange', bodyEn: 'If the size does not fit, you can ask for an exchange. Tell us your order number and we will arrange it.', bodyBn: 'সাইজ না মিললে এক্সচেঞ্জ চাইতে পারেন। অর্ডার নম্বর বলুন, আমরা ব্যবস্থা করছি।' },
   { shortcut: 'track', bodyEn: 'Please send your order number and we will tell you where your parcel is.', bodyBn: 'আপনার অর্ডার নম্বর দিন, পার্সেল কোথায় আছে জানিয়ে দিচ্ছি।' },
   { shortcut: 'stock', bodyEn: 'Please tell us the product, colour and size, and we will check if it is in stock.', bodyBn: 'প্রোডাক্ট, রং আর সাইজ বলুন, স্টকে আছে কিনা দেখে জানাচ্ছি।' },

@@ -54,6 +54,7 @@ export default async function MetaFeedPage() {
   const { set, currency, products } = await feedProducts(access.deps.db, access.deps.resolver, origin ?? 'https://shop.invalid', MOTHER_STORE_ID);
   const { items, left } = feedItems(products, currency, set.outOfStock, set.variants, { gender: set.gender, ageGroup: set.ageGroup });
   const issues = metaIssues(products, set.outOfStock);
+  const moreIssues = issues.length > SHOWN;
   const leftTotal = Object.values(left).reduce((a, b) => a + b, 0);
   const inFeed = new Set(items.map((i) => i.groupId ?? i.id)).size;
   const n = (x: number) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' }).format(x);
@@ -117,7 +118,7 @@ export default async function MetaFeedPage() {
         ) : (
           <p className="a2-sm a2-mute">{c('noneIssues')}</p>
         )}
-        {issues.length > SHOWN ? <p className="a2-xs a2-mute a2-mt6">{c('shown', { n: SHOWN })}</p> : null}
+        {moreIssues ? <p className="a2-xs a2-mute a2-mt6">{c('shown', { n: SHOWN })}</p> : null}
       </section>
       <p className="a2-xs a2-mute a2-mt6">{c('note')}</p>
       {canWrite ? (

@@ -49,6 +49,7 @@ export default async function AffiliatesPage() {
   const c = (k: string, v?: Record<string, string | number>) => t(d, `w5a.aff.${k}`, v);
   const who: rl.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const board = await rl.affiliateBoard(rulesDeps(access.deps), who);
+  const reversedIds = new Set(board.payouts.map((q) => q.reversesId));
   const perms = access.guard.permissions;
   const can = { write: perms?.has('rules.write') ?? false, pay: perms?.has('payments.record') ?? false, owner: perms?.has('rules.approve') ?? false };
   const sw = await access.deps.resolver.value('marketing.affiliates', { storeId: MOTHER_STORE_ID });
@@ -139,7 +140,7 @@ export default async function AffiliatesPage() {
                       <span className="a2-mute">{when.format(p.createdAt)}</span> · <b>{nameOf.get(p.affiliateId) ?? '—'}</b> · {money(p.amountMinor)} · {p.method}
                       {p.reversesId ? ` · ${c('reversed')}` : ''}
                     </div>
-                    {can.pay && board.payoutsOn && p.amountMinor > 0 && !board.payouts.some((q) => q.reversesId === p.id) ? <ReversePayout dict={d} id={p.id} /> : null}
+                    {can.pay && board.payoutsOn && p.amountMinor > 0 && !reversedIds.has(p.id) ? <ReversePayout dict={d} id={p.id} /> : null}
                   </li>
                 ))}
               </ul>
