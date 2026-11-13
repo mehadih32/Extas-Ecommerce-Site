@@ -8,7 +8,12 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
-import { MODEL_ANGLES, MODEL_KINDS, type ModelAngle, type ModelKind } from '@extas/photoshoot';
+// Type-only: `@extas/photoshoot`'s barrel also carries server-only Prisma raw-query code (styleAbTest.ts's
+// `$queryRaw`), so a VALUE import of its MODEL_KINDS/MODEL_ANGLES arrays from this 'use client' file would pull
+// that whole module graph into the browser bundle ("sqltag is unable to run in this browser environment"). The
+// two option lists below are derived from `texts.kinds`/`texts.angles` instead — already keyed by the exact same
+// values, handed down from the server page — so no runtime import of the package is needed here at all.
+import type { ModelAngle, ModelKind } from '@extas/photoshoot';
 import type { ModelOverviewRow } from '@/lib/marketing/studio-models';
 
 type Out = { text: string; bad: boolean } | null;
@@ -92,7 +97,7 @@ export function ModelNew({ url, texts: x }: { url: string; texts: ModelTexts }) 
           {x.kind}
         </label>
         <select id="model-kind" className="a2-sel" value={kind} disabled={busy} onChange={(e) => setKind(e.target.value as ModelKind)} data-testid="model-kind">
-          {MODEL_KINDS.map((k) => (
+          {(Object.keys(x.kinds) as ModelKind[]).map((k) => (
             <option key={k} value={k}>
               {x.kinds[k]}
             </option>
@@ -219,7 +224,7 @@ export function ModelAssetAdd({ url, modelId, texts: x }: { url: string; modelId
           {x.asset.angle}
         </label>
         <select id={`model-asset-angle-${modelId}`} className="a2-sel" value={angle} disabled={busy} onChange={(e) => setAngle(e.target.value as ModelAngle)} data-testid="model-asset-angle">
-          {MODEL_ANGLES.map((an) => (
+          {(Object.keys(x.angles) as ModelAngle[]).map((an) => (
             <option key={an} value={an}>
               {x.angles[an]}
             </option>
