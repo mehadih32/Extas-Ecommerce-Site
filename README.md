@@ -4013,6 +4013,8 @@ Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking
 
 Planned — register PRs 659–707 (49 PRs, 5 build waves), filed 13 Nov 2026 (CN-048): the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look. Gap map: [`docs/demo/admin-proto-v5/GAP-MAP.md`](docs/demo/admin-proto-v5/GAP-MAP.md). *বাংলায়: আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ আসল অ্যাডমিন হবে; ৪৯টা নতুন PR, পাঁচটা ওয়েভে।*
 
+**Built so far (wave 1, builder B):** PR 662 courier score out of 10 (Rules › Order flow, off), PR 663 auto-confirm rules (nine cases, three presets, off; never touches money, price or COD) and PR 668 incomplete orders v5 (newest first by day, date filters, call log, ready messages that only open WhatsApp or SMS, "Confirm as order" for Cash on Delivery, "Possible match", "Ordered later", journey report). *বাংলায়: কুরিয়ার স্কোর, অটো-কনফার্ম আর অসম্পূর্ণ অর্ডারের নতুন কাজ তৈরি; সবই শুরুতে বন্ধ, টাকা বা দামে হাত দেয় না।*
+
 ---
 
 ## PR log
@@ -4024,6 +4026,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 
 | GitHub | Register PRs / title | Date | What it added |
 |---|---|---|---|
+| pending | PR [662](docs/stages/S28.md#pr-662), [663](docs/stages/S28.md#pr-663), [668](docs/stages/S28.md#pr-668) | 13 Nov | S28 wave 1 builder B: courier score out of 10 (`risk.courierScore`, event `order.courierScore`, order card, accuracy report); auto-confirm engine (`orders.autoConfirm`, `confirmedBy RULE`, call task or red tag, off); incomplete orders v5 (migrations 0210 and 0211, `orders.incompleteV5`, call log, ready messages, Confirm as order, journey report). |
 | pending | CN-048 (PR 659–707 filed) | 13 Nov | Status: Phase A gap map. `docs/demo/admin-proto-v5/GAP-MAP.md` joins the three part files into one list: 54 items already built, 123 small changes on existing PRs (65 dated lines in the register), 46 new items filed as 49 new PRs in the new stage S28, in 5 build waves. CN-048 adopts prototype v5 as the admin UI truth and lifts CN-046's freeze; Lumen stays the look. No app code. |
 | #179 | PR [488](docs/stages/S25.md#pr-488) | 12 Nov | S25: campaign creative export part 2, the producer. `produceCreativeExport` re-checks approved media fresh at production time and fills one preview output per chosen size (honest preview, never a real crop); "Produce this export" on a `DRAFT`/`FAILED` row, `READY` shows the preview note. |
 | #179 | PR [487](docs/stages/S25.md#pr-487) | 12 Nov | S25: campaign creative export part 1. `requestCreativeExport` from exactly one of a product, SKU or category that already has an approved image/video; Marketing › Studio › Export, "Request this export" leaves it `DRAFT`, "Cancel" on a `DRAFT` row. |
