@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import packJson from '../data/default-pack.json';
+import { ensureSteadfastCourier } from './couriers';
 import { lockSeed } from './lock';
 
 /**
@@ -292,6 +293,9 @@ export async function applyPackTx(tx: Prisma.TransactionClient, pack: PackData, 
     });
     created.NotificationTemplate++;
   }
+
+  // PR 670 (owner decision 13 Nov): Steadfast is the default courier, always; added once, never counted as pack data
+  await ensureSteadfastCourier(tx, storeId);
 
   const recordedBefore = await tx.defaultPackApplication.findFirst({
     where: { storeId, packKey: pack.key, version: pack.version },

@@ -48,6 +48,21 @@ const view = (r: Row, modes: Map<string, Mode>): CourierAccountView => ({
   createdAt: r.createdAt,
 });
 
+/** Steadfast is the shop's default courier (owner decision 13 Nov, PR 670): matched by adapter key or name, any case. */
+export const DEFAULT_COURIER_PROVIDER = 'steadfast';
+
+/**
+ * The id of the default courier among `rows` (pure): the one the setting names when it is still there and not
+ * archived; else, while the setting is empty or stale, the Steadfast account (adapter key or name, any case);
+ * else the first. '' when there is none.
+ */
+export function defaultCourierIdOf(rows: readonly { id: string; providerKey: string; name: string; archivedAt: Date | null }[], settingId: string): string {
+  const live = rows.filter((r) => r.archivedAt === null);
+  if (settingId && live.some((r) => r.id === settingId)) return settingId;
+  const s = live.find((r) => r.providerKey.toLowerCase() === DEFAULT_COURIER_PROVIDER) ?? live.find((r) => r.name.toLowerCase().includes(DEFAULT_COURIER_PROVIDER));
+  return s?.id ?? live[0]?.id ?? '';
+}
+
 /** The store's courier accounts with each one's mode (DLV-05). */
 export async function listCouriers(deps: ShippingDeps, who: Who, opts: { includeArchived?: boolean } = {}): Promise<{ couriers: CourierAccountView[]; providers: string[] }> {
   await allow(deps, who, 'delivery.read');
@@ -60,6 +75,19 @@ export async function listCouriers(deps: ShippingDeps, who: Who, opts: { include
   const first = setup.defaultCourierId ? rows.findIndex((r) => r.id === setup.defaultCourierId && r.archivedAt === null) : -1;
   const ordered = first > 0 ? [rows[first]!, ...rows.slice(0, first), ...rows.slice(first + 1)] : rows;
   return { couriers: ordered.map((r) => view(r, modes)), providers: courierProviders() };
+}
+
+/**
+ * Makes sure the store has a Steadfast courier account (idempotent; the adapter runs on its practice world until the
+ * keys are typed in, A1.3). Called when couriers are first set up, so Steadfast is the first courier of a new store.
+ * Adds nothing when any non-archived Steadfast account exists.
+ */
+export async function ensureSteadfastCourier(db: Db, storeId: number): Promise<{ id: string; created: boolean }> {
+  const rows = await db.courierAccount.findMany({ where: { storeId, archivedAt: null }, select: SELECT, orderBy: { createdAt: 'asc' } });
+  const id = rows.find((r) => r.providerKey.toLowerCase() === DEFAULT_COURIER_PROVIDER || r.name.toLowerCase().includes(DEFAULT_COURIER_PROVIDER))?.id;
+  if (id) return { id, created: false };
+  const r = await db.courierAccount.create({ data: { storeId, providerKey: DEFAULT_COURIER_PROVIDER, name: 'Steadfast', enabled: true }, select: { id: true } });
+  return { id: r.id, created: true };
 }
 
 /** A courier account usable for booking: in this store, switched on, not archived. */
