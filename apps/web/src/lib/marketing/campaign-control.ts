@@ -18,12 +18,18 @@
 //   need the campaign builder switched on (`ads.campaignBuilder`). Approved, a launch is created through the platform's
 //   writer (practice: nothing reaches the platform and the shop keeps no campaign); a live create keeps the new
 //   campaign's row and the draft remembers it.
+// - PR 581 (Tirondaj's own guardrails, `ads.guardrails`): every increase this file ever sends (`apply`/`applyCreate`,
+//   the one choke point every path above runs through, never only the request) is checked against the owner's kill
+//   switch, daily/monthly budget ceilings and cost-per-purchase cap — even one he has already approved. Off by
+//   default (every ceiling and the cap at 0), so nothing here changes until the owner sets a number
+//   (lib/marketing/ads-guardrails.ts reads the same settings for its own page and for the kill switch's mass pause).
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { OBJECTIVE_WORDS, practiceCampaignWriter, type AdsPlatform, type AdsRead, type CampaignChange, type CampaignObjective, type CampaignWriter } from '@extas/adapters';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type Prisma } from '@extas/db/client';
 import { adsCampaignControlSchema, storeTarget, type AdsCampaignControlSettings } from '@extas/settings';
+import { adDeliveredReturn, lastDays } from '@extas/metrics';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { t, type Dict } from '../i18n';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
@@ -119,14 +125,54 @@ function describeChange(ch: CampaignChange, p: Payload, d: Dict, m: ReturnType<t
   return what;
 }
 
+/** PR 581: how far back a trailing window looks for the monthly ceiling and the CPA cap (a rolling 30 days, the
+ * same "ending now, not a calendar month" idea PR 578's own reports use). */
+export const GUARDRAIL_WINDOW_DAYS = 30; // hardcode-ok: a rolling window length, not a business number
+
+/** A trailing-30-day cost-per-purchase, pure given the figures: null while nothing delivered yet. */
+export function cpaMinorOf(spendMinor: number | null, delivered: number): number | null {
+  return spendMinor === null || delivered <= 0 ? null : Math.round(spendMinor / delivered);
+}
+
+/** A value crosses a ceiling only while the ceiling is set (> 0) and the value is known. Pure. */
+export function ceilingBreach(valueMinor: number | null, ceilingMinor: number): boolean {
+  return ceilingMinor > 0 && valueMinor !== null && valueMinor > ceilingMinor;
+}
+
+/** Why a guardrail refuses this increase, or `null` to let it through. Runs inside `apply`/`applyCreate`, the one
+ * choke point every increase this file ever sends goes through, so even an owner-approved one is still checked. */
+async function guardrailRefusal(deps: Pick<ControlDeps, 'db' | 'resolver' | 'now'>, campaignId: string | null, newDailyBudgetMinor: number | null): Promise<string | null> {
+  const gr = await deps.resolver.value('ads.guardrails', { storeId: S });
+  if (gr.killSwitch) return 'KILL_SWITCH';
+  if (!gr.on) return null;
+  const [tz, currency] = await Promise.all([deps.resolver.value('store.timeZone', { storeId: S }), deps.resolver.value('store.currency', { storeId: S })]);
+  const now = deps.now ? deps.now() : new Date();
+  const w = lastDays(GUARDRAIL_WINDOW_DAYS, now, tz);
+  const ret = await adDeliveredReturn(deps.db, S, w, { currency, timeZone: tz });
+  // the owner's own ceilings and cap are typed as whole store currency (PR 269's own `noDeliveredSpend` precedent)
+  const scale = 10 ** moneyOf(currency, 'en-GB').digits;
+  if (ceilingBreach(ret.total.spendMinor, gr.monthlyBudgetCeiling * scale)) return 'MONTHLY_CEILING';
+  if (gr.dailyBudgetCeiling > 0 && newDailyBudgetMinor !== null) {
+    const others = await deps.db.adCampaign.aggregate({ where: { storeId: S, archivedAt: null, status: 'ACTIVE', ...(campaignId ? { id: { not: campaignId } } : {}) }, _sum: { dailyBudgetMinor: true } });
+    if ((others._sum.dailyBudgetMinor ?? 0) + newDailyBudgetMinor > gr.dailyBudgetCeiling * scale) return 'DAILY_CEILING';
+  }
+  if (campaignId && gr.maxCostPerPurchase > 0) {
+    const row = ret.campaigns.find((c) => c.key === campaignId);
+    if (row && ceilingBreach(cpaMinorOf(row.spendMinor, row.delivered), gr.maxCostPerPurchase * scale)) return 'CPA_CAP';
+  }
+  return null;
+}
+
 /** PR 531: an approved launch, created through the platform's writer; a live create keeps the new campaign's row. */
 async function applyCreate(deps: ControlDeps, who: AdPlatformsWho, requestId: string, ch: CreateChange, currency: string): Promise<ControlStatus> {
   const now = deps.now ? deps.now() : new Date();
   const draft = await deps.db.adCampaignDraft.findFirst({ where: { id: ch.draftId, storeId: S }, select: { id: true, adAccountId: true, campaignId: true, archivedAt: true, adAccount: { select: { externalId: true, archivedAt: true } } } });
   let practice = true;
   let r: AdsRead<{ externalId: string }>;
+  const refusal = !draft || draft.archivedAt || draft.adAccount.archivedAt || (ch.endAt && new Date(ch.endAt) <= now) ? null : await guardrailRefusal(deps, null, ch.dailyBudgetMinor);
   if (!draft || draft.archivedAt || draft.adAccount.archivedAt) r = { ok: false, error: 'draft gone' };
   else if (ch.endAt && new Date(ch.endAt) <= now) r = { ok: false, error: 'schedule passed' };
+  else if (refusal) r = { ok: false, error: refusal };
   else {
     const writer = deps.writers?.[ch.platform] ?? practiceCampaignWriter(ch.platform);
     practice = writer.practice;
@@ -156,9 +202,11 @@ async function apply(deps: ControlDeps, who: AdPlatformsWho, requestId: string, 
   }
   const platform = PLATFORM[c.adAccount.platform];
   if (!platform) throw new AdPlatformsError('INVALID_INPUT', 400, ['platform']);
-  const writer = deps.writers?.[platform] ?? practiceCampaignWriter(platform);
   const change = p.change;
-  const r = await writer.change({ campaignExternalId: c.externalId, accountExternalId: c.adAccount.externalId, currency: c.currency, change });
+  // PR 581: the one choke point every increase sent through this file passes — even one the owner already approved.
+  const refusal = isIncrease(change, p.fromDailyMinor) ? await guardrailRefusal(deps, c.id, change.kind === 'budget' ? change.dailyBudgetMinor : c.dailyBudgetMinor) : null;
+  const writer = deps.writers?.[platform] ?? practiceCampaignWriter(platform);
+  const r = refusal ? { ok: false as const, error: refusal } : await writer.change({ campaignExternalId: c.externalId, accountExternalId: c.adAccount.externalId, currency: c.currency, change });
   const status: ControlStatus = !r.ok ? 'FAILED' : writer.practice ? 'PRACTICE' : 'APPLIED';
   const now = deps.now ? deps.now() : new Date();
   await deps.db.$transaction(async (tx) => {

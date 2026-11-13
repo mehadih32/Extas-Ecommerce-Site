@@ -55,6 +55,7 @@ const GROWTH_PAGE = '/admin/marketing/ad-platforms/growth';
 const BRIEFS_PAGE = '/admin/marketing/ad-platforms/briefs';
 const BUILDER_PAGE = '/admin/marketing/ad-platforms/campaigns';
 const BUILDER_API = '/api/admin/marketing/ad-platforms/campaigns';
+const GUARDRAILS_PAGE = '/admin/marketing/ad-platforms/guardrails';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
@@ -229,6 +230,9 @@ export default async function AdPlatformsPage() {
         </Link>
         <Link className="a2-sm adp-keys" href={BUILDER_PAGE} data-testid="adp-builder-link">
           {s('build.link')}
+        </Link>
+        <Link className="a2-sm adp-keys" href={GUARDRAILS_PAGE} data-testid="adp-guardrails-link">
+          {s('guardrails.link')}
         </Link>
       </p>
       <p className="a2-sm a2-mute a2-mt12">{sp('spendNote')}</p>
