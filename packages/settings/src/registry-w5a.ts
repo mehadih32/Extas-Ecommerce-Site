@@ -67,7 +67,7 @@ export const messagesCostCeilingSchema = z
 export type MessagesCostCeilingSettings = z.output<typeof messagesCostCeilingSchema>;
 
 const ratio = z.number().min(0).max(1000); // hardcode-ok: a technical bound
-export const marketingVerdictsSchema = z.object({ scale: ratio, keep: ratio, fix: ratio }).strict().refine((v) => v.scale >= v.keep && v.keep >= v.fix, { message: 'scale >= keep >= fix' });
+export const marketingVerdictsSchema = z.object({ scale: ratio, keep: ratio, fix: ratio, shiftPct: z.number().int().min(1).max(100) }).strict().refine((v) => v.scale >= v.keep && v.keep >= v.fix, { message: 'scale >= keep >= fix' });
 export type MarketingVerdictsSettings = z.output<typeof marketingVerdictsSchema>;
 
 export const marketingMetaFeedSchema = z.object({ on: z.boolean() }).strict();
@@ -140,7 +140,7 @@ export const w5aSettings = {
     group: 'marketing',
     valueType: 'JSON',
     schema: marketingVerdictsSchema,
-    default: { scale: 4, keep: 2.5, fix: 1.5 },
+    default: { scale: 4, keep: 2.5, fix: 1.5, shiftPct: 20 },
     labelKey: 'marketing.verdicts.label',
     helpKey: 'marketing.verdicts.help',
     sortOrder: 705,

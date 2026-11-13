@@ -337,6 +337,7 @@ model Store {
   campaigns               Campaign[]
   adAccounts              AdAccount[]
   adCampaigns             AdCampaign[]
+  adCreativeDays          AdCreativeDay[]
   adSets                  AdSet[]
   ads                     Ad[]
   adSpendDailies          AdSpendDaily[]
@@ -7736,18 +7737,19 @@ model AdSet {
 
 /// @stage S13 · PR 259–261, 270 — an ad and its creative.
 model Ad {
-  id         String    @id @default(uuid(7)) @db.Uuid
+  id         String          @id @default(uuid(7)) @db.Uuid
   storeId    Int
-  store      Store     @relation(fields: [storeId], references: [id])
-  adSetId    String    @db.Uuid
-  adSet      AdSet     @relation(fields: [adSetId], references: [id])
+  store      Store           @relation(fields: [storeId], references: [id])
+  adSetId    String          @db.Uuid
+  adSet      AdSet           @relation(fields: [adSetId], references: [id])
   externalId String
   name       String
   status     String
-  creativeId String?   @db.Uuid
-  archivedAt DateTime? @db.Timestamptz(3)
-  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+  creativeId String?         @db.Uuid
+  archivedAt DateTime?       @db.Timestamptz(3)
+  createdAt  DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime        @updatedAt @db.Timestamptz(3)
+  days       AdCreativeDay[]
 
   @@unique([adSetId, externalId])
 }
@@ -11551,19 +11553,19 @@ model LiveCapture {
 /// personal code. `status` ON | PAUSED | ARCHIVED (never deleted). `shareBp` is the partner's own commission in basis
 /// points of the order's goods value (null: the shop's `marketing.affiliates` default).
 model Affiliate {
-  id           String            @id @default(uuid(7)) @db.Uuid
-  storeId      Int
-  store        Store             @relation(fields: [storeId], references: [id])
-  name         String
-  handle       String?
-  platform     String?
-  status       String            @default("ON")
-  shareBp      Int?
-  createdById  String?           @db.Uuid
-  createdAt    DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
-  codes        AffiliateCode[]
-  payouts      AffiliatePayout[]
+  id          String            @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store             @relation(fields: [storeId], references: [id])
+  name        String
+  handle      String?
+  platform    String?
+  status      String            @default("ON")
+  shareBp     Int?
+  createdById String?           @db.Uuid
+  createdAt   DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime          @updatedAt @db.Timestamptz(3)
+  codes       AffiliateCode[]
+  payouts     AffiliatePayout[]
 
   @@index([storeId, status])
 }
@@ -11603,4 +11605,25 @@ model AffiliatePayout {
   createdAt   DateTime  @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, affiliateId, createdAt])
+}
+
+/// @stage S28 · PR 699 (CN-048) — Marketing › Ad campaigns: one ad's day (spend in the store currency, shows, clicks, buys),
+/// written by the platform sync (mock until a key is typed) or by hand. One row per ad per day; a later write for the same
+/// day replaces that day's figures. Drives "Tired ads" (clicks per 100 shows, last 7 days against the 7 before).
+model AdCreativeDay {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  storeId         Int
+  store           Store    @relation(fields: [storeId], references: [id])
+  adId            String   @db.Uuid
+  ad              Ad       @relation(fields: [adId], references: [id])
+  date            DateTime @db.Date
+  spendStoreMinor Int      @default(0)
+  impressions     Int      @default(0)
+  clicks          Int      @default(0)
+  purchases       Int      @default(0)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([adId, date])
+  @@index([storeId, date])
 }

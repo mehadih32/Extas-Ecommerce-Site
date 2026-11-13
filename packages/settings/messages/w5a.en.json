@@ -20,7 +20,7 @@
     },
     "verdicts": {
       "label": "Campaign verdicts",
-      "help": "Marketing › Overview: a campaign's chip by delivered sales per Tk 1 of ads. At or over Scale = Scale, at or over Keep = Keep, at or over Fix = Fix, below that = Stop. Advice only: nothing is paused or changed by itself."
+      "help": "Marketing › Overview: a campaign's chip by delivered sales per Tk 1 of ads. At or over Scale = Scale, at or over Keep = Keep, at or over Fix = Fix, below that = Stop. \"Shift (%)\" is how much of a budget the Plan page suggests moving. Advice only: nothing is paused or changed by itself."
     },
     "metaFeed": {
       "label": "Meta catalogue feed",
