@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { registry } from '@extas/settings';
 import { retryDelayMs, retryPolicyOf } from './backoff';
 import { compactStats, JOBS, jobDefinition, outcomeOf, QUEUES } from './catalogue';
-import { courierPlanner, courierZonesPlanner, packingPhotosPlanner, ZONE_TURN_MINUTES } from './courier';
+import { courierPayoutsPlanner, courierPlanner, courierZonesPlanner, packingPhotosPlanner, ZONE_TURN_MINUTES } from './courier';
 import { messagesPlanner } from './messages';
 import { paymentsPlanner } from './payments';
 import { RETURNS_ERP_JOB, returnsErpPlanner } from './returns-erp';
@@ -64,7 +64,7 @@ describe('PR 6 · catalogue', () => {
     // PR 351: + 'money.report.send' (its own queue 'reports'). PR 264: + 'audiences.refresh' (the same queue). PR 265: + 'ads.spend.import' (the same queue).
     // Follow-up 602: + 'tracking.sweep' (the same queue).
     expect([...JOBS.keys()].sort()).toEqual(
-      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
+      ['ads.spend.import', 'audiences.refresh', 'courier.track', 'money.report.send', 'courier.zones', 'courier.payouts', 'customers.grades.run', 'customers.points.run', 'erp.webhook.process', 'inventory.books.checkAccount', 'inventory.books.close', 'inventory.books.summaryCheck', 'inventory.books.summaryTick', 'inventory.erp.applyEvents', 'inventory.erp.checkOrders', 'inventory.erp.pullEvents', 'inventory.erp.pullStock', 'inventory.erp.pushDocuments', 'inventory.erp.reconcile', 'inventory.locations.ensureDefaults', 'inventory.lowStock.evaluate', 'inventory.reservations.release', 'invoices.issue', 'messages.run', 'orders.followUps.run', 'orders.pii.purge', 'orders.returns.erp', 'packing.photos.expire', 'payments.pending.sweep', 'search.index', 'support.escalate', 'tracking.sweep'].sort(),
     );
     expect(jobDefinition('messages.run')!.queue).toBe('messages');
     expect(jobDefinition('money.report.send')!.queue).toBe('reports');
@@ -151,6 +151,23 @@ describe('PR 6 · catalogue', () => {
     const planned = await courierPlanner(deps, at);
     expect(planned.map((p) => p.key)).toEqual([`courier.track/1/${slotOf(at.getTime(), 30 * 60_000)}`]);
     expect(planned[0]!.queue).toBe('courier');
+  });
+
+  it('PR 671: the courier payouts read needs a store; one per slot of `delivery.courier.payouts.pollMinutes` for a store with it on or a request still open, off otherwise', async () => {
+    const job = jobDefinition('courier.payouts')!;
+    expect(job.queue).toBe('courier');
+    expect(() => job.parse({})).toThrow(/positive integer/);
+    expect(job.storeOf(job.parse({ storeId: 5 }))).toBe(5);
+    // without the courier connections nothing is planned and a run does nothing
+    expect(await courierPayoutsPlanner({} as never, new Date())).toEqual([]);
+    expect(await job.run({} as never, { storeId: 5 })).toEqual({ ok: true, stats: { skipped: 'no couriers' } });
+    // store 1 has it on, store 2 is off with a request still open, store 3 is off with nothing open
+    const settings = { value: async (_k: string, o?: { storeId?: number }) => ({ enabled: o?.storeId === 1, pollMinutes: 30, minAmountMinor: 0 }) };
+    const db = { store: { findMany: async () => [{ id: 1 }, { id: 2 }, { id: 3 }] }, courierPayout: { count: async (q: { where: { storeId: number } }) => (q.where.storeId === 2 ? 1 : 0) } };
+    const deps = { couriers: { connections: { use: async () => null } }, settings, db } as never;
+    const at = new Date(Date.UTC(2026, 9, 24, 6, 0, 30));
+    const planned = await courierPayoutsPlanner(deps, at);
+    expect(planned.map((p) => p.key)).toEqual([1, 2].map((s) => `courier.payouts/${s}/${slotOf(at.getTime(), 30 * 60_000)}`));
   });
 
   it('PR 182: the packing photo sweep needs a store; one per day slot for a store with a photo past its day, no courier needed', async () => {

@@ -12,6 +12,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { AskPayout, PayoutRowActions } from '@/components/admin/couriers/PayoutPanel';
 import { PerfTable } from '@/components/admin/courier-report/PerfTable';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -24,7 +25,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { orderHref } from '@/lib/admin-orders/model';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
 import { paymentsDeps } from '@/lib/payments-api';
 import { shippingDeps } from '@/lib/shipping-api';
 import '@/app/admin/reports/delivery/report.css';
@@ -35,7 +36,7 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The sections, in the order the page shows them. */
-const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'performance', 'setup'] as const;
+const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'performance', 'setup'] as const;
 type Section = (typeof COURIER_SECTIONS)[number];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -342,6 +343,100 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
               </>
             ) : (
               <p className="a2-sm a2-mute a2-mt6">{cr('m.openNone')}</p>
+            )}
+          </section>
+        </>
+      );
+    }
+  } else if (section === 'payouts') {
+    if (!(access.guard.permissions?.has('payments.view') ?? false)) {
+      body = (
+        <section className="a2-card a2-mt12">
+          <p className="a2-sm a2-mute">{cr('m.noPerm')}</p>
+        </section>
+      );
+    } else {
+      const py = await pay.payoutView(await paymentsDeps(access.deps), who, id);
+      const canAsk = access.guard.permissions?.has('payments.settle') ?? false;
+      const cd: Dict = { cr: d.cr as Dict };
+      const row = (r: pay.PayoutRow) => {
+        const unconfirmed = r.providerRef === null && (r.state === 'REQUESTED' || r.state === 'PROCESSING');
+        const isOpen = r.state === 'REQUESTED' || r.state === 'PROCESSING';
+        return (
+          <li key={r.id} className="a2-card tight" data-testid="payout-row" data-state={r.state}>
+            <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <span className={`a2-pill ${r.state === 'PAID' ? 'ok' : r.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${r.state}`)}</span> <b>{m(r.amountMinor)}</b>
+                <span className="a2-xs a2-mute a2-blk">
+                  {cr('y.requested')}: {when.format(r.requestedAt)} · {cr('y.mode')}: {t(d, `ful.couriers.mode.${r.mode}`)} · {cr('y.covers')}: {cr('y.coversN', { n: n(r.parcels) })}
+                </span>
+              </div>
+              {canAsk && (isOpen || r.state === 'PAID') ? <PayoutRowActions dict={cd} payoutId={r.id} canCheck={isOpen && r.providerRef !== null} canSettle={r.state === 'PAID' && !r.settledAt} canClose={unconfirmed} /> : null}
+            </div>
+            {r.state === 'PAID' ? (
+              <p className="a2-sm a2-mt6">
+                {cr('y.paid')}: <b>{r.paidMinor === null ? '—' : m(r.paidMinor)}</b>
+                {r.paymentRef ? ` · ${r.paymentRef}` : ''} · {r.settledAt ? cr('y.settled') : cr('y.notSettled')}
+              </p>
+            ) : null}
+            {r.differenceMinor !== null ? <div className="a2-note bad a2-mt6">{cr('y.diff', { diff: m(Math.abs(r.differenceMinor)), dir: r.differenceMinor > 0 ? cr('y.dir.more') : cr('y.dir.less') })}</div> : null}
+            {unconfirmed ? <div className="a2-note bad a2-mt6">{cr('y.unconfirmed')}</div> : null}
+            {r.state === 'REJECTED' && r.note ? (
+              <p className="a2-xs a2-mute a2-mt6">
+                {cr('y.reason')}: {r.note}
+              </p>
+            ) : null}
+          </li>
+        );
+      };
+      body = (
+        <>
+          {!py.enabled ? (
+            <div className="a2-note a2-mt12" data-testid="payout-off">
+              {cr('y.off')} <Link href="/admin/delivery/settings">{cr('s.settingsOpen')}</Link>
+            </div>
+          ) : null}
+          {py.supported === 'read' ? <div className="a2-note a2-mt12">{cr('y.read')}</div> : null}
+          {py.supported === 'none' ? <div className="a2-note a2-mt12">{cr('y.noneCourier')}</div> : null}
+          <section className="a2-card a2-mt12" data-testid="payout-holds">
+            <h2 className="a2-h3">{cr('y.holds')}</h2>
+            <p className="a2-sm a2-mt6">{cr('y.holdsBody', { cash: m(py.holds.cashMinor), n: n(py.holds.parcels), charges: m(py.holds.chargesMinor), net: m(py.holds.netMinor) })}</p>
+            {py.courierBalanceMinor !== null ? (
+              <p className="a2-xs a2-mute">
+                {cr('y.balance')}: {m(py.courierBalanceMinor)}
+              </p>
+            ) : null}
+            {py.minAmountMinor ? <p className="a2-xs a2-mute">{cr('y.minimum', { amount: m(py.minAmountMinor) })}</p> : null}
+            {py.enabled && py.supported === 'request' ? (
+              py.blockedBy.length ? (
+                <ul className="a2-xs a2-mute a2-mt6" style={{ paddingLeft: 18 }}>
+                  {py.blockedBy.map((b) => (
+                    <li key={b}>{cr(`y.blocked.${b}`)}</li>
+                  ))}
+                </ul>
+              ) : canAsk ? (
+                <AskPayout dict={cd} courierId={id} label={cr('y.ask')} />
+              ) : (
+                <p className="a2-xs a2-mute a2-mt6">{cr('y.noPerm')}</p>
+              )
+            ) : null}
+          </section>
+          {py.open ? (
+            <section className="a2-mt12" data-testid="payout-open">
+              <h2 className="a2-h3">{cr('y.open')}</h2>
+              <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }}>
+                {row(py.open)}
+              </ul>
+            </section>
+          ) : null}
+          <section className="a2-mt12" data-testid="payout-history">
+            <h2 className="a2-h3">{cr('y.history')}</h2>
+            {py.rows.filter((r) => r.id !== py.open?.id).length ? (
+              <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }}>
+                {py.rows.filter((r) => r.id !== py.open?.id).map(row)}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute a2-mt6">{cr('y.noRows')}</p>
             )}
           </section>
         </>

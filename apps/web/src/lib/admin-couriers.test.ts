@@ -2,6 +2,7 @@
 // every statement-line reason and every Courier 360 section, so a page never shows a raw code.
 import { describe, expect, it } from 'vitest';
 import { LINE_MISMATCHES } from '@extas/payments';
+import { PAYOUT_STATES } from '@extas/adapters';
 import { PARCEL_FILTERS } from '@extas/shipping';
 import bn from '../../messages/admin-couriers.bn.json';
 import en from '../../messages/admin-couriers.en.json';
@@ -18,7 +19,9 @@ describe('the Couriers words (PR 670)', () => {
       const has = (k: string) => expect(t(d, k), k).not.toBe(k);
       for (const x of PARCEL_FILTERS) has(`cr.p.f.${x}`);
       for (const x of LINE_MISMATCHES) has(`cr.m.reasons.${x}`);
-      for (const x of ['overview', 'parcels', 'money', 'performance', 'setup']) has(`cr.c.sec.${x}`);
+      for (const x of PAYOUT_STATES) has(`cr.y.state.${x}`);
+      for (const x of ['PIN_REQUIRED', 'WRONG_PIN', 'PIN_LOCKED', 'PIN_NOT_SET', 'PAYOUTS_OFF', 'PAYOUT_NOT_SUPPORTED', 'PAYOUT_OPEN', 'PAYOUT_NOTHING', 'PAYOUT_REFUSED', 'FORBIDDEN']) has(`cr.y.err.${x}`);
+      for (const x of ['overview', 'parcels', 'money', 'payouts', 'performance', 'setup']) has(`cr.c.sec.${x}`);
     }
   });
 });
