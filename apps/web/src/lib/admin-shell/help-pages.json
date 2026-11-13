@@ -148,6 +148,7 @@
     { "id": "money/expenses", "route": "/admin/money/expenses" },
     { "id": "money/fees", "route": "/admin/money/fees" },
     { "id": "money/vat", "route": "/admin/money/vat" },
+    { "id": "reports/library", "route": "/admin/reports" },
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
     { "id": "reports/experiments", "route": "/admin/reports/experiments" },

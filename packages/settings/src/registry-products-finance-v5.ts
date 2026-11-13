@@ -9,6 +9,7 @@ import { setting } from './define';
 const V686 = 686;
 const V687 = 687;
 const V688 = 688;
+const V689 = 689;
 
 // ---- PR 686 · shop ranking -----------------------------------------------------------------------------------------
 
@@ -60,6 +61,18 @@ export const budgetSchema = z
   .strict();
 export type BudgetSettings = z.output<typeof budgetSchema>;
 
+// ---- PR 689 · report library ---------------------------------------------------------------------------------------
+
+export const reportsLibrarySchema = z
+  .object({
+    /** A style that sold in the last 30 days is "restock now" when its stock lasts this many days or fewer (or a size that sold is out). */
+    restockCoverDays: z.number().int().min(1).max(180),
+    /** A style still in stock with nothing sold in 30 days counts as "sitting unsold" once it is this many days old. */
+    deadAfterDays: z.number().int().min(7).max(720),
+  })
+  .strict();
+export type ReportsLibrarySettings = z.output<typeof reportsLibrarySchema>;
+
 export const productsFinanceV5Settings = {
   'shop.ranking': setting({
     scope: 'store',
@@ -104,5 +117,18 @@ export const productsFinanceV5Settings = {
     isPublic: false,
     sortOrder: 30,
     version: V688,
+  }),
+  'reports.library': setting({
+    scope: 'store',
+    schema: reportsLibrarySchema,
+    default: { restockCoverDays: 14, deadAfterDays: 60 }, // hardcode-ok: restock within two weeks of stock; unsold after two months; both editable
+    valueType: 'JSON',
+    group: 'reports',
+    labelKey: 'reports.library.label',
+    helpKey: 'reports.library.help',
+    isOwnerData: false,
+    isPublic: false,
+    sortOrder: 40,
+    version: V689,
   }),
 } as const;
