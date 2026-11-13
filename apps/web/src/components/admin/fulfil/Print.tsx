@@ -49,6 +49,9 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState('');
+  // S28 · PR 666: a second print asks for the owner's PIN while the owner's switch is on (typed here, sent once, never kept)
+  const [needPin, setNeedPin] = useState(false);
+  const [pin, setPin] = useState('');
   const press = useRef<{ key: string; what: string } | null>(null);
   const go = async () => {
     if (asking && reason.trim().length < 3) {
@@ -59,7 +62,7 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
     setBusy(true);
     const what = JSON.stringify(body ?? null);
     if (keyed && press.current?.what !== what) press.current = { key: newKey(), what };
-    const sent = body ? { ...body, ...(keyed && press.current ? { requestKey: press.current.key } : {}), ...(asking ? { reason: reason.trim() } : {}) } : undefined;
+    const sent = body ? { ...body, ...(keyed && press.current ? { requestKey: press.current.key } : {}), ...(asking ? { reason: reason.trim() } : {}), ...(needPin && pin.trim() ? { pin: pin.trim() } : {}) } : undefined;
     const tab = window.open('', '_blank');
     try {
       const res = await fetch(url, { method, credentials: 'same-origin', cache: 'no-store', headers: sent ? { 'content-type': 'application/json' } : undefined, body: sent ? JSON.stringify(sent) : undefined });
@@ -68,6 +71,8 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
         press.current = null;
         setAsking(false);
         setReason('');
+        setNeedPin(false);
+        setPin('');
         const href = URL.createObjectURL(await res.blob());
         if (tab && !tab.closed) tab.location.href = href;
         else {
@@ -85,6 +90,16 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
       if (data.error === 'REASON_REQUIRED') {
         setAsking(true);
         setMsg({ ok: true, text: t(dict, 'ful.reprint.ask', { orders: (data.details ?? []).join(', ') }) });
+        return;
+      }
+      if (data.error === 'PIN_REQUIRED' || data.error === 'WRONG_PIN') {
+        setNeedPin(true);
+        setPin('');
+        setMsg({ ok: data.error === 'PIN_REQUIRED', text: t(dict, data.error === 'PIN_REQUIRED' ? 'ful.pin.needed' : 'ful.pin.wrong') });
+        return;
+      }
+      if (data.error === 'PIN_NOT_SET' || data.error === 'PIN_LOCKED') {
+        setMsg({ ok: false, text: t(dict, data.error === 'PIN_NOT_SET' ? 'ful.pin.notSet' : 'ful.pin.locked') });
         return;
       }
       const refused = data.data?.refused;
@@ -108,12 +123,20 @@ export function PdfButton({ dict, url, method = 'POST', body, label, busyLabel, 
           <input id={`${id}-r`} className="a2-inp" value={reason} maxLength={200} placeholder={t(dict, 'ful.reprint.placeholder')} onChange={(e) => setReason(e.target.value)} data-testid="reprint-reason" />
         </span>
       ) : null}
+      {needPin ? (
+        <span className="a2-stack" style={{ gap: 4 }}>
+          <label className="a2-xs a2-mute" htmlFor={`${id}-p`}>
+            {t(dict, 'ful.pin.label')}
+          </label>
+          <input id={`${id}-p`} className="a2-inp" type="password" inputMode="numeric" autoComplete="off" value={pin} maxLength={20} placeholder={t(dict, 'ful.pin.placeholder')} onChange={(e) => setPin(e.target.value)} data-testid="reprint-pin" />
+        </span>
+      ) : null}
       <span className="a2-gap8">
         <button type="button" className={`a2-btn ${size} ${tone}`.trim()} onClick={go} disabled={busy || disabled} data-testid={testId}>
-          {busy ? (busyLabel ?? label) : asking ? t(dict, 'ful.reprint.go') : label}
+          {busy ? (busyLabel ?? label) : asking || needPin ? t(dict, 'ful.reprint.go') : label}
         </button>
-        {asking ? (
-          <button type="button" className="a2-btn sm ghost" onClick={() => { setAsking(false); setMsg(null); }} disabled={busy}>
+        {asking || needPin ? (
+          <button type="button" className="a2-btn sm ghost" onClick={() => { setAsking(false); setNeedPin(false); setPin(''); setMsg(null); }} disabled={busy}>
             {t(dict, 'ful.cancel')}
           </button>
         ) : null}

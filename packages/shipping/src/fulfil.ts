@@ -21,7 +21,8 @@
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { bengaliToLatin } from '@extas/delivery';
-import { DELIVERY_TARGET_SELECT, deliveryTarget, sharedPointOf } from '@extas/orders';
+import { verifyOwnerPin, type PinPolicy } from '@extas/auth';
+import { DELIVERY_TARGET_SELECT, deliveryTarget, orderStep, sharedPointOf, staffBy } from '@extas/orders';
 import { allow, logChange, nowOf, parse, setting, TX, type ShippingDeps, type Who } from './context';
 import { ShippingError } from './errors';
 import { fixedSetsOf, type FixedSetName } from './set-line';
@@ -257,6 +258,8 @@ const printInput = (max: number) =>
       reason: z.string().trim().min(3).max(200).optional(),
       /** The press's own key: the same key again returns the same job (a double click, a lost answer). */
       requestKey: z.string().trim().min(8).max(100).optional(),
+      /** PR 666: the owner's PIN for a reprint while `fulfilment.toShip.reprintPin` is on (never stored or logged as typed). */
+      pin: z.string().trim().min(1).max(20).optional(),
     })
     .strict();
 
@@ -272,6 +275,22 @@ async function replayPrint(deps: ShippingDeps, who: Who, job: { id: string; kind
   const ordered = await inPrintOrder(deps.db, who.storeId, rows);
   const [latin, sets, points] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered), locationLines(deps, who.storeId, ordered)]);
   return { jobId: job.id, replay: true, parcels: ordered.map((r) => stickerOf(r, prints[r.id] ?? r.labelPrintCount, latin, sets, points)) };
+}
+
+/** The longest PIN taken (the books PIN's own bound; a longer text is a typing mistake). */
+const PIN_MAX_DIGITS = 12;
+
+/** PR 666: orders whose sticker was just printed and that are confirmed or being picked move on to Packed (the order's own rules apply; one that cannot is left as it is). */
+async function packPrinted(deps: ShippingDeps, who: Who, rows: readonly PrintParcelRow[]): Promise<void> {
+  const od = { db: deps.db, settings: deps.settings, now: deps.now };
+  for (const r of rows) {
+    if (r.order.status !== 'CONFIRMED' && r.order.status !== 'PROCESSING') continue;
+    try {
+      await orderStep(od, { storeId: who.storeId, orderId: r.orderId }, staffBy(who.actor, who.ctx), 'pack');
+    } catch {
+      // the print already happened and is counted; an order that cannot be packed now (changed meanwhile) stays where it is
+    }
+  }
 }
 
 /**
@@ -298,13 +317,22 @@ export async function printStickers(deps: ShippingDeps, who: Who, input: unknown
       reprints: reprints.map((r) => ({ shipmentId: r.id, orderNumber: r.order.number, printCount: r.labelPrintCount })),
     });
   const reason = reprints.length ? (d.reason ?? null) : null;
+  // PR 666 (O-19): while the owner's switch is on, a second print also needs the owner's PIN (PIN_REQUIRED / WRONG_PIN …)
+  const toShip = await setting(deps, who.storeId, 'fulfilment.toShip');
+  let pinChecked = false;
+  if (reprints.length && toShip.reprintPin) {
+    const [minLength, maxAttempts, lockMinutes] = await Promise.all([deps.settings.value('books.pin.minLength'), deps.settings.value('books.pin.maxAttempts'), deps.settings.value('books.pin.lockMinutes')]);
+    const policy: PinPolicy = { minLength, maxLength: Math.max(minLength, PIN_MAX_DIGITS), maxAttempts, lockMinutes };
+    await verifyOwnerPin(deps.db, who.actor, d.pin, policy, { action: 'sticker.reprint', storeId: who.storeId, now: nowOf(deps), ctx: { source: 'admin-api', ...who.ctx } });
+    pinChecked = true;
+  }
   const ordered = await inPrintOrder(deps.db, who.storeId, rows);
   const at = nowOf(deps);
   try {
     const done = await deps.db.$transaction(async (tx) => {
       // the job first: a second press with the same key stops here, before anything is counted
       const job = await tx.printJob.create({
-        data: { storeId: who.storeId, kind: 'STICKER', orderIds: ordered.map((r) => r.orderId), shipmentIds: ordered.map((r) => r.id), isReprint: reprints.length > 0, status: 'RUNNING', actorId: who.actor.staffUserId, reason, requestKey: d.requestKey ?? null },
+        data: { storeId: who.storeId, kind: 'STICKER', orderIds: ordered.map((r) => r.orderId), shipmentIds: ordered.map((r) => r.id), isReprint: reprints.length > 0, status: 'RUNNING', actorId: who.actor.staffUserId, reason, requestKey: d.requestKey ?? null, ...(pinChecked ? { data: { pinChecked: true } } : {}) },
         select: { id: true },
       });
       const prints: Record<string, number> = {};
@@ -315,9 +343,11 @@ export async function printStickers(deps: ShippingDeps, who: Who, input: unknown
         await tx.orderEvent.create({ data: { storeId: who.storeId, orderId: r.orderId, type: 'shipment.stickerPrinted', data: { shipmentId: r.id, print: after.labelPrintCount, reprint: again, jobId: job.id, ...(again && reason ? { reason } : {}) }, actorType: who.actor.staffUserId ? 'STAFF' : 'SYSTEM', actorId: who.actor.staffUserId, source: 'admin' } });
         await logChange(tx, who, 'shipment.sticker.print', 'Shipment', r.id, { labelPrintCount: after.labelPrintCount - 1 }, { labelPrintCount: after.labelPrintCount, jobId: job.id, ...(again && reason ? { reason } : {}) });
       }
-      await tx.printJob.update({ where: { id: job.id }, data: { status: 'SUCCEEDED', printedAt: at, data: { prints } } });
+      await tx.printJob.update({ where: { id: job.id }, data: { status: 'SUCCEEDED', printedAt: at, data: { prints, ...(pinChecked ? { pinChecked: true } : {}) } } });
       return { jobId: job.id, prints };
     }, TX);
+    // PR 666 (O-20): with the owner's switch on, a printed sticker is the parcel packed (no piece scan) — through the order service
+    if (toShip.packOnPrint) await packPrinted(deps, who, ordered);
     const [latin, sets, points] = await Promise.all([latinLines(deps, who.storeId, ordered), fixedSetLines(deps, who.storeId, ordered), locationLines(deps, who.storeId, ordered)]);
     return { jobId: done.jobId, replay: false, parcels: ordered.map((r) => stickerOf(r, done.prints[r.id]!, latin, sets, points)) };
   } catch (e) {
@@ -336,6 +366,8 @@ export interface PrintJobRow {
   orderNumbers: string[];
   isReprint: boolean;
   reason: string | null;
+  /** PR 666: the owner's PIN was checked for this reprint. */
+  pinChecked: boolean;
   by: string | null;
   at: string;
 }
@@ -348,7 +380,7 @@ export async function printJobs(deps: ShippingDeps, who: Who): Promise<PrintJobR
     where: { storeId: who.storeId, kind: { in: ['STICKER', 'HANDOVER_SHEET', 'PICKING_LIST'] }, status: 'SUCCEEDED' },
     orderBy: { createdAt: 'desc' },
     take: recentPrints,
-    select: { id: true, kind: true, orderIds: true, shipmentIds: true, isReprint: true, reason: true, actorId: true, createdAt: true },
+    select: { id: true, kind: true, orderIds: true, shipmentIds: true, isReprint: true, reason: true, actorId: true, createdAt: true, data: true },
   });
   const orderIds = [...new Set(jobs.flatMap((j) => j.orderIds))];
   const actorIds = [...new Set(jobs.map((j) => j.actorId).filter((x): x is string => !!x))];
@@ -365,6 +397,7 @@ export async function printJobs(deps: ShippingDeps, who: Who): Promise<PrintJobR
     orderNumbers: j.orderIds.map((id) => numberOf.get(id)).filter((x): x is string => !!x),
     isReprint: j.isReprint,
     reason: j.reason,
+    pinChecked: !!(j.data && typeof j.data === 'object' && (j.data as { pinChecked?: unknown }).pinChecked === true),
     by: j.actorId ? (nameOf.get(j.actorId) ?? null) : null,
     at: j.createdAt.toISOString(),
   }));
