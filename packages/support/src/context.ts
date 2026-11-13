@@ -74,6 +74,9 @@ export const SUPPORT_ERROR_CODES = [
   'PUSH_OFF',
   // follow-up 507: no order with this number in this store, to link the chat to
   'ORDER_NOT_FOUND',
+  // S28 · PR 692: quick replies are switched off; the short name is already used
+  'SAVED_REPLIES_OFF',
+  'SHORTCUT_TAKEN',
 ] as const;
 export type SupportErrorCode = (typeof SUPPORT_ERROR_CODES)[number];
 

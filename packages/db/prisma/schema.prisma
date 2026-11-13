@@ -437,6 +437,7 @@ model Store {
   supportCarts            SupportCart[]
   supportProductShares    SupportProductShare[]
   supportFollowUps        SupportFollowUp[]
+  supportSavedReplies     SupportSavedReply[]
   supportEscalations      SupportEscalation[]
   supportChannelTaps      SupportChannelTap[]
   conversationEvents      ConversationEvent[]
@@ -11464,4 +11465,25 @@ model ReportView {
   updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
 
   @@index([storeId, reportKey])
+}
+
+/// @stage S28 · PR 692 (CN-048) — Inbox › Quick replies: a short name with an English and a Bengali text, typed as
+/// `/name` in a chat's reply box. Never deleted: `archivedAt` hides it from chats and it can come back. `usedCount` is
+/// how often a person picked it. The 8 starter replies are the shop's own to edit (seeded once per store).
+model SupportSavedReply {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  /// One lower-case word (a-z, 0-9), unique in the store.
+  shortcut    String
+  bodyEn      String
+  bodyBn      String
+  usedCount   Int       @default(0)
+  archivedAt  DateTime? @db.Timestamptz(3)
+  createdById String?   @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, shortcut])
+  @@index([storeId, archivedAt])
 }

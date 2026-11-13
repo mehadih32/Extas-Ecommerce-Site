@@ -243,6 +243,8 @@ import supportIdentityEn from '../messages/support-identity.en.json';
 import supportContextBn from '../messages/support-context.bn.json';
 import supportContextEn from '../messages/support-context.en.json';
 import supportCatalogueBn from '../messages/support-catalogue.bn.json';
+import w5aBn from '../messages/w5a.bn.json';
+import w5aEn from '../messages/w5a.en.json';
 import supportCatalogueEn from '../messages/support-catalogue.en.json';
 import supportCartBn from '../messages/support-cart.bn.json';
 import supportCartEn from '../messages/support-cart.en.json';
@@ -491,6 +493,8 @@ messages.bn = mergeMessages(messages.bn, supportContextBn);
 // S22 · PR 429 (registry v157): the catalogue drawer in a support chat.
 messages.en = mergeMessages(messages.en, supportCatalogueEn);
 messages.bn = mergeMessages(messages.bn, supportCatalogueBn);
+messages.en = mergeMessages(messages.en, w5aEn);
+messages.bn = mergeMessages(messages.bn, w5aBn);
 // S22 · PR 430 (registry v158): orders from a support chat.
 messages.en = mergeMessages(messages.en, supportCartEn);
 messages.bn = mergeMessages(messages.bn, supportCartBn);
