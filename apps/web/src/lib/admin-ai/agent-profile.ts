@@ -253,8 +253,10 @@ export async function agentProfileView(deps: AgentProfileDeps, key: string): Pro
 
 const BIO_MAX = 600;
 const LABEL_MAX = 120;
-const TITLE_MAX = 160;
-const DESCRIPTION_MAX = 600;
+/** Exported (PR 584) so a caller writing an assignment from outside this file — the Telegram webhook — cuts a
+ * long command to the same limit instead of hand-copying the number. */
+export const TITLE_MAX = 160;
+export const DESCRIPTION_MAX = 600;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isHttpUrl(v: string): boolean {
@@ -342,12 +344,14 @@ export async function giveAgentReward(deps: { db: PrismaClient }, who: { actor: 
   return { id: created.id, label, note, at: created.createdAt.toISOString() };
 }
 
-/** Gives an agent a new assignment, with or without a due date (C10.4, PR 577/584). */
+/** Gives an agent a new assignment, with or without a due date (C10.4, PR 577/584). `source` defaults to
+ * `'dashboard'` (the manual form below); PR 584's Telegram routing passes `'telegram'` so the profile page's own
+ * "from {source}" line tells the two apart honestly. */
 export async function assignAgentTask(
   deps: { db: PrismaClient },
   who: { actor: Actor; ctx?: RequestContext },
   key: string,
-  input: { title: string; description?: string | null; dueAt?: string | null },
+  input: { title: string; description?: string | null; dueAt?: string | null; source?: string },
 ): Promise<AgentProfileAssignment> {
   if (!isAiAgentKey(key)) throw new AiError(404, 'NOT_FOUND', ['key']);
   const title = input.title.trim();
@@ -362,7 +366,7 @@ export async function assignAgentTask(
       agentId: row.id,
       title,
       description,
-      source: 'dashboard',
+      source: input.source?.trim() || 'dashboard',
       assignedById: who.actor.staffUserId ?? null,
       status: 'todo',
       dueAt: input.dueAt ? new Date(`${input.dueAt}T00:00:00Z`) : null,

@@ -197,15 +197,16 @@ check "gate: a token that is not hex is refused" "$(bash "$AB" "# fp" extas H 'x
 # Follow-up 372: and the couriers' status calls (POST, the typed-in token or secret) on their two paths, as a fifth.
 # CN-045 (12 Nov, owner, a failed deploy): and /reset and the four self-unregistering service-worker routes (CN-043),
 # GET only, as a sixth through tenth — a browser that cannot reach the app at all must still reach these.
+# PR 584: and the agents' shared Telegram bot (POST, the webhook secret header) on its one path, as an eleventh.
 # qa-gate (30 Oct): each one matches the raw request target ({http.request.orig_uri}), case for case, anchored on its
 # exact path; never Caddy's `path` matcher, which ignores case and decodes and cleans the path first.
 x() { printf '\tnot {\n\t\tmethod %s\n\t\texpression `{http.request.orig_uri}.matches(\x27^%s([?].*)?$\x27)`\n\t}' "$1" "$2"; }
-want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x 'GET POST' /api/messenger/webhook; echo; x GET '/erp-api/(top-products|customers)'; echo; x POST '/api/courier/(steadfast|pathao)/webhook'; echo; x GET '/reset'; echo; x GET '/sw[.]js'; echo; x GET '/service-worker[.]js'; echo; x GET '/OneSignalSDKWorker[.]js'; echo; x GET '/firebase-messaging-sw[.]js')"
-check "gate: the ERP, WhatsApp, Messenger and courier webhooks, the ERP's calls, reset and the service workers are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "10:10:10:0"
-check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "10:0"
+want_ex="$(x POST /api/erp/webhook; echo; x 'GET POST' /api/whatsapp/webhook; echo; x 'GET POST' /api/messenger/webhook; echo; x GET '/erp-api/(top-products|customers)'; echo; x POST '/api/courier/(steadfast|pathao)/webhook'; echo; x GET '/reset'; echo; x GET '/sw[.]js'; echo; x GET '/service-worker[.]js'; echo; x GET '/OneSignalSDKWorker[.]js'; echo; x GET '/firebase-messaging-sw[.]js'; echo; x POST '/api/telegram/webhook')"
+check "gate: the ERP, WhatsApp, Messenger, courier and Telegram webhooks, the ERP's calls, reset and the service workers are the only exemptions" "$(grep -c 'not {' <<<"$blk"):$(grep -c 'method ' <<<"$blk"):$(grep -c 'expression ' <<<"$blk"):$(grep -c 'path ' <<<"$blk")" "11:11:11:0"
+check "gate: the exemptions match the raw target, never a cleaned path" "$(grep -c '{http.request.orig_uri}.matches(.^/' <<<"$blk"):$(grep -cE '\b(path|path_regexp|http\.request\.uri\.path)\b' <<<"$blk")" "11:0"
 check "gate: the exemption blocks, word for word" "$(sed -n '/^\tnot {$/,/^\t}$/p' <<<"$blk")" "$want_ex"
-check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "11"
-check "gate: the server re-writes an older gate (fingerprint v8)" "$(grep -c '# preview gate v8 for' ../server/steps/09-stack.sh)" "1"
+check "gate: cookie test and exemptions in one matcher" "$(sed -n '/^@preview_needed {$/,/^}$/p' <<<"$blk" | grep -c $'^\tnot ')" "12"
+check "gate: the server re-writes an older gate (fingerprint v9)" "$(grep -c '# preview gate v9 for' ../server/steps/09-stack.sh)" "1"
 # With a Caddy binary (CADDY_BIN, or caddy on PATH), the gate runs for real: the webhook POST reaches the app with no
 # login and no cookie, and nothing else does. CI downloads the release that matches the server's image (IMG_CADDY) and
 # runs this part; anywhere else it runs when a Caddy is installed.
@@ -228,6 +229,8 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   check "gate (caddy): its other methods, paths and spellings still ask" "$(code -X PUT "$u/api/messenger/webhook"):$(code "$u/api/messenger/webhook/x"):$(code "$u/API/MESSENGER/WEBHOOK"):$(code -X POST "$u/api/messenger/webhoo%6b"):$(code -I "$u/api/messenger/webhook")" "401:401:401:401:401"
   check "gate (caddy): the couriers' status call POSTs pass with no login" "$(code -X POST "$u/api/courier/steadfast/webhook" -d '{}'):$(code -X POST "$u/api/courier/pathao/webhook" -d '{}')" "200:200"
   check "gate (caddy): no other courier, method, path or spelling passes" "$(code "$u/api/courier/steadfast/webhook"):$(code -X POST "$u/api/courier/mockCourier/webhook"):$(code -X POST "$u/api/courier/steadfast/webhook/x"):$(code -X POST "$u/API/COURIER/PATHAO/WEBHOOK"):$(code -X POST "$u/api/courier/pathao/webhoo%6b"):$(code -X POST --path-as-is "$u/api/courier/x/../pathao/webhook")" "401:401:401:401:401:401"
+  check "gate (caddy): the Telegram webhook POST passes with no login" "$(code -X POST "$u/api/telegram/webhook" -d '{}')" "200"
+  check "gate (caddy): its other methods, paths and spellings still ask" "$(code "$u/api/telegram/webhook"):$(code -X PUT "$u/api/telegram/webhook"):$(code -X POST "$u/api/telegram/webhook/x"):$(code -X POST "$u/API/TELEGRAM/WEBHOOK"):$(code -X POST "$u/api/telegram/webhoo%6b")" "401:401:401:401:401"
   check "gate (caddy): the ERP's two GET calls pass with no login" "$(code "$u/erp-api/top-products?from=2026-10-01&to=2026-10-22"):$(code "$u/erp-api/customers?page=1")" "200:200"
   check "gate (caddy): nothing else under /erp-api passes" "$(code -X POST "$u/erp-api/customers"):$(code "$u/erp-api/orders"):$(code "$u/erp-api/customers/x"):$(code "$u/erp-api")" "401:401:401:401"
   # qa-gate (30 Oct): Caddy's `path` matcher ignores case and matches the decoded, cleaned path while the app routes on

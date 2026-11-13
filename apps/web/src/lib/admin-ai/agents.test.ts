@@ -13,6 +13,13 @@ describe('the seven fixed agents (PR 304, 577, 581)', () => {
     }
   });
 
+  it('each has a short Telegram identity tag, never the whole role sentence (PR 584)', () => {
+    for (const a of AI_AGENTS) {
+      expect(a.tag.trim()).not.toBe('');
+      expect(a.tag.length).toBeLessThanOrEqual(20);
+    }
+  });
+
   it('Gyani alone is the chief', () => {
     const chiefs = AI_AGENTS.filter((a) => a.isChief);
     expect(chiefs.map((a) => a.key)).toEqual(['gyani']);

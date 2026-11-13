@@ -904,6 +904,29 @@ export const registry = {
     sortOrder: 40,
     version: 310,
   }),
+  // ---- S15 · PR 584 · Telegram identity and command routing: `enabled` off until the owner turns it on (CLAUDE.md
+  // rule — every AI feature ships off). While off, an inbound Telegram update is still answered 200 OK (so Telegram
+  // does not retry it) but nothing is routed or assigned; the bot's outbound alerts (PR 392) keep working either
+  // way, off or on. Also gated on the Telegram connection's own optional `webhookSecret` being set (A1.3 "mock until
+  // a real key") — `enabled` alone is not enough. `maxBodyKb`: the largest webhook body read (one bot, one address,
+  // the same shape `support.channels.webhookMaxBodyKb` already uses for Messenger). ----
+  'ai.telegram.commands': setting({
+    schema: z
+      .object({
+        enabled: z.boolean(),
+        maxBodyKb: z.int().min(16).max(1024),
+      })
+      .strict(),
+    default: { enabled: false, maxBodyKb: 64 },
+    scope: 'installation',
+    valueType: 'JSON',
+    group: 'ai',
+    labelKey: 'ai.telegram.commands.label',
+    helpKey: 'ai.telegram.commands.help',
+    isOwnerData: false,
+    sortOrder: 41,
+    version: 350,
+  }),
 
   // ---- PR 508 · theme: which complete theme the shop wears (D table: Classic) and the large-text switch (off). The
   // theme's colour and font tokens belong to the design-token file (Shilpi, S02), not to this registry. ----

@@ -240,10 +240,11 @@ CONF
   # v3 (follow-up 80): the ERP webhook POST passes without the login; v4 (PR 292) the WhatsApp webhook GET and POST
   # too; v5 (PR 620) the ERP's two signed GET calls; v6 (PR 426) the Messenger webhook GET and POST; v7 (follow-up 372) the
   # couriers' status calls (POST); v8 (CN-045, 12 Nov) /reset and the four self-unregistering service-worker routes
-  # (GET). A server with an older gate re-writes it — CN-045's own first deploy didn't bump this tag, so a server
-  # already on v7 kept its old auth.caddy (same user/password/days) and /reset stayed behind the gate it was meant
-  # to skip, failing the smoke test and rolling the deploy back a second time.
-  tag="# preview gate v8 for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12) days $days"
+  # (GET); v9 (PR 584) the agents' shared Telegram bot's webhook (POST). A server with an older gate re-writes it —
+  # CN-045's own first deploy didn't bump this tag, so a server already on v7 kept its old auth.caddy (same
+  # user/password/days) and /reset stayed behind the gate it was meant to skip, failing the smoke test and rolling
+  # the deploy back a second time.
+  tag="# preview gate v9 for $EXTAS_STAGING_USER $(printf '%s' "$pw" | sha256sum | cut -c1-12) days $days"
   if [ ! -s "$d/auth.caddy" ] || ! grep -qxF "$tag" "$d/auth.caddy"; then
     hash="$(docker run --rm --quiet "$IMG_CADDY" caddy hash-password --plaintext "$pw")"
     token="$(printf 'extas-preview-cookie:%s:%s' "$salt" "$pw" | sha256sum | cut -c1-64)"
