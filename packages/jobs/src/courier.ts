@@ -10,8 +10,14 @@
 // PR 182: `packing.photos.expire` — the daily sweep of a store's packing photos past the owner's days to keep
 // (packages/shipping packing.ts `expirePackingPhotos`: archived, never deleted). Planned once per day slot for a store
 // that has a photo past its day; it needs no courier connection.
+// S28 · PR 671: `courier.payouts` — a payout asked of a courier through its own payment request is read back (REQUESTED →
+// PROCESSING → PAID or REJECTED) and a PAID one settles the orders it covers in the name of the person who asked. Planned per
+// slot of `delivery.courier.payouts.pollMinutes` for a store with the feature on or a request still open; the poll itself
+// decides what is due, so a slot planned twice is one run. It never asks a courier for money.
 // This module imports `./keys`, never `./scheduler` (the scheduler imports the catalogue, which imports this).
-import type { ShippingDeps } from '@extas/shipping';
+import { recordStatementCost } from '@extas/inventory';
+import type { PaymentsDeps } from '@extas/payments';
+import { courierApi, noteStatementCharges, type ShippingDeps } from '@extas/shipping';
 import type { JobDeps } from './context';
 import { runKey, slotOf } from './keys';
 import type { Planner } from './worker';
@@ -19,6 +25,8 @@ import type { Planner } from './worker';
 export const COURIER_TRACK_JOB = 'courier.track';
 export const COURIER_QUEUE = 'courier';
 export const COURIER_ZONES_JOB = 'courier.zones';
+/** S28 · PR 671: the courier payout requests read back (packages/payments `pollPayouts`). */
+export const COURIER_PAYOUTS_JOB = 'courier.payouts';
 /** PR 182: the daily sweep of packing photos past their days to keep. */
 export const PACKING_PHOTOS_JOB = 'packing.photos.expire';
 /** How often a store's zone sync turn is looked at (the owner's `everyDays` decides when a list is read again). */
@@ -31,6 +39,34 @@ export function courierDeps(deps: JobDeps): ShippingDeps | null {
   if (!deps.couriers) return null;
   return { db: deps.db, settings: deps.settings, connections: deps.couriers.connections, now: deps.now };
 }
+
+/** The payments service's dependencies from the worker's: the couriers' own payment requests, and the books and charge log hooks a statement import uses (as the web app's). */
+export function payoutDeps(deps: JobDeps): PaymentsDeps | null {
+  const c = courierDeps(deps);
+  if (!c) return null;
+  return {
+    db: deps.db,
+    settings: deps.settings,
+    now: deps.now,
+    couriers: (storeId, provider) => courierApi(c, storeId, provider),
+    courier: { statementCharges: (storeId, lines) => noteStatementCharges({ db: deps.db, settings: deps.settings, now: deps.now }, storeId, lines) },
+    books: { statementCost: async (who, cost) => recordStatementCost(deps.inventory, who, cost) },
+  };
+}
+
+/** S28 · PR 671: each live store with courier payouts on, or a request still open: one read per slot of the owner's interval. */
+export const courierPayoutsPlanner: Planner = async (deps, now) => {
+  if (!deps.couriers) return [];
+  const stores = await deps.db.store.findMany({ where: { status: { not: 'ARCHIVED' }, archivedAt: null }, select: { id: true }, orderBy: { id: 'asc' } });
+  const out: Awaited<ReturnType<Planner>> = [];
+  for (const s of stores) {
+    const cfg = await deps.settings.value('delivery.courier.payouts', { storeId: s.id });
+    if (!cfg.enabled && !(await deps.db.courierPayout.count({ where: { storeId: s.id, OR: [{ state: { in: ['REQUESTED', 'PROCESSING'] } }, { state: 'PAID', settledAt: null, settleError: null }] } }))) continue;
+    const payload = { storeId: s.id };
+    out.push({ queue: COURIER_QUEUE, name: COURIER_PAYOUTS_JOB, payload, key: runKey(COURIER_PAYOUTS_JOB, payload, slotOf(now.getTime(), cfg.pollMinutes * MINUTE)) });
+  }
+  return out;
+};
 
 /** Each live store with tracking on: one read per slot of its interval. */
 export const courierPlanner: Planner = async (deps, now) => {

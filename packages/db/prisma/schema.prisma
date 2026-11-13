@@ -225,6 +225,7 @@ model Store {
   paymentLinks            PaymentLink[]
   courierSettlements      CourierSettlement[]
   courierSettlementLines  CourierSettlementLine[]
+  courierPayouts          CourierPayout[]
   codCollections          CodCollection[]
   walletAccounts          WalletAccount[]
   walletEntries           WalletEntry[]
@@ -4173,6 +4174,54 @@ model CourierSettlementLine {
   @@index([storeId, matchState])
 }
 
+/// @stage S28 · PR 671 — a payout the shop asked a courier for through the courier's OWN payment-request feature (never an
+/// "Ask for payment" of ours). REQUESTED → PROCESSING → PAID or REJECTED, read back from the courier by a poll. The parcels
+/// the request covers are the ones the courier held for us when it was asked (`shipmentIds`, a snapshot); when the courier
+/// says PAID they are put on an imported statement (`settlementId`) the way a statement file would, so the orders show
+/// the cash settled. A paid amount that differs from what those parcels come to is kept in `differenceMinor` and flagged,
+/// never corrected. Nothing is deleted; a rejected request stays with the courier's reason.
+model CourierPayout {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store          @relation(fields: [storeId], references: [id])
+  courierAccountId String         @db.Uuid
+  courierAccount   CourierAccount @relation(fields: [courierAccountId], references: [id])
+  /// The courier's own id of the request (null while the courier has not answered yet: the request is then unknown, see `note`).
+  providerRef      String?
+  /// REQUESTED, PROCESSING, PAID or REJECTED (the courier's words mapped by the adapter).
+  state            String         @default("REQUESTED")
+  /// MOCK (the practice world), SANDBOX or LIVE: the mode the courier's connection was in when asked.
+  mode             String         @default("MOCK")
+  /// What we asked for, and what the parcels it covers come to (cash collected less the courier's charge) when it was asked.
+  amountMinor      Int
+  coveredMinor     Int            @default(0)
+  /// What the courier says it paid, its payment reference and method, when it did.
+  paidMinor        Int?
+  paymentRef       String?
+  method           String?
+  paidAt           DateTime?      @db.Timestamptz(3)
+  /// The courier's own words (raw status) and the reason of a rejection.
+  rawStatus        String?
+  note             String?
+  /// paidMinor - coveredMinor when they differ (flagged on the screen); null when they agree or it is not paid yet.
+  differenceMinor  Int?
+  shipmentIds      Json           @default("[]")
+  settlementId     String?        @db.Uuid
+  settledAt        DateTime?      @db.Timestamptz(3)
+  /// Why the orders were not marked settled after PAID (e.g. the person who asked no longer holds `payments.settle`); a person presses "Mark orders settled".
+  settleError      String?
+  requestedAt      DateTime       @default(now()) @db.Timestamptz(3)
+  requestedById    String?        @db.Uuid
+  requestKey       String?
+  lastCheckedAt    DateTime?      @db.Timestamptz(3)
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, requestKey])
+  @@index([storeId, courierAccountId, requestedAt])
+  @@index([storeId, state])
+}
+
 /// PR 166 (§6.5.5; SIM-F-028) — how a settlement line stands against our records: MATCHED, MISMATCH (always with a reason
 /// code), or LATE (the money is right but came after the owner's limit).
 enum SettlementMatch {
@@ -4413,6 +4462,7 @@ model CourierAccount {
   shipments    Shipment[]
   areaMappings CourierAreaMapping[]
   settlements  CourierSettlement[]
+  payouts      CourierPayout[]
   handovers    HandoverBatch[]
   places       CourierPlace[]
   zoneSyncs    CourierZoneSync[]
