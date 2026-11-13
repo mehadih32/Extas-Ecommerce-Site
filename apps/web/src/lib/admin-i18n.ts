@@ -58,11 +58,13 @@ export const adminDicts: Record<AdminLang, Dict> = {
 
 const isLang = (v: unknown): v is AdminLang => typeof v === 'string' && (ADMIN_LANGS as readonly string[]).includes(v);
 
-/** The cookie's choice, else the language of the store's locale, else Bengali. */
-export function pickAdminLang(cookie: string | undefined | null, storeLocale: string | undefined | null): AdminLang {
-  if (isLang(cookie)) return cookie;
-  const base = (storeLocale ?? '').toLowerCase().split('-')[0];
-  return isLang(base) ? base : 'bn';
+/**
+ * The cookie's choice, else English (owner decision 13 Nov, PR 659: the admin opens in English, Bengali only through
+ * the EN/বাং switch, like the prototype). The store's locale no longer decides it: it is the storefront's language
+ * (it only sets how dates and numbers are written, see `adminLocale`). The second argument is kept so callers stay.
+ */
+export function pickAdminLang(cookie: string | undefined | null, _storeLocale?: string | undefined | null): AdminLang {
+  return isLang(cookie) ? cookie : 'en';
 }
 
 /** The locale dates are written in: the store's own when it is in the admin's language, else the bare language. */
