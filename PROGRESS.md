@@ -341,6 +341,7 @@
 | 2026-11-13 | **PR 680 · S28 (wave 4, lane w4a) — easy photo adding and plain photo quality checks (no AI): reorder, main, colour tag, one-click fix, off until switched on (registry v306, no migration)** |
 | 2026-11-13 | **PR 681 · S28 (wave 4, lane w4a) — product video built (upload or link), switch off** |
 | 2026-11-13 | **PR 682 · S28 (wave 4, lane w4a) — product and category FAQs built, switch off** |
+| 2026-11-13 | **PR 683 · S28 (wave 4, lane w4a) — ERP size chart site side built (sample source), switch off** |
 
 ## Parked
 

@@ -54,3 +54,4 @@ export * from './ghost';
 export * from './audit';
 export * from './video';
 export * from './faq';
+export * from './erp-size-chart';
