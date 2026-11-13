@@ -114,8 +114,8 @@ describe('PR 594 · the real register', () => {
   const md = readFileSync(join(__dirname, '../../../../docs/MASTER-REGISTER.md'), 'utf8');
   const reg = parseRegister(md, readFileSync(join(__dirname, '../../../../docs/BLUEPRINT.md'), 'utf8'));
 
-  it('has S0A and S00–S27, every numbered PR of them, and this PR on its card', () => {
-    expect(reg.stages).toHaveLength(29); // hardcode-ok: S0A plus S00–S27 (the register's "28 stages" leaves S0A out)
+  it('has S0A and S00–S28, every numbered PR of them, and this PR on its card', () => {
+    expect(reg.stages).toHaveLength(30); // hardcode-ok: S0A plus S00–S28 (the register leaves S0A out of its count)
     const numbered = reg.stages.flatMap((s) => s.prs);
     const missing = numbered.filter((n) => !reg.prs.has(n));
     expect(missing).toEqual([]);
