@@ -290,6 +290,10 @@ import courierWebhooksEn from '../messages/courier-webhooks.en.json';
 import courierWebhooksBn from '../messages/courier-webhooks.bn.json';
 import handoverCheckEn from '../messages/handover-check.en.json';
 import handoverCheckBn from '../messages/handover-check.bn.json';
+import toShipEn from '../messages/to-ship.en.json';
+import toShipBn from '../messages/to-ship.bn.json';
+import courierWatchEn from '../messages/courier-watch.en.json';
+import courierWatchBn from '../messages/courier-watch.bn.json';
 
 export type MessageTree = { [key: string]: string | MessageTree };
 export interface SettingsMessages {
@@ -439,6 +443,12 @@ messages.bn = mergeMessages(messages.bn, courierWebhooksBn);
 // S08 · PR 180 follow-up 437 (registry v275): the courier's pick-up checked against a handed-over sheet (registry-handover-check.ts).
 messages.en = mergeMessages(messages.en, handoverCheckEn);
 messages.bn = mergeMessages(messages.bn, handoverCheckBn);
+// S28 · PR 666 (registry v293): the To ship screen's two switches (registry-to-ship.ts).
+messages.en = mergeMessages(messages.en, toShipEn);
+messages.bn = mergeMessages(messages.bn, toShipBn);
+// S28 · PR 667 (registry v294): the With courier screen's watch (registry-courier-watch.ts).
+messages.en = mergeMessages(messages.en, courierWatchEn);
+messages.bn = mergeMessages(messages.bn, courierWatchBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);

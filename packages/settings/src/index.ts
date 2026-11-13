@@ -226,6 +226,10 @@ export * from './registry-shared-location';
 export * from './registry-courier-webhooks';
 // S08 · PR 180 follow-up 437 — the courier's pick-up checked against each handed-over sheet, off (registry-handover-check.ts, version 275).
 export * from './registry-handover-check';
+// S28 · PR 666 — the To ship screen's switches: reprint needs the PIN, packed on print (both off; registry-to-ship.ts, version 293).
+export * from './registry-to-ship';
+// S28 · PR 667 — the With courier screen's watch: stuck-parcel alert (off, 48 hours) and the backup courier (registry-courier-watch.ts, version 294).
+export * from './registry-courier-watch';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).

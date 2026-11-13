@@ -15,6 +15,7 @@ import type { ShellIconName } from '../admin-shell/icons';
 import type { FieldOption } from './spec';
 import { docChips, docsSummaryLine } from './docs';
 import { t } from '../i18n';
+import { validDay } from './range';
 import { phoneNormalizeBD } from '../phone-bd';
 import { LIST_PAGES, ORDER_TONE, orderHref, PAY_TONE, RET_TONE, SECTION_TONE, SHIP_TONE, UNBOOKED_SHIPMENT, type ListPageId, type ListQuery, type Tone } from './model';
 
@@ -42,11 +43,20 @@ export function parseListQuery(page: ListPageId, sp: Search): ListQuery {
     risk: one(sp.risk) && BAND_KEY.test(one(sp.risk)!) ? one(sp.risk) : undefined,
     section: pick(one(sp.section), RISK_SECTIONS),
     sort: pick(one(sp.sort), od.LIST_SORTS.filter((s) => s !== 'new')),
+    ...dayBar(sp),
     cursor: cursor && UUID.test(cursor) ? cursor : undefined,
   };
 }
 
 const BAND_KEY = /^[a-z0-9][a-z0-9-]{0,59}$/;
+
+/** PR 660: the date bar from the address: `from` and `to` (a real day each), or `range=<from>..<to>` from the preset select. */
+export function dayBar(sp: Search): { from?: string; to?: string } {
+  const r = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/.exec(one(sp.range) ?? '');
+  const from = validDay(one(sp.from)) ?? (r ? validDay(r[1]) : undefined);
+  const to = validDay(one(sp.to)) ?? (r ? validDay(r[2]) : undefined);
+  return { ...(from ? { from } : {}), ...(to ? { to } : {}) };
+}
 
 export interface Chip {
   label: string;
@@ -196,6 +206,8 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
     ...(query.risk ? { risk: query.risk } : {}),
     ...(query.section ? { section: query.section } : {}),
     ...(query.sort ? { sort: query.sort } : {}),
+    ...(query.from ? { from: query.from } : {}),
+    ...(query.to ? { to: query.to } : {}),
     ...(query.cursor ? { cursor: query.cursor } : {}),
   });
   const ids = list.rows.map((r) => r.id);

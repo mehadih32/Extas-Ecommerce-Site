@@ -16,9 +16,9 @@ describe('admin shell settings (v33)', () => {
     }
   });
 
-  it('PR 495: start pages are empty by default and take only real roles and the 14 sections', () => {
+  it('PR 495: start pages are empty by default and take only real roles and the real sections', () => {
     expect(adminShellSettings['admin.startPages'].default).toEqual({});
-    expect(ADMIN_SECTIONS).toHaveLength(14);
+    expect(ADMIN_SECTIONS).toHaveLength(15);
     expect(adminStartPagesSchema.safeParse({ 'order-desk': 'orders', packer: 'products' }).success).toBe(true);
     expect(adminStartPagesSchema.safeParse({ 'order-desk': 'nowhere' }).success).toBe(false);
     expect(adminStartPagesSchema.safeParse({ 'Order Desk': 'orders' }).success).toBe(false);

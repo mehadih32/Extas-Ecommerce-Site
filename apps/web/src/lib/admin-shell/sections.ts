@@ -41,12 +41,17 @@ export interface ShellSection {
   ownerOnly?: boolean;
   /** The admin guide (docs/admin-guide/<slug>.md). */
   guide: string;
+  /**
+   * PR 659: a section whose pages moved into another section (Messages, now Marketing › Message campaigns). It stays in
+   * the table so its id, its words and its saved settings are never lost, but it has no menu entry and no tabs.
+   */
+  folded?: boolean;
 }
 
 export const SHELL_GROUPS: readonly Exclude<ShellGroup, 'bottom'>[] = ['daily', 'grow', 'business'];
 
 export const SHELL_SECTIONS: readonly ShellSection[] = [
-  { id: 'dashboard', icon: 'grid', group: 'daily', base: '/admin', tabs: [], perms: ['dashboard.read'], guide: 'dashboard' },
+  { id: 'dashboard', icon: 'home', group: 'daily', base: '/admin', tabs: [], perms: ['dashboard.read'], guide: 'dashboard' },
   // S05 (PR 140, 141; follow-up 200): All orders (and one order's page) and the To confirm call queue. Risk review,
   // packing, returns and the order settings join as their PRs are built. `orders.invoice` alone no longer shows the
   // section (its pages need orders.read); the palette still opens invoices for that key.
@@ -58,21 +63,15 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
     guide: 'orders',
     tabs: [
       { id: 'all', pages: [{ href: '/admin/orders', perm: 'orders.read', keys: ['orders', 'order'] }] },
+      // PR 660 (CN-048): this tab is "Processing" in the menu — the call queue and its calls, now over the Processing view (address unchanged)
       // S06 · PR 545: Calls to make — the call tasks the shop's steps left (a new customer among them), worked by a person
       { id: 'confirm', pages: [
         { href: '/admin/orders/confirm', perm: 'orders.confirm', keys: ['ordersConfirm'] },
         { href: '/admin/orders/confirm/calls', perm: 'orders.confirm', keys: ['ordersCalls'] },
       ] },
-      // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
-      { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
-      // S13 · PR 274: Incomplete — typed at checkout and left without ordering (All orders links it as a saved view)
-      { id: 'incomplete', more: true, pages: [{ href: '/admin/orders/incomplete', perm: 'orders.read', keys: ['ordersIncomplete'] }] },
-      // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
-      // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
-      { id: 'riskrules', more: true, pages: [
-        { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
-        { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
-      ] },
+      // S28 · PR 661 (CN-048): Batch — every order not yet handed to the courier (Current) and the handed-over sheets (Past).
+      { id: 'batch', pages: [{ href: '/admin/orders/batch', perm: 'orders.read', keys: ['ordersBatch'] }] },
+      // PR 660 (CN-048): this tab is "To ship" in the menu (pack, print, picking list, invoices); the rider's handover is the With courier tab
       // S08 · PR 179–181: Packing & print (ORD-04) — the print run of courier stickers, the daily picking list and the
       // rider's handover. PR 182: Pack (pick, pack and hand over on one screen) is the tab's first page; S20 · PR 407: the invoices.
       {
@@ -81,11 +80,12 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/packing', perm: 'fulfilment.read', keys: ['packingPack'] },
           { href: '/admin/orders/packing/print', perm: 'fulfilment.read', keys: ['packingPrint'] },
           { href: '/admin/orders/packing/picking', perm: 'fulfilment.read', keys: ['packingPicking'] },
-          { href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] },
           // S20 · PR 407: the customers' invoices — the list, printing (paper, roll, chat picture) and the invoice's settings
           { href: '/admin/orders/packing/invoices', perm: 'fulfilment.read', keys: ['packingInvoices'] },
         ],
       },
+      // PR 660 (CN-048): With courier — the rider's handover and the day-end check (PR 667 adds the live courier status and the stuck-parcel alert).
+      { id: 'courier', pages: [{ href: '/admin/orders/packing/handover', perm: 'fulfilment.read', keys: ['packingHandover'] }] },
       // S08 · PR 185, 187, 191: Returns & exchanges (the board, a case, starting an exchange) and Receive & QC.
       {
         id: 'returns',
@@ -101,6 +101,16 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/orders/returns/erp', perm: 'returns.view', keys: ['ordersReturnsErp'] },
         ],
       },
+      // S13 · PR 274: Incomplete — typed at checkout and left without ordering (All orders links it as a saved view)
+      { id: 'incomplete', pages: [{ href: '/admin/orders/incomplete', perm: 'orders.read', keys: ['ordersIncomplete'] }] },
+      // S06 · PR 540: Today's digest — what came in, what the engine saw, and what waits for a person's OK (the gate's card)
+      { id: 'digest', more: true, pages: [{ href: '/admin/orders/digest', perm: 'orders.read', keys: ['ordersDigest'] }] },
+      // S06 · PR 161: ORD-06 Risk rules (its Levels section first; the matrix and the rule switches join with their PRs);
+      // S04 · PR 558: its Checkout advance panel (the Parameter for Checkout) is the tab's second page
+      { id: 'riskrules', more: true, pages: [
+        { href: '/admin/orders/risk-rules', perm: 'risk.rules.read', keys: ['riskRules'] },
+        { href: '/admin/orders/risk-rules/checkout', perm: 'risk.rules.read', keys: ['checkoutAdvance'] },
+      ] },
     ],
   },
   {
@@ -181,39 +191,14 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'settings', pages: [{ href: '/admin/delivery/settings', perm: 'delivery.read', keys: ['deliverySettings'] }] },
     ],
   },
-  // S14 (PR 291): the Message log (MSG-04) and Channels & limits (MSG-05). PR 505: the Order journey (MSG-01) and the
-  // Templates (MSG-03) come first, in the demo's order. Campaigns join with their PR.
-  {
-    id: 'messages',
-    icon: 'msg',
-    group: 'daily',
-    base: '/admin/messages',
-    guide: 'comms',
-    tabs: [
-      { id: 'journey', pages: [{ href: '/admin/messages/journey', perm: 'messages.journey.read', keys: ['messagesJourney'] }] },
-      // PR 289: customer journeys (product-life reminder, win-back, welcome) — MSG-02's ready-made automations
-      { id: 'automations', pages: [{ href: '/admin/messages/automations', perm: 'messages.journey.read', keys: ['messagesAutomations'] }] },
-      // PR 300: campaigns — win-back as MSG-02's ready-made campaign type (CN-019 control centre)
-      { id: 'campaigns', pages: [{ href: '/admin/messages/campaigns', perm: 'messages.journey.read', keys: ['messagesCampaigns'] }] },
-      // PR 290: e-mail marketing — the owner's e-mail templates, e-mail sends to a segment and their delivery log
-      { id: 'email', pages: [{ href: '/admin/messages/email', perm: 'messages.journey.read', keys: ['messagesEmail'] }] },
-      { id: 'templates', pages: [{ href: '/admin/messages/templates', perm: 'messages.templates.read', keys: ['messagesTemplates'] }] },
-      { id: 'log', pages: [{ href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] }] },
-      // PR 298: Consent is the Channels & limits tab's second page
-      {
-        id: 'channels',
-        pages: [
-          { href: '/admin/messages/channels', perm: 'messages.channels.read', keys: ['messagesChannels'] },
-          { href: '/admin/messages/consent', perm: 'messages.consent.view', keys: ['messagesConsent'] },
-        ],
-      },
-    ],
-  },
+  // PR 659 (CN-048): Messages is no section of its own any more: its pages are Marketing › Message campaigns. The id stays
+  // (saved settings, words, the guide); it has no menu entry. The pages and their addresses are unchanged.
+  { id: 'messages', icon: 'msg', group: 'grow', base: '/admin/messages', tabs: [], guide: 'comms', folded: true },
   // S22 · PR 425: the Inbox (one conversation's page is under it) and Support settings. Rider issues, Claims & credits
   // and Saved replies join with their PRs.
   {
     id: 'support',
-    icon: 'headset',
+    icon: 'inbox',
     group: 'daily',
     base: '/admin/support',
     guide: 'support',
@@ -228,15 +213,17 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       { id: 'analytics', pages: [{ href: '/admin/support/analytics', perm: 'support.read', keys: ['supportAnalytics'] }] },
     ],
   },
+  // PR 659 (CN-048): Rules is its own section (it was Marketing's first tab). Same pages, same addresses; the Offers & discounts
+  // and Pop-ups tabs of the prototype join with PR 676 and PR 677.
   {
-    id: 'marketing',
-    icon: 'mega',
-    group: 'grow',
-    base: '/admin/marketing',
-    guide: 'ads',
+    id: 'rules',
+    icon: 'rules',
+    group: 'daily',
+    base: '/admin/rules',
+    guide: 'rules',
     tabs: [
       {
-        id: 'rules',
+        id: 'all',
         guide: 'rules',
         pages: [
           { href: '/admin/rules', perm: 'rules.read', keys: ['rules'] },
@@ -245,8 +232,35 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/rules/eid', perm: 'rules.read', keys: ['eidDates'] },
         ],
       },
+    ],
+  },
+  {
+    id: 'marketing',
+    icon: 'mega',
+    group: 'grow',
+    base: '/admin/marketing',
+    guide: 'ads',
+    tabs: [
       // S13 · PR 256: campaigns — audience, offer, creative, window and the planned budget (`/admin/marketing/campaigns/<id>`).
       { id: 'campaigns', pages: [{ href: '/admin/marketing/campaigns', perm: 'marketing.campaigns.read', keys: ['marketingCampaigns', 'marketingCampaign'] }] },
+      // PR 659: the Smart Rules moved to their own section (Rules); Messages joined here as Message campaigns.
+      {
+        id: 'messages',
+        guide: 'comms',
+        pages: [
+          { href: '/admin/messages/campaigns', perm: 'messages.journey.read', keys: ['messagesCampaigns'] },
+          { href: '/admin/messages/journey', perm: 'messages.journey.read', keys: ['messagesJourney'] },
+          // PR 289: customer journeys (product-life reminder, win-back, welcome)
+          { href: '/admin/messages/automations', perm: 'messages.journey.read', keys: ['messagesAutomations'] },
+          // PR 290: e-mail marketing — the owner's e-mail templates, e-mail sends to a segment and their delivery log
+          { href: '/admin/messages/email', perm: 'messages.journey.read', keys: ['messagesEmail'] },
+          { href: '/admin/messages/templates', perm: 'messages.templates.read', keys: ['messagesTemplates'] },
+          { href: '/admin/messages/log', perm: 'messages.log.view', keys: ['messagesLog'] },
+          // PR 291, 298: Channels & limits and Consent
+          { href: '/admin/messages/channels', perm: 'messages.channels.read', keys: ['messagesChannels'] },
+          { href: '/admin/messages/consent', perm: 'messages.consent.view', keys: ['messagesConsent'] },
+        ],
+      },
       // S13 · PR 262: audiences from real orders — the list and the builder (`/admin/marketing/audiences/<id>`, `new`).
       { id: 'audiences', pages: [{ href: '/admin/marketing/audiences', perm: 'marketing.audiences.read', keys: ['marketingAudiences', 'marketingAudience'] }] },
       // S13 · PR 259: the ad accounts as the platforms see them (read only; Meta first, TikTok PR 260, Google PR 261).
@@ -627,7 +641,7 @@ export const visibleTabs = (s: ShellSection, v: ShellViewer) => s.tabs.filter((t
 
 /** A menu entry shows only to someone who holds a key in it (§5.0); a section with no key yet, to the owner. */
 export function sectionVisible(s: ShellSection, v: ShellViewer): boolean {
-  if (v.hidden?.has(s.id)) return false;
+  if (s.folded || v.hidden?.has(s.id)) return false;
   if (v.owner) return true;
   if (s.ownerOnly) return false;
   if (s.perms?.some((k) => v.perms.has(k))) return true;
@@ -689,4 +703,4 @@ export const guideOf = (p: ShellPlace) => p.tab?.guide ?? p.section.guide;
 export const GUIDE_SLUGS: readonly string[] = [...new Set(SHELL_SECTIONS.flatMap((s) => [s.guide, ...s.tabs.flatMap((t) => (t.guide ? [t.guide] : []))]))];
 
 /** Sections whose placeholder is drawn at their base address (no built page lives there). */
-export const placeholderSections = () => SHELL_SECTIONS.filter((s) => s.base !== '/admin' && !s.tabs.some((t) => t.pages.some((p) => p.href === s.base)));
+export const placeholderSections = () => SHELL_SECTIONS.filter((s) => !s.folded && s.base !== '/admin' && !s.tabs.some((t) => t.pages.some((p) => p.href === s.base)));

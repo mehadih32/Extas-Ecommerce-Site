@@ -14,13 +14,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { handoverHistorySchema, handoverReconcileSchema, handoverSheetSchema, pickingSortSchema, printQualitySchema, printRunSchema, stickerLayoutSchema, storeTarget } from '@extas/settings';
+import { handoverHistorySchema, handoverReconcileSchema, handoverSheetSchema, pickingSortSchema, printQualitySchema, printRunSchema, stickerLayoutSchema, storeTarget, toShipSchema, courierWatchSchema } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys these pages save (one card each). */
-export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history', 'documents.printQuality', 'fulfilment.picking.sort', 'fulfilment.handover.reconcile'] as const;
+export const PACKING_SETTING_KEYS = ['fulfilment.printRun', 'delivery.sticker.layout', 'delivery.handover.sheet', 'fulfilment.handover.history', 'documents.printQuality', 'fulfilment.picking.sort', 'fulfilment.handover.reconcile', 'fulfilment.toShip', 'fulfilment.courierWatch'] as const;
 export type PackingSettingKey = (typeof PACKING_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -34,6 +34,10 @@ const CARDS: Record<PackingSettingKey, { schema: ZodType<Record<string, unknown>
   'fulfilment.picking.sort': { schema: pickingSortSchema, reason: 'Orders › Packing & print › Picking list › List order', action: 'fulfilment.picking.sort.save' },
   // follow-up 437: the courier's pick-up checked against each handed-over sheet, on the Handover page
   'fulfilment.handover.reconcile': { schema: handoverReconcileSchema, reason: 'Orders › Packing & print › Handover › Check the pick-up against the sheet', action: 'fulfilment.handover.reconcile.save' },
+  // S28 · PR 666: the To ship screen's two switches (reprint needs the PIN, packed on print), on the To ship page
+  // S28 · PR 667: the With courier screen's watch (stuck alert, hours, backup courier), on the With courier page
+  'fulfilment.courierWatch': { schema: courierWatchSchema, reason: 'Orders › With courier › Stuck parcels and backup courier', action: 'fulfilment.courierWatch.save' },
+  'fulfilment.toShip': { schema: toShipSchema, reason: 'Orders › To ship › To ship switches', action: 'fulfilment.toShip.save' },
 };
 
 const isKey = (k: unknown): k is PackingSettingKey => typeof k === 'string' && (PACKING_SETTING_KEYS as readonly string[]).includes(k);

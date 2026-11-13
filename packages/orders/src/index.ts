@@ -67,6 +67,8 @@ export * from './customer';
 export * from './notes';
 export * from './duplicates';
 export * from './list';
+export * from './day-range';
+export * from './cancelled-summary';
 export * from './followups';
 export * from './calls';
 export * from './addon';
@@ -148,3 +150,4 @@ export * from './returns-erp';
 export * from './exchange-v6';
 // CN-028 · PR 619 (follow-up 530): a v5 order waiting at the switch-over sent again as a v6 order
 export * from './erp-switch-resend';
+export * from './batch';

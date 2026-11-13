@@ -7,6 +7,7 @@ import Link from 'next/link';
 import * as od from '@extas/orders';
 import { EmptyList, Kpis, ordersDict, readDeps, ViewChips, filterSelects } from '@/components/admin/orders/OrderListPage';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
+import { CancelledSummary } from '@/components/admin/orders/CancelledSummary';
 import { OrderTable } from '@/components/admin/orders/OrderTable';
 import { PageHead, SectionTabs } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -53,7 +54,7 @@ async function OrdersB(p: OrdersDesignProps) {
   const d = view.dict;
   const page: ListPageId = 'all';
   const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
-  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section || query.from || query.to);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
@@ -85,6 +86,7 @@ async function OrdersB(p: OrdersDesignProps) {
           clear={filtered || query.sort ? { href: listHref(page, { view: query.view }), label: t(d, 'orders.list.clear') } : null}
         />
       </details>
+      <CancelledSummary view={view} a={a} query={query} />
       {data.rows.length ? (
         <>
           <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length || files.length ? { commands: canBulk, holdOptions: data.holdOptions, files } : null} />

@@ -27,7 +27,9 @@ import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
 import type { LookMenuProps } from '../look/LookMenu';
 import { LookMenu } from '../look/LookMenu';
+import { DATE_PRESETS, dayOf, presetOf, presetValue } from '@/lib/admin-orders/range';
 import { OrderFilters, type FilterSelect } from './OrderFilters';
+import { CancelledSummary } from './CancelledSummary';
 import { OrderTable } from './OrderTable';
 
 export interface ListAccess {
@@ -126,7 +128,19 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
     return { name, label, any: t(d, 'orders.list.any', { name: label }), value: q[name] ?? '', options: values.map((v) => ({ value: v, label: t(d, `orders.${key}.${v}`) })) };
   };
   const risk = t(d, 'orders.list.risk');
+  // PR 660: the date bar — Today, Yesterday, Last 7 days, This month, Last month (the preset picked when the days match one),
+  // and two day boxes for a custom range; the days are the store's own (the order service reads them in `store.timeZone`).
+  const today = dayOf(new Date(), view.timeZone);
+  const range: FilterSelect = {
+    name: 'range',
+    label: t(d, 'orders.list.dateLabel'),
+    any: t(d, 'orders.list.dateAny'),
+    value: q.from && q.to && presetOf(q.from, q.to, today) ? `${q.from}..${q.to}` : '',
+    options: DATE_PRESETS.map((p) => ({ value: presetValue(p, today), label: t(d, `orders.list.datePreset.${p}`) })),
+    custom: { from: q.from ?? '', to: q.to ?? '', fromLabel: t(d, 'orders.list.dateFrom'), toLabel: t(d, 'orders.list.dateTo') },
+  };
   return [
+    range,
     sel('status', FILTER_STATES, 'st'),
     sel('payment', od.PAYMENT_METHODS, 'method'),
     sel('source', od.LIST_SOURCES, 'source'),
@@ -140,7 +154,7 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
   const d = view.dict;
   const page: ListPageId = 'all';
   const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
-  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section || query.from || query.to);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   // follow-up 222: the ticked orders' files (Export, Print invoices), each with its own key
   const files = bulkFilesFor(a.perms);
@@ -163,6 +177,7 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
         selects={filterSelects(view, query, data.bands)}
         clear={filtered || query.sort ? { href: listHref(page, { view: query.view }), label: t(d, 'orders.list.clear') } : null}
       />
+      <CancelledSummary view={view} a={a} query={query} />
       {data.rows.length ? (
         <>
           <OrderTable dict={ordersDict(view)} rows={data.rows} bulk={canBulk.length || files.length ? { commands: canBulk, holdOptions: data.holdOptions, files } : null} />

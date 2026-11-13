@@ -48,7 +48,13 @@
       "NOT_SAME_PIECE": "That is not the same piece in another size or colour.",
       "OUT_OF_STOCK": "That size or colour is out of stock too.",
       "NOTHING_CHANGED": "Nothing changed.",
-      "FORBIDDEN": "You do not have the permission for this."
+      "FORBIDDEN": "You do not have the permission for this.",
+      "PIN_REQUIRED": "This needs the owner's PIN.",
+      "WRONG_PIN": "That PIN is not right.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while and try again.",
+      "NO_BACKUP_COURIER": "Pick a backup courier first (in the card below).",
+      "NOT_WITH_US": "The courier picked this parcel up meanwhile."
     },
     "couriers": {
       "title": "Couriers",
@@ -686,6 +692,24 @@
         "notBooked": "Not booked: {list}",
         "print": "Print selected ({n})",
         "note": "Book first, then print. A print makes what \"What to print\" on the print run page says, in packing order. Nothing is booked or printed by itself."
+      },
+      "chips": {
+        "label": "Where the orders are",
+        "confirmed": "Confirmed",
+        "booked": "Booked",
+        "packed": "Packed",
+        "confirmedHelp": "Confirmed, no courier booked yet",
+        "bookedHelp": "A courier is booked, the sticker is not printed yet",
+        "packedHelp": "Sticker printed, ready for the courier's rider",
+        "log": "Print log",
+        "set": {
+          "h": "To ship switches",
+          "d": "Two switches for printing stickers. Both are off as shipped.",
+          "reprintPin": "A second print needs the owner's PIN",
+          "reprintPinHelp": "Off: a reprint needs only its reason. On: it also needs the PIN, and the print log marks it.",
+          "packOnPrint": "A printed sticker means packed",
+          "packOnPrintHelp": "Off: packing is its own step. On: printing a confirmed order's sticker marks it Packed (no piece scan)."
+        }
       }
     },
     "printRun": {
@@ -832,6 +856,88 @@
         "edgeMm": "Edge the printer cannot reach (mm)",
         "edgeMmHelp": "0 to 5. The print check wants no ink in this band."
       }
+    },
+    "pin": {
+      "label": "Owner's PIN",
+      "placeholder": "PIN",
+      "needed": "A second print needs the owner's PIN. Type it, then press Print again.",
+      "wrong": "That PIN is not right.",
+      "notSet": "The owner has not set a PIN yet.",
+      "locked": "Too many wrong tries. Wait a while and try again.",
+      "logged": "PIN checked"
+    },
+    "withCourier": {
+      "held": {
+        "h": "With the courier now",
+        "d": "Parcels a courier holds, with the status it last reported.",
+        "empty": "No courier is holding a parcel now.",
+        "all": "All",
+        "status": "Status",
+        "moved": "Last moved",
+        "track": "History",
+        "stuck": "Stuck",
+        "cancelled": "Cancelled but still booked",
+        "cancelledHelp": "The order is cancelled but the parcel is still booked: tell the courier.",
+        "none": "not yet",
+        "stuckCount": "{n} stuck for {hours} hours or more",
+        "cancelledCount": "{n} cancelled but still booked",
+        "cod": "To collect",
+        "courier": "Courier"
+      },
+      "dayend": {
+        "h": "Day-end check",
+        "line": "Packed today {packed} · entered at a courier {entered}",
+        "ok": "Every order packed today is entered at a courier.",
+        "missing": "Not entered at a courier: {list}"
+      },
+      "drawer": {
+        "h": "Tracking history",
+        "close": "Close",
+        "attempts": "Failed delivery tries: {n}",
+        "empty": "The courier has sent no news yet.",
+        "rider": "Rider note: {note}",
+        "consignment": "Consignment",
+        "tracking": "Tracking code"
+      },
+      "watch": {
+        "h": "Stuck parcels and backup courier",
+        "d": "The stuck alert is off as shipped. The backup courier is where parcels move when the first courier is down.",
+        "stuckAlert": "Mark parcels that have not moved",
+        "stuckAlertHelp": "On: a parcel the courier holds that has not moved for the hours below is marked stuck.",
+        "stuckHours": "Hours without movement",
+        "stuckHoursHelp": "Default 48.",
+        "backup": "Backup courier",
+        "backupHelp": "Where parcels move when the first courier is down (needs the owner's PIN).",
+        "noBackup": "None chosen"
+      }
+    },
+    "move": {
+      "open": "Move to {name}",
+      "note": "The parcels this courier has not picked up are booked again with {name}. First cancel the old bookings with this courier yourself: nothing is cancelled there from here.",
+      "via": "How did you cancel with the courier?",
+      "viaPhone": "By phone",
+      "viaPanel": "In its panel",
+      "go": "Move {n} parcels",
+      "done": "Moved {moved}, left {skipped}."
+    },
+    "status": {
+      "IN_REVIEW": "In review",
+      "PENDING_PICKUP": "Waiting for pickup",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "On the way",
+      "OUT_FOR_DELIVERY": "Out for delivery",
+      "ATTEMPT_FAILED": "Try failed",
+      "ADDRESS_PROBLEM": "Address problem",
+      "LOST": "Lost",
+      "DAMAGED": "Damaged",
+      "RETURNING": "Coming back",
+      "BOOKING": "Booking",
+      "CANCELLED": "Cancelled",
+      "CANCEL_REQUESTED": "Cancel asked",
+      "DELIVERED": "Delivered",
+      "RETURNED": "Returned",
+      "PARTIALLY_DELIVERED": "Partly delivered",
+      "BOOKING_FAILED": "Booking failed"
     }
   }
 }

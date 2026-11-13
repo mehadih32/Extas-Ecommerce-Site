@@ -53,10 +53,10 @@ describe('shell words (Bengali and English side by side)', () => {
   });
 });
 
-describe('the 14 sections', () => {
+describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded into Marketing)', () => {
   it('match the settings list of sections, in order, in 3 groups plus the bottom', () => {
     expect(SHELL_SECTIONS.map((s) => s.id)).toEqual([...ADMIN_SECTIONS]);
-    expect(SHELL_SECTIONS).toHaveLength(14);
+    expect(SHELL_SECTIONS).toHaveLength(15);
     expect(new Set(SHELL_SECTIONS.map((s) => s.group))).toEqual(new Set(['daily', 'grow', 'business', 'bottom']));
   });
 
@@ -79,8 +79,8 @@ describe('the 14 sections', () => {
     const orders = sectionById('orders')!;
     expect(sectionVisible(orders, viewer(['orders.invoice']))).toBe(false);
     // PR 540: Today's digest only reads, so a reader of orders sees it too
-    expect(visibleTabs(orders, viewer(['orders.read'])).map((x) => x.id)).toEqual(['all', 'digest', 'incomplete']);
-    expect(visibleTabs(orders, viewer(['orders.read', 'orders.confirm'])).map((x) => x.id)).toEqual(['all', 'confirm', 'digest', 'incomplete']);
+    expect(visibleTabs(orders, viewer(['orders.read'])).map((x) => x.id)).toEqual(['all', 'batch', 'incomplete', 'digest']);
+    expect(visibleTabs(orders, viewer(['orders.read', 'orders.confirm'])).map((x) => x.id)).toEqual(['all', 'confirm', 'batch', 'incomplete', 'digest']);
     expect(locate('/admin/orders/digest')?.page?.keys).toEqual(['ordersDigest']);
     expect(locate('/admin/orders/incomplete')?.page?.keys).toEqual(['ordersIncomplete']);
     expect(sectionHome(orders, viewer(['orders.confirm']))).toBe('/admin/orders/confirm');
@@ -91,7 +91,7 @@ describe('the 14 sections', () => {
     expect(locate('/admin/orders/returns/refused')?.page?.keys).toEqual(['ordersReturnsRefused']);
     expect(locate('/admin/orders/returns/refused')?.tab?.id).toBe('returns');
     expect(sectionHome(orders, viewer(['returns.qc']))).toBe('/admin/orders/returns/qc');
-    expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['all', 'digest', 'incomplete', 'returns']);
+    expect(visibleTabs(orders, viewer(['orders.read', 'returns.view'])).map((x) => x.id)).toEqual(['all', 'batch', 'returns', 'incomplete', 'digest']);
     expect(locateKey('order')?.page?.href).toBe('/admin/orders');
   });
 
@@ -114,7 +114,8 @@ describe('the 14 sections', () => {
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
     // PR 342: /admin/money is Money → Overview now, so Money has no placeholder left.
     // PR 304: /admin/ai (Control room) is now a real page, so AI Center has no placeholder left either.
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'reports', 'settings']);
+    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'marketing', 'website', 'reports', 'settings']);
+    // PR 659: Messages is folded into Marketing, so it has no placeholder either
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
 
@@ -195,7 +196,7 @@ describe('page guides (PR 594, CN-026)', () => {
     expect(guidePlace('/admin/customers')).toEqual({ section: 'customers', page: 'customers/all' });
     expect(guidePlace('/admin/customers/review')).toEqual({ section: 'customers', page: 'customers/review' });
     expect(guidePlace('/admin/marketing')?.page ?? null).toBeNull();
-    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/invoices', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused', 'orders/returns-handback', 'orders/returns-erp', 'orders/pack', 'orders/digest', 'orders/incomplete', 'orders/calls']);
+    expect(sectionPages('orders').map((p) => p.id)).toEqual(['orders/all', 'orders/order', 'orders/confirm', 'orders/risk-rules', 'orders/checkout-advance', 'orders/print', 'orders/picking', 'orders/handover', 'orders/invoices', 'orders/returns', 'orders/returns-qc', 'orders/returns-refused', 'orders/returns-handback', 'orders/returns-erp', 'orders/pack', 'orders/digest', 'orders/batch', 'orders/incomplete', 'orders/calls']);
     expect(guidePlace('/admin/orders/risk-rules/checkout')?.page).toBe('orders/checkout-advance');
     // PR 179: Packing & print's print run, a fixed path under /admin/orders that beats an order's [id]
     expect(guidePlace('/admin/orders/packing/print')).toEqual({ section: 'orders', page: 'orders/print' });

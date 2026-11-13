@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { RISK_SECTIONS } from '@extas/settings';
 import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type OrdersDeps, type Who } from './context';
+import { placedRange } from './day-range';
 import { OrdersError } from './errors';
 import { notesOf, type OrderNoteView } from './notes';
 import { allowedCommands, customerCancelMode, deliveryTarget, dueOf, FINAL_STATES, OPEN_STATES, paymentPill, type DeliveryTarget, type OrderCommand, type OrderState, type PaymentPill } from './pure';
@@ -20,7 +21,7 @@ import { TWO_SIZE_FLAGS } from './two-size';
 import { DUPLICATE_SECTION, reviewKindOf, type StoredRuleHit } from './duplicates';
 import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './service';
 
-export const ORDER_VIEWS = ['all', 'open', 'new', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished'] as const;
+export const ORDER_VIEWS = ['all', 'open', 'new', 'processing', 'cancelled', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
 /** PR 541: every payment method but cash on delivery (paid before the parcel leaves). */
@@ -40,6 +41,13 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
       return { status: { in: [...OPEN_STATES] } };
     case 'new':
       return { status: 'PLACED' };
+    case 'processing':
+      // PR 660 (CN-048, admin prototype v5): "Processing" is a VIEW, never an order status — everything a person still has to
+      // sort out before it can be booked: new orders to confirm, orders waiting for their advance, orders on hold, and orders
+      // with an open review (a possible duplicate or a risk section). Customer cancel requests keep their own view.
+      return { OR: [{ status: { in: ['PLACED', 'AWAITING_ADVANCE', 'ON_HOLD'] } }, { id: { in: openReviewOrderIds }, status: { in: [...OPEN_STATES] } }] };
+    case 'cancelled':
+      return { status: 'CANCELLED' };
     case 'toConfirm':
       return { status: 'PLACED', cancelRequestedAt: null, id: { notIn: openReviewOrderIds }, OR: [{ paymentMethod: 'COD' }, { paymentMethod: null }] };
     case 'prepaid':
@@ -86,6 +94,8 @@ export const LIST_SOURCES = ['SUPPORT', ...ORDER_SOURCES] as const;
 export const LIST_SORTS = ['new', 'risk'] as const;
 export type ListSort = (typeof LIST_SORTS)[number];
 
+const dayText = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'a day like 2026-11-13' });
+
 export const listQuery = z
   .object({
     view: z.enum(ORDER_VIEWS).default('all'),
@@ -98,6 +108,9 @@ export const listQuery = z
     risk: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,59}$/).optional(),
     section: z.enum(RISK_SECTIONS).optional(),
     sort: z.enum(LIST_SORTS).default('new'),
+    /** PR 660: the day the order was placed, from and to (both included), as the store's own days (YYYY-MM-DD). */
+    from: dayText.optional(),
+    to: dayText.optional(),
     cursor: z.uuid().optional(),
     limit: z.coerce.number().int().min(1).max(100).optional(),
   })
@@ -198,7 +211,10 @@ export async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<
 }
 
 /** The list's filters (view, status, search, payment method, channel) as one condition; PR 151's export uses it too. */
-export type ListFilters = Pick<z.output<typeof listQuery>, 'view' | 'status' | 'q' | 'payment' | 'source'> & Partial<Pick<z.output<typeof listQuery>, 'risk' | 'section'>>;
+export type ListFilters = Pick<z.output<typeof listQuery>, 'view' | 'status' | 'q' | 'payment' | 'source'> & Partial<Pick<z.output<typeof listQuery>, 'risk' | 'section'>> & {
+  /** PR 660: placed on or after / before these moments (see `placedRange`). */
+  placed?: { from?: Date; before?: Date };
+};
 
 /** Every order of the store the list shows (never a draft or an archived order). */
 export const listBase = (storeId: number): Prisma.OrderWhereInput => ({ storeId, archivedAt: null, status: { not: 'DRAFT' } });
@@ -213,6 +229,7 @@ export function listWhere(storeId: number, q: ListFilters, reviews: string[]): P
     ...(q.source === 'SUPPORT' ? { source: { in: [...SUPPORT_SOURCES] } } : q.source ? { source: q.source } : {}),
     ...(q.risk ? { riskBand: q.risk } : {}),
     ...(q.section ? { riskSection: q.section } : {}),
+    ...(q.placed && (q.placed.from || q.placed.before) ? { placedAt: { ...(q.placed.from ? { gte: q.placed.from } : {}), ...(q.placed.before ? { lt: q.placed.before } : {}) } } : {}),
   };
   return { AND: [listBase(storeId), viewWhere(q.view, reviews), status, filters, search] };
 }
@@ -230,7 +247,8 @@ export async function listOrders(deps: OrdersDeps, who: Who, query: unknown = {}
   const take = q.limit ?? (await setting(deps, who.storeId, 'orders.list.pageSize'));
   const reviews = await openReviewIds(deps, who.storeId);
   const base = listBase(who.storeId);
-  const where = listWhere(who.storeId, q, reviews);
+  const placed = await placedRange(deps, who.storeId, q.from, q.to);
+  const where = listWhere(who.storeId, { ...q, placed }, reviews);
   const found = await deps.db.order.findMany({ where, orderBy: orderOf(q.sort), take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}), select: ROW_SELECT });
   const page = found.slice(0, take);
   const refunded = await refundedOf(deps, who.storeId, page.map((o) => o.id));
