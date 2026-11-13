@@ -245,6 +245,8 @@ export const APPEND_ONLY_LOCKED = [
   'OrderPriceAdjustment',
   // S05 · PR 665 (S28; migration 0201_order_merge): one row per order folded into another; never edited.
   'OrderMerge',
+  // S28 · PR 695 (migration 0263_affiliates): each payout to an affiliate partner; a correction is a new, negative row.
+  'AffiliatePayout',
 ] as const;
 
 const RUN_ROW = 'a run or job row: its status, result or end time is written when the run finishes';

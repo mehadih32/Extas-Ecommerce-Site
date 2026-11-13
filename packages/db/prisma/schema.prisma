@@ -440,6 +440,9 @@ model Store {
   supportSavedReplies     SupportSavedReply[]
   liveSessions            LiveSession[]
   liveCaptures            LiveCapture[]
+  affiliates              Affiliate[]
+  affiliateCodes          AffiliateCode[]
+  affiliatePayouts        AffiliatePayout[]
   supportEscalations      SupportEscalation[]
   supportChannelTaps      SupportChannelTap[]
   conversationEvents      ConversationEvent[]
@@ -11542,4 +11545,62 @@ model LiveCapture {
 
   @@unique([sessionId, commentId])
   @@index([storeId, sessionId, createdAt])
+}
+
+/// @stage S28 · PR 695 (CN-048) — Marketing › Tools › Influencers & affiliates: a partner (influencer, page, shop) who gets a
+/// personal code. `status` ON | PAUSED | ARCHIVED (never deleted). `shareBp` is the partner's own commission in basis
+/// points of the order's goods value (null: the shop's `marketing.affiliates` default).
+model Affiliate {
+  id           String            @id @default(uuid(7)) @db.Uuid
+  storeId      Int
+  store        Store             @relation(fields: [storeId], references: [id])
+  name         String
+  handle       String?
+  platform     String?
+  status       String            @default("ON")
+  shareBp      Int?
+  createdById  String?           @db.Uuid
+  createdAt    DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime          @updatedAt @db.Timestamptz(3)
+  codes        AffiliateCode[]
+  payouts      AffiliatePayout[]
+
+  @@index([storeId, status])
+}
+
+/// @stage S28 · PR 695 (CN-048) — a partner's personal code. It is the code of a coupon the owner made (`couponId`, the
+/// coupon gives the buyer the discount); an order that used the code counts for the partner once delivered. Unique per store.
+model AffiliateCode {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  affiliateId String    @db.Uuid
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id])
+  code        String
+  couponId    String?   @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, code])
+  @@index([affiliateId])
+}
+
+/// @stage S28 · PR 695 (CN-048) — the payout ledger of a partner. Append-only: a correction is a new row with a negative
+/// amount that names the row it reverses (`reversesId`). Each payout also writes one cost line (`costEntryId`, CostEntry).
+/// @append-only
+model AffiliatePayout {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store     @relation(fields: [storeId], references: [id])
+  affiliateId String    @db.Uuid
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id])
+  amountMinor Int
+  method      String
+  note        String?
+  reversesId  String?   @db.Uuid
+  costEntryId String?   @db.Uuid
+  paidById    String?   @db.Uuid
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, affiliateId, createdAt])
 }
