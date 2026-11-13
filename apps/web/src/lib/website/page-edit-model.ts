@@ -322,16 +322,7 @@ export function desktopOnly(key: EditKey, live: unknown, draft: unknown): unknow
 // ---- the phone checks (page-edit-phone.ts: no imports, so the shop panel can use it) --------------------------------
 export { judgePhone, type PhoneIssue, type PhoneMeasure } from './page-edit-phone';
 
-/** The page kind of a shop path (without /bn). */
-export function pageKindOf(path: string, productPrefix: string): EditPage {
-  const p = path.split(/[?#]/)[0] || '/';
-  if (p === '/' || p === '') return 'home';
-  if (p.startsWith('/collections/')) return 'category';
-  if (p === '/bag' || p.startsWith('/bag/')) return 'bag';
-  if (p.startsWith('/checkout') || p.startsWith('/pay')) return 'checkout';
-  const pre = `/${productPrefix.replace(/^\/+|\/+$/g, '')}/`;
-  if (productPrefix && p.startsWith(pre)) return 'product';
-  return 'other';
-}
+// ---- the page kind of a path (page-kind.ts: no imports, so the shop's own beacon can use it) ---------------------------
+export { pageKindOf } from './page-kind';
 
 export const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v ?? null)).digest('hex').slice(0, 16);
