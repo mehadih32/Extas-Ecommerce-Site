@@ -44810,7 +44810,7 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-13",
-    "note": "photos and video step, easy adding and plain quality checks (S28 wave 4; registry v306 `media.quality`, off; no migration): `@extas/media` `quality.ts` reads the picture's own pixels with sharp (too small, blurry, too dark, wrong shape, cut off; no AI call), `reorderProductPhotos`, `tagProductPhotoColour`, `productPhotoQuality`, `fixProductPhoto` (one-click reframe to 4:5 and lift the light; the old file stays in the library); the media API gains reorder/tag/fix and `?quality=1`; the product page gets the photo manager (drag many, paste, reorder, main, colour tag, alt text) and a Photo checks card in More options",
+    "note": "photos and video step, easy adding and plain quality checks (S28 wave 4; registry v321 `media.quality`, off; no migration): `@extas/media` `quality.ts` reads the picture's own pixels with sharp (too small, blurry, too dark, wrong shape, cut off; no AI call), `reorderProductPhotos`, `tagProductPhotoColour`, `productPhotoQuality`, `fixProductPhoto` (one-click reframe to 4:5 and lift the light; the old file stays in the library); the media API gains reorder/tag/fix and `?quality=1`; the product page gets the photo manager (drag many, paste, reorder, main, colour tag, alt text) and a Photo checks card in More options",
     "github": []
    },
    "builtFacts": {

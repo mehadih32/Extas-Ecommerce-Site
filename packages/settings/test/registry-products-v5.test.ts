@@ -1,14 +1,14 @@
-// S28 · PR 680-685 (registry v306): the product screens' settings are off as shipped and labelled in both languages.
+// S28 · PR 680-685 (registry v321): the product screens' settings are off as shipped and labelled in both languages.
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
 import { mediaQualitySchema, productsV5Settings } from '../src/registry-products-v5';
 
-describe('products v5 settings (v306)', () => {
+describe('products v5 settings (v321)', () => {
   it('every key is in the registry, at 306, never owner data, labelled in English and Bengali', () => {
     for (const [key, spec] of Object.entries(productsV5Settings)) {
       expect((registry as Record<string, unknown>)[key]).toBe(spec);
-      expect(spec.version).toBe(306);
+      expect(spec.version).toBe(321);
       expect(spec.isOwnerData).toBe(false);
       for (const lang of ['en', 'bn'] as const) {
         expect(lookup(messages[lang], spec.labelKey)).toBeTruthy();
