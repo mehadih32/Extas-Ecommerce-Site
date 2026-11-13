@@ -10,7 +10,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { beacon } from '@/lib/shop/beacon';
-import { pageKindOf } from '@/lib/website/page-edit-model';
+import { pageKindOf } from '@/lib/website/page-kind';
 
 export const ANALYTICS_BEACON_URL = '/api/shop/analytics';
 
