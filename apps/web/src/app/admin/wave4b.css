@@ -18,3 +18,14 @@
 .w4-delta.up { color: var(--lm-ok); }
 .w4-delta.down { color: var(--lm-bad); }
 .w4-delta.flat { opacity: 0.6; }
+/* PR 687: Money in & out */
+.w4-stack { display: grid; gap: 12px; margin-top: 12px; }
+.w4-kpis { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.w4-kpi { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--lm-ln); border-radius: 8px; min-width: 0; }
+.w4-kpi b { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.w4-pos { color: var(--lm-ok); }
+.w4-neg { color: var(--lm-bad); }
+.w4-r { text-align: right; font-variant-numeric: tabular-nums; }
+.w4-struck td { opacity: 0.55; text-decoration: line-through; }
+.w4-modal { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; background: var(--lm-scrim); z-index: 60; overflow: auto; }
+.w4-modal-box { width: min(440px, 100%); display: grid; gap: 10px; }

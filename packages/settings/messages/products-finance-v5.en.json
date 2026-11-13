@@ -4,5 +4,11 @@
       "label": "Shop ranking",
       "help": "The order products show in on your own shop (category pages, collections). How much sales, visitors who buy, margin, sizes in stock and newness count; how many days count as new; how many days of stock count as healthy; and whether the new order goes live by itself each night. Google ranking is separate."
     }
+  },
+  "books": {
+    "cash": {
+      "label": "Cashbook",
+      "help": "Whether Accounts and the owner may record money in and out of the cashbook (it is on), how many days ahead the cash forecast looks, and over how many days the cash couriers hold is expected to reach the shop. A record only: nothing is sent or paid."
+    }
   }
 }

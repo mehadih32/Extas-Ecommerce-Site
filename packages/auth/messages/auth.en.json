@@ -291,6 +291,9 @@
     "costlines": {
       "write": "Enter or reverse a day’s cost on a cost line (packaging, accessories, fees, courier, ads, other); never the month’s fixed costs"
     },
+    "cash": {
+      "record": "Record money in or out of a cashbook account, move it between accounts, and reverse a wrong entry (owner’s PIN; a record only, nothing is sent or paid)"
+    },
     "costs": {
       "write": "Record a prepaid top-up (SMS credit) and its low mark; set the costs & fees figures"
     },
