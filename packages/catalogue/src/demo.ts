@@ -110,7 +110,7 @@ export async function reconcileDemoCore(deps: CatalogueDeps, who: Who): Promise<
   return { shown: show.length, hidden: hide.length };
 }
 
-const LIMIT_SIZES = 4;
+const LIMIT_SIZES = 4; // hardcode-ok: the size columns a demo product gets, a display limit not a business rule
 
 /** Makes sample products: one for every category that has none yet (or just one category). Hidden until the switches show them. */
 export async function seedDemoProducts(deps: CatalogueDeps, who: Who, input: { categoryId?: string | null } = {}): Promise<{ made: number }> {
