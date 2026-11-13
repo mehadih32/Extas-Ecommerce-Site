@@ -1,0 +1,98 @@
+{
+  "moneyCash": {
+    "metaTitle": "Money in & out",
+    "title": "Money in & out",
+    "sub": "Every account's balance and every movement: cash, bank, bKash, Nagad. A wrong entry is reversed, never edited.",
+    "off": "Recording in the cashbook is switched off in the settings. You can still see what is here.",
+    "readOnly": "You can see the cashbook. Recording money needs the permission to record cash.",
+    "accounts": {
+      "title": "Accounts",
+      "total": "All accounts"
+    },
+    "month": {
+      "in": "Came in this month",
+      "out": "Went out this month"
+    },
+    "record": "Record money",
+    "reverse": "Reverse",
+    "reverseTitle": "Reverse this entry",
+    "recorded": "Saved in the cashbook",
+    "reversed": "Reversed with a new entry",
+    "types": {
+      "CAPITAL": "Owner put in money",
+      "OWNER_TAKE": "Owner took money",
+      "OTHER_IN": "Other money in",
+      "OTHER_OUT": "Other money out",
+      "TRANSFER": "Move between accounts"
+    },
+    "kinds": {
+      "OPENING": "Opening balance",
+      "COURIER": "From courier",
+      "ONLINE": "Online payment",
+      "REFUND": "Refund",
+      "EXPENSE": "Cost",
+      "ADS": "Ads",
+      "ERP": "ERP",
+      "CAPITAL": "Owner put in money",
+      "OWNER_TAKE": "Owner took money",
+      "OTHER_IN": "Other money in",
+      "OTHER_OUT": "Other money out",
+      "TRANSFER": "Move between accounts",
+      "REVERSAL": "Reversal"
+    },
+    "f": {
+      "kind": "What happened",
+      "from": "Move from",
+      "into": "Into account",
+      "outOf": "Out of account",
+      "to": "Move to",
+      "amount": "Amount",
+      "note": "Note (optional)",
+      "reason": "Why is it reversed",
+      "pin": "Owner's PIN"
+    },
+    "cancel": "Cancel",
+    "confirm": "Save with PIN",
+    "saving": "Saving…",
+    "forecast": {
+      "title": "Next {days} days",
+      "sub": "A calculation, not a promise: today's balance, the cash couriers hold arriving after the payout days, and the fixed costs due.",
+      "cod": "Cash held by couriers",
+      "fixed": "Fixed costs due",
+      "tightest": "Lowest balance on {day}",
+      "covered": "The fixed costs are covered.",
+      "short": "The balance goes below zero while paying the fixed costs."
+    },
+    "all": {
+      "title": "All movements",
+      "find": "Search movements",
+      "all": "All",
+      "in": "In",
+      "out": "Out",
+      "empty": "Nothing recorded yet.",
+      "more": "Older movements are not shown."
+    },
+    "col": {
+      "day": "Day",
+      "what": "What",
+      "account": "Account",
+      "amount": "Amount",
+      "balance": "Balance after",
+      "note": "Note",
+      "reversed": "Reversed"
+    },
+    "err": {
+      "forbidden": "You do not have permission for this.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "WRONG_PIN": "The PIN is not right.",
+      "PIN_LOCKED": "Too many wrong PINs. Wait a while and try again.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet (Closes page).",
+      "CASH_OFF": "Recording in the cashbook is switched off.",
+      "INVALID_INPUT": "Check the account, the amount and the day.",
+      "NOT_ADJUSTABLE": "This entry cannot be reversed.",
+      "CONFLICT": "This was already done.",
+      "amount": "Write an amount above zero.",
+      "other": "It could not be saved. Try again."
+    }
+  }
+}

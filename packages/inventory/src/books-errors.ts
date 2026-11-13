@@ -26,7 +26,9 @@ export type BooksErrorCode =
   /** qa-gate: a run of the books is going on for this store (one at a time); try again in a few minutes. */
   | 'BUSY'
   /** Money review: a day of the month moved after its close (`details` names it); the match runs first, then the close. */
-  | 'RUN_MATCH_FIRST';
+  | 'RUN_MATCH_FIRST'
+  /** S28 · PR 687: recording in the cashbook is switched off for this store (`books.cash.enabled`). */
+  | 'CASH_OFF';
 
 export class BooksError extends Error {
   readonly code: BooksErrorCode;
@@ -55,6 +57,7 @@ export class BooksError extends Error {
       case 'NOTHING_TO_CLOSE':
       case 'BUSY':
       case 'RUN_MATCH_FIRST':
+      case 'CASH_OFF':
         return 409;
       default:
         return 400;

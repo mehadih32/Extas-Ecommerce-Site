@@ -159,6 +159,7 @@
     { "id": "money/books-differences", "route": "/admin/money/books/differences" },
     { "id": "money/books-closes", "route": "/admin/money/books/closes" },
     { "id": "money/books-daily", "route": "/admin/money/books/daily" },
+    { "id": "money/cash", "route": "/admin/money/cash" },
     { "id": "money/costs", "route": "/admin/money/costs" },
     { "id": "reports/health", "route": "/admin/reports/health" },
     { "id": "reports/health-problems", "route": "/admin/reports/health/problems" },

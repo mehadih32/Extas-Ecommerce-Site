@@ -278,6 +278,8 @@ model Store {
   erpExchangeLines        ErpExchangeLine[]
   erpDailySummaries       ErpDailySummary[]
   erpFixedCostMonths      ErpFixedCostMonth[]
+  cashAccounts            CashAccount[]
+  cashEntries             CashEntry[]
   erpBooksSends           ErpBooksSend[]
   booksMatchRuns          BooksMatchRun[]
   booksDayCloses          BooksDayClose[]
@@ -11356,4 +11358,72 @@ model CheckoutVoice {
 
   @@index([storeId, visitorId, createdAt])
   @@index([orderId])
+}
+
+/// @stage S16 · PR 687 — a cashbook account (Cash, Bank, bKash, Nagad … ): where the shop's own money sits. The owner adds
+/// more; an account is archived, never deleted. A record of where money is: nothing here sends or moves money.
+model CashAccount {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  storeId    Int
+  store      Store     @relation(fields: [storeId], references: [id])
+  key        String
+  nameEn     String
+  nameBn     String?
+  /// CASH, BANK or MOBILE (bKash, Nagad, Rocket).
+  kind       String
+  sortOrder  Int       @default(0)
+  archivedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(3)
+
+  entries CashEntry[]
+
+  @@unique([storeId, key])
+}
+
+enum CashEntryKind {
+  OPENING
+  COURIER
+  ONLINE
+  REFUND
+  EXPENSE
+  ADS
+  ERP
+  CAPITAL
+  OWNER_TAKE
+  OTHER_IN
+  OTHER_OUT
+  TRANSFER
+  REVERSAL
+}
+
+/// @stage S16 · PR 687 — one money movement on a cashbook account, signed (in +, out −, minor units). Append-only: a wrong
+/// entry is reversed by a new entry that points at it (REVERSAL), never edited or deleted. A move between two accounts is
+/// two TRANSFER rows with one `transferId`. `requestKey` makes a double tap record once.
+/// @append-only
+model CashEntry {
+  id          String        @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store         @relation(fields: [storeId], references: [id])
+  accountId   String        @db.Uuid
+  account     CashAccount   @relation(fields: [accountId], references: [id])
+  /// The store's own day of the movement.
+  day         DateTime      @db.Date
+  kind        CashEntryKind
+  amountMinor Int
+  note        String?
+  transferId  String?       @db.Uuid
+  reversesId  String?       @db.Uuid
+  reason      String?
+  requestKey  String?
+  /// Where the row came from: `manual` (typed here) or a source such as a courier statement.
+  source      String        @default("manual")
+  createdById String?       @db.Uuid
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+
+  @@unique([storeId, requestKey])
+  @@unique([reversesId])
+  @@index([storeId, accountId, day])
+  @@index([storeId, day])
+  @@index([transferId])
 }
