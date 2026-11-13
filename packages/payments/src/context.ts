@@ -3,7 +3,7 @@
 // checks its permission itself (B6.5), scopes rows by `storeId` (A4.1) and writes the audit log in the same transaction
 // as the change. The order's status is never written here: when money makes an order ready (an advance paid in full),
 // the caller's `orders` hook moves it through the one order service (@extas/orders), which this package does not import.
-import type { Mode, PaymentGateway } from '@extas/adapters';
+import type { CourierApi, Mode, PaymentGateway } from '@extas/adapters';
 import type { Prisma, PrismaClient } from '@extas/db/client';
 import { requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import type { Key, Value } from '@extas/settings';
@@ -40,6 +40,9 @@ export async function afterPaid(hooks: OrderHooks | undefined, storeId: number, 
  * PR 170 — the gateway a payment's provider runs on now for a store (the app's connection layer: the practice gateway
  * until the owner's keys pass the Test button, A1.3).
  */
+/** S28 · PR 671: the courier's adapter for a provider in this store, in the mode its connection is in (none: no payout is asked or read here). */
+export type CourierResolver = (storeId: number, provider: string) => Promise<{ api: CourierApi; mode: Mode }>;
+
 export type GatewayResolver = (storeId: number, provider: string) => Promise<{ api: PaymentGateway; mode: Mode }>;
 
 /** PR 564 — what the delivery side does with the charges a courier's statement shows (the charge mismatch log). */
@@ -76,6 +79,8 @@ export interface PaymentsDeps {
   courier?: CourierChargeHooks;
   /** PR 170: the payment gateways (none: nothing goes through a gateway here). */
   gateways?: GatewayResolver;
+  /** S28 · PR 671: the couriers' own payment requests (none: no payout is asked or read here). */
+  couriers?: CourierResolver;
   /** CN-018 (4): the kept part's delivery charge (none: a split never adds a delivery charge). */
   door?: DoorHooks;
   /** Follow-up 565: the books' cost line from an imported statement (none: the statement's charges stay on its lines). */

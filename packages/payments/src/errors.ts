@@ -39,6 +39,13 @@ export type PaymentsErrorCode =
   | 'INSUFFICIENT_BALANCE'
   /** PR 171: more than the owner's limit (`data.limitMinor`). */
   | 'OVER_LIMIT'
+  /** S28 · PR 671: courier payouts are switched off (`delivery.courier.payouts`), the courier has no payment request, an earlier request is still open (`data.payoutId`), or there is nothing to ask for (`data.minAmountMinor`). */
+  | 'PAYOUTS_OFF'
+  | 'PAYOUT_NOT_SUPPORTED'
+  | 'PAYOUT_OPEN'
+  | 'PAYOUT_NOTHING'
+  /** S28 · PR 671: the courier refused the request (`message` has its words) or did not answer (the request stays open until a person checks). */
+  | 'PAYOUT_REFUSED'
   /** PR 171: this entry is not put right by a reversal (money spent or refunded), or it was reversed already. */
   | 'NOT_REVERSIBLE'
   /** PR 171: the order has no customer, so there is no wallet. */
@@ -107,6 +114,7 @@ export class PaymentsError extends Error {
       case 'TEST_PAYMENTS_OFF':
       case 'SAME_PERSON':
       case 'ALREADY_OPEN':
+      case 'PAYOUT_OPEN':
         return 409;
       case 'GATEWAY_ERROR':
         return 502;

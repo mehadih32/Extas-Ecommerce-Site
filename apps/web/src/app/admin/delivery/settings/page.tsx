@@ -155,6 +155,12 @@ export default async function DeliverySettingsPage() {
   ];
   // S28 · PR 670: the default courier
   const defaultFields: FieldsCardField[] = [{ kind: 'select', path: 'defaultCourierId', label: t(d, 'cr.s.default'), options: [{ value: '', label: t(d, 'cr.s.card.first') }, ...couriers.map((x) => ({ value: x.id, label: x.name }))] }];
+  // S28 · PR 671: courier payouts (off)
+  const payoutFields: FieldsCardField[] = [
+    { kind: 'switch', path: 'enabled', label: t(d, 'cr.s.payouts.enabled'), help: t(d, 'cr.s.payouts.enabledHelp') },
+    { kind: 'number', path: 'pollMinutes', label: t(d, 'cr.s.payouts.pollMinutes'), help: t(d, 'cr.s.payouts.pollMinutesHelp'), min: 5, max: 1440 },
+    { kind: 'number', path: 'minAmountMinor', label: t(d, 'cr.s.payouts.minAmountMinor'), help: t(d, 'cr.s.payouts.minAmountMinorHelp'), min: 0, max: 1_000_000_000 },
+  ];
   // follow-up 462: the packing step's cards, under More options
   const pa = (k: string, vars?: Record<string, string>) => t(d, `eta.packing.${k}`, vars);
   const packCard = (key: 'fulfilment.packing.check' | 'fulfilment.packing.photo' | 'fulfilment.packing.weight' | 'fulfilment.packing.queue' | 'fulfilment.packing.issues') => ({ key: cards[key].key, value: cards[key].value, version: cards[key].version });
@@ -213,6 +219,7 @@ export default async function DeliverySettingsPage() {
       <FieldsCard url={API} screen={card('delivery.courier.booking')} fields={bookingFields} texts={{ ...texts, h: ck('booking.h'), d: ck('booking.d') }} canEdit={canEdit} testId="delivery-courier-booking" />
       <FieldsCard url={API} screen={card('delivery.courier.selection')} fields={selectionFields} texts={{ ...texts, h: ck('selection.h'), d: ck('selection.d') }} canEdit={canEdit} testId="delivery-courier-selection" />
       <FieldsCard url={API} screen={{ key: cards['delivery.couriers'].key, value: cards['delivery.couriers'].value, version: cards['delivery.couriers'].version }} fields={defaultFields} texts={{ ...texts, h: t(d, 'cr.s.card.h'), d: t(d, 'cr.s.card.d') }} canEdit={canEdit} testId="delivery-courier-default" />
+      <FieldsCard url={API} screen={{ key: cards['delivery.courier.payouts'].key, value: cards['delivery.courier.payouts'].value, version: cards['delivery.courier.payouts'].version }} fields={payoutFields} texts={{ ...texts, h: t(d, 'cr.s.payouts.h'), d: t(d, 'cr.s.payouts.d') }} canEdit={canEdit} testId="delivery-courier-payouts" />
       <FieldsCard url={API} screen={card('delivery.courier.webhooks')} fields={webhookFields} texts={{ ...texts, h: ck('webhooks.h'), d: ck('webhooks.d') }} canEdit={canEdit} testId="delivery-courier-webhooks" />
       <FieldsCard url={API} screen={card('delivery.courier.zoneSync')} fields={zoneFields} texts={{ ...texts, h: ck('zoneSync.h'), d: ck('zoneSync.d') }} canEdit={canEdit} testId="delivery-courier-zones" />
       {/* the browser opens it before hydration when the address names #packing: that `open` is expected */}
