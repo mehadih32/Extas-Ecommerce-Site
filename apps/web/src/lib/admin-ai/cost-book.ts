@@ -63,10 +63,17 @@ export interface ModelCatalogEntry {
   perImageMicros?: number;
   /** Millionths of a USD per second of video (video only). */
   perVideoSecondMicros?: number;
+  /** Genuinely free to run (no per-token/per-image charge) — PR 580's own qualification pool, never a "free
+   * trial"/"free credits" model that turns paid later. Defaults to false (every model above is paid). */
+  isFree?: boolean;
 }
 
 /** Reference prices only (editable/refreshable in a later PR, C2.3) — approximate public per-million/per-unit
- * figures, not a live feed. `tier` drives which model the Cost Book recommends for which kind of job. */
+ * figures, not a live feed. `tier` drives which model the Cost Book recommends for which kind of job.
+ * PR 580 adds the last two rows: real zero-cost OpenRouter community models (`isFree: true`), the same free
+ * tier the demo's own pool names (Blueprint C2.4 "free models are qualified like paid ones") — small-tier only,
+ * because that is genuinely what ships free; qualification (below) decides which job they are good enough for,
+ * never by widening the free pool itself. */
 export const MODEL_CATALOG: readonly ModelCatalogEntry[] = [
   { providerKey: 'anthropic', providerName: 'Anthropic', modelKey: 'claude-haiku', displayName: 'Claude Haiku', kind: 'text', tier: 'small', priceCurrency: 'USD', inputPerMillionMicros: 800_000, outputPerMillionMicros: 4_000_000 },
   { providerKey: 'anthropic', providerName: 'Anthropic', modelKey: 'claude-sonnet', displayName: 'Claude Sonnet', kind: 'text', tier: 'mid', priceCurrency: 'USD', inputPerMillionMicros: 3_000_000, outputPerMillionMicros: 15_000_000 },
@@ -84,6 +91,10 @@ export const MODEL_CATALOG: readonly ModelCatalogEntry[] = [
   { providerKey: 'videoGen', providerName: 'Runway', modelKey: 'runway-gen', displayName: 'Runway Gen', kind: 'video', tier: 'mid', priceCurrency: 'USD', perVideoSecondMicros: 500_000 },
   { providerKey: 'pika', providerName: 'Pika', modelKey: 'pika-gen', displayName: 'Pika Gen', kind: 'video', tier: 'mid', priceCurrency: 'USD', perVideoSecondMicros: 400_000 },
   { providerKey: 'serverRender', providerName: 'Server render', modelKey: 'ffmpeg-assemble', displayName: 'Server assembly', kind: 'video', tier: 'small', priceCurrency: 'USD', perVideoSecondMicros: 10_000 },
+  // PR 580 — the free-model pool: genuinely zero-cost community models on OpenRouter, qualified against every
+  // job's own quality bar exactly like a paid model (never assumed good enough, never excluded on sight either).
+  { providerKey: 'openRouter', providerName: 'OpenRouter', modelKey: 'llama-3.1-8b-free', displayName: 'Llama 3.1 8B (free)', kind: 'text', tier: 'small', priceCurrency: 'USD', inputPerMillionMicros: 0, outputPerMillionMicros: 0, isFree: true },
+  { providerKey: 'openRouter', providerName: 'OpenRouter', modelKey: 'gemma-2-9b-free', displayName: 'Gemma 2 9B (free)', kind: 'text', tier: 'small', priceCurrency: 'USD', inputPerMillionMicros: 0, outputPerMillionMicros: 0, isFree: true },
 ] as const;
 
 export function modelOf(modelKey: string): ModelCatalogEntry {
@@ -412,6 +423,7 @@ export async function ensureCostBookSeeded(db: Db): Promise<void> {
         outputPerMillionMicros: m.outputPerMillionMicros != null ? BigInt(m.outputPerMillionMicros) : null,
         perImageMicros: m.perImageMicros != null ? BigInt(m.perImageMicros) : null,
         perVideoSecondMicros: m.perVideoSecondMicros != null ? BigInt(m.perVideoSecondMicros) : null,
+        isFree: m.isFree ?? false,
         enabled: true,
       },
       update: {
@@ -422,6 +434,7 @@ export async function ensureCostBookSeeded(db: Db): Promise<void> {
         outputPerMillionMicros: m.outputPerMillionMicros != null ? BigInt(m.outputPerMillionMicros) : null,
         perImageMicros: m.perImageMicros != null ? BigInt(m.perImageMicros) : null,
         perVideoSecondMicros: m.perVideoSecondMicros != null ? BigInt(m.perVideoSecondMicros) : null,
+        isFree: m.isFree ?? false,
       },
     });
     modelIds.set(m.modelKey, row.id);
@@ -432,10 +445,25 @@ export async function ensureCostBookSeeded(db: Db): Promise<void> {
     const perRunMicros = estimateMicrosFor(j.usage, modelOf(j.recommendedModelKey));
     await db.aiJobType.upsert({
       where: { key: j.key },
-      create: { key: j.key, section: j.section, nameEn: j.nameEn, nameBn: j.nameBn, description: j.description, agentKey: j.agentKey, recommendedModelId, recommendationNote: j.recommendationNote, estimatePerRunMicros: BigInt(perRunMicros), typicalRunsPerDay: j.typicalRunsPerDay },
+      // PR 580 — `qualityBar` is seeded once, on create only, at the default (95% of the best unblocked candidate's
+      // own score — Blueprint C2.4's own default); like `selectedModelId`, the owner's own later choice (90/95/98%)
+      // is never overwritten by a reseed.
+      create: { key: j.key, section: j.section, nameEn: j.nameEn, nameBn: j.nameBn, description: j.description, agentKey: j.agentKey, recommendedModelId, recommendationNote: j.recommendationNote, estimatePerRunMicros: BigInt(perRunMicros), typicalRunsPerDay: j.typicalRunsPerDay, qualityBar: { barPercent: DEFAULT_QUALITY_BAR_PERCENT } },
       update: { section: j.section, nameEn: j.nameEn, nameBn: j.nameBn, description: j.description, agentKey: j.agentKey, recommendedModelId, recommendationNote: j.recommendationNote, estimatePerRunMicros: BigInt(perRunMicros), typicalRunsPerDay: j.typicalRunsPerDay },
     });
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// PR 580 — the quality bar (Blueprint C2.4): "N% of the best unblocked candidate's own score", the owner's own
+// per-job choice among three fixed options (never a free-typed number, CLAUDE.md rule 1). `model-qualification.ts`
+// owns the scoring itself; these three live here because `ensureCostBookSeeded` (above) is this file's own job.
+// ---------------------------------------------------------------------------------------------------------------
+export const QUALITY_BAR_OPTIONS = [90, 95, 98] as const;
+export type QualityBarPercent = (typeof QUALITY_BAR_OPTIONS)[number];
+export const DEFAULT_QUALITY_BAR_PERCENT: QualityBarPercent = 95; // hardcode-ok: one of the three fixed bar options above, Blueprint C2.4's own default — never the owner's own number
+export function isQualityBarPercent(value: number): value is QualityBarPercent {
+  return (QUALITY_BAR_OPTIONS as readonly number[]).includes(value);
 }
 
 export interface CostBookModelChoice {

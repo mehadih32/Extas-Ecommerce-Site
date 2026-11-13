@@ -525,6 +525,9 @@ export const SHELL_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 304 (C1.1, C1.2; AIC-01) — Control room: every agent, what it did last, today's and this month's
       // cost, and a pause button per agent (the master switch itself joins with PR 305).
       { id: 'control', guide: 'ai', pages: [{ href: '/admin/ai', perm: 'ai.read', keys: ['aiControl'] }] },
+      // S15 · PR 580 (C2.4) — Model picks: a suggested model per job, free models qualified like paid ones, with
+      // their own quality score, cost and a "Re-test now" (owner only; off by default behind its own switch).
+      { id: 'models', guide: 'ai', pages: [{ href: '/admin/ai/models', perm: 'ai.read', keys: ['aiModels'] }] },
       // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
       { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
       // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
