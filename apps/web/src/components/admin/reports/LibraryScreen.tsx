@@ -140,7 +140,7 @@ export function LibraryScreen(p: LibraryScreenProps) {
           <button type="button" className={`a2-btn sm${p.preset === 'custom' ? ' pri' : ''}`} aria-pressed={p.preset === 'custom'} onClick={() => goDates(from, to, p.compare)} data-testid="lib-period-custom">
             {c('period.custom')}
           </button>
-          <label className="a2-sm">
+          <label className="a2-chkl a2-sm">
             <input type="checkbox" checked={p.compare} onChange={(e) => (p.preset === 'custom' ? goDates(p.range.from, p.range.to, e.target.checked) : go(p.preset, e.target.checked))} data-testid="lib-compare" /> {c('period.compare')}
           </label>
         </div>
@@ -217,7 +217,7 @@ export function LibraryScreen(p: LibraryScreenProps) {
           {p.time.hour.map((n, i) => (
             <div key={i} className="w4-barcol">
               <i style={{ height: `${Math.round((n / peakHour) * 100)}%` }} />
-              <span className="a2-xs">{i}</span>
+              <span className="a2-xs">{i % 3 === 0 ? i : ''}</span>
             </div>
           ))}
         </div>

@@ -63,10 +63,10 @@ export function PacksScreen(p: { dict: Dict; packs: readonly string[]; schedules
             <h3 className="a2-h4 a2-mt12">{c('schedule.title')}</h3>
             <p className="a2-xs a2-mute">{c('schedule.sub')}</p>
             <div className="w4-row a2-mt6">
-              <label className="a2-sm">
+              <label className="a2-chkl a2-sm">
                 <input type="checkbox" checked={r.enabled} onChange={(e) => set(id, { enabled: e.target.checked })} data-testid={`pack-on-${id}`} /> {c('schedule.on')}
               </label>
-              <label className="a2-sm">
+              <label className="a2-chkl a2-sm">
                 <span className="a2-xs a2-mute">{c('schedule.frequency')} </span>
                 <select className="a2-inp" value={r.frequency} onChange={(e) => set(id, { frequency: e.target.value as 'weekly' | 'monthly' })}>
                   <option value="weekly">{c('schedule.weekly')}</option>
@@ -74,7 +74,7 @@ export function PacksScreen(p: { dict: Dict; packs: readonly string[]; schedules
                 </select>
               </label>
               {(['telegram', 'email'] as const).map((ch) => (
-                <label key={ch} className="a2-sm">
+                <label key={ch} className="a2-chkl a2-sm">
                   <input type="checkbox" checked={r.channels.includes(ch)} onChange={() => toggle(r, ch)} /> {c(`schedule.${ch}`)}
                 </label>
               ))}

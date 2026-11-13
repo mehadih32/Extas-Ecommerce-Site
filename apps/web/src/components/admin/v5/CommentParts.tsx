@@ -75,7 +75,7 @@ export function CommentRules({ dict, before }: { dict: Dict; before: DeskValue }
     router.refresh();
   }
   const toggle = (k: 'hidePhone' | 'hideAbuse' | 'autoPrivate', label: string, tid: string) => (
-    <label className="a2-gap8" style={{ alignItems: 'center' }}>
+    <label className="a2-chkl a2-gap8">
       <input type="checkbox" checked={v[k]} onChange={(e) => set(k, e.target.checked)} data-testid={tid} />
       <span className="a2-sm">{label}</span>
     </label>
@@ -88,7 +88,7 @@ export function CommentRules({ dict, before }: { dict: Dict; before: DeskValue }
   );
   return (
     <div className="a2-stack" style={{ gap: 10 }} data-testid="comment-rules">
-      <label className="a2-gap8" style={{ alignItems: 'center' }}>
+      <label className="a2-chkl a2-gap8">
         <input type="checkbox" checked={v.enabled} onChange={(e) => set('enabled', e.target.checked)} data-testid="desk-enabled" />
         <b className="a2-sm">{c('rEnabled')}</b>
       </label>

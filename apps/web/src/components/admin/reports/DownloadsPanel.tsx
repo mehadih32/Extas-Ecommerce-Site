@@ -141,16 +141,16 @@ export function DownloadsPanel(p: { dict: Dict; lang: string; period: FilePeriod
       <p className="a2-cs">{c('daily.note')}</p>
       {daily ? (
         <div className="w4-row a2-mt6" data-testid="dl-daily">
-          <label className="a2-sm">
+          <label className="a2-chkl a2-sm">
             <input type="checkbox" checked={daily.enabled} onChange={(e) => void saveDaily({ ...daily, enabled: e.target.checked })} data-testid="dr-on" /> {c('daily.on')}
           </label>
           <select className="a2-inp" value={daily.time} aria-label={c('daily.on')} onChange={(e) => void saveDaily({ ...daily, time: e.target.value })} data-testid="dr-time">
             {(DAILY_TIMES as readonly string[]).includes(daily.time) ? DAILY_TIMES.map((x) => <option key={x}>{x}</option>) : [daily.time, ...DAILY_TIMES].map((x) => <option key={x}>{x}</option>)}
           </select>
-          <label className="a2-sm">
+          <label className="a2-chkl a2-sm">
             <input type="checkbox" checked={daily.channels.includes('telegram')} onChange={() => void saveDaily(toggleCh(daily, 'telegram'))} data-testid="dr-tg" /> {c('daily.telegram')}
           </label>
-          <label className="a2-sm">
+          <label className="a2-chkl a2-sm">
             <input type="checkbox" checked={daily.channels.includes('email')} onChange={() => void saveDaily(toggleCh(daily, 'email'))} data-testid="dr-em" /> {c('daily.email')}
           </label>
           <a className="a2-btn sm" href={fileUrl('daily', 'pdf', { preset: 'today' }, p.lang)} target="_blank" rel="noreferrer" data-testid="dr-pv">

@@ -43,7 +43,7 @@ export function CeilingForm({ dict, before, currency, unit }: { dict: Dict; befo
   return (
     <div className="a2-stack" style={{ gap: 12 }} data-testid="ceiling-form">
       <span className="a2-xs a2-mute">{c('unit', { c: currency })}</span>
-      <label className="a2-gap8" style={{ alignItems: 'center' }}>
+      <label className="a2-chkl a2-gap8">
         <input type="checkbox" checked={f.enabled} onChange={(e) => setF({ ...f, enabled: e.target.checked })} data-testid="ceiling-enabled" />
         <span className="a2-sm">{c('fEnabled')}</span>
       </label>
@@ -59,7 +59,7 @@ export function CeilingForm({ dict, before, currency, unit }: { dict: Dict; befo
         <span className="a2-sm">{c('fWarn')}</span>
         <input className="a2-inp" type="number" inputMode="numeric" min={1} max={100} value={f.warn} onChange={(e) => setF({ ...f, warn: e.target.value })} style={{ maxWidth: 120 }} data-testid="ceiling-warn" />
       </label>
-      <label className="a2-gap8" style={{ alignItems: 'center' }}>
+      <label className="a2-chkl a2-gap8">
         <input type="checkbox" checked={f.cheap} onChange={(e) => setF({ ...f, cheap: e.target.checked })} data-testid="ceiling-cheap" />
         <span className="a2-sm">{c('fCheapest')}</span>
       </label>
