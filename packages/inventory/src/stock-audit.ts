@@ -100,7 +100,7 @@ async function view(db: Db, id: string): Promise<AuditView> {
 
 /** The mirror's on-hand number of one SKU at one location: the freshest row of the pool (every store mirrors it). */
 async function onHandAt(db: Db, locationId: string, skus: string[]): Promise<Map<string, number>> {
-  const rows = await db.stockLevel.findMany({ where: { locationId, variant: { sku: { in: skus } } }, select: { onHand: true, erpUpdatedAt: true, variant: { select: { sku: true } } } });
+  const rows = await db.stockLevel.findMany({ where: { locationId, variant: { sku: { in: skus }, product: { isDemo: false } } }, select: { onHand: true, erpUpdatedAt: true, variant: { select: { sku: true } } } });
   const best = new Map<string, { onHand: number; t: number }>();
   for (const r of rows) {
     const t = r.erpUpdatedAt?.getTime() ?? -Infinity;
@@ -190,7 +190,7 @@ export async function reviewStockAudit(deps: InventoryDeps, who: Who, auditId: s
     const variantIds = lines.flatMap((l) => (l.variantId ? [l.variantId] : []));
     const skuOf = new Map((await tx.productVariant.findMany({ where: { id: { in: variantIds } }, select: { id: true, sku: true } })).map((v) => [v.id, v.sku]));
     // Every SKU the mirror has at this location (any store's row), on hand or not.
-    const there = await tx.stockLevel.findMany({ where: { locationId: a.locationId, onHand: { not: 0 } }, select: { variant: { select: { sku: true } } } });
+    const there = await tx.stockLevel.findMany({ where: { locationId: a.locationId, onHand: { not: 0 }, variant: { product: { isDemo: false } } }, select: { variant: { select: { sku: true } } } });
     const skus = [...new Set([...skuOf.values(), ...there.map((r) => r.variant.sku)])];
     const onHand = await onHandAt(tx, a.locationId, skus);
     for (const l of lines) {

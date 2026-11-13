@@ -40,7 +40,7 @@ export function shortSkus(balance: Map<string, number>): Map<string, number> {
 async function balances(deps: InventoryDeps, skus: string[] | null): Promise<Map<string, number>> {
   const [rows, kinds] = await Promise.all([
     deps.db.stockLevel.findMany({
-      where: skus ? { variant: { sku: { in: skus } } } : {},
+      where: skus ? { variant: { sku: { in: skus }, product: { isDemo: false } } } : { variant: { product: { isDemo: false } } },
       select: {
         id: true,
         variantId: true,
