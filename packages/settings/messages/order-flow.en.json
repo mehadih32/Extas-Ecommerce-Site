@@ -3,6 +3,10 @@
     "priceAdjust": {
       "label": "Price adjust on orders",
       "help": "Staff may take money off an open order before it is booked: a taka amount, a percent, the customer's wallet or the delivery charge, with a reason. Every adjustment is a new line in the order's price ledger. On as shipped (the owner's decision, 13 Nov 2026). Add a role under 'Limits per role' to say how much it may take off by itself; a role that is not listed needs approval for everything. Above the limit the owner approves with the PIN."
+    },
+    "mergeOrders": {
+      "label": "Merge orders",
+      "help": "Fold one open order of a customer into another, from the Merge button on the order list. Off until you switch it on. Look-back days: how many days before the kept order the other one may have been placed (5 as shipped). Auto-merge: do it by itself when an order lands, only when the addresses match (off). Different address: ask a person to confirm the kept order's address, or refuse. An order that is Packed or with the courier is never merged."
     }
   }
 }

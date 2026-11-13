@@ -156,3 +156,4 @@ export * from './auto-confirm';
 // S28 · PR 664 — price adjust on every order: the ledger, the limits, the owner's approval (price-adjust.ts).
 export * from './price-adjust-pure';
 export * from './price-adjust';
+export * from './merge-into-one';

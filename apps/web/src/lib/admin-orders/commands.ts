@@ -84,6 +84,8 @@ export const KNOWN_ERRORS = [
   'DUPLICATE',
   // S28 · PR 664: price adjust (the owner's switch, more than is due, nothing to take off, answered already) and the owner's PIN
   'ADJUST_OFF',
+  'MERGE_OFF',
+  'ADDRESS_DIFFERS',
   'ADJUST_TOO_MUCH',
   'NOTHING_TO_ADJUST',
   'ALREADY_DECIDED',
