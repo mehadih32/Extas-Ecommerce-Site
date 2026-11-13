@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { checkStoreId, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, type Who } from './context';
 import { PaymentsError } from './errors';
 import { CASH_OUTCOMES } from './cod-match';
-import { openOverchargeClaim, orderLine } from './claims';
+import { claimDeadline, openOverchargeClaim, orderLine } from './claims';
 import { REFUND_METHODS } from './refund-pure';
 import { requestRefund } from './refunds';
 import { auditMoney } from './wallet';
@@ -188,6 +188,7 @@ export async function decideRiderIssue(deps: PaymentsDeps, who: Who, issueId: st
   if (d.decision === 'approve' && d.confirm !== true) throw new PaymentsError('CONFIRM_REQUIRED', 'confirm the extra amount first', ['confirm']);
   const storeId = who.storeId;
   await riderRules(deps, storeId);
+  const deadlineAt = d.decision === 'approve' ? await claimDeadline(deps, storeId, nowOf(deps)) : null;
   return deps.db.$transaction(async (tx) => {
     const r = await tx.riderIssue.findFirst({ where: { id: issueId, storeId }, select: ROW });
     if (!r) throw new PaymentsError('NOT_FOUND', 'no such rider issue', ['issueId']);
@@ -197,7 +198,7 @@ export async function decideRiderIssue(deps: PaymentsDeps, who: Who, issueId: st
     if (moved.count !== 1) throw new PaymentsError('NOT_PENDING', 'someone decided this rider issue first');
     let claimId: string | null = null;
     if (status === 'APPROVED') {
-      claimId = await openOverchargeClaim(tx, who, { riderIssueId: r.id, orderId: r.orderId, shipmentId: r.shipmentId, courierAccountId: r.courierAccountId, extraMinor: r.extraMinor, note: d.note });
+      claimId = await openOverchargeClaim(tx, who, { riderIssueId: r.id, orderId: r.orderId, shipmentId: r.shipmentId, courierAccountId: r.courierAccountId, extraMinor: r.extraMinor, note: d.note, deadlineAt });
       await tx.riderIssue.update({ where: { id: r.id }, data: { claimId } });
     }
     await orderLine(tx, who, r.orderId, status === 'APPROVED' ? RIDER_ISSUE_EVENTS.approved : RIDER_ISSUE_EVENTS.rejected, { riderIssueId: r.id, extraMinor: r.extraMinor, note: d.note, claimId });

@@ -2,7 +2,7 @@
 // (`?s=`): Overview (the 30-day figures, success week by week, parcels with a problem now), Parcels (the courier's parcels,
 // filtered, 30 a page), Money (the cash it holds for us, days to pay, statements, the lines that do not match), Performance
 // (by delivery zone and district, late now, the charges), and Setup (connection, area pairs, rate card, default and
-// backup). Payouts, Claims and Messages join with PR 671, 673 and 674. The old page of this address (the area pairs) moved
+// backup), Payouts (PR 671) and Claims (PR 673); Messages joins with PR 674. The old page of this address (the area pairs) moved
 // to `.../areas`. Seeing needs `delivery.read`; the Money section also needs `payments.view`. Practice parcels are never
 // counted in a figure. Guide: docs/admin-guide/pages/delivery/courier-360.md.
 import type { Metadata } from 'next';
@@ -12,7 +12,9 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { RaiseClaim } from '@/components/admin/couriers/ClaimPanel';
 import { AskPayout, PayoutRowActions } from '@/components/admin/couriers/PayoutPanel';
+import { StepButton } from '@/components/admin/courier-report/Parts';
 import { PerfTable } from '@/components/admin/courier-report/PerfTable';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -36,8 +38,10 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The sections, in the order the page shows them. */
-const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'performance', 'setup'] as const;
+const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'claims', 'performance', 'setup'] as const;
 type Section = (typeof COURIER_SECTIONS)[number];
+/** How many claims and parcels the Claims section lists. */
+const CLAIM_ROWS = 50;
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = withCouriers(await adminView());
@@ -442,6 +446,91 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
         </>
       );
     }
+  } else if (section === 'claims') {
+    const pd = await paymentsDeps(access.deps);
+    const [cl, claimsSwitch, parcels] = await Promise.all([
+      pay.listClaims(pd, who, { courierAccountId: id, limit: CLAIM_ROWS }),
+      access.deps.resolver.value('delivery.courier.claims', { storeId: MOTHER_STORE_ID }),
+      access.deps.db.shipment.findMany({ where: { storeId: MOTHER_STORE_ID, courierAccountId: id }, select: { id: true, consignmentId: true, order: { select: { number: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: CLAIM_ROWS }),
+    ]);
+    const canClaim = access.guard.permissions?.has('delivery.claims') ?? false;
+    const on = claimsSwitch.enabled;
+    const API = '/api/admin/delivery/claims';
+    const outcomePill = { open: 'warn', sent: 'info', won: 'ok', lost: 'line' } as const;
+    body = (
+      <>
+        {!on ? (
+          <div className="a2-note a2-mt12" data-testid="claims-off">
+            {cr('k.off')} <Link href="/admin/delivery/settings">{cr('s.settingsOpen')}</Link>
+          </div>
+        ) : null}
+        <section className="a2-card a2-mt12" data-testid="claims-totals">
+          <h2 className="a2-h3">{cr('k.totals')}</h2>
+          <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
+            <span className="a2-pill warn">{cr('k.open', { n: n(cl.open.count), amount: m(cl.open.claimedMinor) })}</span>
+            {cl.late.count ? <span className="a2-pill bad" data-testid="claims-late">{cr('k.lateN', { n: n(cl.late.count), amount: m(cl.late.claimedMinor) })}</span> : null}
+            <span className="a2-pill line">{cr('k.won', { n: n(cl.settled.count), paid: m(cl.settled.settledMinor), asked: m(cl.settled.claimedMinor) })}</span>
+          </div>
+          {on && canClaim ? <RaiseClaim dict={{ cr: d.cr as Dict, courierReport: d.courierReport as Dict }} parcels={parcels.map((p) => ({ id: p.id, label: `${p.order.number} · ${p.consignmentId ?? '—'}` }))} /> : null}
+        </section>
+        {cl.claimable.length ? (
+          <section className="a2-card a2-mt12" data-testid="claims-claimable">
+            <h2 className="a2-h3">{cr('k.claimable')}</h2>
+            <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }}>
+              {cl.claimable.map((p) => (
+                <li key={`${p.shipmentId}:${p.kind}`} className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }} data-testid="claimable-row">
+                  <span>
+                    <b>{p.orderNumber}</b> <span className="a2-pill bad">{t(d, `courierReport.claims.kind.${p.kind}`)}</span>
+                    <span className="a2-xs a2-mute"> {p.declaredValueMinor !== null ? cr('k.declared', { amount: m(p.declaredValueMinor) }) : ''}</span>
+                  </span>
+                  {on && canClaim ? <StepButton dict={d} url={API} body={{ shipmentId: p.shipmentId, kind: p.kind }} withKey label={t(d, 'courierReport.claims.claim')} field={{ name: 'note', label: t(d, 'courierReport.claims.claimNote') }} tone="pri" testId="claim-raise" /> : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        <section className="a2-mt12" data-testid="claims-ledger">
+          <h2 className="a2-h3">{cr('k.ledger')}</h2>
+          {cl.rows.length ? (
+            <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }}>
+              {cl.rows.map((r) => {
+                const out = pay.claimOutcome(r);
+                const dl = pay.deadlineState(r, cl.at, cl.terms.warnDays);
+                return (
+                  <li key={r.id} className="a2-card tight" data-testid="claim-row" data-status={r.status} data-outcome={out}>
+                    <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <Link href={orderHref(r.orderId)}>{r.orderNumber ?? '—'}</Link> <span className="a2-pill line">{t(d, `courierReport.claims.kind.${r.kind}`)}</span> <span className={`a2-pill ${outcomePill[out]}`}>{cr(`k.out.${out}`)}</span>
+                        {dl ? <span className={`a2-pill ${dl === 'late' ? 'bad' : 'warn'}`} data-testid="claim-deadline">{cr(`k.dl.${dl}`)}</span> : null}
+                        <span className="a2-xs a2-mute a2-blk">
+                          {when.format(r.createdAt)}
+                          {r.deadlineAt ? ` · ${cr('k.deadline', { date: day.format(r.deadlineAt) })}` : ''}
+                          {r.courierRef ? ` · ${r.courierRef}` : ''}
+                        </span>
+                        <span className="a2-sm a2-blk">
+                          <b>{m(r.claimedMinor)}</b>
+                          {r.settledMinor !== null ? <span className="a2-mute"> · {cr('k.paidLine', { amount: m(r.settledMinor) })}</span> : null}
+                        </span>
+                      </div>
+                      {on && canClaim && (r.status === 'OPEN' || r.status === 'SENT') ? (
+                        <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
+                          {r.status === 'OPEN' ? <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SENT' }} label={t(d, 'courierReport.claims.send')} field={{ name: 'courierRef', label: t(d, 'courierReport.claims.ref'), optional: true }} testId="claim-sent" /> : null}
+                          <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SETTLED' }} label={t(d, 'courierReport.claims.settle')} field={{ name: 'settledMinor', label: t(d, 'courierReport.claims.paid'), money: true }} tone="pri" testId="claim-settled" />
+                          <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'REJECTED' }} label={t(d, 'courierReport.claims.reject')} field={{ name: 'note', label: t(d, 'courierReport.claims.why') }} testId="claim-rejected" />
+                        </div>
+                      ) : null}
+                    </div>
+                    {r.note ? <p className="a2-xs a2-mute a2-mt6" style={{ whiteSpace: 'pre-line' }}>{r.note}</p> : null}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{cr('k.none')}</p>
+          )}
+        </section>
+      </>
+    );
   } else if (section === 'performance') {
     const to = new Date();
     const perf = await sh.courierPerformance(

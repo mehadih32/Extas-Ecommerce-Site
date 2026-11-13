@@ -15,12 +15,34 @@ import { checkStoreId, KEY, nowOf, parse, setting, TX, UUID, type PaymentsDeps, 
 import { PaymentsError } from './errors';
 import { auditMoney } from './wallet';
 
-export const CLAIM_KINDS = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER'] as const;
+export const CLAIM_KINDS = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'SHORT_COD', 'RETURN_SHORT'] as const;
 export type ClaimKind = (typeof CLAIM_KINDS)[number];
 export const CLAIM_STATES = ['OPEN', 'SENT', 'SETTLED', 'REJECTED'] as const;
 export type ClaimState = (typeof CLAIM_STATES)[number];
 /** Still waiting for the courier. */
 export const OPEN_CLAIM_STATES = ['OPEN', 'SENT'] as const satisfies readonly ClaimState[];
+
+/** The kinds a person types an amount for (the parcel's records cannot say how much). */
+export const TYPED_AMOUNT_KINDS = ['OTHER', 'SHORT_COD', 'RETURN_SHORT'] as const;
+
+/** How the ledger shows a claim: open and sent as they are, settled as won (lost when the courier paid nothing), rejected as lost. */
+export type ClaimOutcome = 'open' | 'sent' | 'won' | 'lost';
+export const claimOutcome = (c: { status: ClaimState; settledMinor: number | null }): ClaimOutcome => (c.status === 'OPEN' ? 'open' : c.status === 'SENT' ? 'sent' : c.status === 'REJECTED' || !c.settledMinor ? 'lost' : 'won');
+
+/** Where a still-open claim stands against its deadline: past it, within `warnDays` of it, or fine (or none). */
+export type DeadlineState = 'late' | 'soon' | null;
+export function deadlineState(c: { status: ClaimState; deadlineAt: Date | null }, now: Date, warnDays: number): DeadlineState {
+  if (!c.deadlineAt || !(OPEN_CLAIM_STATES as readonly string[]).includes(c.status)) return null;
+  const left = c.deadlineAt.getTime() - now.getTime();
+  if (left < 0) return 'late';
+  return warnDays > 0 && left <= warnDays * 86_400_000 ? 'soon' : null;
+}
+
+/** The deadline a claim raised now gets: the owner's days from today, or none while the switch is off. */
+export async function claimDeadline(deps: Pick<PaymentsDeps, 'settings'>, storeId: number, from: Date): Promise<Date | null> {
+  const t = await setting(deps, storeId, 'delivery.courier.claimTerms');
+  return t.deadlineEnabled ? new Date(from.getTime() + t.days * 86_400_000) : null;
+}
 
 /** The order timeline's event types of a claim. */
 export const CLAIM_EVENTS = { raised: 'claim.raised', moved: 'claim.moved' } as const;
@@ -45,6 +67,7 @@ export interface ClaimRow {
   riderIssueId: string | null;
   sentAt: Date | null;
   closedAt: Date | null;
+  deadlineAt: Date | null;
   createdAt: Date;
 }
 
@@ -62,6 +85,7 @@ const ROW = {
   riderIssueId: true,
   sentAt: true,
   closedAt: true,
+  deadlineAt: true,
   createdAt: true,
 } satisfies Prisma.CourierClaimSelect;
 type Row = Prisma.CourierClaimGetPayload<{ select: typeof ROW }>;
@@ -98,8 +122,8 @@ async function allowClaims(deps: PaymentsDeps, who: Who): Promise<void> {
 export const claimInput = z
   .object({
     shipmentId: z.uuid(),
-    kind: z.enum(['LOST', 'DAMAGED', 'OTHER']),
-    /** Left out for a lost or damaged parcel: its declared value at booking. */
+    kind: z.enum(['LOST', 'DAMAGED', 'OTHER', 'SHORT_COD', 'RETURN_SHORT']),
+    /** Left out for a lost or damaged parcel: its declared value at booking. Short COD and return short need it typed. */
     amountMinor: z.int().min(1).max(1_000_000_000).optional(),
     note: z.string().trim().min(3).max(1_000),
   })
@@ -127,19 +151,21 @@ export async function raiseClaim(deps: PaymentsDeps, who: Who, input: unknown, o
   if (again) return again;
   const s = await deps.db.shipment.findFirst({ where: { id: d.shipmentId, storeId }, select: { id: true, orderId: true, courierAccountId: true, status: true, declaredValueMinor: true, consignmentId: true } });
   if (!s) throw new PaymentsError('NOT_FOUND', 'no such parcel', ['shipmentId']);
-  if (d.kind !== 'OTHER') {
+  const typed = (TYPED_AMOUNT_KINDS as readonly string[]).includes(d.kind);
+  if (d.kind === 'LOST' || d.kind === 'DAMAGED') {
     const seen = s.status === d.kind || (await deps.db.shipmentEvent.count({ where: { storeId, shipmentId: s.id, status: d.kind } })) > 0;
     if (!seen) throw new PaymentsError('NOT_CLAIMABLE', `the parcel's records do not show it ${d.kind.toLowerCase()}`, ['kind'], { status: s.status });
   }
-  const amountMinor = d.amountMinor ?? (d.kind === 'OTHER' ? null : s.declaredValueMinor);
+  const amountMinor = d.amountMinor ?? (typed ? null : s.declaredValueMinor);
   if (!amountMinor || amountMinor <= 0) throw new PaymentsError('INVALID_INPUT', 'give the amount (the parcel has no declared value)', ['amountMinor']);
   try {
+    const deadlineAt = await claimDeadline(deps, storeId, nowOf(deps));
     return await deps.db.$transaction(async (tx) => {
       const c = await tx.courierClaim.create({
-        data: { storeId, courierAccountId: s.courierAccountId, orderId: s.orderId, shipmentId: s.id, kind: d.kind, claimedMinor: amountMinor, note: d.note, idempotencyKey, raisedById: who.actor.staffUserId },
+        data: { storeId, courierAccountId: s.courierAccountId, orderId: s.orderId, shipmentId: s.id, kind: d.kind, claimedMinor: amountMinor, note: d.note, idempotencyKey, raisedById: who.actor.staffUserId, deadlineAt },
         select: ROW,
       });
-      await orderLine(tx, who, s.orderId, CLAIM_EVENTS.raised, { claimId: c.id, kind: d.kind, claimedMinor: amountMinor, consignmentId: s.consignmentId });
+      await orderLine(tx, who, s.orderId, CLAIM_EVENTS.raised, { claimId: c.id, kind: d.kind, claimedMinor: amountMinor, consignmentId: s.consignmentId, deadlineAt });
       await auditMoney(tx, who, 'claim.raise', 'CourierClaim', c.id, undefined, { shipmentId: s.id, orderId: s.orderId, kind: d.kind, claimedMinor: amountMinor, note: d.note });
       return { claim: (await withNames(tx as unknown as PaymentsDeps['db'], [c]))[0]!, replay: false };
     }, TX);
@@ -156,7 +182,7 @@ export async function raiseClaim(deps: PaymentsDeps, who: Who, input: unknown, o
  * The rider's-extra claim an approved rider issue opens (rider-issues.ts), in the caller's transaction. Not behind the
  * claims switch: approving the complaint is the person's decision.
  */
-export async function openOverchargeClaim(tx: Tx, who: Who, i: { riderIssueId: string; orderId: string; shipmentId: string; courierAccountId: string; extraMinor: number; note: string }): Promise<string> {
+export async function openOverchargeClaim(tx: Tx, who: Who, i: { riderIssueId: string; orderId: string; shipmentId: string; courierAccountId: string; extraMinor: number; note: string; deadlineAt?: Date | null }): Promise<string> {
   const c = await tx.courierClaim.create({
     data: {
       storeId: who.storeId,
@@ -167,6 +193,7 @@ export async function openOverchargeClaim(tx: Tx, who: Who, i: { riderIssueId: s
       claimedMinor: i.extraMinor,
       note: i.note,
       riderIssueId: i.riderIssueId,
+      deadlineAt: i.deadlineAt ?? null,
       idempotencyKey: `rider-issue:${i.riderIssueId}`,
       raisedById: who.actor.staffUserId,
     },
@@ -198,6 +225,20 @@ export async function moveClaim(deps: PaymentsDeps, who: Who, claimId: string, i
   await allowClaims(deps, who);
   if (!UUID.test(claimId)) throw new PaymentsError('NOT_FOUND', 'no such claim', ['claimId']);
   const d = parse(claimMoveInput, input, 'claim step');
+  const storeId = who.storeId;
+  const moved = await moveInTx(deps, who, claimId, d);
+  // S28 · PR 673: money won back is handed to the books once (a record only), while the owner's switch is on and a hook is wired.
+  if (d.to === 'SETTLED' && d.settledMinor! > 0 && deps.books?.claimRecovered && (await setting(deps, storeId, 'delivery.courier.claimTerms')).postRecovered) {
+    try {
+      await deps.books.claimRecovered(who, { claimId: moved.id, courierAccountId: moved.courierAccountId, amountMinor: d.settledMinor!, reference: moved.courierRef });
+    } catch {
+      // never fails the settlement: the claim stays settled, the books can be told again by a person
+    }
+  }
+  return moved;
+}
+
+async function moveInTx(deps: PaymentsDeps, who: Who, claimId: string, d: z.output<typeof claimMoveInput>): Promise<ClaimRow> {
   const storeId = who.storeId;
   return deps.db.$transaction(async (tx) => {
     const c = await tx.courierClaim.findFirst({ where: { id: claimId, storeId }, select: ROW });
@@ -244,6 +285,11 @@ export interface ClaimList {
   open: { count: number; claimedMinor: number };
   /** Settled claims: claimed against what the couriers paid. */
   settled: { count: number; claimedMinor: number; settledMinor: number };
+  /** S28 · PR 673: open claims past their deadline, and the owner's deadline terms (the screen flags "due soon" with `warnDays`). */
+  late: { count: number; claimedMinor: number };
+  terms: { deadlineEnabled: boolean; warnDays: number };
+  /** The time of the reading (deadlines are judged against it). */
+  at: Date;
   /** Lost or damaged parcels with no claim of that kind yet (newest first, at most 20). */
   claimable: { shipmentId: string; orderNumber: string; kind: 'LOST' | 'DAMAGED'; declaredValueMinor: number | null; consignmentId: string | null }[];
 }
@@ -255,10 +301,13 @@ export async function listClaims(deps: PaymentsDeps, who: Who, query: unknown = 
   const q = parse(claimListQuery, query, 'claim list query');
   const storeId = who.storeId;
   const scope = { storeId, ...(q.courierAccountId ? { courierAccountId: q.courierAccountId } : {}) };
-  const [rows, open, settled, lostOrDamaged] = await Promise.all([
+  const now = nowOf(deps);
+  const [rows, open, settled, late, terms, lostOrDamaged] = await Promise.all([
     deps.db.courierClaim.findMany({ where: { ...scope, ...(q.open === undefined ? {} : { status: q.open ? { in: [...OPEN_CLAIM_STATES] } : { in: ['SETTLED', 'REJECTED'] } }) }, select: ROW, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: q.limit }),
     deps.db.courierClaim.aggregate({ where: { ...scope, status: { in: [...OPEN_CLAIM_STATES] } }, _count: true, _sum: { claimedMinor: true } }),
     deps.db.courierClaim.aggregate({ where: { ...scope, status: 'SETTLED' }, _count: true, _sum: { claimedMinor: true, settledMinor: true } }),
+    deps.db.courierClaim.aggregate({ where: { ...scope, status: { in: [...OPEN_CLAIM_STATES] }, deadlineAt: { lt: now } }, _count: true, _sum: { claimedMinor: true } }),
+    setting(deps, storeId, 'delivery.courier.claimTerms'),
     deps.db.shipment.findMany({
       where: { ...scope, OR: [{ status: { in: ['LOST', 'DAMAGED'] } }, { events: { some: { status: { in: ['LOST', 'DAMAGED'] } } } }] },
       select: { id: true, status: true, declaredValueMinor: true, consignmentId: true, order: { select: { number: true } }, events: { where: { status: { in: ['LOST', 'DAMAGED'] } }, select: { status: true } } },
@@ -277,6 +326,9 @@ export async function listClaims(deps: PaymentsDeps, who: Who, query: unknown = 
     rows: await withNames(deps.db, rows),
     open: { count: open._count, claimedMinor: open._sum.claimedMinor ?? 0 },
     settled: { count: settled._count, claimedMinor: settled._sum.claimedMinor ?? 0, settledMinor: settled._sum.settledMinor ?? 0 },
+    late: { count: late._count, claimedMinor: late._sum.claimedMinor ?? 0 },
+    terms: { deadlineEnabled: terms.deadlineEnabled, warnDays: terms.warnDays },
+    at: now,
     claimable,
   };
 }

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import bn from '../../messages/admin-money.bn.json';
 import en from '../../messages/admin-money.en.json';
-import { dayIn, overviewOf, receivedByDay } from './money-overview';
+import { claimsToReceiveOf, dayIn, overviewOf, receivedByDay } from './money-overview';
 
 const now = new Date('2026-10-31T12:00:00Z');
 const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000);
@@ -96,5 +96,28 @@ describe('cash received day by day (PR 642, the Lumen hero chart)', () => {
     expect(days).toHaveLength(30);
     expect(days.reduce((s, d) => s + d.minor, 0)).toBe(5_500);
     expect(dayIn(now, 'Not/AZone')).toBe('2026-10-31');
+  });
+});
+
+describe('courier claims to receive (PR 673)', () => {
+  const now = new Date('2026-11-10T00:00:00Z');
+  it('adds the open claims per courier, biggest first, and counts the ones past their deadline', () => {
+    const c = claimsToReceiveOf(now, [
+      { courierAccountId: 'a', courier: 'Steadfast', claimedMinor: 5_000, deadlineAt: new Date('2026-11-09T00:00:00Z') },
+      { courierAccountId: 'b', courier: 'RedX', claimedMinor: 9_000, deadlineAt: null },
+      { courierAccountId: 'a', courier: 'Steadfast', claimedMinor: 2_000, deadlineAt: new Date('2026-11-20T00:00:00Z') },
+    ]);
+    expect(c).toEqual({
+      minor: 16_000,
+      count: 3,
+      late: 1,
+      byCourier: [
+        { courierId: 'b', courier: 'RedX', minor: 9_000, count: 1 },
+        { courierId: 'a', courier: 'Steadfast', minor: 7_000, count: 2 },
+      ],
+    });
+  });
+  it('is all zero when no claim is open', () => {
+    expect(claimsToReceiveOf(now, [])).toEqual({ minor: 0, count: 0, late: 0, byCourier: [] });
   });
 });
