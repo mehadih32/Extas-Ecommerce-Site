@@ -114,7 +114,9 @@ describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded 
     // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'messages', 'marketing', 'website', 'money', 'reports', 'ai', 'settings']);~~
     // PR 342: /admin/money is Money → Overview now, so Money has no placeholder left.
     // PR 304: /admin/ai (Control room) is now a real page, so AI Center has no placeholder left either.
-    expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'marketing', 'website', 'reports', 'settings']);
+    // ~~expect(placeholderSections().map((s) => s.id)).toEqual(['delivery', 'marketing', 'website', 'reports', 'settings']);~~
+    // S28 · PR 670: /admin/delivery is the Couriers Overview now, so Delivery has no placeholder left.
+    expect(placeholderSections().map((s) => s.id)).toEqual(['marketing', 'website', 'reports', 'settings']);
     // PR 659: Messages is folded into Marketing, so it has no placeholder either
     expect(sectionHome(sectionById('customers')!, viewer(['customers.read']))).toBe('/admin/customers');
   });
