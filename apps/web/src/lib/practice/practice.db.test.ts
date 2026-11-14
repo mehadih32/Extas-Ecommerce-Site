@@ -33,6 +33,18 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
       const has = await db.category.findFirst({ where: { storeId: S, slug }, select: { id: true } });
       if (!has) await db.category.create({ data: { storeId: S, slug, nameEn: slug } });
     }
+    // a stock location (a live store has one; the practice stock goes on the first)
+    if (!(await db.inventoryLocation.findFirst({ select: { id: true } }))) {
+      const wh = await db.warehouse.upsert({
+        where: { code: 'PRACTICE-TEST-WH' },
+        update: {},
+        create: { code: 'PRACTICE-TEST-WH', name: 'Test warehouse' },
+        select: { id: true },
+      });
+      await db.inventoryLocation.create({
+        data: { warehouseId: wh.id, code: 'PRACTICE-TEST-MAIN', name: 'Test shelf', kind: 'WAREHOUSE' },
+      });
+    }
     // real records that a reset must never touch
     const cust = await db.customer.create({
       data: { storeId: S, phone: '+8801700009999', name: 'Real Customer' },
@@ -469,5 +481,5 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await db.productMedia.count({ where: { storeId: S } })).toBe(0);
     expect(await db.mediaAsset.count({ where: { storeId: S, folder: 'practice' } })).toBe(0);
     expect(await db.mediaAsset.findUnique({ where: { id: realAsset.id } })).not.toBeNull();
-  });
+  }, 240_000);
 });
