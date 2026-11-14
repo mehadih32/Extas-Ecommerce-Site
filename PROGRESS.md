@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 726 Website › Brand & menus (owner order, built on branch `claude/brand-menus`, not pushed)
+
+`/admin/website/brand-menus`: Brand, Header & menu and Footer cards with drag, touch and arrow-key reordering, show/hide boxes, English + Bengali words and phone and computer previews; the shop header and footer draw the uploaded logo. The register rows for PR 726 are in `docs/owner/PR-726-register-rows.md` (paste them with the counters when it merges). Typecheck, lint and the tests were not run on the box that wrote it (no `node_modules`, 8 GB): run `pnpm check` before the first push.
+
 ## 15 Nov 2026 — PR 725 (branch `claude/demo-live`, committed locally, NOT pushed, NOT in the register yet)
 
 **What.** The owner's decision of 15 Nov: while `practice.enabled` is on, the sample shop is LIVE on the storefront (practice products PUBLISHED and orderable) and fills by itself (server clock `apps/web/src/lib/practice/keeper.ts` from `instrumentation.ts`, lease-protected `ensure.ts`; pictures in steps of 6). Off = one click hides every practice product (status DRAFT; shop, search, sitemaps, bag) and the admin product lists; on shows them again. Reset needs the PIN only and keeps the automatic fill off (`practice.autoFill`). Orders made of practice products are practice orders (flagged, no real customer, no coupon or consent, test-page payment only, no ad or own-analytics event); a bag mixing practice and real products is refused (`PRACTICE_MIXED`). A small "Practice shop" notice (`practice.notice`, words and hide switch in settings).

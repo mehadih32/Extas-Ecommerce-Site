@@ -13,6 +13,7 @@ import { GarmentIcon, Icon, PayMark, SocialMark, WaGlyph } from './Icon';
 import { JoinForm, type JoinWords } from './JoinForm';
 import { LangSwitch } from './LangSwitch';
 import { LogoText } from './LogoText';
+import { ShopLogo } from './ShopLogo';
 
 /** The classic desktop footer's line icons (V12.1). The phone and the reference desktop footer draw SocialMark (V12.2). */
 const SOCIAL_ICON = { facebook: 'facebook', instagram: 'instagram', youtube: 'play', tiktok: 'spark' } as const;
@@ -154,7 +155,9 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
         <div className="container">
           <div className="ftr-brand">
             <div className="ftr-brand-top">
-              <div className="logo">{name}</div>
+              <div className="logo">
+                <ShopLogo c={c} where="footer" fallback={name} />
+              </div>
               <div className="xs ftr-brand-sub">{slogan}</div>
             </div>
             {joinShown(F, c.flags) ? <JoinForm id="join" variant="phone" words={join} /> : null}
@@ -209,7 +212,9 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
           <div className="container">
             <div className="ftr-d-top">
               <div className="ftr-d-brand">
-                <div className="logo">{name}</div>
+                <div className="logo">
+                <ShopLogo c={c} where="footer" fallback={name} />
+              </div>
                 <div className="xs ftr-brand-sub">{slogan}</div>
               </div>
             </div>
@@ -301,7 +306,7 @@ function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWor
           <div className="fdr-left">
             <div className="fdr-brand">
               <span className="logo">
-                <LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />
+                <ShopLogo c={c} where="footer" fallback={<LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />} />
               </span>
               <span className="fdr-slog">{slogan}</span>
             </div>
