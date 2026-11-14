@@ -601,6 +601,8 @@ export async function runSmoke(opts) {
         problems.push(
           ...out.problems
             .filter((p) => !p.endsWith("sent back to the sign-in page"))
+            // CN-053: the 404 itself is the expected answer here, so its own failed request and console line are not problems
+            .filter((p) => !p.startsWith(`${adminPath}: request 404`) && !p.startsWith(`${adminPath}: console error: Failed to load resource`))
             .map((p) => `${p} (${vp.name})`),
         );
       }

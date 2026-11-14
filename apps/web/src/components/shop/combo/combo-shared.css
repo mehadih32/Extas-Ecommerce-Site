@@ -361,6 +361,7 @@
 .shop .link { background: none; border: none; padding: 4px 0px; color: var(--brand); font-weight: 600; text-decoration: underline; cursor: pointer; font-size: 13px; }
 .shop.shop[data-theme="festive"] .link { color: var(--gold); }
 .shop .tag.warn { background: var(--warn-bg); color: var(--warn); }
+.shop .tag.dark { background: var(--ink); color: var(--bg); }
 .shop .swatch.on { outline: 2px solid var(--brand); outline-offset: 2px; }
 .shop.shop[data-theme="festive"] .swatch.on { outline-color: var(--gold); }
 .shop .size-pill { min-width: 54px; min-height: 44px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--input); background: var(--surface); font-weight: 600; font-size: 14px; cursor: pointer; color: var(--ink); }
