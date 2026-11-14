@@ -155,10 +155,7 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
  * wave 2, rules wave 3, the shop's report and set tabs) and bring their own tab in `sections.ts`; a tab that appears is
  * placed by `NAV_V5` at once. When one of these is built, take it off this list (`nav-v5.test.ts` says so).
  */
-export const AWAITING: readonly string[] = [
-  'website.policies',
-  'reports.products', 'reports.marketing', 'reports.review',
-];
+export const AWAITING: readonly string[] = [];
 
 export interface PendingPage {
   /** `<section>.<tab>` or `<section>.<tab>.<page>`: the key in nav-pending.json. */
