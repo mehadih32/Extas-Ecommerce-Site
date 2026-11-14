@@ -255,7 +255,7 @@ export function parseRegister(md: string, blueprint = ''): Register {
     const best = [...rows].sort((a, b) => (stateRank[b.state] ?? 0) - (stateRank[a.state] ?? 0) || b.date.localeCompare(a.date))[0];
     const stage = stageOf.get(n) ?? '';
     const parked = stages.find((s) => s.id === stage)?.parked ?? false;
-    const state: PrState = best && best.state in stateRank ? (best.state as PrState) : parked ? 'parked' : 'todo';
+    const state: PrState = best && best.state in stateRank ? (best.state as PrState) : parked || rows.some((r) => r.state.startsWith('cancelled')) ? 'parked' : 'todo';
     prs.set(n, { n, stage, title: titleOf(original || text), text: original, updates, status: rows, state, stateDate: best?.date ?? '', notes: [], buildsOn: prRefs(text, max).filter((x) => x !== n), owner: '', derived: false });
   }
 
@@ -274,7 +274,7 @@ export function parseRegister(md: string, blueprint = ''): Register {
     const parked = stages.find((s) => s.id === stage)?.parked ?? false;
     const derived = /\(derived\)/.test(title ?? '');
     const clean = (title ?? '').replace(/\s*\*\(derived\)\*/g, '').trim();
-    prs.set(n, { n, stage, title: titleOf(clean), text: clean, updates: [], status: rows, state: best && best.state in stateRank ? (best.state as PrState) : parked ? 'parked' : 'todo', stateDate: best?.date ?? '', notes: [], buildsOn: [], owner: plainMd(owner ?? ''), derived });
+    prs.set(n, { n, stage, title: titleOf(clean), text: clean, updates: [], status: rows, state: best && best.state in stateRank ? (best.state as PrState) : parked || rows.some((r) => r.state.startsWith('cancelled')) ? 'parked' : 'todo', stateDate: best?.date ?? '', notes: [], buildsOn: [], owner: plainMd(owner ?? ''), derived });
   }
 
   // change notes: one "> **CN-### · …**" blockquote each, its paragraphs split by "> " blank lines
