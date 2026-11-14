@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { V5Number } from '@/components/admin/v5/Parts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -80,6 +80,7 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
           </span>
         }
       />
+      <SectionTabs view={view} current={KEY} />
       <div className="a2-kpis a2-mt12">
         <div className="a2-card" data-testid="mkt-spend">
           <div className="a2-xs a2-mute">{c('kSpend')}</div>

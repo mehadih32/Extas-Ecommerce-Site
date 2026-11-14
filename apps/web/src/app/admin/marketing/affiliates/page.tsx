@@ -12,7 +12,7 @@ import * as rl from '@extas/rules';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AddPartner, PartnerActions, ReversePayout } from '@/components/admin/v5/AffiliateParts';
 import { V5Number, V5Switch } from '@/components/admin/v5/Parts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -64,6 +64,7 @@ export default async function AffiliatesPage() {
   return (
     <div className="a2-z" data-testid="affiliates" data-lm-ready="" data-on={board.enabled ? 'yes' : 'no'} data-payouts={board.payoutsOn ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} right={<Link className="a2-btn sm" href="/admin/marketing/referrals">{c('back')}</Link>} />
+      <SectionTabs view={view} current={KEY} />
       {!board.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       {board.enabled ? (
         <>

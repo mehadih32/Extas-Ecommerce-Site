@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
 import { Icon } from '@/components/admin/Icon';
 import { WizardBar } from '@/components/admin/products/WizardBar';
 import { NewProductForm } from '@/components/admin/products/NewProductForm';
@@ -17,7 +17,7 @@ import { t } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
-const KEY = 'products';
+const KEY = 'productNew';
 const HERE = `${PRODUCTS_HOME}/new`;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,6 +51,7 @@ export default async function NewProductPage() {
         <h1 className="ad-h1">{t(d, 'products.new.title')}</h1>
         <p className="ad-intro">{t(d, 'products.new.intro')}</p>
       </div>
+      <SystemTabs view={view} current={KEY} />
       <WizardBar dict={d} step={1} productId={null} done={[]} furthest={1} canWrite={c.can('catalogue.write')} preview={null} />
       {drafts.length ? (
         <section className="ad-card" aria-label={t(d, 'products.wiz.resume')} data-testid="wizard-resume">

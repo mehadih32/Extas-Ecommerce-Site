@@ -12,7 +12,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { TestSend } from '@/components/admin/v5/CampaignParts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -69,6 +69,7 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
   return (
     <div className="a2-z" data-testid="message-campaigns" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <SectionTabs view={view} current={KEY} />
       <section className="a2-card a2-mt12" aria-label={c('new')} data-testid="camp-new">
         <h2 className="a2-h3" style={{ marginBottom: 10 }}>
           {c('new')}

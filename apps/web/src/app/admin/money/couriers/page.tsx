@@ -4,5 +4,5 @@ import { openDefaultCourier } from '@/lib/admin-couriers-open';
 export const dynamic = 'force-dynamic';
 
 export default async function CouriersTab() {
-  return openDefaultCourier('/admin/money/couriers', 'money');
+  return openDefaultCourier('/admin/money/couriers', 'money', 'money');
 }

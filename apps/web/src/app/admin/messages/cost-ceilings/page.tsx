@@ -12,7 +12,7 @@ import * as ms from '@extas/messages';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CeilingCard } from '@/components/admin/v5/CeilingCard';
 import { CeilingForm } from '@/components/admin/v5/CeilingForm';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -55,6 +55,7 @@ export default async function CostCeilingsPage() {
   return (
     <div className="a2-z" data-testid="cost-ceilings" data-lm-ready="" data-on={status.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} right={<Link className="a2-btn sm" href="/admin/messages/channels">{c('back')}</Link>} />
+      <SectionTabs view={view} current={KEY} />
       <CeilingCard dict={d} status={status} locale={view.locale} timeZone={view.timeZone} link={false} />
       <p className="a2-xs a2-mute a2-mt6">{c('explain')}</p>
       {canEdit ? (

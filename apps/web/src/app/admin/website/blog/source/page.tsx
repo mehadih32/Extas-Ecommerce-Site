@@ -77,7 +77,7 @@ export default async function BlogSourceLinkPage() {
   return (
     <div className="a2-z" data-testid="blog-source" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={s('title')} sub={s('sub')} />
-      <SectionTabs view={view} current="blog" />
+      <SectionTabs view={view} current={KEY} />
       <div className="jr-grid a2-mt12">
         <SourceLinkForm words={words} block={screen.block} used={screen.used} dailyMax={screen.dailyMax} canWrite={canWrite} />
         <div className="jr-stack">

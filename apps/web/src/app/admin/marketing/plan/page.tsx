@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -52,6 +52,7 @@ export default async function MarketingPlanPage() {
   return (
     <div className="a2-z" data-testid="mkt-plan" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub', { n: WINDOW_DAYS })} right={<Link className="a2-btn sm" href="/admin/marketing/overview">{c('back')}</Link>} />
+      <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12">{c('advice')}</div>
       <section className="a2-card a2-mt12" data-testid="mkt-plan-channels">
         <h2 className="a2-h3" style={{ marginBottom: 10 }}>
