@@ -10,6 +10,8 @@ import { storeTarget } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { requireOwnerPin } from '../owner-pin';
 import { practiceCounts, resetPractice, type ResetResult } from './reset';
+import type { MediaDeps } from '@extas/media';
+import { addPracticePhotos } from './photos';
 import { seedPractice, type SeedResult } from './seed';
 
 /** The words typed to confirm a reset. */
@@ -73,10 +75,12 @@ export async function setPracticeMode(deps: AdminDeps, actor: Actor, ctx: Reques
 }
 
 /** "Add sample data": fills the practice world. Needs practice mode on; does nothing when practice orders already exist. */
-export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number): Promise<Out<{ result: SeedResult }>> {
+export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, media: MediaDeps | null = null): Promise<Out<{ result: SeedResult }>> {
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
   const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date());
+  // the pictures of the sample products (needs the media storage; adds only what is missing)
+  if (media) result.counts.photos = (await addPracticePhotos(media, storeId)).photos;
   if (result.seeded)
     await audit(
       deps.db,
@@ -110,6 +114,7 @@ export async function resetPracticeData(
   ctx: RequestContext,
   storeId: number,
   raw: unknown,
+  media: MediaDeps | null = null,
 ): Promise<Out<{ result: ResetResult; seeded: SeedResult | null }>> {
   const b = resetBody.safeParse(raw);
   if (!b.success) return { ok: false, error: 'INVALID_INPUT' };
@@ -122,6 +127,7 @@ export async function resetPracticeData(
     removeDemo: b.data.removeDemo === true,
   });
   const seeded = b.data.refill && enabled.on ? await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date()) : null;
+  if (seeded && media) seeded.counts.photos = (await addPracticePhotos(media, storeId)).photos;
   await audit(
     deps.db,
     actor,
@@ -157,6 +163,7 @@ export async function practiceRoute(request: Request, deps: AdminDeps | null, pa
   const storeId = raw === null ? MOTHER_STORE_ID : /^\d+$/.test(raw) ? Number(raw) : null;
   if (storeId === null) return fail(400, 'invalid-store-id');
   const [a] = path;
+  const media = deps ? (await import('../media')).mediaDeps() : null;
   try {
     const g = await guardAdmin(request, deps, {
       permission: 'settings.write',
@@ -173,7 +180,7 @@ export async function practiceRoute(request: Request, deps: AdminDeps | null, pa
       return r.ok ? json({ ok: true, ...(await practiceView(deps!, g.actor, storeId)) }) : fail(STATUS[r.error] ?? 422, r.error);
     }
     if (a === 'fill' && m === 'POST') {
-      const r = await addSampleData(deps!, g.actor, g.ctx, storeId);
+      const r = await addSampleData(deps!, g.actor, g.ctx, storeId, media);
       return r.ok
         ? json({
             ok: true,
@@ -184,7 +191,7 @@ export async function practiceRoute(request: Request, deps: AdminDeps | null, pa
         : fail(STATUS[r.error] ?? 422, r.error);
     }
     if (a === 'reset' && m === 'POST') {
-      const r = await resetPracticeData(deps!, g.actor, g.ctx, storeId, await body(request));
+      const r = await resetPracticeData(deps!, g.actor, g.ctx, storeId, await body(request), media);
       return r.ok
         ? json({
             ok: true,

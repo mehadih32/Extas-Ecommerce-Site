@@ -157,6 +157,13 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
         ).count,
       };
       for (const [table, n] of Object.entries(gone)) if (n) removed.set(table, n);
+      // 4c. the sample pictures (library files in the "practice" folder, no longer placed on any product); their sizes go first
+      const pics = (await tx.mediaAsset.findMany({ where: { storeId, folder: 'practice', productMedia: { none: {} } }, select: { id: true } })).map((a) => a.id);
+      if (pics.length) {
+        await tx.mediaRendition.deleteMany({ where: { assetId: { in: pics } } });
+        const n = (await tx.mediaAsset.deleteMany({ where: { id: { in: pics } } })).count;
+        if (n) removed.set('MediaAsset', n);
+      }
       const keptProducts = await tx.product.count({ where: { storeId } });
       return {
         removed: Object.fromEntries(removed),

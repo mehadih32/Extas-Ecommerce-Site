@@ -195,8 +195,8 @@ export function practiceStock(sku: string): number {
  * Completes the practice products: category, colours (+ sizes on the variants), stock, size chart, fabric and a short
  * description. It only fills what is missing (so a second run changes nothing and an older empty shell is completed), touches
  * only practice products, and every colour, size, fabric and chart it makes is practice-owned (key "practice-..." or name
- * "... (practice)"), so "Reset practice data" removes exactly those and never the owner's own. No photo is made: a photo needs
- * a stored file, and a made-up file would show as a broken picture on the shop.
+ * "... (practice)"), so "Reset practice data" removes exactly those and never the owner's own. Photos are made apart, by
+ * `addPracticePhotos` (photos.ts): a photo needs a stored file, which needs the media storage this seeder does not hold.
  */
 export async function completeProducts(db: Db, storeId: number, plan: ProductPlan): Promise<Record<string, number>> {
   const have = await db.product.findMany({
