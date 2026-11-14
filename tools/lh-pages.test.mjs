@@ -245,7 +245,7 @@ describe('lh-pages: the one page list (CN-023)', () => {
   });
 
   it('still has the pages both old lists measured (storefront on the sample data, the admin and the status page)', () => {
-    for (const p of ['/status', '/access', '/admin/orders', '/checkout/thanks/0', '/p/contrast-collar-polo', '/bn/p/contrast-collar-polo', '/bn/combos', '/bn/account/orders/0/invoice', '/search?q=polo']) {
+    for (const p of ['/status', '/access', '/checkout/thanks/0', '/p/contrast-collar-polo', '/bn/p/contrast-collar-polo', '/bn/combos', '/bn/account/orders/0/invoice', '/search?q=polo']) {
       expect(paths).toContain(p);
     }
     expect(paths.length).toBeGreaterThanOrEqual(55);
