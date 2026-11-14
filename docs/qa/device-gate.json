@@ -386,6 +386,7 @@
       "/admin/marketing/audiences/new",
       "/admin/marketing/ad-platforms",
       "/admin/marketing/ad-platforms/growth",
+      "/admin/marketing/ad-platforms/guardrails",
       "/admin/marketing/ad-platforms/briefs",
       "/admin/marketing/ad-platforms/campaigns",
       "/admin/marketing/studio/motion",

@@ -76,6 +76,10 @@
     "creativeBrief": {
       "label": "Creative briefs for ads",
       "help": "Off as it ships. On, Marketing › Ad platforms › Creative briefs writes a brief for the studio from a product and, if you pick one, a platform campaign: the offer, the formats, a hook in Bengali and English, what the picture shows, the landing page and what the ads optimise for. You correct the words and send it to the studio. A brief never changes a price, a budget or a campaign."
+    },
+    "guardrails": {
+      "label": "Ads guardrails (Tirondaj)",
+      "help": "Off as it ships: every ceiling and the cost-per-purchase cap are 0 (off) and nothing is blocked. On, Marketing › Ad platforms › Ads guardrails checks, before any increase goes through (even one you have already approved): the daily budget ceiling (the sum of every active campaign's own daily budget), the monthly budget ceiling (the shop's ad spend over the last 30 days) and the cost-per-purchase cap (a campaign's own cost per delivered order). The kill switch is always live even with this off: it refuses every increase and pauses every active campaign at once. \"Decrease now\" (with auto-decrease allowed) lowers a campaign over the cap by the step you set. The sales and purchase targets are shown as progress only and never block anything."
     }
   },
   "studio": {

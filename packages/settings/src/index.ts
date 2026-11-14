@@ -203,6 +203,9 @@ export * from './registry-conversion-feed';
 export * from './registry-ads-growth';
 // S13 · PR 270 — the ad creative brief's settings (registry-ads-brief.ts, version 176).
 export * from './registry-ads-brief';
+// S15 · PR 581 — Tirondaj's own ads guardrails: ceilings, the CPA cap, auto-decrease, the kill switch
+// (registry-ads-guardrails.ts, version 296).
+export * from './registry-ads-guardrails';
 // S13 · PR 272 — how coupon codes reach people: links and single-use batches (registry-coupons-distribution.ts, version 177).
 export * from './registry-coupons-distribution';
 // S13 · PR 273 — the referral programme: switch, window, the friend's rule, the sharer's reward (registry-referrals.ts, version 178).

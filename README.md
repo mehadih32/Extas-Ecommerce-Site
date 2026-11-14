@@ -2697,8 +2697,16 @@ is changed.
 - **Growth agent (269):** `ads.growthAgent` (every proposal kind off at 0) — Marketing › Ad platforms › Growth agent
   (`/admin/marketing/ad-platforms/growth`): delivered ROAS by campaign, product and district, campaigns spending with no
   delivered order, and proposals waiting once for approval.
+- **Tirondaj's own ads guardrails (581):** `ads.guardrails` (v333, off; every ceiling, the cost-per-purchase cap and the
+  two targets at 0, auto-decrease and the kill switch off) — Marketing › Ad platforms › Ads guardrails
+  (`/admin/marketing/ad-platforms/guardrails`): a daily and a monthly budget ceiling, a cost-per-purchase cap and two
+  owner targets (sales, purchases — progress only, never a block), checked inside `campaign-control.ts`'s own single
+  choke point so even an owner-already-approved increase is still refused past a set ceiling; a kill switch that
+  refuses every increase and pauses every active campaign at once; "Decrease now" lowers every over-cap campaign's
+  budget by the owner's own step, with no approval wait (a decrease never needs one). Seeing needs
+  `marketing.campaigns.read`; changing the card needs `marketing.ads.approve`.
 - Guides: [marketing/ad-platforms](docs/admin-guide/pages/marketing/ad-platforms.md), [marketing/ad-growth](docs/admin-guide/pages/marketing/ad-growth.md),
-  [money/fees](docs/admin-guide/pages/money/fees.md).
+  [marketing/ad-guardrails](docs/admin-guide/pages/marketing/ad-guardrails.md), [money/fees](docs/admin-guide/pages/money/fees.md).
 
 **Built (PR [270](docs/stages/S13.md#pr-270)–273; 6 Nov, #82, After launch): creative briefs, the coupon engine,
 coupon distribution and the referral programme.** Every switch is off and no amount is set anywhere; settings registry
@@ -4230,6 +4238,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 | pending | S28 · PR 686–691 (wave 4B) | 13 Nov | Shop ranking, cashbook and forecast, budgets and profit snapshot, report library, report packs and schedules, Home Command as default. Gap close (13 Nov): the five pages are tabs (menu and search), Downloads & report packs in one place (Excel, PDF, Print; English or Bengali), packs by e-mail to the owner, Home tiles for profit, COD and ad spend with pinned reports and the exchange line. Still open: `docs/demo/admin-proto-v5/gap/NAV-PATCH-w4b.md`. Migrations 0250–0253; settings v686–v689; permission `cash.record`. |
 | pending | S28 · PR 686–691 (wave 4B) | 13 Nov | Shop ranking, cashbook and forecast, budgets and profit snapshot, report library, report packs and schedules, Home Command as default. Nav patch: `docs/demo/admin-proto-v5/gap/NAV-PATCH-w4b.md`. Migrations 0250–0253; settings v686–v689; permission `cash.record`. |
 | pending | PR [584](docs/stages/S15.md#pr-584) | 13 Nov | S15: Telegram identity and command routing — off by default, gated by the owner's switch and the Telegram connection's webhook secret. |
+| pending | PR [581](docs/stages/S15.md#pr-581) | 13 Nov | S15: তীরন্দাজ Tirondaj's own ads guardrails — daily/monthly budget ceilings, a cost-per-purchase cap and a kill switch, enforced inside `campaign-control.ts`'s own choke point so even an owner-approved increase is still checked; new Marketing › Ad platforms › Ads guardrails page. |
 | pending | PR [580](docs/stages/S15.md#pr-580) | 13 Nov | S15: Model auto-suggest with free-model qualification. |
 | pending | PR [582](docs/stages/S15.md#pr-582) | 13 Nov | S15 (CN-050 parallel builder 1): strong agent memory. `ai.memory.enabled` v333, **off by default**, shared by every agent; `AiMemory` (no migration); search is an honest text-match mock; weekly digest on demand (no cron); correct/archive, never delete; new "Memory" card on `/admin/agents/:key`, `GET/POST /api/admin/agents/:key/memory`, guide updated. |
 | pending | PR [665](docs/stages/S28.md#pr-665) | 13 Nov | S28 wave 1 (builder C): merge orders into one. `orders.mergeOrders` v331 (off), "Merge" and "Merge + call" on the kept order, append-only `OrderMerge` record (migration 0201), auto-merge hook (off), guide updated. |

@@ -128,6 +128,7 @@ import { adsBuilderSettings } from './registry-ads-builder';
 import { conversionFeedSettings } from './registry-conversion-feed';
 import { adsGrowthSettings } from './registry-ads-growth';
 import { adsBriefSettings } from './registry-ads-brief';
+import { adsGuardrailsSettings } from './registry-ads-guardrails';
 import { couponDistributionSettings } from './registry-coupons-distribution';
 import { referralSettings } from './registry-referrals';
 import { aiDraftSettings, approvalSettings, briefSettings, clusterSettings, journalSettings, performanceSettings, scheduleSettings, sourceWriterSettings } from './registry-journal';
@@ -1542,6 +1543,7 @@ export const registry = {
   ...conversionFeedSettings,
   ...adsGrowthSettings,
   ...adsBriefSettings,
+  ...adsGuardrailsSettings,
   ...couponDistributionSettings,
   ...referralSettings,
   ...incompleteSettings,
