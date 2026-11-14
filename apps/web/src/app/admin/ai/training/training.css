@@ -1,0 +1,22 @@
+/* S28 · PR 713 — AI Center › Training (/admin/ai/training), in the Lumen look. Shared --lm- / a2- tokens only; phone first: one column,
+   every control 44 px tall with 16 px text, cards side by side from 900 px. */
+.adm2 .tr-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+@media (min-width: 900px) { .adm2 .tr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .tr-card { min-width: 0; }
+.adm2 .tr-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.adm2 .tr-form .a2-sel, .adm2 .tr-form .a2-inp, .adm2 .tr-inline .a2-inp { min-height: 44px; font-size: 16px; width: 100%; min-width: 0; }
+.adm2 .tr-inline { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.adm2 .tr-inline .a2-inp { flex: 1 1 180px; }
+.adm2 .tr-inline .a2-btn, .adm2 .tr-form .a2-btn, .adm2 .tr-row .a2-btn, .adm2 .tr-ver .a2-btn { min-height: 44px; }
+.adm2 .tr-scope { margin-top: 12px; }
+.adm2 .tr-scope:first-child { margin-top: 0; }
+.adm2 .tr-row { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; border-top: 1px solid var(--ln); padding: 8px 0; }
+.adm2 .tr-row > span { min-width: 0; flex: 1 1 200px; overflow-wrap: anywhere; }
+.adm2 .tr-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.adm2 .tr-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 4px 0 14px; border-radius: 999px; border: 1px solid var(--ln); background: var(--sf2); max-width: 100%; overflow-wrap: anywhere; }
+.adm2 .tr-chipx { min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--ink); font-size: 20px; cursor: pointer; border-radius: 999px; }
+.adm2 .tr-ver { border-top: 1px solid var(--ln); padding: 10px 0; display: flex; flex-direction: column; gap: 4px; }
+.adm2 .tr-ver:first-child { border-top: none; }
+.adm2 .tr-ver-h { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.adm2 .tr-ver ul { margin: 0; padding-left: 18px; }
+.adm2 .tr-ver li { overflow-wrap: anywhere; }

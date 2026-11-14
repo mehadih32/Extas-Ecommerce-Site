@@ -1,0 +1,79 @@
+{
+  "aiTraining": {
+    "metaTitle": "Training",
+    "title": "Training",
+    "sub": "Teach the agents how the shop talks and decides, in your own words. Every change is a new version, and you can bring back an older one.",
+    "needPermission": "You can read this page. Teaching the agents needs the AI control permission.",
+    "aiOff": "AI is off. What you write here is saved and kept; the agents use it once AI is turned on.",
+    "rules": "Instructions guide how an agent writes and decides. They never override the standing rules: replies to buyers stay on Ask, deletes wait for your approval, and no agent changes permissions.",
+    "scope": {
+      "all": "Every agent"
+    },
+    "instr": {
+      "h": "Your instructions",
+      "d": "One instruction per line, for every agent or for one.",
+      "agent": "For",
+      "text": "Instruction",
+      "placeholder": "For example: write replies short and warm, in Bengali first.",
+      "add": "Add instruction",
+      "added": "Instruction saved as a new version",
+      "failed": "Could not save. Someone may have saved first: reload the page and try again.",
+      "none": "No instructions yet.",
+      "remove": "Remove",
+      "removeLabel": "Remove instruction",
+      "removed": "Instruction removed as a new version"
+    },
+    "forbidden": {
+      "h": "Forbidden topics",
+      "d": "Topics no agent may bring up.",
+      "text": "Topic",
+      "placeholder": "For example: politics",
+      "add": "Add topic",
+      "added": "Topic saved as a new version",
+      "failed": "Could not save. Someone may have saved first: reload the page and try again.",
+      "none": "No forbidden topics yet.",
+      "removeLabel": "Remove topic",
+      "removed": "Topic removed as a new version"
+    },
+    "ver": {
+      "h": "Version history",
+      "d": "Every save is a version. Restoring one saves it again as the newest version; nothing is deleted.",
+      "inUse": "In use",
+      "v": "Version {n}",
+      "by": "by {name}",
+      "restore": "Restore this version",
+      "restoreLabel": "Restore version",
+      "restored": "Restored as a new version",
+      "failed": "Could not restore. Someone may have saved first: reload the page and try again.",
+      "restoredFrom": "Brought back from version {n}",
+      "none": "No versions yet. The first save makes version 1.",
+      "more": "Showing the newest {shown} of {total}. Older versions are kept.",
+      "add": "Added for {scope}: {text}",
+      "remove": "Removed for {scope}: {text}",
+      "addForbidden": "Forbidden topic added: {text}",
+      "removeForbidden": "Forbidden topic removed: {text}",
+      "noChange": "No wording changed"
+    },
+    "opt": {
+      "h": "More options",
+      "d": "How many versions the history shows. Every version is kept either way.",
+      "versionRows": "Versions shown",
+      "versionRowsHelp": "From 5 to 100.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see this choice. Changing it needs the AI control permission.",
+      "err": {
+        "STALE": "Someone saved first. The page shows their value; check and save again.",
+        "INVALID_INPUT": "A number is out of range.",
+        "FORBIDDEN": "You may not change this.",
+        "forbidden": "You may not change this.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Try again."
+      }
+    }
+  }
+}

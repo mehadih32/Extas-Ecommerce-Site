@@ -599,6 +599,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 585 — Learning engine: Tirondaj/Doot's own research → quality gate → skill basket loop, practice
       // tasks and paid-tool proposals (owner only).
       { id: 'learning', guide: 'ai', pages: [{ href: '/admin/ai/learning', perm: 'ai.read', keys: ['aiLearning'] }] },
+      // S28 · PR 713 (CN-048): Training — the owner's written instructions per agent, forbidden topics, versions and restore.
+      { id: 'train', guide: 'ai', pages: [{ href: '/admin/ai/training', perm: 'ai.read', keys: ['aiTraining'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',

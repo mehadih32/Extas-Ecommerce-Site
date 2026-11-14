@@ -158,7 +158,6 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
 export const AWAITING: readonly string[] = [
   'website.policies',
   'reports.profit', 'reports.products', 'reports.marketing', 'reports.review',
-  'ai.train',
 ];
 
 export interface PendingPage {
