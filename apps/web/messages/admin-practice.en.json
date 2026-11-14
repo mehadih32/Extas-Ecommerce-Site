@@ -47,7 +47,6 @@
       "OWNER_ONLY": "Only the owner can do this.",
       "PRACTICE_OFF": "Turn practice mode on first.",
       "RESET_HIDDEN": "Reset is switched off for this shop.",
-      "WORDS_MISMATCH": "Type RESET PRACTICE exactly.",
       "INVALID_INPUT": "Check what you typed.",
       "PIN_REQUIRED": "Type the owner's PIN.",
       "PIN_NOT_SET": "The owner has not set a PIN yet.",

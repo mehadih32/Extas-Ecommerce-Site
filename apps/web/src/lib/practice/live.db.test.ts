@@ -51,7 +51,7 @@ describe.skipIf(!HAS_TEST_DB)('the practice shop is live and hides with one swit
     const r = await ensurePractice(deps(), S);
     expect(r.seeded?.seeded).toBe(true);
     const products = await t.prisma.product.findMany({ where: { storeId: S, isPractice: true }, select: { status: true, publishedAt: true, variants: { select: { sku: true, active: true } } } });
-    expect(products.length).toBeGreaterThanOrEqual(20);
+    expect(products.length).toBe(72);
     expect(products.every((p) => p.status === 'PUBLISHED' && p.publishedAt !== null)).toBe(true);
     expect(products.every((p) => p.variants.length > 0 && p.variants.every((v) => v.active))).toBe(true);
     expect(await practiceVisibilityDrift(t.prisma, S, true)).toBe(0);
@@ -73,9 +73,16 @@ describe.skipIf(!HAS_TEST_DB)('the practice shop is live and hides with one swit
     expect(await t.prisma.product.count({ where: { storeId: S, isPractice: true, status: 'PUBLISHED' } })).toBe(0);
     expect(await t.prisma.product.count({ where: { storeId: S, isPractice: true } })).toBe(count);
     expect((await t.prisma.product.findUniqueOrThrow({ where: { id: realProductId } })).status).toBe('PUBLISHED');
+    // the demo's combos and journal posts leave the shop with them, and the categories only they needed are hidden again
+    expect(await t.prisma.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(0);
+    expect(await t.prisma.blogPost.count({ where: { storeId: S, status: 'PUBLISHED' } })).toBe(0);
+    expect(await t.prisma.category.count({ where: { storeId: S, slug: 'joggers', isVisible: true } })).toBe(0);
     await set('practice.enabled', true);
     const on = await ensurePractice(deps(), S);
     expect(on.shown).toBe(count);
+    expect(await t.prisma.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(5);
+    expect(await t.prisma.blogPost.count({ where: { storeId: S, status: 'PUBLISHED' } })).toBe(12);
+    expect(await t.prisma.category.count({ where: { storeId: S, slug: 'polos', isVisible: true } })).toBe(1);
     expect(await t.prisma.product.count({ where: { storeId: S, isPractice: true, status: 'PUBLISHED' } })).toBe(count);
     expect((await t.prisma.product.findUniqueOrThrow({ where: { id: realProductId } })).status).toBe('PUBLISHED');
   });

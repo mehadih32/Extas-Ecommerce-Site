@@ -20,8 +20,6 @@ import { addPracticePhotos, practicePhotoProgress } from './photos';
 import { seedPractice, type SeedResult } from './seed';
 import { syncPracticeVisibility } from './visibility';
 
-/** The words once typed to confirm a reset (PR 725: no longer asked; the PIN alone confirms). */
-export const RESET_WORDS = 'RESET PRACTICE'; // hardcode-ok: kept so nothing that imported it breaks
 
 export interface PracticeView {
   enabled: boolean;
@@ -214,7 +212,6 @@ const STATUS: Record<string, number> = {
   RESET_HIDDEN: 409,
   MEDIA_UNAVAILABLE: 503,
   NO_SAMPLE_PRODUCTS: 409,
-  WORDS_MISMATCH: 422,
   INVALID_INPUT: 422,
 };
 

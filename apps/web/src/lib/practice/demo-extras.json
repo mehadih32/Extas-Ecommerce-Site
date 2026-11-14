@@ -1,0 +1,157 @@
+{
+  "combos": [
+    {
+      "id": "polo-duo",
+      "name": "Polo Duo",
+      "blurb": "Any 2 different colours of our Essential Piqué Polo",
+      "items": [
+        "essential-pique-polo",
+        "essential-pique-polo"
+      ],
+      "priceMinor": 150000,
+      "autoApply": true,
+      "sameColour": false,
+      "template": "C1"
+    },
+    {
+      "id": "office-trio",
+      "name": "Office Trio",
+      "blurb": "Oxford shirt + slim chino + knit polo",
+      "items": [
+        "oxford-cotton-shirt",
+        "slim-chino-trousers",
+        "textured-knit-polo"
+      ],
+      "priceMinor": 310000,
+      "autoApply": true,
+      "sameColour": false,
+      "template": "C1"
+    },
+    {
+      "id": "polo-chino",
+      "name": "Polo + Chino",
+      "blurb": "Essential polo with slim chinos",
+      "items": [
+        "essential-pique-polo",
+        "slim-chino-trousers"
+      ],
+      "priceMinor": 205000,
+      "autoApply": false,
+      "sameColour": false,
+      "template": "C1"
+    },
+    {
+      "id": "hoodie-jogger-set",
+      "name": "Hoodie + Jogger Set",
+      "blurb": "Fleece hoodie with the matching fleece jogger",
+      "items": [
+        "ct-fleece-hoodie",
+        "ct-fleece-jogger"
+      ],
+      "priceMinor": 249000,
+      "autoApply": true,
+      "sameColour": false,
+      "template": "C1"
+    },
+    {
+      "id": "classic-tracksuit-set",
+      "name": "Classic Tracksuit Set",
+      "blurb": "Classic track top with the slim track jogger",
+      "items": [
+        "classic-track-top",
+        "slim-track-jogger"
+      ],
+      "priceMinor": 269000,
+      "autoApply": true,
+      "sameColour": false,
+      "template": "C1"
+    }
+  ],
+  "journal": [
+    {
+      "title": "How to pick your polo size",
+      "kicker": "Size guide · 3 min read",
+      "excerpt": "Measure a polo you already own, or just give us height and weight. Here is what the chest and length numbers really mean.",
+      "product": "essential-pique-polo",
+      "colour": "navy"
+    },
+    {
+      "title": "Oxford shirt: office to dinner",
+      "kicker": "Style · 3 min read",
+      "excerpt": "One shirt, three ways — with chinos for work, over a tee on Friday, sleeves rolled for dinner.",
+      "product": "oxford-cotton-shirt",
+      "colour": "sky"
+    },
+    {
+      "title": "Cotton GSM, in plain words",
+      "kicker": "Fabric · 4 min read",
+      "excerpt": "180, 220, 320 GSM — what the number changes in how a tee or hoodie feels, and which one suits Dhaka weather.",
+      "product": "heavy-cotton-tee",
+      "colour": "ecru"
+    },
+    {
+      "title": "Chino or twill: which trouser",
+      "kicker": "Fit guide · 3 min read",
+      "excerpt": "Slim chinos hold a crease and suit the office. Relaxed twill breathes more. How to choose by waist and use.",
+      "product": "slim-chino-trousers",
+      "colour": "khaki"
+    },
+    {
+      "title": "What to wear for Eid 2026",
+      "kicker": "Style · 4 min read",
+      "excerpt": "From a crisp panjabi for prayers to an easy polo for family visits — five outfits for the whole Eid weekend.",
+      "product": "classic-cotton-panjabi",
+      "colour": "white"
+    },
+    {
+      "title": "Panjabi length and sleeve guide",
+      "kicker": "Size guide · 3 min read",
+      "excerpt": "Knee length or a touch below? Sleeve to the wrist bone? The three measurements that decide how a panjabi sits.",
+      "product": "classic-cotton-panjabi",
+      "colour": "maroon"
+    },
+    {
+      "title": "Layering for a Dhaka winter",
+      "kicker": "Winter · 4 min read",
+      "excerpt": "It never gets truly cold, so one heavy layer beats three thin ones. Tee, knit polo, hoodie — in that order.",
+      "product": "heavyweight-hoodie",
+      "colour": "black"
+    },
+    {
+      "title": "Washing dark colours so they stay dark",
+      "kicker": "Care · 2 min read",
+      "excerpt": "Cold water, inside out, dry in shade. Four habits that keep navy and black from going grey in six months.",
+      "product": "everyday-crew-tee",
+      "colour": "black"
+    },
+    {
+      "title": "Five ways to wear a knit polo",
+      "kicker": "Style · 3 min read",
+      "excerpt": "The knit polo is the one top that works at a wedding, at work and at a tea stall. Here is how.",
+      "product": "textured-knit-polo",
+      "colour": "bottle"
+    },
+    {
+      "title": "Why we only exchange for size",
+      "kicker": "Behind EXTAS · 3 min read",
+      "excerpt": "Size exchange in 72 hours, no returns — why that policy keeps our prices where they are, explained honestly.",
+      "product": "long-sleeve-polo",
+      "colour": "white"
+    },
+    {
+      "title": "Linen in the hot months",
+      "kicker": "Fabric · 3 min read",
+      "excerpt": "Linen creases, and that is the point. How a linen-cotton blend keeps the look neat while staying cool.",
+      "product": "linen-blend-shirt",
+      "colour": "sand"
+    },
+    {
+      "title": "Building a ten-piece menswear capsule",
+      "kicker": "Style · 5 min read",
+      "excerpt": "Ten pieces that make about thirty outfits — the shortlist we would buy first, in order.",
+      "product": "pocket-tee",
+      "colour": "sky"
+    }
+  ],
+  "$comment": "PR 725 — the approved demo journal and combos (docs/demo/src/01-data.js + 01zz-demo-more.js DB.journal, DB.combos), made-up sample data, prices in minor units."
+}

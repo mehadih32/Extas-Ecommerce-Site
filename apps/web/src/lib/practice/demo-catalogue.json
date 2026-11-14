@@ -1,0 +1,2767 @@
+{
+  "$comment": "S28 — the approved demo catalogue (docs/demo/src/01-data.js + 01zz-demo-more.js): 72 styles made by tools/demo/export-demo-catalogue.mjs. Made-up sample data, prices in minor units (poisha).",
+  "categories": [
+    {
+      "slug": "polos",
+      "nameEn": "Polos",
+      "nameBn": "পোলো",
+      "garment": "polo",
+      "hidden": false,
+      "introEn": "Piqué, knit and jersey polos in regular and slim fits."
+    },
+    {
+      "slug": "tshirts",
+      "nameEn": "T-Shirts",
+      "nameBn": "টি-শার্ট",
+      "garment": "tee",
+      "hidden": false,
+      "introEn": "Everyday cotton tees — crew, pocket and heavyweight."
+    },
+    {
+      "slug": "shirts",
+      "nameEn": "Shirts",
+      "nameBn": "শার্ট",
+      "garment": "shirt",
+      "hidden": false,
+      "introEn": "Oxford and linen-blend shirts for office and weekends."
+    },
+    {
+      "slug": "panjabi",
+      "nameEn": "Panjabi",
+      "nameBn": "পাঞ্জাবি",
+      "garment": "panjabi",
+      "hidden": false,
+      "introEn": "Classic cotton panjabi for Eid, Puja and every celebration."
+    },
+    {
+      "slug": "trousers",
+      "nameEn": "Trousers",
+      "nameBn": "ট্রাউজার",
+      "garment": "trouser",
+      "hidden": false,
+      "introEn": "Slim chinos and relaxed twill trousers."
+    },
+    {
+      "slug": "hoodies",
+      "nameEn": "Hoodies",
+      "nameBn": "হুডি",
+      "garment": "hoodie",
+      "hidden": false,
+      "introEn": "Heavyweight hoodies built for Bangladeshi winters."
+    },
+    {
+      "slug": "extras",
+      "nameEn": "Extras",
+      "nameBn": "অন্যান্য",
+      "garment": "accessory",
+      "hidden": true,
+      "introEn": "Socks and belts."
+    },
+    {
+      "slug": "joggers",
+      "nameEn": "Joggers",
+      "nameBn": "জগার",
+      "garment": "jogger",
+      "hidden": true,
+      "introEn": "Cuffed joggers and track bottoms."
+    },
+    {
+      "slug": "tracksuits",
+      "nameEn": "Tracksuits",
+      "nameBn": "ট্র্যাকস্যুট",
+      "garment": "tracktop",
+      "hidden": true,
+      "introEn": "Zip track tops — buy alone or as a set with the bottom."
+    },
+    {
+      "slug": "jackets",
+      "nameEn": "Jackets",
+      "nameBn": "জ্যাকেট",
+      "garment": "puffer",
+      "hidden": true,
+      "introEn": "Puffer and bomber jackets for Bangladeshi winters."
+    },
+    {
+      "slug": "sweaters",
+      "nameEn": "Sweaters",
+      "nameBn": "সোয়েটার",
+      "garment": "sweater",
+      "hidden": true,
+      "introEn": "Crew-neck knit sweaters."
+    }
+  ],
+  "colours": [
+    {
+      "key": "navy",
+      "nameEn": "Navy",
+      "hex": "#1F2A44",
+      "noteEn": "Deep navy. Can look almost black in low light — see the daylight photo."
+    },
+    {
+      "key": "black",
+      "nameEn": "Black",
+      "hex": "#1E1E20",
+      "noteEn": "True black, no blue tint."
+    },
+    {
+      "key": "white",
+      "nameEn": "White",
+      "hex": "#F4F2EC",
+      "noteEn": "Clean white, slightly soft — not optic bright."
+    },
+    {
+      "key": "olive",
+      "nameEn": "Olive",
+      "hex": "#4A5240",
+      "noteEn": "Muted army green. Looks a little browner indoors."
+    },
+    {
+      "key": "red",
+      "nameEn": "Red",
+      "hex": "#9E2B2B",
+      "noteEn": "Rich brick red, not bright fire-engine red."
+    },
+    {
+      "key": "charcoal",
+      "nameEn": "Charcoal",
+      "hex": "#3A3B3E",
+      "noteEn": "Deep grey, not black."
+    },
+    {
+      "key": "ecru",
+      "nameEn": "Ecru",
+      "hex": "#E6DCC8",
+      "noteEn": "Natural off-white with a warm tone."
+    },
+    {
+      "key": "bottle",
+      "nameEn": "Bottle Green",
+      "hex": "#1F4A3A",
+      "noteEn": "Dark bottle green."
+    },
+    {
+      "key": "grey",
+      "nameEn": "Grey Melange",
+      "hex": "#9A9A9A",
+      "noteEn": null
+    },
+    {
+      "key": "mustard",
+      "nameEn": "Mustard",
+      "hex": "#C99A2E",
+      "noteEn": null
+    },
+    {
+      "key": "sky",
+      "nameEn": "Sky Blue",
+      "hex": "#9DB8D3",
+      "noteEn": "Soft pale blue, classic office shade."
+    },
+    {
+      "key": "sand",
+      "nameEn": "Sand",
+      "hex": "#CDBB9C",
+      "noteEn": null
+    },
+    {
+      "key": "pink",
+      "nameEn": "Pink",
+      "hex": "#E3B7B9",
+      "noteEn": null
+    },
+    {
+      "key": "maroon",
+      "nameEn": "Maroon",
+      "hex": "#5C1F27",
+      "noteEn": "Deep wine maroon."
+    },
+    {
+      "key": "khaki",
+      "nameEn": "Khaki",
+      "hex": "#C3A97E",
+      "noteEn": "Warm sandy khaki."
+    },
+    {
+      "key": "mixed",
+      "nameEn": "Mixed",
+      "hex": "#7D8A96",
+      "noteEn": null
+    },
+    {
+      "key": "brown",
+      "nameEn": "Brown",
+      "hex": "#6B4A32",
+      "noteEn": null
+    }
+  ],
+  "sizes": [
+    {
+      "key": "s",
+      "label": "S",
+      "sortOrder": 10
+    },
+    {
+      "key": "m",
+      "label": "M",
+      "sortOrder": 20
+    },
+    {
+      "key": "l",
+      "label": "L",
+      "sortOrder": 30
+    },
+    {
+      "key": "xl",
+      "label": "XL",
+      "sortOrder": 40
+    },
+    {
+      "key": "xxl",
+      "label": "XXL",
+      "sortOrder": 50
+    },
+    {
+      "key": "w30",
+      "label": "30",
+      "sortOrder": 60
+    },
+    {
+      "key": "w32",
+      "label": "32",
+      "sortOrder": 70
+    },
+    {
+      "key": "w34",
+      "label": "34",
+      "sortOrder": 80
+    },
+    {
+      "key": "w36",
+      "label": "36",
+      "sortOrder": 90
+    },
+    {
+      "key": "one-size",
+      "label": "One size",
+      "sortOrder": 100
+    },
+    {
+      "key": "3xl",
+      "label": "3XL",
+      "sortOrder": 55
+    }
+  ],
+  "charts": [
+    {
+      "key": "polo-regular",
+      "name": "Polo · Regular fit",
+      "garment": "polo",
+      "fitKey": "regular",
+      "easeInch": 4,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [38, 27, 16.5, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [40, 28, 17, 8]
+        },
+        {
+          "size": "l",
+          "values": [42, 29, 18, 8.25]
+        },
+        {
+          "size": "xl",
+          "values": [44, 30, 19, 8.5]
+        },
+        {
+          "size": "xxl",
+          "values": [46, 31, 20, 8.75]
+        }
+      ]
+    },
+    {
+      "key": "polo-slim",
+      "name": "Polo · Slim fit",
+      "garment": "polo",
+      "fitKey": "slim",
+      "easeInch": 2,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [37, 27, 16, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [39, 28, 16.5, 7.75]
+        },
+        {
+          "size": "l",
+          "values": [41, 29, 17.5, 8]
+        },
+        {
+          "size": "xl",
+          "values": [43, 30, 18.5, 8.25]
+        },
+        {
+          "size": "xxl",
+          "values": [45, 31, 19.5, 8.5]
+        }
+      ]
+    },
+    {
+      "key": "tee-regular",
+      "name": "T-shirt · Regular",
+      "garment": "tee",
+      "fitKey": "regular",
+      "easeInch": 4,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [38, 27, 17, 7.5]
+        },
+        {
+          "size": "m",
+          "values": [40, 28, 17.5, 8]
+        },
+        {
+          "size": "l",
+          "values": [42, 29, 18.5, 8.25]
+        },
+        {
+          "size": "xl",
+          "values": [44, 30, 19.5, 8.5]
+        },
+        {
+          "size": "xxl",
+          "values": [46, 31, 20.5, 9]
+        }
+      ]
+    },
+    {
+      "key": "shirt-regular",
+      "name": "Shirt · Regular",
+      "garment": "shirt",
+      "fitKey": "regular",
+      "easeInch": 5,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [39, 28.5, 17, 24]
+        },
+        {
+          "size": "m",
+          "values": [41, 29.5, 17.5, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [43, 30.5, 18, 25]
+        },
+        {
+          "size": "xl",
+          "values": [45, 31.5, 18.5, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [47, 32.5, 19, 26]
+        }
+      ]
+    },
+    {
+      "key": "panjabi-classic",
+      "name": "Panjabi · Classic",
+      "garment": "panjabi",
+      "fitKey": "classic",
+      "easeInch": 5,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [39, 40, 17, 23.5]
+        },
+        {
+          "size": "m",
+          "values": [41, 41, 17.5, 24]
+        },
+        {
+          "size": "l",
+          "values": [43, 42, 18, 24.5]
+        },
+        {
+          "size": "xl",
+          "values": [45, 43, 18.5, 25]
+        },
+        {
+          "size": "xxl",
+          "values": [47, 44, 19, 25.5]
+        }
+      ]
+    },
+    {
+      "key": "chino-slim",
+      "name": "Chino · Slim",
+      "garment": "trouser",
+      "fitKey": "slim",
+      "easeInch": 1,
+      "fields": [
+        {
+          "key": "waist",
+          "labelEn": "Waist"
+        },
+        {
+          "key": "hip",
+          "labelEn": "Hip"
+        },
+        {
+          "key": "thigh",
+          "labelEn": "Thigh"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "legOpening",
+          "labelEn": "Leg opening"
+        }
+      ],
+      "rows": [
+        {
+          "size": "w30",
+          "values": [30, 39, 23, 40, 13]
+        },
+        {
+          "size": "w32",
+          "values": [32, 41, 24, 40.5, 13.5]
+        },
+        {
+          "size": "w34",
+          "values": [34, 43, 25, 41, 14]
+        },
+        {
+          "size": "w36",
+          "values": [36, 45, 26, 41.5, 14.5]
+        }
+      ]
+    },
+    {
+      "key": "hoodie-regular",
+      "name": "Hoodie · Regular",
+      "garment": "hoodie",
+      "fitKey": "regular",
+      "easeInch": 6,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [40, 26.5, 17.5, 24]
+        },
+        {
+          "size": "m",
+          "values": [42, 27.5, 18, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [44, 28.5, 19, 25]
+        },
+        {
+          "size": "xl",
+          "values": [46, 29.5, 20, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [48, 30.5, 21, 26]
+        }
+      ]
+    },
+    {
+      "key": "ct-jogger",
+      "name": "Jogger · Elastic waist",
+      "garment": "jogger",
+      "fitKey": "elastic",
+      "easeInch": 1,
+      "fields": [
+        {
+          "key": "waist",
+          "labelEn": "Waist"
+        },
+        {
+          "key": "hip",
+          "labelEn": "Hip"
+        },
+        {
+          "key": "thigh",
+          "labelEn": "Thigh"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "legOpening",
+          "labelEn": "Leg opening"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [28, 39, 23, 38.5, 9]
+        },
+        {
+          "size": "m",
+          "values": [30, 41, 24, 39, 9.5]
+        },
+        {
+          "size": "l",
+          "values": [32, 43, 25, 39.5, 10]
+        },
+        {
+          "size": "xl",
+          "values": [34, 45, 26, 40, 10.5]
+        },
+        {
+          "size": "xxl",
+          "values": [36, 47, 27, 40.5, 11]
+        },
+        {
+          "size": "3xl",
+          "values": [38, 49, 28, 41, 11.5]
+        }
+      ]
+    },
+    {
+      "key": "ct-tracktop",
+      "name": "Track top · Regular",
+      "garment": "tracktop",
+      "fitKey": "regular",
+      "easeInch": 5,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [39, 26.5, 17, 24]
+        },
+        {
+          "size": "m",
+          "values": [41, 27.5, 17.5, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [43, 28.5, 18.5, 25]
+        },
+        {
+          "size": "xl",
+          "values": [45, 29.5, 19.5, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [47, 30.5, 20.5, 26]
+        },
+        {
+          "size": "3xl",
+          "values": [49, 31.5, 21.5, 26.5]
+        }
+      ]
+    },
+    {
+      "key": "ct-puffer",
+      "name": "Puffer jacket · Regular",
+      "garment": "puffer",
+      "fitKey": "regular",
+      "easeInch": 8,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [42, 26.5, 18, 25]
+        },
+        {
+          "size": "m",
+          "values": [44, 27.5, 18.5, 25.5]
+        },
+        {
+          "size": "l",
+          "values": [46, 28.5, 19.5, 26]
+        },
+        {
+          "size": "xl",
+          "values": [48, 29.5, 20.5, 26.5]
+        },
+        {
+          "size": "xxl",
+          "values": [50, 30.5, 21.5, 27]
+        },
+        {
+          "size": "3xl",
+          "values": [52, 31.5, 22.5, 27.5]
+        }
+      ]
+    },
+    {
+      "key": "ct-sweater",
+      "name": "Sweater · Crew neck",
+      "garment": "sweater",
+      "fitKey": "crew",
+      "easeInch": 4,
+      "fields": [
+        {
+          "key": "chest",
+          "labelEn": "Chest"
+        },
+        {
+          "key": "length",
+          "labelEn": "Length"
+        },
+        {
+          "key": "shoulder",
+          "labelEn": "Shoulder"
+        },
+        {
+          "key": "sleeve",
+          "labelEn": "Sleeve"
+        }
+      ],
+      "rows": [
+        {
+          "size": "s",
+          "values": [38, 26, 17, 24]
+        },
+        {
+          "size": "m",
+          "values": [40, 27, 17.5, 24.5]
+        },
+        {
+          "size": "l",
+          "values": [42, 28, 18.5, 25]
+        },
+        {
+          "size": "xl",
+          "values": [44, 29, 19.5, 25.5]
+        },
+        {
+          "size": "xxl",
+          "values": [46, 30, 20.5, 26]
+        },
+        {
+          "size": "3xl",
+          "values": [48, 31, 21.5, 26.5]
+        }
+      ]
+    }
+  ],
+  "products": [
+    {
+      "slug": "demo-essential-pique-polo",
+      "id": "essential-pique-polo",
+      "nameEn": "Essential Piqué Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "tag": "bestseller",
+      "template": "T1",
+      "sortRank": 10,
+      "descriptionEn": "Our everyday polo in breathable cotton piqué. Ribbed collar that stays flat, 2-button placket, side vents.",
+      "careEn": "Wash inside out, cold · Do not bleach · Dry in shade",
+      "fabric": "100% combed cotton piqué · 220 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 68 kg · wears M",
+      "freeDelivery": true,
+      "chart": "polo-regular",
+      "priceMinor": 85000,
+      "compareAtMinor": null,
+      "colours": ["navy", "black", "white", "olive", "red"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [5, 6, 2, 4, 0],
+        "black": [4, 7, 6, 3, 2],
+        "white": [3, 5, 4, 4, 1],
+        "olive": [2, 4, 3, 0, 1],
+        "red": [3, 2, 0, 2, 1]
+      }
+    },
+    {
+      "slug": "demo-textured-knit-polo",
+      "id": "textured-knit-polo",
+      "nameEn": "Textured Knit Polo",
+      "category": "polos",
+      "collection": "knitwear",
+      "tag": "new",
+      "template": "T2",
+      "sortRank": 20,
+      "descriptionEn": "A refined knit polo with a soft waffle texture. Dresses up with chinos, down with denim.",
+      "careEn": "Hand wash or gentle cycle · Dry flat",
+      "fabric": "100% cotton textured knit · 260 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 6'0\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "polo-regular",
+      "priceMinor": 115000,
+      "compareAtMinor": null,
+      "colours": ["charcoal", "ecru", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "charcoal": [3, 5, 4, 2, 0],
+        "ecru": [2, 3, 3, 2, 1],
+        "bottle": [1, 4, 2, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-contrast-collar-polo",
+      "id": "contrast-collar-polo",
+      "nameEn": "Contrast Collar Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "tag": null,
+      "template": "T3",
+      "sortRank": 30,
+      "descriptionEn": "Classic polo with contrast-tipped collar and cuffs.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton piqué with contrast tipping",
+      "fit": "Regular fit",
+      "fitNote": "Runs slightly small — between sizes, go up.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "polo-regular",
+      "priceMinor": 95000,
+      "compareAtMinor": 119000,
+      "colours": ["navy", "white", "black"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [2, 3, 3, 1, 0],
+        "white": [1, 2, 2, 2, 0],
+        "black": [2, 2, 1, 1, 1]
+      }
+    },
+    {
+      "slug": "demo-jersey-zip-polo",
+      "id": "jersey-zip-polo",
+      "nameEn": "Jersey Zip Polo",
+      "category": "polos",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 40,
+      "descriptionEn": "Smooth jersey polo with a short zip neck. Slim through the body.",
+      "careEn": "Wash cold",
+      "fabric": "Cotton-rich jersey with stretch",
+      "fit": "Slim fit",
+      "fitNote": "Slim fit — take one size up for a relaxed look.",
+      "model": "Model 5'10\" · 70 kg · wears M",
+      "freeDelivery": false,
+      "chart": "polo-slim",
+      "priceMinor": 105000,
+      "compareAtMinor": null,
+      "colours": ["black", "grey", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [3, 4, 2, 2, 0],
+        "grey": [2, 3, 3, 1, 0],
+        "navy": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-striped-rib-polo",
+      "id": "striped-rib-polo",
+      "nameEn": "Striped Rib Polo",
+      "category": "polos",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 50,
+      "descriptionEn": "Yarn-dyed stripes on a soft rib knit.",
+      "careEn": "Wash cold · Dry flat",
+      "fabric": "Ribbed cotton with yarn-dyed stripes",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "polo-regular",
+      "priceMinor": 99000,
+      "compareAtMinor": null,
+      "colours": ["navy", "mustard"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [2, 3, 0, 2, 1],
+        "mustard": [1, 2, 0, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-long-sleeve-polo",
+      "id": "long-sleeve-polo",
+      "nameEn": "Long Sleeve Polo",
+      "category": "polos",
+      "collection": "essentials",
+      "tag": "new",
+      "template": "T1",
+      "sortRank": 60,
+      "descriptionEn": "The Essential polo with long sleeves for cooler evenings.",
+      "careEn": "Wash cold",
+      "fabric": "Cotton piqué · long sleeves with ribbed cuffs",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "polo-regular",
+      "priceMinor": 119000,
+      "compareAtMinor": null,
+      "colours": ["white", "navy", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [2, 3, 3, 2, 1],
+        "navy": [2, 4, 3, 2, 0],
+        "olive": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-everyday-crew-tee",
+      "id": "everyday-crew-tee",
+      "nameEn": "Everyday Crew T-Shirt",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": "bestseller",
+      "template": "T1",
+      "sortRank": 70,
+      "descriptionEn": "The tee you reach for every day. Soft, breathable, keeps its shape.",
+      "careEn": "Machine wash cold",
+      "fabric": "100% cotton single jersey · 180 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 68 kg · wears M",
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 55000,
+      "compareAtMinor": null,
+      "colours": ["white", "black", "navy", "grey"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [8, 9, 7, 6, 3],
+        "black": [6, 8, 8, 5, 3],
+        "navy": [4, 6, 5, 4, 2],
+        "grey": [3, 5, 4, 3, 2]
+      }
+    },
+    {
+      "slug": "demo-heavy-cotton-tee",
+      "id": "heavy-cotton-tee",
+      "nameEn": "Heavy Cotton Tee",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 80,
+      "descriptionEn": "A thick, structured tee with a slightly boxy shape.",
+      "careEn": "Machine wash cold",
+      "fabric": "Heavyweight cotton · 240 GSM",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed fit — size down for a closer fit.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 65000,
+      "compareAtMinor": null,
+      "colours": ["ecru", "black", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "ecru": [3, 4, 4, 3, 2],
+        "black": [4, 5, 5, 4, 2],
+        "olive": [2, 3, 3, 2, 1]
+      }
+    },
+    {
+      "slug": "demo-pocket-tee",
+      "id": "pocket-tee",
+      "nameEn": "Pocket Tee",
+      "category": "tshirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 90,
+      "descriptionEn": "Easy pocket tee in a soft slub cotton.",
+      "careEn": "Machine wash cold",
+      "fabric": "Cotton slub jersey",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 60000,
+      "compareAtMinor": null,
+      "colours": ["sky", "white", "sand"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sky": [2, 3, 3, 2, 1],
+        "white": [3, 3, 2, 2, 1],
+        "sand": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-oxford-cotton-shirt",
+      "id": "oxford-cotton-shirt",
+      "nameEn": "Oxford Cotton Shirt",
+      "category": "shirts",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 100,
+      "descriptionEn": "Button-down Oxford shirt that works from office to dinner.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "100% cotton Oxford weave",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'10\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 125000,
+      "compareAtMinor": null,
+      "colours": ["sky", "white", "pink"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sky": [3, 4, 5, 3, 1],
+        "white": [4, 5, 5, 4, 2],
+        "pink": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-linen-blend-shirt",
+      "id": "linen-blend-shirt",
+      "nameEn": "Linen Blend Shirt",
+      "category": "shirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 110,
+      "descriptionEn": "Breathable linen-cotton for hot days.",
+      "careEn": "Wash cold · Line dry",
+      "fabric": "55% linen, 45% cotton",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed fit.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 145000,
+      "compareAtMinor": 169000,
+      "colours": ["white", "sand", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [2, 3, 3, 2, 1],
+        "sand": [2, 2, 3, 1, 0],
+        "olive": [1, 2, 1, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-classic-cotton-panjabi",
+      "id": "classic-cotton-panjabi",
+      "nameEn": "Classic Cotton Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": "eid-edit",
+      "template": "T2",
+      "sortRank": 120,
+      "descriptionEn": "A soft, breathable panjabi with a neat mandarin collar.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Fine cotton voile with self-stripe",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 185000,
+      "compareAtMinor": null,
+      "colours": ["white", "sky", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [3, 5, 5, 4, 2],
+        "sky": [2, 3, 4, 2, 1],
+        "maroon": [1, 3, 3, 2, 1]
+      }
+    },
+    {
+      "slug": "demo-slim-chino-trousers",
+      "id": "slim-chino-trousers",
+      "nameEn": "Slim Chino Trousers",
+      "category": "trousers",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 130,
+      "descriptionEn": "Slim chinos with a touch of stretch. Tapered leg, 4 pockets.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton twill with 2% stretch",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to waist size.",
+      "model": "Model 5'10\" · 70 kg · wears 32",
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["khaki", "navy", "charcoal"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "khaki": [3, 4, 3, 0],
+        "navy": [2, 3, 3, 1],
+        "charcoal": [2, 2, 2, 1]
+      }
+    },
+    {
+      "slug": "demo-relaxed-twill-trousers",
+      "id": "relaxed-twill-trousers",
+      "nameEn": "Relaxed Twill Trousers",
+      "category": "trousers",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 140,
+      "descriptionEn": "Easy relaxed trousers with a soft brushed finish.",
+      "careEn": "Wash cold",
+      "fabric": "Brushed cotton twill",
+      "fit": "Relaxed fit",
+      "fitNote": "Relaxed through the leg.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 135000,
+      "compareAtMinor": 160000,
+      "colours": ["olive", "black"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "olive": [2, 3, 2, 1],
+        "black": [3, 3, 3, 2]
+      }
+    },
+    {
+      "slug": "demo-heavyweight-hoodie",
+      "id": "heavyweight-hoodie",
+      "nameEn": "Heavyweight Hoodie 320 GSM",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": "winter-2026",
+      "template": "T1",
+      "sortRank": 150,
+      "descriptionEn": "Thick brushed fleece, double-layer hood, kangaroo pocket.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "320 GSM cotton fleece · 80% cotton, 20% polyester",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 165000,
+      "compareAtMinor": 210000,
+      "colours": ["black", "grey", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [2, 4, 4, 3, 0],
+        "grey": [2, 3, 3, 2, 0],
+        "olive": [1, 2, 2, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-cotton-socks-3",
+      "id": "cotton-socks-3",
+      "nameEn": "Cotton Socks, 3 pairs",
+      "category": "extras",
+      "collection": "extras",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 160,
+      "descriptionEn": "Soft everyday socks, pack of 3.",
+      "careEn": "Machine wash",
+      "fabric": "Combed cotton with stretch",
+      "fit": "One size",
+      "fitNote": "Fits UK 6–10.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": null,
+      "priceMinor": 35000,
+      "compareAtMinor": null,
+      "colours": ["mixed"],
+      "sizes": ["one-size"],
+      "stock": {
+        "mixed": [40]
+      }
+    },
+    {
+      "slug": "demo-leather-look-belt",
+      "id": "leather-look-belt",
+      "nameEn": "Classic Leather-look Belt",
+      "category": "extras",
+      "collection": "extras",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 170,
+      "descriptionEn": "Smart belt that goes with chinos and denim.",
+      "careEn": "Wipe clean",
+      "fabric": "PU with metal buckle",
+      "fit": "One size",
+      "fitNote": "Adjustable 30–38.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": null,
+      "priceMinor": 65000,
+      "compareAtMinor": null,
+      "colours": ["brown"],
+      "sizes": ["one-size"],
+      "stock": {
+        "brown": [20]
+      }
+    },
+    {
+      "slug": "demo-eid-silk-blend-panjabi",
+      "id": "eid-silk-blend-panjabi",
+      "nameEn": "Silk Blend Eid Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": "eid-edit",
+      "template": "T2",
+      "sortRank": 180,
+      "descriptionEn": "Light sheen for Eid morning. Hidden placket and mandarin collar.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Silk-cotton blend with a soft sheen",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 265000,
+      "compareAtMinor": null,
+      "colours": ["ecru", "maroon", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "ecru": [7, 1, 4, 7, 1],
+        "maroon": [3, 6, 0, 3, 6],
+        "bottle": [8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-embroidered-neck-panjabi",
+      "id": "embroidered-neck-panjabi",
+      "nameEn": "Embroidered Neck Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 190,
+      "descriptionEn": "Fine thread work at the neck only. Smart, not loud.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton voile · tone-on-tone neck embroidery",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 235000,
+      "compareAtMinor": 275000,
+      "colours": ["white", "sky", "sand"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [5, 8, 2, 5, 8],
+        "sky": [1, 4, 7, 1, 4],
+        "sand": [6, 0, 3, 6, 0]
+      }
+    },
+    {
+      "slug": "demo-short-kurta-panjabi",
+      "id": "short-kurta-panjabi",
+      "nameEn": "Short Kurta Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 200,
+      "descriptionEn": "Hip length. Wear it with jeans or chinos.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton slub",
+      "fit": "Classic fit",
+      "fitNote": "Hip length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["white", "navy", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [3, 6, 0, 3, 6],
+        "navy": [8, 2, 5, 8, 2],
+        "olive": [4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-linen-panjabi",
+      "id": "linen-panjabi",
+      "nameEn": "Linen Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 210,
+      "descriptionEn": "Cool linen for hot Eid days. It creases a little, like linen should.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "55% linen, 45% cotton",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 215000,
+      "compareAtMinor": null,
+      "colours": ["sand", "white", "sky"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sand": [1, 4, 7, 1, 4],
+        "white": [6, 0, 3, 6, 0],
+        "sky": [2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-printed-panjabi",
+      "id": "printed-panjabi",
+      "nameEn": "Block Print Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 220,
+      "descriptionEn": "Small block print all over. Made in Bangladesh.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton · hand block print",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 175000,
+      "compareAtMinor": null,
+      "colours": ["ecru", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "ecru": [8, 2, 5, 8, 2],
+        "navy": [4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-jacquard-panjabi",
+      "id": "jacquard-panjabi",
+      "nameEn": "Jacquard Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": "eid-edit",
+      "template": "T2",
+      "sortRank": 230,
+      "descriptionEn": "Woven pattern in the fabric. For weddings and Eid.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton jacquard weave",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 295000,
+      "compareAtMinor": 340000,
+      "colours": ["maroon", "black", "ecru"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "maroon": [6, 0, 3, 6, 0],
+        "black": [2, 5, 8, 2, 5],
+        "ecru": [7, 1, 4, 7, 0]
+      }
+    },
+    {
+      "slug": "demo-everyday-cotton-panjabi",
+      "id": "everyday-cotton-panjabi",
+      "nameEn": "Everyday Cotton Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 240,
+      "descriptionEn": "Simple and light. For Friday prayers and daily wear.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "100% cotton poplin",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 125000,
+      "compareAtMinor": null,
+      "colours": ["white", "sky", "grey"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [4, 7, 1, 4, 7],
+        "sky": [0, 3, 6, 0, 3],
+        "grey": [5, 8, 2, 5, 0]
+      }
+    },
+    {
+      "slug": "demo-puja-festive-panjabi",
+      "id": "puja-festive-panjabi",
+      "nameEn": "Festive Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 250,
+      "descriptionEn": "Bright festive colours with a neat collar.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton dobby",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 245000,
+      "compareAtMinor": null,
+      "colours": ["mustard", "maroon", "white"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "mustard": [2, 5, 8, 2, 5],
+        "maroon": [7, 1, 4, 7, 1],
+        "white": [3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-slim-cut-panjabi",
+      "id": "slim-cut-panjabi",
+      "nameEn": "Slim Cut Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 260,
+      "descriptionEn": "Closer fit through the body. Knee length.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Cotton with a little stretch",
+      "fit": "Slim fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": "Model 5'9\" · 70 kg · wears L",
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 195000,
+      "compareAtMinor": null,
+      "colours": ["black", "navy", "white"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [0, 3, 6, 0, 3],
+        "navy": [5, 8, 2, 5, 8],
+        "white": [1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-kids-match-panjabi",
+      "id": "kids-match-panjabi",
+      "nameEn": "Father-Son Panjabi",
+      "category": "panjabi",
+      "collection": "eid-edit",
+      "tag": null,
+      "template": "T2",
+      "sortRank": 270,
+      "descriptionEn": "Same colour in a kids size too, so you can match on Eid.",
+      "careEn": "Gentle wash · Iron low",
+      "fabric": "Fine cotton voile",
+      "fit": "Classic fit",
+      "fitNote": "Classic fit, knee length.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "panjabi-classic",
+      "priceMinor": 165000,
+      "compareAtMinor": null,
+      "colours": ["white", "sky"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [7, 1, 4, 7, 1],
+        "sky": [3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-stretch-office-trousers",
+      "id": "stretch-office-trousers",
+      "nameEn": "Stretch Office Trousers",
+      "category": "trousers",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 280,
+      "descriptionEn": "Smart office trousers. Easy to iron.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Poly-viscose with 3% stretch",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to waist size.",
+      "model": "Model 5'10\" · 70 kg · wears 32",
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 165000,
+      "compareAtMinor": null,
+      "colours": ["charcoal", "navy", "black"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "charcoal": [5, 8, 2, 5],
+        "navy": [1, 4, 7, 1],
+        "black": [6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-cargo-twill-trousers",
+      "id": "cargo-twill-trousers",
+      "nameEn": "Cargo Twill Trousers",
+      "category": "trousers",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 290,
+      "descriptionEn": "Two side pockets with flaps. Weekend wear.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton twill",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to waist size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 155000,
+      "compareAtMinor": null,
+      "colours": ["olive", "khaki", "black"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "olive": [3, 6, 0, 3],
+        "khaki": [8, 2, 5, 8],
+        "black": [4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-pleated-chino-trousers",
+      "id": "pleated-chino-trousers",
+      "nameEn": "Pleated Chino Trousers",
+      "category": "trousers",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 300,
+      "descriptionEn": "One pleat in front. A little more room at the top.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton twill with 2% stretch",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to waist size.",
+      "model": "Model 5'10\" · 70 kg · wears 32",
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 175000,
+      "compareAtMinor": 199000,
+      "colours": ["sand", "navy"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "sand": [1, 4, 7, 1],
+        "navy": [6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-linen-drawstring-trousers",
+      "id": "linen-drawstring-trousers",
+      "nameEn": "Linen Drawstring Trousers",
+      "category": "trousers",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 310,
+      "descriptionEn": "Soft waist with a cord. Cool for summer.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "55% linen, 45% cotton",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to waist size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["sand", "white", "olive"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "sand": [8, 2, 5, 8],
+        "white": [4, 7, 1, 4],
+        "olive": [0, 3, 6, 0]
+      }
+    },
+    {
+      "slug": "demo-slim-denim-jeans",
+      "id": "slim-denim-jeans",
+      "nameEn": "Slim Denim Jeans",
+      "category": "trousers",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 320,
+      "descriptionEn": "Classic five-pocket jeans.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton denim with stretch · 11 oz",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to waist size.",
+      "model": "Model 5'10\" · 70 kg · wears 32",
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 185000,
+      "compareAtMinor": null,
+      "colours": ["navy", "black"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "navy": [6, 0, 3, 6],
+        "black": [2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-straight-denim-jeans",
+      "id": "straight-denim-jeans",
+      "nameEn": "Straight Denim Jeans",
+      "category": "trousers",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 330,
+      "descriptionEn": "Straight leg. Not tight, not loose.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton denim · 12 oz",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to waist size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 179000,
+      "compareAtMinor": null,
+      "colours": ["navy", "charcoal"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "navy": [4, 7, 1, 4],
+        "charcoal": [0, 3, 6, 0]
+      }
+    },
+    {
+      "slug": "demo-corduroy-trousers",
+      "id": "corduroy-trousers",
+      "nameEn": "Corduroy Trousers",
+      "category": "trousers",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 340,
+      "descriptionEn": "Soft ribbed cotton for winter.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton corduroy",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to waist size.",
+      "model": "Model 5'10\" · 70 kg · wears 32",
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 189000,
+      "compareAtMinor": null,
+      "colours": ["brown", "bottle", "sand"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "brown": [2, 5, 8, 2],
+        "bottle": [7, 1, 4, 7],
+        "sand": [3, 6, 0, 0]
+      }
+    },
+    {
+      "slug": "demo-travel-tech-trousers",
+      "id": "travel-tech-trousers",
+      "nameEn": "Travel Trousers",
+      "category": "trousers",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 350,
+      "descriptionEn": "Light and quick to dry. Zip pocket for your phone.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Nylon blend · quick dry",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to waist size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "chino-slim",
+      "priceMinor": 199000,
+      "compareAtMinor": 230000,
+      "colours": ["black", "charcoal"],
+      "sizes": ["w30", "w32", "w34", "w36"],
+      "stock": {
+        "black": [0, 3, 6, 0],
+        "charcoal": [5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-poplin-office-shirt",
+      "id": "poplin-office-shirt",
+      "nameEn": "Poplin Office Shirt",
+      "category": "shirts",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 360,
+      "descriptionEn": "Smooth office shirt. Easy to iron.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "100% cotton poplin",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'10\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 135000,
+      "compareAtMinor": null,
+      "colours": ["white", "sky", "pink"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [7, 1, 4, 7, 1],
+        "sky": [3, 6, 0, 3, 6],
+        "pink": [8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-check-flannel-shirt",
+      "id": "check-flannel-shirt",
+      "nameEn": "Check Flannel Shirt",
+      "category": "shirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 370,
+      "descriptionEn": "Soft check shirt for winter.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Brushed cotton flannel",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 155000,
+      "compareAtMinor": null,
+      "colours": ["maroon", "bottle", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "maroon": [5, 8, 2, 5, 8],
+        "bottle": [1, 4, 7, 1, 4],
+        "navy": [6, 0, 3, 6, 0]
+      }
+    },
+    {
+      "slug": "demo-denim-shirt",
+      "id": "denim-shirt",
+      "nameEn": "Denim Shirt",
+      "category": "shirts",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 380,
+      "descriptionEn": "Wear it alone or open over a tee.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Light cotton denim",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'10\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 169000,
+      "compareAtMinor": 189000,
+      "colours": ["navy", "sky"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [3, 6, 0, 3, 6],
+        "sky": [8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-mandarin-collar-shirt",
+      "id": "mandarin-collar-shirt",
+      "nameEn": "Mandarin Collar Shirt",
+      "category": "shirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 390,
+      "descriptionEn": "Band collar, no tie needed.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton-linen blend",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["white", "black", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [1, 4, 7, 1, 4],
+        "black": [6, 0, 3, 6, 0],
+        "olive": [2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-short-sleeve-camp-shirt",
+      "id": "short-sleeve-camp-shirt",
+      "nameEn": "Short Sleeve Camp Shirt",
+      "category": "shirts",
+      "collection": "office",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 400,
+      "descriptionEn": "Open collar. For hot weekends.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton viscose",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'10\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 125000,
+      "compareAtMinor": null,
+      "colours": ["sand", "sky", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "sand": [8, 2, 5, 8, 2],
+        "sky": [4, 7, 1, 4, 7],
+        "olive": [0, 3, 6, 0, 0]
+      }
+    },
+    {
+      "slug": "demo-slim-stretch-shirt",
+      "id": "slim-stretch-shirt",
+      "nameEn": "Slim Stretch Shirt",
+      "category": "shirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 410,
+      "descriptionEn": "Moves with you all day.",
+      "careEn": "Wash cold · Iron medium",
+      "fabric": "Cotton with 3% stretch",
+      "fit": "Slim fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "shirt-regular",
+      "priceMinor": 149000,
+      "compareAtMinor": null,
+      "colours": ["white", "navy", "charcoal"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [6, 0, 3, 6, 0],
+        "navy": [2, 5, 8, 2, 5],
+        "charcoal": [7, 1, 4, 7, 0]
+      }
+    },
+    {
+      "slug": "demo-zip-through-hoodie",
+      "id": "zip-through-hoodie",
+      "nameEn": "Zip-Through Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 420,
+      "descriptionEn": "Full zip and two pockets.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "300 GSM cotton fleece · brushed inside",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 175000,
+      "compareAtMinor": null,
+      "colours": ["black", "grey", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [4, 7, 1, 4, 7],
+        "grey": [0, 3, 6, 0, 3],
+        "navy": [5, 8, 2, 5, 0]
+      }
+    },
+    {
+      "slug": "demo-oversized-hoodie",
+      "id": "oversized-hoodie",
+      "nameEn": "Oversized Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 430,
+      "descriptionEn": "Wide and loose. Drop shoulder.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "340 GSM cotton fleece",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 185000,
+      "compareAtMinor": 220000,
+      "colours": ["charcoal", "sand", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "charcoal": [2, 5, 8, 2, 5],
+        "sand": [7, 1, 4, 7, 1],
+        "olive": [3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-light-summer-hoodie",
+      "id": "light-summer-hoodie",
+      "nameEn": "Light Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 440,
+      "descriptionEn": "Thin hoodie for cool evenings and AC rooms.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "220 GSM French terry",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 129000,
+      "compareAtMinor": null,
+      "colours": ["grey", "navy", "white"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "grey": [0, 3, 6, 0, 3],
+        "navy": [5, 8, 2, 5, 8],
+        "white": [1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-sherpa-lined-hoodie",
+      "id": "sherpa-lined-hoodie",
+      "nameEn": "Sherpa Lined Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 450,
+      "descriptionEn": "Extra warm. Soft lining inside.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "Cotton fleece · sherpa lining",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 245000,
+      "compareAtMinor": null,
+      "colours": ["black", "brown"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [7, 1, 4, 7, 1],
+        "brown": [3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-graphic-print-hoodie",
+      "id": "graphic-print-hoodie",
+      "nameEn": "Print Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 460,
+      "descriptionEn": "Small print on the chest.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "300 GSM cotton fleece",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 72 kg · wears L",
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 169000,
+      "compareAtMinor": null,
+      "colours": ["black", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [5, 8, 2, 5, 8],
+        "maroon": [1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-pullover-sweat-hoodie",
+      "id": "pullover-sweat-hoodie",
+      "nameEn": "Classic Pullover Hoodie",
+      "category": "hoodies",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 470,
+      "descriptionEn": "Plain everyday hoodie with a kangaroo pocket.",
+      "careEn": "Wash inside out, cold",
+      "fabric": "280 GSM cotton fleece",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "hoodie-regular",
+      "priceMinor": 149000,
+      "compareAtMinor": null,
+      "colours": ["grey", "black", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "grey": [3, 6, 0, 3, 6],
+        "black": [8, 2, 5, 8, 2],
+        "bottle": [4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-v-neck-tee",
+      "id": "v-neck-tee",
+      "nameEn": "V-Neck Tee",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 480,
+      "descriptionEn": "Clean V neck. Light and soft.",
+      "careEn": "Machine wash cold",
+      "fabric": "100% cotton single jersey · 180 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 68 kg · wears M",
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 55000,
+      "compareAtMinor": null,
+      "colours": ["white", "black", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [1, 4, 7, 1, 4],
+        "black": [6, 0, 3, 6, 0],
+        "navy": [2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-oversized-heavy-tee",
+      "id": "oversized-heavy-tee",
+      "nameEn": "Oversized Heavy Tee",
+      "category": "tshirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 490,
+      "descriptionEn": "Thick cotton. Loose fit.",
+      "careEn": "Machine wash cold",
+      "fabric": "100% cotton · 260 GSM",
+      "fit": "Relaxed fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 79000,
+      "compareAtMinor": null,
+      "colours": ["black", "sand", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "black": [8, 2, 5, 8, 2],
+        "sand": [4, 7, 1, 4, 7],
+        "olive": [0, 3, 6, 0, 0]
+      }
+    },
+    {
+      "slug": "demo-striped-breton-tee",
+      "id": "striped-breton-tee",
+      "nameEn": "Striped Tee",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 500,
+      "descriptionEn": "Classic stripes. The colour does not wash out.",
+      "careEn": "Machine wash cold",
+      "fabric": "Cotton jersey · yarn-dyed stripe",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 68 kg · wears M",
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 69000,
+      "compareAtMinor": 85000,
+      "colours": ["navy", "white"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "navy": [6, 0, 3, 6, 0],
+        "white": [2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-henley-tee",
+      "id": "henley-tee",
+      "nameEn": "Henley Tee",
+      "category": "tshirts",
+      "collection": "weekend",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 510,
+      "descriptionEn": "Three buttons at the neck.",
+      "careEn": "Machine wash cold",
+      "fabric": "Cotton slub jersey",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 75000,
+      "compareAtMinor": null,
+      "colours": ["grey", "olive", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "grey": [4, 7, 1, 4, 7],
+        "olive": [0, 3, 6, 0, 3],
+        "navy": [5, 8, 2, 5, 0]
+      }
+    },
+    {
+      "slug": "demo-long-sleeve-tee",
+      "id": "long-sleeve-tee",
+      "nameEn": "Long Sleeve Tee",
+      "category": "tshirts",
+      "collection": "essentials",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 520,
+      "descriptionEn": "Full sleeves for cooler days.",
+      "careEn": "Machine wash cold",
+      "fabric": "100% cotton · 200 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": "Model 5'9\" · 68 kg · wears M",
+      "freeDelivery": false,
+      "chart": "tee-regular",
+      "priceMinor": 69000,
+      "compareAtMinor": null,
+      "colours": ["white", "black", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl"],
+      "stock": {
+        "white": [2, 5, 8, 2, 5],
+        "black": [7, 1, 4, 7, 1],
+        "maroon": [3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-slim-track-jogger",
+      "id": "slim-track-jogger",
+      "nameEn": "Slim Track Jogger",
+      "category": "joggers",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 530,
+      "descriptionEn": "Slim leg with zip pockets.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Poly-cotton interlock · 260 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Elastic waist — pick your usual top size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-jogger",
+      "priceMinor": 135000,
+      "compareAtMinor": null,
+      "colours": ["black", "navy", "charcoal"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [0, 3, 6, 0, 3, 6],
+        "navy": [5, 8, 2, 5, 8, 2],
+        "charcoal": [1, 4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-cargo-jogger",
+      "id": "cargo-jogger",
+      "nameEn": "Cargo Jogger",
+      "category": "joggers",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 540,
+      "descriptionEn": "Cargo pockets and cuffed ankles.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Cotton twill with stretch",
+      "fit": "Regular fit",
+      "fitNote": "Elastic waist — pick your usual top size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-jogger",
+      "priceMinor": 149000,
+      "compareAtMinor": null,
+      "colours": ["olive", "black", "khaki"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "olive": [7, 1, 4, 7, 1, 4],
+        "black": [3, 6, 0, 3, 6, 0],
+        "khaki": [8, 2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-light-terry-jogger",
+      "id": "light-terry-jogger",
+      "nameEn": "Light Jogger",
+      "category": "joggers",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 550,
+      "descriptionEn": "Light jogger for home and gym.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "220 GSM French terry",
+      "fit": "Regular fit",
+      "fitNote": "Elastic waist — pick your usual top size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-jogger",
+      "priceMinor": 99000,
+      "compareAtMinor": null,
+      "colours": ["grey", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "grey": [5, 8, 2, 5, 8, 2],
+        "navy": [1, 4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-winter-fleece-jogger",
+      "id": "winter-fleece-jogger",
+      "nameEn": "Winter Fleece Jogger",
+      "category": "joggers",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 560,
+      "descriptionEn": "Thick and warm. Ribbed cuffs.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "320 GSM brushed fleece",
+      "fit": "Regular fit",
+      "fitNote": "Elastic waist — pick your usual top size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-jogger",
+      "priceMinor": 139000,
+      "compareAtMinor": 160000,
+      "colours": ["black", "charcoal", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [3, 6, 0, 3, 6, 0],
+        "charcoal": [8, 2, 5, 8, 2, 5],
+        "bottle": [4, 7, 1, 4, 7, 0]
+      }
+    },
+    {
+      "slug": "demo-open-hem-trackpant",
+      "id": "open-hem-trackpant",
+      "nameEn": "Open Hem Track Pant",
+      "category": "joggers",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 570,
+      "descriptionEn": "Straight leg, no cuff.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Poly-cotton interlock",
+      "fit": "Regular fit",
+      "fitNote": "Elastic waist — pick your usual top size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-jogger",
+      "priceMinor": 129000,
+      "compareAtMinor": null,
+      "colours": ["black", "navy", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [1, 4, 7, 1, 4, 7],
+        "navy": [6, 0, 3, 6, 0, 3],
+        "maroon": [2, 5, 8, 2, 5, 0]
+      }
+    },
+    {
+      "slug": "demo-classic-track-top",
+      "id": "classic-track-top",
+      "nameEn": "Classic Track Top",
+      "category": "tracksuits",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 580,
+      "descriptionEn": "Full zip with side stripes.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Poly-cotton interlock · 260 GSM",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-tracktop",
+      "priceMinor": 165000,
+      "compareAtMinor": null,
+      "colours": ["navy", "black", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "navy": [8, 2, 5, 8, 2, 5],
+        "black": [4, 7, 1, 4, 7, 1],
+        "maroon": [0, 3, 6, 0, 3, 0]
+      }
+    },
+    {
+      "slug": "demo-hooded-track-top",
+      "id": "hooded-track-top",
+      "nameEn": "Hooded Track Top",
+      "category": "tracksuits",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 590,
+      "descriptionEn": "Track top with a hood.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Brushed poly-cotton",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-tracktop",
+      "priceMinor": 185000,
+      "compareAtMinor": null,
+      "colours": ["black", "charcoal", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [6, 0, 3, 6, 0, 3],
+        "charcoal": [2, 5, 8, 2, 5, 8],
+        "bottle": [7, 1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-retro-stripe-track-top",
+      "id": "retro-stripe-track-top",
+      "nameEn": "Retro Stripe Track Top",
+      "category": "tracksuits",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 600,
+      "descriptionEn": "Bold stripes on the sleeves.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Tricot knit",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-tracktop",
+      "priceMinor": 175000,
+      "compareAtMinor": 199000,
+      "colours": ["maroon", "black", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "maroon": [4, 7, 1, 4, 7, 1],
+        "black": [0, 3, 6, 0, 3, 6],
+        "bottle": [5, 8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-half-zip-track-top",
+      "id": "half-zip-track-top",
+      "nameEn": "Half-Zip Track Top",
+      "category": "tracksuits",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 610,
+      "descriptionEn": "Pull-over top with a short zip.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Poly-cotton interlock",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-tracktop",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["grey", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "grey": [2, 5, 8, 2, 5, 8],
+        "navy": [7, 1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-winter-track-jacket",
+      "id": "winter-track-jacket",
+      "nameEn": "Winter Track Jacket",
+      "category": "tracksuits",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 620,
+      "descriptionEn": "Warm track jacket for winter mornings.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Fleece-backed knit",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-tracktop",
+      "priceMinor": 215000,
+      "compareAtMinor": null,
+      "colours": ["black", "navy", "olive"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [0, 3, 6, 0, 3, 6],
+        "navy": [5, 8, 2, 5, 8, 2],
+        "olive": [1, 4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-bomber-jacket",
+      "id": "bomber-jacket",
+      "nameEn": "Bomber Jacket",
+      "category": "jackets",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 630,
+      "descriptionEn": "Classic bomber with ribbed cuffs.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Nylon shell · light padding",
+      "fit": "Regular fit",
+      "fitNote": "Room for a hoodie underneath — take your usual size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-puffer",
+      "priceMinor": 295000,
+      "compareAtMinor": null,
+      "colours": ["black", "olive", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [7, 1, 4, 7, 1, 4],
+        "olive": [3, 6, 0, 3, 6, 0],
+        "navy": [8, 2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-denim-jacket",
+      "id": "denim-jacket",
+      "nameEn": "Denim Jacket",
+      "category": "jackets",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 640,
+      "descriptionEn": "Classic denim jacket.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Cotton denim · 12 oz",
+      "fit": "Regular fit",
+      "fitNote": "Room for a hoodie underneath — take your usual size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-puffer",
+      "priceMinor": 265000,
+      "compareAtMinor": null,
+      "colours": ["navy", "sky"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "navy": [5, 8, 2, 5, 8, 2],
+        "sky": [1, 4, 7, 1, 4, 0]
+      }
+    },
+    {
+      "slug": "demo-light-puffer-vest",
+      "id": "light-puffer-vest",
+      "nameEn": "Light Puffer Jacket",
+      "category": "jackets",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 650,
+      "descriptionEn": "Very light. Packs small.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Water-repellent nylon · light fill",
+      "fit": "Regular fit",
+      "fitNote": "Room for a hoodie underneath — take your usual size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-puffer",
+      "priceMinor": 245000,
+      "compareAtMinor": 290000,
+      "colours": ["black", "sand"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "black": [3, 6, 0, 3, 6, 0],
+        "sand": [8, 2, 5, 8, 2, 0]
+      }
+    },
+    {
+      "slug": "demo-harrington-jacket",
+      "id": "harrington-jacket",
+      "nameEn": "Harrington Jacket",
+      "category": "jackets",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 660,
+      "descriptionEn": "Smart jacket with a short collar.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Cotton twill · check lining",
+      "fit": "Regular fit",
+      "fitNote": "Room for a hoodie underneath — take your usual size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-puffer",
+      "priceMinor": 275000,
+      "compareAtMinor": null,
+      "colours": ["khaki", "navy", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "khaki": [1, 4, 7, 1, 4, 7],
+        "navy": [6, 0, 3, 6, 0, 3],
+        "bottle": [2, 5, 8, 2, 5, 0]
+      }
+    },
+    {
+      "slug": "demo-hooded-parka",
+      "id": "hooded-parka",
+      "nameEn": "Hooded Parka",
+      "category": "jackets",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 670,
+      "descriptionEn": "Long warm jacket with a hood.",
+      "careEn": "Wash cold · Dry in shade",
+      "fabric": "Cotton blend · padded",
+      "fit": "Regular fit",
+      "fitNote": "Room for a hoodie underneath — take your usual size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-puffer",
+      "priceMinor": 385000,
+      "compareAtMinor": null,
+      "colours": ["olive", "black"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "olive": [8, 2, 5, 8, 2, 5],
+        "black": [4, 7, 1, 4, 7, 0]
+      }
+    },
+    {
+      "slug": "demo-v-neck-sweater",
+      "id": "v-neck-sweater",
+      "nameEn": "V-Neck Sweater",
+      "category": "sweaters",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 680,
+      "descriptionEn": "Fine knit V neck. Wear it over a shirt.",
+      "careEn": "Hand wash or gentle cycle cold · Dry flat",
+      "fabric": "Acrylic-cotton blend · fine knit",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-sweater",
+      "priceMinor": 135000,
+      "compareAtMinor": null,
+      "colours": ["navy", "charcoal", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "navy": [6, 0, 3, 6, 0, 3],
+        "charcoal": [2, 5, 8, 2, 5, 8],
+        "maroon": [7, 1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-half-zip-sweater",
+      "id": "half-zip-sweater",
+      "nameEn": "Half-Zip Sweater",
+      "category": "sweaters",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 690,
+      "descriptionEn": "Short zip at the neck.",
+      "careEn": "Hand wash or gentle cycle cold · Dry flat",
+      "fabric": "Cotton blend knit",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-sweater",
+      "priceMinor": 159000,
+      "compareAtMinor": null,
+      "colours": ["ecru", "navy", "bottle"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "ecru": [4, 7, 1, 4, 7, 1],
+        "navy": [0, 3, 6, 0, 3, 6],
+        "bottle": [5, 8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-cable-knit-sweater",
+      "id": "cable-knit-sweater",
+      "nameEn": "Cable Knit Sweater",
+      "category": "sweaters",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 700,
+      "descriptionEn": "Thick cable pattern. Very warm.",
+      "careEn": "Hand wash or gentle cycle cold · Dry flat",
+      "fabric": "Acrylic-wool blend",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-sweater",
+      "priceMinor": 169000,
+      "compareAtMinor": 195000,
+      "colours": ["ecru", "grey"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "ecru": [2, 5, 8, 2, 5, 8],
+        "grey": [7, 1, 4, 7, 1, 0]
+      }
+    },
+    {
+      "slug": "demo-striped-knit-sweater",
+      "id": "striped-knit-sweater",
+      "nameEn": "Striped Sweater",
+      "category": "sweaters",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 710,
+      "descriptionEn": "Wide stripes. Soft on the skin.",
+      "careEn": "Hand wash or gentle cycle cold · Dry flat",
+      "fabric": "Cotton-acrylic knit",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-sweater",
+      "priceMinor": 145000,
+      "compareAtMinor": null,
+      "colours": ["navy", "maroon"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "navy": [0, 3, 6, 0, 3, 6],
+        "maroon": [5, 8, 2, 5, 8, 0]
+      }
+    },
+    {
+      "slug": "demo-knit-cardigan",
+      "id": "knit-cardigan",
+      "nameEn": "Knit Cardigan",
+      "category": "sweaters",
+      "collection": "winter-2026",
+      "tag": null,
+      "template": "T1",
+      "sortRank": 720,
+      "descriptionEn": "Buttons down the front, two pockets.",
+      "careEn": "Hand wash or gentle cycle cold · Dry flat",
+      "fabric": "Acrylic-cotton blend",
+      "fit": "Regular fit",
+      "fitNote": "Fits true to size.",
+      "model": null,
+      "freeDelivery": false,
+      "chart": "ct-sweater",
+      "priceMinor": 179000,
+      "compareAtMinor": null,
+      "colours": ["charcoal", "brown", "navy"],
+      "sizes": ["s", "m", "l", "xl", "xxl", "3xl"],
+      "stock": {
+        "charcoal": [7, 1, 4, 7, 1, 4],
+        "brown": [3, 6, 0, 3, 6, 0],
+        "navy": [8, 2, 5, 8, 2, 0]
+      }
+    }
+  ],
+  "collections": [
+    {
+      "slug": "essentials",
+      "nameEn": "Essentials"
+    },
+    {
+      "slug": "knitwear",
+      "nameEn": "Knitwear"
+    },
+    {
+      "slug": "weekend",
+      "nameEn": "Weekend"
+    },
+    {
+      "slug": "office",
+      "nameEn": "Office"
+    },
+    {
+      "slug": "eid-edit",
+      "nameEn": "Eid Edit"
+    },
+    {
+      "slug": "winter-2026",
+      "nameEn": "Winter 2026"
+    },
+    {
+      "slug": "extras",
+      "nameEn": "Extras"
+    }
+  ],
+  "tags": [
+    {
+      "slug": "bestseller",
+      "name": "Bestseller"
+    },
+    {
+      "slug": "new",
+      "name": "New"
+    },
+    {
+      "slug": "eid-edit",
+      "name": "Eid edit"
+    },
+    {
+      "slug": "winter-2026",
+      "name": "Winter 2026"
+    }
+  ]
+}

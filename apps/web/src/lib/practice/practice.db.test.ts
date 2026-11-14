@@ -9,6 +9,7 @@ import { PRACTICE_PHONE_PREFIX } from '@extas/db/client';
 import { memoryStorage } from '@extas/adapters';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import { photoSetStatus, type MediaDeps } from '@extas/media';
+import { DEMO_PACK } from './data';
 import { seedPractice, completeProducts } from './seed';
 import { addPracticePhotos, drawingPng, practicePhotoProgress } from './photos';
 import { practiceCounts, resetPractice } from './reset';
@@ -143,7 +144,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
       couriers: 3,
     });
     expect(c.payouts).toBeGreaterThan(5);
-    expect(c.products).toBe(20);
+    expect(c.products).toBe(72); // the approved demo's 72 styles (PR 725)
     const claimStates = new Set((await t.prisma.courierClaim.findMany({ where: { storeId: S } })).map((x) => x.status));
     expect([...claimStates].sort()).toEqual(['OPEN', 'REJECTED', 'SENT', 'SETTLED']);
   });
@@ -303,7 +304,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await shape()).toEqual(a);
   });
 
-  it('makes every practice product complete: category, 2+ colours, sizes, stock (some low, some out), a size chart, a fabric, a description; still DRAFT', async () => {
+  it('makes every practice product complete: category, 2+ colours, sizes, stock (some low, some out), a size chart (as the demo has it), a fabric, a description; still DRAFT', async () => {
     await resetPractice(t.prisma, S);
     await seedPractice(t.prisma, S, NOW);
     const db = t.prisma;
@@ -320,7 +321,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
       expect(p.categoryId, p.slug).not.toBeNull();
       expect(p.fabricId, p.slug).not.toBeNull();
       expect(p.descriptionEn, p.slug).toBeTruthy();
-      expect(p.colours.length, p.slug).toBeGreaterThanOrEqual(2);
+      expect(p.colours.length, p.slug).toBeGreaterThanOrEqual(1);
       expect(
         p.variants.every((v) => v.colourId && v.sizeId),
         p.slug,
@@ -329,13 +330,16 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
         p.variants.every((v) => v.stockLevels.length === 1),
         p.slug,
       ).toBe(true);
+      // a size chart as the demo has it (two accessory styles, socks and a belt, have none)
       expect(
         await db.sizeChartAssignment.count({
           where: { storeId: S, productId: p.id },
         }),
         p.slug,
-      ).toBe(1);
+      ).toBe(DEMO_PACK.products.find((d) => `practice-${d.id}` === p.slug)?.chart ? 1 : 0);
     }
+    expect(products.length).toBe(72);
+    expect(products.filter((p) => p.colours.length >= 2).length).toBeGreaterThan(60);
     const qty = products.flatMap((p) => p.variants.flatMap((v) => v.stockLevels.map((l) => l.onHand)));
     expect(qty.some((q) => q === 0)).toBe(true);
     expect(qty.some((q) => q > 0 && q <= 3)).toBe(true);
@@ -466,7 +470,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     await seedPractice(db, S, NOW);
     // keep the test fast: only two sample products take part (the others have no active colour, so they get no pictures)
     const all = await db.product.findMany({ where: { storeId: S, isPractice: true }, orderBy: { slug: 'asc' }, select: { id: true, status: true } });
-    expect(all.length).toBe(21);
+    expect(all.length).toBe(72);
     const two = all.slice(0, 2);
     await db.productColour.updateMany({ where: { product: { storeId: S, isPractice: true }, productId: { notIn: two.map((p) => p.id) } }, data: { archivedAt: NOW } });
     const minimum = await deps.settings.value('media.photos.minimum', { storeId: S });
@@ -499,5 +503,59 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await db.productMedia.count({ where: { storeId: S } })).toBe(0);
     expect(await db.mediaAsset.count({ where: { storeId: S, folder: 'practice' } })).toBe(0);
     expect(await db.mediaAsset.findUnique({ where: { id: realAsset.id } })).not.toBeNull();
+  }, 240_000);
+
+  it('PR 725: the shop is the demo — its names, prices with struck prices, colours, sizes, collections, combos and journal posts, all practice-owned', async () => {
+    await resetPractice(t.prisma, S);
+    await seedPractice(t.prisma, S, NOW);
+    const db = t.prisma;
+    const polo = await db.product.findFirstOrThrow({ where: { storeId: S, slug: 'practice-essential-pique-polo' }, include: { variants: true, colours: true } });
+    expect(polo.nameEn).toBe('Essential Piqué Polo');
+    expect(polo.minPriceMinor).toBe(85_000);
+    expect(polo.colours.length).toBe(5);
+    expect(polo.variants.length).toBe(25);
+    const struck = await db.productVariant.count({ where: { storeId: S, product: { isPractice: true }, compareAtMinor: { not: null } } });
+    expect(struck).toBeGreaterThan(0);
+    expect(await db.collection.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(7);
+    expect(await db.collectionProduct.count({ where: { storeId: S } })).toBe(72);
+    expect(await db.combo.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(5);
+    expect(await db.comboItem.count({ where: { storeId: S } })).toBe(2 + 3 + 2 + 2 + 2);
+    expect(await db.blogPost.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(12);
+    // before the switch shows them they are all hidden
+    expect(await db.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(0);
+    expect(await db.blogPost.count({ where: { storeId: S, status: 'PUBLISHED' } })).toBe(0);
+    // a second run changes nothing
+    const before = [await db.combo.count(), await db.blogPost.count(), await db.collectionProduct.count(), await db.productTag.count()];
+    await seedPractice(db, S, NOW);
+    expect([await db.combo.count(), await db.blogPost.count(), await db.collectionProduct.count(), await db.productTag.count()]).toEqual(before);
+    // a reset removes them all, and a real collection or tag is never touched
+    await resetPractice(db, S);
+    for (const n of [await db.combo.count({ where: { storeId: S } }), await db.blogPost.count({ where: { storeId: S } }), await db.collection.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } }), await db.tag.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } }), await db.blogCategory.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })]) expect(n).toBe(0);
+  }, 240_000);
+
+  it('PR 725: an older generation of generic practice products is retired (archived, kept for the orders that name them) when the demo catalogue arrives', async () => {
+    const db = t.prisma;
+    await resetPractice(db, S);
+    const old = await db.product.create({ data: { storeId: S, slug: 'practice-old-tee-1001', nameEn: 'Old tee (practice)', status: 'DRAFT', isPractice: true } });
+    await db.order.create({ data: { storeId: S, number: 'PR-OLD-1', status: 'CONFIRMED', source: 'WEBSITE', currency: 'BDT', subtotalMinor: 1, totalMinor: 1, idempotencyKey: 'practice-old-1', isPractice: true } });
+    await seedPractice(db, S, NOW); // practice orders exist: the "already" path adds the catalogue
+    expect((await db.product.findUniqueOrThrow({ where: { id: old.id } })).archivedAt).not.toBeNull();
+    expect(await db.product.count({ where: { storeId: S, isPractice: true, archivedAt: null } })).toBe(72);
+  }, 240_000);
+
+  it('PR 725: the pictures are made in small steps (a few at a time) and a step stops where it is told', async () => {
+    const db = t.prisma;
+    await resetPractice(db, S);
+    await seedPractice(db, S, NOW);
+    await syncSettings(db, { registry, messages });
+    const storage = memoryStorage('LOCAL_DISK');
+    const deps: MediaDeps = { db, settings: new SettingsResolver(prismaBackend(db), registry, { checkIntervalMs: 0 }), storage: async () => storage, now: () => NOW };
+    const one = await addPracticePhotos(deps, S, { maxPhotos: 3 });
+    expect(one.photos).toBe(3);
+    expect(one.complete).toBe(false);
+    const two = await addPracticePhotos(deps, S, { maxPhotos: 3 });
+    expect(two.photos).toBe(3);
+    expect(await db.productMedia.count({ where: { storeId: S } })).toBe(6);
+    await resetPractice(db, S);
   }, 240_000);
 });

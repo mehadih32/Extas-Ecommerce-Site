@@ -58,7 +58,7 @@ export async function runReportPack(deps: JobDeps, p: ReportPackPayload): Promis
   const report = await profitReport({ db: deps.db, settings: deps.settings }, p.storeId, r.from, r.to);
   const money = (n: number) => `${currency} ${(n / 100).toFixed(2)}`;
   const figures = `Sales ${money(report.salesMinor)}\nNet profit ${report.netProfitMinor === null ? 'not known yet' : money(report.netProfitMinor)}`;
-  const waiting = daily ? await deps.db.order.count({ where: { storeId: p.storeId, status: 'PLACED', archivedAt: null } }) : 0;
+  const waiting = daily ? await deps.db.order.count({ where: { storeId: p.storeId, status: 'PLACED', archivedAt: null, isPractice: false } }) : 0; // PR 725: a practice order never counts in a message to the owner
   const text = daily
     ? `Daily business report\n${r.from}\n${figures}\nOrders waiting for confirmation: ${waiting}\nOpen Reports > Downloads & report packs for the full PDF.`
     : `Report pack: ${p.pack}\n${r.from} to ${r.to}\n${figures}\nOpen Reports > Report packs for the PDF and the Excel file.`;

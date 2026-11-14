@@ -2,6 +2,9 @@
 // and rules (docs/demo/admin-proto-v5/js/core.js), in one place. Nothing here is a real person: names are the
 // prototype's made-up ones and every phone number sits in a reserved range no operator uses (PRACTICE_PHONE_PREFIX).
 // The amounts are the prototype's sample figures in whole taka (the seeder converts them to the store's minor units).
+import catalogueJson from './demo-catalogue.json';
+import extrasJson from './demo-extras.json';
+
 
 export const FIRST_NAMES = [
   'Rahim',
@@ -328,7 +331,7 @@ export const PRACTICE_INCOMPLETE = 18; // hardcode-ok: how many started-but-not-
 /**
  * PR 724 — the "rich" sample world (screenshots and the side-by-side comparison with the admin prototype only; never the
  * owner's Practice button). It multiplies the plan above so Home, Orders, Products, Couriers, Claims and Reports show real
- * figures: about 850 orders over six months, 240 people, ~108 products, 36 claims, 40 incomplete orders, ad spend for
+ * figures: about 850 orders over six months, 240 people, 36 claims, 40 incomplete orders, ad spend for
  * three platforms and ~140 reviews. It only ever runs on the sample store (seed.ts checks the sample marker).
  */
 export const RICH = {
@@ -359,3 +362,64 @@ export const RICH_REVIEW_BODIES = [
   'Slightly long in the sleeve but I like it.',
   'Worth every taka. Friends asked where I bought it.',
 ] as const;
+
+// ---- PR 725 (15 Nov 2026): the approved demo's catalogue, journal and combos as practice data ------------------------
+// `demo-catalogue.json` is the demo's 72 styles (docs/demo/src/01-data.js + 01zz-demo-more.js, made by
+// tools/demo/export-demo-catalogue.mjs; prices in minor units, struck prices as `compareAtMinor`, stock per colour and
+// size). `demo-extras.json` is its 12 journal posts and 5 combos (made from the same files). Sample data only.
+
+export interface DemoStyle {
+  id: string;
+  nameEn: string;
+  category: string;
+  collection: string;
+  tag: string | null;
+  template: string;
+  sortRank: number;
+  descriptionEn: string;
+  careEn: string;
+  fabric: string;
+  fit: string;
+  fitNote: string;
+  model: string | null;
+  freeDelivery: boolean;
+  chart: string | null;
+  priceMinor: number;
+  compareAtMinor: number | null;
+  colours: string[];
+  sizes: string[];
+  stock: Record<string, number[]>;
+}
+export interface DemoPack {
+  categories: { slug: string; nameEn: string; nameBn: string; garment: string; hidden: boolean; introEn: string }[];
+  colours: { key: string; nameEn: string; hex: string; noteEn: string | null }[];
+  sizes: { key: string; label: string; sortOrder: number }[];
+  charts: { key: string; name: string; garment: string; fitKey: string; easeInch: number; fields: { key: string; labelEn: string }[]; rows: { size: string; values: number[] }[] }[];
+  collections: { slug: string; nameEn: string }[];
+  tags: { slug: string; name: string }[];
+  products: DemoStyle[];
+}
+export interface DemoExtras {
+  combos: { id: string; name: string; blurb: string; items: string[]; priceMinor: number; autoApply: boolean; sameColour: boolean; template: string }[];
+  journal: { title: string; kicker: string; excerpt: string; product: string; colour: string }[];
+}
+export const DEMO_PACK = catalogueJson as unknown as DemoPack;
+export const DEMO_EXTRAS = extrasJson as unknown as DemoExtras;
+
+/** The practice marker in the address of every row the practice world adds beside its flagged ones (collections, tags, combos, posts). */
+export const PRACTICE_SLUG = 'practice-'; // hardcode-ok: an ownership prefix, not a text the shop shows
+
+/** Which garment drawing the demo's `garmentSVG` look gives a category (photos.ts). */
+export const DRAW_KIND_OF_CATEGORY: Record<string, 'polo' | 'tee' | 'shirt' | 'panjabi' | 'trouser' | 'hoodie'> = {
+  polos: 'polo',
+  tshirts: 'tee',
+  shirts: 'shirt',
+  panjabi: 'panjabi',
+  trousers: 'trouser',
+  joggers: 'trouser',
+  hoodies: 'hoodie',
+  tracksuits: 'hoodie',
+  jackets: 'hoodie',
+  sweaters: 'hoodie',
+  extras: 'tee',
+};

@@ -110,6 +110,16 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
           select: { id: true },
         })
       ).map((p) => p.id);
+      // PR 725: the demo's combos and journal posts of the practice world (owned by their "practice-" address; no flag on those tables)
+      const own = `"storeId" = ${Math.trunc(storeId)} AND "slug" LIKE 'practice-%'`;
+      await removeRows(tx, fks, 'Combo', own, 0, removed);
+      await removeRows(tx, fks, 'BlogPost', own, 0, removed);
+      await removeRows(tx, fks, 'BlogCategory', own, 0, removed);
+      // their collection and tag links have no foreign key to the product: by hand, before the products go
+      const cl = await tx.collectionProduct.deleteMany({ where: { storeId, productId: { in: practiceProducts } } });
+      if (cl.count) removed.set('CollectionProduct', cl.count);
+      const tl = await tx.productTag.deleteMany({ where: { storeId, productId: { in: practiceProducts } } });
+      if (tl.count) removed.set('ProductTag', tl.count);
       const links = await tx.sizeChartAssignment.deleteMany({
         where: { storeId, productId: { in: practiceProducts } },
       });
@@ -156,6 +166,10 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
           })
         ).count,
       };
+      const goneCollections = (await tx.collection.deleteMany({ where: { storeId, slug: { startsWith: 'practice-' }, products: { none: {} } } })).count;
+      const goneTags = (await tx.tag.deleteMany({ where: { storeId, slug: { startsWith: 'practice-' }, products: { none: {} } } })).count;
+      if (goneCollections) removed.set('Collection', goneCollections);
+      if (goneTags) removed.set('Tag', goneTags);
       for (const [table, n] of Object.entries(gone)) if (n) removed.set(table, n);
       // 4c. the sample pictures (library files in the "practice" folder, no longer placed on any product); their sizes go first
       const pics = (await tx.mediaAsset.findMany({ where: { storeId, folder: 'practice', productMedia: { none: {} } }, select: { id: true } })).map((a) => a.id);
