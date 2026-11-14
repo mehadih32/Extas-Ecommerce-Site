@@ -34,6 +34,9 @@ import {
   PAYMENTS,
   PRACTICE_CUSTOMERS,
   PRACTICE_INCOMPLETE,
+  RICH,
+  RICH_ADS,
+  RICH_REVIEW_BODIES,
   SIZES_BOTTOM,
   SIZES_TOP,
   SUB_AREAS,
@@ -119,7 +122,7 @@ export interface ProductPlan {
 }
 
 /** The practice products and variants. It is the first user of the random numbers, so a fresh generator always gives the same plan. */
-function planProducts(rng: ReturnType<typeof makeRng>, storeId: number, minor: (taka: number) => number): ProductPlan {
+function planProducts(rng: ReturnType<typeof makeRng>, storeId: number, minor: (taka: number) => number, rich = false): ProductPlan {
   const plan: ProductPlan = {
     products: [],
     variantRows: [],
@@ -128,7 +131,9 @@ function planProducts(rng: ReturnType<typeof makeRng>, storeId: number, minor: (
   };
   let n = 1000;
   for (const cat of CATEGORIES) {
-    for (const name of cat.names.slice(0, 2)) {
+    // rich: every style in each series (PR 724); the default plan is unchanged, so its ids and figures stay the same
+    const names = rich ? cat.names.flatMap((nm) => RICH.seriesPerName.map((sr) => (sr ? `${nm} ${sr}` : nm))) : cat.names.slice(0, 2);
+    for (const name of names) {
       n += 1;
       const pid = practiceId(`product:${n}`);
       const price = Math.round(rng.int(cat.price[0], cat.price[1]) / 10) * 10 - 10;
@@ -395,7 +400,15 @@ export async function completeProducts(db: Db, storeId: number, plan: ProductPla
   return counts;
 }
 
-export async function seedPractice(db: Db, storeId: number, now: Date = new Date()): Promise<SeedResult> {
+/** The sample store's own mark (DefaultPackApplication.packKey of packages/seed/src/sample.ts): rich data goes only there. */
+const SAMPLE_PACK_KEY = 'sample-catalogue'; // hardcode-ok: the sample seed's own marker, same string as @extas/seed
+
+export interface SeedOptions {
+  /** PR 724: the big sample world for screenshots. Honoured only on the sample store; anywhere else it is ignored. */
+  rich?: boolean;
+}
+
+export async function seedPractice(db: Db, storeId: number, now: Date = new Date(), opts: SeedOptions = {}): Promise<SeedResult> {
   const store = await db.store.findUnique({
     where: { id: storeId },
     select: { id: true, currency: true },
@@ -407,6 +420,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
       currency: store.currency,
     }).resolvedOptions().maximumFractionDigits ?? 2;
   const minor = (taka: number) => Math.round(taka * 10 ** digits);
+  const rich = !!opts.rich && (await db.defaultPackApplication.count({ where: { storeId, packKey: SAMPLE_PACK_KEY } })) > 0;
   if ((await db.order.count({ where: { storeId, isPractice: true } })) > 0) {
     // an older run left empty product shells: complete them (adds only what is missing, nothing else is touched)
     const done = await completeProducts(db, storeId, planProducts(makeRng(SEED), storeId, minor));
@@ -435,7 +449,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   counts.couriers = couriers.length;
 
   // ---- products (DRAFT: never on the live shop) with variants, then completed (category, colours, sizes, stock, chart, fabric)
-  const plan = planProducts(rng, storeId, minor);
+  const plan = planProducts(rng, storeId, minor, rich);
   await db.product.createMany({ data: plan.products, skipDuplicates: true });
   await db.productVariant.createMany({
     data: plan.variantRows,
@@ -450,7 +464,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
 
   // ---- customers
   const custs: Cust[] = [];
-  for (let i = 0; i < PRACTICE_CUSTOMERS; i++) {
+  for (let i = 0; i < (rich ? RICH.customers : PRACTICE_CUSTOMERS); i++) {
     const zone = rng.weighted<Zone>([
       ['inside', 56],
       ['sub', 16],
@@ -480,7 +494,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   }
   const plans: Plan[] = [];
   for (const p of ORDER_PLAN)
-    for (let k = 0; k < p.count; k++)
+    for (let k = 0; k < p.count * (rich ? RICH.orderScale : 1); k++)
       plans.push({
         kind: p.kind,
         ageDays: p.age[0] + rng.next() * (p.age[1] - p.age[0]),
@@ -517,7 +531,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     placedAt.setUTCHours(rng.int(3, 17), rng.int(0, 59), 0, 0); // 9:00-23:59 shop time
     if (placedAt > now) placedAt.setTime(now.getTime() - rng.int(10, 300) * 60_000);
     const repeat = rng.next() < 0.3 && i > 6;
-    const cust = repeat ? custs[rng.int(0, Math.min(custs.length - 1, 14))]! : rng.pick(custs);
+    const cust = repeat ? custs[rng.int(0, Math.min(custs.length - 1, rich ? 40 : 14))]! : rng.pick(custs);
     const id = practiceId(`order:${i}`);
     const number = `P-${num++}`;
     // lines
@@ -869,11 +883,14 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   counts.payouts = payoutNo;
 
   // ---- courier claims (lost, damaged, rider overcharge, other) in every state
-  const kinds = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'LOST', 'DAMAGED'] as const;
-  const states = ['OPEN', 'SENT', 'SETTLED', 'REJECTED', 'OPEN', 'SENT'] as const;
+  const baseKinds = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'LOST', 'DAMAGED'] as const;
+  const baseStates = ['OPEN', 'SENT', 'SETTLED', 'REJECTED', 'OPEN', 'SENT'] as const;
+  const claimTotal = rich ? RICH.claims : baseKinds.length;
+  const kinds = Array.from({ length: claimTotal }, (_, k) => baseKinds[k % baseKinds.length]!);
+  const states = Array.from({ length: claimTotal }, (_, k) => baseStates[(k + Math.floor(k / baseStates.length)) % baseStates.length]!);
   const claims: Prisma.CourierClaimCreateManyInput[] = [];
   kinds.forEach((kind, k) => {
-    const src = claimable[(k * 5) % Math.max(1, claimable.length)];
+    const src = claimable[(k * (rich ? 7 : 5)) % Math.max(1, claimable.length)];
     if (!src) return;
     const claimed = kind === 'RIDER_OVERCHARGE' ? minor(rng.int(30, 120)) : Math.min(src.total, minor(rng.int(700, 1800)));
     claims.push({
@@ -900,7 +917,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
 
   // ---- incomplete orders (started checkouts that did not finish)
   const drafts: Prisma.CheckoutDraftCreateManyInput[] = [];
-  for (let k = 0; k < PRACTICE_INCOMPLETE; k++) {
+  for (let k = 0; k < (rich ? RICH.incomplete : PRACTICE_INCOMPLETE); k++) {
     const c = rng.pick(custs);
     const v = rng.pick(variants);
     const last = new Date(now.getTime() - rng.int(20, 30 * 24 * 60) * 60_000);
@@ -934,5 +951,93 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   await db.checkoutDraft.createMany({ data: drafts, skipDuplicates: true });
   counts.incomplete = drafts.length;
 
+  if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now));
+
   return { seeded: true, counts };
+}
+
+/**
+ * PR 724 — what only the rich sample adds: three ad accounts with daily spend (Reports › Marketing & ads), and approved
+ * reviews on the sample products (Reports › Products, the product pages). Every id comes from the row's own key, so a
+ * second run adds nothing. Ad accounts are never enabled or connected; nothing leaves the system.
+ */
+async function seedRichExtras(
+  db: Db,
+  storeId: number,
+  currency: string,
+  minor: (taka: number) => number,
+  rng: ReturnType<typeof makeRng>,
+  plan: ProductPlan,
+  now: Date,
+): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const accounts: Prisma.AdAccountCreateManyInput[] = [];
+  const campaigns: Prisma.AdCampaignCreateManyInput[] = [];
+  const spend: Prisma.AdSpendDailyCreateManyInput[] = [];
+  for (const a of RICH_ADS) {
+    const accountId = practiceId(`adaccount:${a.platform}`);
+    accounts.push({ id: accountId, storeId, platform: a.platform, externalId: `practice-${a.platform.toLowerCase()}`, name: a.account, currency, enabled: false });
+    for (const [ci, name] of a.campaigns.entries()) {
+      const campaignId = practiceId(`adcampaign:${a.platform}:${ci}`);
+      campaigns.push({ id: campaignId, storeId, adAccountId: accountId, externalId: `practice-${a.platform.toLowerCase()}-${ci}`, name, status: 'ACTIVE', objective: 'SALES', dailyBudgetMinor: minor(a.spend[1]), currency });
+      for (let d = 0; d < RICH.adDays; d++) {
+        const date = new Date(today.getTime() - d * DAY);
+        const weekend = [5, 6].includes(date.getUTCDay()); // hardcode-ok: Friday and Saturday, the shop's busy days
+        const taka = Math.round((a.spend[0] + rng.next() * (a.spend[1] - a.spend[0])) * (weekend ? 1.15 : 1) / a.campaigns.length);
+        const impressions = Math.round((taka / 0.9) * 1000 * (0.8 + rng.next() * 0.4)); // hardcode-ok: sample reach, about 0.9 taka per 1,000
+        const clicks = Math.round(impressions * a.ctr * (0.8 + rng.next() * 0.4));
+        const purchases = Math.round(clicks * a.cvr * (0.7 + rng.next() * 0.6));
+        spend.push({
+          id: practiceId(`adspend:${a.platform}:${ci}:${d}`),
+          storeId,
+          adAccountId: accountId,
+          adCampaignId: campaignId,
+          date,
+          platform: a.platform,
+          spendMinor: minor(taka),
+          currency,
+          spendStoreMinor: minor(taka),
+          impressions,
+          clicks,
+          purchases,
+          deliveredPurchases: Math.round(purchases * (0.68 + rng.next() * 0.12)), // hardcode-ok: sample delivery rate
+        });
+      }
+    }
+  }
+  await db.adAccount.createMany({ data: accounts, skipDuplicates: true });
+  await db.adCampaign.createMany({ data: campaigns, skipDuplicates: true });
+  await db.adSpendDaily.createMany({ data: spend, skipDuplicates: true });
+  counts.adAccounts = accounts.length;
+  counts.adSpendRows = spend.length;
+
+  const reviews: Prisma.ReviewCreateManyInput[] = [];
+  const pids = [...plan.meta.keys()];
+  for (let k = 0; k < RICH.reviews; k++) {
+    const pid = pids[Math.floor(rng.next() * pids.length)]!;
+    const m = plan.meta.get(pid)!;
+    const at = new Date(now.getTime() - rng.int(1, 175) * DAY);
+    const status = k % 10 === 9 ? 'PENDING' : 'APPROVED'; // hardcode-ok: one in ten waits for a person
+    reviews.push({
+      id: practiceId(`review:${k}`),
+      storeId,
+      productId: pid,
+      rating: rng.weighted([[5, 52], [4, 28], [3, 12], [2, 5], [1, 3]] as const),
+      body: rng.pick(RICH_REVIEW_BODIES),
+      displayName: `Practice reviewer ${k + 1}`,
+      status,
+      source: 'STAFF',
+      isVerifiedPurchase: true,
+      sizeLabel: rng.pick(m.sizes),
+      colourName: rng.pick(m.colours),
+      publishedAt: status === 'APPROVED' ? at : null,
+      moderatedAt: status === 'APPROVED' ? at : null,
+      createdAt: at,
+      updatedAt: at,
+    });
+  }
+  await db.review.createMany({ data: reviews, skipDuplicates: true });
+  counts.reviews = reviews.length;
+  return counts;
 }
