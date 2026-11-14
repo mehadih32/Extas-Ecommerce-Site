@@ -11,6 +11,7 @@ import type { BulkCommand } from '@/lib/admin-orders/bulk';
 import type { Chip, OrderRowView } from '@/lib/admin-orders/list';
 import type { BulkFile } from '@/lib/admin-orders/bulk-files';
 import type { FieldOption } from '@/lib/admin-orders/spec';
+import { ResponsiveImage } from '@/components/media/ResponsiveImage';
 import { t, type Dict } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
 import { OrderPicker } from './OrderPicker';
@@ -63,8 +64,10 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
               </th>
             ) : null}
             <th>{col('order')}</th>
+            <th>{col('customer')}</th>
             <th>{col('items')}</th>
             <th className="r">{col('total')}</th>
+            <th className="r">{col('score')}</th>
             <th>{col('status')}</th>
             <th>{col('risk')}</th>
             <th>{col('courier')}</th>
@@ -97,16 +100,26 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                         {t(d, "orders.list.practice")}
                       </span>
                     ) : null}
-                    <span className="a2-oname">{r.name || dash}</span>
                     <span className="a2-nowrap" title={r.placed}>
-                      {r.phone ? `${r.age} · ${r.phone}` : r.age}
+                      {r.placed}
                     </span>
                   </div>
                 </td>
-                <td className="a2-tdm" data-l={col('items')}>
+                <td data-l={col('customer')}>
                   <div className="a2-cell">
-                    <b>{r.items}</b>
-                    {r.firstItem ? <span className="a2-ell">{r.firstItem}</span> : null}
+                    <span className="a2-oname">{r.name || dash}</span>
+                    {r.phone ? <span className="a2-nowrap">{r.phone}</span> : null}
+                  </div>
+                </td>
+                <td className="a2-tdm" data-l={col('items')}>
+                  <div className="a2-itm" data-testid="order-items">
+                    <span className="a2-ith" aria-hidden={r.thumb ? undefined : 'true'}>
+                      {r.thumb ? <ResponsiveImage image={r.thumb} slot="thumb" sizes="32px" alt={r.firstItem ?? ''} /> : <ShellIcon name="bag" size={14} />}
+                    </span>
+                    <div className="a2-cell">
+                      {r.firstItem ? <span className="a2-ell a2-ink">{r.firstItem}</span> : null}
+                      <span>{r.items}</span>
+                    </div>
                   </div>
                 </td>
                 <td className="r" data-l={col('total')}>
@@ -114,6 +127,9 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                     <b className="a2-num">{r.total}</b>
                     {r.method ? <span>{r.method}</span> : null}
                   </div>
+                </td>
+                <td className="r" data-l={col('score')} data-testid="order-score">
+                  {r.score ? <b className={`a2-num a2-sc ${r.score.tone}`}>{r.score.value}</b> : <span className="a2-faint">{dash}</span>}
                 </td>
                 <td className="a2-tdw" data-l={col('status')}>
                   <Chips chips={r.chips} />

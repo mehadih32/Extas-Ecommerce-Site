@@ -6,7 +6,8 @@
 // currency. The words come from messages/admin-orders.<lang>.json; nothing here is a sample.
 import * as od from '@extas/orders';
 import { ORDER_STATES, type OrderState } from '@extas/orders/pure';
-import { RISK_SECTIONS } from '@extas/settings';
+import { RISK_MAX, RISK_SECTIONS } from '@extas/settings';
+import { imageSources, type ImageSource } from '@extas/media';
 import { documentsOf, type PackDocs } from '@extas/shipping';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import type { AdminView } from '../admin-page';
@@ -100,6 +101,53 @@ export interface OrderRowView {
   facts: BulkFacts;
   /** PR 706 (CN-049): a practice order (shows a small Practice mark). */
   practice?: boolean;
+  /** PR 722 (prototype v5 parity): the first piece's photo (null: none yet) and the order's score out of 10 (null: not scored). */
+  thumb?: ImageSource | null;
+  score?: { value: string; tone: Tone } | null;
+}
+
+/**
+ * PR 722: the order's score out of 10, the prototype's "Score" column: the risk score turned round, so 10 is a clean order
+ * and 0 the riskiest (`RISK_MAX` is the risk engine's own top, never a number of this page). Tone from the owner's bands
+ * is not used: the colour follows the plain thirds (a clean order is green, a doubtful one amber, a risky one red).
+ */
+export function scoreOf(riskScore: number | null, locale: string): { value: string; tone: Tone } | null {
+  if (riskScore === null) return null;
+  const v = Math.max(0, Math.min(10, Math.round(((RISK_MAX - riskScore) / RISK_MAX) * 100) / 10));
+  return { value: new Intl.NumberFormat(locale, { numberingSystem: 'latn', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v), tone: v >= 7 ? 'ok' : v >= 4 ? 'warn' : 'bad' };
+}
+
+/** PR 722: the photo of each order's first piece, by order id (an order whose piece has no photo is left out). Never throws: a photo that cannot be read is just no photo. */
+export async function orderThumbs(deps: od.OrdersDeps, storeId: number, orderIds: readonly string[]): Promise<Map<string, ImageSource>> {
+  const out = new Map<string, ImageSource>();
+  if (!orderIds.length) return out;
+  try {
+    const items = await deps.db.orderItem.findMany({
+      where: { storeId, orderId: { in: [...orderIds] }, status: 'ACTIVE', productId: { not: null } },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: { orderId: true, productId: true },
+    });
+    const first = new Map<string, string>();
+    for (const i of items) if (!first.has(i.orderId)) first.set(i.orderId, i.productId!);
+    const productIds = [...new Set(first.values())];
+    if (!productIds.length) return out;
+    const media = await deps.db.productMedia.findMany({
+      where: { storeId, productId: { in: productIds }, archivedAt: null, asset: { kind: 'IMAGE', archivedAt: null } },
+      orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: { productId: true, assetId: true },
+    });
+    const asset = new Map<string, string>();
+    for (const m of media) if (!asset.has(m.productId)) asset.set(m.productId, m.assetId);
+    const sources = new Map(await imageSources({ db: deps.db as never, settings: deps.settings as never }, storeId, [...new Set(asset.values())]));
+    for (const [orderId, productId] of first) {
+      const a = asset.get(productId);
+      const src = a ? sources.get(a) : undefined;
+      if (src) out.set(orderId, src);
+    }
+  } catch {
+    return out;
+  }
+  return out;
 }
 
 export interface OrderListData {
@@ -214,7 +262,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
     ...(query.cursor ? { cursor: query.cursor } : {}),
   });
   const ids = list.rows.map((r) => r.id);
-  const [extras, reasons, riskBands, kept] = await Promise.all([od.listExtras(deps, who, ids), od.reasonLists(deps, who.storeId), od.setting(deps, who.storeId, 'risk.bands'), documentsOf(deps.db, who.storeId, ids)]);
+  const [extras, reasons, riskBands, kept, thumbs] = await Promise.all([od.listExtras(deps, who, ids), od.reasonLists(deps, who.storeId), od.setting(deps, who.storeId, 'risk.bands'), documentsOf(deps.db, who.storeId, ids), orderThumbs(deps, who.storeId, ids)]);
   // follow-up 435: the sticker is the newest booking's (a cancelled booking's prints are history, not this parcel's)
   const docsOf = (id: string): PackDocs => {
     const s = extras[id]?.shipment;
@@ -248,6 +296,8 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
       risk: riskChips(view, r, riskBands),
       docs: docChips(view, docsOf(r.id)),
       ...(r.isPractice ? { practice: true } : {}),
+      thumb: thumbs.get(r.id) ?? null,
+      score: scoreOf(r.riskScore, view.locale),
       facts: {
         status: r.status,
         version: r.version,
