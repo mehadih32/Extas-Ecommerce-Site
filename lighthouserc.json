@@ -81,7 +81,6 @@
         "http://127.0.0.1:3000/bn/account/orders/0/invoice",
         "http://127.0.0.1:3000/help/faq",
         "http://127.0.0.1:3000/bn/help/exchange",
-        "http://127.0.0.1:3000/status",
         "http://127.0.0.1:3000/bn/fresh-start",
         "http://127.0.0.1:3000/access",
         "http://127.0.0.1:3000/combos/build-your-own",
