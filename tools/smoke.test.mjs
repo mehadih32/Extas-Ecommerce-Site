@@ -105,7 +105,7 @@ it('review R3 (admin M2): every static admin page is opened by the smoke test, o
 });
 
 /** Follow-up 611: shop pages the smoke test does not open on their own, each with why. */
-const SHOP_SKIP = {};
+const SHOP_SKIP = { '/status': 'preview-host-only page: answers 404 on extas.com.bd by design since the staging host was retired (CN-052)' };
 
 it('follow-up 611: every static shop page is opened by the smoke test (listed or discovered), or is on the skip list with a reason', async () => {
   const { readdirSync } = await import('node:fs');
