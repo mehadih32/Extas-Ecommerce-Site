@@ -76,7 +76,9 @@
         "courier": "Courier",
         "flags": "Flags",
         "risk": "Risk",
-        "docs": "Documents"
+        "docs": "Documents",
+        "customer": "Customer",
+        "score": "Score"
       },
       "empty": {
         "title": "Nothing matches",
@@ -125,6 +127,12 @@
         "days7": "Last 7 days",
         "month": "This month",
         "lastMonth": "Last month"
+      },
+      "actions": {
+        "export": "Export",
+        "bulk": "New bulk order",
+        "phone": "Phone order",
+        "phoneOff": "Phone orders are not switched on yet. For now, an order taken by phone is entered by the customer on the shop, or by the bulk order form."
       }
     },
     "kpi": {

@@ -16,6 +16,7 @@ import { LIST_PAGES, listHref, type ListPageId } from '@/lib/admin-orders/model'
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { LookMenu } from '../LookMenu';
+import { OrderHeaderActions } from '@/components/admin/orders/OrderHeaderActions';
 import { LookThumb } from '../thumbs';
 import type { LookDesign } from '../types';
 import { FLOW_VIEWS, type OrdersDesignProps } from './common';
@@ -49,7 +50,7 @@ async function OrdersC(p: OrdersDesignProps) {
   const shown = formatNumber(data.rows.length, view.locale);
   return (
     <div className="a2-z a3-ordc" data-testid="orders-list" data-design="C" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<LookMenu {...menu} />} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
       <FlowStrip p={p} counts={data.counts} />

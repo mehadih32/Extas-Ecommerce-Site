@@ -31,6 +31,7 @@ import { DATE_PRESETS, dayOf, presetOf, presetValue } from '@/lib/admin-orders/r
 import { OrderFilters, type FilterSelect } from './OrderFilters';
 import { CancelledSummary } from './CancelledSummary';
 import { OrderTable } from './OrderTable';
+import { OrderHeaderActions } from './OrderHeaderActions';
 
 export interface ListAccess {
   deps: AdminDeps;
@@ -161,7 +162,7 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
   const shown = formatNumber(data.rows.length, view.locale);
   return (
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={menu ? <LookMenu {...menu} /> : null} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
       <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />

@@ -20,6 +20,7 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { formatNumber } from '@/components/admin/products/model';
 import { t } from '@/lib/i18n';
 import { LookMenu } from '../LookMenu';
+import { OrderHeaderActions } from '@/components/admin/orders/OrderHeaderActions';
 import { LookThumb } from '../thumbs';
 import type { LookDesign } from '../types';
 import type { OrdersDesignProps } from './common';
@@ -63,7 +64,7 @@ async function OrdersB(p: OrdersDesignProps) {
   const oldest = toConfirm ? await od.viewOldest(readDeps(a.deps), a.who, 'toConfirm') : null;
   return (
     <div className="a2-z a3-ordb" data-testid="orders-list" data-design="B" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<LookMenu {...menu} />} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
       <SectionTabs view={view} current="orders" />
       <Hero p={p} toConfirm={toConfirm} oldest={oldest} />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
