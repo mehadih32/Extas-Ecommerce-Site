@@ -13,6 +13,7 @@ import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { TRAINING_ALL, TRAINING_ANSWER_MAX, TRAINING_DOCS_MAX, TRAINING_DOC_TEXT_MAX, TRAINING_DOC_TITLE_MAX, TRAINING_NOTE_MAX, TRAINING_SAMPLE_MAX } from '@extas/settings';
 import type { Vault } from '@extas/vault';
 import type { AppResolver } from '../settings';
+import { isAiAgentKey, type AiAgentKey } from './agents';
 import { AiError } from './errors';
 import { guideQaAnswer } from './guide-qa-dispatch';
 import { validScope, instructionState } from './training-instructions';
@@ -21,6 +22,12 @@ import { CORRECTION_KIND } from './training';
 export const DOCUMENT_KIND = 'document';
 export const NOTE_KIND = 'note';
 export const SANDBOX_REF = 'sandbox';
+/** Ledger/diary `refType` of a sandbox run: a test, so Control room and the owner can tell it from real work. */
+export const SANDBOX_REF_TYPE = 'AiTrainingSandbox';
+/** "All agents" has no agent of its own; a sandbox run for it is billed to the agent that owns this admin area (the same one the guide panel uses). */
+const ALL_SCOPE_BILLED_TO: AiAgentKey = 'prohori';
+/** The agent a sandbox run answers as and is billed to. */
+export const sandboxAgentKey = (scope: string): AiAgentKey => (isAiAgentKey(scope) ? scope : ALL_SCOPE_BILLED_TO);
 const TYPE = 'AiTrainingExample';
 /** How many saved examples / notes the page lists (a display count, every row stays). */
 export const EXTRAS_LIST_MAX = 20; // hardcode-ok: a display row count
@@ -95,7 +102,12 @@ export async function tryIt(deps: ExtrasDeps, input: unknown, agentName: (key: s
   const lines = state.agents.filter((a) => a.key === TRAINING_ALL || a.key === agent).flatMap((a) => a.lines);
   const docs = extras.docs.filter((d) => d.agentKey === TRAINING_ALL || d.agentKey === agent);
   const facts = sandboxFacts({ agentName: agentName(agent), lines, forbidden: state.forbidden, docs });
-  const answer = await guideQaAnswer(deps, MOTHER_STORE_ID, `training:${agent}`, locale, sample, { title: agentName(agent), blocks: [{ t: 'p', c: [{ t: 'text', v: facts }] }] });
+  const answer = await guideQaAnswer(deps, MOTHER_STORE_ID, `training:${agent}`, locale, sample, { title: agentName(agent), blocks: [{ t: 'p', c: [{ t: 'text', v: facts }] }] }, {
+    agentKey: sandboxAgentKey(agent), // answers as, and is billed to, the agent being trained
+    refType: SANDBOX_REF_TYPE, // marked as a test run in the ledger and the diary
+    keyPrefix: 'training-sandbox',
+    diarySummaryBn: 'মালিক ট্রেনিং পাতায় "Try it" দিয়ে পরীক্ষা করেছেন, একটা নমুনা বার্তায় আমি কী জবাব দিতাম। এটা শুধু পরীক্ষা, কাউকে পাঠানো হয়নি।',
+  });
   return answer ? { status: 'ok', answer } : { status: 'unavailable' };
 }
 
