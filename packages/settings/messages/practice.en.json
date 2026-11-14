@@ -7,6 +7,10 @@
     "showReset": {
       "label": "Show Reset sample data button",
       "help": "On by default while practice mode is on. The button on the Practice data screen removes all practice records (needs your PIN) and can fill fresh sample data again. Turn it off when the practice period is over."
+    },
+    "photoBatch": {
+      "label": "Practice photos per step",
+      "help": "How many sample products get their pictures in one step of Add practice photos (each product gets front, back, detail and on-model views). A small number keeps each step quick; the page repeats the steps by itself until all are done."
     }
   }
 }

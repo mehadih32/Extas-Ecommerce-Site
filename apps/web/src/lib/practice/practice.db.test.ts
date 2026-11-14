@@ -10,7 +10,7 @@ import { memoryStorage } from '@extas/adapters';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import { photoSetStatus, type MediaDeps } from '@extas/media';
 import { seedPractice, completeProducts } from './seed';
-import { addPracticePhotos, drawingPng } from './photos';
+import { addPracticePhotos, drawingPng, practicePhotoProgress } from './photos';
 import { practiceCounts, resetPractice } from './reset';
 
 const NOW = new Date('2026-11-13T08:00:00Z');
@@ -453,7 +453,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await db.category.count({ where: { storeId: S } })).toBe(realCategory);
     expect(await db.product.findUnique({ where: { id: realProductId } })).not.toBeNull();
   });
-  it.skip('gives every practice product the photos the shop asks for (drawn like the demo), once, and reset removes exactly those', async () => {
+  it('makes the practice photos in small resumable steps (2 products here), once, as the shop\'s photo rule asks, and reset removes exactly those', async () => {
     const db = t.prisma;
     await syncSettings(db, { registry, messages });
     const storage = memoryStorage('LOCAL_DISK');
@@ -464,23 +464,35 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
       data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: 'media/real/own.png', mimeType: 'image/png', bytes: BigInt(realPng.byteLength), checksumSha256: 'f'.repeat(64), tags: [] },
     });
     await seedPractice(db, S, NOW);
-    const first = await addPracticePhotos(deps, S);
-    expect(first.photos).toBeGreaterThan(0);
-    const products = await db.product.findMany({ where: { storeId: S, isPractice: true }, select: { id: true, status: true } });
-    expect(products.length).toBe(21);
-    for (const p of products) {
+    // keep the test fast: only two sample products take part (the others have no active colour, so they get no pictures)
+    const all = await db.product.findMany({ where: { storeId: S, isPractice: true }, orderBy: { slug: 'asc' }, select: { id: true, status: true } });
+    expect(all.length).toBe(21);
+    const two = all.slice(0, 2);
+    await db.productColour.updateMany({ where: { product: { storeId: S, isPractice: true }, productId: { notIn: two.map((p) => p.id) } }, data: { archivedAt: NOW } });
+    const minimum = await deps.settings.value('media.photos.minimum', { storeId: S });
+    expect(await practicePhotoProgress(db, S, minimum)).toEqual({ total: 2, done: 0 });
+    // step 1: one product
+    const s1 = await addPracticePhotos(deps, S, { limit: 1 });
+    expect(s1).toMatchObject({ total: 2, done: 1 });
+    expect(s1.photos).toBeGreaterThanOrEqual(4);
+    expect(await photoSetStatus(deps, { storeId: S, productId: two[0]!.id })).toMatchObject({ ok: true });
+    expect((await photoSetStatus(deps, { storeId: S, productId: two[1]!.id })).ok).toBe(false);
+    // closing the page and pressing again continues with the next product, never repeating the first
+    const s2 = await addPracticePhotos(deps, S, { limit: 1 });
+    expect(s2).toMatchObject({ total: 2, done: 2 });
+    for (const p of two) {
       const st = await photoSetStatus(deps, { storeId: S, productId: p.id });
       expect(st.ok, `${p.id} ${st.missing.join(',')} ${st.count}/${st.minimum}`).toBe(true);
-      expect(p.status).toBe('DRAFT');
     }
+    expect((await db.product.findMany({ where: { id: { in: two.map((p) => p.id) } }, select: { status: true } })).every((p) => p.status === 'DRAFT')).toBe(true);
     // real stored files with sizes made, never a broken picture
     const asset = await db.mediaAsset.findFirstOrThrow({ where: { storeId: S, folder: 'practice' }, include: { renditions: true } });
     expect(asset.renditions.length).toBeGreaterThan(0);
     expect((await storage.get(asset.storageKey))?.contentType).toBe('image/png');
     expect(await storage.get(asset.renditions[0]!.storageKey)).not.toBeNull();
-    // a second run changes nothing
+    // a further step changes nothing
     const before = [await db.productMedia.count(), await db.mediaAsset.count(), await db.mediaRendition.count()];
-    expect((await addPracticePhotos(deps, S)).photos).toBe(0);
+    expect(await addPracticePhotos(deps, S, { limit: 1 })).toMatchObject({ photos: 0, total: 2, done: 2 });
     expect([await db.productMedia.count(), await db.mediaAsset.count(), await db.mediaRendition.count()]).toEqual(before);
     // reset removes exactly the practice pictures
     await resetPractice(db, S);

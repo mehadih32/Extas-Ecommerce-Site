@@ -154,16 +154,22 @@ const WORDS: Record<Role, string> = {
   ON_MODEL: "on model",
 };
 
+type Wanted = { role: Role; colourId: string; hex: string };
+interface PlanItem {
+  id: string;
+  name: string;
+  kind: DrawKind;
+  firstColourId: string;
+  missing: Wanted[];
+  have: number;
+}
+
 /**
- * Gives every practice product the photo set the shop asks for: a front photo in each of its colours, and a back, a
- * detail and an on-model photo (in its first colour). Returns how many photos it added (0 on a second run).
+ * What every practice product still lacks: a front photo in each of its colours, and a back, a detail and an on-model
+ * photo (in its first colour). Reads the database only (nothing is drawn), so it also gives the progress figures.
  */
-export async function addPracticePhotos(
-  deps: MediaDeps,
-  storeId: number,
-): Promise<{ photos: number }> {
-  const rules = await photoRules(deps.settings, storeId);
-  const products = await deps.db.product.findMany({
+async function photoPlan(db: MediaDeps["db"], storeId: number, minimum: number): Promise<PlanItem[]> {
+  const products = await db.product.findMany({
     where: { storeId, isPractice: true },
     select: {
       id: true,
@@ -176,28 +182,33 @@ export async function addPracticePhotos(
     },
     orderBy: { slug: "asc" },
   });
-  const storage = await deps.storage(storeId);
-  const now = deps.now ? deps.now() : new Date();
-  let added = 0;
+  const media = await db.productMedia.findMany({
+    where: {
+      storeId,
+      archivedAt: null,
+      product: { isPractice: true },
+      asset: { folder: PRACTICE_MEDIA_FOLDER },
+    },
+    select: { productId: true, role: true, colourId: true },
+  });
+  const byProduct = new Map<string, { role: string; colourId: string | null }[]>();
+  for (const m of media) {
+    const list = byProduct.get(m.productId) ?? [];
+    list.push(m);
+    byProduct.set(m.productId, list);
+  }
+  const out: PlanItem[] = [];
   for (const p of products) {
     const name = p.nameEn.replace(/ \(practice\)$/, "");
     const code = CATEGORIES.find((c) =>
       (c.names as readonly string[]).includes(name),
     )?.code;
-    const kind = (code && KIND_OF[code]) || "tee";
     const cols = p.colours.filter((c) => c.colour.hex);
     if (!cols.length) continue;
-    const have = await deps.db.productMedia.findMany({
-      where: {
-        productId: p.id,
-        archivedAt: null,
-        asset: { folder: PRACTICE_MEDIA_FOLDER },
-      },
-      select: { role: true, colourId: true },
-    });
+    const have = byProduct.get(p.id) ?? [];
     const done = new Set(have.map((h) => `${h.role}:${h.colourId ?? ""}`));
     const first = cols[0]!;
-    const wanted: { role: Role; colourId: string; hex: string }[] = [
+    const wanted: Wanted[] = [
       ...cols.map((c) => ({
         role: "FRONT" as Role,
         colourId: c.colourId,
@@ -211,12 +222,60 @@ export async function addPracticePhotos(
     ];
     // a very small set rule (minimum above what the kinds give) is met with extra back views in the other colours
     for (const c of cols.slice(1))
-      if (wanted.length < rules.minimum)
+      if (wanted.length < minimum)
         wanted.push({ role: "BACK", colourId: c.colourId, hex: c.colour.hex! });
-    let sort = have.length;
-    for (const w of wanted) {
-      if (done.has(`${w.role}:${w.colourId}`)) continue;
-      const body = await drawingPng(kind, w.hex, VIEW_OF[w.role]);
+    out.push({
+      id: p.id,
+      name,
+      kind: (code && KIND_OF[code]) || "tee",
+      firstColourId: first.colourId,
+      missing: wanted.filter((w) => !done.has(`${w.role}:${w.colourId}`)),
+      have: have.length,
+    });
+  }
+  return out;
+}
+
+export interface PhotoProgress {
+  /** Photos added by this call. */
+  photos: number;
+  /** Practice products that get pictures (the ones with a colour). */
+  total: number;
+  /** Of those, how many have their whole set. */
+  done: number;
+}
+
+/** "x of y products done" without drawing anything. */
+export async function practicePhotoProgress(
+  db: MediaDeps["db"],
+  storeId: number,
+  minimum: number,
+): Promise<Omit<PhotoProgress, "photos">> {
+  const plan = await photoPlan(db, storeId, minimum);
+  return { total: plan.length, done: plan.filter((p) => !p.missing.length).length };
+}
+
+/**
+ * Gives practice products the photo set the shop asks for. `limit` = how many products to finish in this call (all when
+ * not given): a call never repeats work, so pressing again simply continues where the last one stopped. Returns how many
+ * photos it added (0 on a second run) and the progress.
+ */
+export async function addPracticePhotos(
+  deps: MediaDeps,
+  storeId: number,
+  opts: { limit?: number } = {},
+): Promise<PhotoProgress> {
+  const rules = await photoRules(deps.settings, storeId);
+  const plan = await photoPlan(deps.db, storeId, rules.minimum);
+  const pending = plan.filter((p) => p.missing.length);
+  const batch = opts.limit && opts.limit > 0 ? pending.slice(0, opts.limit) : pending;
+  const storage = await deps.storage(storeId);
+  const now = deps.now ? deps.now() : new Date();
+  let added = 0;
+  for (const p of batch) {
+    let sort = p.have;
+    for (const w of p.missing) {
+      const body = await drawingPng(p.kind, w.hex, VIEW_OF[w.role]);
       const checksum = createHash("sha256").update(body).digest("hex");
       let asset = await deps.db.mediaAsset.findFirst({
         where: {
@@ -227,7 +286,7 @@ export async function addPracticePhotos(
         },
       });
       if (!asset) {
-        const slug = `practice-${kind}-${w.hex.slice(1)}-${VIEW_OF[w.role]}`;
+        const slug = `practice-${p.kind}-${w.hex.slice(1)}-${VIEW_OF[w.role]}`;
         const key = originalKey({
           storeId,
           checksum,
@@ -249,7 +308,7 @@ export async function addPracticePhotos(
             height: SIZE.height,
             checksumSha256: checksum,
             isOriginal: true,
-            altEn: `${name}, ${WORDS[w.role]}`,
+            altEn: `${p.name}, ${WORDS[w.role]}`,
             folder: PRACTICE_MEDIA_FOLDER,
             tags: ["practice"],
             createdAt: now,
@@ -265,11 +324,15 @@ export async function addPracticePhotos(
           role: w.role,
           colourId: w.colourId,
           sortOrder: sort++,
-          isPrimary: w.role === "FRONT" && w.colourId === first.colourId,
+          isPrimary: w.role === "FRONT" && w.colourId === p.firstColourId,
         },
       });
       added++;
     }
   }
-  return { photos: added };
+  return {
+    photos: added,
+    total: plan.length,
+    done: plan.length - (pending.length - batch.length),
+  };
 }
