@@ -1,7 +1,10 @@
 # ERP SKU ও স্টক তুলনা — শুধু পড়ার জন্য (read-only)
 
-**সারকথা:** কোনো স্টোরে আসল ERP যুক্ত নেই বা প্র্যাক্টিস ERP-তে আছে, তাই এখন তুলনা করার কিছু নেই।
+**সারকথা:** দোকানের SKU আর স্টক-এর সাথে আসল ERP-এর কিছু অমিল পাওয়া গেছে — নিচে তালিকা দেওয়া আছে। এটা শুধু তথ্যের জন্য; এতে কোনো স্টক বা দাম বদলায়নি।
 
-স্টোর 1: এই স্টোর এখনো প্র্যাক্টিস ERP-তে আছে, তাই আসল ERP-এর সাথে তুলনা হয়নি।
+স্টোর 1: মিলেছে 0টা SKU (স্টক মিলেছে 0টা)। পার্থক্য — স্টক 0টা, SKU ERP-এ আছে দোকানে নেই 168টা, দোকানে আছে ERP-এ নেই 25টা, দোকানের দাম নেই 168টা।
+  - ERP-এ আছে, দোকানে নেই: NIKE-SET-BLACKC-L, NIKE-SET-BLACKC-M, NIKE-SET-BLACKC-S, NIKE-SET-BLACKC-XL, NIKE-SET-BLACKC-XXL, NIKE-SET-NAVYBL-L, NIKE-SET-NAVYBL-M, NIKE-SET-NAVYBL-S, NIKE-SET-NAVYBL-XL, NIKE-SET-NAVYBL-XXL, NIKE-SET-OLIVEC-L, NIKE-SET-OLIVEC-M, NIKE-SET-OLIVEC-S, NIKE-SET-OLIVEC-XL, NIKE-SET-OLIVEC-XXL, NIKE-SET-WHITEC-L, NIKE-SET-WHITEC-M, NIKE-SET-WHITEC-S, NIKE-SET-WHITEC-XL, NIKE-SET-WHITEC-XXL (… আরও 148টা)
+  - দোকানে আছে, ERP-এ নেই: GATE-TEST-POLO-BLACK-L, GATE-TEST-POLO-BLACK-M, GATE-TEST-POLO-BLACK-S, GATE-TEST-POLO-BLACK-XL, GATE-TEST-POLO-WHITE-L, GATE-TEST-POLO-WHITE-M, GATE-TEST-POLO-WHITE-S, GATE-TEST-POLO-WHITE-XL, GATE-TEST-SHIRT-BLACK-L, GATE-TEST-SHIRT-BLACK-M, GATE-TEST-SHIRT-BLACK-XL, GATE-TEST-SHIRT-NAVY-L, GATE-TEST-SHIRT-NAVY-M, GATE-TEST-SHIRT-NAVY-XL, GATE-TEST-SHIRT-WHITE-L, GATE-TEST-SHIRT-WHITE-M, GATE-TEST-SHIRT-WHITE-XL, GATE-TEST-TROUSER-BLACK-L, GATE-TEST-TROUSER-BLACK-M, GATE-TEST-TROUSER-BLACK-S (… আরও 5টা)
+  - দোকানের ক্রয়মূল্য (shop price) এখনো নেই: NIKE-SET-BLACKC-L, NIKE-SET-BLACKC-M, NIKE-SET-BLACKC-S, NIKE-SET-BLACKC-XL, NIKE-SET-BLACKC-XXL, NIKE-SET-NAVYBL-L, NIKE-SET-NAVYBL-M, NIKE-SET-NAVYBL-S, NIKE-SET-NAVYBL-XL, NIKE-SET-NAVYBL-XXL, NIKE-SET-OLIVEC-L, NIKE-SET-OLIVEC-M, NIKE-SET-OLIVEC-S, NIKE-SET-OLIVEC-XL, NIKE-SET-OLIVEC-XXL, NIKE-SET-WHITEC-L, NIKE-SET-WHITEC-M, NIKE-SET-WHITEC-S, NIKE-SET-WHITEC-XL, NIKE-SET-WHITEC-XXL (… আরও 148টা)
 
-- 2026-11-13T02:46:00.792Z: এই রিপোর্ট কোনো ERP বা দোকানের স্টক/দাম বদলায়নি (GET-only); এটা শুধু তুলনা।
+- 2026-11-14T02:36:08.282Z: এই রিপোর্ট কোনো ERP বা দোকানের স্টক/দাম বদলায়নি (GET-only); এটা শুধু তুলনা।
