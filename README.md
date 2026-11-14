@@ -3169,6 +3169,7 @@ except PR 442 (open as its own PR, not yet merged to `main`).
 > **বাংলায়:** নতুন (PR 582): প্রতিটা এজেন্টের প্রোফাইল পাতায় এখন একটা "স্মৃতি" কার্ড — ডিফল্ট বন্ধ, একটাই সুইচ সব এজেন্টের জন্য। চালু করলে প্রতিটা এজেন্ট তথ্য, সিদ্ধান্ত, মালিকের নির্দেশ, ক্যাম্পেইন-কাজ আর শেখা জিনিস মনে রাখে, খুঁজে বের করা যায় (আজ পর্যন্ত সহজ লেখা-মিল, সত্যিকার অর্থ-বোঝা খোঁজার ব্যবস্থা আসেনি), সপ্তাহের একটা হিসাবও দেখা যায়। মালিক নিজের হাতে একটা স্মৃতি লেখা ঠিক করতে বা আর্কাইভ করতে পারেন — কখনো মোছা হয় না।
 
 Planned — see register PRs 581, 583–585: [S15](docs/MASTER-REGISTER.md#s15--ai-360-control-room--pr-304341).
+Planned — see register PRs 581, 582, 584, 585: [S15](docs/MASTER-REGISTER.md#s15--ai-360-control-room--pr-304341).
 
 ### S16 · Finance, costs & reports — Done (22/22)
 
@@ -4226,6 +4227,7 @@ documents-only commit to `main`; "server report" commits are written by the `ser
 | pending | PR [708](docs/stages/S28.md#pr-708) | 14 Nov | Demo catalogue: the 72 demo products are available as demo products (export tool and catalogue module). |
 | pending | PR 710 | 14 Nov | Admin v5 checks: demo products no longer count in location totals, low stock, shortage and stock counts; readiness report added (docs/reports/2026-11-14-admin-v5.md). |
 | pending | PR 709 | 14 Nov | Device-gate fixes: status pills, small buttons and landing chips wrap at every width (size charts, tracking, landing templates). CSS only. |
+| pending | PR [583](docs/stages/S15.md#pr-583) | 13 Nov | S15 (CN-050): Chief agent — Gyani as virtual CEO, chain of command. New `/admin/agents/chief` page; every other agent's proposal over its own limit routes to Gyani for approval before it runs; off by default. |
 | pending | PR [699](docs/stages/S28.md#pr-699) | 13 Nov | S28 wave 5a: Marketing overview and Plan and ideas. Overview with spend, delivered sales per Tk 1, profit after ads, Scale/Keep/Fix/Stop chips from settings; Ad campaigns table with ad-level rows (tired ads); Plan page with a channel budget plan (advice only) and overlap and low-stock warnings; migration 0264 |
 | pending | PR [698](docs/stages/S28.md#pr-698) | 13 Nov | S28 wave 5a: Message cost ceilings. Monthly SMS and WhatsApp ceiling (owner sets; off by default), warning at a share, further messages on a channel at its ceiling wait in the log (order's first message never held), cheapest-channel fallback to the step's fallback channel; card on the new Messages page and on the AI Center cost book. |
 | pending | PR [697](docs/stages/S28.md#pr-697) | 13 Nov | S28 wave 5a: Message campaigns v5. One list of every WhatsApp, SMS and e-mail send (win-back, group, e-mail) with cost and delivered orders and sales, entry buttons to the existing builders, Messenger practice note, and a test send of a template to the person's own phone or e-mail (max 10 a day). Existing consent, template, schedule and throttle checks stay in the builders. |

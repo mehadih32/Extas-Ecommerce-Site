@@ -131,6 +131,12 @@ export interface ControlRoomScreen {
 /**
  * Keeps the seven fixed agents' identity rows in step with the catalogue above (the same idea as `syncAuth` for
  * permissions) — never touches a row's `enabled`, `monthlyCapMinor` or `schedule`, which are the owner's own choice.
+ *
+ * S15 · PR 583 (C10.2) — also wires the chain of command itself: owner → the chief → the other six. `agents.ts`'s
+ * own header comment names `AiAgent.reportsToId` as "wired by PR 583, not here" — done here, on every read, so an
+ * installation that already has these seven rows (every one, since PR 304) picks it up with no data migration, the
+ * same "ensure, never invent a second source" idea `syncAuth` already uses for permissions. Idempotent: an agent
+ * already pointed at the chief is left untouched.
  */
 export async function ensureAgentRows(db: Pick<PrismaClient, 'aiAgent'>): Promise<void> {
   for (const a of AI_AGENTS) {
@@ -139,6 +145,18 @@ export async function ensureAgentRows(db: Pick<PrismaClient, 'aiAgent'>): Promis
       create: { key: a.key, code: a.code, nameEn: a.nameEn, nameBn: a.nameBn, role: a.role, emoji: a.emoji, isChief: a.isChief, enabled: false, keepOnWhenMasterOff: false, verified: true },
       update: { code: a.code, nameEn: a.nameEn, nameBn: a.nameBn, role: a.role, emoji: a.emoji, isChief: a.isChief },
     });
+  }
+  const chief = AI_AGENTS.find((a) => a.isChief);
+  if (!chief) return;
+  const chiefRow = await db.aiAgent.findUnique({ where: { key: chief.key } });
+  if (!chiefRow) return;
+  for (const a of AI_AGENTS) {
+    if (a.key === chief.key) continue;
+    // Always written, never guarded by the row's current value: `reportsToId` is null for a fresh row (SQL's own
+    // three-valued logic reads `reportsToId <> chiefRow.id` as unknown, not true, when it is null, so a guard here
+    // would silently skip exactly the rows that most need setting). Writing the same id again is still a no-op in
+    // effect, the same as the identity fields just above being rewritten unconditionally on every call.
+    await db.aiAgent.update({ where: { key: a.key }, data: { reportsToId: chiefRow.id } });
   }
 }
 

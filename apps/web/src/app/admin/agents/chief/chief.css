@@ -1,0 +1,112 @@
+/* S15 · PR 583 — the chief's page (/admin/agents/chief). Uses the shared --lm-, --g and --ink theme tokens, so it
+   needs no colour literal of its own (the hardcode guard checks CSS files too). */
+.adm2 .ac-org {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.adm2 .ac-org-owner,
+.adm2 .ac-org-chief {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--g1);
+  font-weight: 600;
+}
+.adm2 .ac-org-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.adm2 .ac-org-n {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px var(--ln);
+  color: inherit;
+  text-decoration: none;
+}
+.adm2 .ac-g2 {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.adm2 .ac-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.adm2 .ac-ask {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .ac-ask input {
+  flex: 1;
+  min-width: 0;
+}
+.adm2 .ac-inv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+}
+.adm2 .ac-inv-row {
+  border-radius: var(--r, 10px);
+  box-shadow: inset 0 0 0 1px var(--ln);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .ac-inv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.adm2 .ac-ev {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.adm2 .ac-row-act {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.adm2 .ac-free {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.adm2 .ac-pm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+.adm2 .ac-pm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 720px) {
+  .adm2 .ac-g2 {
+    grid-template-columns: 1fr;
+  }
+}
