@@ -19,6 +19,7 @@ import { LookThumb } from '../thumbs';
 import { Bar, BarsChart, Card, Delta, Empty, LineChart, Lnk, Pill, Soon, Spark, Tile } from '../kit';
 import type { Fmt } from '../fmt';
 import { can, DashHead, prevText, rangeText, type DashProps } from './common';
+import { ProtoCards } from './ProtoCards';
 
 export function Photo({ image, name, lang, cls = 'sm' }: { image: TopRow['image']; name: string; lang: 'bn' | 'en'; cls?: 'xs' | 'sm' }) {
   return (
@@ -326,6 +327,7 @@ function Overview(p: DashProps) {
           {cards}
         </div>
       ) : null}
+      <ProtoCards {...p} />
     </>
   );
 }
@@ -426,7 +428,7 @@ export const dashboardA: LookDesign<DashProps, DashPart> = {
     en: 'One big delivered-sales story with a comparison line, where every order is right now, and four short cards. A money & marketing view sits one click away.',
     bn: 'একটা বড় ডেলিভারি বিক্রির গ্রাফ আর তুলনা, অর্ডার এখন কোথায়, আর চারটা ছোট কার্ড। টাকা ও মার্কেটিং এক ক্লিকে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit'],
   Render: DashboardA,
   // The demo's sketch of this design (its key there is B).
   Thumb: () => <LookThumb page="dashboard" id="B" />,
