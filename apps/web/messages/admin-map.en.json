@@ -49,6 +49,7 @@
       "customers.review": "Customers waiting for a look: duplicates, risky and new ones.",
       "customers.segments": "Customer groups made by rules, for messages and offers.",
       "customers.settings": "Customer rules: what is kept, tags, and sign-in options.",
+      "delivery.claims": "Every courier claim with its state, amount, age and deadline, and what each courier holds, has paid and owes.",
       "delivery.courier360": "One courier in full: parcels, money, speed and setup.",
       "delivery.couriers": "Courier accounts and how parcels are booked.",
       "delivery.overview": "Couriers at a glance: parcels out, money still with them, who is slow.",
