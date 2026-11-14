@@ -475,6 +475,7 @@
 .adm2 .a2-fsrch{position:relative;flex:1 1 260px;max-width:420px;min-width:200px}
 .adm2 .a2-fsrch svg{position:absolute;left:11px;top:11px;color:var(--mute)}
 .adm2 .a2-fsrch .a2-inp{padding-left:34px}
+.adm2 .a2-fbar .a2-inp[type=date]{width:auto;flex:0 1 160px}
 .adm2 .a2-fbar .a2-sel{width:auto;min-width:130px;flex:0 1 auto}
 .adm2 .a2-tblw{background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);overflow-x:auto}
 .adm2 .a2-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
