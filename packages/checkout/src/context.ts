@@ -66,7 +66,11 @@ export type CheckoutErrorCode =
   /** Follow-up 50: the test page's "paid" or "fail" while test payments are off or a real gateway is connected. */
   | 'TEST_PAYMENT_OFF'
   /** PR 610 (ERP contract v6): checkout pauses by itself while the ERP holds Retail's account (`erp.hold.pauseCheckout`). */
-  | 'PAUSED';
+  | 'PAUSED'
+  /** PR 725: the bag mixes practice products with real ones (one order is all practice or all real). */
+  | 'PRACTICE_MIXED'
+  /** PR 725: a practice order cannot spend real money (the wallet). */
+  | 'PRACTICE_WALLET';
 
 /** One error type for every refusal of the checkout. The `code` is stable; the shop turns it into words. */
 export class CheckoutError extends Error {

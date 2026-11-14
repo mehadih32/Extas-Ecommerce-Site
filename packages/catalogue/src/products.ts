@@ -9,7 +9,7 @@
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { emitCacheEvent } from '@extas/cache/events';
-import { allow, assertImage, changed, found, logChange, parse, TX, type CatalogueDeps, type Db, type Tx, type Who } from './context';
+import { allow, assertImage, changed, found, logChange, parse, setting, TX, type CatalogueDeps, type Db, type Tx, type Who } from './context';
 import { effectiveGarmentTypeOf } from './categories';
 import { CatalogueError } from './errors';
 import { readComposition, type Composition } from './fabrics';
@@ -178,8 +178,11 @@ export async function listProducts(deps: CatalogueDeps, who: Who, query: Product
   await allow(deps, who, 'catalogue.read');
   const d = parse(productListQuery, query, 'product list');
   const q = d.q;
+  // PR 725: with practice mode off, practice products are in no list (kept, not deleted)
+  const practice = await setting(deps, who, 'practice.enabled');
   const where: Prisma.ProductWhereInput = {
     storeId: who.storeId,
+    ...(practice.on ? {} : { isPractice: false }),
     ...(d.includeArchived ? {} : { archivedAt: null }),
     ...(d.categoryId ? { categoryId: d.categoryId } : {}),
     ...(d.brandId ? { brandId: d.brandId } : {}),

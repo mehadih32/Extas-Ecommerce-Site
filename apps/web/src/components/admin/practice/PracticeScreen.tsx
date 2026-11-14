@@ -1,6 +1,6 @@
 'use client';
-// S28 · PR 706 (CN-049) — Settings → Practice data: the practice switch, "Add sample data" and the reset dialog (the words,
-// the owner's PIN, "Also remove demo products" unticked, "Add sample data again" for Refresh). Writes go to
+// S28 · PR 706 (CN-049) — Settings → Practice data: the practice switch, "Add sample data" and the reset dialog (PR 725: the
+// owner's PIN alone, no typed words; "Also remove demo products" unticked, "Add sample data again" for Refresh). Writes go to
 // /api/admin/practice/*; every refusal is text from the messages file.
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -9,7 +9,6 @@ import type { PracticeView } from '@/lib/practice/api';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 
-const WORDS = 'RESET PRACTICE'; // hardcode-ok: the phrase the owner types, shown in the field's hint
 const KINDS = ['orders', 'customers', 'incomplete', 'claims', 'payouts', 'parcels', 'couriers', 'products'] as const;
 
 export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView }) {
@@ -17,7 +16,6 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
   const router = useRouter();
   const c = (k: string, vars?: Record<string, string | number>) => t(dict, `practice.${k}`, vars);
   const [open, setOpen] = useState(false);
-  const [words, setWords] = useState('');
   const [pin, setPin] = useState('');
   const [removeDemo, setRemoveDemo] = useState(false);
   const [refill, setRefill] = useState(false);
@@ -79,11 +77,10 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
     router.refresh();
   }
   async function reset() {
-    const a = await post('reset', { words, pin, removeDemo, refill });
+    const a = await post('reset', { pin, removeDemo, refill });
     if (a.data.ok) {
       showToast({ text: c('resetDone'), tone: 'ok' });
       setOpen(false);
-      setWords('');
       setPin('');
       setRemoveDemo(false);
       setRefill(false);
@@ -97,7 +94,7 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
         {c('ownerOnly')}
       </p>
     );
-  const canReset = words.trim() === WORDS && /^\d{4,12}$/.test(pin.trim()) && !busy;
+  const canReset = /^\d{4,12}$/.test(pin.trim()) && !busy;
   return (
     <>
       <section className="a2-card a2-mt12" data-testid="practice-card" aria-labelledby={`${id}-t`}>
@@ -163,10 +160,6 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
               </label>
               <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <input type="checkbox" checked={refill} onChange={(e) => setRefill(e.target.checked)} data-testid="practice-refill" /> {c('reset.refill')}
-              </label>
-              <label className="a2-mt12" style={{ display: 'block' }}>
-                <b>{c('reset.words')}</b>
-                <input className="a2-inp" value={words} autoComplete="off" placeholder={WORDS} onChange={(e) => setWords(e.target.value)} data-testid="practice-words" />
               </label>
               <label className="a2-mt12" style={{ display: 'block' }}>
                 <b>{c('reset.pin')}</b>

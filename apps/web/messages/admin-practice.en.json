@@ -5,8 +5,8 @@
     "sub": "Sample customers, orders, couriers and claims to practise with for the first days. Nothing here reaches a real customer, courier or the ERP.",
     "card": {
       "title": "Practice mode",
-      "lead": "While it is on, the shop holds sample data like the demo, marked Practice. Nothing is sent: no courier booking, no messages, no ads feed, no ERP.",
-      "guard": "Owner only · switching it off hides practice records from reports and lists, it does not remove them"
+      "lead": "While it is on, the shop is a practice shop: the sample products are live on the storefront and you can order from them to practise. Everything is marked Practice and nothing leaves the system: no courier booking, no messages, no ads feed, no ERP, no real money or stock.",
+      "guard": "Owner only · Turn off hides every practice product and record from the shop, lists and reports, it does not remove them. Turn on shows them again."
     },
     "mode": {
       "on": "Practice mode is on.",
@@ -32,11 +32,10 @@
     "reset": {
       "open": "Reset practice data…",
       "title": "Reset practice data",
-      "lead": "Removes every practice record and leaves a clean store. Real orders, customers and the products you uploaded stay.",
+      "lead": "Removes every practice record, picture and sample product and leaves a clean store. Real orders, customers and the products you uploaded stay. The PIN alone confirms it.",
       "backup": "Take a backup first if you are not sure (Settings › System › Backups).",
       "removeDemo": "Also remove demo products",
       "refill": "Add sample data again after (Refresh)",
-      "words": "Type RESET PRACTICE",
       "pin": "Owner PIN",
       "cancel": "Cancel",
       "go": "Reset now",

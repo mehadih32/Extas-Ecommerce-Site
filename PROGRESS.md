@@ -1,5 +1,10 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 725 (branch `claude/demo-live`, committed locally, NOT pushed, NOT in the register yet)
+
+**What.** The owner's decision of 15 Nov: while `practice.enabled` is on, the sample shop is LIVE on the storefront (practice products PUBLISHED and orderable) and fills by itself (server clock `apps/web/src/lib/practice/keeper.ts` from `instrumentation.ts`, lease-protected `ensure.ts`; pictures in steps of 6). Off = one click hides every practice product (status DRAFT; shop, search, sitemaps, bag) and the admin product lists; on shows them again. Reset needs the PIN only and keeps the automatic fill off (`practice.autoFill`). Orders made of practice products are practice orders (flagged, no real customer, no coupon or consent, test-page payment only, no ad or own-analytics event); a bag mixing practice and real products is refused (`PRACTICE_MIXED`). A small "Practice shop" notice (`practice.notice`, words and hide switch in settings).
+**Not done (follow-ups).** (1) the demo's own product list (`docs/demo/src/01-data.js` `DB.products`: exact names, prices, colours, collections, text) is not ported: the sample products still come from `CATEGORIES` in `practice/data.ts` (21 to 24 products); (2) collections, combos and journal content of the demo are not seeded; (3) nothing was run: no `node_modules`, no `tsc`, no tests on this machine; (4) file the PR in the register with a CN note before it is pushed (CLAUDE.md rule 8).
+
 ## CLOSED — 14 Nov 2026 (owner, CN-051): the project has no open work
 
 **State.** 718 PRs in the register, 709 active, 9 parked; **684 built**. S28 (admin v5) is complete, 60/60 (PR 700–718 merged 13–14 Nov; 711–718 are the eight prototype tabs). S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.

@@ -322,7 +322,9 @@
       "network": "We could not reach the shop. Press Confirm again — you will not get two orders.",
       "again": "Your bag changed after your last press. Please check it and press Confirm again. An order you already placed stays as it is.",
       "other": "Something went wrong. Please try again, or message us on WhatsApp.",
-      "paused": "We are not taking new orders for a short while. Your bag is saved — please try again a little later, or message us on WhatsApp."
+      "paused": "We are not taking new orders for a short while. Your bag is saved — please try again a little later, or message us on WhatsApp.",
+      "practiceMixed": "Practice products and real products cannot be ordered together. Please order them one at a time (take one kind out of your bag).",
+      "practiceWallet": "A practice order cannot use your wallet. Please pay another way."
     },
     "paused": {
       "title": "We are not taking new orders just now",

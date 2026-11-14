@@ -11,6 +11,14 @@
     "photoBatch": {
       "label": "Practice photos per step",
       "help": "How many sample products get their pictures in one step of Add practice photos (each product gets front, back, detail and on-model views). A small number keeps each step quick; the page repeats the steps by itself until all are done."
+    },
+    "autoFill": {
+      "label": "Fill the practice shop by itself",
+      "help": "On as shipped. While practice mode is on, the sample products, orders and pictures come by themselves and the products are live in the shop. A reset switches it off; Turn on or Add sample data switches it on again."
+    },
+    "notice": {
+      "label": "Practice shop notice",
+      "help": "The small notice on the storefront while practice mode is on. You can hide it or change its words in both languages."
     }
   }
 }

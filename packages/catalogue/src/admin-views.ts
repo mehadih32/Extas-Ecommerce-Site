@@ -77,12 +77,15 @@ export async function productStock(deps: CatalogueDeps, who: Who, productId: str
 export async function adminProductList(deps: CatalogueDeps, who: Who, query: AdminListQuery = {}): Promise<AdminProductList> {
   await allow(deps, who, 'catalogue.read');
   const d = parse(adminListQuery, query, 'product list');
-  const [pageSize, lowPieces] = await Promise.all([setting(deps, who, 'catalogue.admin.pageSize'), setting(deps, who, 'catalogue.admin.lowStockPieces')]);
+  const [pageSize, lowPieces, practice] = await Promise.all([setting(deps, who, 'catalogue.admin.pageSize'), setting(deps, who, 'catalogue.admin.lowStockPieces'), setting(deps, who, 'practice.enabled')]);
   const db = deps.db;
   const storeId = who.storeId;
   const q = d.q;
+  // PR 725: with practice mode off, practice products are in no list and no counter (they are kept, not deleted)
+  const hidePractice = practice.on ? {} : { isPractice: false };
   const where: Prisma.ProductWhereInput = {
     storeId,
+    ...hidePractice,
     ...(d.status === 'archived' ? { archivedAt: { not: null } } : { archivedAt: null }),
     ...(d.status && d.status !== 'archived' ? { status: STATUS_OF[d.status] } : {}),
     ...(d.categoryId ? { categoryId: d.categoryId } : {}),
@@ -172,13 +175,13 @@ export async function adminProductList(deps: CatalogueDeps, who: Who, query: Adm
   });
 
   // The counters cover the whole store (not just the page), like the demo's.
-  const live = { storeId, archivedAt: null } as const;
+  const live = { storeId, archivedAt: null, ...hidePractice } as const;
   const [all, byStatus, byCategory, health, allStock] = await Promise.all([
     db.product.count({ where: live }),
     db.product.groupBy({ by: ['status'], where: live, _count: { _all: true } }),
     db.product.groupBy({ by: ['categoryId'], where: live, _count: { _all: true } }),
     db.product.findMany({ where: live, select: { healthIssues: true } }),
-    db.stockLevel.groupBy({ by: ['variantId'], where: { variant: { storeId, archivedAt: null, product: { archivedAt: null } } }, _sum: { available: true } }),
+    db.stockLevel.groupBy({ by: ['variantId'], where: { variant: { storeId, archivedAt: null, product: { archivedAt: null, ...hidePractice } } }, _sum: { available: true } }),
   ]);
   const status = (s: string) => byStatus.find((b) => b.status === s)?._count._all ?? 0;
   const needPhotos = health.filter((h) => readStoredHealth(h.healthIssues)?.checks.some((c) => c.key === 'photos' && !c.ok)).length;

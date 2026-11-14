@@ -11,4 +11,7 @@ export async function register(): Promise<void> {
   startEdgeSecurity();
   const { startOrderTracking } = await import('./lib/tracking/orders');
   startOrderTracking();
+  // PR 725: the practice shop fills, shows and hides itself (cheap when nothing is to do)
+  const { startPracticeKeeper } = await import('./lib/practice/keeper');
+  startPracticeKeeper();
 }
