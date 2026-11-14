@@ -70,7 +70,8 @@
       "latest": "Latest payout requests",
       "noPayouts": "No payout requests yet.",
       "covers": "covers {amount}",
-      "paidOn": "paid {amount}"
+      "paidOn": "paid {amount}",
+      "request": "Request payout"
     },
     "opt": {
       "h": "More options",
@@ -94,6 +95,15 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Try again."
       }
+    },
+    "t": {
+      "claim": "Claim",
+      "type": "Type",
+      "amount": "Amount",
+      "deadline": "Deadline",
+      "status": "Status",
+      "requested": "Requested",
+      "paid": "Paid"
     }
   }
 }
