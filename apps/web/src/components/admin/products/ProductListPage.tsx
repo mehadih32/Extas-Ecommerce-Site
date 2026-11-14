@@ -114,6 +114,13 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
         </label>
         {query.status ? <input type="hidden" name="status" value={query.status} /> : null}
         {query.categoryId ? <input type="hidden" name="category" value={query.categoryId} /> : null}
+        <label className="pa-sort">
+          <span className="pa-vh">{t(d, 'products.sort.label')}</span>
+          <select className="ad-input" name="sort" defaultValue={query.sort ?? 'new'} aria-label={t(d, 'products.sort.label')}>
+            <option value="new">{t(d, 'products.sort.new')}</option>
+            <option value="best">{t(d, 'products.sort.best')}</option>
+          </select>
+        </label>
         <button type="submit" className="ad-btn ad-btn-ghost ad-btn-sm">
           {t(d, 'products.search.submit')}
         </button>
@@ -122,10 +129,12 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
       <nav className="ad-tabs" aria-label={t(d, 'products.filters.label')}>
         <Link className="ad-chip" href={href({ status: undefined, page: 1 })} aria-current={!query.status ? 'page' : undefined}>
           {t(d, 'products.filters.all')}
+          <span className="pa-chip-n">{num(data.strip.statusCounts.all)}</span>
         </Link>
         {(ADMIN_STATUS_FILTERS as readonly AdminStatusFilter[]).map((s) => (
           <Link key={s} className="ad-chip" href={href({ status: s, page: 1 })} aria-current={query.status === s ? 'page' : undefined}>
             {t(d, `products.filters.${s}`)}
+            <span className="pa-chip-n">{num(data.strip.statusCounts[s === 'live' ? 'live' : s === 'ready' ? 'ready' : s === 'draft' ? 'draft' : s === 'off' ? 'off' : 'archived'])}</span>
           </Link>
         ))}
       </nav>

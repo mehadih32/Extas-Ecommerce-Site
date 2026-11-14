@@ -664,6 +664,11 @@
     "insight": {
       "best": "{name} is your best seller ({n} pieces in 30 days). {sold} pieces sold on the shop in 30 days.",
       "notSelling": "{n} products on the shop sold nothing in 30 days — push them down in Shop ranking or put them in a combo."
+    },
+    "sort": {
+      "label": "Sort",
+      "new": "Sort: newest first",
+      "best": "Sort: best selling"
     }
   },
   "checks": {

@@ -133,7 +133,8 @@
         "bulk": "New bulk order",
         "phone": "Phone order",
         "phoneOff": "Phone orders are not switched on yet. For now, an order taken by phone is entered by the customer on the shop, or by the bulk order form."
-      }
+      },
+      "subTotal": "{n} orders · {v}"
     },
     "kpi": {
       "today": "Orders today",
@@ -1027,7 +1028,8 @@
       "sub": "{n} to confirm · oldest waiting {age}",
       "subNone": "Nothing waits to be confirmed",
       "full": "Full order",
-      "never": "After Confirm the next order in the queue opens."
+      "never": "After Confirm the next order in the queue opens.",
+      "callDesk": "Call desk"
     },
     "risk": {
       "title": "Risk",

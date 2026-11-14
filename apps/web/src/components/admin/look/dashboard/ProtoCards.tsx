@@ -10,7 +10,7 @@ import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { nameIn } from '@/components/admin/products/model';
 import { salesPerUnit } from '@/lib/admin-look/dashboard-data';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
-import { Bar, Card, Empty, Lnk } from '../kit';
+import { Bar, Card, Delta, Empty, Lnk, Spark } from '../kit';
 import { can, type DashProps } from './common';
 
 /** Slow stock and set-up lists are "This week"; bad-tone lists are "Urgent"; the rest is "Today" (the same split as design B). */
@@ -160,6 +160,63 @@ function MonthTarget({ p }: { p: DashProps }) {
   );
 }
 
+/** Prototype "Profit snapshot": the chosen period's sales against what it cost, and the part you keep, with the period before beside it. */
+function ProfitSnap({ p }: { p: DashProps }) {
+  const { f, data, viewer } = p;
+  const pf = data.profit;
+  if (!pf || pf.cur.netMinor === null) return null;
+  const sales = pf.cur.salesMinor;
+  const net = pf.cur.netMinor;
+  const keep = sales > 0 ? Math.max(0, Math.min(1, net / sales)) : 0;
+  const prevNet = pf.prev.netMinor;
+  return (
+    <Card title={f.t('dsh.proto.snapTitle')} sub={f.t('dsh.proto.snapSub')} right={can(viewer, 'books.read') ? <Lnk href="/admin/money">{f.t('dsh.proto.snapLink')}</Lnk> : null} testId="dash-profitsnap">
+      <div className="a3-snap">
+        <b className="a3-num">{f.money(net)}</b>
+        <Delta f={f} x={prevNet !== null && prevNet !== 0 ? (net - prevNet) / Math.abs(prevNet) : null} />
+      </div>
+      <Bar p={keep} />
+      <div className="a3-snap-r">
+        <span>{f.t('dsh.proto.snapSales', { v: f.money(sales) })}</span>
+        <span>{f.t('dsh.proto.snapCosts', { v: f.money(Math.max(0, sales - net)) })}</span>
+      </div>
+    </Card>
+  );
+}
+
+/** Prototype's six figures with a small line each: orders, delivered sales, net profit, money with couriers, return rate, ad spend. */
+function SixTiles({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  const m = data.money;
+  const pf = data.profit;
+  type T = { key: string; label: string; value: string; sub?: string; line?: readonly number[]; color: string };
+  const tiles: T[] = [];
+  if (m) {
+    tiles.push({ key: 'orders', label: f.t('dsh.proto.tOrders'), value: f.n(m.cur.ordered.orders), sub: f.money(m.cur.ordered.valueMinor), line: m.chart.orders, color: 'var(--a3-c1)' });
+    tiles.push({ key: 'sales', label: f.t('dsh.proto.tSales'), value: f.money(m.cur.sales.itemsMinor), sub: f.t('dsh.proto.tDelivered', { n: f.n(m.cur.sales.orders) }), line: m.chart.sales, color: 'var(--a3-c2, var(--a3-c1))' });
+  }
+  if (pf && pf.cur.netMinor !== null) tiles.push({ key: 'net', label: f.t('dsh.proto.tNet'), value: f.money(pf.cur.netMinor), sub: pf.cur.salesMinor > 0 ? f.t('dsh.proto.shortKeep', { pct: f.pct(pf.cur.netMinor / pf.cur.salesMinor, 0) }) : undefined, color: 'var(--a3-c1)' });
+  if (data.cod) tiles.push({ key: 'cod', label: f.t('dsh.proto.tCod'), value: f.money(data.cod.minor), sub: f.t('dsh.proto.tParcels', { n: f.n(data.cod.parcels) }), color: 'var(--a3-c1)' });
+  if (data.delivery) tiles.push({ key: 'ret', label: f.t('dsh.proto.tReturn'), value: f.pct(data.delivery.returnRate), sub: f.t('dsh.proto.tOfFinished', { n: f.n(data.delivery.finished) }), color: 'var(--a3-c1)' });
+  if (pf) {
+    const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
+    tiles.push({ key: 'ads', label: f.t('dsh.proto.tAds'), value: pf.cur.adsMinor === null ? '—' : f.money(pf.cur.adsMinor), sub: per === null ? undefined : `${per.toFixed(1)}x`, color: 'var(--a3-c1)' });
+  }
+  if (!tiles.length) return null;
+  return (
+    <div className="a3-six" data-testid="dash-six">
+      {tiles.map((t) => (
+        <div className="a3-card a3-kpi" key={t.key} data-testid={`dash-six-${t.key}`}>
+          <span className="a3-cap">{t.label}</span>
+          <b className="a3-num a3-six-v">{t.value}</b>
+          {t.sub ? <span className="a3-cap c">{t.sub}</span> : null}
+          {t.line && t.line.length > 1 ? <Spark id={`six-${t.key}`} values={t.line} color={t.color} w={120} h={32} /> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** The prototype's lower Home cards. Left out entirely when none of them has anything the person may read. */
 export function ProtoCards(p: DashProps) {
   const { data, viewer } = p;
@@ -171,10 +228,14 @@ export function ProtoCards(p: DashProps) {
     canMoney ? <InShort key="short" p={p} /> : null,
     canMoney ? <MonthTarget key="goal" p={p} /> : null,
   ].filter(Boolean);
-  if (!cards.length) return null;
+  if (!cards.length && !canMoney) return null;
   return (
-    <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: Math.min(3, cards.length) }} data-testid="dash-proto">
-      {cards}
-    </div>
+    <>
+      {canMoney ? <ProfitSnap p={p} /> : null}
+      {canMoney ? <SixTiles p={p} /> : null}
+      <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: Math.min(3, cards.length) }} data-testid="dash-proto">
+        {cards}
+      </div>
+    </>
   );
 }

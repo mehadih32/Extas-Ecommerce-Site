@@ -160,9 +160,23 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
   // follow-up 222: the ticked orders' files (Export, Print invoices), each with its own key
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
+  // PR 722 (prototype "861 orders · ৳19,50,785"): on the unfiltered list, the count and the value of the orders that count (not cancelled, not a draft);
+  // the value only for a person who may read money. Any filter or view keeps the page's own sentence.
+  let sub: string = t(d, 'orders.list.sub');
+  if (query.view === 'all' && !filtered && !query.sort && a.perms.has('metrics.read')) {
+    try {
+      const [sum, currency] = await Promise.all([
+        a.deps.db.order.aggregate({ where: { storeId: MOTHER_STORE_ID, archivedAt: null, status: { notIn: ['DRAFT', 'CANCELLED'] } }, _sum: { totalMinor: true } }),
+        a.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+      ]);
+      sub = t(d, 'orders.list.subTotal', { n: formatNumber(data.counts.all ?? 0, view.locale), v: formatMoney(sum._sum.totalMinor ?? 0, moneyOf(currency, view.locale)) });
+    } catch {
+      sub = t(d, 'orders.list.sub');
+    }
+  }
   return (
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
       <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />

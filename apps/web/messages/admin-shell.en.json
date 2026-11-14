@@ -846,7 +846,21 @@
       "shortBest": "{name} brings the most money: {v}.",
       "shortNone": "Nothing to sum up yet.",
       "targetLine": "Target {goal} · {pct} done",
-      "targetSold": "Delivered sales this month {sales} · {n} days left"
+      "targetSold": "Delivered sales this month {sales} · {n} days left",
+      "snapTitle": "Profit snapshot",
+      "snapSub": "Green is what you keep, the rest is what it cost",
+      "snapLink": "Profit & loss",
+      "snapSales": "Sales {v}",
+      "snapCosts": "Costs {v}",
+      "tOrders": "Orders",
+      "tSales": "Sales (delivered)",
+      "tDelivered": "{n} delivered",
+      "tNet": "Net profit",
+      "tCod": "Money with couriers",
+      "tParcels": "{n} parcels",
+      "tReturn": "Return rate",
+      "tOfFinished": "of {n} finished parcels",
+      "tAds": "Ad spend"
     }
   },
   "look": {

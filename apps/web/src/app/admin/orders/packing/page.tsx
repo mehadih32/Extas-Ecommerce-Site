@@ -207,6 +207,9 @@ export default async function PackPage({ searchParams }: Props) {
         sub={t(d, 'ful.pack.sub')}
         right={
           <>
+            <button type="button" className="a2-btn is-off" disabled title={t(d, 'ful.pack.peakOff')} data-testid="pack-peak-off">
+              {t(d, 'ful.pack.peak')}
+            </button>
             <Link className="a2-btn" href="/admin/orders/packing/print" data-testid="pack-print-all">
               <ShellIcon name="print" size={15} />
               {t(d, 'ful.pack.printAll')}

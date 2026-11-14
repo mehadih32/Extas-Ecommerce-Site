@@ -711,7 +711,9 @@
           "packOnPrint": "A printed sticker means packed",
           "packOnPrintHelp": "Off: packing is its own step. On: printing a confirmed order's sticker marks it Packed (no piece scan)."
         }
-      }
+      },
+      "peak": "Peak / Eid mode",
+      "peakOff": "Peak and Eid mode is not switched on yet. Today the packing queue works the same on every day."
     },
     "printRun": {
       "press": {

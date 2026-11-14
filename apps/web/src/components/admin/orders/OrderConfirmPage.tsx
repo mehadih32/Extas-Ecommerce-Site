@@ -150,7 +150,7 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
   ) : null;
   return (
     <div className="a2-z" data-testid="orders-confirm" data-lm-ready="">
-      <PageHead view={view} place={locateKey('ordersConfirm')} title={t(d, 'orders.page.confirm')} sub={sub} />
+      <PageHead view={view} place={locateKey('ordersConfirm')} title={t(d, 'orders.page.confirm')} sub={sub} right={<Link className="a2-btn" href="/admin/orders/confirm/calls" data-testid="orders-call-desk">{t(d, 'orders.confirm.callDesk')}</Link>} />
       <SectionTabs view={view} current="ordersConfirm" />
       <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
       {list.rows.length ? (

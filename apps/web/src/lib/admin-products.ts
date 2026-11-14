@@ -59,6 +59,8 @@ export interface ProductQuery {
   status?: AdminStatusFilter;
   categoryId?: string;
   page: number;
+  /** PR 722: "Sort: best selling" (pieces sold in 30 days); absent = newest first. */
+  sort?: 'new' | 'best';
 }
 
 export interface ProductListData {
@@ -100,6 +102,8 @@ export interface ProductStrip {
   floorMarginPct: number | null;
   /** Shop products whose average margin is under that floor (0 when no floor). */
   belowFloor: number;
+  /** PR 722: how many products are in each status chip (archived ones only under Archived). */
+  statusCounts: { all: number; live: number; ready: number; draft: number; off: number; archived: number };
 }
 
 const DAY_MS = 86_400_000;
@@ -124,18 +128,21 @@ export async function loadProductList(c: CatalogueAccess, locale: string, query:
 
 /** PR 722: the extra columns of the product table and the headline strip. Reads only; a failure leaves them empty (the list still draws). */
 export async function loadProductExtras(c: CatalogueAccess, ids: string[], lowPieces: number, showsBuying: boolean): Promise<{ extras: Record<string, ProductExtras>; strip: ProductStrip }> {
-  const empty = { extras: {}, strip: { sold30Pieces: 0, avgMarginPct: null, notSelling: 0, best: null, floorMarginPct: null, belowFloor: 0 } as ProductStrip };
+  const empty = { extras: {}, strip: { sold30Pieces: 0, avgMarginPct: null, notSelling: 0, best: null, floorMarginPct: null, belowFloor: 0, statusCounts: { all: 0, live: 0, ready: 0, draft: 0, off: 0, archived: 0 } } as ProductStrip };
   try {
     const db = c.deps.db;
     const since = new Date(((c.deps.now ?? (() => new Date()))()).getTime() - 30 * DAY_MS);
-    const [pageProducts, sold, shop, floor] = await Promise.all([
+    const [pageProducts, sold, shop, floor, byStatus, archivedCount] = await Promise.all([
       ids.length
         ? db.product.findMany({ where: { storeId: c.storeId, id: { in: ids } }, select: { id: true, erpStyleCode: true, variants: { where: { archivedAt: null }, select: { id: true, priceMinor: true, compareAtMinor: true, shopPriceMinor: true } } } })
         : Promise.resolve([]),
       db.orderItem.groupBy({ by: ['productId'], where: { storeId: c.storeId, productId: { not: null }, status: 'ACTIVE', order: { status: { in: [...SOLD_STATUS] }, placedAt: { gte: since } } }, _sum: { quantity: true } }),
       db.product.findMany({ where: { storeId: c.storeId, status: 'PUBLISHED', archivedAt: null }, select: { id: true, nameEn: true, category: { select: { nameEn: true } }, variants: { where: { archivedAt: null }, select: { priceMinor: true, shopPriceMinor: true } } } }),
       Promise.resolve(c.deps.settings.value('catalogue.floor.minMarginPercent', { storeId: c.storeId })).then((v): number | null => (typeof v === 'number' ? v : null)),
+      db.product.groupBy({ by: ['status'], where: { storeId: c.storeId, archivedAt: null }, _count: { _all: true } }),
+      db.product.count({ where: { storeId: c.storeId, archivedAt: { not: null } } }),
     ]);
+    const inStatus = (st: string) => byStatus.find((b) => b.status === st)?._count._all ?? 0;
     const floorMarginPct = showsBuying && floor != null ? Math.round(((floor * 100) / (100 + floor)) * 10) / 10 : null;
     const soldBy = new Map(sold.map((r) => [r.productId as string, r._sum.quantity ?? 0]));
     const stock = await stockByVariant(db, c.storeId, pageProducts.flatMap((p) => p.variants.map((v) => v.id)));
@@ -165,6 +172,7 @@ export async function loadProductExtras(c: CatalogueAccess, ids: string[], lowPi
         notSelling: ranked.filter((r) => r.sold30 === 0).length,
         best: ranked[0] && ranked[0].sold30 > 0 ? ranked[0] : null,
         floorMarginPct,
+        statusCounts: { all: byStatus.reduce((n, b) => n + b._count._all, 0), live: inStatus('PUBLISHED'), ready: inStatus('READY_TO_PUBLISH'), draft: inStatus('DRAFT'), off: inStatus('UNPUBLISHED'), archived: archivedCount },
         belowFloor: floorMarginPct === null ? 0 : shop.filter((p) => { const m = marginOf(p.variants); return m !== null && m < floorMarginPct; }).length,
       },
     };
@@ -177,6 +185,7 @@ export async function loadProductExtras(c: CatalogueAccess, ids: string[], lowPi
 export function productsHref(query: ProductQuery, o: { q?: string; status?: string; category?: string; page?: number }): string {
   const p = new URLSearchParams();
   const merged = { q: query.q, status: query.status, category: query.categoryId, ...o };
+  if (query.sort && query.sort !== 'new') p.set('sort', query.sort);
   if (merged.q) p.set('q', merged.q);
   if (merged.status) p.set('status', merged.status);
   if (merged.category) p.set('category', merged.category);
