@@ -28,6 +28,11 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     t = await createTestDatabase('practice');
     [S] = await seedSampleStores(t.prisma);
     const db = t.prisma;
+    // the default pack's categories (a live store has them; the sample store's own names differ)
+    for (const slug of ['polos', 'tshirts', 'shirts', 'panjabi', 'trousers', 'hoodies']) {
+      const has = await db.category.findFirst({ where: { storeId: S, slug }, select: { id: true } });
+      if (!has) await db.category.create({ data: { storeId: S, slug, nameEn: slug } });
+    }
     // real records that a reset must never touch
     const cust = await db.customer.create({
       data: { storeId: S, phone: '+8801700009999', name: 'Real Customer' },

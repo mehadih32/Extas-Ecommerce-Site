@@ -168,7 +168,7 @@ export async function addPracticePhotos(
     select: {
       id: true,
       nameEn: true,
-      productColours: {
+      colours: {
         where: { archivedAt: null },
         orderBy: { sortOrder: "asc" },
         select: { colourId: true, colour: { select: { hex: true } } },
@@ -185,7 +185,7 @@ export async function addPracticePhotos(
       (c.names as readonly string[]).includes(name),
     )?.code;
     const kind = (code && KIND_OF[code]) || "tee";
-    const cols = p.productColours.filter((c) => c.colour.hex);
+    const cols = p.colours.filter((c) => c.colour.hex);
     if (!cols.length) continue;
     const have = await deps.db.productMedia.findMany({
       where: {
