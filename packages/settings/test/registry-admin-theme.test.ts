@@ -21,20 +21,20 @@ describe('admin theme setting (v234)', () => {
   });
 
   it('ships Lumen in coral with full motion', () => {
-    expect(adminThemeSettings['admin.theme'].default).toEqual({ look: 'lumen', accent: '#FF5A36', reduceMotion: false });
+    expect(adminThemeSettings['admin.theme'].default).toEqual({ look: 'lumen', accent: '#C2410C', reduceMotion: false });
     expect(adminThemeSchema.safeParse(adminThemeSettings['admin.theme'].default).success).toBe(true);
   });
 
   it('lists four looks; only the built ones (Lumen) can be chosen', () => {
     expect(ADMIN_THEME_LOOKS.map((l) => l.id)).toEqual(['lumen', 'clear', 'night', 'studio']);
     expect(BUILT_ADMIN_LOOKS).toEqual(['lumen']);
-    expect(adminThemeSchema.safeParse({ look: 'clear', accent: '#FF5A36', reduceMotion: false }).success).toBe(false);
+    expect(adminThemeSchema.safeParse({ look: 'clear', accent: '#C2410C', reduceMotion: false }).success).toBe(false);
   });
 
   it('checks the accent colour', () => {
     for (const accent of ['#12B5A6', '#7c5cff']) expect(adminThemeSchema.safeParse({ look: 'lumen', accent, reduceMotion: false }).success).toBe(true);
     for (const accent of ['red', '#FFF', '#12B5A6;x', 'url(x)', '#12B5A699']) expect(adminThemeSchema.safeParse({ look: 'lumen', accent, reduceMotion: true }).success, accent).toBe(false);
-    expect(adminThemeSchema.safeParse({ look: 'lumen', accent: '#FF5A36', reduceMotion: false, extra: 1 }).success).toBe(false);
+    expect(adminThemeSchema.safeParse({ look: 'lumen', accent: '#C2410C', reduceMotion: false, extra: 1 }).success).toBe(false);
   });
 
   it('offers ready accent swatches, coral first (the shipped default), each a valid colour', () => {

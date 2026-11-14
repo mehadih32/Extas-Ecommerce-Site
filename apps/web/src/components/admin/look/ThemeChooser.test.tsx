@@ -19,7 +19,7 @@ function props(dict: typeof en, over: Partial<ThemeChooserProps> = {}): ThemeCho
   const th = words(dict);
   return {
     looks: ADMIN_THEME_LOOKS.map((l) => ({ id: l.id, letter: l.letter, built: l.built, name: th.looks[l.id]!.name, desc: th.looks[l.id]!.desc })),
-    now: { look: 'lumen', mode: 'light', motion: 'full', accent: '#FF5A36' },
+    now: { look: 'lumen', mode: 'light', motion: 'full', accent: '#C2410C' },
     mine: { accent: null },
     team: null,
     swatches: ADMIN_ACCENT_PRESETS.map((p) => ({ id: p.id, hex: p.hex, name: th.swatch[p.id]! })),
@@ -47,7 +47,7 @@ describe('Admin look: theme', () => {
   });
 
   it('marks the person’s own accent and dark mode, and shows the team part with settings.write', () => {
-    const html = renderToStaticMarkup(<ThemeChooser {...props(en, { now: { look: 'lumen', mode: 'dark', motion: 'reduce', accent: '#7C5CFF' }, mine: { accent: '#7C5CFF' }, team: { accent: '#FF5A36', reduceMotion: false } })} />);
+    const html = renderToStaticMarkup(<ThemeChooser {...props(en, { now: { look: 'lumen', mode: 'dark', motion: 'reduce', accent: '#7C5CFF' }, mine: { accent: '#7C5CFF' }, team: { accent: '#C2410C', reduceMotion: false } })} />);
     expect(html).toMatch(/aria-checked="true" class="on"[^>]*data-value="dark"/);
     expect(html).toMatch(/aria-checked="true" class="lm-swatch on"[^>]*data-value="violet"/);
     expect(html).toContain("Use the team&#x27;s colour");
