@@ -161,6 +161,10 @@ async function run() {
     const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
     const page = await context.newPage();
     watchPage(page, base, ignore, () => step, problems, secrets);
+    const dropExpected404 = (label) => {
+      for (let i = problems.length - 1; i >= 0; i--)
+        if (problems[i].startsWith(`${label}:`) && /404/.test(problems[i])) problems.splice(i, 1);
+    };
     const check = async (status) => problems.push(...pageProblems(step, status, await page.innerText("body")));
 
     step = "0 legacy browser state (CN-043)";
@@ -281,8 +285,11 @@ async function run() {
     step = "6 a protected page goes back to sign-in";
     r = await page.goto(`${base}${landed}`);
     await settle(page);
-    if (!onLogin(page.url())) problems.push(`${step}: ${landed} opened at ${here(page)} after logging out`);
-    await check(r?.status() ?? 0);
+    // Signed out, a protected admin page answers a bare 404 (CN-053): it must show nothing, or the sign-in.
+    const gone6 = r?.status() === 404;
+    if (!gone6 && !onLogin(page.url())) problems.push(`${step}: ${landed} opened at ${here(page)} after logging out`);
+    if (gone6) dropExpected404(step);
+    else await check(r?.status() ?? 0);
     console.log(`ok   ${step} (${landed} → ${here(page)})`);
 
     step = "6b the old session cookie is dead";
@@ -296,8 +303,10 @@ async function run() {
       watchPage(old, base, ignore, () => step, problems, secrets);
       r = await old.goto(`${base}${landed}`);
       await settle(old);
-      if (!onLogin(old.url())) problems.push(`${step}: the cookie from before the log-out still opens ${landed}`);
-      problems.push(...pageProblems(step, r?.status() ?? 0, await old.innerText("body")));
+      const gone6b = r?.status() === 404;
+      if (!gone6b && !onLogin(old.url())) problems.push(`${step}: the cookie from before the log-out still opens ${landed}`);
+      if (gone6b) dropExpected404(step);
+      else problems.push(...pageProblems(step, r?.status() ?? 0, await old.innerText("body")));
       console.log(`ok   ${step} (${landed} → ${new URL(old.url()).pathname})`);
     } finally {
       await replay.close();
