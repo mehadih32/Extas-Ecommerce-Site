@@ -24,3 +24,4 @@
 .adm2 .cl-kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin-top: 8px; }
 .adm2 .cl-kv dd { text-align: right; font-weight: 700; overflow-wrap: anywhere; }
 .adm2 .cl-pager { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.adm2 [data-testid="claims-off"] a { display: inline-flex; align-items: center; min-height: 44px; }
