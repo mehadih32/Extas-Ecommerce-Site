@@ -1,5 +1,9 @@
 // S28 · PR 706 (CN-049) — the Practice data screen's server side: the view, the practice-mode switch, "Add sample data" and
-// "Reset practice data" (owner only; the owner's PIN and the typed words RESET PRACTICE; it removes only practice rows).
+// "Reset practice data" (owner only; the owner's PIN alone since PR 725, no typed words; it removes only practice rows).
+// PR 725 (15 Nov 2026): while practice mode is on the sample shop is LIVE on the storefront (products published and
+// orderable) and fills by itself (ensure.ts / keeper.ts); switching it off hides every practice product and record with one
+// click, switching it on shows them again; a reset removes them and keeps the automatic fill off until "Turn on" or "Add
+// sample data" asks for it again.
 // Practice mode (`practice.enabled`) is off as shipped. The Reset button is shown while `practice.showReset` is on (it is
 // on by default; the owner turns it off himself later) and is refused by the server when it is off.
 // Align with Start fresh (PR 706's one-time clearing): its run calls `resetPractice` too, so one clean-up covers both.
@@ -11,11 +15,13 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../
 import { requireOwnerPin } from '../owner-pin';
 import { practiceCounts, resetPractice, type ResetResult } from './reset';
 import type { MediaDeps } from '@extas/media';
+import { ensurePractice } from './ensure';
 import { addPracticePhotos, practicePhotoProgress } from './photos';
 import { seedPractice, type SeedResult } from './seed';
+import { syncPracticeVisibility } from './visibility';
 
-/** The words typed to confirm a reset. */
-export const RESET_WORDS = 'RESET PRACTICE'; // hardcode-ok: the confirmation phrase the owner's decision names
+/** The words once typed to confirm a reset (PR 725: no longer asked; the PIN alone confirms). */
+export const RESET_WORDS = 'RESET PRACTICE'; // hardcode-ok: kept so nothing that imported it breaks
 
 export interface PracticeView {
   enabled: boolean;
@@ -63,6 +69,9 @@ export async function setPracticeMode(deps: AdminDeps, actor: Actor, ctx: Reques
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   const cur = await deps.resolver.value('practice.enabled', { storeId });
   await deps.resolver.set('practice.enabled', { on: b.data.on }, storeTarget(storeId), { actorId: actor.staffUserId, reason: 'Settings › Practice data' });
+  // PR 725: on = the sample shop fills by itself and goes live; off = every practice product leaves the shop (nothing is deleted)
+  if (b.data.on) await deps.resolver.set('practice.autoFill', { on: true }, storeTarget(storeId), { actorId: actor.staffUserId, reason: 'Settings › Practice data' });
+  await ensurePractice({ db: deps.db, resolver: deps.resolver, now: deps.now }, storeId, { photos: false, force: b.data.on }).catch((e: unknown) => console.warn(`practice: ${(e instanceof Error ? e.message : String(e)).split('\n')[0]}`)); // the server clock tries again
   await audit(
     deps.db,
     actor,
@@ -84,7 +93,10 @@ export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestC
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
   const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date(), { rich });
-  // The pictures of the sample products are NOT made here (too slow for one press): they come in small steps (`addPhotosBatch`).
+  // PR 725: the sample products go live now; their pictures are made in small steps by the server clock (ensure.ts), never in this request;
+  // the "Add practice photos" button (`addPhotosBatch`, PR 720) can still make them by hand with the same function
+  await deps.resolver.set('practice.autoFill', { on: true }, storeTarget(storeId), { actorId: actor.staffUserId, reason: 'Settings › Practice data' });
+  await syncPracticeVisibility(deps.db, storeId, true, deps.now ? deps.now() : new Date());
   void media;
   if (result.seeded)
     await audit(
@@ -145,7 +157,6 @@ export async function addPhotosBatch(deps: AdminDeps, actor: Actor, ctx: Request
 
 const resetBody = z
   .object({
-    words: z.string(),
     pin: z.string(),
     removeDemo: z.boolean().optional(),
     refill: z.boolean().optional(),
@@ -166,12 +177,15 @@ export async function resetPracticeData(
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   const [enabled, show] = await Promise.all([deps.resolver.value('practice.enabled', { storeId }), deps.resolver.value('practice.showReset', { storeId })]);
   if (!show.on) return { ok: false, error: 'RESET_HIDDEN' };
-  if (b.data.words.trim() !== RESET_WORDS) return { ok: false, error: 'WORDS_MISMATCH' };
   await requireOwnerPin(deps, actor, ctx, b.data.pin, 'practice.reset', storeId); // throws the PIN errors
   const result = await resetPractice(deps.db, storeId, {
     removeDemo: b.data.removeDemo === true,
   });
-  const seeded = b.data.refill && enabled.on ? await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date()) : null;
+  // PR 725: after a reset the sample shop stays empty (the automatic fill is switched off) unless he asked to refill
+  const refill = b.data.refill === true && enabled.on;
+  await deps.resolver.set('practice.autoFill', { on: refill }, storeTarget(storeId), { actorId: actor.staffUserId, reason: 'Settings › Practice data' });
+  const seeded = refill ? await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date()) : null;
+  if (refill) await syncPracticeVisibility(deps.db, storeId, true, deps.now ? deps.now() : new Date());
   void media;
 
   await audit(

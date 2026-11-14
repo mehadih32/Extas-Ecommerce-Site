@@ -74,7 +74,7 @@ export function refusal(e: unknown): Response {
  * its own status.
  */
 export function placeRefusal(e: unknown): Response {
-  if (e instanceof CheckoutError && e.code === 'PAUSED') return json({ ok: false, error: e.code }, { status: 200 });
+  if (e instanceof CheckoutError && (e.code === 'PAUSED' || e.code === 'PRACTICE_MIXED' || e.code === 'PRACTICE_WALLET')) return json({ ok: false, error: e.code }, { status: 200 });
   return refusal(e);
 }
 
@@ -344,16 +344,19 @@ export async function placeHandler(request: Request, deps: CheckoutApiDeps | nul
     const r = await placeOrder(deps.checkout, { storeId: deps.storeId, visitorId: visitor, customerId, ip, deviceId: device, attribution, supportRef, input: b });
     if (!r.replay) {
       await noteBotSignals({ db: deps.checkout.db, settings: deps.checkout.settings }, { form: 'checkout', sent: human, storeId: deps.storeId, ip });
-      await orderLanded(deps, r.orderId);
-      // PR 250: the journal articles this browser read before ordering get the order (`blog.performance`; never fails it)
-      await creditOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: readCookie(request, READ_COOKIE) });
-      // PR 592: the house ad this browser clicked last within the credit days gets the order (`blog.houseAds`; never fails it)
-      await creditAdOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: clickCookieOf(request) });
-      // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
-      // follow-up 605: here only for cash on delivery with nothing to pay first; a prepaid or advance order goes once paid
-      await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId, at: 'placed' });
-      // S15 · PR 338: the owner's own Analytics section hears of the order too, while `analytics.events` is on (quiet)
-      await recordPurchaseAnalytics(request, { storeId: deps.storeId, orderId: r.orderId, number: r.number });
+      // PR 725: a practice order feeds none of the real reports: no journal or house-ad credit, no ad platform, no own analytics
+      if (!r.practice) {
+        await orderLanded(deps, r.orderId);
+        // PR 250: the journal articles this browser read before ordering get the order (`blog.performance`; never fails it)
+        await creditOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: readCookie(request, READ_COOKIE) });
+        // PR 592: the house ad this browser clicked last within the credit days gets the order (`blog.houseAds`; never fails it)
+        await creditAdOrder(deps.checkout.db, deps.checkout.settings, { storeId: deps.storeId, orderId: r.orderId, cookie: clickCookieOf(request) });
+        // PR 257: the purchase goes to the ad platforms from the server while tracking is on (quiet, never stops the order)
+        // follow-up 605: here only for cash on delivery with nothing to pay first; a prepaid or advance order goes once paid
+        await trackPurchase(request, { storeId: deps.storeId, orderId: r.orderId, at: 'placed' });
+        // S15 · PR 338: the owner's own Analytics section hears of the order too, while `analytics.events` is on (quiet)
+        await recordPurchaseAnalytics(request, { storeId: deps.storeId, orderId: r.orderId, number: r.number });
+      }
     }
     const lang = langOf(b.lang);
     const days = await deps.checkout.settings.value('bag.keepDays', { storeId: deps.storeId });

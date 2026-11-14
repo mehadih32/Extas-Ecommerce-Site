@@ -449,6 +449,9 @@ export function CheckoutForm({
       window.location.assign(bagHref);
       return;
     }
+    // PR 725: practice products and real ones cannot be ordered together; a practice order cannot use the wallet
+    if (a.error === 'PRACTICE_MIXED') return showToast(formEl, w('err.practiceMixed'));
+    if (a.error === 'PRACTICE_WALLET') return showToast(formEl, w('err.practiceWallet'));
     showToast(formEl, w('err.other'));
   };
   // C6.4: a browser that filled the boxes from its own saved details shows them to the page on the first touch; they

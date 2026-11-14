@@ -37,6 +37,17 @@ import { autoAltAfterAttach } from './seo/alt-text-data';
 
 const holder = globalThis as unknown as { __mediaDeps?: MediaDeps; __mediaVault?: Pick<Vault, 'get'> | null };
 
+/** PR 725: the media dependencies for the server's own clock (no request is running, so a deferred task runs here at once). */
+export function backgroundMediaDeps(): MediaDeps | null {
+  const settings = settingsResolver();
+  if (!settings) return null;
+  if (holder.__mediaVault === undefined) {
+    const key = process.env.VAULT_MASTER_KEY;
+    holder.__mediaVault = key && key.length >= 32 ? createVault(getPrisma(), key) : null;
+  }
+  return mediaRuntime({ db: getPrisma(), settings, vault: holder.__mediaVault, defer: (task) => void task().catch(() => undefined) });
+}
+
 /** The media dependencies, or null when the server gave the app no database (CI, `next build`). */
 export function mediaDeps(): MediaDeps | null {
   const settings = settingsResolver();

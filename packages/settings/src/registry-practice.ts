@@ -25,6 +25,10 @@ const base = {
   version: V,
 } as const;
 
+/** PR 725: the small "Practice shop" notice on the storefront while practice mode is on (the owner can hide it or change its words). */
+export const practiceNoticeSchema = z.object({ show: z.boolean(), textEn: z.string().max(200), textBn: z.string().max(200) }).strict();
+export type PracticeNoticeSettings = z.output<typeof practiceNoticeSchema>;
+
 export const practiceSettings = {
   'practice.enabled': setting({
     ...base,
@@ -47,5 +51,22 @@ export const practiceSettings = {
     labelKey: 'practice.photoBatch.label',
     helpKey: 'practice.photoBatch.help',
     sortOrder: 730,
+  }),
+  // PR 725: the sample data fills by itself while practice mode is on (on as shipped); a reset switches it off, "Turn on" or "Add sample data" switches it on again.
+  'practice.autoFill': setting({
+    ...base,
+    default: { on: true }, // hardcode-ok: the owner's decision of 15 Nov 2026: the practice shop fills by itself while practice is on
+    labelKey: 'practice.autoFill.label',
+    helpKey: 'practice.autoFill.help',
+    sortOrder: 731,
+  }),
+  // PR 725: the notice's words are settings, in both languages; the owner can hide it.
+  'practice.notice': setting({
+    ...base,
+    schema: practiceNoticeSchema,
+    default: { show: true, textEn: 'Practice shop: the products and orders here are samples.', textBn: 'প্র্যাকটিস দোকান: এখানকার পণ্য আর অর্ডার নমুনা।' }, // hardcode-ok: the default words of the practice notice, edited in Settings
+    labelKey: 'practice.notice.label',
+    helpKey: 'practice.notice.help',
+    sortOrder: 732,
   }),
 };

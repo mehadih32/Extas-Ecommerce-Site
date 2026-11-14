@@ -19,6 +19,7 @@ export * from './quote';
 export * from './payment';
 export * from './consent';
 export * from './place';
+export * from './practice';
 export * from './receipt';
 export * from './advance';
 // S06 · PR 562: a flagged checkout kept once per bag for the flag outcome report (flag-shown.ts).

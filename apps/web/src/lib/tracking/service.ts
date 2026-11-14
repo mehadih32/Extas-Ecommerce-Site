@@ -120,6 +120,9 @@ export async function recordEvent(deps: TrackingDeps, input: RecordInput): Promi
       ? recordsFeed(s, await deps.resolver.value('ads.deliveredPurchase', at), await deps.resolver.value('ads.conversionFeed', at), name, input.test)
       : records(s, name, input.test);
   if (!on) return { recorded: false };
+  // PR 725: a view or cart event of a practice product (sample data) never reaches an ad platform either
+  const skus = input.items.map((i) => i.sku).filter((x): x is string => !!x);
+  if (skus.length && (await deps.db.productVariant.count({ where: { storeId: input.storeId, sku: { in: skus }, product: { isPractice: true } } })) > 0) return { recorded: false };
   const currency = input.currency ?? (await deps.resolver.value('store.currency', at));
   const platforms = input.platforms ?? tickedPlatforms(s);
   const eventId = input.eventId && EVENT_ID.test(input.eventId) ? input.eventId : `${input.name}-${randomUUID()}`;

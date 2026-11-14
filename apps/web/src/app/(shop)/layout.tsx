@@ -14,6 +14,7 @@
 // S06 · PR 556: while the in-transit duplicate notice is on, the visit's campaign is kept in the tab (CampaignKeep).
 // S02 · PR 79: while `language.frontEdit` is on, the switch for editing the page's words (WordsEditLoader; the panel
 // itself loads only on a page opened with ?words=edit).
+// S28 · PR 725: the small "Practice shop" notice while `practice.enabled` is on and `practice.notice` is shown.
 // S02 · PR 600: while `shop.pageEdit` is on, the signed-in owner's on-page edit bar (PageEditBar; lib/website/page-edit-
 // shop decides, from the admin session, so a customer's page carries nothing for it).
 import type { Metadata } from 'next';
@@ -35,6 +36,7 @@ import { BehaviourBeacon } from '@/components/shop/BehaviourBeacon';
 import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { WordsEditLoader } from '@/components/shop/WordsEditLoader';
 import { PageEditBar } from '@/components/shop/PageEditBar';
+import { PracticeNotice } from '@/components/shop/PracticeNotice';
 import { pageKindOf } from '@/lib/website/page-edit-model';
 import { pageEditState } from '@/lib/website/page-edit-shop';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
@@ -64,7 +66,9 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'analytics.events': analyticsEvents,
     'analytics.visitors': analyticsVisitors,
     'analytics.behaviour': analyticsBehaviour,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors', 'analytics.behaviour'] as const, c.storeId);
+    'practice.enabled': practiceOn,
+    'practice.notice': practiceNotice,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors', 'analytics.behaviour', 'practice.enabled', 'practice.notice'] as const, c.storeId);
   // PR 600: the owner's on-page edit bar (null for everyone else; nothing is read without an admin session)
   const pageEdit = await pageEditState();
   const trackView = tracking.on && tracking.events.view;
@@ -102,6 +106,8 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
       {analyticsEvents.on ? <AnalyticsBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], collect: analyticsVisitors.collect }} /> : null}
       {analyticsBehaviour.collect ? <BehaviourBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'] }} /> : null}
       {transit.enabled ? <CampaignKeep /> : null}
+      {/* PR 725: the small "Practice shop" notice while practice mode is on (the owner's words, hideable) */}
+      {practiceOn.on && practiceNotice.show ? <PracticeNotice text={c.lang === 'bn' ? practiceNotice.textBn : practiceNotice.textEn} /> : null}
       {children}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
       {frontEdit.enabled ? <WordsEditLoader /> : null}

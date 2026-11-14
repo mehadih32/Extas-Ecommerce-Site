@@ -60,6 +60,7 @@ import { paymentInputSchema, isPrepaid, type PaymentChoice } from './payment';
 import { checkForm, fieldOrder, phoneNormalizeBD, type FieldProblem } from './pure';
 import { checkoutQuote, viewOf, WALLET_ACTIVE, type CheckoutQuote } from './quote';
 import { creditSupportShare, supportShareFor } from './support-credit';
+import { practiceKindOf } from './practice';
 import { isLow } from './voice';
 
 const TEXT_MAX = 2_000;
@@ -184,6 +185,8 @@ export interface PlaceResult {
   next: PlaceNext;
   /** The order was placed before with this key (a second press, a retry after a lost answer). */
   replay: boolean;
+  /** PR 725: a practice order (all its products are practice products): nothing about it leaves the system. */
+  practice?: boolean;
 }
 
 /** The order's flags the team's screens read (PR 563 address queue, the payment follow-up). */
@@ -418,6 +421,12 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   // SIM-F-003: the money stored is the money shown, or nothing is stored.
   if (q.fingerprint !== d.fingerprint) throw new CheckoutError('PRICE_CHANGED', 'the checkout changed since the page showed it', [], { view: viewOf(q) });
   const t = q.totals;
+  // PR 725: practice products (sample data the owner orders from to practise) make a practice order; a bag that mixes
+  // practice and real products is refused, and a practice order never spends real money (the wallet).
+  const kind = await practiceKindOf(deps.db, storeId, orderLinesOf(q, await bagLines(deps.db, storeId, cartId)).map((r) => r.productId));
+  if (kind === 'mixed') throw new CheckoutError('PRACTICE_MIXED', 'the bag mixes practice products with real ones');
+  const practice = kind === 'practice';
+  if (practice && t.walletMinor > 0) throw new CheckoutError('PRACTICE_WALLET', 'a practice order cannot use the wallet');
   const choice = q.pay.chosen;
   if (t.dueMinor > 0 && !choice) throw new CheckoutError('NO_PAYMENT', 'no payment method is open for this order');
 
@@ -487,7 +496,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
       const share = await supportShareFor(deps, tx, storeId, req.supportRef, now);
       // PR 129: the account it belongs to (SIM-F-039: a new one has no password; the browser is not signed in).
       // PR 605: the phone of a gift is the receiver's — no account is made or found for him; a signed-in sender keeps it
-      const account = await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate: autoCreate && !gift });
+      // PR 725: a practice order is never tied to a real customer account (no real customer's orders, spend or points change)
+      const account = practice ? null : await linkOrderAccount(tx, { storeId, phone: check.phone.e164, name: d.form.name, placedAt: now, signedInCustomerId: customerId, autoCreate: autoCreate && !gift });
       const ownerId = account?.customerId ?? null;
       const rows = orderLinesOf(q, lines);
       // PR 622 (CN-034): "bought again from #…" — the past order whose "Buy again" filled this bag, while a line it put in is ordered
@@ -501,6 +511,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           storeId,
           number,
           customerId: ownerId,
+          isPractice: practice,
           status: 'PLACED',
           source: chat ? chat.source : landingPageId ? 'LANDING_PAGE' : 'WEBSITE',
           landingPageId,
@@ -584,7 +595,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         })),
       });
       // who may use it is judged as the quote judged it: the signed-in customer (a guest is counted by his phone)
-      if (coupon?.code) await redeemCoupon(tx, { storeId, code: coupon.code, orderId: o.id, phone: check.phone.e164, customerId, discountMinor: couponMinor, now });
+      if (coupon?.code && !practice) await redeemCoupon(tx, { storeId, code: coupon.code, orderId: o.id, phone: check.phone.e164, customerId, discountMinor: couponMinor, now });
       await convertCart(inv, { storeId, cartId, orderId: o.id }, { tx });
       const credited = share ? await creditSupportShare(tx, storeId, share, { id: o.id, number }, now) : false;
       const closed = await tx.cart.updateMany({ where: { id: cartId, storeId, status: 'ACTIVE' }, data: { status: 'CONVERTED', convertedOrderId: o.id, lastActivityAt: now } });
@@ -605,6 +616,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             codOff: q.pay.codOff,
             charge: q.charge.state,
             account: account?.kind ?? null,
+            ...(practice ? { practice: true } : {}),
             ...(gift ? { gift: { advance: q.gift?.advance ?? 'none', partMinor: giftPart, deliverAfter: gift.deliverAfter, hidePrices: gift.hidePrices } } : {}),
             // PR 560: what the checkout asked ahead (the layer is on the flag event, for the team only)
             ...(adv ? { advance: { kind: adv.kind, amountMinor: adv.amountMinor } } : {}),
@@ -624,7 +636,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         await tx.checkoutFlagEvent.create({
           data: { storeId, layerId: flagged.layerId, orderId: o.id, customerId: ownerId, requirement: flagged.requirement, outcome: FLAG_OUTCOMES.asked, explanation: { layer: flagged.layerName, score: flagged.score, band: flagged.band, kind: adv.kind, amountMinor: adv.amountMinor, restMinor: adv.restMinor } },
         });
-      await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: chat ? CHAT_SOURCE : CHECKOUT_SOURCE });
+      if (!practice) await recordConsent(tx, { storeId, orderId: o.id, customerId: ownerId, phone: check.phone.e164, ip: req.ip ?? null, answer: consent, source: chat ? CHAT_SOURCE : CHECKOUT_SOURCE });
 
       if (t.walletMinor > 0) {
         if (!customerId) throw new CheckoutError('PRICE_CHANGED', 'the wallet needs a signed-in customer');
@@ -647,6 +659,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
             method: payMethod,
             provider: choice!.option ?? choice!.method,
             purpose: adv ? ADVANCE_PURPOSE[adv.kind] : 'ORDER',
+            isPractice: practice,
             status: 'INITIATED',
             amountMinor: adv ? adv.amountMinor : t.dueMinor,
             currency,
@@ -683,7 +696,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         where: { scope_key: { scope, key: d.idempotencyKey } },
         data: { completedAt: now, responseStatus: 201, responseBody: { orderId: o.id, number } },
       });
-      return { orderId: o.id, number, next: prepaid ? 'pay' : 'thanks', replay: false } satisfies PlaceResult;
+      return { orderId: o.id, number, next: prepaid ? 'pay' : 'thanks', replay: false, ...(practice ? { practice: true } : {}) } satisfies PlaceResult;
     }, TX);
   } catch (e) {
     // Two presses at the same moment: the second waited for the first and finds its order.
@@ -704,7 +717,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
 
 /** The visitor's own order by its number (anything else is "no such order"). */
 async function ownOrder(db: Db, storeId: number, visitorId: string, number: string) {
-  const o = await db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, visitorId: true, idempotencyKey: true, flags: true, paidMinor: true, currency: true, status: true } });
+  const o = await db.order.findUnique({ where: { storeId_number: { storeId, number } }, select: { id: true, visitorId: true, idempotencyKey: true, flags: true, paidMinor: true, currency: true, status: true, isPractice: true } });
   if (!o || o.visitorId !== visitorId) throw new CheckoutError('NOT_FOUND', 'no such order for this visitor', ['number']);
   return o;
 }
@@ -755,7 +768,8 @@ export async function payAction(deps: CheckoutDeps, req: { storeId: number; visi
   if (d.action !== 'retry') {
     const mine = await ownOrder(deps.db, storeId, req.visitorId, d.number);
     const last = await deps.db.payment.findFirst({ where: { storeId, orderId: mine.id, purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' }, select: { provider: true } });
-    if (last && !(await payModes(deps, storeId, last.provider)).test) throw new CheckoutError('TEST_PAYMENT_OFF', 'the test payment page is off here; the payment service answers for this payment', ['action']);
+    // PR 725: a practice order is always paid on the test page (the mock); no real gateway is ever opened for it
+    if (last && !mine.isPractice && !(await payModes(deps, storeId, last.provider)).test) throw new CheckoutError('TEST_PAYMENT_OFF', 'the test payment page is off here; the payment service answers for this payment', ['action']);
   }
   /** PR 560: the order whose advance this payment completed (the order service moves it back to the queue). */
   let met: string | null = null;
@@ -825,11 +839,11 @@ export interface PayView extends PayModes {
 }
 
 export async function payView(deps: CheckoutDeps, req: { storeId: number; visitorId: string; number: string }): Promise<PayView | null> {
-  const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: req.storeId, number: req.number } }, select: { id: true, number: true, visitorId: true } });
+  const o = await deps.db.order.findUnique({ where: { storeId_number: { storeId: req.storeId, number: req.number } }, select: { id: true, number: true, visitorId: true, isPractice: true } });
   if (!o || o.visitorId !== req.visitorId) return null;
   const p = await deps.db.payment.findFirst({ where: { storeId: req.storeId, orderId: o.id, purpose: { in: CHECKOUT_PAY_PURPOSES }, method: { notIn: ['COD', 'WALLET'] } }, orderBy: { createdAt: 'desc' } });
   if (!p || p.status === 'REFUNDED' || p.status === 'PARTIALLY_REFUNDED' || p.status === 'AUTHORIZED') return null;
-  return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status, ...(await payModes(deps, req.storeId, p.provider)) };
+  return { paymentId: p.id, number: o.number, amountMinor: p.amountMinor, method: p.method, provider: p.provider, status: p.status, ...(o.isPractice ? { test: true, gateway: false } : await payModes(deps, req.storeId, p.provider)) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

@@ -199,6 +199,10 @@ async function photoPlan(db: MediaDeps["db"], storeId: number, minimum: number):
   }
   const out: PlanItem[] = [];
   for (const p of products) {
+    if (added >= max) {
+      complete = false;
+      break;
+    }
     const name = p.nameEn.replace(/ \(practice\)$/, "");
     const code = CATEGORIES.find((c) =>
       (c.names as readonly string[]).includes(name),
@@ -243,6 +247,8 @@ export interface PhotoProgress {
   total: number;
   /** Of those, how many have their whole set. */
   done: number;
+  /** True when every practice product has its whole set (nothing left to make). */
+  complete: boolean;
 }
 
 /** "x of y products done" without drawing anything. */
@@ -250,20 +256,21 @@ export async function practicePhotoProgress(
   db: MediaDeps["db"],
   storeId: number,
   minimum: number,
-): Promise<Omit<PhotoProgress, "photos">> {
+): Promise<Omit<PhotoProgress, "photos" | "complete">> {
   const plan = await photoPlan(db, storeId, minimum);
   return { total: plan.length, done: plan.filter((p) => !p.missing.length).length };
 }
 
 /**
  * Gives practice products the photo set the shop asks for. `limit` = how many products to finish in this call (all when
- * not given): a call never repeats work, so pressing again simply continues where the last one stopped. Returns how many
- * photos it added (0 on a second run) and the progress.
+ * not given; the "Add practice photos" button, PR 720); `maxPhotos` = at most this many pictures in this call (the
+ * automatic fill, PR 725, makes them in small steps). A call never repeats work, so the next call simply continues where
+ * the last one stopped. Returns how many photos it added (0 on a second run) and the progress.
  */
 export async function addPracticePhotos(
   deps: MediaDeps,
   storeId: number,
-  opts: { limit?: number } = {},
+  opts: { limit?: number; maxPhotos?: number } = {},
 ): Promise<PhotoProgress> {
   const rules = await photoRules(deps.settings, storeId);
   const plan = await photoPlan(deps.db, storeId, rules.minimum);
@@ -271,10 +278,15 @@ export async function addPracticePhotos(
   const batch = opts.limit && opts.limit > 0 ? pending.slice(0, opts.limit) : pending;
   const storage = await deps.storage(storeId);
   const now = deps.now ? deps.now() : new Date();
+  const max = opts.maxPhotos ?? Number.POSITIVE_INFINITY;
   let added = 0;
+  let finishedNow = 0;
   for (const p of batch) {
+    if (added >= max) break;
     let sort = p.have;
+    let left = p.missing.length;
     for (const w of p.missing) {
+      if (added >= max) break;
       const body = await drawingPng(p.kind, w.hex, VIEW_OF[w.role]);
       const checksum = createHash("sha256").update(body).digest("hex");
       let asset = await deps.db.mediaAsset.findFirst({
@@ -328,11 +340,10 @@ export async function addPracticePhotos(
         },
       });
       added++;
+      left--;
     }
+    if (left === 0) finishedNow++;
   }
-  return {
-    photos: added,
-    total: plan.length,
-    done: plan.length - (pending.length - batch.length),
-  };
+  const done = plan.length - pending.length + finishedNow;
+  return { photos: added, total: plan.length, done, complete: done >= plan.length };
 }
