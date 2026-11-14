@@ -827,6 +827,26 @@
       "roasNone": "No ad spend recorded for this time, so there is no ROAS yet.",
       "roasUnknown": "Ad spend for some days is not known yet, so ROAS is not shown.",
       "roasMore": "Campaigns"
+    },
+    "proto": {
+      "doNow": "Do now",
+      "doSub": "{n} things waiting · most urgent first",
+      "prodTitle": "Products: what to do",
+      "prodSub": "Best sellers, last {n} days, with stock cover",
+      "prodLink": "Shop ranking",
+      "prodSold": "{n} sold · {v}",
+      "daysLeft": "{n} days left",
+      "stockOk": "Stock fine",
+      "prodNone": "No delivered sales yet, so no best sellers.",
+      "roas": "Sales for each 1 of ad spend",
+      "shortTitle": "In short",
+      "shortUp": "Delivered sales are up {pct} on the previous {n} days.",
+      "shortDown": "Delivered sales are down {pct} on the previous {n} days.",
+      "shortKeep": "In this period you keep {pct} of every sale, after all costs.",
+      "shortBest": "{name} brings the most money: {v}.",
+      "shortNone": "Nothing to sum up yet.",
+      "targetLine": "Target {goal} · {pct} done",
+      "targetSold": "Delivered sales this month {sales} · {n} days left"
     }
   },
   "look": {

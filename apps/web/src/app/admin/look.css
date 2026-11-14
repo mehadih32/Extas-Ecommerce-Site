@@ -595,3 +595,9 @@
 @media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
   .adm2 .a3-fstep{min-height:44px}
 }
+
+/* PR 722 (prototype v5 parity): the cards under Home design A's overview (components/admin/look/dashboard/ProtoCards.tsx) */
+.adm2 .a3-proto{margin-top:20px}
+.adm2 .a3-proto .a3-prob{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+.adm2 .a3-proto .a3-cap{margin:8px 0 4px}
+@media (max-width:1023px){.adm2 .a3-dg3.a3-proto{grid-template-columns:minmax(0,1fr)}}
