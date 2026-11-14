@@ -1,0 +1,2118 @@
+[
+ {
+  "id": "dashboard",
+  "base": "/admin",
+  "tabs": []
+ },
+ {
+  "id": "orders",
+  "base": "/admin/orders",
+  "tabs": [
+   {
+    "id": "batch",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/batch",
+      "keys": [
+       "ordersBatch"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "all",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders",
+      "keys": [
+       "orders",
+       "order"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "confirm",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/confirm",
+      "keys": [
+       "ordersConfirm"
+      ]
+     },
+     {
+      "href": "/admin/orders/confirm/calls",
+      "keys": [
+       "ordersCalls"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "packing",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/packing",
+      "keys": [
+       "packingPack"
+      ]
+     },
+     {
+      "href": "/admin/orders/packing/print",
+      "keys": [
+       "packingPrint"
+      ]
+     },
+     {
+      "href": "/admin/orders/packing/picking",
+      "keys": [
+       "packingPicking"
+      ]
+     },
+     {
+      "href": "/admin/orders/packing/invoices",
+      "keys": [
+       "packingInvoices"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "courier",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/packing/handover",
+      "keys": [
+       "packingHandover"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "returns",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/returns",
+      "keys": [
+       "ordersReturns"
+      ]
+     },
+     {
+      "href": "/admin/orders/returns/qc",
+      "keys": [
+       "ordersReturnsQc"
+      ]
+     },
+     {
+      "href": "/admin/orders/returns/refused",
+      "keys": [
+       "ordersReturnsRefused"
+      ]
+     },
+     {
+      "href": "/admin/orders/returns/handback",
+      "keys": [
+       "ordersReturnsHandback"
+      ]
+     },
+     {
+      "href": "/admin/orders/returns/erp",
+      "keys": [
+       "ordersReturnsErp"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "incomplete",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/orders/incomplete",
+      "keys": [
+       "ordersIncomplete"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "digest",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/orders/digest",
+      "keys": [
+       "ordersDigest"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "riskrules",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/orders/risk-rules",
+      "keys": [
+       "riskRules"
+      ]
+     },
+     {
+      "href": "/admin/orders/risk-rules/checkout",
+      "keys": [
+       "checkoutAdvance"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "bulk",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/orders/bulk",
+      "keys": [
+       "ordersBulk"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "products",
+  "base": "/admin/products",
+  "tabs": [
+   {
+    "id": "all",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/products",
+      "keys": [
+       "products",
+       "product"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "add",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/products/new",
+      "keys": [
+       "productNew"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "stock",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/stock",
+      "keys": [
+       "stock"
+      ]
+     },
+     {
+      "href": "/admin/stock/counts",
+      "keys": [
+       "stockCounts",
+       "stockCount"
+      ]
+     },
+     {
+      "href": "/admin/stock/movements",
+      "keys": [
+       "stockMovements"
+      ]
+     },
+     {
+      "href": "/admin/products/back-in-stock",
+      "keys": [
+       "backInStock"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "ranking",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/products/ranking",
+      "keys": [
+       "productRanking"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "combos",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/combos",
+      "keys": [
+       "combos"
+      ]
+     },
+     {
+      "href": "/admin/combos/bag-box",
+      "keys": [
+       "combosBagBox"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "sets",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/products/sets",
+      "keys": [
+       "productSets"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "reviews",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/products/reviews",
+      "keys": [
+       "productReviews"
+      ]
+     },
+     {
+      "href": "/admin/products/questions",
+      "keys": [
+       "productQuestions"
+      ]
+     },
+     {
+      "href": "/admin/products/faqs",
+      "keys": [
+       "productFaqs"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "charts",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/size-charts",
+      "keys": [
+       "sizeCharts"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "queue",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/products/queue",
+      "keys": [
+       "publishQueue"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "import",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/products/import",
+      "keys": [
+       "productImport"
+      ]
+     },
+     {
+      "href": "/admin/products/erp-import",
+      "keys": [
+       "erpImport"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "audit",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/products/audit",
+      "keys": [
+       "productAudit"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "customers",
+  "base": "/admin/customers",
+  "tabs": [
+   {
+    "id": "all",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/customers",
+      "keys": [
+       "customers",
+       "customer"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "segments",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/customers/segments",
+      "keys": [
+       "customersSegments"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "loyalty",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/customers/loyalty",
+      "keys": [
+       "customersLoyalty"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "review",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/customers/review",
+      "keys": [
+       "customersReview"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "import",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/customers/import",
+      "keys": [
+       "customersImport"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "settings",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/customers/settings",
+      "keys": [
+       "customersSettings"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "delivery",
+  "base": "/admin/delivery",
+  "tabs": [
+   {
+    "id": "overview",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/delivery",
+      "keys": [
+       "couriersOverview"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "courier360",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/delivery/courier-360",
+      "keys": [
+       "courier",
+       "courierStatement"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "claims",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/delivery/claims",
+      "keys": [
+       "courierClaims"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "zones",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/delivery/zones",
+      "keys": [
+       "delivery"
+      ]
+     },
+     {
+      "href": "/admin/delivery/couriers",
+      "keys": [
+       "couriers",
+       "courierAreas"
+      ]
+     },
+     {
+      "href": "/admin/delivery/settings",
+      "keys": [
+       "deliverySettings"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "support",
+  "base": "/admin/support",
+  "tabs": [
+   {
+    "id": "inbox",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/support",
+      "keys": [
+       "supportInbox",
+       "supportConversation"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "replies",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/support/replies",
+      "keys": [
+       "supportReplies"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "analytics",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/support/analytics",
+      "keys": [
+       "supportAnalytics"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "settings",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/support/settings",
+      "keys": [
+       "supportSettings"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "riderIssues",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/support/rider-issues",
+      "keys": [
+       "supportRiderIssues"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "app",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/support/app",
+      "keys": [
+       "supportApp"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "comments",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/support/comments",
+      "keys": [
+       "supportComments"
+      ]
+     },
+     {
+      "href": "/admin/support/comments/live",
+      "keys": [
+       "supportCommentsLive"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "rules",
+  "base": "/admin/rules",
+  "tabs": [
+   {
+    "id": "all",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/rules",
+      "keys": [
+       "rules"
+      ]
+     },
+     {
+      "href": "/admin/rules/smart",
+      "keys": [
+       "rulesSmart"
+      ]
+     },
+     {
+      "href": "/admin/rules/eid",
+      "keys": [
+       "eidDates"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "offers",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/rules/offers",
+      "keys": [
+       "rulesOffers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "popups",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/rules/notices",
+      "keys": [
+       "notices"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "marketing",
+  "base": "/admin/marketing",
+  "tabs": [
+   {
+    "id": "overview",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/overview",
+      "keys": [
+       "marketingOverview"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "campaigns",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/campaigns",
+      "keys": [
+       "marketingCampaigns",
+       "marketingCampaign"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "messages",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/message-campaigns",
+      "keys": [
+       "marketingMessageCampaigns"
+      ]
+     },
+     {
+      "href": "/admin/messages/campaigns",
+      "keys": [
+       "messagesCampaigns"
+      ]
+     },
+     {
+      "href": "/admin/messages/journey",
+      "keys": [
+       "messagesJourney"
+      ]
+     },
+     {
+      "href": "/admin/messages/automations",
+      "keys": [
+       "messagesAutomations"
+      ]
+     },
+     {
+      "href": "/admin/messages/email",
+      "keys": [
+       "messagesEmail"
+      ]
+     },
+     {
+      "href": "/admin/messages/templates",
+      "keys": [
+       "messagesTemplates"
+      ]
+     },
+     {
+      "href": "/admin/messages/log",
+      "keys": [
+       "messagesLog"
+      ]
+     },
+     {
+      "href": "/admin/messages/channels",
+      "keys": [
+       "messagesChannels"
+      ]
+     },
+     {
+      "href": "/admin/messages/consent",
+      "keys": [
+       "messagesConsent"
+      ]
+     },
+     {
+      "href": "/admin/messages/cost-ceilings",
+      "keys": [
+       "messagesCostCeilings"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "audiences",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/audiences",
+      "keys": [
+       "marketingAudiences",
+       "marketingAudience"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "calendar",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/calendar",
+      "keys": [
+       "marketingCalendar"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "plan",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/plan",
+      "keys": [
+       "marketingPlan"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "adPlatforms",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/ad-platforms",
+      "keys": [
+       "marketingAdPlatforms",
+       "marketingAdGrowth",
+       "marketingAdBriefs",
+       "marketingAdCampaigns",
+       "marketingAdGuardrails"
+      ]
+     },
+     {
+      "href": "/admin/marketing/affiliates",
+      "keys": [
+       "marketingAffiliates"
+      ]
+     },
+     {
+      "href": "/admin/marketing/landing",
+      "keys": [
+       "marketingLanding",
+       "marketingLandingPage",
+       "marketingLandingTemplates"
+      ]
+     },
+     {
+      "href": "/admin/marketing/landing/seasonal",
+      "keys": [
+       "marketingSeasonal",
+       "marketingSeasonalPage"
+      ]
+     },
+     {
+      "href": "/admin/marketing/landing/seasonal/yearly",
+      "keys": [
+       "marketingSeasonalYearly"
+      ]
+     },
+     {
+      "href": "/admin/marketing/referrals",
+      "keys": [
+       "marketingReferrals"
+      ]
+     },
+     {
+      "href": "/admin/marketing/merchant-feed",
+      "keys": [
+       "marketingMerchantFeed"
+      ]
+     },
+     {
+      "href": "/admin/marketing/meta-feed",
+      "keys": [
+       "marketingMetaFeed"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "tracking",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/tracking",
+      "keys": [
+       "adsTracking"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "studio",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/studio",
+      "keys": [
+       "marketingStudio"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/motion",
+      "keys": [
+       "marketingStudioMotion"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/models",
+      "keys": [
+       "marketingStudioModels"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/videos",
+      "keys": [
+       "marketingStudioVideos"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/reels",
+      "keys": [
+       "marketingStudioReels"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/export",
+      "keys": [
+       "marketingStudioExport"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/briefs",
+      "keys": [
+       "marketingStudioBriefs"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/overlay",
+      "keys": [
+       "marketingStudioOverlay"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "youtube",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/youtube",
+      "keys": [
+       "marketingYoutube"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "outreach",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/outreach",
+      "keys": [
+       "marketingOutreach"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "seasonal",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/seasonal",
+      "keys": [
+       "marketingSeasonalHome"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "festive",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/festive",
+      "keys": [
+       "marketingFestive"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "report",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/report",
+      "keys": [
+       "marketingReport"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "geoGuide",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/geo-guide",
+      "keys": [
+       "marketingGeoGuide"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "intel",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/marketing/intel",
+      "keys": [
+       "marketingIntel"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "website",
+  "base": "/admin/website",
+  "tabs": [
+   {
+    "id": "layouts",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/layouts",
+      "keys": [
+       "websiteLayouts"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "words",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/words",
+      "keys": [
+       "websiteWords"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "policies",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/policies",
+      "keys": [
+       "websitePolicies"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "blog",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/blog",
+      "keys": [
+       "blog",
+       "blogPost",
+       "blogPhoto"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/shelves",
+      "keys": [
+       "blogShelves"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/plan",
+      "keys": [
+       "blogPlan",
+       "blogBrief"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/calendar",
+      "keys": [
+       "blogCalendar"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/performance",
+      "keys": [
+       "blogPerformance"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/comments",
+      "keys": [
+       "blogComments"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/shared",
+      "keys": [
+       "blogShared"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/sold",
+      "keys": [
+       "blogSold"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/ads",
+      "keys": [
+       "blogAds",
+       "blogAd"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/pipeline",
+      "keys": [
+       "blogPipeline"
+      ]
+     },
+     {
+      "href": "/admin/website/blog/source",
+      "keys": [
+       "blogSource"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "analytics",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/analytics",
+      "keys": [
+       "websiteAnalytics"
+      ]
+     },
+     {
+      "href": "/admin/website/analytics/behaviour",
+      "keys": [
+       "webAnalytics.behaviour"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "seo",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/seo",
+      "keys": [
+       "seo"
+      ]
+     },
+     {
+      "href": "/admin/website/seo/redirects",
+      "keys": [
+       "seoRedirects"
+      ]
+     },
+     {
+      "href": "/admin/website/seo/categories",
+      "keys": [
+       "seoCategories"
+      ]
+     },
+     {
+      "href": "/admin/website/seo/bengali",
+      "keys": [
+       "seoBengali"
+      ]
+     },
+     {
+      "href": "/admin/website/seo/health",
+      "keys": [
+       "seoHealth"
+      ]
+     },
+     {
+      "href": "/admin/website/seo/organic",
+      "keys": [
+       "seoOrganic"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "brand",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/brand-menus",
+      "keys": [
+       "websiteBrand"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "eye",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/eye-toggles",
+      "keys": [
+       "websiteEyeToggles"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "canvas",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/side-canvas",
+      "keys": [
+       "websiteSideCanvas"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "launch",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/launch-default",
+      "keys": [
+       "websiteLaunchDefault"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "pageEdit",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/page-edit",
+      "keys": [
+       "websitePageEdit"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "money",
+  "base": "/admin/money",
+  "tabs": [
+   {
+    "id": "overview",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money",
+      "keys": [
+       "moneyOverview"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "cash",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/cash",
+      "keys": [
+       "moneyCash"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "profit",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/profit",
+      "keys": [
+       "moneyProfit"
+      ]
+     },
+     {
+      "href": "/admin/money/profit/groups",
+      "keys": [
+       "moneyProfitGroups"
+      ]
+     },
+     {
+      "href": "/admin/money/profit/channels",
+      "keys": [
+       "moneyProfitChannels"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "costs",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/costs",
+      "keys": [
+       "moneyCosts"
+      ]
+     },
+     {
+      "href": "/admin/money/expenses",
+      "keys": [
+       "moneyExpenses"
+      ]
+     },
+     {
+      "href": "/admin/money/fees",
+      "keys": [
+       "moneyFees"
+      ]
+     },
+     {
+      "href": "/admin/money/cost-ledger",
+      "keys": [
+       "moneyCostLedger"
+      ]
+     },
+     {
+      "href": "/admin/money/cost-ledger/report",
+      "keys": [
+       "moneyCostReport"
+      ]
+     },
+     {
+      "href": "/admin/money/budgets",
+      "keys": [
+       "moneyBudgets"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "erp",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/books",
+      "keys": [
+       "booksAccount"
+      ]
+     },
+     {
+      "href": "/admin/money/books/match",
+      "keys": [
+       "booksMatch"
+      ]
+     },
+     {
+      "href": "/admin/money/books/differences",
+      "keys": [
+       "booksDifferences"
+      ]
+     },
+     {
+      "href": "/admin/money/books/closes",
+      "keys": [
+       "booksCloses"
+      ]
+     },
+     {
+      "href": "/admin/money/books/daily",
+      "keys": [
+       "booksDaily"
+      ]
+     },
+     {
+      "href": "/admin/money/month-end",
+      "keys": [
+       "moneyMonthEnd"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "couriers",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/couriers",
+      "keys": [
+       "moneyCouriers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "refunds",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/refunds",
+      "keys": [
+       "moneyRefunds"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "vat",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/money/vat",
+      "keys": [
+       "moneyVat"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "reports",
+  "base": "/admin/reports",
+  "tabs": [
+   {
+    "id": "library",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports",
+      "keys": [
+       "reportsLibrary"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "orders",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/orders",
+      "keys": [
+       "reportsOrders"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "profitReport",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/profit",
+      "keys": [
+       "reportsProfit"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "productsReport",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/products",
+      "keys": [
+       "reportsProducts"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "customers",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/customers",
+      "keys": [
+       "reportsCustomers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "delivery",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/delivery",
+      "keys": [
+       "reportsDelivery"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "couriers",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/couriers",
+      "keys": [
+       "reportsCouriers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "marketingReport",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/marketing",
+      "keys": [
+       "reportsMarketing"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "areas",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/areas",
+      "keys": [
+       "reportsAreas"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "team",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/team",
+      "keys": [
+       "reportsTeam"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "monthlyReview",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/reports/review",
+      "keys": [
+       "reportsReview"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "packs",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/packs",
+      "keys": [
+       "reportsPacks"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "health",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/health",
+      "keys": [
+       "health"
+      ]
+     },
+     {
+      "href": "/admin/reports/health/problems",
+      "keys": [
+       "healthProblems"
+      ]
+     },
+     {
+      "href": "/admin/reports/health/speed",
+      "keys": [
+       "healthSpeed"
+      ]
+     },
+     {
+      "href": "/admin/reports/health/smoke",
+      "keys": [
+       "healthSmoke"
+      ]
+     },
+     {
+      "href": "/admin/reports/health/history",
+      "keys": [
+       "healthHistory"
+      ]
+     },
+     {
+      "href": "/admin/reports/health/fixes",
+      "keys": [
+       "healthFixes"
+      ]
+     },
+     {
+      "href": "/admin/server",
+      "keys": [
+       "server"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "fraud",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/fraud",
+      "keys": [
+       "reportsFraud"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "stopped",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/stopped",
+      "keys": [
+       "reportsStopped"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "learning",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/learning",
+      "keys": [
+       "reportsLearning"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "flags",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/flags",
+      "keys": [
+       "reportsFlags"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "searches",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/searches",
+      "keys": [
+       "reportsSearches"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "experiments",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/experiments",
+      "keys": [
+       "reportsExperiments",
+       "reportsExperiment"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "funnels",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/funnels",
+      "keys": [
+       "reportsFunnels"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ai",
+  "base": "/admin/ai",
+  "tabs": [
+   {
+    "id": "approvals",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/approvals",
+      "keys": [
+       "aiApprovals"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "agents",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/agents",
+      "keys": [
+       "aiAgents"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "costBook",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/cost-book",
+      "keys": [
+       "aiCostBook"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "train",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/training",
+      "keys": [
+       "aiTraining"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "control",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai",
+      "keys": [
+       "aiControl"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "models",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/models",
+      "keys": [
+       "aiModels"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "agentsChief",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/agents/chief",
+      "keys": [
+       "aiAgentsChief"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "audit",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/audit",
+      "keys": [
+       "aiAudit"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "permissions",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/permissions",
+      "keys": [
+       "aiPermissions"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "diary",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/diary",
+      "keys": [
+       "aiDiary"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "skills",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/skills",
+      "keys": [
+       "aiSkills"
+      ]
+     },
+     {
+      "href": "/admin/ai/skills/sandbox",
+      "keys": [
+       "aiSkillsSandbox"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "reports",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/reports",
+      "keys": [
+       "aiReports"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "learning",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/ai/learning",
+      "keys": [
+       "aiLearning"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "settings",
+  "base": "/admin/settings",
+  "tabs": [
+   {
+    "id": "store",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/settings/store",
+      "keys": [
+       "store"
+      ]
+     },
+     {
+      "href": "/admin/settings/policies",
+      "keys": [
+       "policies"
+      ]
+     },
+     {
+      "href": "/admin/settings/people",
+      "keys": [
+       "people"
+      ]
+     },
+     {
+      "href": "/admin/settings/roles",
+      "keys": [
+       "roles"
+      ]
+     },
+     {
+      "href": "/admin/settings/staff-controls",
+      "keys": [
+       "staffControls"
+      ]
+     },
+     {
+      "href": "/admin/settings/erp-link",
+      "keys": [
+       "erpLink"
+      ]
+     },
+     {
+      "href": "/admin/settings/look",
+      "keys": [
+       "adminLook"
+      ]
+     },
+     {
+      "href": "/admin/products/demo",
+      "keys": [
+       "productDemo"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "keys",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/integrations",
+      "keys": [
+       "integrations"
+      ]
+     },
+     {
+      "href": "/admin/settings/telegram-approvals",
+      "keys": [
+       "telegramApprovals"
+      ]
+     },
+     {
+      "href": "/admin/settings/system/cache",
+      "keys": [
+       "cache"
+      ]
+     },
+     {
+      "href": "/admin/settings/system/backups",
+      "keys": [
+       "backups"
+      ]
+     },
+     {
+      "href": "/admin/settings/system/go-live",
+      "keys": [
+       "golive"
+      ]
+     },
+     {
+      "href": "/admin/settings/security",
+      "keys": [
+       "security"
+      ]
+     },
+     {
+      "href": "/admin/settings/security/edge",
+      "keys": [
+       "edge"
+      ]
+     },
+     {
+      "href": "/admin/settings/activity",
+      "keys": [
+       "activity"
+      ]
+     },
+     {
+      "href": "/admin/settings/privacy",
+      "keys": [
+       "privacy"
+      ]
+     },
+     {
+      "href": "/admin/settings/start-fresh",
+      "keys": [
+       "startFresh"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "practice",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/practice",
+      "keys": [
+       "practice"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "shimmer",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/shimmer",
+      "keys": [
+       "settingsShimmer"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "shell",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/shell",
+      "keys": [
+       "settingsShell"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "help",
+  "base": "/admin/help",
+  "tabs": [
+   {
+    "id": "manual",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/help",
+      "keys": [
+       "help"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "book",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/help/manual",
+      "keys": [
+       "manual"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "build",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/build",
+      "keys": [
+       "build",
+       "buildPr"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "problems",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/build/problems",
+      "keys": [
+       "buildProblems"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "files",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/build/files",
+      "keys": [
+       "buildFiles",
+       "buildFile"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "requests",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/build/requests",
+      "keys": [
+       "buildRequests"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
