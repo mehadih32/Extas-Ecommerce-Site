@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expireLegacyCookies, legacyCookieNames, registrableDomain, resetPageHtml } from './legacy-browser';
+import { ADMIN_LOGIN } from './admin-nav';
 
 describe('legacyCookieNames', () => {
   it('finds old WordPress/WooCommerce cookie names and ignores our own', () => {
@@ -43,7 +44,7 @@ describe('resetPageHtml', () => {
   it('is a plain HTML string with a meta refresh to the admin sign-in and no script tag', () => {
     const html = resetPageHtml();
     expect(html).toContain('http-equiv="refresh"');
-    expect(html).toContain('/admin/login');
+    expect(html).toContain(ADMIN_LOGIN);
     expect(html).not.toContain('<script');
   });
 });

@@ -32,20 +32,20 @@ describe('device gate', () => {
   });
 
   it('takes the lighthouserc URLs onto the base, once each', () => {
-    const rc = { ci: { collect: { url: ['http://127.0.0.1:3000/status', 'http://127.0.0.1:3000/admin/login?x=1', 'http://127.0.0.1:3000/status'] } } };
-    expect(urlList('http://localhost:4000', rc)).toEqual(['http://localhost:4000/status', 'http://localhost:4000/admin/login?x=1']);
+    const rc = { ci: { collect: { url: ['http://127.0.0.1:3000/status', 'http://127.0.0.1:3000/access?x=1', 'http://127.0.0.1:3000/status'] } } };
+    expect(urlList('http://localhost:4000', rc)).toEqual(['http://localhost:4000/status', 'http://localhost:4000/access?x=1']);
   });
 
   it('plans the signed-in run: lighthouserc paths, extra urls and discovered pages, each with its data-only controls', () => {
-    const rc = ['http://127.0.0.1:3000/admin/login', 'http://127.0.0.1:3000/admin/products', 'http://127.0.0.1:3000/admin/stock'];
+    const rc = ['http://127.0.0.1:3000/access', 'http://127.0.0.1:3000/admin/products', 'http://127.0.0.1:3000/admin/stock'];
     const signedIn = {
-      signedOutPaths: ['/admin/login'],
+      signedOutPaths: ['/access'],
       urls: ['/admin/products/new', '/admin/products'],
       expect: { '/admin/stock': ['a.st-name'] },
     };
     const plan = signedInPlan('http://h:1', signedIn, rc, [{ path: '/admin/products/p1', expect: ['.pa-x', '.pa-kind'] }]);
-    expect(plan.map((p) => new URL(p.url).pathname)).toEqual(['/admin/login', '/admin/products', '/admin/stock', '/admin/products/new', '/admin/products/p1']);
-    expect(plan.find((p) => p.url.endsWith('/admin/login')).signedOut).toBe(true);
+    expect(plan.map((p) => new URL(p.url).pathname)).toEqual(['/access', '/admin/products', '/admin/stock', '/admin/products/new', '/admin/products/p1']);
+    expect(plan.find((p) => p.url.endsWith('/access')).signedOut).toBe(true);
     expect(plan.filter((p) => p.signedOut)).toHaveLength(1);
     expect(plan.find((p) => p.url.endsWith('/admin/stock')).expect).toEqual(['a.st-name']);
     expect(plan.find((p) => p.url.endsWith('/admin/products/p1')).expect).toEqual(['.pa-x', '.pa-kind']);
@@ -70,7 +70,7 @@ describe('device gate', () => {
     const expected = [...Object.values(rules.signedIn.expect).flat(), ...rules.signedIn.discover.flatMap((d) => d.expect)];
     for (const sel of ['.pa-x', '.pa-col', '.pa-kind', '.sc-item', 'a.st-name']) expect(expected).toContain(sel);
     expect(rules.signedIn.discover.every((d) => d.required)).toBe(true);
-    expect(rules.signedIn.signedOutPaths).toContain('/admin/login');
+    expect(rules.signedIn.signedOutPaths).toContain('/access');
   });
 
   it('PR 107 · plans the filled bag: opened signed out after the fill, apart from the empty bag, its lines expected', () => {
@@ -212,10 +212,10 @@ describe('device gate', () => {
   it('reports PASS at 0 fails and lists every failure otherwise', () => {
     const ok = { device: 'p', group: 'phone', w: 360, h: 800, url: '/status', finalUrl: '/status', issues: [] };
     expect(markdownReport([ok], { base: 'b', seconds: 1 })).toMatch(/PASS — 0 fails in 1 device × page checks/);
-    const bad = { ...ok, url: '/admin/x', finalUrl: '/admin/login', issues: [{ k: 'TAP-TOO-SMALL', d: 'chip 56×36' }] };
+    const bad = { ...ok, url: '/admin/x', finalUrl: '/access', issues: [{ k: 'TAP-TOO-SMALL', d: 'chip 56×36' }] };
     const md = markdownReport([ok, bad], { base: 'b', seconds: 1 });
     expect(md).toMatch(/FAIL — 1 of 2/);
-    expect(md).toContain('| p 360×800 | /admin/x → /admin/login | TAP-TOO-SMALL | chip 56×36 |');
+    expect(md).toContain('| p 360×800 | /admin/x → /access | TAP-TOO-SMALL | chip 56×36 |');
   });
 });
 

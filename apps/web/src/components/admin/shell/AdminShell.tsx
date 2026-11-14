@@ -27,7 +27,8 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
-import { ADMIN_LANG_COOKIE, ADMIN_LOGIN } from '@/lib/admin-nav';
+import { ADMIN_LANG_COOKIE, ADMIN_LOGIN, ADMIN_LOGIN_PAGE } from '@/lib/admin-nav';
+import { setAdminCookie } from '@/lib/admin-prefs-client';
 import { DEFAULT_THEME, themeAttrs, themeOnRoot, themeStyle, type ThemeMode } from '@/lib/admin-look/theme';
 import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
 import { lumenNav } from '@/lib/admin-shell/lumen-nav';
@@ -45,7 +46,6 @@ import { Palette } from './Palette';
 import { ShellIcon } from './ShellIcon';
 import { readLater, TodoDrawer } from './TodoDrawer';
 
-const YEAR_SECONDS = 365 * 24 * 60 * 60;
 type Pop = 'me' | 'me2' | null;
 
 const typingIn = (el: HTMLElement | null) => !!el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
@@ -59,10 +59,7 @@ const onPhoneChange = (cb: () => void) => {
 };
 const isPhone = () => window.matchMedia(PHONE).matches;
 
-const cookie = (name: string, value: string) => {
-  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `${name}=${value}; Path=/admin; Max-Age=${YEAR_SECONDS}; SameSite=Lax${secure}`;
-};
+const cookie = (name: string, value: string) => void setAdminCookie(name, value);
 
 /** One person's own choice, kept on their staff account (PUT /api/admin/look, scope "me"); a failure keeps the screen. */
 const saveMine = (body: Record<string, unknown>) =>
@@ -174,7 +171,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   }, []);
   // Once per shell (later pages reuse the count; opening the panel reads again); never on the sign-in page.
   useEffect(() => {
-    if (!window.location.pathname.startsWith(ADMIN_LOGIN)) loadNotes();
+    if (!window.location.pathname.startsWith(ADMIN_LOGIN) && !window.location.pathname.startsWith(ADMIN_LOGIN_PAGE)) loadNotes();
   }, [loadNotes]);
 
   const openPal = useCallback(() => {
@@ -257,7 +254,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     restore();
   }, []);
 
-  if (pathname === ADMIN_LOGIN || pathname.startsWith(`${ADMIN_LOGIN}/`)) return <>{children}</>;
+  if (pathname === ADMIN_LOGIN || pathname === ADMIN_LOGIN_PAGE || pathname === model.loginPath || pathname.startsWith(`${ADMIN_LOGIN}/`) || pathname.startsWith(`${ADMIN_LOGIN_PAGE}/`)) return <>{children}</>;
 
   const here = locate(pathname);
   const active = here?.section.id ?? null;
@@ -391,8 +388,8 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     try {
       await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'same-origin' });
     } finally {
-      router.replace(ADMIN_LOGIN);
-      router.refresh();
+      // CN-053: a full load of the sign-in address, so nothing of the signed-in page stays in this tab
+      window.location.replace(model.loginPath);
     }
   };
 
@@ -544,6 +541,10 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
           <main className="a2-ct a3-ct lm-ct" id="main" tabIndex={-1}>
             {children}
           </main>
+          {/* CN-053: which build this browser really runs, readable without clearing anything */}
+          <small className="a2-buildid" data-testid="build-id" translate="no" style={{ display: 'block', padding: '4px 16px 12px', opacity: 0.55, fontSize: 11 }}>
+            #{model.buildId}
+          </small>
         </div>
       </div>
       <nav className="lm-bar a2-z" aria-label={tt('nav.quick')} data-testid="lm-bar">

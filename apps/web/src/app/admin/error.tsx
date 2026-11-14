@@ -4,10 +4,15 @@
 import Link from 'next/link';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { useShellText } from '@/components/admin/shell/ShellText';
+import { clearAdminPrefs } from '@/lib/admin-prefs-client';
 import { t } from '@/lib/i18n';
 
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const { dict, lang, inShell } = useShellText();
+  const reload = () => {
+    clearAdminPrefs();
+    window.location.reload();
+  };
   const tt = (k: string) => t(dict, `shell.state.error.${k}`);
   const state = (
     <div className="a2-state err" data-testid="a2-state" data-state="error" role="alert">
@@ -26,9 +31,16 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
           <ShellIcon name="refresh" size={16} />
           {tt('retry')}
         </button>
-        <Link className="a2-btn" href="/admin?home=1">
-          {tt('back')}
-        </Link>
+        {/* CN-053: "Reload" first clears this browser's saved admin choices (language, side bar, "Later" lists), the usual
+            cause of a screen that breaks only in one browser, then loads the page again. Never a blank screen. */}
+        <button type="button" className="a2-btn" onClick={reload} data-testid="a2-reload">
+          {tt('reload')}
+        </button>
+        {inShell ? (
+          <Link className="a2-btn" href="/admin?home=1">
+            {tt('back')}
+          </Link>
+        ) : null}
       </div>
     </div>
   );

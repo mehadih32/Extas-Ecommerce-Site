@@ -84,7 +84,7 @@ it('follow-up 200: every adminDiscover entry names a built admin page, a selecto
 
 /** Review R3 (admin M2): admin pages the smoke test does not open on their own, each with why. */
 const SMOKE_SKIP = {
-  '/admin/login': 'the sign-in page: the smoke test signs in through it, and a signed-in visit only sends it on',
+  '/admin/login': 'the folder of the sign-in page (CN-053: visitors reach it only at /access and /admin/login itself is a 404): the smoke test signs in through it, and a signed-in visit only sends it on',
 };
 
 it('review R3 (admin M2): every static admin page is opened by the smoke test, or is on the skip list with a reason', async () => {

@@ -14,7 +14,7 @@ if [ ! -s "$f" ]; then
 fi
 email="$(grep '^OWNER_EMAIL=' "$f" | cut -d= -f2-)"
 pw="$(grep '^OWNER_FIRST_PASSWORD=' "$f" | cut -d= -f2-)"
-echo "অ্যাডমিনের ঠিকানা: https://$EXTAS_SITE_HOST/admin/login"
+echo "অ্যাডমিনের ঠিকানা: https://$EXTAS_SITE_HOST/access"
 echo "ই-মেইল: $email"
 echo "প্রথম পাসওয়ার্ড: $pw"
 echo "প্রথমবার ঢোকার পরই পাসওয়ার্ডটা বদলে নিজের একটা পাসওয়ার্ড দিন।"

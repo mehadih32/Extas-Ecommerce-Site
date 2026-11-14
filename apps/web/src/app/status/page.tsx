@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import dict from "../../../messages/status.bn.json";
+import { buildId } from "@/lib/build-id";
 import { t } from "@/lib/i18n";
 import { dateTime, num } from "@/lib/format";
 import { buildStatus, erpAcceptanceLine, runtimeState, type Backup } from "@/lib/status";
@@ -94,6 +95,10 @@ export default async function StatusPage() {
           {t(dict, "lastDeploy")}:{" "}
           {dateTime(deploy?.at ?? s.generatedAt, d) ?? t(dict, "never")}
           {sha ? ` · ${t(dict, "commit")} ${sha}` : ""}
+        </p>
+        {/* CN-053: the build this very server runs (a browser's own page can be compared with it) */}
+        <p className="mt-1 text-sm text-ink-soft" data-testid="build-id">
+          {t(dict, "commit")} {buildId()}
         </p>
       </section>
 

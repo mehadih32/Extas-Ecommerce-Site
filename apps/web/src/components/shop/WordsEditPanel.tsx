@@ -15,10 +15,11 @@ import { previewText, type PageWord } from '@/lib/website/words-match';
 import bnWords from '../../../messages/words-edit.bn.json';
 import enWords from '../../../messages/words-edit.en.json';
 import './words-edit.css';
+import { ADMIN_LOGIN } from '@/lib/admin-nav';
 
 const PAGE_API = '/api/admin/website/front-edit';
 const SAVE_API = '/api/admin/website/dictionary';
-const LOGIN = '/admin/login';
+const LOGIN = ADMIN_LOGIN; // CN-053: the staff sign-in address
 const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'] as const;
 /** How many ancestors a tap on the page climbs to find a word (a tap often lands on an icon inside the button). */
 const CLIMB = 5;

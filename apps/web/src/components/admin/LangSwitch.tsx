@@ -13,15 +13,13 @@ export interface LangLabels {
   bnShort: string;
 }
 
-const YEAR_SECONDS = 365 * 24 * 60 * 60;
-
 export function LangSwitch({ current, labels, where }: { current: 'bn' | 'en'; labels: LangLabels; where: 'side' | 'top' | 'main' }) {
   const router = useRouter();
   const [, start] = useTransition();
   const pick = (v: 'bn' | 'en') => {
     if (v === current) return;
-    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-    document.cookie = `${ADMIN_LANG_COOKIE}=${v}; Path=/admin; Max-Age=${YEAR_SECONDS}; SameSite=Lax${secure}`;
+    // CN-053: Path=/ so the sign-in address (outside /admin) sees the choice too; a refused cookie keeps the screen as it is
+    if (!setAdminCookie(ADMIN_LANG_COOKIE, v)) return;
     start(() => router.refresh());
   };
   const button = (v: 'bn' | 'en', full: string, short: string) => (

@@ -26,6 +26,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const view = await adminView();
   const section = sectionAt((await params).rest);
   const name = section ? t(view.dict, `shell.sec.${section.id}`) : t(view.dict, 'shell.state.notfound.title');
+  // CN-053: an address with no section (what the proxy hides from visitors) names nothing of the admin in its title
+  if (!section) return { title: name, robots: { index: false, follow: false } };
   return { title: `${name} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 

@@ -8,6 +8,8 @@
 //   (kept on their own staff account, StaffUser.adminPrefs; 0 = off, as it ships) — and `keyJumps`: "g" then a
 //   letter opens a section ("g d" the Dashboard, "g o" Orders), off as it ships. A value saved before reads as off.
 // - `admin.dashboard`: the Dashboard's date choices (days) and the hours the greeting changes.
+// - `admin.loginPath` (CN-053, 14 Nov 2026): the secret address of the staff sign-in (default `access`, so
+//   https://<shop>/access); `/admin/login` does not exist for visitors (404). One word, lower case, never a shop address.
 // Nothing here changes money or any order: it is how the admin looks and where it opens.
 import { z } from 'zod';
 import { setting } from './define';
@@ -73,7 +75,30 @@ export const adminDashboardSchema = z
 
 const json = { scope: 'store', valueType: 'JSON', group: 'admin', isOwnerData: false, isPublic: false, version: V } as const;
 
+/** Words the sign-in address may never be: they are the shop's, the API's or the admin's own first folders. */
+export const ADMIN_LOGIN_PATH_RESERVED = ['admin', 'api', 'erp-api', 'media', 'status', 'bn', 'login', 'reset', 'fresh-start', 'sitemaps'] as const;
+
+/** CN-053: one folder name, 3 to 40 letters, digits or hyphens. */
+export const adminLoginPathSchema = z
+  .string()
+  .regex(/^[a-z0-9][a-z0-9-]{2,39}$/)
+  .refine((v) => !(ADMIN_LOGIN_PATH_RESERVED as readonly string[]).includes(v), { message: 'that word belongs to the shop or the API' });
+
 export const adminShellSettings = {
+  'admin.loginPath': setting({
+    scope: 'installation',
+    valueType: 'STRING',
+    group: 'admin',
+    isOwnerData: false,
+    isPublic: false,
+    schema: adminLoginPathSchema,
+    default: 'access',
+    labelKey: 'admin.loginPath.label',
+    helpKey: 'admin.loginPath.help',
+    sortOrder: 5,
+    version: 708,
+    since: 708,
+  }),
   'admin.startPages': setting({
     ...json,
     schema: adminStartPagesSchema,

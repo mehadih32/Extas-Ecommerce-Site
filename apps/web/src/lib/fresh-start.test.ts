@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { POST } from '@/app/api/fresh-start/route';
 import { afterFresh } from '@/components/FreshStart';
 import { AUTO_WINDOW_MS, CLEAR_SITE_DATA, cookieNames, expireCookies, mayAutoRecover } from './fresh-start';
+import { ADMIN_LOGIN } from './admin-nav';
 
 const post = (body: unknown, cookie?: string) =>
   POST(new Request('https://shop.example.test/api/fresh-start', { method: 'POST', headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) }));
@@ -53,8 +54,8 @@ describe('fresh start (CN-032)', () => {
   });
 
   it('goes to the admin sign-in from the admin or ?to=admin, else home or the same page', () => {
-    expect(afterFresh('/admin/orders')).toBe('/admin/login');
-    expect(afterFresh('/bn/fresh-start', '?to=admin')).toBe('/admin/login');
+    expect(afterFresh('/admin/orders')).toBe(ADMIN_LOGIN);
+    expect(afterFresh('/bn/fresh-start', '?to=admin')).toBe(ADMIN_LOGIN);
     expect(afterFresh('/bn/fresh-start')).toBe('/bn');
     expect(afterFresh('/fresh-start')).toBe('/');
     expect(afterFresh('/p/polo')).toBe('/p/polo');

@@ -11,6 +11,8 @@ const LEGACY_COOKIE_RE = /^(wordpress_|wp-settings-|wp_woocommerce_session_|wooc
 const MAX_LEGACY_COOKIES = 40;
 
 /** Legacy cookie names from a Cookie request header (names only). */
+import { ADMIN_LOGIN } from './admin-nav';
+
 export function legacyCookieNames(header: string | null): string[] {
   const names: string[] = [];
   if (!header) return names;
@@ -58,7 +60,7 @@ export function resetPageHtml(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta http-equiv="refresh" content="1;url=/admin/login">
+<meta http-equiv="refresh" content="1;url=${ADMIN_LOGIN}">
 <title>ব্রাউজার পরিষ্কার হচ্ছে…</title>
 <body style="font-family:system-ui,sans-serif;padding:48px 20px;text-align:center;color:#111;background:#fff">
 <p style="font-size:18px">ব্রাউজার পরিষ্কার হচ্ছে…</p>

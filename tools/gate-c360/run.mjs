@@ -193,7 +193,7 @@ export async function runGate(o) {
     const at = new URL(page.url()).pathname;
     const problems = [...pageProblems(at, status, await page.innerText("body").catch(() => "")), ...watch];
     if (status >= 400 && !raw) problems.push(`${at}: answered ${status}`);
-    if (path.startsWith("/admin") && at.startsWith("/admin/login")) problems.push("sent back to the staff sign-in");
+    if (path.startsWith("/admin") && at.startsWith("/access")) problems.push("sent back to the staff sign-in");
     if (expect && !(await page.locator(expect).count())) problems.push(`${expect} is not on the page`);
     if (scr && !path.startsWith("/admin")) problems.push(...(await quality(page, scr, lang)));
     if (links) problems.push(...(await deadLinks(page)));

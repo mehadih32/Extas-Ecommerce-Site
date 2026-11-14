@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { preload } from 'react-dom';
 import '../fonts/site.css';
+import { BrowserGuards } from '@/components/BrowserGuards';
 import './globals.css';
 import dict from '../../messages/status.bn.json';
 import { t } from '@/lib/i18n';
@@ -32,7 +33,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   if (isShopLang(lang)) for (const href of shopDefaultFontPreloads()) preload(href, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous', fetchPriority: 'low' });
   return (
     <html lang={isShopLang(lang) ? lang : 'bn'} translate="no">
-      <body className="min-h-dvh font-sans antialiased">{children}</body>
+      <body className="min-h-dvh font-sans antialiased">
+        <BrowserGuards />
+        {children}
+      </body>
     </html>
   );
 }

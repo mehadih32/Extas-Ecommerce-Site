@@ -372,7 +372,7 @@ async function checkOne(browser, device, url, rules, matrix, opts = {}) {
     const res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
     finalUrl = page.url();
     if (!res || res.status() >= 400) issues.push({ k: 'PAGE-STATUS', d: `HTTP ${res ? res.status() : 'no answer'}` });
-    if (opts.state && new URL(finalUrl).pathname.startsWith('/admin/login')) issues.push({ k: 'SIGNED-OUT', d: 'sent to the sign-in page with a session' });
+    if (opts.state && new URL(finalUrl).pathname.startsWith('/access')) issues.push({ k: 'SIGNED-OUT', d: 'sent to the sign-in page with a session' });
     await page.waitForTimeout(rules.settleMs);
     // follow-up 75: open what the plan names (the phone menu, a category's sub-categories) before measuring
     for (const sel of opts.clicks ?? []) {

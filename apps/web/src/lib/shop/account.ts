@@ -17,10 +17,11 @@ import { getPrisma } from '@extas/db/client';
 import { adminDeps, readCookie } from '../admin-auth';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import type { AccountApiDeps } from './account-api';
+import { CUSTOMER_COOKIE_NAME } from './customer-cookie';
 import { shopStoreId } from './context';
 import { shopT } from './dict';
 
-export const CUSTOMER_COOKIE = '__Host-extas_c';
+export const CUSTOMER_COOKIE = CUSTOMER_COOKIE_NAME;
 export const DEVICE_COOKIE = '__Host-extas_dev';
 
 /** The account services' dependencies, or null without a database. */

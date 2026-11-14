@@ -19,6 +19,10 @@ export interface ShellLangLabels {
 }
 
 export interface ShellModel {
+  /** CN-053: where the staff sign-in lives now (`admin.loginPath`), for sign-out and an ended session. */
+  loginPath: string;
+  /** CN-053: the short commit of the build that drew this page (lib/build-id.ts), shown in the footer line. */
+  buildId: string;
   lang: AdminLang;
   /** `shell.*` of the admin dictionary (and the switch's labels). */
   dict: Dict;

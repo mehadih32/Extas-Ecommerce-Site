@@ -8,6 +8,11 @@ const config: NextConfig = {
   // gate measured the footer's unfitted first paint ("Track my order" cut at 390 px). Dev only; a build ignores it.
   allowedDevOrigins: ['127.0.0.1'],
   reactStrictMode: true,
+  // CN-053 (14 Nov 2026): every build carries the commit it was made from as its build id and deployment id. A tab opened
+  // before a deploy then knows the server changed (Next opens the next page with a full load instead of asking for the
+  // old build's files), and the browser's cached files are named for this build. Without a commit (a local build) Next
+  // keeps its own random id.
+  ...(process.env.GIT_SHA ? { deploymentId: process.env.GIT_SHA, generateBuildId: async () => process.env.GIT_SHA as string } : {}),
   // The repository root holds the docs the status page is generated from.
   outputFileTracingRoot: new URL('../../', import.meta.url).pathname,
   // Workspace packages ship TypeScript source (PR 13 database client, PR 491 settings, PR 493 vault, PR 15 auth,
