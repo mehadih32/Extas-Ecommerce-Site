@@ -285,6 +285,12 @@
         "label": "Telegram commands",
         "help": "Off by default. When on (and the Telegram connection's webhook secret is set in Keys & connections), a message naming an agent or its code is assigned to that agent, with no name it goes to Gyani, and approvals come back as buttons. Every agent message starts with its own identity line either way."
       }
+    },
+    "memory": {
+      "enabled": {
+        "label": "Strong agent memory",
+        "help": "Off by default. On: every agent keeps a long-term memory (facts, decisions, your instructions, past campaigns and tasks, lessons) it can search and that is never deleted silently — only archived or corrected by you."
+      }
     }
   },
   "theme": {
