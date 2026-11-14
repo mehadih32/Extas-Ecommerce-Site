@@ -19,7 +19,7 @@ const PAIRS = [
   ['home-D', '/admin?design=D', '#home'],
   ['orders', '/admin/orders', '#orders--all'],
   ['products', '/admin/products', '#products--all'],
-  ['couriers', '/admin/delivery/couriers', '#couriers--overview'],
+  ['couriers', '/admin/delivery', '#couriers--overview'],
   ['claims', '/admin/delivery/claims', '#couriers--claims'],
   ['sets', '/admin/products/sets', '#products--sets'],
   ['ai-training', '/admin/ai/training', '#ai--train'],
@@ -28,7 +28,7 @@ const PAIRS = [
   ['reports-marketing', '/admin/reports/marketing', '#reports--marketing'],
   ['reports-review', '/admin/reports/review', '#reports--review'],
   ['policies', '/admin/website/policies', '#website--policies'],
-  ['practice', '/admin/settings/practice', '#settings--keys'],
+  ['practice', '/admin/settings/practice', '#settings--store'],
 ];
 const VPS = [['phone', 390, 844], ['desktop', 1366, 900]];
 const MAXH = 2400;
@@ -65,7 +65,7 @@ for (const [vn, w, h] of VPS) {
   const rc = await browser.newContext({ viewport: { width: w, height: h }, storageState: state, deviceScaleFactor: 1, hasTouch: vn === 'phone' });
   const pc = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: vn === 'phone' });
   for (const [key, real, pr] of PAIRS) {
-    const r = await shot(rc, base + real, `${out}/real-${key}-${vn}.jpg`, 1200);
+    const r = await shot(rc, base + real, `${out}/real-${key}-${vn}.jpg`, 2500);
     const p = await shot(pc, `${proto}/index.html${pr}`, `${out}/proto-${key}-${vn}.jpg`, 900);
     // side by side
     const b64 = (f) => readFileSync(f).toString('base64');
