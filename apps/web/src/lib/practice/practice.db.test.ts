@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { PRACTICE_PHONE_PREFIX } from '@extas/db/client';
-import { seedPractice } from './seed';
+import { seedPractice, completeProducts } from './seed';
 import { practiceCounts, resetPractice } from './reset';
 
 const NOW = new Date('2026-11-13T08:00:00Z');
@@ -155,7 +155,12 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await db.notificationLog.count()).toBe(0);
     expect(await db.stockReservation.count()).toBe(0);
     expect(await db.stockMovement.count()).toBe(0);
-    expect(await db.stockLevel.count()).toBe(0);
+    // stock rows exist only for practice variants (a practice product is complete); never a movement or a reservation
+    expect(
+      await db.stockLevel.count({
+        where: { variant: { product: { isPractice: false } } },
+      }),
+    ).toBe(0);
     expect(await db.trackedEvent.count()).toBe(0);
     expect((await db.payment.findMany({ where: { storeId: S, isPractice: true } })).every((p) => p.status === 'PAID')).toBe(true);
     const phones = [
@@ -270,5 +275,155 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     await resetPractice(t.prisma, S);
     await seedPractice(t.prisma, S, NOW);
     expect(await shape()).toEqual(a);
+  });
+
+  it('makes every practice product complete: category, 2+ colours, sizes, stock (some low, some out), a size chart, a fabric, a description; still DRAFT', async () => {
+    await resetPractice(t.prisma, S);
+    await seedPractice(t.prisma, S, NOW);
+    const db = t.prisma;
+    const products = await db.product.findMany({
+      where: { storeId: S, isPractice: true },
+      include: {
+        variants: { include: { stockLevels: true } },
+        colours: true,
+      },
+    });
+    expect(products.length).toBeGreaterThan(0);
+    for (const p of products) {
+      expect(p.status, p.slug).toBe('DRAFT');
+      expect(p.categoryId, p.slug).not.toBeNull();
+      expect(p.fabricId, p.slug).not.toBeNull();
+      expect(p.descriptionEn, p.slug).toBeTruthy();
+      expect(p.colours.length, p.slug).toBeGreaterThanOrEqual(2);
+      expect(
+        p.variants.every((v) => v.colourId && v.sizeId),
+        p.slug,
+      ).toBe(true);
+      expect(
+        p.variants.every((v) => v.stockLevels.length === 1),
+        p.slug,
+      ).toBe(true);
+      expect(
+        await db.sizeChartAssignment.count({
+          where: { storeId: S, productId: p.id },
+        }),
+        p.slug,
+      ).toBe(1);
+    }
+    const qty = products.flatMap((p) => p.variants.flatMap((v) => v.stockLevels.map((l) => l.onHand)));
+    expect(qty.some((q) => q === 0)).toBe(true);
+    expect(qty.some((q) => q > 0 && q <= 3)).toBe(true);
+    expect(qty.some((q) => q > 3)).toBe(true);
+  });
+
+  it('pressing "Add sample data" again changes nothing, and completes an older empty shell without touching real rows', async () => {
+    const db = t.prisma;
+    const count = async () => ({
+      p: await db.product.count({ where: { storeId: S } }),
+      v: await db.productVariant.count({ where: { storeId: S } }),
+      pc: await db.productColour.count({ where: { storeId: S } }),
+      st: await db.stockLevel.count(),
+      sc: await db.sizeChartAssignment.count({ where: { storeId: S } }),
+      cp: await db.categoryProduct.count({ where: { storeId: S } }),
+      col: await db.colour.count({ where: { storeId: S } }),
+      fab: await db.fabric.count({ where: { storeId: S } }),
+    });
+    const before = await count();
+    expect((await seedPractice(t.prisma, S, NOW)).seeded).toBe(false);
+    expect(await count()).toEqual(before);
+    // make the old shell shape again: strip everything the completion adds
+    const prac = (
+      await db.product.findMany({
+        where: { storeId: S, isPractice: true },
+        select: { id: true },
+      })
+    ).map((p) => p.id);
+    await db.stockLevel.deleteMany({
+      where: { variant: { productId: { in: prac } } },
+    });
+    await db.sizeChartAssignment.deleteMany({
+      where: { storeId: S, productId: { in: prac } },
+    });
+    await db.categoryProduct.deleteMany({
+      where: { productId: { in: prac } },
+    });
+    await db.productColour.deleteMany({ where: { productId: { in: prac } } });
+    await db.productVariant.updateMany({
+      where: { productId: { in: prac } },
+      data: { colourId: null, sizeId: null, inStock: false },
+    });
+    await db.product.updateMany({
+      where: { id: { in: prac } },
+      data: {
+        categoryId: null,
+        fabricId: null,
+        descriptionEn: null,
+        inStock: false,
+      },
+    });
+    const realBefore = await db.product.findUnique({
+      where: { id: realProductId },
+    });
+    await seedPractice(t.prisma, S, NOW);
+    expect(await count()).toEqual(before);
+    expect(await db.product.findUnique({ where: { id: realProductId } })).toEqual(realBefore);
+    const shell = await db.product.findFirst({
+      where: { id: { in: prac } },
+      include: { variants: true },
+    });
+    expect(shell?.categoryId).not.toBeNull();
+    expect(shell?.variants.every((v) => v.colourId && v.sizeId)).toBe(true);
+    // the completion on its own is safe with nothing to complete
+    expect(
+      await completeProducts(db, S, {
+        products: [],
+        variantRows: [],
+        variants: [],
+        meta: new Map(),
+      }),
+    ).toEqual({});
+  });
+
+  it('reset removes every row the completion added and keeps a real colour, size, category, fabric and product', async () => {
+    const db = t.prisma;
+    const realColour = await db.colour.create({
+      data: {
+        storeId: S,
+        key: 'real-navy',
+        nameEn: 'Real navy',
+        hex: '#000080',
+        synonyms: [],
+      },
+    });
+    const realSize = await db.size.create({
+      data: { storeId: S, key: 'real-s', label: 'S', sortOrder: 1 },
+    });
+    const realFabric = await db.fabric.create({
+      data: { storeId: S, nameEn: 'My own cotton' },
+    });
+    const realCategory = await db.category.count({ where: { storeId: S } });
+    const stockBefore = await db.stockLevel.count();
+    await seedPractice(t.prisma, S, NOW);
+    expect(
+      await db.colour.count({
+        where: { storeId: S, key: { startsWith: 'practice-' } },
+      }),
+    ).toBeGreaterThan(0);
+    await resetPractice(t.prisma, S);
+    for (const [table, where] of [
+      ['colour', { storeId: S, key: { startsWith: 'practice-' } }],
+      ['size', { storeId: S, key: { startsWith: 'practice-' } }],
+      ['fabric', { storeId: S, nameEn: { endsWith: ' (practice)' } }],
+      ['sizeChart', { storeId: S, name: { endsWith: ' (practice)' } }],
+      ['productColour', { storeId: S }],
+      ['categoryProduct', { product: { isPractice: true } }],
+    ] as const)
+      expect(await (db[table] as unknown as { count: (a: unknown) => Promise<number> }).count({ where }), table).toBe(0);
+    expect(await db.stockLevel.count()).toBe(stockBefore);
+    expect(await db.colour.findUnique({ where: { id: realColour.id } })).not.toBeNull();
+    expect(await db.size.findUnique({ where: { id: realSize.id } })).not.toBeNull();
+    expect(await db.fabric.findUnique({ where: { id: realFabric.id } })).not.toBeNull();
+    expect(await db.category.count({ where: { storeId: S } })).toBe(realCategory);
+    expect(await db.product.findUnique({ where: { id: realProductId } })).not.toBeNull();
   });
 });

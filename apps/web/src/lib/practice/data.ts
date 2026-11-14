@@ -180,6 +180,83 @@ export const COLOURS = ['Navy', 'Black', 'White', 'Olive', 'Maroon', 'Grey', 'Sk
 export const SIZES_TOP = ['S', 'M', 'L', 'XL', 'XXL'] as const;
 export const SIZES_BOTTOM = ['30', '32', '34', '36', '38'] as const;
 
+/** Swatch colours for the practice colours (a sample figure, never a brand colour). */
+export const COLOUR_HEX: Record<(typeof COLOURS)[number], string> = {
+  Navy: '#1F2A44', // hardcode-ok: practice swatch
+  Black: '#111111', // hardcode-ok: practice swatch
+  White: '#F5F5F5', // hardcode-ok: practice swatch
+  Olive: '#556B2F', // hardcode-ok: practice swatch
+  Maroon: '#800000', // hardcode-ok: practice swatch
+  Grey: '#808080', // hardcode-ok: practice swatch
+  Sky: '#87CEEB', // hardcode-ok: practice swatch
+  Beige: '#D8C8A8', // hardcode-ok: practice swatch
+};
+
+/** A practice product's garment kind decides its store category, size chart and fabric (the closest default-pack category). */
+export type GarmentKind = 'tee' | 'shirt' | 'bottom';
+export const KIND_BY_CODE: Record<string, { kind: GarmentKind; category: string }> = {
+  PL: { kind: 'tee', category: 'polos' },
+  TS: { kind: 'tee', category: 'tshirts' },
+  SH: { kind: 'shirt', category: 'shirts' },
+  PJ: { kind: 'shirt', category: 'panjabi' },
+  TR: { kind: 'bottom', category: 'trousers' },
+  DN: { kind: 'bottom', category: 'trousers' },
+  JG: { kind: 'bottom', category: 'trousers' },
+  HD: { kind: 'shirt', category: 'hoodies' },
+  JK: { kind: 'shirt', category: 'hoodies' },
+  KT: { kind: 'shirt', category: 'panjabi' },
+};
+export const KINDS: Record<
+  GarmentKind,
+  {
+    garmentType: string;
+    fabric: string;
+    chart: string;
+    columns: string[];
+    rows: number[][];
+  }
+> = {
+  tee: {
+    garmentType: 'tee',
+    fabric: 'Combed cotton jersey (practice)',
+    chart: 'Tee, regular fit (practice)',
+    columns: ['chest', 'length', 'shoulder', 'sleeve'],
+    rows: [
+      [38, 27, 16.5, 7.5],
+      [40, 28, 17, 8],
+      [42, 29, 18, 8.25],
+      [44, 30, 19, 8.5],
+      [46, 31, 20, 8.75],
+    ], // hardcode-ok: sample measurements in inches
+  },
+  shirt: {
+    garmentType: 'shirt',
+    fabric: 'Cotton blend (practice)',
+    chart: 'Shirt, regular fit (practice)',
+    columns: ['chest', 'length', 'shoulder', 'sleeve'],
+    rows: [
+      [40, 28, 17, 24],
+      [42, 29, 18, 25],
+      [44, 30, 19, 25.5],
+      [46, 31, 20, 26],
+      [48, 32, 21, 26.5],
+    ], // hardcode-ok: sample measurements in inches
+  },
+  bottom: {
+    garmentType: 'trouser',
+    fabric: 'Cotton twill (practice)',
+    chart: 'Trouser, regular fit (practice)',
+    columns: ['waist', 'hip', 'thigh', 'length', 'legOpening'],
+    rows: [
+      [30, 38, 23, 40, 8],
+      [32, 40, 24, 41, 8.5],
+      [34, 42, 25, 41.5, 9],
+      [36, 44, 26, 42, 9.5],
+      [38, 46, 27, 42.5, 10],
+    ], // hardcode-ok: sample measurements in inches
+  },
+};
+
 /** The prototype's couriers (a practice courier is made for each; none is ever connected). */
 export const COURIERS = [
   {

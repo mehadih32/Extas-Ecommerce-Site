@@ -4,10 +4,11 @@
 // products, 18 incomplete orders, courier payouts and courier claims, with the prototype's names, areas, prices and
 // couriers. Rules:
 //  - Deterministic: the same `now` gives the same data (a fixed seed, ids made from the record's own key).
-//  - Idempotent: when practice orders already exist nothing is written ("already").
+//  - Idempotent: when practice orders already exist only missing product details are added ("already").
 //  - Every row it makes carries `isPractice = true`, so "Reset practice data" removes exactly these rows and nothing else.
-//  - It touches nothing outside the system: no ERP push, no courier call, no message, no stock level or movement, no
-//    reservation, no payment gateway. Practice products are DRAFT (never on the live shop) and every practice phone
+//  - It touches nothing outside the system: no ERP push, no courier call, no message, no stock movement, no
+//    reservation, no payment gateway. A practice product is complete (category, colours, sizes, stock levels, size chart,
+//    fabric, description; no photo) and pressing the button again completes older empty ones. Practice products are DRAFT (never on the live shop) and every practice phone
 //    number is in a reserved range that no operator uses.
 // Tables that are not on `main` yet are skipped (see docs/demo/admin-proto-v5/gap/PRACTICE-TODO.md).
 import { createHash } from 'node:crypto';
@@ -18,12 +19,15 @@ import {
   CATEGORIES,
   CHANNELS,
   COLOURS,
+  COLOUR_HEX,
   COURIERS,
   DELIVERY_FEE,
   DHAKA_AREAS,
   FIRST_NAMES,
   FREE_DELIVERY_OVER,
   HOLD_CODES,
+  KINDS,
+  KIND_BY_CODE,
   LAST_NAMES,
   ORDER_PLAN,
   OUTSIDE_AREAS,
@@ -33,6 +37,7 @@ import {
   SIZES_BOTTOM,
   SIZES_TOP,
   SUB_AREAS,
+  type GarmentKind,
   type OrderKind,
   type Zone,
 } from './data';
@@ -96,21 +101,319 @@ interface Variant {
   costMinor: number;
 }
 
+export interface ProductPlan {
+  products: Prisma.ProductCreateManyInput[];
+  variantRows: Prisma.ProductVariantCreateManyInput[];
+  variants: Variant[];
+  /** product id → what the completion needs to know */
+  meta: Map<
+    string,
+    {
+      code: string;
+      name: string;
+      colours: string[];
+      sizes: readonly string[];
+      skus: { id: string; colour: string; size: string; sku: string }[];
+    }
+  >;
+}
+
+/** The practice products and variants. It is the first user of the random numbers, so a fresh generator always gives the same plan. */
+function planProducts(rng: ReturnType<typeof makeRng>, storeId: number, minor: (taka: number) => number): ProductPlan {
+  const plan: ProductPlan = {
+    products: [],
+    variantRows: [],
+    variants: [],
+    meta: new Map(),
+  };
+  let n = 1000;
+  for (const cat of CATEGORIES) {
+    for (const name of cat.names.slice(0, 2)) {
+      n += 1;
+      const pid = practiceId(`product:${n}`);
+      const price = Math.round(rng.int(cat.price[0], cat.price[1]) / 10) * 10 - 10;
+      const cost = Math.round(price * (0.36 + rng.next() * 0.12));
+      const cols = [...COLOURS].sort(() => rng.next() - 0.5).slice(0, rng.int(2, 3));
+      const sizes = cat.bottom ? SIZES_BOTTOM : SIZES_TOP;
+      const slug = `practice-${name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')}-${n}`;
+      plan.products.push({
+        id: pid,
+        storeId,
+        slug,
+        nameEn: `${name} (practice)`,
+        status: 'DRAFT',
+        minPriceMinor: minor(price),
+        isPractice: true,
+      });
+      const skus: { id: string; colour: string; size: string; sku: string }[] = [];
+      let order = 0;
+      for (const colour of cols) {
+        for (const size of sizes) {
+          const sku = `PRC-${cat.code}-${n}-${colour.slice(0, 3).toUpperCase()}-${size}`;
+          const vid = practiceId(`variant:${sku}`);
+          plan.variantRows.push({
+            id: vid,
+            storeId,
+            productId: pid,
+            sku,
+            priceMinor: minor(price),
+            active: true,
+            inStock: false,
+            sortOrder: order++,
+          });
+          plan.variants.push({
+            id: vid,
+            productId: pid,
+            name,
+            sku,
+            colour,
+            size,
+            priceMinor: minor(price),
+            costMinor: minor(cost),
+          });
+          skus.push({ id: vid, colour, size, sku });
+        }
+      }
+      plan.meta.set(pid, { code: cat.code, name, colours: cols, sizes, skus });
+    }
+  }
+  return plan;
+}
+
+/** A varied, repeatable on-hand quantity for a practice SKU: about 2 in 10 are out, 2 in 10 are low, the rest are healthy. */
+export function practiceStock(sku: string): number {
+  const v = createHash('sha1').update(`extas-practice-stock:${sku}`).digest()[0]! % 10; // hardcode-ok: ten buckets of a sample spread
+  if (v < 2) return 0; // hardcode-ok: sample spread
+  if (v < 4) return 1 + (v % 3); // hardcode-ok: sample spread (low: 1-3)
+  return 8 + v * 3; // hardcode-ok: sample spread (healthy)
+}
+
+/**
+ * Completes the practice products: category, colours (+ sizes on the variants), stock, size chart, fabric and a short
+ * description. It only fills what is missing (so a second run changes nothing and an older empty shell is completed), touches
+ * only practice products, and every colour, size, fabric and chart it makes is practice-owned (key "practice-..." or name
+ * "... (practice)"), so "Reset practice data" removes exactly those and never the owner's own. No photo is made: a photo needs
+ * a stored file, and a made-up file would show as a broken picture on the shop.
+ */
+export async function completeProducts(db: Db, storeId: number, plan: ProductPlan): Promise<Record<string, number>> {
+  const have = await db.product.findMany({
+    where: { storeId, isPractice: true, id: { in: [...plan.meta.keys()] } },
+    select: { id: true },
+  });
+  if (have.length === 0) return {};
+  const ids = have.map((p) => p.id);
+  const categories = new Map(
+    (
+      await db.category.findMany({
+        where: { storeId },
+        select: { id: true, slug: true },
+      })
+    ).map((c) => [c.slug, c.id]),
+  );
+  const garments = new Map(
+    (
+      await db.garmentType.findMany({
+        where: { storeId },
+        select: { id: true, key: true },
+      })
+    ).map((g) => [g.key, g.id]),
+  );
+
+  // practice colours and sizes
+  const colourIds = new Map<string, string>();
+  for (const name of COLOURS) {
+    const key = `practice-${name.toLowerCase()}`;
+    const row = await db.colour.upsert({
+      where: { storeId_key: { storeId, key } },
+      update: {},
+      create: {
+        storeId,
+        key,
+        nameEn: name,
+        hex: COLOUR_HEX[name],
+        synonyms: [],
+      },
+      select: { id: true },
+    });
+    colourIds.set(name, row.id);
+  }
+  const sizeIds = new Map<string, string>();
+  for (const [i, label] of [...SIZES_TOP, ...SIZES_BOTTOM].entries()) {
+    const key = `practice-${label.toLowerCase()}`;
+    const row = await db.size.upsert({
+      where: { storeId_key: { storeId, key } },
+      update: {},
+      create: { storeId, key, label, sortOrder: (i + 1) * 10 }, // hardcode-ok: sort step
+      select: { id: true },
+    });
+    sizeIds.set(label, row.id);
+  }
+
+  // per garment kind: a fabric and a size chart
+  const fabricIds = new Map<GarmentKind, string>();
+  const chartIds = new Map<GarmentKind, string>();
+  for (const kind of Object.keys(KINDS) as GarmentKind[]) {
+    const k = KINDS[kind];
+    const fabric =
+      (await db.fabric.findFirst({
+        where: { storeId, nameEn: k.fabric },
+        select: { id: true },
+      })) ??
+      (await db.fabric.create({
+        data: {
+          storeId,
+          nameEn: k.fabric,
+          careEn: 'Machine wash cold. Do not bleach.',
+        },
+        select: { id: true },
+      }));
+    fabricIds.set(kind, fabric.id);
+    const garmentTypeId = garments.get(k.garmentType);
+    if (!garmentTypeId) continue; // the store has no such garment type: no chart (a chart needs one)
+    const sizes = kind === 'bottom' ? SIZES_BOTTOM : SIZES_TOP;
+    const chart =
+      (await db.sizeChart.findFirst({
+        where: { storeId, name: k.chart },
+        select: { id: true },
+      })) ??
+      (await db.sizeChart.create({
+        data: {
+          storeId,
+          garmentTypeId,
+          name: k.chart,
+          fitKey: 'regular',
+          columns: k.columns,
+          rows: sizes.map((z, i) => ({
+            size: `practice-${z.toLowerCase()}`,
+            values: k.rows[i]!,
+          })),
+        },
+        select: { id: true },
+      }));
+    chartIds.set(kind, chart.id);
+  }
+
+  // the shared stock pool: the first location of the store's warehouse (none made here; with none, no stock rows)
+  const location = await db.inventoryLocation.findFirst({
+    where: { archivedAt: null },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true },
+  });
+
+  const counts = { practiceStockRows: 0, practiceCharts: chartIds.size };
+  for (const [pid, m] of plan.meta) {
+    if (!ids.includes(pid)) continue;
+    const info = KIND_BY_CODE[m.code];
+    if (!info) continue;
+    const categoryId = categories.get(info.category);
+    const qtys = m.skus.map((v) => practiceStock(v.sku));
+    const anyStock = qtys.some((q) => q > 0);
+    // product fields: only where empty
+    if (categoryId)
+      await db.product.updateMany({
+        where: { id: pid, categoryId: null },
+        data: { categoryId },
+      });
+    await db.product.updateMany({
+      where: { id: pid, fabricId: null },
+      data: { fabricId: fabricIds.get(info.kind)! },
+    });
+    await db.product.updateMany({
+      where: { id: pid, descriptionEn: null },
+      data: {
+        descriptionEn: `${m.name}: a practice product with colours, sizes, stock, a size chart and a fabric, so you can practise the whole admin. It stays a draft until you publish it yourself.`,
+      },
+    });
+    await db.product.updateMany({
+      where: { id: pid, inStock: !anyStock },
+      data: { inStock: anyStock },
+    });
+    if (categoryId) {
+      await db.categoryProduct.createMany({
+        data: [
+          {
+            storeId,
+            categoryId,
+            productId: pid,
+            isVisible: true,
+            inStock: anyStock,
+          },
+        ],
+        skipDuplicates: true,
+      });
+    }
+    // colours of the product
+    await db.productColour.createMany({
+      data: m.colours.map((c, i) => ({
+        storeId,
+        productId: pid,
+        colourId: colourIds.get(c)!,
+        sortOrder: i * 10,
+      })), // hardcode-ok: sort step
+      skipDuplicates: true,
+    });
+    // variants: colour and size (only where still empty), then stock
+    for (const [i, v] of m.skus.entries()) {
+      await db.productVariant.updateMany({
+        where: { id: v.id, OR: [{ colourId: null }, { sizeId: null }] },
+        data: {
+          colourId: colourIds.get(v.colour)!,
+          sizeId: sizeIds.get(v.size)!,
+          inStock: qtys[i]! > 0,
+        },
+      });
+    }
+    if (location) {
+      const made = await db.stockLevel.createMany({
+        data: m.skus.map((v, i) => ({
+          variantId: v.id,
+          locationId: location.id,
+          onHand: qtys[i]!,
+          available: qtys[i]!,
+        })),
+        skipDuplicates: true,
+      });
+      counts.practiceStockRows += made.count;
+    }
+    // the size chart of the product
+    const sizeChartId = chartIds.get(info.kind);
+    if (
+      sizeChartId &&
+      !(await db.sizeChartAssignment.findFirst({
+        where: { storeId, sizeChartId, productId: pid },
+        select: { id: true },
+      }))
+    ) {
+      await db.sizeChartAssignment.create({
+        data: { storeId, sizeChartId, productId: pid },
+      });
+    }
+  }
+  return counts;
+}
+
 export async function seedPractice(db: Db, storeId: number, now: Date = new Date()): Promise<SeedResult> {
   const store = await db.store.findUnique({
     where: { id: storeId },
     select: { id: true, currency: true },
   });
   if (!store) return { seeded: false, reason: 'no-store', counts: {} };
-  if ((await db.order.count({ where: { storeId, isPractice: true } })) > 0) return { seeded: false, reason: 'already', counts: {} };
-
-  const rng = makeRng(SEED);
   const digits =
     new Intl.NumberFormat('en', {
       style: 'currency',
       currency: store.currency,
     }).resolvedOptions().maximumFractionDigits ?? 2;
   const minor = (taka: number) => Math.round(taka * 10 ** digits);
+  if ((await db.order.count({ where: { storeId, isPractice: true } })) > 0) {
+    // an older run left empty product shells: complete them (adds only what is missing, nothing else is touched)
+    const done = await completeProducts(db, storeId, planProducts(makeRng(SEED), storeId, minor));
+    return { seeded: false, reason: 'already', counts: done };
+  }
+
+  const rng = makeRng(SEED);
   const counts: Record<string, number> = {};
 
   // ---- couriers (practice ones; never enabled, never connected)
@@ -131,67 +434,16 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   });
   counts.couriers = couriers.length;
 
-  // ---- products (DRAFT: never on the live shop) with variants
-  const variants: Variant[] = [];
-  const products: Prisma.ProductCreateManyInput[] = [];
-  const variantRows: Prisma.ProductVariantCreateManyInput[] = [];
-  let n = 1000;
-  for (const cat of CATEGORIES) {
-    for (const name of cat.names.slice(0, 2)) {
-      n += 1;
-      const pid = practiceId(`product:${n}`);
-      const price = Math.round(rng.int(cat.price[0], cat.price[1]) / 10) * 10 - 10;
-      const cost = Math.round(price * (0.36 + rng.next() * 0.12));
-      const cols = [...COLOURS].sort(() => rng.next() - 0.5).slice(0, rng.int(2, 3));
-      const sizes = cat.bottom ? SIZES_BOTTOM : SIZES_TOP;
-      const slug = `practice-${name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')}-${n}`;
-      products.push({
-        id: pid,
-        storeId,
-        slug,
-        nameEn: `${name} (practice)`,
-        status: 'DRAFT',
-        minPriceMinor: minor(price),
-        isPractice: true,
-      });
-      let order = 0;
-      for (const colour of cols) {
-        for (const size of sizes) {
-          const sku = `PRC-${cat.code}-${n}-${colour.slice(0, 3).toUpperCase()}-${size}`;
-          const vid = practiceId(`variant:${sku}`);
-          variantRows.push({
-            id: vid,
-            storeId,
-            productId: pid,
-            sku,
-            priceMinor: minor(price),
-            active: true,
-            inStock: false,
-            sortOrder: order++,
-          });
-          variants.push({
-            id: vid,
-            productId: pid,
-            name,
-            sku,
-            colour,
-            size,
-            priceMinor: minor(price),
-            costMinor: minor(cost),
-          });
-        }
-      }
-    }
-  }
-  await db.product.createMany({ data: products, skipDuplicates: true });
+  // ---- products (DRAFT: never on the live shop) with variants, then completed (category, colours, sizes, stock, chart, fabric)
+  const plan = planProducts(rng, storeId, minor);
+  await db.product.createMany({ data: plan.products, skipDuplicates: true });
   await db.productVariant.createMany({
-    data: variantRows,
+    data: plan.variantRows,
     skipDuplicates: true,
   });
-  counts.products = products.length;
+  counts.products = plan.products.length;
+  Object.assign(counts, await completeProducts(db, storeId, plan));
+  const variants = plan.variants;
   const byProduct = new Map<string, Variant[]>();
   for (const v of variants) (byProduct.get(v.productId) ?? byProduct.set(v.productId, []).get(v.productId)!).push(v);
   const productIds = [...byProduct.keys()];

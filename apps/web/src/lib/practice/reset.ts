@@ -103,8 +103,60 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
         await removeRows(tx, fks, 'Product', `"storeId" = ${Math.trunc(storeId)} AND "isDemo" = true`, 0, removed);
         removedDemo = (removed.get('Product') ?? 0) - before;
       }
-      // 4. the practice sample products
+      // 4. the practice sample products. Their size-chart links have no foreign key, so they go first, by hand.
+      const practiceProducts = (
+        await tx.product.findMany({
+          where: { storeId, isPractice: true },
+          select: { id: true },
+        })
+      ).map((p) => p.id);
+      const links = await tx.sizeChartAssignment.deleteMany({
+        where: { storeId, productId: { in: practiceProducts } },
+      });
+      if (links.count) removed.set('SizeChartAssignment', links.count);
       await removeRows(tx, fks, 'Product', where, 0, removed);
+      // 4b. what the sample products brought along, practice-owned by key or name and no longer used by any product
+      // (a real colour, size, fabric or chart never carries these marks, and one still in use is left alone)
+      const gone = {
+        SizeChart: (
+          await tx.sizeChart.deleteMany({
+            where: {
+              storeId,
+              name: { endsWith: ' (practice)' },
+              assignments: { none: {} },
+            },
+          })
+        ).count,
+        Fabric: (
+          await tx.fabric.deleteMany({
+            where: {
+              storeId,
+              nameEn: { endsWith: ' (practice)' },
+              products: { none: {} },
+            },
+          })
+        ).count,
+        Colour: (
+          await tx.colour.deleteMany({
+            where: {
+              storeId,
+              key: { startsWith: 'practice-' },
+              variants: { none: {} },
+              productColours: { none: {} },
+            },
+          })
+        ).count,
+        Size: (
+          await tx.size.deleteMany({
+            where: {
+              storeId,
+              key: { startsWith: 'practice-' },
+              variants: { none: {} },
+            },
+          })
+        ).count,
+      };
+      for (const [table, n] of Object.entries(gone)) if (n) removed.set(table, n);
       const keptProducts = await tx.product.count({ where: { storeId } });
       return {
         removed: Object.fromEntries(removed),
