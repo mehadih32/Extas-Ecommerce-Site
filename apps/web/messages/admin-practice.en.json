@@ -55,7 +55,18 @@
       "PIN_LOCKED": "Too many wrong tries. Wait a while.",
       "WRONG_PIN": "That PIN is not right.",
       "network": "No connection. Try again.",
-      "server-error": "Something went wrong. Try again."
+      "server-error": "Something went wrong. Try again.",
+      "MEDIA_UNAVAILABLE": "Picture storage is not available now. Try again later.",
+      "NO_SAMPLE_PRODUCTS": "There are no sample products yet. Add sample data first."
+    },
+    "photos": {
+      "add": "Add practice photos",
+      "working": "Making pictures…",
+      "none": "Add sample data first; then the sample products can get pictures.",
+      "progress": "{done} of {total} products done. Press again to continue if you close this page.",
+      "complete": "All {total} sample products have their pictures.",
+      "finished": "Practice photos are ready.",
+      "note": "Each sample product gets a front, back, detail and on-model picture. They stay inside the practice area and a reset removes them."
     }
   }
 }

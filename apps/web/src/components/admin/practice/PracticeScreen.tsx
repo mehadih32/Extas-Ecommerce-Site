@@ -23,6 +23,10 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
   const [refill, setRefill] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<string | null>(null);
+  // the photo steps: how far it is (starts from what the page loaded); the loop stops when closed, the next press continues
+  const [pics, setPics] = useState<{ done: number; total: number } | null>(null);
+  const [picBusy, setPicBusy] = useState(false);
+  const shown = pics ?? view.photos;
 
   const say = (a: Awaited<ReturnType<typeof call>>) => {
     const k = `practice.errors.${a.status === 0 ? 'network' : (a.data.error ?? 'server-error')}`;
@@ -50,6 +54,29 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
       });
       router.refresh();
     } else say(a);
+  }
+  async function photos() {
+    setPicBusy(true);
+    setSaid(null);
+    let guard = 0;
+    for (;;) {
+      const a = await call('POST', '/api/admin/practice/photos', {});
+      if (!a.data.ok) {
+        say(a);
+        break;
+      }
+      const done = Number(a.data.done ?? 0);
+      const total = Number(a.data.total ?? 0);
+      setPics({ done, total });
+      if (a.data.finished === true) {
+        showToast({ text: c('photos.finished'), tone: 'ok' });
+        break;
+      }
+      // a step that made nothing and is not finished would repeat for ever: stop and let the owner press again
+      if (Number(a.data.added ?? 0) === 0 || ++guard > 200) break; // hardcode-ok: a loop guard, not a business number
+    }
+    setPicBusy(false);
+    router.refresh();
   }
   async function reset() {
     const a = await post('reset', { words, pin, removeDemo, refill });
@@ -90,6 +117,15 @@ export function PracticeScreen({ dict, view }: { dict: Dict; view: PracticeView 
           </button>
         </div>
         <p className="a2-xs a2-mute a2-mt6">{c('card.guard')}</p>
+        <div className="a2-mt12" data-testid="practice-photos">
+          <button type="button" className="a2-btn" disabled={busy || picBusy || !view.enabled || shown.total === 0} onClick={photos} data-testid="practice-photos-go">
+            {picBusy ? c('photos.working') : c('photos.add')}
+          </button>
+          <p className="a2-sm a2-mt6" role="status" data-testid="practice-photos-progress">
+            {shown.total === 0 ? c('photos.none') : shown.done >= shown.total ? c('photos.complete', { total: shown.total }) : c('photos.progress', { done: shown.done, total: shown.total })}
+          </p>
+          <p className="a2-xs a2-mute">{c('photos.note')}</p>
+        </div>
       </section>
 
       <section className="a2-card a2-mt12" data-testid="practice-counts">

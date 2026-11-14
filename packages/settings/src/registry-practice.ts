@@ -12,6 +12,9 @@ const V = 380;
 export const practiceFlagSchema = z.object({ on: z.boolean() }).strict();
 export type PracticeFlagSettings = z.output<typeof practiceFlagSchema>;
 
+/** `practice.photoBatch`: how many sample products get their pictures in one press of "Add practice photos" (small, so a press is quick). */
+export const practicePhotoBatchSchema = z.object({ count: z.number().int().min(1).max(20) }).strict();
+
 const base = {
   scope: 'store',
   valueType: 'JSON',
@@ -36,5 +39,13 @@ export const practiceSettings = {
     labelKey: 'practice.showReset.label',
     helpKey: 'practice.showReset.help',
     sortOrder: 729,
+  }),
+  'practice.photoBatch': setting({
+    ...base,
+    schema: practicePhotoBatchSchema,
+    default: { count: 4 }, // hardcode-ok: a small batch keeps one press under the web server's time limit; the owner can change it
+    labelKey: 'practice.photoBatch.label',
+    helpKey: 'practice.photoBatch.help',
+    sortOrder: 730,
   }),
 };

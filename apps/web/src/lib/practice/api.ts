@@ -11,7 +11,7 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../
 import { requireOwnerPin } from '../owner-pin';
 import { practiceCounts, resetPractice, type ResetResult } from './reset';
 import type { MediaDeps } from '@extas/media';
-import { addPracticePhotos } from './photos';
+import { addPracticePhotos, practicePhotoProgress } from './photos';
 import { seedPractice, type SeedResult } from './seed';
 
 /** The words typed to confirm a reset. */
@@ -25,16 +25,20 @@ export interface PracticeView {
   total: number;
   /** Products the owner uploaded himself (kept by a reset). */
   keptProducts: number;
+  /** Sample-product pictures: products with their whole set (`done`) of those that get pictures (`total`). */
+  photos: { done: number; total: number };
 }
 
 export async function practiceView(deps: AdminDeps, actor: Actor, storeId: number): Promise<PracticeView> {
-  const [enabled, showReset, counts, owner, kept] = await Promise.all([
+  const [enabled, showReset, counts, owner, kept, minimum] = await Promise.all([
     deps.resolver.value('practice.enabled', { storeId }),
     deps.resolver.value('practice.showReset', { storeId }),
     practiceCounts(deps.db, storeId),
     actor.staffUserId ? isOwner(deps.db, actor.staffUserId) : Promise.resolve(false),
     deps.db.product.count({ where: { storeId, isPractice: false } }),
+    deps.resolver.value('media.photos.minimum', { storeId }),
   ]);
+  const photos = await practicePhotoProgress(deps.db, storeId, minimum);
   return {
     enabled: enabled.on,
     showReset: enabled.on && showReset.on,
@@ -42,6 +46,7 @@ export async function practiceView(deps: AdminDeps, actor: Actor, storeId: numbe
     counts,
     total: Object.values(counts).reduce((a, b) => a + b, 0),
     keptProducts: kept,
+    photos,
   };
 }
 
@@ -79,9 +84,8 @@ export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestC
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
   const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date());
-  // the pictures of the sample products (needs the media storage; adds only what is missing)
-  // Photos: drawing and storing ~100 pictures took over four minutes in CI, too slow for one button press. Not called until it runs in the background.
-  void addPracticePhotos;
+  // The pictures of the sample products are NOT made here (about 100 pictures are too slow for one press): the owner
+  // presses "Add practice photos" (`addPhotosBatch`), which works in small steps.
   void media;
   if (result.seeded)
     await audit(
@@ -98,6 +102,46 @@ export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestC
       ctx,
     );
   return { ok: true, result };
+}
+
+export interface PhotosStep {
+  /** Photos made in this step. */
+  added: number;
+  done: number;
+  total: number;
+  /** True when every sample product has its whole set. */
+  finished: boolean;
+}
+
+/**
+ * "Add practice photos": one small step (`practice.photoBatch` products). Safe to repeat and to abandon: a step only does
+ * what is still missing, so the next press continues. Needs practice mode on and sample products to exist. The pictures
+ * are practice-owned (library folder "practice", placed on practice products only), so "Reset practice data" removes them.
+ */
+export async function addPhotosBatch(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, media: MediaDeps | null): Promise<Out<{ step: PhotosStep }>> {
+  if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
+  if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
+  if (!media) return { ok: false, error: 'MEDIA_UNAVAILABLE' };
+  const batch = await deps.resolver.value('practice.photoBatch', { storeId });
+  const before = await practicePhotoProgress(deps.db, storeId, await deps.resolver.value('media.photos.minimum', { storeId }));
+  if (before.total === 0) return { ok: false, error: 'NO_SAMPLE_PRODUCTS' };
+  const r = await addPracticePhotos(media, storeId, { limit: batch.count });
+  const finished = r.done >= r.total;
+  if (finished && r.photos > 0)
+    await audit(
+      deps.db,
+      actor,
+      {
+        action: 'practice.photos',
+        entityType: 'Practice',
+        entityId: String(storeId),
+        before: null,
+        after: { products: r.total },
+        storeId,
+      },
+      ctx,
+    );
+  return { ok: true, step: { added: r.photos, done: r.done, total: r.total, finished } };
 }
 
 const resetBody = z
@@ -155,6 +199,8 @@ const STATUS: Record<string, number> = {
   OWNER_ONLY: 403,
   PRACTICE_OFF: 409,
   RESET_HIDDEN: 409,
+  MEDIA_UNAVAILABLE: 503,
+  NO_SAMPLE_PRODUCTS: 409,
   WORDS_MISMATCH: 422,
   INVALID_INPUT: 422,
 };
@@ -192,6 +238,10 @@ export async function practiceRoute(request: Request, deps: AdminDeps | null, pa
             ...(await practiceView(deps!, g.actor, storeId)),
           })
         : fail(STATUS[r.error] ?? 422, r.error);
+    }
+    if (a === 'photos' && m === 'POST') {
+      const r = await addPhotosBatch(deps!, g.actor, g.ctx, storeId, media);
+      return r.ok ? json({ ok: true, ...r.step }) : fail(STATUS[r.error] ?? 422, r.error);
     }
     if (a === 'reset' && m === 'POST') {
       const r = await resetPracticeData(deps!, g.actor, g.ctx, storeId, await body(request), media);
