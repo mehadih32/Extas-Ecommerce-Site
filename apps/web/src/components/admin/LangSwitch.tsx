@@ -4,6 +4,7 @@
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { ADMIN_LANG_COOKIE } from '@/lib/admin-nav';
+import { setAdminCookie } from '@/lib/admin-prefs-client';
 
 export interface LangLabels {
   group: string;
