@@ -248,6 +248,7 @@ the pages are out of date.
 | [`admin-guide/pages/reports/profit.md`](admin-guide/pages/reports/profit.md) | Page guide (CN-026 six parts): Reports › Profit (`/admin/reports/profit`, PR 714) |
 | [`admin-guide/pages/reports/products.md`](admin-guide/pages/reports/products.md) | Page guide (CN-026 six parts): Reports › Products (`/admin/reports/products`, PR 715) |
 | [`admin-guide/pages/reports/marketing.md`](admin-guide/pages/reports/marketing.md) | Page guide (CN-026 six parts): Reports › Marketing & ads (`/admin/reports/marketing`, PR 716) |
+| [`admin-guide/pages/reports/review.md`](admin-guide/pages/reports/review.md) | Page guide (CN-026 six parts): Reports › Monthly review (`/admin/reports/review`, PR 717) |
 | [`admin-guide/pages/reports/areas.md`](admin-guide/pages/reports/areas.md) | Page guide (CN-026 six parts): Reports › Sales by area (`/admin/reports/areas`): Sales, pieces, returns and the return rate by district, upazila/thana or Dhaka area, table, map and CSV (PR 568) |
 | [`admin-guide/pages/marketing/landing.md`](admin-guide/pages/marketing/landing.md) | Page guide (CN-026 six parts): Marketing › Landing pages (`/admin/marketing/landing`): the pages for ads, their orders and how many were delivered, the master switch (off as shipped) (PR 254) |
 | [`admin-guide/pages/marketing/landing-builder.md`](admin-guide/pages/marketing/landing-builder.md) | Page guide (CN-026 six parts): one landing page's builder (`/admin/marketing/landing/<id>`): headline, product, link, campaign, the eight parts, publish, take down, archive (PR 254, 255) |
