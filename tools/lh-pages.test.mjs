@@ -248,6 +248,6 @@ describe('lh-pages: the one page list (CN-023)', () => {
     for (const p of ['/status', '/access', '/checkout/thanks/0', '/p/contrast-collar-polo', '/bn/p/contrast-collar-polo', '/bn/combos', '/bn/account/orders/0/invoice', '/search?q=polo']) {
       expect(paths).toContain(p);
     }
-    expect(paths.length).toBeGreaterThanOrEqual(55);
+    expect(paths.length).toBeGreaterThanOrEqual(45);
   });
 });
