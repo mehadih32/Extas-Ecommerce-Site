@@ -13,6 +13,8 @@ import { setting } from './define';
 import { dictionarySchema } from './schemas';
 
 const V = 14;
+// PR 712 (Products › Sets): its own registry version, the PR number.
+const V712 = 712;
 
 /** How a "% off the regular total" pack price is rounded to the rounding step. */
 export const comboRoundingSchema = z.enum(['down', 'nearest', 'up']);
@@ -23,6 +25,17 @@ export const comboListTemplateSchema = z.enum(['L1', 'L2', 'L3', 'L4', 'L5']);
 export const comboPageTemplateSchema = z.enum(['current', 'auto', 'P1', 'P2', 'P3', 'P4', 'P5']);
 /** How a combo shows in the bag (demo CBT_LIST, PR 574). */
 export const comboBagTemplateSchema = z.enum(['current', 'B1', 'B2', 'B3', 'B4', 'B5']);
+/** The combo types the Products › Sets tab lists (the others, such as colour pairs and packs, stay on Combos & sets only). */
+export const COMBO_SET_TYPES = ['TOP_BOTTOM', 'FIXED_SET', 'MIXED_SET', 'FIXED_COLOUR_PACK', 'COLOUR_PAIR', 'BUILD_YOUR_OWN'] as const;
+export const combosSetsTabSchema = z
+  .object({
+    /** Which kinds of combo count as a "set" on the Sets tab. */
+    types: z.array(z.enum(COMBO_SET_TYPES)).min(1).max(COMBO_SET_TYPES.length),
+    /** A set whose stock (the weakest piece) is this many or fewer is marked Low; 0 turns the mark off. */
+    lowStockAt: z.int().min(0).max(1000),
+  })
+  .strict();
+export type CombosSetsTabSettings = z.output<typeof combosSetsTabSchema>;
 export const comboPhotoFormatSchema = z.enum(['webp', 'jpeg']);
 
 export const combosSettings = {
@@ -282,5 +295,19 @@ export const combosSettings = {
     isOwnerData: false,
     sortOrder: 180,
     version: V,
+  }),
+  // ---- PR 712 · Products › Sets ----
+  'combos.setsTab': setting({
+    schema: combosSetsTabSchema,
+    // hardcode-ok: which combo kinds are sets (top + bottom and fixed sets) and when a set's stock is called low; the owner changes both on the Sets tab
+    default: { types: ['TOP_BOTTOM', 'FIXED_SET', 'MIXED_SET'], lowStockAt: 5 },
+    scope: 'store',
+    valueType: 'JSON',
+    group: 'combos',
+    labelKey: 'combos.setsTab.label',
+    helpKey: 'combos.setsTab.help',
+    isOwnerData: false,
+    sortOrder: 190,
+    version: V712,
   }),
 };

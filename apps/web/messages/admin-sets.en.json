@@ -1,0 +1,79 @@
+{
+  "productSets": {
+    "metaTitle": "Sets",
+    "title": "Sets",
+    "sub": "A set is one product made of several pieces, such as a top and a bottom. One price; the customer picks a size for each piece. The stock of a set is what its weakest piece allows.",
+    "edit": "Combos & sets",
+    "k": {
+      "live": "Sets on the shop",
+      "liveSub": "of {total} not ended",
+      "low": "Low stock",
+      "lowSub": "at {n} or fewer",
+      "soldOut": "Sold out",
+      "soldOutSub": "on the shop with no stock"
+    },
+    "note": "A set sells only while every piece has stock. When the top or the bottom runs out, the whole set shows sold out. Prices and the pieces are changed on Combos & sets.",
+    "state": {
+      "live": "On the shop",
+      "soon": "Starts soon",
+      "off": "Off",
+      "ended": "Ended",
+      "draft": "Draft"
+    },
+    "type": {
+      "TOP_BOTTOM": "Top + bottom",
+      "FIXED_SET": "Fixed set",
+      "MIXED_SET": "Mixed set",
+      "FIXED_COLOUR_PACK": "Colour pack",
+      "COLOUR_PAIR": "Colour pair",
+      "BUILD_YOUR_OWN": "Build your own"
+    },
+    "colour": {
+      "same": "Same colour in every piece",
+      "free": "Customer picks each colour"
+    },
+    "pieces": "Pieces",
+    "piece": "Piece {n}",
+    "qty": "{n} pieces",
+    "price": "Set price",
+    "sum": "Pieces added up",
+    "save": "Customer saves",
+    "savePct": "{amount} ({pct}%)",
+    "noPrice": "No set price yet",
+    "noPiecePrice": "A piece has no price",
+    "stock": "Stock of the set",
+    "stockN": "{n} sets",
+    "limit": "Limited by {name}",
+    "pieceStock": "{n} in stock",
+    "low": "Low",
+    "none": "No sets yet. Make one on Combos & sets.",
+    "noneKind": "Only these kinds count as sets: {kinds}.",
+    "blocking": {
+      "NO_SET_PRICE": "Needs a set price",
+      "NO_PIECES": "Needs pieces",
+      "PIECE_NO_PRICE": "A piece has no price"
+    },
+    "opt": {
+      "h": "More options",
+      "d": "Which kinds of combo count as a set on this tab, and the stock at or under which a set is marked Low.",
+      "types": "Kinds counted as sets",
+      "lowStockAt": "Mark a set Low at this stock or less",
+      "lowStockAtHelp": "From 0 to 1000; 0 turns the mark off.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see these choices. Changing them needs the permission to change combos.",
+      "err": {
+        "STALE": "Someone saved first. The page shows their values; check and save again.",
+        "INVALID_INPUT": "A choice or number is out of range.",
+        "FORBIDDEN": "You may not change this.",
+        "forbidden": "You may not change this.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Try again."
+      }
+    }
+  }
+}

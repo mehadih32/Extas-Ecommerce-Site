@@ -131,6 +131,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
       // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
       { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
+      // S28 · PR 712 (CN-048): Products › Sets — the sets on their own tab (Combos & sets stays), read only.
+      { id: 'sets', pages: [{ href: '/admin/products/sets', perm: 'combos.read', keys: ['productSets'] }] },
       {
         id: 'stock',
         guide: 'stock',

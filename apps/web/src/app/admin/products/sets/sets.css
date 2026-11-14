@@ -1,0 +1,18 @@
+/* S28 · PR 712 — Products › Sets. The shell's tokens only; phone first: one column, every link a whole 44 px tap; cards side by side
+   from 768 px, three KPIs in a row from 560 px. */
+.adm2 .st-figs { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+@media (min-width: 560px) { .adm2 .st-figs { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.adm2 .st-fig { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.adm2 .st-fig b { font-size: 22px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+.adm2 .st-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+@media (min-width: 768px) { .adm2 .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .st-card { min-width: 0; }
+.adm2 .st-head { display: flex; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; align-items: flex-start; }
+.adm2 .st-head > * { min-width: 0; overflow-wrap: anywhere; }
+.adm2 .st-pieces { display: grid; gap: 8px; margin-top: 10px; list-style: none; padding: 0; }
+.adm2 .st-piece { display: flex; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; align-items: center; padding: 8px 10px; border: 1px solid var(--ln); border-radius: 9px; background: var(--sf2); }
+.adm2 .st-piece.limit { border-color: var(--warn, var(--ln)); }
+.adm2 .st-piece > span { min-width: 0; overflow-wrap: anywhere; }
+.adm2 .st-kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin-top: 10px; }
+.adm2 .st-kv dd { text-align: right; font-weight: 700; overflow-wrap: anywhere; }
+.adm2 .st-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 9px; border: 1px solid var(--ln); background: var(--sf); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; }
