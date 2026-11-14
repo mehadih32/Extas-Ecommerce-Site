@@ -5,7 +5,13 @@ set -eu
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
+# CN-052: retired. Only a staging host (optional) or a locked main domain (EXTAS_MAIN_OPEN=no) asks for this login.
+if [ -z "${EXTAS_STAGING_HOST:-}" ] && [ "${EXTAS_MAIN_OPEN:-no}" = yes ]; then
+  echo "প্রিভিউ লগইন আর নেই: স্টেজিং সাইট বন্ধ হয়েছে, দোকান শুধু $EXTAS_SITE_HOST-এ চলে (CN-052)।"
+  exit 0
+fi
 pw="$(grep '^STAGING_PASSWORD=' "$EXTAS_ROOT/config/secrets/staging.env" | cut -d= -f2-)"
-echo "ঠিকানা: https://$EXTAS_STAGING_HOST"
+echo "ঠিকানা: https://$EXTAS_SITE_HOST"
 echo "নাম: $EXTAS_STAGING_USER"
 echo "পাসওয়ার্ড: $pw"

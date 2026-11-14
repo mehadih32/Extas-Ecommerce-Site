@@ -124,7 +124,7 @@ services:
       - "443:443/udp"
       - "127.0.0.1:8080:8080"   # internal health/bench port, never public
     environment:
-      EXTAS_STAGING_HOST: ${EXTAS_STAGING_HOST}
+      EXTAS_STAGING_HOST: ${EXTAS_STAGING_HOST:-}
       EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}
       CADDY_BODY_MAX_MB: ${CADDY_BODY_MAX_MB:-25}       # R2 security m1: the request body limits (server.conf)
       CADDY_UPLOAD_MAX_MB: ${CADDY_UPLOAD_MAX_MB:-30}

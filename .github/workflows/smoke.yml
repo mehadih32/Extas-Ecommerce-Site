@@ -18,7 +18,7 @@ on:
     inputs:
       # R1 ops review (M7): runbook step 7 and the first-week watch test the main domain, not only the staging host.
       host:
-        description: "Which host: empty = the staging host; main = the main domain (first of EXTAS_EXTRA_HOSTS); or that host itself"
+        description: "Which host: empty = the site host (the main domain since CN-052); main = the main domain (first of EXTAS_EXTRA_HOSTS); or that host itself"
         required: false
         default: ""
 

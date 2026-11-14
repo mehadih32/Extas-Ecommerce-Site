@@ -60,7 +60,14 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Server setup (S0A) and deploys are workflows in `.github/workflows/`. Read the results from the workflow run
     logs, or from files the workflow commits back.
 - **Domains (CN-003):** the old WordPress shop stays live on **extas.com.bd** until go-live day. **Do not touch it.**
-  - The build deploys to **new.extas.com.bd**, behind Cloudflare, protected with a password and `noindex`.
+  - ~~The build deploys to **new.extas.com.bd**, behind Cloudflare, protected with a password and `noindex`.~~
+  - **Staging retired, one domain only (owner, 14 Nov 2026, CN-052):** the whole shop has been live on **extas.com.bd** since
+    go-live (11 Nov, CN-038). The staging host new.extas.com.bd is retired and the owner deletes its DNS record himself in
+    Cloudflare. Deploys, the post-deploy and nightly smoke tests, the journeys, the speed lab, the go-live check and the
+    server scripts now open **extas.com.bd** (read-only on live data). `EXTAS_STAGING_HOST` in `infra/config/server.conf` is
+    empty and optional: no staging host, no staging Caddy block, no preview password. The workflows that place test orders
+    (`gate-orders`, `simulation`, `gate-c360`, `acceptance`) stay in the repo, by hand only, and refuse to run on the live
+    shop. Wherever this file below says new.extas.com.bd, read extas.com.bd.
   - On go-live day (S19, PR 587) the main domain is switched and every old URL gets a 301 redirect.
   - The domain is a setting, never code.
 - **Stack** (A3.1, A2.9): Next.js (App Router) + TypeScript + Prisma + PostgreSQL (PgBouncer), Redis + BullMQ,
@@ -70,7 +77,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 
 ## Run without stopping (owner, 20 Oct 02:33 — CN-006)
 - The owner's computer and browser may be off. Everything runs in the cloud and on the VM runner; nothing waits for him.
-- **Never stop to ask permission** for building, testing, merging your own PRs, deploying to new.extas.com.bd or
+- **Never stop to ask permission** for building, testing, merging your own PRs, deploying to ~~new.extas.com.bd~~ extas.com.bd or
   starting the next stage. Merge yourself once the gates pass.
 - ~~Build order (CN-027): finish every PR in `docs/LAUNCH-TRACK.md` → Launch first, then continue the After-launch list automatically.~~
 - ~~**The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report, show it in chat, and **carry straight on** to the next wave.~~
@@ -114,8 +121,8 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - ~~Wave boundary: report in Bengali and continue. Don't wait (CN-006).~~
 
 ## Nothing reaches the owner broken (owner, 20 Oct 14:24 — CN-016)
-- **Done means it works on new.extas.com.bd in a real browser,** not only that the tests pass on the branch.
-- **After every deploy** the runner runs a smoke test with Playwright against new.extas.com.bd. It signs in with a dedicated check account whose password exists only on the server, then opens every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, has no error screen and no console error, and returns no failed request. Screenshots go to `docs/reports/smoke/latest/`.
+- **Done means it works on extas.com.bd (~~new.extas.com.bd~~, retired 14 Nov 2026) in a real browser,** not only that the tests pass on the branch.
+- **After every deploy** the runner runs a smoke test with Playwright against ~~new.extas.com.bd~~ extas.com.bd (read-only, CN-052). It signs in with a dedicated check account whose password exists only on the server, then opens every built storefront page and every built admin page, including the pages right after login. A page passes only when it loads, has no error screen and no console error, and returns no failed request. Screenshots go to `docs/reports/smoke/latest/`.
 - **If any page fails,** the deploy rolls back to the last good version by itself, and fixing it comes before any new PR.
 - The same smoke test runs every night. Its result sits on the status page and in README.
 - **Right the first time:** before calling anything done, check it yourself on staging in a real browser, at phone and desktop widths, as a customer and as admin. One build plus one check, never many rounds of rework. Rework burns the owner's money.
@@ -130,7 +137,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 ## Think beyond the ask (owner, 20 Oct 13:52 — CN-013)
 - Goal for every PR: the customer journey is **easy, smart and profitable**, better than an ordinary shop, and still right 2–3 years from now.
 - Every finding gets: the fix, prevention (test/guard/setting), a review of the core decision, and growth ideas. Don't stop at the owner's list; add what is missing. Money, prices, COD or blocking ideas go to the owner as proposals.
-- The real-life journey simulation (`docs/qa/SIMULATION-PLAN.md`) is a go-live gate: it runs again on new.extas.com.bd before real orders.
+- The real-life journey simulation (`docs/qa/SIMULATION-PLAN.md`) is a go-live gate: ~~it runs again on new.extas.com.bd before real orders.~~ it ran before go-live; with no staging host it never runs on the live shop (CN-052).
 
 ## Commits
 - Branch per PR: `pr-<number>-<slug>`. ~~Squash-merge into `main` after the gates pass.~~

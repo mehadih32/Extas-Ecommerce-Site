@@ -104,7 +104,7 @@ async function hostsOf(deps: EdgeDeps, shield: EdgeShield | null): Promise<{ hos
 
 /**
  * The host names that are not the shop's yet: a store's primary domain, or the main domain (the staging host's parent,
- * e.g. new.extas.com.bd → extas.com.bd, and its www.), while the go-live switch is off. Never the staging host itself.
+ * e.g. a staging host new.x.test → x.test, and its www.), while the go-live switch is off. Never the staging host itself. A shop with no staging host has no parent to add.
  */
 export function hostsNotLiveYet(hosts: readonly string[], o: { live: boolean; stagingHost: string | null; primaryHosts: readonly string[] }): string[] {
   if (o.live) return [];

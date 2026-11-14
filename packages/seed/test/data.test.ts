@@ -169,7 +169,7 @@ describe('owner-data check (PR 509)', () => {
     pack.categories[0]!.introEn = 'Call 01712345678 for polos';
     expect(rules({ pack })).toContain('pack-phone-bd');
     const sample = clone(sampleCatalogue);
-    sample.products[0]!.descriptionEn = 'See new.extas.com.bd';
+    sample.products[0]!.descriptionEn = 'See extas.com.bd';
     expect(rules({ sample })).toContain('sample-owner-domain');
   });
 

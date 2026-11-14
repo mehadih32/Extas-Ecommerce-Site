@@ -73,7 +73,7 @@ fi
 host_re='^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
 preview="$(printf '%s' "${EXTAS_STAGING_HOST:-}" | tr 'A-Z' 'a-z')"
 if ! [[ "$preview" =~ $host_re ]]; then
-  log "refused: server.conf names no preview host (EXTAS_STAGING_HOST)"
+  log "refused: server.conf names no preview host (EXTAS_STAGING_HOST). CN-052: the staging site is retired and this run places test orders, so it never runs on the live shop"
   exit 2
 fi
 for h in ${EXTAS_EXTRA_HOSTS:-}; do

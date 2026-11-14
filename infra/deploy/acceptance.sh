@@ -27,6 +27,12 @@ if [ -n "$SHA" ] && ! [[ "$SHA" =~ ^[0-9a-f]{7,40}$ ]]; then
   echo "usage: acceptance.sh <out-dir> [<commit sha>] (a commit hash)" >&2
   exit 2
 fi
+# CN-052 (14 Nov 2026): the staging site is retired and two of the four parts place test orders. With no staging host in
+# server.conf this whole run refuses, before anything is opened: it never runs on the live shop.
+if [ -z "${EXTAS_STAGING_HOST:-}" ]; then
+  echo "[acceptance] REFUSED: server.conf names no staging host (EXTAS_STAGING_HOST; retired by CN-052). This run places test orders, so it never runs on the live shop." >&2
+  exit 2
+fi
 COD="no"; [ "${ACCEPT_ALLOW_COD:-no}" = yes ] && COD="yes"
 STATE="$EXTAS_ROOT/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"

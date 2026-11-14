@@ -7,7 +7,7 @@
 #   sudo infra/deploy/deploy.sh rollback    bring the previous image back the same way, with that version's own
 #                                           worker image (images.sh; the database stays as it is)
 #   sudo infra/deploy/deploy.sh public-health
-#                                           one JSON line: does https://<staging host>/api/health answer through Cloudflare
+#                                           one JSON line: does https://<the site host>/api/health answer through Cloudflare
 #                                           (with the preview login, read on the server and never printed)?
 # Database first (PR 13, 496): before the new colour starts, the migrate image runs `prisma migrate deploy` straight to
 # PostgreSQL and then the settings sync, on the extas network. If either fails, nothing else happens: the live colour
@@ -25,6 +25,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 # Follow-up 618: app.yml passes Caddy's upload limit to the app (EXTAS_UPLOAD_MAX_MB); compose reads it from here.
 export CADDY_UPLOAD_MAX_MB
 R="$EXTAS_ROOT"; STATE="$R/state"; SEC="$R/config/secrets"; SITES="$R/config/caddy/sites"
@@ -69,11 +70,13 @@ on_exit() {
 }
 
 public_health() { # one JSON line; the preview login reaches curl through a file descriptor, never argv or output
-  local pw code body url="https://$EXTAS_STAGING_HOST/api/health" i
+  local pw code body url="https://$EXTAS_SITE_HOST/api/health" i auth=no
   pw="$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" 2>/dev/null | cut -d= -f2- || true)"
+  # CN-052: the preview login goes along only where a gate exists (a staging host, or a main domain not yet open)
+  if [ -n "${EXTAS_STAGING_HOST:-}" ] || [ "${EXTAS_MAIN_OPEN:-no}" != yes ]; then auth=yes; fi
   body="$(mktemp)"
   for i in 1 2 3 4 5 6; do
-    code="$(curl -sS -m 15 -o "$body" -w '%{http_code}' -K <(printf 'user = "%s:%s"\n' "$EXTAS_STAGING_USER" "$pw") \
+    code="$(curl -sS -m 15 -o "$body" -w '%{http_code}' -K <([ "$auth" = yes ] && printf 'user = "%s:%s"\n' "$EXTAS_STAGING_USER" "$pw" || true) \
       -H 'cache-control: no-cache' "$url" 2>/dev/null || true)"
     [ "$code" = 200 ] && grep -q '"ok":true' "$body" && break
     [ "$i" = 6 ] || sleep 5

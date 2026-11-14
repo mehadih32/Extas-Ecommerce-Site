@@ -1,5 +1,7 @@
 # Staging acceptance list (PR 393)
 
+> **CN-052 (14 Nov 2026):** the staging site new.extas.com.bd is retired. This list was walked before go-live (11 Nov); it is not walked on the live shop, and the test-order runs behind it refuse to run without a staging host.
+
 S19 · PR 393 (CN-031). Walk every line on **new.extas.com.bd** (staging) as a customer and as admin, on a phone and on a
 desktop, before real orders. When every line passes, confirm "Staging acceptance list walked through" on
 **Settings → System → Go-live** (`/admin/settings/system/go-live`). A line that fails becomes a fix PR first (CN-016).

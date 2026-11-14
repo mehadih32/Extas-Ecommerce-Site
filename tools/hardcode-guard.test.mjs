@@ -12,7 +12,8 @@ describe('hardcode guard', () => {
     expect(ids('a.ts', 'const u = "postgresql://extas:hunter22@db:5432/x";')).toContain('connection-string');
   });
   it('catches owner data and business numbers', () => {
-    expect(ids('a.ts', 'const host = "new.extas.com.bd";')).toContain('owner-domain');
+    expect(ids('a.ts', 'const host = "extas.com.bd";')).toContain('owner-domain');
+    expect(ids('a.ts', 'const host = "new.extas.com.bd";')).toContain('owner-domain'); // the retired staging host stays flagged (CN-052)
     expect(ids('a.json', '{"t": "EXTAS shop"}')).toContain('owner-brand');
     expect(ids('a.ts', 'call("01712345678")')).toContain('phone-bd');
     expect(ids('a.ts', 'const deliveryCharge = 120;')).toContain('business-number');
@@ -23,7 +24,7 @@ describe('hardcode guard', () => {
     expect(ids('a.tsx', '<h1>{t(dict, "title")}</h1>')).toEqual([]);
   });
   it('ignores comments for code rules and honours a reasoned opt-out', () => {
-    expect(ids('a.ts', '// the EXTAS shop at new.extas.com.bd')).toEqual([]);
+    expect(ids('a.ts', '// the EXTAS shop at extas.com.bd')).toEqual([]);
     expect(ids('a.ts', 'const deliveryCharge = 0; // hardcode-ok: neutral zero, real value from settings')).toEqual([]);
     expect(ids('a.ts', 'const deliveryCharge = 5; // hardcode-ok:')).toContain('business-number');
   });

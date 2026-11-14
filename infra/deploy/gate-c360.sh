@@ -45,7 +45,7 @@ log() { echo "[gate-c360 $(date +%H:%M:%S)] $*"; }
 # gate_host_refusal <preview host> <extra hosts> <main open>: prints why the run may not go on (nothing: it may).
 gate_host_refusal() {
   local host="${1:-}" extra="${2:-}" open="${3:-no}" h
-  [ -n "$host" ] || { echo "no preview host in server.conf (EXTAS_STAGING_HOST)"; return; }
+  [ -n "$host" ] || { echo "no preview host in server.conf (EXTAS_STAGING_HOST). CN-052: the staging site is retired and this run places test orders, so it never runs on the live shop"; return; }
   for h in $extra; do
     [ "$h" = "$host" ] && { echo "the preview host is also a public host (EXTAS_EXTRA_HOSTS)"; return; }
   done

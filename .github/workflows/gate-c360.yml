@@ -1,3 +1,5 @@
+# CN-052 (14 Nov 2026): RETIRED while there is no staging host. This workflow places test orders, so it never runs on the
+# live shop: the script refuses when server.conf has no EXTAS_STAGING_HOST (now empty). The file stays, manual only.
 # PR 414 follow-up (CN-013 go-live gate, phase 2; owner 1 Nov 2026) — the customer 360° run against the preview host, ON
 # the VM through the self-hosted runner (CN-003). By hand only. One test customer ("GATE TEST …", a fresh number each
 # run) walks the whole life cycle on a mid Android phone, an iPhone and a 1366 desktop, in English and /bn: before

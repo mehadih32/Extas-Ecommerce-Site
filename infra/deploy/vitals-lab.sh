@@ -16,6 +16,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 SHA="${1:-}"
 MODE="${2:-now}"
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
@@ -60,8 +61,10 @@ docker run --rm --name "extas-check-$$" --network extas --env-file "$work/db.env
 [ -s "$work/acct/check.env" ] || { log "FAIL: the check account could not be prepared"; exit 1; }
 {
   cat "$work/acct/check.env"
-  echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
-  echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  if [ -n "${EXTAS_STAGING_HOST:-}" ] || [ "${EXTAS_MAIN_OPEN:-no}" != yes ]; then   # CN-052: the preview login only where a gate exists
+    echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
+    echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  fi
 } > "$work/lab.env"
 rm -f "$work/acct/check.env"
 
@@ -70,11 +73,11 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   docker build -q -f "$HERE/smoke.Dockerfile" --build-arg PLAYWRIGHT_VERSION="$SMOKE_PLAYWRIGHT_VERSION" -t "$IMG" "$HERE" >/dev/null
 fi
 
-log "measuring https://$EXTAS_STAGING_HOST"
+log "measuring https://$EXTAS_SITE_HOST"
 mkdir -m 0777 "$work/out"
 at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-vitals-$$" --ipc=host --env-file "$work/lab.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e LAB_OUT=/out/vitals-lab.json -e LAB_AT="$at" -e LAB_SHA="${SHA:0:12}" \
+  -e BASE="https://$EXTAS_SITE_HOST" -e LAB_OUT=/out/vitals-lab.json -e LAB_AT="$at" -e LAB_SHA="${SHA:0:12}" \
   -v "$REPO/tools:/w/tools:ro" -v "$work/out:/out" \
   "$IMG" node /w/tools/vitals-lab.mjs >/dev/null
 jq -e '.pages | length > 0' "$work/out/vitals-lab.json" >/dev/null || { log "FAIL: no page was measured"; exit 1; }

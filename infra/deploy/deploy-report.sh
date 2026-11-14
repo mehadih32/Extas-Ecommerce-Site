@@ -26,7 +26,7 @@ CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 [ -f "$CONF" ] && . "$CONF"
 TZ_NAME="${EXTAS_TIMEZONE:-Asia/Dhaka}"
-HOST="${EXTAS_STAGING_HOST:-the preview site}"
+HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; HOST="${HOST:-the live site}"   # CN-052: the site host (the main domain since the staging host was retired)
 DEPLOY_JSON="${DEPLOY_JSON:-${EXTAS_ROOT:-/srv/extas}/state/last-deploy.json}"
 mkdir -p "$OUT"
 

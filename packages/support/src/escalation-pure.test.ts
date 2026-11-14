@@ -7,7 +7,7 @@ import { checkLink, checkMessageLinks, deskNow, escalationDueAt, escalationLine,
 const TZ = 'Asia/Dhaka'; // UTC+6, no summer time
 const desk = { ...registry['support.deskHours'].default, enabled: true };
 const esc = registry['support.escalation'].default;
-const links = { ...registry['support.linkSafety'].default, enabled: true, trustedSites: 'extas.com.bd, new.extas.com.bd' };
+const links = { ...registry['support.linkSafety'].default, enabled: true, trustedSites: 'extas.com.bd, www.extas.com.bd' };
 const dhaka = (s: string) => new Date(`${s}+06:00`);
 
 describe('desk hours (10:00–22:00 Dhaka)', () => {
@@ -62,7 +62,7 @@ describe('links in a customer message', () => {
   });
 
   it('a trusted site is safe; shortener, look-alike, odd ending, installer, number address, punycode, login trick are risky', () => {
-    expect(checkLink('https://new.extas.com.bd/p/polo', links)).toMatchObject({ risky: false, reasons: [], host: 'new.extas.com.bd' });
+    expect(checkLink('https://www.extas.com.bd/p/polo', links)).toMatchObject({ risky: false, reasons: [], host: 'www.extas.com.bd' });
     expect(checkLink('https://www.daraz.com.bd/x', links)).toMatchObject({ risky: false });
     expect(checkLink('bit.ly/3xYz', links)).toMatchObject({ risky: true, reasons: ['shortener'], url: 'https://bit.ly/3xYz' });
     expect(checkLink('extas-offer.top/win', links).reasons).toEqual(['lookalike', 'ending']);

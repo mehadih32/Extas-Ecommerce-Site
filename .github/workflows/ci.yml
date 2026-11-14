@@ -121,6 +121,12 @@ jobs:
               -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
           done
           rm -f /tmp/sites/hosts.caddy
+          # CN-052: the staging block is optional (sites/staging.caddy, infra/stack/caddy/staging-block.sh): the runs above have
+          # none (the staging host is retired, the Caddyfile loads without it); this one has it, as server setup writes it.
+          bash infra/stack/caddy/staging-block.sh staging.example.test > /tmp/sites/staging.caddy
+          docker run --rm -e EXTAS_STAGING_HOST=staging.example.test -v "$PWD/infra/stack/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/sites:/etc/caddy/sites:ro caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
+          rm -f /tmp/sites/staging.caddy
           # PR 397: both certificate choices of sites/tls.caddy (infra/server/bin/extas-origin-cert) — the automatic one,
           # and a Cloudflare Origin pair (a throwaway one here). The steps below run without the file (the glob's empty case).
           printf 'tls {\n\tissuer acme\n\tissuer internal\n}\n' > /tmp/sites/tls.caddy

@@ -15,6 +15,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 OUT="${1:?usage: golive-check.sh <out-dir> <main domain or empty> [<commit sha>]}"
 DOMAIN="${2:-}"; DOMAIN="${DOMAIN,,}"; DOMAIN="${DOMAIN%.}"
 SHA="${3:-}"
@@ -31,8 +32,8 @@ mkdir -p "$OUT"; rm -rf "${OUT:?}"/*
 switch_json() { jq -cn --argjson ok "$1" --arg detail "$2" '{ok:$ok, detail:$detail}' > "$work/switch.json"; }
 if [ -z "$DOMAIN" ]; then
   switch_json false "no main domain given (workflow input \`domain\`): the dry run needs the name the owner will switch"
-elif ! [[ $DOMAIN =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]] || [ "$DOMAIN" = "${EXTAS_STAGING_HOST,,}" ]; then
-  switch_json false "not a main domain: $DOMAIN (a plain host name, never the staging host)"
+elif ! [[ $DOMAIN =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]] || [ "$DOMAIN" = "${EXTAS_STAGING_HOST:-}" ]; then
+  switch_json false "not a main domain: $DOMAIN (a plain host name, never a staging host)"
 else
   hosts=("$DOMAIN"); [[ $DOMAIN == www.* ]] || hosts+=("www.$DOMAIN")
   bash "$REPO/infra/stack/caddy/hosts-block.sh" yes "${hosts[@]}" | sed 's#/etc/caddy/sites#/tmp/golive-dry/sites#g' > "$work/hosts.caddy"
@@ -60,18 +61,20 @@ docker run --rm --name "extas-golive-acct-$$" --network extas --env-file "$work/
 [ -s "$work/acct/check.env" ] || { log "FAIL: the check account could not be prepared"; exit 1; }
 {
   cat "$work/acct/check.env"
-  echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
-  echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  if [ -n "${EXTAS_STAGING_HOST:-}" ] || [ "${EXTAS_MAIN_OPEN:-no}" != yes ]; then   # CN-052: the preview login only where a gate exists
+    echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
+    echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  fi
 } > "$work/check.env"
 rm -f "$work/acct/check.env"
 if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   log "building the browser image $IMG (once)"
   docker build -q -f "$HERE/smoke.Dockerfile" --build-arg PLAYWRIGHT_VERSION="$SMOKE_PLAYWRIGHT_VERSION" -t "$IMG" "$HERE" >/dev/null
 fi
-log "the go-live list, the redirect map and the sitemap on https://$EXTAS_STAGING_HOST (read-only)"
+log "the go-live list, the redirect map and the sitemap on https://$EXTAS_SITE_HOST (read-only)"
 rc=0
 timeout "$((SMOKE_TIMEOUT_MIN * 60))" docker run --rm --name "extas-golive-$$" --ipc=host --env-file "$work/check.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e GOLIVE_OUT=/out -e SWITCH_JSON=/w/switch.json -e GOLIVE_TITLES=/w/titles.json \
+  -e BASE="https://$EXTAS_SITE_HOST" -e GOLIVE_OUT=/out -e SWITCH_JSON=/w/switch.json -e GOLIVE_TITLES=/w/titles.json \
   -e GOLIVE_SHA="${SHA:0:12}" -e GOLIVE_AT="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M') ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$work/switch.json:/w/switch.json:ro" \
   -v "$REPO/apps/web/messages/admin-golive.en.json:/w/titles.json:ro" -v "$OUT:/out" \

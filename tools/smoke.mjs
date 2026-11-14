@@ -2,7 +2,7 @@
 // signs in to the admin and opens every page in the admin's menu, each on a phone and a desktop screen. A page fails
 // on a 5xx, the error screen ("This page couldn't load"), a console error, an uncaught page error or a failed request
 // (4xx/5xx on this site, or a request that never finished). Runs in three places:
-// - after every deploy and every night on the runner against new.extas.com.bd (infra/deploy/smoke.sh), signed in
+// - after every deploy and every night on the runner against the site host, the main domain since CN-052 (infra/deploy/smoke.sh), signed in
 //   with the read-only check account (SMOKE_EMAIL / SMOKE_PASSWORD / SMOKE_TOTP_SECRET, made on the server);
 // - in CI on the production images against a fresh installation (tools/admin-login-e2e.sh), signed in as the first
 //   owner with the generated first password (E2E_EMAIL / E2E_PASSWORD_FILE), which it then changes.

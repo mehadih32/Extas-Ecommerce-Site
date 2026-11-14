@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       rotate_staging_password:
-        description: "Make a new preview (new.extas.com.bd) password. The owner reads it on the VM, see docs/owner/PREVIEW-LOGIN.md"
+        description: "Make a new preview password (only a staging host or a locked main domain asks for it; CN-052). The owner reads it on the VM, see docs/owner/PREVIEW-LOGIN.md"
         type: boolean
         default: false
   push:

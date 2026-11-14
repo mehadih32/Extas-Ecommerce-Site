@@ -1,6 +1,6 @@
 # EXTAS Caddy (PR 7). Automatic HTTPS (Let's Encrypt, with Caddy's internal CA as a fallback so Cloudflare
 # "Full" always reaches us; PR 397: the Cloudflare Origin certificate instead once it is in the vault, for "Full (strict)"), HTTP/2 + HTTP/3, compression, security headers.
-# The host names are settings (infra/config/server.conf → EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS). The preview password and the
+# The host names are settings (infra/config/server.conf → EXTAS_EXTRA_HOSTS, and EXTAS_STAGING_HOST when one is set). The preview password and the
 # upstream (static page → app, blue/green) are files in /srv/extas/config/caddy/sites written by the scripts.
 {
 	admin localhost:2019
@@ -111,15 +111,11 @@
 	}
 }
 
-# PR 403: the staging host is ALWAYS behind the preview password and noindex, also after go-live.
-# ~~PR 362: the extra host names were served in this same block, so they shared the gate.~~
-{$EXTAS_STAGING_HOST} {
-	import extas_site
-	import gated_cache
-	import /etc/caddy/sites/noindex.caddy
-	import /etc/caddy/sites/auth.caddy
-	import /etc/caddy/sites/upstream.caddy
-}
+# PR 403: a staging host is ALWAYS behind the preview password and noindex, also after go-live.
+# CN-052 (14 Nov 2026): the staging host is retired, so its block is no longer written here. ~~{$EXTAS_STAGING_HOST} { ... }~~
+# Server setup writes it into sites/staging.caddy (09-stack.sh) only when server.conf EXTAS_STAGING_HOST is not empty, and
+# removes the file when it is empty: an empty host name would be an invalid site address. No staging host, no file: a glob.
+import /etc/caddy/sites/staging*.caddy
 
 # PR 362 / PR 403: the extra host names (server.conf EXTAS_EXTRA_HOSTS, cleaned by server setup: the main domain on
 # go-live day, a store's own domain) have their own block, each with its own automatic certificate. Server setup writes

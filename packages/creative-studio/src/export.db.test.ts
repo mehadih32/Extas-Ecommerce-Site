@@ -131,9 +131,9 @@ describe.skipIf(!HAS_TEST_DB)('PR 487 · campaign creative export, part 1 (Postg
     const product = await makeProduct();
     await attachMedia(product.id);
     const campaign = await t.prisma.campaign.create({ data: { storeId: S, name: 'Eid flash sale' } });
-    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-9x16'], withOverlay: true, landingUrl: 'https://new.extas.com.bd/p/solid-polo', campaignId: campaign.id });
+    const exp = await requestCreativeExport(sd, writer, { selection: { productId: product.id }, sizes: ['meta-9x16'], withOverlay: true, landingUrl: 'https://extas.com.bd/p/solid-polo', campaignId: campaign.id });
     expect(exp.withOverlay).toBe(true);
-    expect(exp.landingUrl).toBe('https://new.extas.com.bd/p/solid-polo');
+    expect(exp.landingUrl).toBe('https://extas.com.bd/p/solid-polo');
     expect(exp.campaignId).toBe(campaign.id);
   });
 
