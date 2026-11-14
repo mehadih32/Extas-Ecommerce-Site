@@ -16,7 +16,7 @@ const NOW = new Date('2026-11-15T08:00:00Z');
 describe.skipIf(!HAS_TEST_DB)('the practice shop is live and hides with one switch (PR 725)', () => {
   let t: TestDatabase;
   let S = 0;
-  let resolver: SettingsResolver;
+  let resolver: SettingsResolver<typeof registry>;
   let realProductId = '';
 
   const set = (key: 'practice.enabled' | 'practice.autoFill', on: boolean) => resolver.set(key, { on }, storeTarget(S), { actorId: null, reason: 'test' });
