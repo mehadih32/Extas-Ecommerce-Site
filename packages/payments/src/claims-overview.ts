@@ -166,6 +166,9 @@ export interface PayoutLine {
   differenceMinor: number | null;
   requestedAt: Date;
   paidAt: Date | null;
+  /** The courier's payment reference and how it paid (null until it says). */
+  paymentRef: string | null;
+  method: string | null;
 }
 
 export interface MoneySide {
@@ -297,7 +300,7 @@ async function moneySide(deps: PaymentsDeps, who: Who, o: { names: Map<string, s
     deps.db.courierPayout.groupBy({ by: ['courierAccountId'], where: { storeId, state: { in: ['REQUESTED', 'PROCESSING'] }, ...byCourier }, _sum: { amountMinor: true } }),
     deps.db.courierPayout.findMany({
       where: { storeId, ...byCourier, ...when('requestedAt') },
-      select: { id: true, courierAccountId: true, state: true, amountMinor: true, coveredMinor: true, paidMinor: true, differenceMinor: true, requestedAt: true, paidAt: true },
+      select: { id: true, courierAccountId: true, state: true, amountMinor: true, coveredMinor: true, paidMinor: true, differenceMinor: true, requestedAt: true, paidAt: true, paymentRef: true, method: true },
       orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
       take: o.payoutRows,
     }),

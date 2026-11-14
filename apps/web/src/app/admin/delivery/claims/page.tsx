@@ -102,10 +102,11 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
 
   const who: pay.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const pd = await paymentsDeps(access.deps);
-  const [o, claimsSwitch, card] = await Promise.all([
+  const [o, claimsSwitch, card, toClaim] = await Promise.all([
     pay.claimsOverview(pd, who, { ...(courier ? { courierAccountId: courier } : {}), status, ...(kind ? { kind } : {}), ...range, page: pageNo }),
     access.deps.resolver.value('delivery.courier.claims', { storeId: MOTHER_STORE_ID }),
     claimsPageCard(access.deps, MOTHER_STORE_ID),
+    pay.listClaims(pd, who, {}).then((l) => l.claimable).catch(() => []),
   ]);
   const held = access.guard.permissions;
   const canMove = (held?.has('delivery.claims') ?? false) && claimsSwitch.enabled;
@@ -148,7 +149,19 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
 
   return (
     <div className="a2-z" data-testid="claims-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={co('title')} sub={co('sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={co('title')}
+        sub={co('sub')}
+        right={
+          canMove ? (
+            <a className="a2-btn pri" href="#claimable" data-testid="claims-new">
+              {co('new')}
+            </a>
+          ) : null
+        }
+      />
       <SectionTabs view={view} current={KEY} />
 
       <div className="a2-kpis a2-mt12">
@@ -280,6 +293,44 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         ) : null}
       </section>
 
+      {canMove ? (
+        <section className="a2-card a2-mt12" id="claimable" data-testid="claims-claimable">
+          <h2 className="a2-h3">{co('claimable.title')}</h2>
+          <p className="a2-sm a2-mute">{co('claimable.sub')}</p>
+          {toClaim.length ? (
+            <div className="a2-tblw a2-mt12">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{co('t.claim')}</th>
+                    <th>{co('t.type')}</th>
+                    <th className="r">{co('t.amount')}</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {toClaim.map((p) => (
+                    <tr key={`${p.shipmentId}:${p.kind}`} data-testid="claimable-row">
+                      <td className="a2-tdh" data-l={co('t.claim')}>
+                        {p.orderNumber}
+                        {p.consignmentId ? <span className="a2-xs a2-mute a2-blk">{p.consignmentId}</span> : null}
+                      </td>
+                      <td data-l={co('t.type')}>{t(d, `courierReport.claims.kind.${p.kind}`)}</td>
+                      <td className="r" data-l={co('t.amount')}>{p.declaredValueMinor !== null ? m(p.declaredValueMinor) : '—'}</td>
+                      <td>
+                        <StepButton dict={d} url={API} body={{ shipmentId: p.shipmentId, kind: p.kind }} withKey label={t(d, 'courierReport.claims.claim')} field={{ name: 'note', label: t(d, 'courierReport.claims.claimNote') }} tone="pri" testId="claim-raise" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{co('claimable.none')}</p>
+          )}
+        </section>
+      ) : null}
+
       <section className="a2-card a2-mt12" data-testid="claims-money">
         <h2 className="a2-h3">{co('money.title')}</h2>
         <p className="a2-sm a2-mute">{co('money.sub')}</p>
@@ -328,6 +379,8 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                       <th>{cr('c.pick')}</th>
                       <th className="r">{co('t.amount')}</th>
                       <th>{co('t.status')}</th>
+                      <th>{co('t.paidOn')}</th>
+                      <th>{co('t.reference')}</th>
                       <th className="r">{co('t.paid')}</th>
                     </tr>
                   </thead>
@@ -343,6 +396,11 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                         <td data-l={co('t.status')}>
                           <span className={`a2-pill ${p.state === 'PAID' ? 'ok' : p.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${p.state}`)}</span>
                           {p.differenceMinor !== null ? <span className="a2-xs a2-blk" style={{ color: 'var(--bad)' }}>{cr('y.diff', { diff: m(Math.abs(p.differenceMinor)), dir: p.differenceMinor > 0 ? cr('y.dir.more') : cr('y.dir.less') })}</span> : null}
+                        </td>
+                        <td data-l={co('t.paidOn')}>{p.paidAt ? day.format(p.paidAt) : '—'}</td>
+                        <td data-l={co('t.reference')}>
+                          {p.paymentRef ?? '—'}
+                          {p.method ? <span className="a2-xs a2-mute a2-blk">{p.method}</span> : null}
                         </td>
                         <td className="r" data-l={co('t.paid')}>{p.paidMinor !== null ? m(p.paidMinor) : '—'}</td>
                       </tr>

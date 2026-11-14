@@ -61,7 +61,9 @@
         "cash": "Cash held",
         "claims": "Open claims"
       },
-      "insight": "{best} has the best success rate ({rate}). {slow} takes longest ({days} days on average)."
+      "insight": "{best} has the best success rate ({rate}). {slow} takes longest ({days} days on average).",
+      "defaultDone": "Default courier changed.",
+      "defaultFailed": "Could not change the default courier. Reload and try again."
     },
     "c": {
       "back": "All couriers",
