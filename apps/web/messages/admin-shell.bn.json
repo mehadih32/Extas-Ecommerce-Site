@@ -83,7 +83,11 @@
         "funnels": "ফানেল",
         "searches": "সার্চ",
         "orders": "বিক্রি",
-        "couriers": "কুরিয়ার"
+        "couriers": "কুরিয়ার",
+        "profitReport": "লাভ",
+        "productsReport": "প্রোডাক্ট",
+        "marketingReport": "মার্কেটিং ও বিজ্ঞাপন",
+        "monthlyReview": "মাসের রিভিউ"
       },
       "settings": {
         "store": "ব্যবসার সেটিংস",

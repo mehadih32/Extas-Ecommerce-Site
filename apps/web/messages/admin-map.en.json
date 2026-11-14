@@ -210,7 +210,11 @@
       "website.policies": "Policy pages with \"at a glance\" boxes; numbers come from Rules.",
       "website.seo": "Google ranking of your keywords, SEO problems to fix.",
       "website.text": "Every word customers see, English and Bengali, searchable by page.",
-      "website.words": "Every word customers read, English and Bengali."
+      "website.words": "Every word customers read, English and Bengali.",
+      "reports.profitReport": "Which channels, categories and styles make the profit, with the span before.",
+      "reports.productsReport": "What sells, what sits unsold and what to reorder, with profit by style.",
+      "reports.marketingReport": "What the ads bring back: spend, delivered sales per ৳1, channels and campaigns.",
+      "reports.monthlyReview": "The month on one page: what went well, what went badly, what to do next."
     },
     "taskNames": {
       "deliveryCharge": "Change the delivery charge",

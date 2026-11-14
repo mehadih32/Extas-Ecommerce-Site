@@ -166,6 +166,7 @@
     { "id": "reports/packs", "route": "/admin/reports/packs" },
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
+    { "id": "reports/profit", "route": "/admin/reports/profit" },
     { "id": "reports/experiments", "route": "/admin/reports/experiments" },
     { "id": "reports/funnels", "route": "/admin/reports/funnels" },
     { "id": "reports/experiment", "route": "/admin/reports/experiments/[id]" },
