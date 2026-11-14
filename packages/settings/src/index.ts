@@ -292,6 +292,8 @@ export * from './registry-photoshoot-scene-library';
 export * from './registry-ads-intel';
 // S15 · PR 585 — the continuous learning engine's master switch and quality-gate source count, off by default (registry-learning-engine.ts, version 331).
 export * from './registry-learning-engine';
+// S28 · PR 713 — AI Center › Training: the owner's instructions and forbidden topics (registry-ai-training.ts, version 713).
+export * from './registry-ai-training';
 export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, type Registry, type Key, type Value } from './registry';
 // S28 · PR 680-685 — the product screens' settings (registry-products-v5.ts, version 321).
 export * from './registry-products-v5';

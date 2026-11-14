@@ -49,6 +49,7 @@
       "customers.review": "Customers waiting for a look: duplicates, risky and new ones.",
       "customers.segments": "Customer groups made by rules, for messages and offers.",
       "customers.settings": "Customer rules: what is kept, tags, and sign-in options.",
+      "delivery.claims": "Every courier claim with its state, amount, age and deadline, and what each courier holds, has paid and owes.",
       "delivery.courier360": "One courier in full: parcels, money, speed and setup.",
       "delivery.couriers": "Courier accounts and how parcels are booked.",
       "delivery.overview": "Couriers at a glance: parcels out, money still with them, who is slow.",
@@ -209,7 +210,11 @@
       "website.policies": "Policy pages with \"at a glance\" boxes; numbers come from Rules.",
       "website.seo": "Google ranking of your keywords, SEO problems to fix.",
       "website.text": "Every word customers see, English and Bengali, searchable by page.",
-      "website.words": "Every word customers read, English and Bengali."
+      "website.words": "Every word customers read, English and Bengali.",
+      "reports.profitReport": "Which channels, categories and styles make the profit, with the span before.",
+      "reports.productsReport": "What sells, what sits unsold and what to reorder, with profit by style.",
+      "reports.marketingReport": "What the ads bring back: spend, delivered sales per ৳1, channels and campaigns.",
+      "reports.monthlyReview": "The month on one page: what went well, what went badly, what to do next."
     },
     "taskNames": {
       "deliveryCharge": "Change the delivery charge",

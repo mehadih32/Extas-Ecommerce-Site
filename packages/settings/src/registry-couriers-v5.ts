@@ -11,6 +11,8 @@ const V670 = 310;
 const V671 = 311;
 const V673 = 312;
 const V674 = 313;
+// PR 711 (Couriers › Claims & payouts): its own registry version, the PR number.
+const V711 = 711;
 
 export const couriersSchema = z.object({ defaultCourierId: z.union([z.uuid(), z.literal('')]) }).strict();
 export type CouriersSettings = z.output<typeof couriersSchema>;
@@ -41,6 +43,15 @@ export const courierClaimTermsSchema = z
   })
   .strict();
 export type CourierClaimTermsSettings = z.output<typeof courierClaimTermsSchema>;
+
+/** PR 711: how many rows Couriers › Claims & payouts lists on a page (claims, and the latest payout requests). The owner's to set. */
+export const courierClaimsPageSchema = z
+  .object({
+    claimRows: z.number().int().min(5).max(200),
+    payoutRows: z.number().int().min(3).max(100),
+  })
+  .strict();
+export type CourierClaimsPageSettings = z.output<typeof courierClaimsPageSchema>;
 
 /** PR 674: the events a courier text exists for. */
 export const COURIER_MESSAGE_EVENTS = ['booking', 'delivery', 'cod', 'reattempt', 'hold', 'cancel', 'returnPickup', 'claim', 'payout'] as const;
@@ -137,5 +148,19 @@ export const couriersV5Settings = {
     labelKey: 'delivery.courier.messages.label',
     helpKey: 'delivery.courier.messages.help',
     sortOrder: 973,
+  }),
+  'delivery.courier.claimsPage': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'delivery',
+    version: V711,
+    schema: courierClaimsPageSchema,
+    // hardcode-ok: list sizes of a screen, not a policy; the owner changes them on the page
+    default: { claimRows: 25, payoutRows: 12 },
+    valueType: 'JSON',
+    labelKey: 'delivery.courier.claimsPage.label',
+    helpKey: 'delivery.courier.claimsPage.help',
+    sortOrder: 974,
   }),
 };

@@ -30,6 +30,7 @@
         "all": "All products",
         "queue": "Launch queue",
         "combos": "Combos",
+        "sets": "Sets",
         "stock": "Stock",
         "charts": "Size charts",
         "reviews": "Reviews & questions",
@@ -42,7 +43,8 @@
         "couriers": "Couriers",
         "settings": "Delivery settings",
         "overview": "All couriers",
-        "courier360": "Courier 360"
+        "courier360": "Courier 360",
+        "claims": "Claims & payouts"
       },
       "marketing": {
         "campaigns": "Ad campaigns",
@@ -81,7 +83,11 @@
         "funnels": "Funnels",
         "searches": "Searches",
         "orders": "Sales",
-        "couriers": "Couriers"
+        "couriers": "Couriers",
+        "profitReport": "Profit",
+        "productsReport": "Products",
+        "marketingReport": "Marketing & ads",
+        "monthlyReview": "Monthly review"
       },
       "settings": {
         "store": "Business settings",
@@ -136,6 +142,7 @@
       "website": {
         "layouts": "Page layouts",
         "words": "Shop text",
+        "policies": "Policies",
         "eye": "Eye-toggles",
         "canvas": "Side canvas",
         "launch": "Launch default",
@@ -190,7 +197,8 @@
         "diary": "Diary",
         "skills": "Skills",
         "reports": "Agent reports",
-        "learning": "Learning"
+        "learning": "Learning",
+        "train": "Training"
       }
     },
     "purpose": {
@@ -800,7 +808,25 @@
       "setRows": "Orders listed",
       "setGoal": "Monthly goal",
       "setGoalText": "A ring showing this month's sales (delivered orders only) against your goal. Only a target to look at.",
-      "setAmount": "Goal for the month"
+      "setAmount": "Goal for the month",
+      "doNow": "Do now",
+      "doSub": "{n} things waiting, most urgent first. Each button opens its page.",
+      "grpUrgent": "Urgent",
+      "grpToday": "Today",
+      "grpWeek": "This week",
+      "goalOff": "Month target",
+      "goalOffNone": "No target set",
+      "goalOffText": "A target for the month is not set. Turn it on and type the amount in Page settings below.",
+      "goalOffSet": "Set a target",
+      "goalOffNoAccess": "Ask the owner to set it.",
+      "roasTitle": "Ads: are they paying?",
+      "roasSub": "Delivered sales divided by ad spend, for the days you picked",
+      "roasSpend": "Ad spend",
+      "roasSales": "Delivered sales",
+      "roasRoas": "Sales for each {cur} 1",
+      "roasNone": "No ad spend recorded for this time, so there is no ROAS yet.",
+      "roasUnknown": "Ad spend for some days is not known yet, so ROAS is not shown.",
+      "roasMore": "Campaigns"
     }
   },
   "look": {

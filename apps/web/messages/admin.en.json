@@ -102,6 +102,7 @@
     "seoOrganic": "Organic report",
     "websiteLayouts": "Page layouts",
     "websiteWords": "Words & language",
+    "websitePolicies": "Policies",
     "websiteEyeToggles": "Eye-toggles",
     "websiteSideCanvas": "Side canvas",
     "websiteLaunchDefault": "Launch default",
@@ -174,7 +175,11 @@
     "booksMatch": "Match",
     "booksDifferences": "Differences",
     "booksCloses": "Closes",
-    "moneyBudgets": "Budgets & profit"
+    "moneyBudgets": "Budgets & profit",
+    "reportsProfit": "Profit",
+    "reportsProducts": "Products",
+    "reportsMarketing": "Marketing & ads",
+    "reportsReview": "Monthly review"
   },
   "login": {
     "metaTitle": "Admin sign-in",

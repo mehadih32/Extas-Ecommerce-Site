@@ -131,6 +131,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
       // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
       { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
+      // S28 · PR 712 (CN-048): Products › Sets — the sets on their own tab (Combos & sets stays), read only.
+      { id: 'sets', pages: [{ href: '/admin/products/sets', perm: 'combos.read', keys: ['productSets'] }] },
       {
         id: 'stock',
         guide: 'stock',
@@ -194,6 +196,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       // S28 · PR 670 (CN-048): the Couriers section opens on its Overview (every courier at a glance) and Courier 360 (one courier, eight sections; the default courier first)
       { id: 'overview', pages: [{ href: '/admin/delivery', perm: 'delivery.read', keys: ['couriersOverview'] }] },
       { id: 'courier360', pages: [{ href: '/admin/delivery/courier-360', perm: 'delivery.read', keys: ['courier', 'courierStatement'] }] },
+      // S28 · PR 711: Claims & payouts — every claim and the money of every courier on one page (read only; PR 673's steps).
+      { id: 'claims', guide: 'delivery', pages: [{ href: '/admin/delivery/claims', perm: 'delivery.read', keys: ['courierClaims'] }] },
       { id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] },
       // PR 554: the courier accounts with their area lists (the zone sync); one courier's area pairs are under it
       { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courierAreas'] }] },
@@ -359,6 +363,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'layouts', pages: [{ href: '/admin/website/layouts', perm: 'website.read', keys: ['websiteLayouts'] }] },
       // S02 · PR 78 (WEB-05) — Words & language: every word the shop shows, in English and Bengali, with the owner's own.
       { id: 'words', pages: [{ href: '/admin/website/words', perm: 'website.read', keys: ['websiteWords'] }] },
+      // PR 718 (admin prototype v5 · Website › Policies): the policy pages, each in both languages with a preview, a state and a history.
+      { id: 'policies', pages: [{ href: '/admin/website/policies', perm: 'website.read', keys: ['websitePolicies'] }] },
       // S02 · PR 81 (WEB-06) — Eye-toggles: every part of a shop page that can be shown or hidden, in one searchable list.
       { id: 'eye', more: true, pages: [{ href: '/admin/website/eye-toggles', perm: 'website.read', keys: ['websiteEyeToggles'] }] },
       { id: 'canvas', more: true, pages: [{ href: '/admin/website/side-canvas', perm: 'website.read', keys: ['websiteSideCanvas'] }] },
@@ -537,6 +543,14 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'areas', pages: [{ href: '/admin/reports/areas', perm: 'books.read', keys: ['reportsAreas'] }] },
       // S05 · PR 155 follow-up 91 — Orders: Ordered value and Sales by day, by delivery zone and by payment method (CN-019).
       { id: 'orders', guide: 'analytics', pages: [{ href: '/admin/reports/orders', perm: 'books.read', keys: ['reportsOrders'] }] },
+      // S28 · PR 714 (CN-048): Reports › Profit — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
+      { id: 'profitReport', guide: 'analytics', pages: [{ href: '/admin/reports/profit', perm: 'books.read', keys: ['reportsProfit'] }] },
+      // S28 · PR 715 (CN-048): Reports › Products — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
+      { id: 'productsReport', guide: 'analytics', pages: [{ href: '/admin/reports/products', perm: 'books.read', keys: ['reportsProducts'] }] },
+      // S28 · PR 716 (CN-048): Reports › Marketing & ads — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
+      { id: 'marketingReport', guide: 'analytics', pages: [{ href: '/admin/reports/marketing', perm: 'marketing.campaigns.read', keys: ['reportsMarketing'] }] },
+      // S28 · PR 717 (CN-048): Reports › Monthly review — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
+      { id: 'monthlyReview', guide: 'analytics', pages: [{ href: '/admin/reports/review', perm: 'books.read', keys: ['reportsReview'] }] },
       // S02 · PR 72 follow-up 100 — Searches: what shoppers searched for and what found nothing (`search.insights`, off).
       { id: 'searches', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/searches', perm: 'reports.read', keys: ['reportsSearches'] }] },
       // S02 · PR 83 — REP-08 Experiments: A/B tests of the shop's words and shown or hidden parts, with how sure each result is.
@@ -595,6 +609,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 585 — Learning engine: Tirondaj/Doot's own research → quality gate → skill basket loop, practice
       // tasks and paid-tool proposals (owner only).
       { id: 'learning', guide: 'ai', pages: [{ href: '/admin/ai/learning', perm: 'ai.read', keys: ['aiLearning'] }] },
+      // S28 · PR 713 (CN-048): Training — the owner's written instructions per agent, forbidden topics, versions and restore.
+      { id: 'train', guide: 'ai', pages: [{ href: '/admin/ai/training', perm: 'ai.read', keys: ['aiTraining'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',

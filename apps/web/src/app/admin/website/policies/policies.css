@@ -1,0 +1,30 @@
+/* PR 718 — Website › Policies: the page chips, the editor and the live preview side by side on a computer (stacked on a
+   phone), the history list; every control at a 44px tap size and 16px type, the shell's tokens only. */
+.adm2 .polb-chips{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .polb-chips .a2-chipt{min-height:44px;display:inline-flex;align-items:center;gap:8px;font-size:16px}
+.adm2 .polb-dot{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.adm2 .polb-dot.published{background:var(--g)}
+.adm2 .polb-dot.published-draft{background:var(--warn)}
+.adm2 .polb-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.adm2 .polb-mt6{margin-top:6px}
+.adm2 .polb-block{display:block}
+.adm2 .polb-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;margin-top:12px;align-items:start}
+@media (max-width:980px){.adm2 .polb-grid{grid-template-columns:minmax(0,1fr)}}
+.adm2 .polb-edit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:1280px){.adm2 .polb-edit{grid-template-columns:minmax(0,1fr)}}
+.adm2 .polb-lang{display:grid;gap:10px;min-width:0}
+.adm2 .polb-lang .a2-inp{width:100%;min-height:44px;font-size:16px}
+.adm2 .polb-body{min-height:220px;resize:vertical;line-height:1.5}
+.adm2 .polb-prev{border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);padding:12px;min-width:0}
+.adm2 .polb-prevbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.adm2 .polb-prevbar .a2-seg button{min-height:44px;min-width:44px}
+.adm2 .polb-page{overflow-wrap:anywhere}
+.adm2 .polb-page h3{margin:0 0 6px;font-size:18px}
+.adm2 .polb-page h4{margin:12px 0 4px;font-size:16px}
+.adm2 .polb-page p,.adm2 .polb-page li{font-size:16px;line-height:1.5}
+.adm2 .polb-lede{color:var(--ink2)}
+.adm2 .polb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.adm2 .polb-bar .a2-btn,.adm2 .polb-ver .a2-btn{min-height:44px}
+.adm2 .polb-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .polb-ver{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);min-width:0}
+.adm2 .polb-vtext{min-width:0;overflow-wrap:anywhere}
