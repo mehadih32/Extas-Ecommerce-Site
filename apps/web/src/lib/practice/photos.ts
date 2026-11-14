@@ -13,7 +13,7 @@ import {
   renderAsset,
   type MediaDeps,
 } from "@extas/media";
-import { CATEGORIES } from "./data";
+import { CATEGORIES, DRAW_KIND_OF_CATEGORY } from "./data";
 
 export type DrawKind =
   "polo" | "tee" | "shirt" | "panjabi" | "trouser" | "hoodie";
@@ -170,10 +170,11 @@ interface PlanItem {
  */
 async function photoPlan(db: MediaDeps["db"], storeId: number, minimum: number): Promise<PlanItem[]> {
   const products = await db.product.findMany({
-    where: { storeId, isPractice: true },
+    where: { storeId, isPractice: true, archivedAt: null },
     select: {
       id: true,
       nameEn: true,
+      category: { select: { slug: true } },
       colours: {
         where: { archivedAt: null },
         orderBy: { sortOrder: "asc" },
@@ -199,14 +200,15 @@ async function photoPlan(db: MediaDeps["db"], storeId: number, minimum: number):
   }
   const out: PlanItem[] = [];
   for (const p of products) {
-    if (added >= max) {
-      complete = false;
-      break;
-    }
     const name = p.nameEn.replace(/ \(practice\)$/, "");
+    // the demo's garment drawing for the style's category (the older generic styles by their name's category code)
     const code = CATEGORIES.find((c) =>
       (c.names as readonly string[]).includes(name),
     )?.code;
+    const kind: DrawKind =
+      (p.category && DRAW_KIND_OF_CATEGORY[p.category.slug]) ||
+      (code && KIND_OF[code]) ||
+      "tee";
     const cols = p.colours.filter((c) => c.colour.hex);
     if (!cols.length) continue;
     const have = byProduct.get(p.id) ?? [];
@@ -231,7 +233,7 @@ async function photoPlan(db: MediaDeps["db"], storeId: number, minimum: number):
     out.push({
       id: p.id,
       name,
-      kind: (code && KIND_OF[code]) || "tee",
+      kind,
       firstColourId: first.colourId,
       missing: wanted.filter((w) => !done.has(`${w.role}:${w.colourId}`)),
       have: have.length,

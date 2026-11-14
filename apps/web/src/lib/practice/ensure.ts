@@ -10,6 +10,8 @@
 import type { PrismaClient } from '@extas/db/client';
 import type { MediaDeps } from '@extas/media';
 import type { AdminDeps } from '../admin-auth';
+import { DEMO_PACK } from './data';
+import { practiceId } from './ids';
 import { addPracticePhotos } from './photos';
 import { seedPractice, type SeedResult } from './seed';
 import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
@@ -17,7 +19,7 @@ import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
 /** How long a lease holds before another worker may take the work (a crashed process never blocks it for long). */
 const LEASE_MS = 600_000; // hardcode-ok: a technical lease time, not a business number
 /** Pictures made per step (small steps, so the shop is never slowed). */
-export const PHOTO_STEP = 6; // hardcode-ok: a technical step size
+export const PHOTO_STEP = 10; // hardcode-ok: a technical step size
 /** The least pictures a practice product has when it is done: the owner's "4 or more per product". */
 export const PRACTICE_MIN_PHOTOS = 4; // hardcode-ok: the owner's decision of 15 Nov 2026 (4+ pictures per sample product)
 
@@ -59,9 +61,15 @@ export async function dropLease(db: PrismaClient, name: string, storeId: number)
   await db.idempotencyKey.deleteMany({ where: { scope: SCOPE, key: `${name}:${storeId}` } });
 }
 
+/** Is the demo's catalogue not in the store yet (its first or last style missing: an empty store, or the older generic practice products)? */
+export async function demoCatalogueMissing(db: PrismaClient, storeId: number): Promise<boolean> {
+  const ends = [DEMO_PACK.products[0]!, DEMO_PACK.products[DEMO_PACK.products.length - 1]!].map((p) => practiceId(`product:${p.id}`));
+  return (await db.product.count({ where: { storeId, isPractice: true, id: { in: ends } } })) < ends.length;
+}
+
 /** Practice products that still have fewer pictures than the owner asked for. */
 export async function productsWithoutPictures(db: PrismaClient, storeId: number): Promise<number> {
-  const rows = await db.product.findMany({ where: { storeId, isPractice: true }, select: { _count: { select: { media: { where: { archivedAt: null } } } } } });
+  const rows = await db.product.findMany({ where: { storeId, isPractice: true, archivedAt: null }, select: { _count: { select: { media: { where: { archivedAt: null } } } } } });
   return rows.filter((r) => r._count.media < PRACTICE_MIN_PHOTOS).length;
 }
 
@@ -71,7 +79,7 @@ export async function ensurePractice(deps: EnsureDeps, storeId: number, opts: { 
   const out: EnsureResult = { on: enabled.on, shown: 0, hidden: 0, seeded: null, photos: 0, pending: false };
 
   // 1. fill (only while on; `force` is the "Add sample data" button, which fills whatever the automatic switch says)
-  if (enabled.on && (auto.on || opts.force) && (await deps.db.product.count({ where: { storeId, isPractice: true } })) === 0) {
+  if (enabled.on && (auto.on || opts.force) && (await demoCatalogueMissing(deps.db, storeId))) {
     if (await takeLease(deps.db, 'fill', storeId, now)) {
       try {
         out.seeded = await seedPractice(deps.db, storeId, now);

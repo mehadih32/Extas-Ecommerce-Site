@@ -672,7 +672,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
         });
       }
       const reason = unclear ? CALL_REASONS.addressUnclear : notSet ? CALL_REASONS.chargeNotSet : noDetail ? CALL_REASONS.addressCheck : giftPart ? CALL_REASONS.giftAdvance : voiceLow ? CALL_REASONS.voiceCall : null;
-      if (reason) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
+      // PR 725: a practice order makes no call task (no staff member rings the practice phone number)
+      if (reason && !practice) await tx.callTask.create({ data: { storeId, orderId: o.id, customerId: ownerId, reason } });
       if (voice) {
         const linked = await tx.checkoutVoice.updateMany({ where: { id: voice.id, storeId, orderId: null }, data: { orderId: o.id } });
         if (linked.count !== 1) throw new CheckoutError('INVALID_INPUT', 'the recording went into another order', ['voice']);
