@@ -83,7 +83,11 @@
         "funnels": "Funnels",
         "searches": "Searches",
         "orders": "Sales",
-        "couriers": "Couriers"
+        "couriers": "Couriers",
+        "profitReport": "Profit",
+        "productsReport": "Products",
+        "marketingReport": "Marketing & ads",
+        "monthlyReview": "Monthly review"
       },
       "settings": {
         "store": "Business settings",
