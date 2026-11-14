@@ -23,7 +23,8 @@
         "future": "The period ends today: later days have no figures yet.",
         "swapped": "From was after To, so the two days were turned round.",
         "tooLong": "One report covers at most {days} days, so the period starts later."
-      }
+      },
+      "answers": "This report answers"
     },
     "channel": {
       "ads:META": "Meta ads (Facebook, Instagram)",
@@ -84,7 +85,18 @@
         "ads": "Ad spend imported for the days of the period.",
         "returns": "Courier and handling lost on parcels that came back.",
         "losing": "Styles whose profit after their share of ads is below zero."
-      }
+      },
+      "ans": {
+        "q": "Where does our profit come from, and where does it leak?",
+        "lowCat": "{name} keeps only {pct} of sales as profit before ads (best: {bestName} {bestPct}). Check its prices or discounts.",
+        "checkPrices": "Check prices",
+        "bestCh": "{name} brings the most profit: {amount} ({change} vs the span before). Put more ad money behind it.",
+        "raiseBudget": "Raise budget",
+        "losing": "{n} styles lose money in this period. Look at their price or cost first."
+      },
+      "weeksTitle": "Margin, week by week",
+      "weeksSub": "The period in blocks of seven days. Margin before ads is profit before ads as a share of delivered sales.",
+      "weeksSeries": "Margin before ads %"
     },
     "products": {
       "metaTitle": "Product report",
@@ -125,6 +137,14 @@
         "pieces": "Pieces on the delivered orders.",
         "restock": "From the Report library: the verdict \"restock\" uses the days of stock set in its own settings.",
         "unsold": "From the Report library: in stock, nothing sold in the days set there."
+      },
+      "ans": {
+        "q": "What should I restock, buy in bulk or stop?",
+        "best": "Best seller: {name} ({pieces} pieces, {sales}).",
+        "combo": "Make combo",
+        "restock": "{n} products have selling sizes that are out or will run out soon. Reorder them from the ERP.",
+        "reorder": "Reorder",
+        "unsold": "{n} products sit in stock with nothing sold. Try a combo or a small discount."
       }
     },
     "marketing": {
@@ -166,6 +186,15 @@
         "spend": "Ad spend imported per day plus the cost of the messages sent in the period.",
         "perTk": "Delivered sales of the whole shop divided by all marketing spend. Not known while the spend is not known.",
         "profit": "The shop's net profit for the same days (Money › Profit & loss)."
+      },
+      "ans": {
+        "q": "Which ads bring profit, and which waste money?",
+        "total": "Ads cost {spend} and brought {sales} in delivered sales (per ৳1: {roas}, was {was}).",
+        "campaigns": "Campaigns",
+        "best": "Best campaign: \"{name}\" ({roas} per ৳1). Worth more budget.",
+        "raise": "Raise budget",
+        "worst": "\"{name}\" returns only {roas} per ৳1: {spend} spent. Stop or fix it.",
+        "pause": "Pause ad"
       }
     },
     "review": {
