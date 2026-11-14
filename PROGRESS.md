@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 719–726 filed in the register (branch `claude/round1`, local, NOT pushed)
+
+PR 725 (live practice shop) and PR 726 (Brand & menus) were merged onto the PR 720 photos work and the PR 724 rich seed: the background keeper makes pictures with `maxPhotos`, the manual "Add practice photos" button (`addPhotosBatch`, `practice.photoBatch`) uses the same `addPracticePhotos` (options `limit` and `maxPhotos`), `practice.autoFill` and `practice.notice` sit beside `practice.photoBatch`, and the rich option still works (its orders, claims, ads and reviews; the products are now the 72 demo styles). Register rows 719–726, S28 68/68, totals 726 / 717 active / 692 built, README PR log row and `docs/stages/bn.json` are updated. Nothing was type-checked or tested here (no node_modules): run `pnpm check` and the database tests before the first push.
+
 ## 15 Nov 2026 — PR 726 Website › Brand & menus (owner order, built on branch `claude/brand-menus`, not pushed)
 
 `/admin/website/brand-menus`: Brand, Header & menu and Footer cards with drag, touch and arrow-key reordering, show/hide boxes, English + Bengali words and phone and computer previews; the shop header and footer draw the uploaded logo. The register rows for PR 726 are in `docs/owner/PR-726-register-rows.md` (paste them with the counters when it merges). Typecheck, lint and the tests were not run on the box that wrote it (no `node_modules`, 8 GB): run `pnpm check` before the first push.
