@@ -253,6 +253,8 @@ import adminTelegramApprovalsEn from '../../../messages/admin-telegram-approvals
 import adminTelegramApprovalsBn from '../../../messages/admin-telegram-approvals.bn.json';
 import adminWebsiteAnalyticsEn from '../../../messages/admin-website-analytics.en.json';
 import adminWebsiteAnalyticsBn from '../../../messages/admin-website-analytics.bn.json';
+import adminWebsitePoliciesEn from '../../../messages/admin-website-policies.en.json';
+import adminWebsitePoliciesBn from '../../../messages/admin-website-policies.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -360,6 +362,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-start-fresh': { en: adminStartFreshEn, bn: adminStartFreshBn },
   'admin-telegram-approvals': { en: adminTelegramApprovalsEn, bn: adminTelegramApprovalsBn },
   'admin-website-analytics': { en: adminWebsiteAnalyticsEn, bn: adminWebsiteAnalyticsBn },
+  'admin-website-policies': { en: adminWebsitePoliciesEn, bn: adminWebsitePoliciesBn },
   'admin-searches': { en: adminSearchesEn, bn: adminSearchesBn },
   'admin-seasonal': { en: adminSeasonalEn, bn: adminSeasonalBn },
   'admin-seasonal-home': { en: adminSeasonalHomeEn, bn: adminSeasonalHomeBn },
