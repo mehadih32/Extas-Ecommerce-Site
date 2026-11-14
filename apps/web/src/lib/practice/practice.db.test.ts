@@ -6,7 +6,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { PRACTICE_PHONE_PREFIX } from '@extas/db/client';
+import { memoryStorage } from '@extas/adapters';
+import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { photoSetStatus, type MediaDeps } from '@extas/media';
 import { seedPractice, completeProducts } from './seed';
+import { addPracticePhotos, drawingPng } from './photos';
 import { practiceCounts, resetPractice } from './reset';
 
 const NOW = new Date('2026-11-13T08:00:00Z');
@@ -425,5 +429,40 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(await db.fabric.findUnique({ where: { id: realFabric.id } })).not.toBeNull();
     expect(await db.category.count({ where: { storeId: S } })).toBe(realCategory);
     expect(await db.product.findUnique({ where: { id: realProductId } })).not.toBeNull();
+  });
+  it('gives every practice product the photos the shop asks for (drawn like the demo), once, and reset removes exactly those', async () => {
+    const db = t.prisma;
+    await syncSettings(db, { registry, messages });
+    const storage = memoryStorage('LOCAL_DISK');
+    const deps: MediaDeps = { db, settings: new SettingsResolver(prismaBackend(db), registry, { checkIntervalMs: 0 }), storage: async () => storage, now: () => NOW };
+    // a real photo the owner uploaded must survive the reset
+    const realPng = await drawingPng('tee', '#123456', 'front');
+    const realAsset = await db.mediaAsset.create({
+      data: { storeId: S, kind: 'IMAGE', storage: 'LOCAL_DISK', storageKey: 'media/real/own.png', mimeType: 'image/png', bytes: BigInt(realPng.byteLength), checksumSha256: 'f'.repeat(64), tags: [] },
+    });
+    await seedPractice(db, S, NOW);
+    const first = await addPracticePhotos(deps, S);
+    expect(first.photos).toBeGreaterThan(0);
+    const products = await db.product.findMany({ where: { storeId: S, isPractice: true }, select: { id: true, status: true } });
+    expect(products.length).toBe(21);
+    for (const p of products) {
+      const st = await photoSetStatus(deps, { storeId: S, productId: p.id });
+      expect(st.ok, `${p.id} ${st.missing.join(',')} ${st.count}/${st.minimum}`).toBe(true);
+      expect(p.status).toBe('DRAFT');
+    }
+    // real stored files with sizes made, never a broken picture
+    const asset = await db.mediaAsset.findFirstOrThrow({ where: { storeId: S, folder: 'practice' }, include: { renditions: true } });
+    expect(asset.renditions.length).toBeGreaterThan(0);
+    expect((await storage.get(asset.storageKey))?.contentType).toBe('image/png');
+    expect(await storage.get(asset.renditions[0]!.storageKey)).not.toBeNull();
+    // a second run changes nothing
+    const before = [await db.productMedia.count(), await db.mediaAsset.count(), await db.mediaRendition.count()];
+    expect((await addPracticePhotos(deps, S)).photos).toBe(0);
+    expect([await db.productMedia.count(), await db.mediaAsset.count(), await db.mediaRendition.count()]).toEqual(before);
+    // reset removes exactly the practice pictures
+    await resetPractice(db, S);
+    expect(await db.productMedia.count({ where: { storeId: S } })).toBe(0);
+    expect(await db.mediaAsset.count({ where: { storeId: S, folder: 'practice' } })).toBe(0);
+    expect(await db.mediaAsset.findUnique({ where: { id: realAsset.id } })).not.toBeNull();
   });
 });
