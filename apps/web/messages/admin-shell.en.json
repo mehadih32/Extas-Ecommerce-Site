@@ -808,7 +808,25 @@
       "setRows": "Orders listed",
       "setGoal": "Monthly goal",
       "setGoalText": "A ring showing this month's sales (delivered orders only) against your goal. Only a target to look at.",
-      "setAmount": "Goal for the month"
+      "setAmount": "Goal for the month",
+      "doNow": "Do now",
+      "doSub": "{n} things waiting, most urgent first. Each button opens its page.",
+      "grpUrgent": "Urgent",
+      "grpToday": "Today",
+      "grpWeek": "This week",
+      "goalOff": "Month target",
+      "goalOffNone": "No target set",
+      "goalOffText": "A target for the month is not set. Turn it on and type the amount in Page settings below.",
+      "goalOffSet": "Set a target",
+      "goalOffNoAccess": "Ask the owner to set it.",
+      "roasTitle": "Ads: are they paying?",
+      "roasSub": "Delivered sales divided by ad spend, for the days you picked",
+      "roasSpend": "Ad spend",
+      "roasSales": "Delivered sales",
+      "roasRoas": "Sales for each {cur} 1",
+      "roasNone": "No ad spend recorded for this time, so there is no ROAS yet.",
+      "roasUnknown": "Ad spend for some days is not known yet, so ROAS is not shown.",
+      "roasMore": "Campaigns"
     }
   },
   "look": {

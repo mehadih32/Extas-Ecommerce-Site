@@ -21,7 +21,7 @@ import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/Summary
 import { moneyOf } from '@/components/admin/products/model';
 import { PlaceGuide } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
-import type { DashPart } from '@/lib/admin-look/dashboard-data';
+import { salesPerUnit, type DashPart } from '@/lib/admin-look/dashboard-data';
 import { change } from '@/lib/admin-look/chart';
 import { rangeHref } from '@/lib/admin-look/range';
 import type { CountFormat } from '@/lib/admin-lumen/model';
@@ -135,12 +135,36 @@ function needsRows(p: DashProps): LmQueueRow[] {
   return rows;
 }
 
+/** The "Do now" groups. Bad-tone lists are Urgent, slow stock and set-up lists are This week, the rest is Today. */
+const WEEK_LISTS: ReadonlySet<string> = new Set(['lowStock', 'countsReview', 'launch', 'agentFixes', 'erpKeptAtSwitch', 'ordersTwoSizes']);
+
+function groupOf(p: DashProps, id: string): 'urgent' | 'today' | 'week' {
+  const q = (p.data.queues ?? []).find((x) => x.id === id);
+  if (q?.def.tone === 'bad') return 'urgent';
+  return WEEK_LISTS.has(id) ? 'week' : 'today';
+}
+
 function Needs({ p }: { p: DashProps }) {
   const { f } = p;
   const rows = needsRows(p);
+  const groups = (['urgent', 'today', 'week'] as const)
+    .map((g) => ({ g, rows: rows.filter((r) => groupOf(p, r.id) === g) }))
+    .filter((x) => x.rows.length > 0);
   return (
     <div className="lm-today-needs" data-testid="dash-needs">
-      <Queue title={f.t('dsh.lm.needs')} sub={f.t('dsh.lm.needsSub')} rows={rows} empty={{ title: f.t('dsh.lm.caught'), text: f.t('dsh.prob.none') }} refresh={false} testId="dash-problems" />
+      <div data-testid="dash-problems">
+        {groups.length ? (
+          <>
+            <h2 className="lm-do-h">{f.t('dsh.lm.doNow')}</h2>
+            <p className="lm-sub">{f.t('dsh.lm.doSub', { n: f.n(rows.length) })}</p>
+            {groups.map((x) => (
+              <Queue key={x.g} title={f.t(`dsh.lm.grp${x.g === 'urgent' ? 'Urgent' : x.g === 'today' ? 'Today' : 'Week'}`)} rows={x.rows} empty={{ title: f.t('dsh.lm.caught') }} refresh={false} testId={`dash-do-${x.g}`} />
+            ))}
+          </>
+        ) : (
+          <Queue title={f.t('dsh.lm.doNow')} sub={f.t('dsh.lm.needsSub')} rows={[]} empty={{ title: f.t('dsh.lm.caught'), text: f.t('dsh.prob.none') }} refresh={false} testId="dash-do-none" />
+        )}
+      </div>
       <p className="lm-note">{f.t('dsh.prob.later', { a: f.t('dsh.stage.S21'), b: f.t('dsh.stage.S22') })}</p>
     </div>
   );
@@ -300,6 +324,63 @@ function Goal({ p }: { p: DashProps }) {
   );
 }
 
+/** "Ads: are they paying?" — delivered sales per unit of ad spend, from the same profit report Home D reads. */
+function Roas({ p }: { p: DashProps }) {
+  const { f, viewer } = p;
+  const pf = p.data.profit!;
+  const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
+  const note = pf.cur.adsMinor === null ? f.t('dsh.lm.roasUnknown') : per === null ? f.t('dsh.lm.roasNone') : null;
+  return (
+    <section className="lm-card lm-in a3-B" data-testid="dash-roas" aria-labelledby="lm-roas-h">
+      <div className="lm-card-h">
+        <h2 id="lm-roas-h">{f.t('dsh.lm.roasTitle')}</h2>
+        {can(viewer, 'marketing.campaigns.read') ? (
+          <Link className="lm-btn gh sm" href="/admin/marketing">
+            {f.t('dsh.lm.roasMore')}
+          </Link>
+        ) : null}
+      </div>
+      <p className="lm-sub">{f.t('dsh.lm.roasSub')}</p>
+      <dl className="lm-roas">
+        <div>
+          <dt>{f.t('dsh.lm.roasSpend')}</dt>
+          <dd className="a3-num">{pf.cur.adsMinor === null ? '—' : f.money(pf.cur.adsMinor)}</dd>
+        </div>
+        <div>
+          <dt>{f.t('dsh.lm.roasSales')}</dt>
+          <dd className="a3-num">{f.money(pf.cur.salesMinor)}</dd>
+        </div>
+      </dl>
+      {per !== null ? (
+        <p className="lm-note" data-testid="dash-roas-x">
+          <b className="a3-num">{per.toFixed(1)}x</b> · {f.t('dsh.lm.roasRoas', { cur: f.currency })}
+        </p>
+      ) : (
+        <p className="lm-note">{note}</p>
+      )}
+    </section>
+  );
+}
+
+/** The month target card while the target is off (the ring above draws once it is on). */
+function GoalOff({ p }: { p: DashProps }) {
+  const { f } = p;
+  const mayEdit = can(p.viewer, 'settings.write');
+  return (
+    <section className="lm-card lm-in lm-goal" data-testid="dash-goal-off" aria-labelledby="lm-goaloff-h">
+      <h2 id="lm-goaloff-h">{f.t('dsh.lm.goalOff')}</h2>
+      <EmptyState title={f.t('dsh.lm.goalOffNone')} text={f.t('dsh.lm.goalOffText')} tone="calm" icon="check" />
+      {mayEdit ? (
+        <a className="lm-btn gh sm" href="#dash-settings" data-testid="dash-goal-set">
+          {f.t('dsh.lm.goalOffSet')}
+        </a>
+      ) : (
+        <p className="lm-note">{f.t('dsh.lm.goalOffNoAccess')}</p>
+      )}
+    </section>
+  );
+}
+
 function Couriers({ p }: { p: DashProps }) {
   const { f, viewer } = p;
   const dl = p.data.delivery!;
@@ -377,7 +458,7 @@ function PageSettings({ p }: { p: DashProps }) {
     },
   ];
   return (
-    <details className="a2-more-opts lm-today-set" data-testid="dash-settings">
+    <details className="a2-more-opts lm-today-set" id="dash-settings" data-testid="dash-settings">
       <summary>{f.t('dsh.lm.settings')}</summary>
       <SettingCards cards={cards} save={{ method: 'PUT', url: '/api/admin/dashboard/today' }} testId="dash-setcards" />
     </details>
@@ -396,7 +477,7 @@ function Overview(p: DashProps) {
       <div className="lm-today-g3">
         {data.stages ? <Pipeline p={p} /> : null}
         {data.feed ? <Feed p={p} /> : null}
-        {data.goal ? <Goal p={p} /> : null}
+        {data.goal ? <Goal p={p} /> : can(viewer, 'metrics.read') ? <GoalOff p={p} /> : null}
       </div>
       <div className="lm-today-g3">
         {data.top ? (
@@ -405,6 +486,7 @@ function Overview(p: DashProps) {
           </ListCard>
         ) : null}
         {data.delivery ? <Couriers p={p} /> : null}
+        {data.profit ? <Roas p={p} /> : null}
         {data.lowStock ? (
           <ListCard id="low" title={f.t('dsh.low.title')} sub={f.t('dsh.low.sub')} link={{ href: '/admin/stock#st-low', label: f.t('dsh.low.link') }}>
             <LowStock f={f} rows={data.lowStock} />
@@ -484,7 +566,7 @@ export const dashboardB: LookDesign<DashProps, DashPart> = {
     en: 'The Lumen look: today’s sales in a big hero chart, what needs you with one button each, where orders are, the newest orders as they come in, an optional monthly goal and the cards that matter. Follows dark mode.',
     bn: 'Lumen চেহারা: বড় গ্রাফে বিক্রি, কী আপনার জন্য অপেক্ষা করছে (প্রতিটায় একটা বোতাম), অর্ডার এখন কোথায়, নতুন অর্ডার আসার সাথে সাথে, চাইলে মাসের লক্ষ্য, আর দরকারি কার্ডগুলো। ডার্ক মোডেও চলে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'profit'],
   Render: DashboardB,
   Thumb: ThumbB,
 };
