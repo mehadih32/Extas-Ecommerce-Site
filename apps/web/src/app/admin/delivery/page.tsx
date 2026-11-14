@@ -11,9 +11,9 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import * as sh from '@extas/shipping';
+import './delivery.css';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
-import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCouriers } from '@/lib/admin-couriers';
@@ -53,9 +53,20 @@ export default async function CouriersOverviewPage() {
   const ov = await sh.couriersOverview(sd, who);
   const canMoney = access.guard.permissions?.has('payments.view') ?? false;
   const pd = canMoney ? await paymentsDeps(access.deps) : null;
-  const [currency, moneys] = await Promise.all([
+  const claimsOf = async (courierId?: string) => {
+    if (!pd) return null;
+    try {
+      const o = await pay.claimsOverview(pd, who, { ...(courierId ? { courierAccountId: courierId } : {}), status: 'all', page: 1 });
+      return { count: o.figures.open.count + o.figures.sent.count, minor: o.figures.open.claimedMinor + o.figures.sent.claimedMinor };
+    } catch {
+      return null;
+    }
+  };
+  const [currency, moneys, claimsAll, claimsBy] = await Promise.all([
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }),
     pd ? Promise.all(ov.cards.map((c) => pay.courierMoney(pd, who, c.id).catch(() => null))) : Promise.resolve(ov.cards.map(() => null)),
+    claimsOf(),
+    Promise.all(ov.cards.map((c) => claimsOf(c.id))),
   ]);
   const money = moneyOf(currency, view.locale);
   const m = (x: number) => formatMoney(x, money);
@@ -66,10 +77,55 @@ export default async function CouriersOverviewPage() {
   const lineTotal = moneys.reduce((s, x) => s + (x?.openCount ?? 0), 0);
   const sorted = [...ov.cards].filter((c) => !c.archived);
   const pct = (x: number | null) => (x === null ? '—' : `${n(x)}%`);
+  const claimsOn = new Map(ov.cards.map((c, i) => [c.id, claimsBy[i] ?? null]));
+  const heldAll = pd ? moneys.reduce((s, x) => s + (x?.position?.withCourierMinor ?? 0), 0) : null;
+  const wayAll = sorted.reduce((s, c) => s + c.onTheWay.parcels, 0);
+  const withRate = sorted.filter((c) => c.last30.successPct !== null);
+  const best = [...withRate].sort((a, b) => (b.last30.successPct ?? 0) - (a.last30.successPct ?? 0))[0];
+  const withDays = sorted.filter((c) => c.last30.avgDays !== null);
+  const slow = [...withDays].sort((a, b) => (b.last30.avgDays ?? 0) - (a.last30.avgDays ?? 0))[0];
+  const openClaimsAll = claimsAll;
+  const connected = (c: (typeof sorted)[number]) => c.enabled && c.mode === 'LIVE';
+  const defCard = sorted.find((c) => c.isDefault) ?? sorted[0];
+  const retPct = (c: (typeof sorted)[number]) => (c.last30.finished ? Math.round((c.last30.returned / c.last30.finished) * 1000) / 10 : null);
+  const hl = (v: number | null, best: number | null) => (v !== null && best !== null && v === best && sorted.length > 1 ? 'cr-hl' : '');
+  const minOf = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length ? Math.min(...v) : null;
+  };
+  const maxOf = (xs: (number | null)[]) => {
+    const v = xs.filter((x): x is number => x !== null);
+    return v.length ? Math.max(...v) : null;
+  };
+  const bestSuccess = maxOf(sorted.map((c) => c.last30.successPct));
+  const bestRet = minOf(sorted.map(retPct));
+  const bestDays = minOf(sorted.map((c) => c.last30.avgDays));
+  const bestCost = minOf(sorted.map((c) => c.last30.perParcelMinor));
+  const kpi = (label: string, value: string, sub: string, id: string) => (
+    <div className="a2-card a2-kpi" data-testid={id}>
+      <div className="a2-kl">{label}</div>
+      <div className="a2-kv">{value}</div>
+      <div className="a2-kf">
+        <span className="a2-kn">{sub}</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="a2-z" data-testid="couriers-overview" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={cr('ov.title')} sub={cr('ov.sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={cr('ov.title')}
+        sub={cr('ov.sub')}
+        right={
+          defCard ? (
+            <Link className="a2-btn" href={`/admin/delivery/couriers/${defCard.id}`} data-testid="courier-open-default">
+              {cr('ov.open360')}
+            </Link>
+          ) : null
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       {sorted.length === 0 ? (
         <section className="a2-card a2-mt12" data-testid="couriers-overview-empty">
@@ -80,118 +136,150 @@ export default async function CouriersOverviewPage() {
         </section>
       ) : (
         <>
+          <div className="a2-kpis a2-mt12" data-testid="couriers-kpis">
+            {kpi(cr('ov.k.parcels'), n(wayAll), cr('ov.k.parcelsSub'), 'couriers-kpi-parcels')}
+            {kpi(cr('ov.k.cash'), heldAll === null ? '—' : m(heldAll), cr('ov.k.cashSub'), 'couriers-kpi-cash')}
+            {kpi(cr('ov.k.claims'), openClaimsAll ? n(openClaimsAll.count) : '—', openClaimsAll ? cr('ov.k.claimsSub', { amount: m(openClaimsAll.minor) }) : '', 'couriers-kpi-claims')}
+            {kpi(cr('ov.k.best'), best ? pct(best.last30.successPct) : '—', best ? cr('ov.k.bestSub', { name: best.name }) : '', 'couriers-kpi-best')}
+          </div>
+
           <section className="a2-card a2-mt12" data-testid="couriers-needs">
             <h2 className="a2-h3">{cr('ov.needs')}</h2>
-            <ul className="a2-sm a2-mt6" style={{ paddingLeft: 18 }}>
-              {stuckTotal ? <li>{cr('ov.needsStuck', { n: n(stuckTotal) })}</li> : null}
-              {lineTotal ? <li>{cr('ov.needsLines', { n: n(lineTotal) })}</li> : null}
-              {!stuckTotal && !lineTotal ? <li className="a2-mute">{cr('ov.needsNone')}</li> : null}
+            <ul className="cr-list a2-mt6">
+              {stuckTotal ? (
+                <li>
+                  <span>{cr('ov.needsStuckHours', { n: n(stuckTotal), h: n(ov.watch.stuckHours) })}</span>
+                  <span className="a2-pill bad">{cr('ov.view')}</span>
+                </li>
+              ) : null}
+              {openClaimsAll && openClaimsAll.count ? (
+                <li>
+                  <Link href="/admin/delivery/claims">{cr('ov.needsClaims', { n: n(openClaimsAll.count) })}</Link>
+                  <span className="a2-pill warn">{cr('ov.view')}</span>
+                </li>
+              ) : null}
+              {lineTotal ? (
+                <li>
+                  <Link href="/admin/money/couriers">{cr('ov.needsLines', { n: n(lineTotal) })}</Link>
+                  <span className="a2-pill warn">{cr('ov.view')}</span>
+                </li>
+              ) : null}
+              {!stuckTotal && !lineTotal && !(openClaimsAll && openClaimsAll.count) ? <li className="a2-mute">{cr('ov.needsNone')}</li> : null}
             </ul>
           </section>
 
-          <div className="a2-stack a2-mt12" data-testid="couriers-cards">
+          <div className="cr-cards a2-mt12" data-testid="couriers-cards">
             {sorted.map((c) => {
               const mo = byId.get(c.id) ?? null;
               const f = c.last30;
+              const cl = claimsOn.get(c.id) ?? null;
+              const stat = (v: string, l: string) => (
+                <div>
+                  <b>{v}</b>
+                  <span>{l}</span>
+                </div>
+              );
               return (
-                <section key={c.id} className="a2-card" data-testid="courier-card" data-default={c.isDefault ? 'yes' : 'no'}>
-                  <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <h2 className="a2-h3" style={{ overflowWrap: 'anywhere' }}>
-                        {c.name}
-                      </h2>
-                      <div className="a2-gap8 a2-mt6" style={{ flexWrap: 'wrap' }}>
-                        <span className="a2-pill line">{t(d, `courier.providers.${c.providerKey}`)}</span>
-                        <span className={`a2-pill ${c.mode === 'LIVE' ? 'ok' : 'info'}`}>{t(d, `ful.couriers.mode.${c.mode}`)}</span>
-                        {c.isDefault ? <span className="a2-pill ok">{cr('ov.default')}</span> : null}
-                        {c.isBackup ? <span className="a2-pill warn">{cr('ov.backup')}</span> : null}
-                        {!c.enabled ? <span className="a2-pill line">{t(d, 'ful.couriers.off')}</span> : null}
-                        {c.stuck ? <span className="a2-pill bad">{cr('ov.stuck', { n: n(c.stuck) })}</span> : null}
-                      </div>
-                    </div>
-                    <Link className="a2-btn sm" href={`/admin/delivery/couriers/${c.id}`} data-testid="courier-open">
-                      {cr('ov.open360')}
-                      <ShellIcon name="cr" size={14} />
-                    </Link>
+                <section key={c.id} className="a2-card cr-card" data-testid="courier-card" data-default={c.isDefault ? 'yes' : 'no'}>
+                  <div className="a2-between" style={{ flexWrap: 'nowrap' }}>
+                    <h2 className="a2-h3" style={{ overflowWrap: 'anywhere' }}>
+                      {c.name}
+                    </h2>
+                    <span className="a2-gap8" style={{ flexWrap: 'nowrap' }}>
+                      {c.isDefault ? <span className="a2-pill warn">{cr('ov.default')}</span> : null}
+                      {c.isBackup ? <span className="a2-pill info">{cr('ov.backup')}</span> : null}
+                      <span className={`a2-pill ${connected(c) ? 'ok' : 'bad'}`}>{connected(c) ? cr('ov.connected') : cr('ov.notConnected')}</span>
+                    </span>
                   </div>
-                  <dl className="a2-kv2 a2-mt12" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-                    <div>
-                      <dt className="a2-xs a2-mute">{cr('ov.onWay')}</dt>
-                      <dd>
-                        <b>{cr('ov.parcelsN', { n: n(c.onTheWay.parcels) })}</b>
-                        <span className="a2-xs a2-mute a2-blk">{m(c.onTheWay.codMinor)}</span>
-                      </dd>
-                    </div>
-                    {mo?.position ? (
-                      <div>
-                        <dt className="a2-xs a2-mute">{cr('ov.held')}</dt>
-                        <dd>
-                          <b>{m(mo.position.withCourierMinor)}</b>
-                          <span className="a2-xs a2-mute a2-blk">{cr('ov.parcelsN', { n: n(mo.position.withCourierParcels) })}</span>
-                        </dd>
-                      </div>
+                  <div className="cr-mini a2-mt12">
+                    {stat(n(c.onTheWay.parcels), cr('ov.inTransit'))}
+                    {stat(mo?.position ? m(mo.position.withCourierMinor) : '—', cr('ov.held'))}
+                    {stat(pct(f.successPct), cr('ov.successRate'))}
+                    {stat(f.avgDays === null ? '—' : n(f.avgDays), cr('ov.avgDays'))}
+                    {stat(cl ? n(cl.count) : '—', cr('ov.openClaims'))}
+                    {stat(n(c.stuck), cr('ov.stuckLbl'))}
+                  </div>
+                  <p className="a2-sm a2-mt12">
+                    <span className="a2-mute">{cr('ov.payoutLbl')}: </span>
+                    {mo?.statements[0] ? <b>{m(mo.statements[0].netMinor)}</b> : cr('ov.payoutNone')}
+                  </p>
+                  <div className="a2-gap8 a2-mt12">
+                    <Link className="a2-btn sm pri" href={`/admin/delivery/couriers/${c.id}`} data-testid="courier-open">
+                      {cr('ov.open360')}
+                    </Link>
+                    {!c.isDefault ? (
+                      <Link className="a2-btn sm" href="/admin/delivery/settings" data-testid="courier-make-default">
+                        {cr('ov.makeDefault')}
+                      </Link>
                     ) : null}
-                    <div>
-                      <dt className="a2-xs a2-mute">{cr('ov.success')}</dt>
-                      <dd>
-                        <b>{pct(f.successPct)}</b>
-                        <span className="a2-xs a2-mute a2-blk">{cr('ov.parcelsN', { n: n(f.finished) })}</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="a2-xs a2-mute">{cr('ov.days')}</dt>
-                      <dd>
-                        <b>{f.avgDays === null ? '—' : n(f.avgDays)}</b>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="a2-xs a2-mute">{cr('ov.cost')}</dt>
-                      <dd>
-                        <b>{f.perParcelMinor === null ? '—' : m(f.perParcelMinor)}</b>
-                      </dd>
-                    </div>
-                  </dl>
+                  </div>
                   {c.practiceParcels ? <p className="a2-xs a2-mute a2-mt6">{cr('ov.practice', { n: n(c.practiceParcels) })}</p> : null}
                 </section>
               );
             })}
           </div>
 
-          {sorted.length > 1 ? (
-            <section className="a2-card a2-mt12" data-testid="couriers-compare">
-              <h2 className="a2-h3">{cr('ov.compare')}</h2>
-              <p className="a2-xs a2-mute">{cr('ov.compareSub')}</p>
-              <div className="a2-tblw a2-mt12">
-                <table className="a2-tbl">
-                  <thead>
-                    <tr>
-                      <th>{cr('c.pick')}</th>
-                      <th className="r">{cr('ov.success')}</th>
-                      <th className="r">{cr('ov.days')}</th>
-                      <th className="r">{cr('ov.cost')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sorted.map((c) => (
+          <section className="a2-card a2-mt12" data-testid="couriers-compare">
+            <h2 className="a2-h3">{cr('ov.compare')}</h2>
+            <p className="a2-xs a2-mute">{cr('ov.compareSub')}</p>
+            <div className="a2-tblw a2-mt12">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{cr('c.pick')}</th>
+                    <th className="r">{cr('ov.t.parcels')}</th>
+                    <th className="r">{cr('ov.t.success')}</th>
+                    <th className="r">{cr('ov.t.returned')}</th>
+                    <th className="r">{cr('ov.t.days')}</th>
+                    <th className="r">{cr('ov.t.cost')}</th>
+                    <th className="r">{cr('ov.t.cash')}</th>
+                    <th className="r">{cr('ov.t.claims')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((c) => {
+                    const mo = byId.get(c.id) ?? null;
+                    const cl = claimsOn.get(c.id) ?? null;
+                    return (
                       <tr key={c.id}>
                         <td className="a2-tdh">
-                          <b>{c.name}</b>
+                          <Link href={`/admin/delivery/couriers/${c.id}`}>
+                            <b>{c.name}</b>
+                          </Link>
                         </td>
-                        <td className="r" data-l={cr('ov.success')}>
-                          {pct(c.last30.successPct)}
+                        <td className="r" data-l={cr('ov.t.parcels')}>
+                          {n(c.last30.finished)}
                         </td>
-                        <td className="r" data-l={cr('ov.days')}>
-                          {c.last30.avgDays === null ? '—' : n(c.last30.avgDays)}
+                        <td className="r" data-l={cr('ov.t.success')}>
+                          <span className={hl(c.last30.successPct, bestSuccess)}>{pct(c.last30.successPct)}</span>
                         </td>
-                        <td className="r" data-l={cr('ov.cost')}>
-                          {c.last30.perParcelMinor === null ? '—' : m(c.last30.perParcelMinor)}
+                        <td className="r" data-l={cr('ov.t.returned')}>
+                          <span className={hl(retPct(c), bestRet)}>{pct(retPct(c))}</span>
+                        </td>
+                        <td className="r" data-l={cr('ov.t.days')}>
+                          <span className={hl(c.last30.avgDays, bestDays)}>{c.last30.avgDays === null ? '—' : n(c.last30.avgDays)}</span>
+                        </td>
+                        <td className="r" data-l={cr('ov.t.cost')}>
+                          <span className={hl(c.last30.perParcelMinor, bestCost)}>{c.last30.perParcelMinor === null ? '—' : m(c.last30.perParcelMinor)}</span>
+                        </td>
+                        <td className="r" data-l={cr('ov.t.cash')}>
+                          {mo?.position ? m(mo.position.withCourierMinor) : '—'}
+                        </td>
+                        <td className="r" data-l={cr('ov.t.claims')}>
+                          {cl ? n(cl.count) : '—'}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {best && slow ? (
+            <p className="cr-note a2-mt12" data-testid="couriers-insight">
+              {cr('ov.insight', { best: best.name, rate: pct(best.last30.successPct), slow: slow.name, days: n(slow.last30.avgDays ?? 0) })}
+            </p>
           ) : null}
 
           <section className="a2-card a2-mt12" data-testid="couriers-savings">

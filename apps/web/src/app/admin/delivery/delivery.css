@@ -61,3 +61,21 @@
 @media (max-width: 767px) {
   .adm2 .dz-find .a2-inp, .adm2 .dz-sec .a2-inp, .adm2 .dz-sec .a2-ta, .adm2 .dz-sec .a2-sel, .adm2 .dz-try .a2-inp { font-size: 16px; }
 }
+
+/* ---------- Couriers › All couriers (prototype v5: card grid, mini figures, compare table, insight line) ---------- */
+.adm2 .cr-list { list-style: none; margin: 0; padding: 0; }
+.adm2 .cr-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 8px 0; border-top: 1px solid var(--ln2); font-size: 13.5px; }
+.adm2 .cr-list li:first-child { border-top: 0; }
+.adm2 .cr-list li > :first-child { min-width: 0; overflow-wrap: anywhere; color: var(--ink); }
+.adm2 .cr-cards { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) { .adm2 .cr-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .adm2 .cr-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.adm2 .cr-card { min-width: 0; }
+.adm2 .cr-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 12px; }
+.adm2 .cr-mini > div { min-width: 0; display: flex; flex-direction: column; }
+.adm2 .cr-mini b { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.adm2 .cr-mini span { font-size: 11.5px; color: var(--mute); }
+.adm2 .cr-hl { color: var(--ok); font-weight: 650; }
+.adm2 .cr-note { border: 1px dashed var(--ln); border-radius: 9px; padding: 10px 14px; font-size: 12.5px; color: var(--ink2); }
+.adm2 .cr-card .a2-btn, .adm2 .cr-list a { min-height: 44px; }
+.adm2 .cr-list a { display: inline-flex; align-items: center; }

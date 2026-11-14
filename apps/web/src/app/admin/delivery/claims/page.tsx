@@ -136,10 +136,12 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
   ];
 
   const fig = (label: string, value: string, sub: string, testId: string, tone = '') => (
-    <div className={`a2-card cl-fig ${tone}`} data-testid={testId}>
-      <span className="a2-xs a2-mute">{label}</span>
-      <b>{value}</b>
-      <span className="a2-xs a2-mute">{sub}</span>
+    <div className={`a2-card a2-kpi ${tone}`} data-testid={testId}>
+      <div className="a2-kl">{label}</div>
+      <div className="a2-kv">{value}</div>
+      <div className="a2-kf">
+        <span className="a2-kn">{sub}</span>
+      </div>
     </div>
   );
   const dueCount = o.terms.deadlineEnabled ? (f.late.count ? f.late : f.soon) : null;
@@ -149,7 +151,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
       <PageHead view={view} place={locateKey(KEY)} title={co('title')} sub={co('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="cl-figs">
+      <div className="a2-kpis a2-mt12">
         {fig(co('k.open'), n(openCount), co('k.openSub', { amount: m(openMinor) }), 'claims-fig-open')}
         {fig(co('k.recovered'), m(f.won.paidMinor), co('k.recoveredSub', { asked: m(f.won.claimedMinor) }), 'claims-fig-recovered')}
         {dueCount
@@ -158,48 +160,51 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         {inProgress !== null ? fig(co('k.inProgress'), m(inProgress), co('k.inProgressSub', { amount: m(inProgress) }), 'claims-fig-payouts') : fig(co('k.inProgress'), '—', co('money.noPerm'), 'claims-fig-payouts')}
       </div>
 
-      <form className="a2-card a2-mt12" action={HERE} method="get" aria-label={co('f.label')} data-testid="claims-filter">
-        <div className="cl-filter">
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="cl-c">{co('f.courier')}</label>
-            <select id="cl-c" name="c" className="a2-sel" defaultValue={courier}>
-              <option value="">{co('f.allCouriers')}</option>
-              {o.couriers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+      <section className="a2-card a2-mt12" data-testid="claims-ledger">
+        <h2 className="a2-h3">{co('ledger.title')}</h2>
+        <p className="a2-sm a2-mute">{co('ledger.sub')} · {co('ledger.count', { n: n(o.total) })}</p>
+        <form className="a2-mt12" action={HERE} method="get" aria-label={co('f.label')} data-testid="claims-filter">
+          <div className="cl-filter">
+            <div className="a2-fld">
+              <label className="a2-lbl" htmlFor="cl-c">{co('f.courier')}</label>
+              <select id="cl-c" name="c" className="a2-sel" defaultValue={courier}>
+                <option value="">{co('f.allCouriers')}</option>
+                {o.couriers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="a2-fld">
+              <label className="a2-lbl" htmlFor="cl-k">{co('f.kind')}</label>
+              <select id="cl-k" name="k" className="a2-sel" defaultValue={kind}>
+                <option value="">{co('f.allKinds')}</option>
+                {pay.CLAIM_KINDS.map((k) => (
+                  <option key={k} value={k}>{t(d, `courierReport.claims.kind.${k}`)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="a2-fld">
+              <label className="a2-lbl" htmlFor="cl-from">{co('f.from')}</label>
+              <input id="cl-from" name="from" type="date" className="a2-inp" defaultValue={from} />
+            </div>
+            <div className="a2-fld">
+              <label className="a2-lbl" htmlFor="cl-to">{co('f.to')}</label>
+              <input id="cl-to" name="to" type="date" className="a2-inp" defaultValue={to} />
+            </div>
+            <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
+              {status !== 'all' ? <input type="hidden" name="s" value={status} /> : null}
+              <button type="submit" className="cl-go" data-testid="claims-show">{co('f.show')}</button>
+              {courier || kind || from || to || status !== 'all' ? <Link href={HERE} className="cl-link" data-testid="claims-clear">{co('f.clear')}</Link> : null}
+            </div>
           </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="cl-k">{co('f.kind')}</label>
-            <select id="cl-k" name="k" className="a2-sel" defaultValue={kind}>
-              <option value="">{co('f.allKinds')}</option>
-              {pay.CLAIM_KINDS.map((k) => (
-                <option key={k} value={k}>{t(d, `courierReport.claims.kind.${k}`)}</option>
-              ))}
-            </select>
-          </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="cl-from">{co('f.from')}</label>
-            <input id="cl-from" name="from" type="date" className="a2-inp" defaultValue={from} />
-          </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="cl-to">{co('f.to')}</label>
-            <input id="cl-to" name="to" type="date" className="a2-inp" defaultValue={to} />
-          </div>
-          <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
-            {status !== 'all' ? <input type="hidden" name="s" value={status} /> : null}
-            <button type="submit" className="cl-go" data-testid="claims-show">{co('f.show')}</button>
-            {courier || kind || from || to || status !== 'all' ? <Link href={HERE} className="cl-link" data-testid="claims-clear">{co('f.clear')}</Link> : null}
-          </div>
-        </div>
-        <nav className="cl-chips" aria-label={co('f.status')} data-testid="claims-states">
-          {pay.OVERVIEW_STATUS.map((s) => (
-            <Link key={s} href={href({ s: s === 'all' ? '' : s })} className={`cl-chip ${status === s ? 'on' : ''}`} aria-current={status === s ? 'true' : undefined} data-state={s}>
-              {co(`f.s.${s}`)}
-            </Link>
-          ))}
-        </nav>
-      </form>
+          <nav className="cl-chips" aria-label={co('f.status')} data-testid="claims-states">
+            {pay.OVERVIEW_STATUS.map((s) => (
+              <Link key={s} href={href({ s: s === 'all' ? '' : s })} className={`cl-chip ${status === s ? 'on' : ''}`} aria-current={status === s ? 'true' : undefined} data-state={s}>
+                {co(`f.s.${s}`)}
+              </Link>
+            ))}
+          </nav>
+        </form>
 
       {!claimsSwitch.enabled ? (
         <div className="a2-note a2-mt12" data-testid="claims-off">
@@ -207,44 +212,62 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         </div>
       ) : null}
 
-      <section className="a2-mt12" data-testid="claims-ledger">
-        <h2 className="a2-h3">{co('ledger.title')}</h2>
-        <p className="a2-sm a2-mute">{co('ledger.sub')} · {co('ledger.count', { n: n(o.total) })}</p>
+
         {o.rows.length ? (
-          <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }}>
-            {o.rows.map((r) => (
-              <li key={r.id} className="a2-card tight cl-row" data-testid="claim-row" data-status={r.status} data-outcome={r.outcome}>
-                <div className="cl-head">
-                  <div>
-                    <Link href={orderHref(r.orderId)}>{r.orderNumber ?? '—'}</Link> <span className="a2-pill line">{t(d, `courierReport.claims.kind.${r.kind}`)}</span> <span className={`a2-pill ${outcomePill[r.outcome]}`}>{cr(`k.out.${r.outcome}`)}</span>
-                    {r.deadline ? <span className={`a2-pill ${r.deadline === 'late' ? 'bad' : 'warn'}`} data-testid="claim-deadline">{cr(`k.dl.${r.deadline}`)}</span> : null}
-                    {r.practice ? <span className="a2-pill line" data-testid="claim-practice">{co('ledger.practice')}</span> : null}
-                    <span className="a2-xs a2-mute a2-blk">
-                      <Link href={c360(r.courierAccountId, 'claims')}>{r.courier || '—'}</Link>
-                      {r.consignmentId ? ` · ${r.consignmentId}` : ''}
-                      {r.courierRef ? ` · ${r.courierRef}` : ''}
-                    </span>
-                    <span className="a2-xs a2-mute a2-blk">
-                      {co('ledger.raised', { date: when.format(r.createdAt) })} · {r.closedAt ? co('ledger.ageClosed', { n: n(r.ageDays) }) : co('ledger.age', { n: n(r.ageDays) })}
-                      {r.deadlineAt ? ` · ${cr('k.deadline', { date: day.format(r.deadlineAt) })}` : ''}
-                    </span>
-                    <span className="a2-sm a2-blk">
+          <div className="a2-tblw a2-mt12">
+            <table className="a2-tbl" data-testid="claims-table">
+              <thead>
+                <tr>
+                  <th>{co('t.claim')}</th>
+                  <th>{co('t.type')}</th>
+                  <th className="r">{co('t.amount')}</th>
+                  <th>{co('t.deadline')}</th>
+                  <th>{co('t.status')}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {o.rows.map((r) => (
+                  <tr key={r.id} className="cl-row" data-testid="claim-row" data-status={r.status} data-outcome={r.outcome}>
+                    <td className="a2-tdh" data-l={co('t.claim')}>
+                      <Link href={orderHref(r.orderId)}>{r.orderNumber ?? '—'}</Link>
+                      <span className="a2-xs a2-mute a2-blk">
+                        <Link href={c360(r.courierAccountId, 'claims')}>{r.courier || '—'}</Link>
+                        {r.consignmentId ? ` · ${r.consignmentId}` : ''}
+                        {r.courierRef ? ` · ${r.courierRef}` : ''}
+                      </span>
+                      {r.practice ? <span className="a2-pill line" data-testid="claim-practice">{co('ledger.practice')}</span> : null}
+                    </td>
+                    <td data-l={co('t.type')}>
+                      {t(d, `courierReport.claims.kind.${r.kind}`)}
+                      <span className="a2-xs a2-mute a2-blk" style={{ whiteSpace: 'pre-line' }}>
+                        {r.note ?? (r.closedAt ? co('ledger.ageClosed', { n: n(r.ageDays) }) : co('ledger.age', { n: n(r.ageDays) }))}
+                      </span>
+                    </td>
+                    <td className="r" data-l={co('t.amount')}>
                       <b>{m(r.claimedMinor)}</b>
-                      {r.settledMinor !== null ? <span className="a2-mute"> · {co('ledger.paid', { amount: m(r.settledMinor) })}</span> : null}
-                    </span>
-                  </div>
-                  {canMove && (r.status === 'OPEN' || r.status === 'SENT') && !r.practice ? (
-                    <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
-                      {r.status === 'OPEN' ? <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SENT' }} label={t(d, 'courierReport.claims.send')} field={{ name: 'courierRef', label: t(d, 'courierReport.claims.ref'), optional: true }} testId="claim-sent" /> : null}
-                      <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SETTLED' }} label={t(d, 'courierReport.claims.settle')} field={{ name: 'settledMinor', label: t(d, 'courierReport.claims.paid'), money: true }} tone="pri" testId="claim-settled" />
-                      <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'REJECTED' }} label={t(d, 'courierReport.claims.reject')} field={{ name: 'note', label: t(d, 'courierReport.claims.why') }} testId="claim-rejected" />
-                    </div>
-                  ) : null}
-                </div>
-                {r.note ? <p className="a2-xs a2-mute a2-mt6" style={{ whiteSpace: 'pre-line' }}>{r.note}</p> : null}
-              </li>
-            ))}
-          </ul>
+                      {r.settledMinor !== null ? <span className="a2-xs a2-blk" style={{ color: 'var(--ok)' }}>{co('ledger.paid', { amount: m(r.settledMinor) })}</span> : null}
+                    </td>
+                    <td data-l={co('t.deadline')}>
+                      {r.deadline ? <span className={`a2-pill ${r.deadline === 'late' ? 'bad' : 'warn'}`} data-testid="claim-deadline">{cr(`k.dl.${r.deadline}`)}</span> : r.deadlineAt ? cr('k.deadline', { date: day.format(r.deadlineAt) }) : '—'}
+                    </td>
+                    <td data-l={co('t.status')}>
+                      <span className={`a2-pill ${outcomePill[r.outcome]}`}>{cr(`k.out.${r.outcome}`)}</span>
+                    </td>
+                    <td>
+                      {canMove && (r.status === 'OPEN' || r.status === 'SENT') && !r.practice ? (
+                        <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
+                          {r.status === 'OPEN' ? <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SENT' }} label={t(d, 'courierReport.claims.send')} field={{ name: 'courierRef', label: t(d, 'courierReport.claims.ref'), optional: true }} testId="claim-sent" /> : null}
+                          <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SETTLED' }} label={t(d, 'courierReport.claims.settle')} field={{ name: 'settledMinor', label: t(d, 'courierReport.claims.paid'), money: true }} tone="pri" testId="claim-settled" />
+                          <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'REJECTED' }} label={t(d, 'courierReport.claims.reject')} field={{ name: 'note', label: t(d, 'courierReport.claims.why') }} testId="claim-rejected" />
+                        </div>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="a2-sm a2-mute a2-mt6" data-testid="claims-none">{co('ledger.none')}</p>
         )}
@@ -257,7 +280,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         ) : null}
       </section>
 
-      <section className="a2-mt12" data-testid="claims-money">
+      <section className="a2-card a2-mt12" data-testid="claims-money">
         <h2 className="a2-h3">{co('money.title')}</h2>
         <p className="a2-sm a2-mute">{co('money.sub')}</p>
         {o.money ? (
@@ -285,7 +308,8 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                       <dt className="a2-sm"><b>{co('money.owed')}</b></dt>
                       <dd>{m(c.owedMinor)}</dd>
                     </dl>
-                    <div className="a2-mt6">
+                    <div className="a2-gap8 a2-mt6">
+                      <Link href={c360(c.courierAccountId, 'payouts')} className="cl-link pri" data-testid="claims-request-payout">{co('money.request')}</Link>
                       <Link href={c360(c.courierAccountId, 'payouts')} className="cl-link">{co('money.open360')}</Link>
                     </div>
                   </div>
@@ -296,22 +320,36 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
             )}
             <h3 className="a2-h3 a2-mt12">{co('money.latest')}</h3>
             {o.money.latest.length ? (
-              <ul className="a2-stack a2-mt6" style={{ listStyle: 'none', padding: 0 }} data-testid="claims-payouts">
-                {o.money.latest.map((p) => (
-                  <li key={p.id} className="a2-card tight" data-testid="payout-line" data-state={p.state}>
-                    <div className="cl-head">
-                      <div>
-                        <span className={`a2-pill ${p.state === 'PAID' ? 'ok' : p.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${p.state}`)}</span> <b>{m(p.amountMinor)}</b>
-                        <span className="a2-xs a2-mute a2-blk">
-                          {p.courier || '—'} · {when.format(p.requestedAt)} · {co('money.covers', { amount: m(p.coveredMinor) })}
-                          {p.paidMinor !== null ? ` · ${co('money.paidOn', { amount: m(p.paidMinor) })}` : ''}
-                        </span>
-                      </div>
-                    </div>
-                    {p.differenceMinor !== null ? <div className="a2-note bad a2-mt6">{cr('y.diff', { diff: m(Math.abs(p.differenceMinor)), dir: p.differenceMinor > 0 ? cr('y.dir.more') : cr('y.dir.less') })}</div> : null}
-                  </li>
-                ))}
-              </ul>
+              <div className="a2-tblw a2-mt6" data-testid="claims-payouts">
+                <table className="a2-tbl">
+                  <thead>
+                    <tr>
+                      <th>{co('t.requested')}</th>
+                      <th>{cr('c.pick')}</th>
+                      <th className="r">{co('t.amount')}</th>
+                      <th>{co('t.status')}</th>
+                      <th className="r">{co('t.paid')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {o.money.latest.map((p) => (
+                      <tr key={p.id} data-testid="payout-line" data-state={p.state}>
+                        <td className="a2-tdh" data-l={co('t.requested')}>
+                          {when.format(p.requestedAt)}
+                          <span className="a2-xs a2-mute a2-blk">{co('money.covers', { amount: m(p.coveredMinor) })}</span>
+                        </td>
+                        <td data-l={cr('c.pick')}>{p.courier || '—'}</td>
+                        <td className="r" data-l={co('t.amount')}><b>{m(p.amountMinor)}</b></td>
+                        <td data-l={co('t.status')}>
+                          <span className={`a2-pill ${p.state === 'PAID' ? 'ok' : p.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${p.state}`)}</span>
+                          {p.differenceMinor !== null ? <span className="a2-xs a2-blk" style={{ color: 'var(--bad)' }}>{cr('y.diff', { diff: m(Math.abs(p.differenceMinor)), dir: p.differenceMinor > 0 ? cr('y.dir.more') : cr('y.dir.less') })}</span> : null}
+                        </td>
+                        <td className="r" data-l={co('t.paid')}>{p.paidMinor !== null ? m(p.paidMinor) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p className="a2-sm a2-mute a2-mt6">{co('money.noPayouts')}</p>
             )}
