@@ -11,9 +11,11 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as del from '@extas/delivery';
+import * as rl from '@extas/rules';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { deliveryDeps } from '@/lib/delivery-api';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { PolicyHeadButtons } from '@/components/admin/website/PolicyHeadButtons';
 import { PoliciesTab } from '@/components/admin/website/PoliciesTab';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -91,11 +93,32 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
   } catch {
     /* no rules to show: the page still works without the strip */
   }
+  // …and the numbers of the shop's live Rules (Exchange hours, free-delivery limit, discounts …), by the page they belong to.
+  try {
+    const kindsOf: Record<string, string[]> = { delivery: ['delivery'], exchange: ['exchange'], payment: ['payment'], wallet: ['discount'], cancellation: ['policy'], reviews: ['policy'], cookies: ['policy'], terms: ['policy'], privacy: ['policy'] };
+    const live = (await rl.activeRules(access.deps.db, MOTHER_STORE_ID)).filter((r) => rl.isLive(r, new Date()));
+    const currency = (await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })) as string;
+    const ctx = { locale: view.locale, currency: typeof currency === 'string' ? currency : 'BDT', timeZone: view.timeZone };
+    for (const slug of POLICY_SLUGS) {
+      const cards: { label: string; value: string; sub?: string }[] = [];
+      for (const r of live.filter((x) => (kindsOf[slug] ?? []).includes(x.kind))) {
+        for (const p of r.params) {
+          if (p.type === 'text' || p.type === 'datetime' || p.type === 'bool') continue;
+          const val = rl.formatValue(p.type, p.value, ctx);
+          if (val === null) continue;
+          cards.push({ label: view.lang === 'bn' && p.labelBn ? p.labelBn : p.labelEn, value: p.type === 'hours' ? t(d, 'pw.glance.hours', { n: val }) : val });
+        }
+      }
+      if (cards.length) glance[slug] = [...(glance[slug] ?? []), ...cards].slice(0, 8);
+    }
+  } catch {
+    /* the strip stays as it was */
+  }
   const published = v.rows.filter((r) => r.state !== 'draft').length;
 
   return (
     <div className="a2-z" data-testid="pol-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'pw.title')} sub={t(d, 'pw.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'pw.title')} sub={t(d, 'pw.sub')} right={<PolicyHeadButtons rulesLabel={t(d, 'pw.openRules')} publishLabel={t(d, 'pw.publishHead')} canEdit={canEdit} />} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">
         <span>{t(d, 'pw.note')}</span>

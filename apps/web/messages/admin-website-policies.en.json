@@ -86,6 +86,8 @@
       "note": "These numbers are read from your Delivery settings, so this page always matches checkout. Change them there.",
       "hours": "{n} hours",
       "codLimit": "{name}: cash on delivery limit"
-    }
+    },
+    "openRules": "Open Rules",
+    "publishHead": "Publish"
   }
 }
