@@ -28,7 +28,7 @@ export interface ProductListPageProps {
 
 /** PR 657: the title row and "+ Add product" / "···" menu — shared so B and C can put their own hero or flow strip
  *  between this and the tiles below without touching it. */
-export function ProductsHeader({ view, canWrite, menu }: { view: AdminView; canWrite: boolean; menu?: LookMenuProps | null }) {
+export function ProductsHeader({ view, canWrite, menu, canExport, canImport }: { view: AdminView; canWrite: boolean; menu?: LookMenuProps | null; /** PR 722: Export (`catalogue.export`) and Quick import (`catalogue.import`), as in the prototype. */ canExport?: boolean; canImport?: boolean }) {
   const d = view.dict;
   return (
     <div className="ad-hd pa-hd">
@@ -38,6 +38,18 @@ export function ProductsHeader({ view, canWrite, menu }: { view: AdminView; canW
         <p className="ad-intro">{t(d, 'products.intro')}</p>
       </div>
       <div className="pa-hd-actions">
+        {canExport ? (
+          <a className="ad-btn ad-btn-ghost pa-hd-btn" href="/api/admin/catalogue/csv/export" download data-testid="products-export">
+            <Icon name="doc" size={18} />
+            {t(d, 'products.actions.export')}
+          </a>
+        ) : null}
+        {canImport ? (
+          <Link className="ad-btn ad-btn-ghost pa-hd-btn" href="/admin/products/erp-import" data-testid="products-quick-import">
+            <Icon name="sync" size={18} />
+            {t(d, 'products.actions.quickImport')}
+          </Link>
+        ) : null}
         {canWrite ? (
           <Link className="ad-btn ad-btn-primary pa-hd-btn" href={`${PRODUCTS_HOME}/new`}>
             <Icon name="plus" size={18} />
@@ -66,10 +78,33 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
     tile('lowStock', counts.lowStockSizes, t(d, 'products.kpi.lowStockSub', { n: num(lowPieces) }), 'alert'),
     tile('needPhotos', counts.needPhotos, t(d, 'products.kpi.needPhotosSub', { n: num(photoMin) }), 'file', `${AUDIT_HOME}?check=photos`),
   ];
+  // PR 722 (prototype v5 parity): the average margin as a fifth figure (only for a person who may see buying prices) and the
+  // one-line insight under the figures: the best seller, and how many products sold nothing in 30 days.
+  const strip = data.strip;
+  if (data.showsBuying && strip.avgMarginPct !== null) {
+    tiles.push({
+      key: 'margin',
+      label: t(d, 'products.kpi.margin'),
+      value: strip.avgMarginPct / 100,
+      shown: `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(strip.avgMarginPct)}%`,
+      format: { kind: 'percent', locale: view.locale, digits: 1 },
+      vs: strip.floorMarginPct !== null ? t(d, 'products.kpi.marginSub', { n: num(strip.belowFloor), min: num(Math.round(strip.floorMarginPct)) }) : t(d, 'products.kpi.marginNoFloor'),
+      icon: 'chart',
+    });
+  }
+  const insight = strip.best
+    ? t(d, 'products.insight.best', { name: strip.best.name, n: num(strip.best.sold30), sold: num(strip.sold30Pieces) }) + (strip.notSelling ? ' ' + t(d, 'products.insight.notSelling', { n: num(strip.notSelling) }) : '')
+    : null;
 
   return (
     <>
       <SummaryTiles tiles={tiles} label={t(d, 'products.title')} testId="products-kpi" />
+      {insight ? (
+        <div className="pa-insight" data-testid="products-insight">
+          <Icon name="info" size={16} />
+          <span>{insight}</span>
+        </div>
+      ) : null}
 
       <form className="pa-sbar" role="search" action={PRODUCTS_HOME} method="get">
         <label className="pa-search">
@@ -118,6 +153,9 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
         bulkMax={bulkMax}
         canWrite={canWrite}
         canPublish={canPublish}
+        extras={data.extras}
+        showsBuying={data.showsBuying}
+        floorMarginPct={data.strip.floorMarginPct}
         emptyText={t(d, query.q || query.status || query.categoryId ? 'products.empty' : 'products.emptyAll')}
       />
 
@@ -145,7 +183,7 @@ export function ProductListPage({ view, c, query, data, menu }: ProductListPageP
   const canPublish = c.can('catalogue.publish');
   return (
     <div className="a2-z" data-testid="products-list" data-lm-ready="">
-      <ProductsHeader view={view} canWrite={canWrite} menu={menu} />
+      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} />
       <ProductListBody view={view} query={query} data={data} canWrite={canWrite} canPublish={canPublish} />
     </div>
   );

@@ -240,3 +240,26 @@
 .a3-pdense .pa-meta { margin-top: 2px; }
 .a3-pdense .pa-health { margin-top: 3px; }
 
+
+/* PR 722 (prototype v5 parity): the product table — thumb + name + style code, category, colours, price (struck old
+   price under it), ERP buying price, margin, stock (with the low sizes), 30-day sales, status. a2-tbl turns each row
+   into a card on a phone (shell.css), so no sideways scroll and every tick box is a 44 px target. */
+.pa-tblw { margin-top: 12px; }
+.pa-pc { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pa-pc .pa-th { width: 40px; height: 40px; flex: none; grid-row: auto; border-radius: 8px; }
+.pa-pc .pa-nm { line-height: 18px; min-width: 0; }
+.pa-code { font-family: var(--ad-mono, ui-monospace, monospace); font-size: 11px; color: var(--ad-muted); }
+.pa-chkw { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.pa-chkw input { width: 18px; height: 18px; accent-color: var(--ad-brand); margin: 0; }
+.pa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pa-tbl .pa-was { display: block; text-decoration: line-through; color: var(--ad-muted); }
+.pa-tbl .pa-low { display: block; color: var(--warn, var(--ad-muted)); }
+.pa-tbl td.r b { font-weight: 600; }
+.pa-tbl td .pa-status { display: inline-block; }
+.pa-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 24px; margin: 4px 0 12px; }
+.pa-strip b { display: block; font-size: 24px; line-height: 1.2; font-weight: 700; }
+.pa-strip span { display: block; font-size: 12px; color: var(--ad-muted); }
+.pa-strip a { font-size: 12px; }
+.pa-insight { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--infobg, var(--ad-line2)); color: var(--ink, inherit); font-size: 13.5px; margin-bottom: 12px; }
+.pa-hd-actions .ad-btn { min-height: 44px; }
+@media (max-width: 767px) { .pa-tbl td.a2-tdc { right: 4px; top: 4px; } }
