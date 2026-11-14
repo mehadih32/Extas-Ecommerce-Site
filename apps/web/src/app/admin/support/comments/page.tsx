@@ -11,7 +11,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CommentActions, CommentRules } from '@/components/admin/v5/CommentParts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -58,6 +58,7 @@ export default async function CommentsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="a2-z" data-testid="comment-desk" data-lm-ready="" data-on={list.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub', { need: n(list.counts.need), hidden: n(list.counts.hidden), auto: n(list.counts.auto) })} />
+      <SectionTabs view={view} current={KEY} />
       {!list.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       {list.enabled ? (
         <>

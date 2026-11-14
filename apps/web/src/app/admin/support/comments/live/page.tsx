@@ -13,7 +13,7 @@ import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AddByHand, EndLive, MakeDraft, StartLive } from '@/components/admin/v5/LiveParts';
 import { V5Number, V5Switch } from '@/components/admin/v5/Parts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -66,6 +66,7 @@ export default async function LivePage() {
   return (
     <div className="a2-z" data-testid="live-selling" data-lm-ready="" data-on={board.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} right={<Link className="a2-btn sm" href="/admin/support/comments">{c('back')}</Link>} />
+      <SectionTabs view={view} current={KEY} />
       {!board.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       {board.enabled && !running && can.act ? (
         <section className="a2-card a2-mt12" aria-label={c('start')}>

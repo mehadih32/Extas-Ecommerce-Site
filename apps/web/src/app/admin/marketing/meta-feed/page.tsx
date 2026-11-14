@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { V5Switch } from '@/components/admin/v5/Parts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -63,6 +63,7 @@ export default async function MetaFeedPage() {
   return (
     <div className="a2-z" data-testid="meta-feed" data-lm-ready="" data-on={sw.on ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} right={<Link className="a2-btn sm" href="/admin/marketing/merchant-feed">{c('back')}</Link>} />
+      <SectionTabs view={view} current={KEY} />
       {!sw.on ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       <section className="a2-card a2-mt12" data-testid="meta-address">
         <div className="a2-xs a2-mute">{c('address')}</div>

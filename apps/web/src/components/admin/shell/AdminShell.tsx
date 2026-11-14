@@ -25,7 +25,7 @@
 // PR 12 follow-up 209: while `admin.shell.recentPages` shows some, each admin page opened is kept on the person's account
 // for the palette's "Recent"; while `admin.shell.keyJumps` is on, "g" then a letter opens a section (g d, g o …).
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import { ADMIN_LANG_COOKIE, ADMIN_LOGIN, ADMIN_LOGIN_PAGE } from '@/lib/admin-nav';
 import { setAdminCookie } from '@/lib/admin-prefs-client';
@@ -67,6 +67,7 @@ const saveMine = (body: Record<string, unknown>) =>
 
 export function AdminShell({ model, children, guideMode }: { model: ShellModel; children: ReactNode; guideMode?: string | null }) {
   const pathname = usePathname() ?? '/admin';
+  const from = useSearchParams()?.get('from') ?? null;
   const router = useRouter();
   const [, start] = useTransition();
   const d = model.dict;
@@ -256,7 +257,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
 
   if (pathname === ADMIN_LOGIN || pathname === ADMIN_LOGIN_PAGE || pathname === model.loginPath || pathname.startsWith(`${ADMIN_LOGIN}/`) || pathname.startsWith(`${ADMIN_LOGIN_PAGE}/`)) return <>{children}</>;
 
-  const here = locate(pathname);
+  const here = locate(pathname, from);
   const active = here?.section.id ?? null;
   const aiShown = model.aiShown === true;
   const groups = lumenNav(viewer, { aiShown });

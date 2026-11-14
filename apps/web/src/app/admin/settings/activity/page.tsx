@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ActivityScreen } from '@/components/admin/people/ActivityScreen';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -19,6 +20,7 @@ import '../../s28.css';
 
 export const dynamic = 'force-dynamic';
 const HERE = '/admin/settings/activity';
+const KEY = 'activity';
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, people: ((view.lang === 'bn' ? bn : en).people as unknown) as Dict } };
@@ -46,7 +48,8 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const v = await activityView(d, access.guard.actor, MOTHER_STORE_ID, filtersOf(sp), tz);
   return (
     <div className="a2-z" data-testid="activity-page" data-lm-ready="">
-      <PageHead view={view} place={null} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.sub')} />
+      <SectionTabs view={view} current={KEY} />
       <ActivityScreen dict={view.dict} view={v} tz={tz} />
     </div>
   );

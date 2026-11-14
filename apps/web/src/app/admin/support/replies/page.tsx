@@ -11,7 +11,7 @@ import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ReplyForm, ReplyRowActions } from '@/components/admin/v5/ReplyManager';
 import { V5Number, V5Switch } from '@/components/admin/v5/Parts';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -59,6 +59,7 @@ export default async function RepliesPage({ searchParams }: { searchParams: Prom
   return (
     <div className="a2-z" data-testid="quick-replies" data-lm-ready="" data-on={list.enabled ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <SectionTabs view={view} current={KEY} />
       {!list.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       {list.enabled && list.top ? <div className="a2-note a2-mt12">{c('top', { name: list.top.shortcut, n: list.top.usedCount })}</div> : null}
       {list.enabled && canEdit ? (
