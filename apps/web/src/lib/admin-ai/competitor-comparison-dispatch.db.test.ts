@@ -19,7 +19,7 @@ const NOW = new Date('2026-11-12T10:00:00Z');
 const OWNER = SYSTEM;
 
 const theirStep = (over: Partial<CompetitorJourneyStepResult> = {}): CompetitorJourneyStepResult => ({ label: 'Product', url: 'https://competitor.example/p/1', title: 'Their Polo', blocked: false, blockReason: null, note: 'A grid of polos with a sale badge on every tile.', ...over });
-const ourStep = (over: Partial<CompetitorJourneyStepResult> = {}): CompetitorJourneyStepResult => ({ label: 'Product', url: 'https://new.extas.com.bd/p/1', title: 'Our Polo', blocked: false, blockReason: null, note: 'A filterable grid with no always-on discount badges.', ...over });
+const ourStep = (over: Partial<CompetitorJourneyStepResult> = {}): CompetitorJourneyStepResult => ({ label: 'Product', url: 'https://extas.com.bd/p/1', title: 'Our Polo', blocked: false, blockReason: null, note: 'A filterable grid with no always-on discount badges.', ...over });
 
 describe.skipIf(!HAS_TEST_DB)('AI 360 · the Competitor Teardown comparison/report engine on PostgreSQL (PR 336)', () => {
   let t: TestDatabase;

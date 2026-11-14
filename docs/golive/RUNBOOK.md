@@ -1,5 +1,17 @@
 # Go-live runbook and rollback plan (PR 398)
 
+> **CN-052 (14 Nov 2026): the staging host new.extas.com.bd is retired.** Go-live is done (11 Nov); the shop runs on
+> extas.com.bd only. Every mention of new.extas.com.bd below is history (struck-through where it still matters): the
+> deploy, the nightly and post-deploy smoke tests, the journeys, the speed lab and the go-live check now open
+> extas.com.bd, read-only. `EXTAS_STAGING_HOST` is empty in `infra/config/server.conf`; with it empty there is no staging
+> Caddy block and no preview password. The rollback rehearsal and the test-order runs (gate-orders, simulation) are not
+> run on the live shop; they are by hand only and refuse without a staging host.
+>
+> **Deleting the old DNS record (the owner, after the CN-052 deploy only):** wait until the CN-052 deploy is live and a
+> smoke test on extas.com.bd after it is green (Actions → Smoke test → Run workflow, host empty or `main`). Then
+> Cloudflare → extas.com.bd → DNS → Records → the record named `new` (type A or CNAME) → Edit → Delete. Nothing else
+> uses it. Undo: add the same record again (proxied) and set `EXTAS_STAGING_HOST` in `server.conf`.
+
 S19 · PR 398 (CN-031, Blueprint A1.5). How the main domain (extas.com.bd) moves from the old WordPress shop to the new
 site, minute by minute, and how each step is undone. The switch itself is the owner's decision (CLAUDE.md: the go-live
 switch of extas.com.bd is one of the only real stops); nothing in this file runs on its own. The redirects of the old

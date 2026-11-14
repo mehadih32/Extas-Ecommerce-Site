@@ -27,7 +27,7 @@ MAX_MB="${SITEMAP_MAX_MB:-5}"; [[ "$MAX_MB" =~ ^[0-9]{1,2}$ ]] || MAX_MB=5
 log() { echo "[redirect-import $(date +%H:%M:%S)] $*"; }
 
 [[ "$MODE" == dry || "$MODE" == commit ]] || { log "FAIL: mode must be dry or commit"; exit 1; }
-if ! [[ $OLD =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]] || [ "$OLD" = "${EXTAS_STAGING_HOST,,}" ]; then
+if ! [[ $OLD =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]] || [ "$OLD" = "${EXTAS_STAGING_HOST:-}" ]; then
   log "FAIL: not the old site's host name: '$OLD' (a plain host name such as the main domain, never the staging host)"
   exit 1
 fi

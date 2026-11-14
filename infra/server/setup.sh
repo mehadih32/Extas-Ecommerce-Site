@@ -33,15 +33,16 @@ monitor   step_monitor   0
 k6        step_k6        0
 public    step_public    0"
 
-# Public check: does https://<staging host> answer through Cloudflare? (401 = the preview password page = good)
+# Public check: does https://<site host> answer through Cloudflare? (CN-052: the site host is the main domain since the
+# staging host was retired; 401 = a preview password page, 200 = open; both are good)
 step_public() {
-  local code
-  code="$(curl -s -o /dev/null -m 15 -w '%{http_code}' "https://$EXTAS_STAGING_HOST/" 2>/dev/null || echo 000)"
+  local code site="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"
+  code="$(curl -s -o /dev/null -m 15 -w '%{http_code}' "https://$site/" 2>/dev/null || echo 000)"
   case "$code" in
-    401|200) report OK "public HTTPS" "https://$EXTAS_STAGING_HOST answers ($code — password page)" ;;
-    000) report WARN "public HTTPS" "no answer from https://$EXTAS_STAGING_HOST yet (DNS record new → this VM not in place?)" ;;
+    401|200) report OK "public HTTPS" "https://$site answers ($code)" ;;
+    000) report WARN "public HTTPS" "no answer from https://$site yet (DNS record → this VM not in place?)" ;;
     52[0-9]) report WARN "public HTTPS" "Cloudflare error $code — SSL mode must be Full (strict) or Full" ;;
-    *) report WARN "public HTTPS" "https://$EXTAS_STAGING_HOST answered $code" ;;
+    *) report WARN "public HTTPS" "https://$site answered $code" ;;
   esac
   echo "$code" > "$EXTAS_STATE_DIR/public-https.code" 2>/dev/null || true
 }

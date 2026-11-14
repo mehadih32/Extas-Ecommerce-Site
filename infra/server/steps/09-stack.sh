@@ -252,6 +252,15 @@ CONF
       | write_file "$d/auth.caddy" 0600 >/dev/null
   fi
   write_caddy_client_ip "$d"
+  # CN-052: the staging block exists only while server.conf names a staging host (retired 14 Nov 2026: empty). Written
+  # beside the main domain's block, never instead of it; with no staging host the file is removed (the preview password
+  # files stay: a locked main domain, EXTAS_MAIN_OPEN=no, still uses them). Nothing else is touched.
+  if [ -n "${EXTAS_STAGING_HOST:-}" ]; then
+    bash "$STACK_DIR_REPO/caddy/staging-block.sh" "$EXTAS_STAGING_HOST" \
+      | write_file "$d/staging.caddy" 0644 >/dev/null
+  else
+    rm -f "$d/staging.caddy"
+  fi
   # PR 403: the extra host names get their own site block (sites/hosts.caddy, infra/stack/caddy/hosts-block.sh), locked
   # like the staging host until server.conf EXTAS_MAIN_OPEN="yes" — the owner's go-live day step (BLOCKED 25, runbook
   # step 4). The staging host keeps the preview password and noindex always. No extra hosts, no file.
@@ -261,9 +270,9 @@ CONF
     # shellcheck disable=SC2086  # the cleaned host names, one word each (site_extra_hosts)
     bash "$STACK_DIR_REPO/caddy/hosts-block.sh" "$open" $EXTAS_EXTRA_HOSTS | write_file "$d/hosts.caddy" 0644 >/dev/null
     if [ "$open" = yes ]; then
-      report INFO "PR 403 · main domain" "open: $EXTAS_EXTRA_HOSTS without the preview password and noindex; $EXTAS_STAGING_HOST stays locked"
+      report INFO "PR 403 · main domain" "open: $EXTAS_EXTRA_HOSTS without the preview password and noindex${EXTAS_STAGING_HOST:+; $EXTAS_STAGING_HOST stays locked}"
     else
-      report INFO "PR 403 · main domain" "locked: $EXTAS_EXTRA_HOSTS behind the preview password and noindex, like $EXTAS_STAGING_HOST (EXTAS_MAIN_OPEN=no)"
+      report INFO "PR 403 · main domain" "locked: $EXTAS_EXTRA_HOSTS behind the preview password and noindex (EXTAS_MAIN_OPEN=no)"
     fi
   else
     rm -f "$d/hosts.caddy"
@@ -365,10 +374,11 @@ step_stack() {
   up="$(compose ps --format '{{.Service}}:{{.Health}}' | tr '\n' ' ')"
   report OK "PR 5 · PostgreSQL" "v$ver, shared_buffers $(pg_exec psql -qtAX -U extas -c 'SHOW shared_buffers'), temp on NVMe, WAL archive on, slow log > ${PROFILE_PG_SLOW_MS} ms, PgBouncer (transaction pool)"
   report OK "PR 6 · Redis" "cache (LRU, NVMe) + queue (no eviction, AOF on data disk)"
-  [ "$caddy_rc" = 0 ] && report OK "PR 7 · Caddy" "$EXTAS_STAGING_HOST, auto HTTPS, HTTP/3, password + noindex"
+  [ "$caddy_rc" = 0 ] && report OK "PR 7 · Caddy" "${EXTAS_STAGING_HOST:-$EXTAS_EXTRA_HOSTS}, auto HTTPS, HTTP/3, password + noindex"
   report INFO "stack health" "$up"
   # The preview password is never sent anywhere (not in chat, not in Git, not as an artifact). The owner reads it
-  # on the VM himself: Azure portal → Run command → /usr/local/sbin/extas-preview-login (docs/owner/PREVIEW-LOGIN.md).
+  # on the VM himself: Azure portal → Run command → /usr/local/sbin/extas-preview-login (docs/owner/PREVIEW-LOGIN.md,
+  # retired by CN-052: only a staging host or a locked main domain asks for it).
   install -m 0755 "$EXTAS_REPO_DIR/infra/server/bin/extas-preview-login" /usr/local/sbin/extas-preview-login
   # PR 15 / CN-009 — the same for the admin's first owner login (made by owner-account.yml, which also installs it).
   install -m 0700 "$EXTAS_REPO_DIR/infra/server/bin/extas-owner-login" /usr/local/sbin/extas-owner-login

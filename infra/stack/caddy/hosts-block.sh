@@ -2,7 +2,7 @@
 # PR 403 — the site block for the extra host names (server.conf EXTAS_EXTRA_HOSTS: the main domain on go-live day, a
 # store's own domain), printed to standard output for sites/hosts.caddy:
 #   hosts-block.sh <open: yes|no> <host>...
-# The staging host (EXTAS_STAGING_HOST) has its own block in the Caddyfile and always keeps the preview password and
+# A staging host (EXTAS_STAGING_HOST, optional since CN-052) has its own block (sites/staging.caddy) and always keeps the preview password and
 # `noindex`. These hosts share the app, the headers and the certificate choice, and are LOCKED the same way (the preview
 # login, an X-Robots-Tag "noindex, nofollow" header and a robots.txt that disallows everything) until the owner opens
 # them on go-live day: server.conf EXTAS_MAIN_OPEN="yes" (only the exact word "yes" opens; BLOCKED 25, runbook step 4).

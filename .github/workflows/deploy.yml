@@ -1,4 +1,4 @@
-# Deploy to new.extas.com.bd (PR 4, PR 17; START-HERE step 2). Runs ON the VM through the self-hosted runner (CN-003)
+# Deploy to the live site, extas.com.bd (CN-052: the staging host new.extas.com.bd is retired) (PR 4, PR 17; START-HERE step 2). Runs ON the VM through the self-hosted runner (CN-003)
 # after CI passed on main. The images are built on the VM (no registry, no secrets leave the server), then
 # infra/deploy/deploy.sh migrates the database (schema, then settings, PR 496) and does blue/green: the new version
 # starts next to the old one, is smoke-tested, Caddy switches with a graceful reload, and any failure keeps or gives
@@ -125,12 +125,12 @@ jobs:
       # Through Cloudflare, like a visitor: https://<staging host>/api/health with the preview login (read on the
       # server, never printed; only the HTTP code, ok, commit and colour come out). Also after a failed deploy, to show
       # whether the old version still answers.
-      - name: Health check on the preview host
+      - name: Health check on the site host
         id: health
         if: always() && steps.checkout.outcome == 'success' && steps.order.outputs.skip != 'true'
         continue-on-error: true
         run: |
-          sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/health.json"
+          sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/health.json"
           jq -e '.ok and .code == 200' "$RUNNER_TEMP/health.json" >/dev/null
 
       # CN-016: every built page as a customer and as the admin, phone and desktop. Any error screen, console error or
@@ -156,7 +156,7 @@ jobs:
       - name: Confirm what is live after a failed smoke test
         if: always() && steps.smoke.outcome == 'failure'
         continue-on-error: true
-        run: sudo bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/post-rollback-health.json"
+        run: sudo env EXTAS_CONFIG_FILE="$PWD/infra/config/server.conf" bash infra/deploy/deploy.sh public-health | tee "$RUNNER_TEMP/post-rollback-health.json"
 
       - name: What happened
         if: always() && steps.order.outputs.skip != 'true'

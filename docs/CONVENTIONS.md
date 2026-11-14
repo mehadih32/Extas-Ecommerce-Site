@@ -7,7 +7,7 @@ How code gets into this repository. `CLAUDE.md` holds the owner's hard rules; th
   a group is written `PR 11, 12, 17: …`.
 - Branch name `pr-<number>-<slug>`. **Exception (cloud sessions):** the session's push access is bound to one branch
   (`claude/…`). The PR is opened from that branch, squash-merged, and the branch is reset to `main` for the next PR.
-- `main` is always deployable: every merge runs `ci`, and a green `ci` on `main` runs `deploy` to new.extas.com.bd.
+- `main` is always deployable: every merge runs `ci`, and a green `ci` on `main` runs `deploy` to extas.com.bd (~~new.extas.com.bd~~, retired by CN-052).
 - Squash-merge only, after the gates pass (CLAUDE.md rule 9). The owner is never asked to review or merge.
 - The PR body follows `.github/pull_request_template.md`.
 

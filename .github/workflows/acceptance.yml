@@ -1,3 +1,5 @@
+# CN-052 (14 Nov 2026): RETIRED while there is no staging host. This workflow places test orders, so it never runs on the
+# live shop: the script refuses when server.conf has no EXTAS_STAGING_HOST (now empty). The file stays, manual only.
 # PR 393 follow-up (CN-036) — the acceptance run on the preview site, ON the VM through the self-hosted runner (CN-003),
 # BY HAND ONLY: GitHub › Actions › acceptance › Run workflow. It never runs on a schedule, a push or a pull request.
 # It is the go-live runs that already exist, one after the other on the live version, with one summary

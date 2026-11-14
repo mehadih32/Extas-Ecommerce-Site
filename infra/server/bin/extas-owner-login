@@ -6,6 +6,7 @@ set -eu
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 f="$EXTAS_ROOT/config/secrets/owner-login.env"
 if [ ! -s "$f" ]; then
   echo "অ্যাডমিনের মালিক-অ্যাকাউন্ট এখনো খোলা হয়নি। একটু পরে আবার চেষ্টা করুন।"
@@ -13,7 +14,7 @@ if [ ! -s "$f" ]; then
 fi
 email="$(grep '^OWNER_EMAIL=' "$f" | cut -d= -f2-)"
 pw="$(grep '^OWNER_FIRST_PASSWORD=' "$f" | cut -d= -f2-)"
-echo "অ্যাডমিনের ঠিকানা: https://$EXTAS_STAGING_HOST/admin/login"
+echo "অ্যাডমিনের ঠিকানা: https://$EXTAS_SITE_HOST/admin/login"
 echo "ই-মেইল: $email"
 echo "প্রথম পাসওয়ার্ড: $pw"
 echo "প্রথমবার ঢোকার পরই পাসওয়ার্ডটা বদলে নিজের একটা পাসওয়ার্ড দিন।"

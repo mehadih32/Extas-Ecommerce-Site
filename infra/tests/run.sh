@@ -291,7 +291,7 @@ check "caddy (a): the Caddyfile is copied in place, the mounted inode sees the n
   echo "$a|$b|$(wc -l < "$T/err")|$c|"
 ) > "$T/out"
 check "hosts (362): extra hosts are lower case, once each, never the staging host; a bad name is left out and named" "$(cat "$T/out")" "shop.example.test www.example.test|ok.example.test|3||"
-check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^{$EXTAS_STAGING_HOST} {$' ../stack/caddy/Caddyfile):$(grep -c '^import /etc/caddy/sites/hosts\*\.caddy$' ../stack/caddy/Caddyfile)" "1:1:1:1"
+check "hosts (362): server setup and the stack pass the cleaned extra hosts to Caddy" "$(grep -c 'EXTAS_EXTRA_HOSTS="$(site_extra_hosts "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'EXTAS_EXTRA_HOSTS: ${EXTAS_EXTRA_HOSTS:-}' ../stack/compose.yml):$(grep -c '^import /etc/caddy/sites/staging\*\.caddy$' ../stack/caddy/Caddyfile):$(grep -c '^import /etc/caddy/sites/hosts\*\.caddy$' ../stack/caddy/Caddyfile)" "1:1:1:1"
 # R2 security review (m1, PR 378): the request body limits go server.conf → stack.env (a whole number of MB, else the
 # default) → the Caddy container → the Caddyfile, whose fallbacks are server.conf's defaults.
 check "body limit (R2 m1): server.conf → stack.env → compose → Caddyfile, every host" \
@@ -306,7 +306,7 @@ check "caddy (a): server setup copies the Caddyfile in place and never by rsync"
 HB=../stack/caddy/hosts-block.sh
 check "main domain (403): ships open (go-live, PR 587)" "$(bash -c '. ../config/server.conf; echo "$EXTAS_MAIN_OPEN"')" "yes"
 check "main domain (403): the staging block always imports the gate and noindex, the extra hosts only their own file" \
-  "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' ../stack/caddy/Caddyfile | grep -cE 'import /etc/caddy/sites/(noindex|auth)\.caddy'):$(grep -c 'EXTAS_EXTRA_HOSTS}' ../stack/caddy/Caddyfile)" "2:0"
+  "$(bash ../stack/caddy/staging-block.sh staging.example.test | grep -cE 'import /etc/caddy/sites/(noindex|auth)\.caddy'):$(grep -c 'EXTAS_EXTRA_HOSTS}' ../stack/caddy/Caddyfile)" "2:0"
 lk="$(bash "$HB" no shop.example.test www.example.test)"; op="$(bash "$HB" yes shop.example.test www.example.test)"; od="$(bash "$HB" maybe shop.example.test)"
 check "main domain (403): locked = gate and noindex; open = neither; anything but \"yes\" stays locked" \
   "$(grep -c 'auth.caddy\|X-Robots-Tag\|Disallow' <<<"$lk"):$(grep -c 'auth.caddy\|X-Robots-Tag\|Disallow' <<<"$op"):$(grep -c 'auth.caddy' <<<"$od"):$(grep -c '^shop.example.test www.example.test {$' <<<"$lk")" "3:0:1:1"
@@ -320,6 +320,8 @@ if [ -n "$CADDY" ] && [ -x "$CADDY" ]; then
   bash "$AB" "# fp" extas "$("$CADDY" hash-password --plaintext gate-pw)" "$tok" 30 > "$T4/auth.caddy"
   printf 'header X-Robots-Tag "noindex, nofollow"\nrespond /robots.txt "User-agent: *\nDisallow: /\n" 200\n' > "$T4/noindex.caddy"
   printf 'respond "app" 200\n' > "$T4/upstream.caddy"
+  # CN-052: the staging block is its own file now (sites/staging.caddy), written as server setup writes it
+  bash ../stack/caddy/staging-block.sh "http://staging.test:$port" | sed "s#/etc/caddy/sites#$T4#g" > "$T4/staging.caddy"
   sed -e "s#/etc/caddy/sites#$T4#g" -e "s#/var/log/caddy#$T4#g" -e 's#admin localhost:2019#admin off#' -e 's#^:8080 {#:18496 {#' \
     ../stack/caddy/Caddyfile > "$T4/Caddyfile"
   main_case() { # main_case <open yes|no> → "staging code robots | main code robots | main robots.txt"
@@ -565,7 +567,7 @@ T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
 # The M7 scenarios below build up from a locked, no-extra-host baseline on purpose (no main domain, then a locked
 # extra host, then an open one); override server.conf's own live EXTAS_EXTRA_HOSTS/EXTAS_MAIN_OPEN (go-live, PR 587)
 # so this fixture's starting point stays fixed regardless of this repo's current go-live state.
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS=""\nEXTAS_MAIN_OPEN="no"\n' "$T/root"; } > "$T/conf"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST="new.extas.test"\nEXTAS_EXTRA_HOSTS=""\nEXTAS_MAIN_OPEN="no"\n' "$T/root"; } > "$T/conf"
 printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
 printf 'STAGING_PASSWORD=stagepw\n' > "$T/root/config/secrets/staging.env"
 echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
@@ -613,8 +615,8 @@ check "smoke: the browser never gets the database or the vault key" "$(grep -cE 
 check "smoke: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.smoke*' | wc -l)" "0"
 check "smoke: the live migrate image makes the account" "$(grep -c 'run .*extas-migrate:aaa sh -c .*check-account' "$T/docker.log")" "1"
 check "run history (419): the smoke run goes into the history from the live migrate image" "$(grep -c 'run .*extas-migrate:aaa sh -c .*run-history-cli.ts --tool' "$T/docker.log")" "1"
-check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log")" "1"
-check "smoke (R2 M2): the preview host is a staging host for the host-only checks" "$(grep -c 'BASE=https://new.extas.com.bd -e SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1"
+check "smoke: the preview host" "$(grep -c 'BASE=https://new.extas.test' "$T/docker.log")" "1"
+check "smoke (R2 M2): the preview host is a staging host for the host-only checks" "$(grep -c 'BASE=https://new.extas.test -e SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1"
 # Review R1 (security M1): the admin pictures go to the server's root-only private folder, never the report folder.
 check "smoke (M1): the browser gets a private folder for the admin pictures, root-only" \
   "$(grep -c -- '-e SMOKE_PRIVATE_OUT=/private .*-v '"$T"'/root/private/smoke-admin:/private ' "$T/docker.log"):$(stat -c %a "$T/root/private/smoke-admin")" "1:700"
@@ -633,7 +635,7 @@ check "smoke: a guard problem fails the run and says which table" "$rc:$(jq -c '
 # R1 ops review (M7, PR 402): the host. "main" is the first extra host, with the preview login while it is locked and
 # without once EXTAS_MAIN_OPEN=yes; any host the server does not serve is refused; no main domain yet → the staging host.
 : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
-check "smoke (M7): no main domain yet, the staging host instead" "$(grep -c 'BASE=https://new.extas.com.bd' "$T/docker.log"):$(grep -c 'SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1:1"
+check "smoke (M7): no main domain yet, the staging host instead" "$(grep -c 'BASE=https://new.extas.test' "$T/docker.log"):$(grep -c 'SMOKE_HOST_KIND=staging ' "$T/docker.log")" "1:1"
 printf 'EXTAS_EXTRA_HOSTS="Shop.Example.TEST www.example.test"\n' >> "$T/conf"
 : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null || true
 check "smoke (M7): main = the first extra host, locked: with the preview login" \
@@ -658,13 +660,34 @@ check "smoke (CN-046): a crash with no result.json is still a clean exit-1 failu
   "$rc:$(jq -c '{ok,problems}' "$T/root/state/smoke.json")" '1:{"ok":false,"problems":["the smoke test did not finish (exit 1)"]}'
 check "smoke (CN-046): deploy.yml's rollback, live-check and fail-build steps all key off this step's own outcome, never result.json existing" \
   "$(grep -c "steps.smoke.outcome == 'failure'" ../../.github/workflows/deploy.yml)" "3"
+# CN-052 (14 Nov 2026): the staging host is retired. No staging host in server.conf: the site host is the first extra host
+# (the main domain), open, so the smoke test opens it without any preview login and as an "extra" host; a retired staging
+# name is not a host this server serves any more.
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS="Shop.Example.TEST www.example.test"\nEXTAS_MAIN_OPEN="yes"\n' "$T/root"; } > "$T/conf"
+: > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' >/dev/null || true
+check "smoke (CN-052): no staging host: the site host is the main domain, a host-only 'extra' run, no preview login" \
+  "$(grep -c 'BASE=https://shop.example.test -e SMOKE_HOST_KIND=extra ' "$T/docker.log"):$(grep -c 'SMOKE_HTTP' "$T/seen.env" || true):$(jq -r .host "$T/root/state/smoke.json")" "1:0:shop.example.test"
+rc=0; : > "$T/docker.log"; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=new.extas.test >/dev/null 2>&1 || rc=$?
+check "smoke (CN-052): a retired staging name is refused before anything runs" "$rc:$(wc -l < "$T/docker.log")" "2:0"
+rc=0; sm FAKE_OK=true FAKE_FAILED=0 FAKE_PROBLEMS='[]' SMOKE_HOST=main >/dev/null 2>&1 || rc=$?
+check "smoke (CN-052): main is the same host" "$rc:$(jq -r .host "$T/root/state/smoke.json")" "0:shop.example.test"
+check "server.conf (CN-052): ships with NO staging host and the main domain as the first extra host, open" \
+  "$(bash -c 'set -u; . ../config/server.conf; echo "[$EXTAS_STAGING_HOST][${EXTAS_EXTRA_HOSTS%% *}][$EXTAS_MAIN_OPEN]"')" "[][extas.com.bd][yes]"
+check "server.conf (CN-052): no line assigns the retired host new.extas.com.bd" "$(grep -c '^[A-Z_]*=.*new\.extas\.com\.bd' ../config/server.conf || true)" "0"
+check "stack (CN-052): the staging block is written only while a staging host is set, and removed when it is empty; the main block is never touched" \
+  "$(grep -c 'staging-block.sh" "$EXTAS_STAGING_HOST"' ../server/steps/09-stack.sh):$(grep -c 'rm -f "$d/staging.caddy"' ../server/steps/09-stack.sh):$(grep -c '^{$EXTAS_STAGING_HOST} {' ../stack/caddy/Caddyfile || true):$(grep -c 'hosts-block.sh" "$open"' ../server/steps/09-stack.sh)" "1:1:0:1"
+check "staging block (CN-052): always behind the gate and noindex; an empty or bad host is refused" \
+  "$(bash ../stack/caddy/staging-block.sh staging.example.test | grep -c '^staging.example.test {$'):$(bash ../stack/caddy/staging-block.sh '' >/dev/null 2>&1; echo $?):$(bash ../stack/caddy/staging-block.sh 'a.test {' >/dev/null 2>&1; echo $?)" "1:1:2"
+check "deploy (CN-052): the live health check asks the site host and sends the preview login only where a gate exists" \
+  "$(grep -c 'https://$EXTAS_SITE_HOST/api/health' ../deploy/deploy.sh):$(grep -c 'if \[ -n "${EXTAS_STAGING_HOST:-}" \] || \[ "${EXTAS_MAIN_OPEN:-no}" != yes \]; then auth=yes; fi' ../deploy/deploy.sh)" "1:1"
+check "preview login (CN-052): retired with no staging host and an open main domain" "$(EXTAS_CONFIG_FILE=../config/server.conf bash ../server/bin/extas-preview-login 2>&1 | grep -c 'extas.com.bd')" "1"
 rm -rf "$T"
 
 # Monthly speed lab (S11 · PR 234): vitals-lab.sh makes the check account the same way as smoke.sh, hands the browser
 # only its sign-in and the preview login, and keeps the browser's numbers as state/vitals-lab.json (readable, swapped in
 # whole); a run that measured nothing fails and leaves the old file. Docker is a stand-in that plays both containers.
 T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST="new.extas.test"\nEXTAS_MAIN_OPEN="no"\n' "$T/root"; } > "$T/conf"
 printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nVAULT_MASTER_KEY=vk\nOTHER=x\n' > "$T/root/config/secrets/app.env"
 printf 'STAGING_PASSWORD=stagepw\n' > "$T/root/config/secrets/staging.env"
 echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
@@ -690,7 +713,10 @@ vl() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" SMOKE_IMAGE_UID="$(id
 rc=0; vl FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1800,"kb":700}]' >/dev/null || rc=$?
 check "speed lab: a finished run exits 0 and keeps the numbers" "$rc:$(jq -c '.pages[0] | {kind,lcpMs}' "$T/root/state/vitals-lab.json"):$(stat -c %a "$T/root/state/vitals-lab.json")" '0:{"kind":"home","lcpMs":1800}:644'
 check "speed lab: the browser gets the check account and the preview login only" "$(grep -c '^SMOKE_PASSWORD=pw1$' "$T/seen.env"):$(grep -c '^SMOKE_HTTP_PASSWORD=stagepw$' "$T/seen.env"):$(grep -cE 'DATABASE|VAULT' "$T/seen.env")" "1:1:0"
-check "speed lab: the preview host and the commit" "$(grep -c 'BASE=https://new.extas.com.bd .*LAB_SHA=0123456789ab ' "$T/docker.log")" "1"
+check "speed lab: the preview host and the commit" "$(grep -c 'BASE=https://new.extas.test .*LAB_SHA=0123456789ab ' "$T/docker.log")" "1"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS="shop.example.test www.example.test"\n' "$T/root"; } > "$T/conf-site"
+rc=0; : > "$T/docker.log"; vl EXTAS_CONFIG_FILE="$T/conf-site" FAKE_PAGES='[{"path":"/","kind":"home","lcpMs":1800,"kb":700}]' >/dev/null || rc=$?
+check "speed lab (CN-052): no staging host: it measures the main domain with no preview login" "$rc:$(grep -c 'BASE=https://shop.example.test ' "$T/docker.log"):$(grep -c 'SMOKE_HTTP' "$T/seen.env" || true)" "0:1:0"
 check "speed lab: no sign-in file is left behind" "$(find "$T/root/config/secrets" -mindepth 1 -name '.vitals*' | wc -l)" "0"
 rc=0; vl FAKE_PAGES='[]' >/dev/null 2>&1 || rc=$?
 check "speed lab: a run that measured nothing fails and keeps the last result" "$rc:$(jq -r '.pages[0].kind' "$T/root/state/vitals-lab.json")" "1:home"
@@ -1505,7 +1531,7 @@ check "caddy cache: never kept means no-store for the browser and Cloudflare" \
 # R2 security review (m3): a gated host (staging, a locked extra host) never lets Cloudflare keep a page; the open main
 # domain keeps the app's own cache headers (the live check is with the real Caddy above).
 check "caddy cache (R2 m3): the staging block and a locked extra host import gated_cache; an open one does not" \
-  "$(awk '/^\{\$EXTAS_STAGING_HOST\} \{$/{f=1} f&&/^\}$/{f=0} f' "$CF" | grep -c '^	import gated_cache$'):$(bash ../stack/caddy/hosts-block.sh no a.test | grep -c '	import gated_cache'):$(bash ../stack/caddy/hosts-block.sh yes a.test | grep -c 'gated_cache' || true)" "1:1:0"
+  "$(bash ../stack/caddy/staging-block.sh staging.example.test | grep -c '^	import gated_cache$'):$(bash ../stack/caddy/hosts-block.sh no a.test | grep -c '	import gated_cache'):$(bash ../stack/caddy/hosts-block.sh yes a.test | grep -c 'gated_cache' || true)" "1:1:0"
 # Follow-up 726 (go-live day): the open host keeps the app's own caching (no gated_cache, checked above) but still
 # adds "no-transform" of its own, so Cloudflare never rewrites the live page (follow-up 725's beacon-injection
 # rollback, this time on the main domain); the locked host already gets it from gated_cache's own Cache-Control line
@@ -1960,7 +1986,7 @@ check "audit (570): audit.sh runs the smoke test, the journeys with every UI che
 check "audit (570): the report container has no network at all" "$(grep -c 'extas-audit-$$" --network none' ../deploy/audit.sh)" "1"
 check "audit (570): the hourly check runs audit.sh in its due mode on the VM" "$(grep -c 'bash infra/deploy/audit.sh "$RUNNER_TEMP/audit" "$MODE" "$live"' ../../.github/workflows/audit.yml):$(grep -c 'extas-vm' ../../.github/workflows/audit.yml)" "1:1"
 check "run alert (424): smoke.sh and journeys.sh tell after every run" \
-  "$(grep -c 'run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/smoke.sh):$(grep -c 'run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log"' ../deploy/journeys.sh)" "1:1"
+  "$(grep -c 'run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_SITE_HOST" "$R/logs/alerts.log"' ../deploy/smoke.sh):$(grep -c 'run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_SITE_HOST" "$R/logs/alerts.log"' ../deploy/journeys.sh)" "1:1"
 JK="$T/jkeep"; mkdir -p "$JK"
 for s in 20261027-060101 20261028-060101 20261029-060101 20261030-060101; do echo '{}' > "$JK/$s.json"; done
 echo keep > "$JK/notes.txt"
@@ -2077,7 +2103,7 @@ rm -rf "$T"
 # the run id in a root-only file gone afterwards, keeps the browser off the database network, and runs the clean-up
 # itself when the browser run ended without one. Docker is a stand-in.
 T="$(mktemp -d)"; mkdir -p "$T/bin" "$T/root/config/secrets" "$T/root/state"
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST="new.extas.test"\n' "$T/root"; } > "$T/conf"
 printf 'DATABASE_DIRECT_URL=postgresql://u:dbpw@h/d\nDATABASE_URL=postgresql://pooled\nVAULT_MASTER_KEY=vk\n' > "$T/root/config/secrets/app.env"
 printf 'STAGING_PASSWORD=stpw\n' > "$T/root/config/secrets/staging.env"
 echo '{"image":"extas-web:aaa","migrate":"extas-migrate:aaa"}' > "$T/root/state/last-good-deploy.json"
@@ -2121,7 +2147,7 @@ go() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" GATE_IMAGE_UID="$(id 
 { cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST=""\n' "$T/root"; } > "$T/conf-none"
 rc=0; go EXTAS_CONFIG_FILE="$T/conf-none" bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: no preview host in server.conf is refused before docker" "$rc:$(cat "$T/docker.log" 2>/dev/null | wc -l | tr -d ' ')" "2:0"
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_EXTRA_HOSTS="www.example.test NEW.extas.com.bd"\n' "$T/root"; } > "$T/conf-live"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST="new.extas.test"\nEXTAS_EXTRA_HOSTS="www.example.test NEW.extas.test"\n' "$T/root"; } > "$T/conf-live"
 rc=0; go EXTAS_CONFIG_FILE="$T/conf-live" bash ../deploy/gate-orders.sh "$T/out" >/dev/null 2>&1 || rc=$?
 check "gate orders: a preview host the shop sells on is refused" "$rc:$(cat "$T/docker.log" 2>/dev/null | wc -l | tr -d ' ')" "2:0"
 rc=0; go bash ../deploy/gate-orders.sh "$T/out" '1;rm -rf /' >/dev/null 2>&1 || rc=$?
@@ -2139,10 +2165,10 @@ pay_tok="$(sed -n 's/^GATE_PAY_TOKEN=//p' "$T/shop.env")"
 check "gate orders: the oracle holds the hash of the browser's pay token, never the token" \
   "$(printf '%s' "$pay_tok" | grep -cE '^[0-9a-f]{64}$'):$([ "$(printf '%s' "$pay_tok" | sha256sum | cut -d' ' -f1)" = "$(sed -n 's/^GATE_PAY_TOKEN_HASH=//p' "$T/oracle.env")" ] && echo same):$(grep -c "$pay_tok" "$T/oracle.env")" "1:same:0"
 check "gate orders: cash on delivery is not switched on for the run by default; the grant is for the preview host only" \
-  "$(grep -c '^GATE_ALLOW_COD=no$' "$T/oracle.env"):$(grep -c '^GATE_PREVIEW_HOST=new.extas.com.bd$' "$T/oracle.env")" "1:1"
+  "$(grep -c '^GATE_ALLOW_COD=no$' "$T/oracle.env"):$(grep -c '^GATE_PREVIEW_HOST=new.extas.test$' "$T/oracle.env")" "1:1"
 check "gate orders: a finished run closes its grant once" "$(grep -c -e '--close-run --out /out/close-run.json' "$T/docker.log")" "1"
 check "gate orders: the browser is on the run's own network only, on https of the preview host" \
-  "$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas ' -e 'db\.env'):$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas-gate-[0-9]* .*BASE=https://new.extas.com.bd ')" "0:1"
+  "$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas ' -e 'db\.env'):$(grep 'shop.mjs' "$T/docker.log" | grep -c -e '--network extas-gate-[0-9]* .*BASE=https://new.extas.test ')" "0:1"
 check "gate orders: the live version's migrate image runs the oracle; no clean-up run after a finished run" \
   "$(grep -c 'extas-migrate:aaa /repo/packages/jobs/node_modules/.bin/tsx oracle.ts --serve' "$T/docker.log"):$(grep -c -e '--cleanup' "$T/docker.log")" "1:0"
 check "gate orders: the secrets file is gone, the oracle and its network removed" \
@@ -2228,7 +2254,7 @@ rm -rf "$T"
 # (tools/acceptance/summary.mjs) goes to the run folder and state/acceptance.json. The parts and docker are stand-ins.
 T="$(mktemp -d)"; mkdir -p "$T/infra/deploy" "$T/bin" "$T/root/state" "$T/tools"
 cp ../deploy/acceptance.sh "$T/infra/deploy/"; cp -r ../../tools/acceptance "$T/tools/"
-{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\nEXTAS_STAGING_HOST="new.extas.test"\n' "$T/root"; } > "$T/conf"
 for p in smoke journeys gate-orders gate-c360; do
   cat > "$T/infra/deploy/$p.sh" <<STUB
 #!/usr/bin/env bash
@@ -2262,6 +2288,9 @@ chmod +x "$T/bin/docker"
 acc() { env PATH="$T/bin:$PATH" EXTAS_CONFIG_FILE="$T/conf" FAKE_LOG="$T/log" "$@"; }
 rc=0; acc bash "$T/infra/deploy/acceptance.sh" "$T/out" 'abc;rm' >/dev/null 2>&1 || rc=$?
 check "acceptance (393): only a commit hash is taken" "$rc:$([ -f "$T/log" ] && echo ran || echo none)" "2:none"
+{ cat ../config/server.conf; printf 'EXTAS_ROOT=%s\n' "$T/root"; } > "$T/conf-nostg"
+rc=0; : > "$T/log"; acc EXTAS_CONFIG_FILE="$T/conf-nostg" bash "$T/infra/deploy/acceptance.sh" "$T/out" 0123456789abcdef0123456789abcdef01234567 >/dev/null 2>&1 || rc=$?
+check "acceptance (CN-052): no staging host in server.conf: refused before any part runs, never on the live shop" "$rc:$(wc -l < "$T/log" | tr -d ' ')" "2:0"
 rc=0; acc bash "$T/infra/deploy/acceptance.sh" "$T/out" 0123456789abcdef0123456789abcdef01234567 >/dev/null 2>&1 || rc=$?
 check "acceptance (393): every part passed — exit 0, one summary, state/acceptance.json for the go-live page" \
   "$rc:$(jq -c '{ok,passed,total}' "$T/out/result.json"):$(jq -c '{ok,passed,total,sha,n:(.parts|length)}' "$T/root/state/acceptance.json"):$(jq -r '.at | test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T")' "$T/root/state/acceptance.json"):$(grep -c '4টা অংশের সবগুলো পাস' "$T/out/README.md")" \
@@ -2286,13 +2315,13 @@ check "workflows: golive-check is by hand only, on the VM, in its own lane, no s
 check "golive check (587): the dry run writes only into the Caddy container's /tmp copy, never server.conf, sites/ or a reload" \
   "$(grep -cE 'cat > /tmp/golive-dry/sites/hosts.caddy' ../deploy/golive-check.sh):$(grep -cE '> */etc/caddy|tee [^|]*/etc/caddy|caddy reload|caddyfile_copy_inplace|write_file|> *"?\$CONF|EXTAS_MAIN_OPEN=' ../deploy/golive-check.sh)" "1:0"
 check "golive check (587): the browser half asks only the staging host" \
-  "$(grep -c 'BASE="https://$EXTAS_STAGING_HOST"' ../deploy/golive-check.sh):$(grep -c 'ctx.request.get(onBase(base, path)' ../../tools/golive-check.mjs)" "1:1"
+  "$(grep -c 'BASE="https://$EXTAS_SITE_HOST"' ../deploy/golive-check.sh):$(grep -c 'ctx.request.get(onBase(base, path)' ../../tools/golive-check.mjs)" "1:1"
 
 # S19 · PR 653 (CN-036): the redirect import only GETs the old site's public sitemap, by hand, and writes nothing there.
 check "workflows: redirect-import is by hand only, on the VM, in its own lane, no secret, commit off by default" \
   "$(grep -c '^  workflow_dispatch:' ../../.github/workflows/redirect-import.yml):$(grep -cE '^\s+(schedule|push|pull_request):' ../../.github/workflows/redirect-import.yml):$(grep -c 'runs-on: \[self-hosted, extas-vm\]' ../../.github/workflows/redirect-import.yml):$(grep -c 'group: extas-redirect-import' ../../.github/workflows/redirect-import.yml):$(grep -ciE 'secrets\.|api[_-]?key' ../../.github/workflows/redirect-import.yml):$(grep -A3 '^      commit:' ../../.github/workflows/redirect-import.yml | grep -c -e 'type: boolean' -e 'default: false')" "1:0:1:1:0:2"
 check "redirect import (653): one curl, GET only, https only, no redirect, no cookie, no body; never the staging host" \
-  "$(grep -cE '^\s*curl ' ../deploy/redirect-import.sh):$(grep -cE "curl -sS -X GET --proto '=https' --max-redirs 0" ../deploy/redirect-import.sh):$(grep -A1 -E '^\s*curl ' ../deploy/redirect-import.sh | grep -cE -- '(-X|--request) (POST|PUT|PATCH|DELETE)|--data| -d | -b | -u | -F |--cookie|--user|--form|-T '):$(grep -c '"$OLD" = "${EXTAS_STAGING_HOST,,}"' ../deploy/redirect-import.sh)" "1:1:0:1"
+  "$(grep -cE '^\s*curl ' ../deploy/redirect-import.sh):$(grep -cE "curl -sS -X GET --proto '=https' --max-redirs 0" ../deploy/redirect-import.sh):$(grep -A1 -E '^\s*curl ' ../deploy/redirect-import.sh | grep -cE -- '(-X|--request) (POST|PUT|PATCH|DELETE)|--data| -d | -b | -u | -F |--cookie|--user|--form|-T '):$(grep -c '"$OLD" = "${EXTAS_STAGING_HOST:-}"' ../deploy/redirect-import.sh)" "1:1:0:1"
 rc=0; out="$(EXTAS_CONFIG_FILE=/nonexistent bash ../deploy/redirect-import.sh /tmp/x new.example.test dry 2>&1)" || rc=$?
 check "redirect import (653): refuses to run without the server's configuration" "$([ "$rc" -ne 0 ] && echo refused)" "refused"
 

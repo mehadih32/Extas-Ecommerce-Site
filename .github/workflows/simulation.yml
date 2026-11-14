@@ -1,3 +1,5 @@
+# CN-052 (14 Nov 2026): RETIRED while there is no staging host. This workflow places test orders, so it never runs on the
+# live shop: the script refuses when server.conf has no EXTAS_STAGING_HOST (now empty). The file stays, manual only.
 # PR 414 follow-up (follow-up 668, CN-036) — the 70-order real-life journey simulation (docs/qa/SIMULATION-PLAN.md §3
 # and docs/qa/SIMULATION-REPORT.md P2.2, a go-live gate per CN-013) on the preview site, ON the VM through the
 # self-hosted runner (CN-003), BY HAND ONLY: GitHub › Actions › simulation › Run workflow. It never runs on a schedule, a

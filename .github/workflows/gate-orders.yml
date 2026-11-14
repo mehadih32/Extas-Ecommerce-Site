@@ -1,3 +1,5 @@
+# CN-052 (14 Nov 2026): RETIRED while there is no staging host. This workflow places test orders, so it never runs on the
+# live shop: the script refuses when server.conf has no EXTAS_STAGING_HOST (now empty). The file stays, manual only.
 # PR 414 follow-up (CN-013 go-live gate, phase 2; the owner's OK of 1 Nov 2026) — the go-live test orders on the preview
 # site, ON the VM through the self-hosted runner (CN-003), BY HAND ONLY: GitHub › Actions › gate-orders › Run workflow.
 # It never runs on a schedule, a push or a pull request. infra/deploy/gate-orders.sh refuses any host but the preview

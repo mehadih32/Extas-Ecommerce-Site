@@ -4,7 +4,7 @@
 # The pair comes from the vault (Keys & connections → Cloudflare origin certificate, its Test passed) through
 # extas-vault-sync: config/secrets/origin-cert.pem and origin-key.pem (0600). This script
 #   - checks the pair again here: a certificate and its own key, valid now and for at least ORIGIN_CERT_MIN_DAYS more,
-#     covering the shop's host (EXTAS_STAGING_HOST; the main domain is added on go-live day);
+#     covering the shop's host (EXTAS_SITE_HOST: the main domain since CN-052);
 #   - gives a passing pair to Caddy: config/caddy/sites/origin/ (the key 0600) and sites/tls.caddy naming it; otherwise
 #     tls.caddy keeps Caddy's automatic certificate (Let's Encrypt, Caddy's own as the fallback), as before this PR;
 #   - reloads Caddy when tls.caddy changed; when Caddy refuses the pair, goes back to the automatic certificate at once;
@@ -15,6 +15,7 @@ set -euo pipefail
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 R="$EXTAS_ROOT"; SEC="$R/config/secrets"; SITES="$R/config/caddy/sites"; STATE="$R/state"
 CADDY_CONTAINER="${CADDY_CONTAINER:-extas-caddy}"
 MIN_DAYS="${ORIGIN_CERT_MIN_DAYS:-7}"
@@ -46,8 +47,8 @@ check_pair() {
   if ! openssl x509 -in "$cert" -noout -checkend $(( MIN_DAYS * 86400 )) >/dev/null; then
     error="the certificate ends in less than $MIN_DAYS days"; return
   fi
-  if ! openssl x509 -in "$cert" -noout -checkhost "$EXTAS_STAGING_HOST" 2>/dev/null | grep -q 'does match'; then
-    error="the certificate does not cover $EXTAS_STAGING_HOST"; return
+  if ! openssl x509 -in "$cert" -noout -checkhost "$EXTAS_SITE_HOST" 2>/dev/null | grep -q 'does match'; then
+    error="the certificate does not cover $EXTAS_SITE_HOST"; return
   fi
 }
 
@@ -83,7 +84,7 @@ fi
 [ "$mode" = auto ] && rm -rf "$SITES/origin"
 
 jq -n --arg at "$(date -Is)" --arg mode "$mode" --argjson names "$names" --arg notAfter "$not_after" \
-  --arg days "$days" --arg issuer "$issuer" --arg error "$error" --arg host "$EXTAS_STAGING_HOST" \
+  --arg days "$days" --arg issuer "$issuer" --arg error "$error" --arg host "$EXTAS_SITE_HOST" \
   '{at:$at, mode:$mode, active:($mode == "origin"), names:$names, host:$host,
     notAfter:(if $notAfter == "" then null else $notAfter end), daysLeft:(if $days == "" then null else ($days|tonumber) end),
     issuer:$issuer, error:(if $error == "" then null else $error end)}' > "$STATE/origin-cert.json.tmp"

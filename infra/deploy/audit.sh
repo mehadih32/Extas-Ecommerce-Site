@@ -19,6 +19,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 # shellcheck source=journeys-lib.sh
 . "$HERE/journeys-lib.sh"
 # shellcheck source=smoke-lib.sh
@@ -87,7 +88,7 @@ cp "$STATE/audit.json.tmp" "$STATE/audit/$(date -d "@$now" +%Y%m%d-%H%M%S).json"
 mv "$STATE/audit.json.tmp" "$STATE/audit.json"
 journeys_keep "$STATE/audit" "$AUDIT_KEEP"
 if [ "$AUDIT_TELEGRAM" = yes ]; then
-  log "$(audit_tell "$STATE/audit.json" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
+  log "$(audit_tell "$STATE/audit.json" "$SEC" "$EXTAS_SITE_HOST" "$R/logs/alerts.log")"
 fi
 log "$(jq -r 'if .ok then "PASS: \(.chosen) groups (\(.passedGroups) passed, \(.agentGroups) wait for the agents)" else "FAIL: \(.problems[:5] | join("; "))" end' "$STATE/audit.json")"
 exit "$rc"

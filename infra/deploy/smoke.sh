@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CN-016 (PR 4/17) — the smoke test against the preview host, on the VM: after every deploy (deploy.yml, which rolls
+# CN-016 (PR 4/17) — the smoke test against the site host (the main domain since CN-052), on the VM: after every deploy (deploy.yml, which rolls
 # back when it fails) and every night (smoke.yml).
 #   sudo [SMOKE_ROLLS_BACK=1] [SMOKE_HOST=<host>|main] infra/deploy/smoke.sh <out-dir> <kind> [<commit sha>]
 #   (1 = deploy.yml rolls back on failure; SMOKE_HOST: below, R1 ops review M7)
@@ -25,6 +25,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 OUT="${1:?usage: smoke.sh <out-dir> <kind> [<commit sha>]}"
 KIND="${2:?usage: smoke.sh <out-dir> <kind> [<commit sha>]}"
 SHA="${3:-}"
@@ -32,26 +33,29 @@ R="$EXTAS_ROOT"; SEC="$R/config/secrets"; STATE="$R/state"
 IMG="extas-smoke:$SMOKE_PLAYWRIGHT_VERSION"
 log() { echo "[smoke $(date +%H:%M:%S)] $*"; }
 
-# R1 ops review (M7, PR 402): which host. SMOKE_HOST empty = the staging host (after every deploy, every night);
-# "main" = the main domain, the first of EXTAS_EXTRA_HOSTS (runbook step 7, the first-week watch); otherwise exactly
-# the staging host or one of the extra hosts, never any other address. The preview login goes along, except on an extra
-# host once it is open (server.conf EXTAS_MAIN_OPEN="yes", PR 403).
+# R1 ops review (M7, PR 402): which host. SMOKE_HOST empty = the site host (after every deploy, every night): CN-052, the
+# staging host is retired (14 Nov 2026), so that is the main domain, the first of EXTAS_EXTRA_HOSTS; a staging host, when
+# server.conf still names one, is the site host again. "main" = the first of EXTAS_EXTRA_HOSTS; otherwise exactly the
+# staging host or one of the extra hosts, never any other address. The preview login goes along only where a gate exists
+# (a staging host, or an extra host while server.conf EXTAS_MAIN_OPEN is not "yes", PR 403).
 # shellcheck source=caddy-live.sh
 . "$HERE/caddy-live.sh"
-EXTRAS="$(site_extra_hosts "$EXTAS_STAGING_HOST" "${EXTAS_EXTRA_HOSTS:-}" 2>/dev/null)"
+STAGING="${EXTAS_STAGING_HOST:-}"; STAGING="${STAGING,,}"
+EXTRAS="$(site_extra_hosts "$STAGING" "${EXTAS_EXTRA_HOSTS:-}" 2>/dev/null)"
 HOST="${SMOKE_HOST:-}"; HOST="${HOST,,}"
 case "$HOST" in
-  ""|"${EXTAS_STAGING_HOST,,}") HOST="$EXTAS_STAGING_HOST" ;;
+  "") HOST="$EXTAS_SITE_HOST" ;;
   main) HOST="${EXTRAS%% *}"
-    if [ -z "$HOST" ]; then HOST="$EXTAS_STAGING_HOST"; log "no main domain in EXTAS_EXTRA_HOSTS yet: the staging host instead"; fi ;;
-  *) case " $EXTRAS " in *" $HOST "*) ;; *) log "FAIL: $HOST is not a host this server serves (EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS)"; exit 2 ;; esac ;;
+    if [ -z "$HOST" ]; then HOST="$EXTAS_SITE_HOST"; log "no main domain in EXTAS_EXTRA_HOSTS: the site host instead"; fi ;;
+  *) if [ -n "$STAGING" ] && [ "$HOST" = "$STAGING" ]; then :
+     else case " $EXTRAS " in *" $HOST "*) ;; *) log "FAIL: $HOST is not a host this server serves (EXTAS_STAGING_HOST, EXTAS_EXTRA_HOSTS)"; exit 2 ;; esac; fi ;;
 esac
 GATE=yes
-[ "$HOST" != "$EXTAS_STAGING_HOST" ] && [ "${EXTAS_MAIN_OPEN:-no}" = yes ] && GATE=no
+[ "$HOST" != "$STAGING" ] && [ "${EXTAS_MAIN_OPEN:-no}" = yes ] && GATE=no
 # R2 ops review (M2): which kind of host, for the checks that belong to one (smoke.json `host`): the preview-only
 # noindex check never runs on the main domain, where the first-week watch would fail on it every run.
-HOST_KIND=staging
-[ "$HOST" = "$EXTAS_STAGING_HOST" ] || HOST_KIND=extra
+HOST_KIND=extra
+[ -n "$STAGING" ] && [ "$HOST" = "$STAGING" ] && HOST_KIND=staging
 
 work="$(mktemp -d "$SEC/.smoke.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
@@ -135,6 +139,6 @@ smoke_keep "$OUT" "$STATE/smoke-runs" "$(smoke_slot "$KIND")" || log "no result 
 if [ -f "$STATE/smoke-runs/$(smoke_slot "$KIND")/result.json" ]; then
   log "$(run_history smoke "$STATE/smoke-runs/$(smoke_slot "$KIND")" "$mig" "$work/db.env")"
 fi
-log "$(run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
+log "$(run_alert smoke "$STATE/smoke.json" "$STATE" "$SEC" "$EXTAS_SITE_HOST" "$R/logs/alerts.log")"
 log "$(jq -r 'if .ok then "PASS: \(.pages) page views" else "FAIL: \(.problems | join("; "))" end' "$STATE/smoke.json")"
 exit "$rc"

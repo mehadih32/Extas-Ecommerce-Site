@@ -124,7 +124,7 @@ export const cloudflareConfig = z.object({
   zoneId: z
     .string()
     .regex(/^[a-f0-9]{32}$/, "a zone id is 32 letters and digits (0–9, a–f)"),
-  /** The host names the shop answers on, separated by commas (new.extas.com.bd now; the main domain on go-live day). */
+  /** The host names the shop answers on, separated by commas (the main domain; a staging host too while one exists). */
   hosts: z
     .string()
     .max(1_000)

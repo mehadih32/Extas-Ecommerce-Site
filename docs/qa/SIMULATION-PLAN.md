@@ -372,6 +372,8 @@ Also show the Bengali summary in the chat and write it as `docs/reports/YYYY-MM-
 "How to report").
 
 ### 8.4 The staging run (new.extas.com.bd) — the go-live gate
+> **CN-052 (14 Nov 2026):** the staging host is retired; this run happened before go-live. With no staging host in `server.conf` the simulation workflow refuses to run, so it never creates orders on the live shop.
+
 Run the same 50 orders again on new.extas.com.bd once the shop flows exist there (S04–S08 merged), before real orders
 and before the S19 go-live checklist (PR 585–587) is signed.
 - The site is password-protected and `noindex`; integrations run on **mock or sandbox** (couriers, SMS, WhatsApp,

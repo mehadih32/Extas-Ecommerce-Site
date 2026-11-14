@@ -28,6 +28,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 CONF="${EXTAS_CONFIG_FILE:-/etc/extas/server.conf}"
 # shellcheck source=../config/server.conf
 . "$CONF"
+EXTAS_SITE_HOST="${EXTAS_STAGING_HOST:-${EXTAS_EXTRA_HOSTS%% *}}"; EXTAS_SITE_HOST="${EXTAS_SITE_HOST,,}"   # CN-052: the one site address (the staging host when one is set, else the main domain)
 # shellcheck source=journeys-lib.sh
 . "$HERE/journeys-lib.sh"
 # shellcheck source=smoke-lib.sh
@@ -88,8 +89,10 @@ docker run --rm --name "extas-jcheck-$$" --network extas --env-file "$work/db.en
 [ -s "$work/acct/check.env" ] || { log "FAIL: the check account could not be prepared"; exit 1; }
 {
   cat "$work/acct/check.env"
-  echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
-  echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  if [ -n "${EXTAS_STAGING_HOST:-}" ] || [ "${EXTAS_MAIN_OPEN:-no}" != yes ]; then   # CN-052: the preview login only where a gate exists
+    echo "SMOKE_HTTP_USER=$EXTAS_STAGING_USER"
+    echo "SMOKE_HTTP_PASSWORD=$(grep '^STAGING_PASSWORD=' "$SEC/staging.env" | cut -d= -f2-)"
+  fi
 } > "$work/journeys.env"
 rm -f "$work/acct/check.env"
 
@@ -98,13 +101,13 @@ if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   docker build -q -f "$HERE/smoke.Dockerfile" --build-arg PLAYWRIGHT_VERSION="$SMOKE_PLAYWRIGHT_VERSION" -t "$IMG" "$HERE" >/dev/null
 fi
 
-log "walking the ${GROUP:+$GROUP }journeys on https://$EXTAS_STAGING_HOST ($why)"
+log "walking the ${GROUP:+$GROUP }journeys on https://$EXTAS_SITE_HOST ($why)"
 rm -rf "${OUT:?}"/*
 at="$(TZ="$EXTAS_TIMEZONE" date '+%Y-%m-%d %H:%M')"
 kind="$([ "$why" = scheduled ] && echo scheduled || echo "run now")"
 rc=0
 timeout "$((JOURNEYS_TIMEOUT_MIN * 60))" docker run --rm --name "extas-journeys-$$" --ipc=host --env-file "$work/journeys.env" \
-  -e BASE="https://$EXTAS_STAGING_HOST" -e JOURNEYS_UI="${JOURNEYS_UI:-}" -e JOURNEYS_GROUP="$GROUP" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
+  -e BASE="https://$EXTAS_SITE_HOST" -e JOURNEYS_UI="${JOURNEYS_UI:-}" -e JOURNEYS_GROUP="$GROUP" -e JOURNEYS_OUT=/out -e JOURNEYS_KIND="$kind" -e JOURNEYS_SHA="${SHA:0:12}" -e JOURNEYS_AT="$at ($EXTAS_TIMEZONE)" \
   -v "$REPO/tools:/w/tools:ro" -v "$REPO/docs/qa:/w/docs/qa:ro" -v "$OUT:/out" \
   "$IMG" node /w/tools/journeys.mjs || rc=$?
 
@@ -123,7 +126,7 @@ if [ -z "$GROUP" ]; then
   if [ -f "$OUT/result.json" ]; then
     log "$(run_history journeys "$OUT" "$mig" "$work/db.env")"
   fi
-  log "$(run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_STAGING_HOST" "$R/logs/alerts.log")"
+  log "$(run_alert journeys "$STATE/journeys.json" "$STATE" "$SEC" "$EXTAS_SITE_HOST" "$R/logs/alerts.log")"
 else
   log "group $GROUP: kept apart (no run history, no Telegram line)"
 fi
