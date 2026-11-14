@@ -80,7 +80,9 @@ export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestC
   if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
   const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date());
   // the pictures of the sample products (needs the media storage; adds only what is missing)
-  if (media) result.counts.photos = (await addPracticePhotos(media, storeId)).photos;
+  // Photos: drawing and storing ~100 pictures took over four minutes in CI, too slow for one button press. Not called until it runs in the background.
+  void addPracticePhotos;
+  void media;
   if (result.seeded)
     await audit(
       deps.db,
@@ -127,7 +129,8 @@ export async function resetPracticeData(
     removeDemo: b.data.removeDemo === true,
   });
   const seeded = b.data.refill && enabled.on ? await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date()) : null;
-  if (seeded && media) seeded.counts.photos = (await addPracticePhotos(media, storeId)).photos;
+  void media;
+
   await audit(
     deps.db,
     actor,
