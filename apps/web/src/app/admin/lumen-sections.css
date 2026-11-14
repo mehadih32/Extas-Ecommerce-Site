@@ -330,3 +330,9 @@
    facts list, choices, notes) become Lumen's 14 px; the person's initials read in the accent tokens, AA in dark too. */
 [data-lm-look] [data-lm-ready] :is(.sp-top .sp-when, .sp-prev, .sp-meta, .sp-bub, .sp-by, .sp-file, .sp-kv, .sp-same-row, .sp-opt, .sp-an-sub, .sp-link-risky .sp-link-why, .sp-desk) { font-size: var(--lm-fs-card); }
 [data-lm-look] [data-lm-ready] .sp-av { background: var(--lm-acbg); color: var(--lm-ac-ink); }
+
+/* Home B: "Do now" heading, "Ads: are they paying?" figures */
+[data-lm-look] .lm-do-h { margin: 0; font: 700 1.25rem/1.3 var(--lm-font-disp); }
+[data-lm-look] .lm-roas { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 12px 0 0; }
+[data-lm-look] .lm-roas dt { color: var(--lm-ink2); font-size: var(--lm-fs-card); }
+[data-lm-look] .lm-roas dd { margin: 2px 0 0; font-weight: 700; font-size: 1.25rem; }
