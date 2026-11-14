@@ -103,7 +103,15 @@
       "deadline": "Deadline",
       "status": "Status",
       "requested": "Requested",
-      "paid": "Paid"
+      "paid": "Paid",
+      "paidOn": "Paid on",
+      "reference": "Reference"
+    },
+    "new": "New claim",
+    "claimable": {
+      "title": "Parcels still to claim",
+      "sub": "Lost or damaged parcels with no claim yet. Raise one with one tap.",
+      "none": "No parcel is waiting for a claim."
     }
   }
 }

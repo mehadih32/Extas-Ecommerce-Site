@@ -16,6 +16,8 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
+import { MakeDefaultButton } from '@/components/admin/delivery/MakeDefaultButton';
+import { deliverySettingCards } from '@/lib/delivery-settings-api';
 import { withCouriers } from '@/lib/admin-couriers';
 import { withFulfil } from '@/lib/admin-fulfil/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -53,6 +55,10 @@ export default async function CouriersOverviewPage() {
   const ov = await sh.couriersOverview(sd, who);
   const canMoney = access.guard.permissions?.has('payments.view') ?? false;
   const pd = canMoney ? await paymentsDeps(access.deps) : null;
+  const canSetDefault = access.guard.permissions?.has('delivery.charges') ?? false;
+  const defCard0 = await deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx })
+    .then((c) => c['delivery.couriers'])
+    .catch(() => null);
   const claimsOf = async (courierId?: string) => {
     if (!pd) return null;
     try {
@@ -207,10 +213,8 @@ export default async function CouriersOverviewPage() {
                     <Link className="a2-btn sm pri" href={`/admin/delivery/couriers/${c.id}`} data-testid="courier-open">
                       {cr('ov.open360')}
                     </Link>
-                    {!c.isDefault ? (
-                      <Link className="a2-btn sm" href="/admin/delivery/settings" data-testid="courier-make-default">
-                        {cr('ov.makeDefault')}
-                      </Link>
+                    {!c.isDefault && canSetDefault && defCard0 && connected(c) ? (
+                      <MakeDefaultButton courierId={c.id} version={defCard0.version} value={defCard0.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} />
                     ) : null}
                   </div>
                   {c.practiceParcels ? <p className="a2-xs a2-mute a2-mt6">{cr('ov.practice', { n: n(c.practiceParcels) })}</p> : null}
