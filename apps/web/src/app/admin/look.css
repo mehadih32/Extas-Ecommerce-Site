@@ -601,3 +601,10 @@
 .adm2 .a3-proto .a3-prob{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
 .adm2 .a3-proto .a3-cap{margin:8px 0 4px}
 @media (max-width:1023px){.adm2 .a3-dg3.a3-proto{grid-template-columns:minmax(0,1fr)}}
+.adm2 .a3-snap{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.adm2 .a3-snap b{font-size:28px;line-height:1.1}
+.adm2 .a3-snap-r{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}
+.adm2 .a3-six{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:20px}
+.adm2 .a3-six .a3-kpi{display:flex;flex-direction:column;gap:2px;padding:14px;min-width:0}
+.adm2 .a3-six-v{font-size:22px;line-height:1.2;overflow-wrap:anywhere}
+@media (max-width:1199px){.adm2 .a3-six{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:599px){.adm2 .a3-six{grid-template-columns:repeat(2,minmax(0,1fr))}}

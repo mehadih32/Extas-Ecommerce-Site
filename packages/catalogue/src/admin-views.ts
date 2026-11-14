@@ -1,6 +1,7 @@
 // PR 21 — what the product admin screens read (demo 90-admin-catalog.js: the product list with its counters, search and
 // category chips; the stock per variant in the edit form). Read-only: every change goes through the services
 // (products.ts, variants.ts, naming.ts, publish.ts). Stock is shown, never typed here: it comes from the ERP (S09).
+import { SOLD_STATUS } from './ranking';
 import { z } from 'zod';
 import type { Prisma } from '@extas/db/client';
 import { allow, parse, setting, type CatalogueDeps, type Db, type Who } from './context';
@@ -22,6 +23,8 @@ export const adminListQuery = z
     status: z.enum(ADMIN_STATUS_FILTERS).optional(),
     categoryId: z.uuid().optional(),
     page: z.int().min(1).optional(),
+    /** PR 722 (prototype "Sort: best selling"): `best` = pieces sold in the last 30 days, most first; else newest first. */
+    sort: z.enum(['new', 'best']).optional(),
   })
   .strict();
 export type AdminListQuery = z.input<typeof adminListQuery>;
@@ -98,12 +101,26 @@ export async function adminProductList(deps: CatalogueDeps, who: Who, query: Adm
       : {}),
   };
   const page = d.page ?? 1;
-  const [rows, total, tree] = await Promise.all([
+  // PR 722: best selling — order every matching product by its pieces sold in 30 days, then take this page's ids.
+  let bestIds: string[] | null = null;
+  if (d.sort === 'best') {
+    const since = new Date(((deps.now ?? (() => new Date()))()).getTime() - 30 * 86_400_000);
+    const [all, sold] = await Promise.all([
+      db.product.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }),
+      db.orderItem.groupBy({ by: ['productId'], where: { storeId, productId: { not: null }, status: 'ACTIVE', order: { status: { in: [...SOLD_STATUS] }, placedAt: { gte: since } } }, _sum: { quantity: true } }),
+    ]);
+    const soldBy = new Map(sold.map((r) => [r.productId as string, r._sum.quantity ?? 0]));
+    bestIds = all
+      .map((r, i) => ({ id: r.id, n: soldBy.get(r.id) ?? 0, i }))
+      .sort((a, b) => b.n - a.n || a.i - b.i)
+      .slice((page - 1) * pageSize, page * pageSize)
+      .map((r) => r.id);
+  }
+  const [rows0, total, tree] = await Promise.all([
     db.product.findMany({
-      where,
+      where: bestIds ? { storeId, id: { in: bestIds } } : where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: pageSize,
-      skip: (page - 1) * pageSize,
+      ...(bestIds ? {} : { take: pageSize, skip: (page - 1) * pageSize }),
       include: {
         colours: { where: { archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }], select: { colour: { select: { hex: true, nameEn: true, nameBn: true } } } },
         variants: { where: { archivedAt: null }, select: { id: true, size: { select: { label: true, sortOrder: true } } } },
@@ -112,6 +129,7 @@ export async function adminProductList(deps: CatalogueDeps, who: Who, query: Adm
     db.product.count({ where }),
     categoryTree(deps, who),
   ]);
+  const rows = bestIds ? [...rows0].sort((a, b) => bestIds!.indexOf(a.id) - bestIds!.indexOf(b.id)) : rows0;
   const nodes = new Map(flatten(tree).map((n) => [n.id, n]));
 
   const ids = rows.map((r) => r.id);
