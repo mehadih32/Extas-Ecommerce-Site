@@ -42,7 +42,7 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; ro
   }
 }
 
-export function PoliciesTab({ rows: first, w, names, initial, canEdit, locale, timeZone, shopLang }: { rows: PolicyRow[]; w: Texts; names: Record<string, string>; initial: PolicySlug; canEdit: boolean; locale: string; timeZone: string; shopLang: Lang }) {
+export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, locale, timeZone, shopLang }: { glance: Record<string, { label: string; value: string; sub?: string }[]>; rows: PolicyRow[]; w: Texts; names: Record<string, string>; initial: PolicySlug; canEdit: boolean; locale: string; timeZone: string; shopLang: Lang }) {
   const [rows, setRows] = useState(first);
   const [slug, setSlug] = useState<PolicySlug>(initial);
   const row = rows.find((r) => r.slug === slug)!;
@@ -183,6 +183,26 @@ export function PoliciesTab({ rows: first, w, names, initial, canEdit, locale, t
           </button>
         ))}
       </div>
+
+      {glance[slug]?.length ? (
+        <section className="a2-mt12" aria-label={w['glance.title']} data-testid="pol-glance">
+          <p className="a2-xs a2-mute">{w['glance.title']}</p>
+          <div className="polb-glance a2-mt6">
+            {glance[slug]!.map((g) => (
+              <div key={g.label} className="a2-card a2-kpi polb-g">
+                <div className="a2-kl">{g.label}</div>
+                <div className="a2-kv">{g.value}</div>
+                {g.sub ? (
+                  <div className="a2-kf">
+                    <span className="a2-kn">{g.sub}</span>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <p className="a2-xs a2-mute a2-mt6">{w['glance.note']}</p>
+        </section>
+      ) : null}
 
       <section className="a2-sc a2-mt12" aria-labelledby="pol-h" data-testid="pol-card">
         <div className="polb-head">

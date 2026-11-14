@@ -28,3 +28,8 @@
 .adm2 .polb-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
 .adm2 .polb-ver{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px;border:1px solid var(--ln);border-radius:var(--r);background:var(--sf);min-width:0}
 .adm2 .polb-vtext{min-width:0;overflow-wrap:anywhere}
+
+/* "At a glance": the numbers the shop's Rules hold, as cards (prototype v5 Policies › Delivery) */
+.adm2 .polb-glance { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1200px) { .adm2 .polb-glance { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.adm2 .polb-g { min-width: 0; }

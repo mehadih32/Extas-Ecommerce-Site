@@ -10,6 +10,9 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import * as del from '@extas/delivery';
+import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { deliveryDeps } from '@/lib/delivery-api';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PoliciesTab } from '@/components/admin/website/PoliciesTab';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -67,6 +70,27 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
   const canEdit = access.guard.permissions?.has('settings.write') ?? false;
   const words = flat((view.lang === 'bn' ? bn : en).pw as unknown as Record<string, unknown>);
   const names = Object.fromEntries(POLICY_SLUGS.map((s) => [s, words[`names.${s}`]!]));
+  // "At a glance": the numbers the shop's own Rules already hold, read live so a page never disagrees with checkout.
+  const glance: Record<string, { label: string; value: string; sub?: string }[]> = {};
+  try {
+    const dwho: del.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
+    const [bands, currency] = await Promise.all([del.listBands(deliveryDeps(access.deps), dwho), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+    const money = moneyOf(currency, view.locale);
+    const nm = (b: (typeof bands)[number]) => (view.lang === 'bn' && b.nameBn ? b.nameBn : b.nameEn);
+    const num = (x: number) => formatNumber(x, view.locale);
+    const hours = (b: (typeof bands)[number]) => {
+      const one = b.hoursMax ?? b.hoursMin;
+      if (b.hoursMin != null && b.hoursMax != null && b.hoursMin !== b.hoursMax) return t(d, 'pw.glance.hours', { n: `${num(b.hoursMin)}–${num(b.hoursMax)}` });
+      return one != null ? t(d, 'pw.glance.hours', { n: num(one) }) : undefined;
+    };
+    const live = bands.filter((b) => b.enabled);
+    if (live.length) {
+      glance['delivery'] = live.map((b) => ({ label: nm(b), value: formatMoney(b.chargeMinor, money), sub: hours(b) }));
+      glance['payment'] = live.filter((b) => b.codLimitMinor !== null).map((b) => ({ label: t(d, 'pw.glance.codLimit', { name: nm(b) }), value: formatMoney(b.codLimitMinor!, money) }));
+    }
+  } catch {
+    /* no rules to show: the page still works without the strip */
+  }
   const published = v.rows.filter((r) => r.state !== 'draft').length;
 
   return (
@@ -79,7 +103,7 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
       <p className="a2-xs a2-mute polb-mt6" data-testid="pol-summary">
         {published} / {v.rows.length}
       </p>
-      <PoliciesTab rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} />
+      <PoliciesTab glance={glance} rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} />
     </div>
   );
 }
