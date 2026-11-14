@@ -1,0 +1,54 @@
+/* S15 · PR 585 — AI › Learning engine (/admin/ai/learning), in the Lumen look. Uses the shared --lm- and a2-
+   prefixed tokens and classes, so it needs no colour literal of its own (the hardcode guard checks CSS files too). */
+.adm2 .lrn-sc {
+  margin-top: 16px;
+}
+.adm2 .lrn-sc-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .lrn-assign {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.adm2 .lrn-inline {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.adm2 .lrn-inline .a2-inp,
+.adm2 .lrn-inline .a2-sel {
+  flex: 1 1 150px;
+}
+.adm2 .lrn-date {
+  flex: 0 0 150px;
+}
+.adm2 .lrn-row {
+  border-top: 1px solid var(--ln);
+  padding: 10px 0;
+}
+.adm2 .lrn-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.adm2 .lrn-row-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.adm2 .lrn-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.adm2 .lrn-note {
+  margin: 4px 0 0;
+}

@@ -55,7 +55,19 @@ describe('appraisalRange', () => {
 describe('kpisFromRows', () => {
   it('an empty work log is all honest zeros, and the rate is null (nothing to divide)', () => {
     const kpis = kpisFromRows([], 0);
-    expect(kpis).toEqual<AppraisalKpis>({ tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null });
+    expect(kpis).toEqual<AppraisalKpis>({ tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null, practiceTasksGraded: 0, practiceTasksPassed: 0 });
+  });
+
+  it('PR 585: practiceTasksGraded/Passed are honestly 0/0 when no `practiceTasks` is given at all (every earlier caller)', () => {
+    const kpis = kpisFromRows([{ outcome: null }], 0);
+    expect(kpis.practiceTasksGraded).toBe(0);
+    expect(kpis.practiceTasksPassed).toBe(0);
+  });
+
+  it('PR 585: counts graded practice tasks and how many of them passed, over whatever rows the caller read', () => {
+    const kpis = kpisFromRows([], 0, [{ grade: 'pass' }, { grade: 'pass' }, { grade: 'fail' }, { grade: 'partial' }, { grade: null }]);
+    expect(kpis.practiceTasksGraded).toBe(5);
+    expect(kpis.practiceTasksPassed).toBe(2);
   });
 
   it('counts self-found and owner-found bugs separately, and rewards do not count as tasks', () => {
@@ -89,7 +101,7 @@ describe('kpisFromRows', () => {
 
 describe('appraisalReportText', () => {
   const range = appraisalRange('daily', NOW, TZ);
-  const zero: AppraisalKpis = { tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null };
+  const zero: AppraisalKpis = { tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null, practiceTasksGraded: 0, practiceTasksPassed: 0 };
 
   it('says plainly that nothing was recorded, rather than leaving a blank report', () => {
     const text = appraisalReportText('daily', zero, 'সাইজ পরামর্শ', range);
@@ -104,10 +116,17 @@ describe('appraisalReportText', () => {
   });
 
   it('a real rate is printed as a whole percent', () => {
-    const some: AppraisalKpis = { tasksDone: 4, bugsSelfFound: 1, bugsOwnerFound: 1, rewards: 0, costMinor: 250, firstTimeRightRate: 75 };
+    const some: AppraisalKpis = { tasksDone: 4, bugsSelfFound: 1, bugsOwnerFound: 1, rewards: 0, costMinor: 250, firstTimeRightRate: 75, practiceTasksGraded: 0, practiceTasksPassed: 0 };
     const text = appraisalReportText('daily', some, 'সাইজ পরামর্শ', range);
     expect(text).toContain('75%');
     expect(text).toContain('250');
+  });
+
+  it('PR 585: the practice-task line only appears once something was actually graded, never 0/0 noise', () => {
+    expect(appraisalReportText('daily', zero, 'সাইজ পরামর্শ', range)).not.toContain('প্র্যাকটিস টাস্ক');
+    const withTasks: AppraisalKpis = { ...zero, practiceTasksGraded: 3, practiceTasksPassed: 2 };
+    const text = appraisalReportText('daily', withTasks, 'সাইজ পরামর্শ', range);
+    expect(text).toContain('প্র্যাকটিস টাস্ক: 3টা গ্রেড হয়েছে, 2টা পাস');
   });
 
   it('only the yearly report adds the role line and the honest "not yet filled" note', () => {

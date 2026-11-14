@@ -592,6 +592,9 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       },
       // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
       { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
+      // S15 · PR 585 — Learning engine: Tirondaj/Doot's own research → quality gate → skill basket loop, practice
+      // tasks and paid-tool proposals (owner only).
+      { id: 'learning', guide: 'ai', pages: [{ href: '/admin/ai/learning', perm: 'ai.read', keys: ['aiLearning'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',

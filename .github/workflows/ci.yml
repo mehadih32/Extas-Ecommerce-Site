@@ -232,10 +232,13 @@ jobs:
           key: ${{ steps.nextcache.outputs.cache-primary-key }}
 
   # PR 17, 494, 509 — the checks that need no build, started at once: guards, the generated docs, lint, type-check.
+  # PR 585: bumped 25->35 (CN-050's S23/S28 growth pushed a clean run to ~24-25 min on this job alone before the
+  # gate-orders/redirect-import/gate-c360 tsc steps even start; main's own last run already took 15-16 min here, so
+  # 25 min no longer leaves headroom as the monorepo grows).
   checks:
     name: lint and type-check
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/pnpm-install

@@ -291,6 +291,10 @@
         "label": "Strong agent memory",
         "help": "Off by default. On: every agent keeps a long-term memory (facts, decisions, your instructions, past campaigns and tasks, lessons) it can search and that is never deleted silently — only archived or corrected by you."
       }
+    },
+    "learningEngine": {
+      "label": "Continuous learning engine",
+      "help": "Off by default. On, Tirondaj and Doot's research → quality-gate check → skill basket loop, their practice tasks and their paid-tool proposals all run. Off, curating a learning source still works, but every other step refuses. The number is how many independent good sources a tip needs (when it has no official-docs source) before the quality gate lets it be tested."
     }
   },
   "theme": {

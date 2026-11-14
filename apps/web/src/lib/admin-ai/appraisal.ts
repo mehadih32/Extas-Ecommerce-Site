@@ -63,13 +63,19 @@ export interface AppraisalKpis {
   /** `(tasksDone - bugsOwnerFound) / tasksDone` as a whole percent, or `null` while `tasksDone` is 0 — nothing to
    * divide, never a guessed rate. */
   firstTimeRightRate: number | null;
+  /** PR 585: how many of Tirondaj/Doot's own practice tasks (`AiPracticeTask`) were graded (done or missed, never
+   * still-open) in this window, and how many of those graded `pass`. Honestly 0 for every other agent — practice
+   * tasks are structurally the learning engine's own, never invented for an agent that has none. */
+  practiceTasksGraded: number;
+  practiceTasksPassed: number;
 }
 
-const EMPTY_KPIS: AppraisalKpis = { tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null };
+const EMPTY_KPIS: AppraisalKpis = { tasksDone: 0, bugsSelfFound: 0, bugsOwnerFound: 0, rewards: 0, costMinor: 0, firstTimeRightRate: null, practiceTasksGraded: 0, practiceTasksPassed: 0 };
 
 /** One agent's KPIs over a window — pure arithmetic over rows the caller already read, so the math is unit-tested
- * without a database. */
-export function kpisFromRows(workLog: readonly { outcome: string | null }[], costMinor: number): AppraisalKpis {
+ * without a database. `practiceTasks` is optional so every earlier caller (PR 578's own tests included) keeps
+ * working unchanged and still honestly reads 0/0 for an agent with none. */
+export function kpisFromRows(workLog: readonly { outcome: string | null }[], costMinor: number, practiceTasks: readonly { grade: string | null }[] = []): AppraisalKpis {
   let bugsSelfFound = 0;
   let bugsOwnerFound = 0;
   let rewards = 0;
@@ -80,7 +86,8 @@ export function kpisFromRows(workLog: readonly { outcome: string | null }[], cos
   }
   const tasksDone = workLog.length - rewards;
   const firstTimeRightRate = tasksDone > 0 ? Math.round(((tasksDone - bugsOwnerFound) / tasksDone) * 100) : null;
-  return { tasksDone, bugsSelfFound, bugsOwnerFound, rewards, costMinor, firstTimeRightRate };
+  const practiceTasksPassed = practiceTasks.filter((p) => p.grade === 'pass').length;
+  return { tasksDone, bugsSelfFound, bugsOwnerFound, rewards, costMinor, firstTimeRightRate, practiceTasksGraded: practiceTasks.length, practiceTasksPassed };
 }
 
 export interface AppraisalDeps {
@@ -95,11 +102,15 @@ export async function computeAppraisalKpis(deps: AppraisalDeps, key: AiAgentKey,
   await ensureAgentRows(deps.db);
   const agent = await deps.db.aiAgent.findUnique({ where: { key } });
   if (!agent) return { range, kpis: EMPTY_KPIS };
-  const [workLog, usage] = await Promise.all([
+  const [workLog, usage, practiceTasks] = await Promise.all([
     deps.db.aiWorkLog.findMany({ where: { agentId: agent.id, createdAt: { gte: range.from, lte: range.to } }, select: { outcome: true } }),
     deps.db.aiUsageLedger.aggregate({ where: { agentId: agent.id, createdAt: { gte: range.from, lte: range.to } }, _sum: { costMinor: true } }),
+    // PR 585: Tirondaj/Doot's own practice tasks are keyed by the plain agent key, not `agentId` (AiPracticeTask has
+    // no FK — the same plain-key shape AiLearningSource/AiLearningTip already use); harmlessly empty for any other
+    // agent, since none of theirs ever exist.
+    deps.db.aiPracticeTask.findMany({ where: { agentKey: key, status: { not: 'open' }, updatedAt: { gte: range.from, lte: range.to } }, select: { grade: true } }),
   ]);
-  return { range, kpis: kpisFromRows(workLog, usage._sum.costMinor ?? 0) };
+  return { range, kpis: kpisFromRows(workLog, usage._sum.costMinor ?? 0, practiceTasks) };
 }
 
 /** The honest Bengali report text for one period — every figure in it came from `kpis`, nothing guessed; the parts
@@ -111,6 +122,7 @@ export function appraisalReportText(period: AppraisalPeriod, kpis: AppraisalKpis
   lines.push(`সময়কাল: ${range.periodStart} – ${range.periodEnd}`);
   lines.push(`কাজ শেষ: ${kpis.tasksDone} · নিজে ধরা বাগ: ${kpis.bugsSelfFound} · মালিক ধরা বাগ: ${kpis.bugsOwnerFound} · পুরস্কার: ${kpis.rewards}`);
   lines.push(`প্রথমবারেই ঠিক হওয়ার হার: ${rate} · খরচ: ${kpis.costMinor} পয়সা`);
+  if (kpis.practiceTasksGraded > 0) lines.push(`প্র্যাকটিস টাস্ক: ${kpis.practiceTasksGraded}টা গ্রেড হয়েছে, ${kpis.practiceTasksPassed}টা পাস`);
   if (period === 'yearly') {
     lines.push(`দায়িত্ব: ${role}`);
     lines.push('যোগ্যতা, কারিকুলাম আর মালিকের রেটিং এখনো ভরা হয়নি — সেগুলো PR 579 (কারিকুলাম) আর মালিকের নিজের রেটিং পাতা থেকে আসবে।');

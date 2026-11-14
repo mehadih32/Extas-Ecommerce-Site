@@ -71,6 +71,32 @@ export function scrub(text, secrets) {
 }
 
 /**
+ * Races `promise` against a plain timer: every Playwright *wait* in this file already has its own `timeout`, but a
+ * bare `page.evaluate()` has none — a browser API it calls from inside the page (Cache Storage, a service worker's
+ * `ready`) is never guaranteed to settle, and one that never settles blocks the `await` forever with no error, which
+ * is what actually hung this script's own CI job for its whole budget with nothing printed (step 0 below, the admin
+ * page never even reached). On time, this resolves to `fallback` instead of leaving the caller stuck; past `ms` it
+ * calls `onTimeout(ms)` once (e.g. to file a problem) and resolves to `fallback`.
+ */
+export async function withDeadline(promise, ms, onTimeout, fallback = null) {
+  const TIMED_OUT = Symbol("timed-out");
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(TIMED_OUT), ms);
+  });
+  try {
+    const result = await Promise.race([promise, timeout]);
+    if (result === TIMED_OUT) {
+      onTimeout(ms);
+      return fallback;
+    }
+    return result;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Watches a page for the whole journey: console errors, page errors, failed requests and 4xx/5xx answers on this site.
  * `step()` names the step each problem is filed under.
  */
@@ -117,6 +143,20 @@ async function run() {
     if (shots) await page.screenshot({ path: join(shots, `admin-session-${name}.png`) }).catch(() => {});
   };
   const settle = (page) => page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+  // A page-side check capped the same way every page-side *wait* above already is (see `withDeadline`'s own doc).
+  const capped = (promise, ms, label, fallback) => withDeadline(promise, ms, () => problems.push(`${step}: ${label} did not finish within ${ms}ms (a browser API never answered)`), fallback);
+  // A second, whole-script safety net: whatever still hangs (browser.close() itself, a step nobody has capped yet)
+  // must never again spend the CI job's full budget in silence. armWatchdog()/disarmWatchdog() bracket the run below.
+  const WATCHDOG_MS = 5 * 60_000;
+  let watchdog;
+  const armWatchdog = () => {
+    watchdog = setTimeout(() => {
+      console.error(`admin session e2e: FAILED — stuck at "${step}" past the ${WATCHDOG_MS}ms watchdog; exiting so the job does not hang`);
+      process.exit(1);
+    }, WATCHDOG_MS);
+  };
+  const disarmWatchdog = () => clearTimeout(watchdog);
+  armWatchdog();
   try {
     const context = await browser.newContext({ viewport: { width: 1366, height: 900 } });
     const page = await context.newPage();
@@ -138,20 +178,28 @@ async function run() {
         /* a browser that refuses storage is still fine to test against */
       }
     });
-    await page.evaluate(async () => {
-      try {
-        const c = await caches.open("old-wp-cache");
-        await c.put("/old-wp-asset.css", new Response("body{color:red}"));
-      } catch {
-        /* no Cache Storage in this context: the rest of the check still holds */
-      }
-      try {
-        await navigator.serviceWorker.register("/sw.js");
-        await navigator.serviceWorker.ready;
-      } catch {
-        /* no service-worker support in this context: the rest of the check still holds */
-      }
-    });
+    // `navigator.serviceWorker.ready` only resolves once this registration reaches "activated" — a state Chromium
+    // itself does not promise to reach in bounded time (e.g. a slow or contended host can leave the install/activate
+    // handshake pending well past any sane test budget). Capped at 20s, the same budget this file already gives
+    // every other page-side wait (the sign-in form, a navigation, a click).
+    await capped(
+      page.evaluate(async () => {
+        try {
+          const c = await caches.open("old-wp-cache");
+          await c.put("/old-wp-asset.css", new Response("body{color:red}"));
+        } catch {
+          /* no Cache Storage in this context: the rest of the check still holds */
+        }
+        try {
+          await navigator.serviceWorker.register("/sw.js");
+          await navigator.serviceWorker.ready;
+        } catch {
+          /* no service-worker support in this context: the rest of the check still holds */
+        }
+      }),
+      20_000,
+      "the legacy service-worker/cache simulation",
+    );
     console.log(`ok   ${step}`);
 
     step = "1 open the sign-in page";
@@ -258,30 +306,35 @@ async function run() {
     step = "7 /reset clears the legacy browser state (CN-043)";
     r = await page.goto(`${base}/reset`);
     await check(r?.status() ?? 0);
-    const afterReset = await page.evaluate(async () => ({
-      cookies: document.cookie,
-      storageLen: (() => {
-        try {
-          return window.localStorage.length;
-        } catch {
-          return 0;
-        }
-      })(),
-      caches: await (async () => {
-        try {
-          return (await caches.keys()).length;
-        } catch {
-          return 0;
-        }
-      })(),
-      registrations: await (async () => {
-        try {
-          return (await navigator.serviceWorker.getRegistrations()).length;
-        } catch {
-          return 0;
-        }
-      })(),
-    }));
+    const afterReset = await capped(
+      page.evaluate(async () => ({
+        cookies: document.cookie,
+        storageLen: (() => {
+          try {
+            return window.localStorage.length;
+          } catch {
+            return 0;
+          }
+        })(),
+        caches: await (async () => {
+          try {
+            return (await caches.keys()).length;
+          } catch {
+            return 0;
+          }
+        })(),
+        registrations: await (async () => {
+          try {
+            return (await navigator.serviceWorker.getRegistrations()).length;
+          } catch {
+            return 0;
+          }
+        })(),
+      })),
+      20_000,
+      "reading the browser state after /reset",
+      { cookies: "", storageLen: 0, caches: 0, registrations: 0 },
+    );
     if (/woocommerce_|wp-settings-/.test(afterReset.cookies)) problems.push(`${step}: a legacy cookie is still set after /reset`);
     if (afterReset.storageLen > 0) problems.push(`${step}: localStorage still has ${afterReset.storageLen} key(s) after /reset`);
     if (afterReset.caches > 0) problems.push(`${step}: ${afterReset.caches} cache(s) remain after /reset`);
@@ -292,6 +345,7 @@ async function run() {
     problems.push(`${step}: ${scrub(e instanceof Error ? e.message : String(e), secrets).split("\n")[0]}`);
   } finally {
     await browser.close();
+    disarmWatchdog();
   }
   if (problems.length) {
     console.error(`admin session e2e: ${problems.length} problem(s)\n  ${problems.join("\n  ")}`);
