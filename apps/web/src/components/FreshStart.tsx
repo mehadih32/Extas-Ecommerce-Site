@@ -3,6 +3,7 @@
 // opens the sign-in page (from the admin) or the page the person was on.
 import { useState } from 'react';
 import type { Dict } from '@/lib/i18n';
+import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { t } from '@/lib/i18n';
 
 /** Asks the site to clear this browser's data for it; true when the site answered. */
@@ -20,7 +21,7 @@ export async function freshStart(level: 'soft' | 'full'): Promise<boolean> {
  * shop's home (in the page's language) from the fresh-start page, else the same page.
  */
 export function afterFresh(path: string, search = ''): string {
-  if (path === '/admin' || path.startsWith('/admin/') || new URLSearchParams(search).get('to') === 'admin') return '/admin/login';
+  if (path === '/admin' || path.startsWith('/admin/') || new URLSearchParams(search).get('to') === 'admin') return ADMIN_LOGIN;
   return path.endsWith('/fresh-start') ? path.replace(/\/fresh-start$/, '') || '/' : path;
 }
 

@@ -664,7 +664,7 @@ provisional or reconciled.
 
 | ID | Page | Mark | Content · API · perms |
 |---|---|---|---|
-| SH-01 | Sign in `/admin/login` [built] | Gate | e-mail + password, first-password and 2FA steps, full-e-mail hint, wrong-try pause · `/api/admin/auth/login`, `/2fa`, `/password` |
+| SH-01 | Sign in `/access` (`admin.loginPath`; `/admin/login` and every signed-out `/admin/**` answer 404, CN-053) [built] | Gate | e-mail + password, first-password and 2FA steps, full-e-mail hint, wrong-try pause · `/api/admin/auth/login`, `/2fa`, `/password` |
 | SH-02 | Command palette | Gate | above · `GET /api/admin/search` |
 | SH-03 | Notifications drawer | Gate | above · own notifications only |
 | SH-04 | Ask AI panel | Plan (owner 23 Oct; Q1) | chief agent answers with links, never acts outside the approval queue (PR 583, 540); hidden when AI is off |

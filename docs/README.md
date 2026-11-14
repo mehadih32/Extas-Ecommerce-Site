@@ -38,7 +38,7 @@ docs file (CN-011).
 | [`admin-guide/admin-look.md`](admin-guide/admin-look.md) | Settings → Admin look: page designs and where the guide opens (`/admin/settings/look`, PR 12, CN-025, CN-026) |
 | [`admin-guide/HOW-TO-ADD-A-DESIGN.md`](admin-guide/HOW-TO-ADD-A-DESIGN.md) | How to add a design to an admin page: `pnpm admin:design <page> <KEY>` (English, Bengali summary; PR 12, CN-025) |
 | [`admin-guide/delivery.md`](admin-guide/delivery.md) | Delivery areas and charges (`/admin/delivery/zones`, moved from `/admin/delivery` in PR 12; S06) |
-| [`admin-guide/login.md`](admin-guide/login.md) | Admin sign-in and the admin shell: 14 sections, search, notifications, guide panel (`/admin/login`, S00; PR 12) |
+| [`admin-guide/login.md`](admin-guide/login.md) | Admin sign-in and the admin shell: 14 sections, search, notifications, guide panel (`/access`, S00; PR 12; CN-053) |
 | [`admin-guide/integrations.md`](admin-guide/integrations.md) | Keys & connections (`/admin/integrations`, S00, S09) |
 | [`admin-guide/products.md`](admin-guide/products.md) | Products: list, new, edit, publish queue, import from a link, audit, back in stock (`/admin/products/*`, S01) |
 | [`admin-guide/size-charts.md`](admin-guide/size-charts.md) | Size charts (`/admin/size-charts`, S01) |

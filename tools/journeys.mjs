@@ -327,7 +327,7 @@ async function runStep(page, base, ignore, s, n, skip, out, tag, ui, settings) {
     const path = new URL(page.url()).pathname;
     row.problems.push(...pageProblems(path, status, await page.innerText("body").catch(() => "")));
     if (s.open && s.status && status !== s.status) row.problems.push(`answered ${status}, expected ${s.status}`);
-    if (s.open?.startsWith("/admin") && path.startsWith("/admin/login")) row.problems.push("sent back to the sign-in page");
+    if (s.open?.startsWith("/admin") && path.startsWith("/access")) row.problems.push("sent back to the sign-in page");
     row.problems.push(...(await expectOn(page, s, settings)));
   });
   row.problems.push(...watch);

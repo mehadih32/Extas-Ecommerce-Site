@@ -7,10 +7,10 @@ import { expect, it } from "vitest";
 import { logoutLabels, logoutName, onAdmin, onLogin, scrub, sessionCookies, withDeadline } from "./admin-session-e2e.mjs";
 
 it("tells the sign-in page from a signed-in admin page", () => {
-  expect(onLogin("http://localhost:3200/admin/login")).toBe(true);
-  expect(onLogin("http://localhost:3200/admin/login?next=%2Fadmin%2Fstock")).toBe(true);
+  expect(onLogin("http://localhost:3200/access")).toBe(true);
+  expect(onLogin("http://localhost:3200/access?next=%2Fadmin%2Fstock")).toBe(true);
   expect(onLogin("http://localhost:3200/admin/products")).toBe(false);
-  expect(onAdmin("http://localhost:3200/admin/login")).toBe(false);
+  expect(onAdmin("http://localhost:3200/access")).toBe(false);
   expect(onAdmin("http://localhost:3200/admin/products")).toBe(true);
   expect(onAdmin("http://localhost:3200/admin")).toBe(true);
   expect(onAdmin("http://localhost:3200/administrator")).toBe(false);

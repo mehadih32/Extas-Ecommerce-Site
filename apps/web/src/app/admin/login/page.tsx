@@ -1,3 +1,5 @@
+// CN-053: this folder is the page's own place in the app; visitors reach it only at the sign-in address (`admin.loginPath`,
+// "/access"), which src/proxy.ts rewrites here. /admin/login itself answers 404.
 // PR 500 — the admin sign-in (on the PR 15 login API). Drawn without a database too (CI, Lighthouse): the form then
 // says that nobody can sign in yet.
 import type { Metadata } from 'next';
@@ -14,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
-  return { title: t(view.dict, 'login.metaTitle'), robots: { index: false, follow: false } };
+  return { title: t(view.dict, 'login.metaTitle'), robots: { index: false, follow: false }, other: { google: 'notranslate' } };
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -30,7 +32,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   }
   const labels = langLabels(view);
   return (
-    <div className="ad ad-login" lang={view.lang}>
+    <div className="ad ad-login" lang={view.lang} translate="no">
       <header className="ad-top">
         <Brand view={view} logo="top" />
         <LangSwitch current={view.lang} labels={labels} where="top" />

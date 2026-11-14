@@ -385,6 +385,7 @@
         "title": "This page could not load",
         "body": "Nothing was changed. Try again; if it keeps happening, send the error id to the team.",
         "retry": "Retry",
+        "reload": "Reload",
         "back": "Back to Dashboard",
         "id": "Error id"
       },

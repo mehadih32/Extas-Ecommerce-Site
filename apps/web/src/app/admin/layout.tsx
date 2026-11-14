@@ -46,6 +46,8 @@ import { AdminShell } from '@/components/admin/shell/AdminShell';
 import { ShellTextProvider } from '@/components/admin/shell/ShellText';
 import { langLabels } from '@/components/admin/AdminFrame';
 import { adminFontPreloads } from '@/lib/admin-fonts';
+import { buildId } from '@/lib/build-id';
+import { adminLoginPath } from '@/lib/admin-login-path';
 import { adminView } from '@/lib/admin-page';
 import { initialsOf, mineOf, RAIL_COOKIE, todoItems, type ShellModel } from '@/lib/admin-shell/model';
 import { badgesFrom, cachedQueues, visibleQueues } from '@/lib/admin-shell/queues';
@@ -76,6 +78,8 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
   const role = s.roles[0];
   const labels = langLabels(view);
   return {
+    loginPath: await adminLoginPath(),
+    buildId: buildId(),
     lang: view.lang,
     dict: { shell: view.dict.shell as Dict, dash: { queue: (view.dict.dash as Dict).queue, age: (view.dict.dash as Dict).age } as Dict },
     storeName: view.storeName,
@@ -122,7 +126,7 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
           {children}
         </AdminShell>
       ) : (
-        <div {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
+        <div translate="no" {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
           {children}
         </div>
       )}

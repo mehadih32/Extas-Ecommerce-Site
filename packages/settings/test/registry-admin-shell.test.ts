@@ -9,11 +9,19 @@ describe('admin shell settings (v33)', () => {
     for (const [key, spec] of Object.entries(adminShellSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
       // PR 12 follow-up 209 moved admin.shell to v263 (recent pages, key jumps); the others stay at 33.
-      expect(spec.version, key).toBe(key === 'admin.shell' ? 263 : 33);
+      expect(spec.version, key).toBe(key === 'admin.shell' ? 263 : key === 'admin.loginPath' ? 708 : 33);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.isPublic, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);
     }
+  });
+
+  it('CN-053: the sign-in address is one lower-case word, "access" by default, never a reserved word', () => {
+    const spec = adminShellSettings['admin.loginPath'];
+    expect(spec.default).toBe('access');
+    expect(spec.scope).toBe('installation');
+    for (const ok of ['access', 'staff-door', 'x9z']) expect(spec.schema.safeParse(ok).success, ok).toBe(true);
+    for (const bad of ['', 'ab', 'Access', 'a/b', '/access', 'admin', 'api', 'login', 'media', 'with space', 'x'.repeat(41)]) expect(spec.schema.safeParse(bad).success, bad).toBe(false);
   });
 
   it('PR 495: start pages are empty by default and take only real roles and the real sections', () => {

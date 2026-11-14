@@ -34,9 +34,12 @@
 // carries from the shop that used to run on this same domain before go-live (lib/legacy-browser.ts). Name-matched
 // only, so this never touches our own cookies; every branch below (the shop's and the admin's alike) goes through it.
 import { NextResponse, type NextRequest } from 'next/server';
+import { expiryLines, oversizedOwnedCookies } from './lib/storage-guard';
 import { shopCacheHeaders } from './lib/cache-policy';
 import { AB_PREVIEW_COOKIE, AB_PREVIEW_HEADER, AB_PREVIEW_PARAM, AB_VISITOR_HEADER, BOT, newVisitorId, previewCookie, previewOf, visitorIdOf } from './lib/experiments/edge';
 import { liveTests, showing } from './lib/experiments/live';
+import { adminDoor, adminLoginPath, HIDDEN_TARGET, ADMIN_SESSION_COOKIE } from './lib/admin-login-path';
+import { ADMIN_LOGIN_PAGE } from './lib/admin-nav';
 import { expireLegacyCookies, legacyCookieNames, registrableDomain } from './lib/legacy-browser';
 import { apiGate, pageCspHeader } from './lib/security/edge-gate';
 import { bengaliGateSends } from './lib/seo/bengali-gate';
@@ -45,6 +48,8 @@ import { countRedirectHit, forwardOf, redirectTable } from './lib/seo/redirect-t
 import { BAG_COOKIE, bagCookie } from './lib/shop/bag-model';
 import { isShopPath, LANG_HEADER, PATH_HEADER, REWRITE_MARK_HEADER, THEME_HEADER } from './lib/shop/lang';
 import { requestLang, rewriteMark } from './lib/shop/rewrite-mark';
+import { CUSTOMER_COOKIE_NAME } from './lib/shop/customer-cookie';
+import { ROUTES } from './lib/shop/routes';
 import { shopStoreId } from './lib/shop/store-id';
 import { NOT_FOUND_HEADER, unknownAddressNow } from './lib/shop/unknown-address';
 import { ATTRIBUTION_COOKIE, fromElsewhere, hasTags, landingCookie } from './lib/tracking/attribution';
@@ -65,6 +70,8 @@ function withCacheHeaders(res: NextResponse, req: NextRequest): NextResponse {
 
 /** CN-043: expires any old WordPress/WooCommerce cookie this browser still carries, by name only. */
 function withLegacyCookieCleanup(res: NextResponse, req: NextRequest): NextResponse {
+  // CN-053: one of OUR cookies grown too big (it could push a later request over a header limit) is expired, on every answer
+  for (const line of expiryLines(oversizedOwnedCookies(req.headers.get('cookie')))) res.headers.append('set-cookie', line);
   const names = legacyCookieNames(req.headers.get('cookie'));
   if (!names.length) return res;
   const domain = registrableDomain(req.headers.get('host'));
@@ -138,9 +145,57 @@ function withAb(res: NextResponse, ab: { cookie: string | null; noStore: boolean
   return res;
 }
 
-export async function proxy(req: NextRequest) {
+/**
+ * CN-053 (14 Nov 2026): the staff sign-in is at its own address (`admin.loginPath`, "/access"), the sign-in page's folder
+ * /admin/login does not exist for visitors, and an /admin address asked for without an admin session cookie is a plain
+ * 404 (no redirect, no hint). The sign-in page and the 404 are this proxy's own rewrites; they carry this process's
+ * secret mark so the second pass (and any browser guessing) is told apart. A visitor whose admin cookie no longer
+ * belongs to a session gets that one cookie expired on the sign-in address (never any other cookie).
+ */
+async function adminAnswer(req: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = req.nextUrl;
+  const loginPath = await adminLoginPath();
+  const hasCookie = req.cookies.has(ADMIN_SESSION_COOKIE);
+  const door = adminDoor(pathname, loginPath, hasCookie, req.headers.get(REWRITE_MARK_HEADER) === rewriteMark());
+  if (door === 'pass') return null;
+  const h = new Headers(req.headers);
+  h.set(REWRITE_MARK_HEADER, rewriteMark());
+  const url = req.nextUrl.clone();
+  if (door === 'moved') {
+    url.pathname = loginPath;
+    return NextResponse.redirect(url, TEMPORARY);
+  }
+  if (door === 'hide') {
+    url.pathname = HIDDEN_TARGET;
+    url.search = '';
+    const res = NextResponse.rewrite(url, { request: { headers: h }, status: NOT_FOUND });
+    res.headers.set('cache-control', 'no-store');
+    return res;
+  }
+  url.pathname = ADMIN_LOGIN_PAGE;
+  const res = NextResponse.rewrite(url, { request: { headers: h } });
+  res.headers.set('cache-control', 'private, no-store');
+  res.headers.set('cdn-cache-control', 'no-store');
+  if (hasCookie && req.method === 'GET') {
+    const { staleSessionCookieLine } = await import('./lib/admin-stale-cookie');
+    const line = await staleSessionCookieLine(req.cookies.get(ADMIN_SESSION_COOKIE)?.value ?? null);
+    if (line) res.headers.append('set-cookie', line);
+  }
+  return res;
+}
+
+async function proxyAnswer(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
   if (pathname.startsWith('/api/') || pathname.startsWith('/erp-api/')) return withLegacyCookieCleanup(gateApi(req), req);
+  const admin = await adminAnswer(req);
+  if (admin) return withLegacyCookieCleanup(withPageCsp(admin), req);
+  // CN-053: an admin page (it is personal) is never kept by a browser or a cache, so an old copy can never be shown
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    const res = NextResponse.next();
+    res.headers.set('cache-control', 'private, no-store');
+    res.headers.set('cdn-cache-control', 'no-store');
+    return withLegacyCookieCleanup(withPageCsp(res), req);
+  }
   if (!isShopPath(pathname)) return withLegacyCookieCleanup(withPageCsp(NextResponse.next()), req);
   const lower = lowerCaseTarget(pathname);
   if (lower) {
@@ -183,6 +238,18 @@ export async function proxy(req: NextRequest) {
     return withLegacyCookieCleanup(await withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.rewrite(url, { request: { headers: h }, status }), req)), ab), req), req);
   }
   return withLegacyCookieCleanup(await withAttribution(withAb(withPageCsp(withCacheHeaders(NextResponse.next({ request: { headers: h }, status }), req)), ab), req), req);
+}
+
+/** CN-053: the customer sign-in page expires a customer cookie that no longer belongs to a session (only that cookie). */
+export async function proxy(req: NextRequest) {
+  const res = await proxyAnswer(req);
+  const { pathname } = req.nextUrl;
+  if (req.method === 'GET' && (pathname === ROUTES.login || pathname === `/bn${ROUTES.login}`) && req.cookies.has(CUSTOMER_COOKIE_NAME)) {
+    const { staleCustomerCookieLine } = await import('./lib/shop/stale-cookie');
+    const line = await staleCustomerCookieLine(req.cookies.get(CUSTOMER_COOKIE_NAME)?.value ?? null);
+    if (line) res.headers.append('set-cookie', line);
+  }
+  return res;
 }
 
 export const config = {

@@ -2,7 +2,7 @@
 //   1. the sign-in page opens (signed out);
 //   2. signing in lands on the admin (a first password is replaced by the account's own one, as the form asks);
 //   3. a page refresh keeps the session;
-//   4. opening /admin/login while signed in goes to the admin, never to a second sign-in;
+//   4. opening /access while signed in goes to the admin, never to a second sign-in;
 //   5. "Log out" ends the session and shows the sign-in page;
 //   6. a protected page then goes back to the sign-in page, and the session cookie from before the log-out no longer
 //      opens the admin either (the server ended the session, not only the browser's cookie).
@@ -22,7 +22,7 @@ import { pageProblems, requestCounts } from "./smoke.mjs";
 
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const LOGIN = "/admin/login";
+const LOGIN = "/access";
 
 /** True for the sign-in page (with or without a "come back here" query). */
 export function onLogin(url) {

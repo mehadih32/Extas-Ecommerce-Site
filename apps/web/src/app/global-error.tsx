@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import bn from '../../messages/recover.bn.json';
 import en from '../../messages/recover.en.json';
 import { FreshStartButton, freshStart } from '@/components/FreshStart';
+import { clearAdminPrefs } from '@/lib/admin-prefs-client';
 import { AUTO_KEY, mayAutoRecover } from '@/lib/fresh-start';
 import { reportErrorScreen } from '@/lib/problems/probe';
 import { t } from '@/lib/i18n';
@@ -54,7 +55,20 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           ))}
           {trying ? null : (
             <div className="ge-actions">
-              <FreshStartButton dict={bn} className="ge-btn pri" />
+              {/* CN-053: "Reload" clears this browser's saved admin choices first, then loads the page again */}
+              <button
+                type="button"
+                className="ge-btn pri"
+                lang="bn"
+                data-testid="ge-reload"
+                onClick={() => {
+                  clearAdminPrefs();
+                  window.location.reload();
+                }}
+              >
+                {t(bn, 'reload')}
+              </button>
+              <FreshStartButton dict={bn} className="ge-btn" />
               <button type="button" className="ge-btn" onClick={() => reset()} lang="bn">
                 {t(bn, 'retry')}
               </button>

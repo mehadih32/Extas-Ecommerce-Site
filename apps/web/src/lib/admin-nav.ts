@@ -48,12 +48,18 @@ export const ADMIN_PAGES: readonly AdminPage[] = [
 
 /** PR 12: the admin's front door is the Dashboard (DSH-01), which sends a role to its start page (`admin.startPages`). */
 export const ADMIN_HOME = '/admin';
-export const ADMIN_LOGIN = '/admin/login';
+/**
+ * CN-053 (14 Nov 2026): the staff sign-in lives at its own address, not under /admin. This is the address of the
+ * `admin.loginPath` setting's default (a test keeps the two equal); the proxy (src/proxy.ts) serves the real one.
+ */
+export const ADMIN_LOGIN = '/access'; // hardcode-ok: the address of the setting's own default (admin.loginPath), kept equal by a test
+/** The sign-in page's folder inside the app. Never an address a visitor can open: the proxy answers 404 for it (CN-053). */
+export const ADMIN_LOGIN_PAGE = '/admin/login';
 /** The EN | বাং switch's choice (not a secret; read by the server to pick the messages file). */
 export const ADMIN_LANG_COOKIE = 'admin_lang';
 
 /** Only a path inside the admin may be a "come back here after sign-in" target (no open redirect). */
 export function safeNext(v: string | string[] | undefined | null, fallback: string = ADMIN_HOME): string {
   const s = Array.isArray(v) ? v[0] : v;
-  return s && /^\/admin(\/[a-z0-9-]+)*$/.test(s) && !s.startsWith(ADMIN_LOGIN) ? s : fallback;
+  return s && /^\/admin(\/[a-z0-9-]+)*$/.test(s) && !s.startsWith(ADMIN_LOGIN_PAGE) ? s : fallback;
 }

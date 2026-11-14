@@ -3,6 +3,8 @@
   "body": "Something this browser saved earlier got in the way. We tried once to clear it by itself.",
   "fresh": "Start fresh",
   "freshNote": "Clears only this site's saved data in this browser (nothing else in your browser). You sign in again after it.",
+  "reload": "Reload",
+  "updating": "Updating…",
   "retry": "Try again",
   "detail": "For the team",
   "pageTitle": "Start fresh",

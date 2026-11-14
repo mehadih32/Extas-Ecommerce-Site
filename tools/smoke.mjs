@@ -35,6 +35,8 @@ const PREVIEW_COOKIE = "extas_preview"; // set by the preview gate (infra/stack/
  * this header on every request, so the shop's speed endpoint counts their page loads apart and never in the real
  * visitors' figures (apps/web/src/lib/seo/vitals-data.ts CHECK_HEADER). It changes nothing else on any page.
  */
+/** CN-053: the staff sign-in address (the `admin.loginPath` setting; "/access" unless the owner chose another). */
+export const LOGIN_PATH = process.env.ADMIN_LOGIN_PATH || "/access";
 export const CHECK_HEADERS = Object.freeze({ "x-extas-check": "1" });
 
 /** A browser context of one of the shop's own test browsers: `browser.newContext` with the check header. */
@@ -334,7 +336,7 @@ async function emailHintProblems(page) {
 
 /** Signs in through the form; returns the sign-in page's own problems (the e-mail hint). */
 export async function signIn(page, base, creds) {
-  await page.goto(`${base}/admin/login`);
+  await page.goto(`${base}${LOGIN_PATH}`);
   const problems = await emailHintProblems(page);
   await page.fill("#ad-email", creds.email);
   await page.fill("#ad-password", creds.password);
@@ -346,7 +348,7 @@ export async function signIn(page, base, creds) {
         .waitForSelector("#ad-pw1", { timeout: 20_000 })
         .then(() => "password"),
       page
-        .waitForURL((u) => !u.pathname.startsWith("/admin/login"), {
+        .waitForURL((u) => !u.pathname.startsWith(LOGIN_PATH), {
           timeout: 20_000,
         })
         .then(() => "in"),
@@ -379,7 +381,7 @@ export async function signIn(page, base, creds) {
       throw new Error(`still on the sign-in page after signing in: ${text}`);
     }
   }
-  await page.waitForURL((u) => !u.pathname.startsWith("/admin/login"), {
+  await page.waitForURL((u) => !u.pathname.startsWith(LOGIN_PATH), {
     timeout: 20_000,
   });
   return problems;
@@ -443,7 +445,7 @@ async function visit(page, base, ignore, path, screen, dirs, before) {
   });
   logVisit(path, screen, Date.now() - started, [...open].map((r) => r.url().replace(base, "")));
   problems.push(...watch.map((w) => `${path}: ${w}`));
-  if (path.startsWith("/admin") && landed.startsWith("/admin/login"))
+  if (path.startsWith("/admin") && landed.startsWith(LOGIN_PATH))
     problems.push(`${path}: sent back to the sign-in page`);
   const dir = dirs ? shotDir(path, dirs.out, dirs.privateOut) : null;
   const shot = dir ? slug(path, screen) : null;
@@ -587,13 +589,14 @@ export async function runSmoke(opts) {
         for (const path of discovered(hrefs, d.take))
           rows.push(await withPair(await visit(gp, opts.base, ignore, path, vp.name, opts)));
       }
-      // Signed out, an admin page sends you to the sign-in page (never an error). CN-045: checked on two different
+      // Signed out, an admin page answers 404 (CN-053; it used to send you to the sign-in page). CN-045: checked on two different
       // admin pages, not just one, since the bug that rolled back 06ffb720de42 was never this redirect itself.
-      for (const adminPath of ["/admin/products", "/admin/orders"]) {
+      for (const adminPath of ["/admin/products", "/admin/orders", "/admin/login"]) {
         const out = await visit(gp, opts.base, ignore, adminPath, vp.name, null);
-        if (!out.landed.startsWith("/admin/login"))
+        // CN-053: signed out, an admin page is a plain 404 (no redirect, no hint), and /admin/login does not exist
+        if (out.status !== 404 || out.landed !== adminPath)
           problems.push(
-            `signed out, ${adminPath} did not go to the sign-in page (${out.landed})`,
+            `signed out, ${adminPath} did not answer a plain 404 (${out.status}, ${out.landed})`,
           );
         problems.push(
           ...out.problems
