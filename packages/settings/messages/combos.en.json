@@ -96,6 +96,10 @@
         "label": "Best combos listed in the report",
         "help": "How many best-selling combos and colour pairs the report lists."
       }
+    },
+    "setsTab": {
+      "label": "Sets tab: what counts as a set, and low stock",
+      "help": "Products › Sets lists the combo kinds ticked here (top + bottom, fixed set and mixed set as shipped). A set whose stock, set by its weakest piece, is at or below the low number is marked Low; 0 turns the mark off. A display choice only: prices and the combos themselves stay on Combos & sets."
     }
   }
 }
