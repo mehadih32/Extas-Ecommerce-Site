@@ -62,7 +62,7 @@ describe('links in a customer message', () => {
   });
 
   it('a trusted site is safe; shortener, look-alike, odd ending, installer, number address, punycode, login trick are risky', () => {
-    expect(checkLink('https://www.extas.com.bd/p/polo', links)).toMatchObject({ risky: false, reasons: [], host: 'www.extas.com.bd' });
+    expect(checkLink('https://www.extas.com.bd/p/polo', links)).toMatchObject({ risky: false, reasons: [], host: 'extas.com.bd' });
     expect(checkLink('https://www.daraz.com.bd/x', links)).toMatchObject({ risky: false });
     expect(checkLink('bit.ly/3xYz', links)).toMatchObject({ risky: true, reasons: ['shortener'], url: 'https://bit.ly/3xYz' });
     expect(checkLink('extas-offer.top/win', links).reasons).toEqual(['lookalike', 'ending']);
