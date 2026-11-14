@@ -84,7 +84,7 @@ export const sortRankOf = (rank: number, count: number): number => Math.max(1, c
 // ---- reading the facts --------------------------------------------------------------------------------------------
 
 /** Orders that count as a sale of a piece for the ranking: placed and not cancelled, returned or still a draft. */
-const SOLD_STATUS = ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED'] as const;
+export const SOLD_STATUS = ['PLACED', 'AWAITING_ADVANCE', 'CONFIRMED', 'ON_HOLD', 'PROCESSING', 'PACKED', 'HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED'] as const;
 
 /** The live products of a store with the facts the score reads. */
 export async function loadRankInputs(deps: CatalogueDeps, storeId: number): Promise<{ inputs: RankInput[]; names: Map<string, { name: string; categoryId: string | null; sold30: number }> }> {

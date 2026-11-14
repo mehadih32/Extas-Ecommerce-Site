@@ -11,6 +11,7 @@ import type { AdminProductRow, BulkResult } from '@extas/catalogue';
 import type { ImageSource } from '@extas/media/delivery';
 import { ResponsiveImage, altFor } from '@/components/media/ResponsiveImage';
 import { t, type Dict } from '@/lib/i18n';
+import type { ProductExtras } from '@/lib/admin-products';
 import { call } from '../api';
 import { Icon } from '../Icon';
 import { formatMoney, formatNumber, nameIn, refusalText, type Lang, type Money } from './model';
@@ -29,6 +30,10 @@ interface Props {
   canWrite: boolean;
   canPublish: boolean;
   emptyText: string;
+  /** PR 722 (prototype v5 parity): the table's extra columns, whether buying prices may be shown, and the owner's margin floor. */
+  extras: Record<string, ProductExtras>;
+  showsBuying: boolean;
+  floorMarginPct: number | null;
 }
 
 const CONFIRM: Partial<Record<Action, string>> = { archive: 'products.bulk.confirmArchive', unpublish: 'products.bulk.confirmUnpublish' };
@@ -47,7 +52,7 @@ export function statusKey(r: { status: string; archived: boolean }) {
   return r.archived ? 'ARCHIVED' : r.status;
 }
 
-export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulkMax, canWrite, canPublish, emptyText }: Props) {
+export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulkMax, canWrite, canPublish, emptyText, extras, showsBuying, floorMarginPct }: Props) {
   const router = useRouter();
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -126,84 +131,122 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
         </div>
       ) : null}
 
-      <div className="ad-card pa-listcard">
-        {rows.length ? (
-          <label className="pa-selall">
-            <input type="checkbox" checked={allOn} onChange={() => setPicked(allOn ? [] : rows.map((r) => r.id))} />
-            {t(d, 'products.bulk.selectAll')}
-          </label>
-        ) : (
+      {rows.length ? (
+        <div className="a2-tblw pa-tblw" data-testid="products-table">
+          <table className="a2-tbl pa-tbl">
+            <thead>
+              <tr>
+                <th className="w0">
+                  <label className="pa-chkw">
+                    <input type="checkbox" checked={allOn} onChange={() => setPicked(allOn ? [] : rows.map((r) => r.id))} aria-label={t(d, 'products.bulk.selectAll')} />
+                  </label>
+                </th>
+                <th>{t(d, 'products.cols.product')}</th>
+                <th>{t(d, 'products.cols.category')}</th>
+                <th>{t(d, 'products.cols.colours')}</th>
+                <th className="r">{t(d, 'products.cols.price')}</th>
+                {showsBuying ? <th className="r">{t(d, 'products.cols.buying')}</th> : null}
+                {showsBuying ? <th className="r">{t(d, 'products.cols.margin')}</th> : null}
+                <th className="r">{t(d, 'products.cols.stock')}</th>
+                <th className="r">{t(d, 'products.cols.sold30')}</th>
+                <th>{t(d, 'products.cols.status')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const name = nameIn(lang, r);
+                const x = extras[r.id];
+                const img = r.thumbAssetId ? photos[r.thumbAssetId] : undefined;
+                const leaf = (lang === 'bn' && r.categoryPathBn.length ? r.categoryPathBn : r.categoryPathEn).slice(-1)[0] ?? '';
+                const issues = r.issues ?? [];
+                const shown = issues.slice(0, issuesShown);
+                const on = live.includes(r.id);
+                const st = statusKey(r);
+                const mg = x?.marginPct ?? null;
+                const mgTone = mg === null ? '' : floorMarginPct !== null ? (mg < floorMarginPct ? 'warn' : 'ok') : mg > 0 ? 'ok' : 'bad';
+                return (
+                  <tr key={r.id} className={on ? 'sel' : undefined} data-testid="product-row">
+                    <td className="w0 a2-tdc">
+                      <label className="pa-chkw">
+                        <input type="checkbox" checked={on} onChange={() => toggle(r.id)} aria-label={t(d, 'products.row.select', { name })} />
+                      </label>
+                    </td>
+                    <td className="a2-tdh">
+                      <div className="pa-pc">
+                        <Link className="pa-th" href={`/admin/products/${r.id}`} tabIndex={-1} aria-hidden="true">
+                          {img ? <ResponsiveImage image={img} slot="thumb" sizes="40px" alt={altFor(img, lang, name)} /> : <span className="pa-th-none"><Icon name="camera" size={18} /></span>}
+                        </Link>
+                        <div className="pa-main">
+                          <Link className="pa-nm" href={`/admin/products/${r.id}`}>
+                            {name}
+                          </Link>
+                          {x?.styleCode ? <div className="ad-mini pa-code">{x.styleCode}</div> : null}
+                          {r.issues === null ? (
+                            <div className="pa-health">
+                              <span className="pa-miss off">{t(d, 'products.row.notChecked')}</span>
+                            </div>
+                          ) : shown.length ? (
+                            <div className="pa-health">
+                              {shown.map((i) => (
+                                <span key={i.key} className={`pa-miss${i.level === 'warn' ? ' soft' : ''}`}>
+                                  {t(d, `checks.${i.key}.short`)}
+                                </span>
+                              ))}
+                              {issues.length - shown.length > 0 ? <span className="pa-miss soft">{t(d, 'checks.more', { n: num(issues.length - shown.length) })}</span> : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
+                    <td data-l={t(d, 'products.cols.category')}>{leaf || t(d, 'products.row.none')}</td>
+                    <td data-l={t(d, 'products.cols.colours')}>
+                      {r.colours.length ? (
+                        <span className="pa-dots" title={r.colours.map((c) => (lang === 'bn' && c.nameBn ? c.nameBn : c.nameEn)).join(', ')}>
+                          {r.colours.slice(0, 5).map((c, i) => (
+                            <i key={i} style={{ background: c.hex }} />
+                          ))}
+                          <span className="pa-sr">{t(d, r.colours.length === 1 ? 'products.row.colour1' : 'products.row.colours', { n: num(r.colours.length) })}</span>
+                        </span>
+                      ) : (
+                        <span className="a2-faint">{t(d, 'products.row.none')}</span>
+                      )}
+                    </td>
+                    <td className="r" data-l={t(d, 'products.cols.price')}>
+                      <b>{r.fromPriceMinor != null ? formatMoney(r.fromPriceMinor, money) : t(d, 'products.row.noPrice')}</b>
+                      {x?.compareAtMinor ? <s className="ad-mini pa-was">{formatMoney(x.compareAtMinor, money)}</s> : null}
+                    </td>
+                    {showsBuying ? (
+                      <td className="r" data-l={t(d, 'products.cols.buying')}>
+                        {x?.buyingMinor != null ? formatMoney(x.buyingMinor, money) : <span className="a2-faint">{t(d, 'products.row.none')}</span>}
+                      </td>
+                    ) : null}
+                    {showsBuying ? (
+                      <td className="r" data-l={t(d, 'products.cols.margin')}>
+                        {mg !== null ? <span className={`a2-pill ${mgTone}`}>{`${num(Math.round(mg))}%`}</span> : <span className="a2-faint">{t(d, 'products.row.none')}</span>}
+                      </td>
+                    ) : null}
+                    <td className="r" data-l={t(d, 'products.cols.stock')}>
+                      <b>{num(r.stockPieces)}</b>
+                      {x && x.lowSizes > 0 ? <span className="ad-mini pa-low">{t(d, 'products.row.lowSizes', { n: num(x.lowSizes) })}</span> : null}
+                    </td>
+                    <td className="r" data-l={t(d, 'products.cols.sold30')}>
+                      {num(x?.sold30 ?? 0)}
+                    </td>
+                    <td data-l={t(d, 'products.cols.status')}>
+                      <span className={`pa-status s-${st}`}>{t(d, `products.status.${st}`)}</span>
+                      <span className="ad-mini">{t(d, 'products.row.score', { n: num(r.healthScore) })}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="ad-card pa-listcard">
           <p className="pa-empty">{emptyText}</p>
-        )}
-        {rows.map((r) => {
-          const name = nameIn(lang, r);
-          const img = r.thumbAssetId ? photos[r.thumbAssetId] : undefined;
-          const path = (lang === 'bn' && r.categoryPathBn.length ? r.categoryPathBn : r.categoryPathEn).join(t(d, 'products.row.pathSep'));
-          const issues = r.issues ?? [];
-          const shown = issues.slice(0, issuesShown);
-          const on = live.includes(r.id);
-          const st = statusKey(r);
-          return (
-            <div key={r.id} className={`pa-row${on ? ' on' : ''}`}>
-              <Link className="pa-th" href={`/admin/products/${r.id}`} tabIndex={-1} aria-hidden="true">
-                {img ? <ResponsiveImage image={img} slot="thumb" sizes="56px" alt={altFor(img, lang, name)} /> : <span className="pa-th-none"><Icon name="camera" size={20} /></span>}
-              </Link>
-              <div className="pa-main">
-                <Link className="pa-nm" href={`/admin/products/${r.id}`}>
-                  {name}
-                </Link>
-                {path ? <div className="ad-mini pa-path">{path}</div> : null}
-                <div className="pa-meta">
-                  {r.colours.length ? (
-                    <span className="pa-dots" aria-hidden="true">
-                      {r.colours.slice(0, 4).map((c, i) => (
-                        <i key={i} style={{ background: c.hex }} />
-                      ))}
-                    </span>
-                  ) : null}
-                  <span>
-                    {r.variants
-                      ? [t(d, r.colours.length === 1 ? 'products.row.colour1' : 'products.row.colours', { n: num(r.colours.length) }), sizesText(r.sizes)].filter(Boolean).join(t(d, 'products.row.metaSep'))
-                      : t(d, 'products.row.noVariants')}
-                  </span>
-                </div>
-                {r.issues === null ? (
-                  <div className="pa-health">
-                    <span className="pa-miss off">{t(d, 'products.row.notChecked')}</span>
-                  </div>
-                ) : shown.length ? (
-                  <div className="pa-health">
-                    {shown.map((i) => (
-                      <span key={i.key} className={`pa-miss${i.level === 'warn' ? ' soft' : ''}`}>
-                        {t(d, `checks.${i.key}.short`)}
-                      </span>
-                    ))}
-                    {issues.length - shown.length > 0 ? <span className="pa-miss soft">{t(d, 'checks.more', { n: num(issues.length - shown.length) })}</span> : null}
-                  </div>
-                ) : null}
-              </div>
-              <div className="pa-num">
-                <b>{r.fromPriceMinor != null ? formatMoney(r.fromPriceMinor, money) : t(d, 'products.row.noPrice')}</b>
-                <span className="ad-mini">{t(d, 'products.row.stock', { n: num(r.stockPieces) })}</span>
-              </div>
-              <div className="pa-st">
-                <span className={`pa-status s-${st}`}>{t(d, `products.status.${st}`)}</span>
-                <span className="ad-mini">{t(d, 'products.row.score', { n: num(r.healthScore) })}</span>
-              </div>
-              <div className="pa-act">
-                <Link className="ad-btn ad-btn-ghost ad-btn-sm pa-edit" href={`/admin/products/${r.id}`}>
-                  <Icon name="edit" size={16} />
-                  {t(d, 'products.row.edit')}
-                </Link>
-                <label className={`ad-btn ad-btn-ghost ad-btn-sm pa-pick${on ? ' on' : ''}`}>
-                  <input type="checkbox" checked={on} onChange={() => toggle(r.id)} aria-label={t(d, 'products.row.select', { name })} />
-                  {t(d, 'products.row.selectShort')}
-                </label>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+        </div>
+      )}
 
       {live.length ? (
         <div className="pa-bulk" role="region" aria-label={t(d, 'products.bulk.label')}>

@@ -45,7 +45,7 @@ async function ProductsB(p: ProductsDesignProps) {
   const canPublish = c.can('catalogue.publish');
   return (
     <div className="a2-z" data-testid="products-list" data-design="B" data-lm-ready="">
-      <ProductsHeader view={view} canWrite={canWrite} menu={menu} />
+      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} />
       <Hero p={p} ready={data.list.counts.ready} needPhotos={data.list.counts.needPhotos} />
       <ProductListBody view={view} query={query} data={data} canWrite={canWrite} canPublish={canPublish} />
     </div>

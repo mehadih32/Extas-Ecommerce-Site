@@ -3,7 +3,7 @@
 // PR 657 (CN-025, follow-up 382): `loadProductList` and `productsHref` are the one loader and one link builder design
 // A (the page's own route), B and C all share, so every design reads the same figures and writes nothing (CN-044).
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { adminProductList, type AdminStatusFilter } from '@extas/catalogue';
+import { adminProductList, SOLD_STATUS, stockByVariant, type AdminStatusFilter } from '@extas/catalogue';
 import type { CatalogueDeps, Who } from '@extas/catalogue';
 import { imageSources, type ImageSource } from '@extas/media';
 import type { PermissionKey } from '@extas/auth';
@@ -70,7 +70,40 @@ export interface ProductListData {
   bulkMax: number;
   photos: Record<string, ImageSource>;
   pages: number;
+  /** PR 722 (prototype v5 parity): per product on this page — style code, struck price, ERP buying price, margin, 30-day sales, low sizes. */
+  extras: Record<string, ProductExtras>;
+  /** PR 722: the headline strip's store-wide figures and the one-line insight. */
+  strip: ProductStrip;
+  /** PR 722: may this person see the ERP buying price and margin (`catalogue.prices`)? */
+  showsBuying: boolean;
 }
+
+export interface ProductExtras {
+  styleCode: string | null;
+  compareAtMinor: number | null;
+  /** The ERP buying price ("bought from ERP at"), the average over the product's sizes that have one; null when none or not allowed. */
+  buyingMinor: number | null;
+  /** (price - buying) / price in percent, averaged over the sizes that have both; null when not known or not allowed. */
+  marginPct: number | null;
+  sold30: number;
+  /** Sizes with a few pieces left (1 to `catalogue.admin.lowStockPieces`). */
+  lowSizes: number;
+}
+
+export interface ProductStrip {
+  sold30Pieces: number;
+  avgMarginPct: number | null;
+  /** How many shop products sold nothing in the last 30 days. */
+  notSelling: number;
+  best: { name: string; sold30: number; categoryName: string | null } | null;
+  /** The owner's lowest margin (`catalogue.floor.minMarginPercent`, a mark-up on the buying price) said as a margin on the selling price; null: no floor set. */
+  floorMarginPct: number | null;
+  /** Shop products whose average margin is under that floor (0 when no floor). */
+  belowFloor: number;
+}
+
+const DAY_MS = 86_400_000;
+const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
 /** PR 657: every design's one loader (design A's route, design B and C) — the same figures, never a second read. */
 export async function loadProductList(c: CatalogueAccess, locale: string, query: ProductQuery): Promise<ProductListData> {
@@ -84,7 +117,60 @@ export async function loadProductList(c: CatalogueAccess, locale: string, query:
   ]);
   const photos = await photosOf(c, list.items.map((i) => i.thumbAssetId));
   const pages = Math.max(1, Math.ceil(list.total / list.pageSize));
-  return { list, money, issuesShown, lowPieces, photoMin, bulkMax, photos, pages };
+  const showsBuying = c.can('catalogue.prices');
+  const { extras, strip } = await loadProductExtras(c, list.items.map((i) => i.id), lowPieces, showsBuying);
+  return { list, money, issuesShown, lowPieces, photoMin, bulkMax, photos, pages, extras, strip, showsBuying };
+}
+
+/** PR 722: the extra columns of the product table and the headline strip. Reads only; a failure leaves them empty (the list still draws). */
+export async function loadProductExtras(c: CatalogueAccess, ids: string[], lowPieces: number, showsBuying: boolean): Promise<{ extras: Record<string, ProductExtras>; strip: ProductStrip }> {
+  const empty = { extras: {}, strip: { sold30Pieces: 0, avgMarginPct: null, notSelling: 0, best: null, floorMarginPct: null, belowFloor: 0 } as ProductStrip };
+  try {
+    const db = c.deps.db;
+    const since = new Date(((c.deps.now ?? (() => new Date()))()).getTime() - 30 * DAY_MS);
+    const [pageProducts, sold, shop, floor] = await Promise.all([
+      ids.length
+        ? db.product.findMany({ where: { storeId: c.storeId, id: { in: ids } }, select: { id: true, erpStyleCode: true, variants: { where: { archivedAt: null }, select: { id: true, priceMinor: true, compareAtMinor: true, shopPriceMinor: true } } } })
+        : Promise.resolve([]),
+      db.orderItem.groupBy({ by: ['productId'], where: { storeId: c.storeId, productId: { not: null }, status: 'ACTIVE', order: { status: { in: [...SOLD_STATUS] }, placedAt: { gte: since } } }, _sum: { quantity: true } }),
+      db.product.findMany({ where: { storeId: c.storeId, status: 'PUBLISHED', archivedAt: null }, select: { id: true, nameEn: true, category: { select: { nameEn: true } }, variants: { where: { archivedAt: null }, select: { priceMinor: true, shopPriceMinor: true } } } }),
+      Promise.resolve(c.deps.settings.value('catalogue.floor.minMarginPercent', { storeId: c.storeId })).then((v): number | null => (typeof v === 'number' ? v : null)),
+    ]);
+    const floorMarginPct = showsBuying && floor != null ? Math.round(((floor * 100) / (100 + floor)) * 10) / 10 : null;
+    const soldBy = new Map(sold.map((r) => [r.productId as string, r._sum.quantity ?? 0]));
+    const stock = await stockByVariant(db, c.storeId, pageProducts.flatMap((p) => p.variants.map((v) => v.id)));
+    const marginOf = (vs: { priceMinor: number | null; shopPriceMinor: number | null }[]) => mean(vs.filter((v) => v.priceMinor && v.priceMinor > 0 && v.shopPriceMinor && v.shopPriceMinor > 0).map((v) => ((v.priceMinor! - v.shopPriceMinor!) / v.priceMinor!) * 100));
+    const extras: Record<string, ProductExtras> = {};
+    for (const p of pageProducts) {
+      const priced = p.variants.filter((v) => v.priceMinor && v.priceMinor > 0);
+      const cheapest = priced.sort((a, b) => a.priceMinor! - b.priceMinor!)[0];
+      const buy = mean(p.variants.map((v) => v.shopPriceMinor).filter((x): x is number => !!x && x > 0));
+      const m = marginOf(p.variants);
+      extras[p.id] = {
+        styleCode: p.erpStyleCode,
+        compareAtMinor: cheapest?.compareAtMinor && cheapest.compareAtMinor > (cheapest.priceMinor ?? 0) ? cheapest.compareAtMinor : null,
+        buyingMinor: showsBuying && buy !== null ? Math.round(buy) : null,
+        marginPct: showsBuying && m !== null ? Math.round(m * 10) / 10 : null,
+        sold30: soldBy.get(p.id) ?? 0,
+        lowSizes: p.variants.filter((v) => { const n = stock.get(v.id) ?? 0; return n > 0 && n <= lowPieces; }).length,
+      };
+    }
+    const ranked = shop.map((p) => ({ name: p.nameEn, sold30: soldBy.get(p.id) ?? 0, categoryName: p.category?.nameEn ?? null })).sort((a, b) => b.sold30 - a.sold30);
+    const avg = showsBuying ? mean(shop.map((p) => marginOf(p.variants)).filter((x): x is number => x !== null)) : null;
+    return {
+      extras,
+      strip: {
+        sold30Pieces: sold.reduce((n, r) => n + (r._sum.quantity ?? 0), 0),
+        avgMarginPct: avg === null ? null : Math.round(avg * 10) / 10,
+        notSelling: ranked.filter((r) => r.sold30 === 0).length,
+        best: ranked[0] && ranked[0].sold30 > 0 ? ranked[0] : null,
+        floorMarginPct,
+        belowFloor: floorMarginPct === null ? 0 : shop.filter((p) => { const m = marginOf(p.variants); return m !== null && m < floorMarginPct; }).length,
+      },
+    };
+  } catch {
+    return empty;
+  }
 }
 
 /** PR 657: the list's own link builder, shared by every design (q/status/category kept, page reset unless given). */

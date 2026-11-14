@@ -16,7 +16,10 @@
       "lowStock": "Sizes almost out",
       "lowStockSub": "1–{n} pieces left",
       "needPhotos": "Need photos",
-      "needPhotosSub": "fewer than {n}, or a kind missing"
+      "needPhotosSub": "fewer than {n}, or a kind missing",
+      "margin": "Average margin",
+      "marginSub": "{n} below your {min}% minimum",
+      "marginNoFloor": "on the shop, buying price to selling price"
     },
     "search": {
       "label": "Search products",
@@ -56,7 +59,9 @@
       "score": "Health {n}",
       "edit": "Edit",
       "select": "Select {name}",
-      "selectShort": "Select"
+      "selectShort": "Select",
+      "none": "—",
+      "lowSizes": "{n} sizes low"
     },
     "pager": {
       "label": "Pages",
@@ -640,6 +645,25 @@
           "why": "The checklist shows what is still missing. When it is all green, publish. Nothing goes on the shop before that."
         }
       }
+    },
+    "cols": {
+      "product": "Product",
+      "category": "Category",
+      "colours": "Colours",
+      "price": "Price",
+      "buying": "Buying price (ERP)",
+      "margin": "Margin",
+      "stock": "Stock",
+      "sold30": "Sold 30d",
+      "status": "Status"
+    },
+    "actions": {
+      "export": "Export",
+      "quickImport": "Quick import"
+    },
+    "insight": {
+      "best": "{name} is your best seller ({n} pieces in 30 days). {sold} pieces sold on the shop in 30 days.",
+      "notSelling": "{n} products on the shop sold nothing in 30 days — push them down in Shop ranking or put them in a combo."
     }
   },
   "checks": {
