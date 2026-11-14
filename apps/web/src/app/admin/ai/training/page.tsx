@@ -2,20 +2,23 @@
 // owner's own words: instructions for every agent or for one, topics no agent may bring up, and the version history with "Restore
 // this version" (a restore saves the old set again as a NEW version; nothing is deleted). Seeing needs `ai.read`; teaching and
 // restoring `ai.control`. The text is kept as rows of AiTrainingExample (S15 · PR 323), nothing is overwritten or deleted. AI stays off until `ai.enabled`: the page says so, and nothing here ever reaches a buyer. Not built from the
-// prototype's Training tab (no sandbox, example corrections, documents or "describe a problem" box yet): the agents' own memory,
-// skills sandbox and Gyani's investigations hold those. Words: messages/admin-training.*.json (`aiTraining.*`).
+// prototype's Training tab beyond the instructions: "Try it" (a sandbox that never calls a model while AI is off, with "Use as a training
+// example"), reference documents (versioned, never deleted) and a "Describe a problem" box (a note, no model call), all rows of
+// AiTrainingExample (lib/admin-ai/training-extras.ts). Words: messages/admin-training.*.json (`aiTraining.*`).
 // lib/admin-ai/training-instructions.ts. Guide: docs/admin-guide/pages/ai/training.md.
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { TRAINING_ALL, TRAINING_FORBIDDEN_TEXT_MAX, TRAINING_TEXT_MAX } from '@extas/settings';
+import { TRAINING_ALL, TRAINING_ANSWER_MAX, TRAINING_DOC_TEXT_MAX, TRAINING_DOC_TITLE_MAX, TRAINING_FORBIDDEN_TEXT_MAX, TRAINING_NOTE_MAX, TRAINING_SAMPLE_MAX, TRAINING_TEXT_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ForbiddenAddForm, ForbiddenRemoveButton, RestoreButton, TrainingAddForm, TrainingRemoveButton } from '@/components/admin/ai/TrainingControls';
+import { DocAddForm, DocRow, NoteForm, TryItBox } from '@/components/admin/ai/TrainingExtras';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
 import { AI_AGENTS, aiAgentDef, isAiAgentKey } from '@/lib/admin-ai/agents';
+import { extrasState } from '@/lib/admin-ai/training-extras';
 import { instructionsScreen } from '@/lib/admin-ai/training-instructions-api';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -56,7 +59,7 @@ export default async function AiTrainingPage() {
     );
   const c = (k: string, vars?: Record<string, string | number>) => t(view.dict, `aiTraining.${k}`, vars);
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
-  const [screen, aiOn] = await Promise.all([instructionsScreen(access.deps), access.deps.resolver.value('ai.enabled')]);
+  const [screen, aiOn, extras] = await Promise.all([instructionsScreen(access.deps), access.deps.resolver.value('ai.enabled'), extrasState(access.deps.db)]);
   const { state, versions, card } = screen;
   const at = (x: Date) => dateTime(x.toISOString(), view.locale, view.timeZone);
   const agentName = (key: string) => {
@@ -158,6 +161,77 @@ export default async function AiTrainingPage() {
           {canControl ? <ForbiddenAddForm base={state.version} texts={{ text: c('forbidden.text'), placeholder: c('forbidden.placeholder'), add: c('forbidden.add'), done: c('forbidden.added'), failed: c('forbidden.failed'), max: TRAINING_FORBIDDEN_TEXT_MAX }} /> : null}
         </section>
       </div>
+
+      <div className="tr-grid">
+        <section className="a2-card tr-card" data-testid="training-sandbox" aria-labelledby="tr-try-h">
+          <h2 className="a2-h3" id="tr-try-h">
+            {c('try.h')}
+          </h2>
+          <p className="a2-sm a2-mute">{c('try.d')}</p>
+          {canControl ? (
+            <TryItBox
+              agents={scopes.filter((x) => x.key !== TRAINING_ALL)}
+              texts={{ agent: c('try.agent'), sample: c('try.sample'), samplePh: c('try.samplePh'), go: c('try.go'), busy: c('try.busy'), off: c('try.off'), unavailable: c('try.unavailable'), answer: c('try.answer'), better: c('try.better'), betterPh: c('try.betterPh'), use: c('try.use'), saved: c('try.saved'), failed: c('try.failed'), nothing: c('try.nothing'), sampleMax: TRAINING_SAMPLE_MAX, answerMax: TRAINING_ANSWER_MAX, locale: view.lang === 'bn' ? 'bn' : 'en' }}
+            />
+          ) : null}
+          <h3 className="a2-sm a2-mt12">
+            <b>{c('try.examples')}</b>
+          </h3>
+          {extras.examples.length ? (
+            extras.examples.map((e) => (
+              <div className="tr-note-row" key={e.id} data-testid="training-example">
+                <span className="a2-xs a2-mute a2-blk">{`${agentName(e.agentKey)} · ${at(e.at)}`}</span>
+                <span className="a2-sm a2-blk">{c('try.exSample', { text: e.input })}</span>
+                <span className="a2-sm a2-blk">{c('try.exBetter', { text: e.expected })}</span>
+              </div>
+            ))
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{c('try.noExamples')}</p>
+          )}
+        </section>
+
+        <section className="a2-card tr-card" data-testid="training-problems" aria-labelledby="tr-note-h">
+          <h2 className="a2-h3" id="tr-note-h">
+            {c('note.h')}
+          </h2>
+          <p className="a2-sm a2-mute">{c('note.d')}</p>
+          {canControl ? <NoteForm scopes={scopes} texts={{ agent: c('note.agent'), text: c('note.text'), placeholder: c('note.placeholder'), add: c('note.add'), done: c('note.added'), failed: c('note.failed'), max: TRAINING_NOTE_MAX }} /> : null}
+          {extras.notes.length ? (
+            extras.notes.map((n) => (
+              <div className="tr-note-row" key={n.id} data-testid="training-note">
+                <span className="a2-xs a2-mute a2-blk">{`${agentName(n.agentKey)} · ${at(n.at)}`}</span>
+                <span className="a2-sm tr-pre">{n.text}</span>
+              </div>
+            ))
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{c('note.none')}</p>
+          )}
+        </section>
+      </div>
+
+      <section className="a2-card a2-mt12" data-testid="training-docs" aria-labelledby="tr-doc-h">
+        <h2 className="a2-h3" id="tr-doc-h">
+          {c('doc.h')}
+        </h2>
+        <p className="a2-sm a2-mute">{c('doc.d')}</p>
+        {extras.docs.length ? (
+          extras.docs.map((d) =>
+            canControl ? (
+              <DocRow key={d.id} id={d.id} title={d.title} text={d.text} meta={`${agentName(d.agentKey)} · ${c('doc.v', { n: d.version })} · ${at(d.at)}`} texts={{ edit: c('doc.edit'), save: c('doc.save'), cancel: c('doc.cancel'), remove: c('doc.remove'), label: c('doc.editLabel'), done: c('doc.saved'), removed: c('doc.removed'), failed: c('doc.failed'), textMax: TRAINING_DOC_TEXT_MAX }} />
+            ) : (
+              <div className="tr-note-row" key={d.id} data-testid="training-doc">
+                <b>{d.title}</b> <span className="a2-xs a2-mute">{`${agentName(d.agentKey)} · ${c('doc.v', { n: d.version })}`}</span>
+                <span className="a2-sm a2-blk tr-pre">{d.text}</span>
+              </div>
+            ),
+          )
+        ) : (
+          <p className="a2-sm a2-mute a2-mt6">{c('doc.none')}</p>
+        )}
+        {canControl ? (
+          <DocAddForm scopes={scopes} texts={{ agent: c('doc.agent'), title: c('doc.title'), titlePh: c('doc.titlePh'), text: c('doc.text'), textPh: c('doc.textPh'), add: c('doc.add'), done: c('doc.added'), failed: c('doc.failed'), titleMax: TRAINING_DOC_TITLE_MAX, textMax: TRAINING_DOC_TEXT_MAX }} />
+        ) : null}
+      </section>
 
       <section className="a2-card a2-mt12" data-testid="training-versions" aria-labelledby="tr-ver-h">
         <h2 className="a2-h3" id="tr-ver-h">

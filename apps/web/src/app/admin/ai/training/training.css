@@ -20,3 +20,10 @@
 .adm2 .tr-ver-h { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
 .adm2 .tr-ver ul { margin: 0; padding-left: 18px; }
 .adm2 .tr-ver li { overflow-wrap: anywhere; }
+.adm2 .tr-answer { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--ln); padding-top: 10px; }
+.adm2 .tr-pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.adm2 .tr-form textarea.a2-inp, .adm2 .tr-doc textarea.a2-inp { font-size: 16px; width: 100%; min-width: 0; }
+.adm2 .tr-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm2 .tr-acts .a2-btn { min-height: 44px; min-width: 44px; }
+.adm2 .tr-doc { align-items: flex-start; }
+.adm2 .tr-note-row { border-top: 1px solid var(--ln); padding: 8px 0; overflow-wrap: anywhere; }

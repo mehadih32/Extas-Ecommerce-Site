@@ -74,6 +74,60 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Try again."
       }
+    },
+    "try": {
+      "h": "Try it",
+      "d": "Type a sample message and see what the agent would answer with the instructions above. Nothing is sent to anyone and nothing is saved until you press the button below the answer.",
+      "agent": "Agent",
+      "sample": "Sample message",
+      "samplePh": "For example: Where is my order?",
+      "go": "Try it",
+      "busy": "Thinking…",
+      "off": "AI is off, so nothing was tried. Turn AI on to test an agent; no model was called.",
+      "unavailable": "The agent could not answer now (paused, no connection ready, or the monthly limit is reached). Nothing was sent.",
+      "answer": "What the agent would answer",
+      "better": "How it should have answered",
+      "betterPh": "Change the answer the way you want it.",
+      "use": "Use as a training example",
+      "saved": "Saved as a training example",
+      "failed": "Could not save. Try again.",
+      "nothing": "Nothing to save.",
+      "examples": "Saved examples",
+      "exSample": "Message: {text}",
+      "exBetter": "Better answer: {text}",
+      "noExamples": "No examples yet."
+    },
+    "note": {
+      "h": "Describe a problem",
+      "d": "Write what an agent got wrong, in your own words. It is saved as a note for you and your team; no AI is called.",
+      "agent": "Agent",
+      "text": "What went wrong",
+      "placeholder": "For example: the support agent promised a refund date.",
+      "add": "Save note",
+      "added": "Note saved",
+      "failed": "Could not save. Try again.",
+      "none": "No notes yet."
+    },
+    "doc": {
+      "h": "Extra documents",
+      "d": "Reference notes the agent may use, such as a size guide or a returns explanation. Editing saves a new version; older versions are kept.",
+      "agent": "For",
+      "title": "Title",
+      "titlePh": "For example: Returns explained",
+      "text": "Text",
+      "textPh": "Paste or type the reference text.",
+      "add": "Add document",
+      "added": "Document saved",
+      "failed": "Could not save. Try again.",
+      "none": "No documents yet.",
+      "v": "Version {n}",
+      "edit": "Edit",
+      "editLabel": "Document text",
+      "save": "Save new version",
+      "cancel": "Cancel",
+      "saved": "Saved as a new version",
+      "remove": "Remove",
+      "removed": "Document removed (kept in history)"
     }
   }
 }
