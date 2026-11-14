@@ -1,6 +1,6 @@
-# Server report — 2026-11-13 19:46 +06
+# Server report — 2026-11-14 18:54 +06
 
-Run by `infra/server/setup.sh` (S0A) from commit `44c1fc7b1c3ba94e9781fb0dd3a1e81569577fba`. Overall: **PASS**.
+Run by `infra/server/setup.sh` (S0A) from commit `c8af4543b3f11398ffdadaa540d0e3e1f9b28d9d`. Overall: **PASS**.
 
 ## Machine
 
@@ -48,24 +48,24 @@ nvme1n1             440G disk ext4        /mnt/nvme                Microsoft NVM
 | kernel tuning | OK | sysctl (backlog, fq+bbr, swappiness 10), THP off, nofile 65536 |
 | PR 3 · Cloudflare-only | INFO | off (setting EXTAS_UFW_CLOUDFLARE_ONLY) |
 | PR 4 · Docker | OK | Docker version 29.9.3, compose 5.7.1; logs rotated; build cache ≤ 40 GB; starts after NVMe + data disk |
-| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (53G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
+| PR 4 · OS disk | OK | / 5% used, 118 GB free (a deploy needs 15); containerd store: on its own volume (56G used of 120G); build cache ≤ 40 GB; journal ≤ 1024 MB; runner logs 7 days |
 | PR 604 · auto profile | OK | 8 vCPU / 64 GB → 6 app replicas, PG 16 GB |
 | PR 620 · client address | INFO | Cloudflare's ranges written for Caddy; checked live after the reload |
-| PR 403 · main domain | INFO | open: extas.com.bd www.extas.com.bd without the preview password and noindex; new.extas.com.bd stays locked |
+| PR 403 · main domain | INFO | open: extas.com.bd www.extas.com.bd without the preview password and noindex |
 | PR 620 · client address | OK | live: CF-Connecting-IP believed from Cloudflare's ranges only (trusted_proxies in Caddy's running configuration) |
 | PR 139 · app database role | OK | extas_app may add to the audit log and the history tables, never change or remove them |
 | PR 5 · PostgreSQL | OK | v17.12 (Debian 17.12-1.pgdg13+1), shared_buffers 16GB, temp on NVMe, WAL archive on, slow log > 100 ms, PgBouncer (transaction pool) |
 | PR 6 · Redis | OK | cache (LRU, NVMe) + queue (no eviction, AOF on data disk) |
-| PR 7 · Caddy | OK | new.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
+| PR 7 · Caddy | OK | extas.com.bd www.extas.com.bd, auto HTTPS, HTTP/3, password + noindex |
 | stack health | INFO | caddy:healthy meilisearch:healthy pgbouncer:healthy postgres:healthy redis-cache:healthy redis-queue:healthy  |
-| PR 8 · backup (data disk) | OK | 36M base + dump; photos: 0 new or changed since the full archive of 20261108-0230; docs of b6553166bde7; 98% of the backup disk free; daily at 02:30, WAL every minute |
+| PR 8 · backup (data disk) | OK | 38M base + dump; photos: 0 new or changed since the full archive of 20261108-0230; docs of 41b253a853bc; 98% of the backup disk free; daily at 02:30, WAL every minute |
 | PR 8 · Azure Blob | INFO | off — not connected — add the key in Keys & connections |
 | PR 8 · Google Drive | INFO | off — not connected — add the key in Keys & connections |
-| PR 8 · restore test | OK | base 20261113-0230, 411 tables restored (live has 411); photos: the archive holds no photo yet; docs: docs-20261113-0230.tar.gz back with README, blueprint and register, COMMIT b6553166bde7 matches |
+| PR 8 · restore test | OK | base 20261114-0230, 432 tables restored (live has 432); photos: the archive holds no photo yet; docs: docs-20261114-0230.tar.gz back with README, blueprint and register, COMMIT 41b253a853bc matches |
 | PR 9 · monitoring | OK | every minute: disks (80%), services, NVMe, backups, speed; Telegram not connected — alerts go to the log until the Telegram bot is added in Keys & connections; problems now: none |
 | PR 392 · vault keys for the server | INFO | every 2 min: ok — unchanged |
 | PR 10 · k6 baseline | INFO | kept from 2026-10-20T02:40:47+06:00: p95 7.21 ms at 15044 req/s |
-| public HTTPS | OK | https://new.extas.com.bd answers (401 — password page) |
+| public HTTPS | OK | https://extas.com.bd answers (200) |
 
 ## OS disk (/) — before this run
 
@@ -76,8 +76,8 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (53G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (166M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (56G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (171M used on it) |
 | `/home/ghrunner/actions-runner` | 2.8 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.4 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
@@ -85,7 +85,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 | `/root` | 0.0 GB |  |
 | `/var/log` | 0.3 GB |  |
 | `/var/log/journal` | 0.1 GB |  |
-| `/var/cache` | 0.2 GB |  |
+| `/var/cache` | 0.1 GB |  |
 | `/var/tmp` | 0.0 GB |  |
 | `/tmp` | 0.0 GB |  |
 
@@ -113,8 +113,8 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 | Folder | On the OS disk | Note |
 |---|---|---|
-| `/var/lib/containerd` | 0.0 GB | own volume here (53G used on it) |
-| `/var/lib/docker` | 0.0 GB | own volume here (166M used on it) |
+| `/var/lib/containerd` | 0.0 GB | own volume here (56G used on it) |
+| `/var/lib/docker` | 0.0 GB | own volume here (171M used on it) |
 | `/home/ghrunner/actions-runner` | 2.8 GB |  |
 | `/home/ghrunner/actions-runner/_work` | 1.4 GB |  |
 | `/home/ghrunner/actions-runner/_diag` | 0.0 GB |  |
