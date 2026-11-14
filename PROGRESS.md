@@ -2,7 +2,7 @@
 
 ## CLOSED — 14 Nov 2026 (owner, CN-051): the project has no open work
 
-**State.** 710 PRs in the register, 701 active, 9 parked; **676 built**. S28 (admin v5) is complete, 52/52 (PR 700–710 merged 13–14 Nov). S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.
+**State.** 718 PRs in the register, 709 active, 9 parked; **684 built**. S28 (admin v5) is complete, 60/60 (PR 700–718 merged 13–14 Nov; 711–718 are the eight prototype tabs). S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.
 
 **Not built, and why.** PR 646 (the AI Center in Lumen): superseded by S15 and the menu section (cosmetic leftover parked). PR 587 (main-domain switch and redirects): the domain is switched and holds, **but on 14 Nov the 45 old WordPress addresses answered 404** on the live site; it stays open until `seo.redirects.wordpressMapLive` is switched on and the 45 addresses answer 301. S17: 23 PRs closed. S26, S27, PR 649–651: parked.
 
