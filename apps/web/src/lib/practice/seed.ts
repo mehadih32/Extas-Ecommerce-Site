@@ -937,11 +937,15 @@ async function seedRichExtras(
   counts.adAccounts = accounts.length;
   counts.adSpendRows = spend.length;
 
+  const colourName = new Map(DEMO_PACK.colours.map((c) => [c.key, c.nameEn]));
+  const sizeLabel = new Map(DEMO_PACK.sizes.map((z) => [z.key, z.label]));
   const reviews: Prisma.ReviewCreateManyInput[] = [];
   const pids = [...plan.meta.keys()];
   for (let k = 0; k < RICH.reviews; k++) {
     const pid = pids[Math.floor(rng.next() * pids.length)]!;
     const m = plan.meta.get(pid)!;
+    const pickSize = rng.pick(m.style.sizes);
+    const pickColour = rng.pick(m.style.colours);
     const at = new Date(now.getTime() - rng.int(1, 175) * DAY);
     const status = k % 10 === 9 ? 'PENDING' : 'APPROVED'; // hardcode-ok: one in ten waits for a person
     reviews.push({
@@ -954,8 +958,8 @@ async function seedRichExtras(
       status,
       source: 'STAFF',
       isVerifiedPurchase: true,
-      sizeLabel: rng.pick(m.sizes),
-      colourName: rng.pick(m.colours),
+      sizeLabel: sizeLabel.get(pickSize) ?? pickSize,
+      colourName: colourName.get(pickColour) ?? pickColour,
       publishedAt: status === 'APPROVED' ? at : null,
       moderatedAt: status === 'APPROVED' ? at : null,
       createdAt: at,
