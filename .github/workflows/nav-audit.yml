@@ -1,0 +1,86 @@
+# PR 727 — the admin menu audit (tools/nav-audit.mjs): builds the app, seeds the sample data, signs in as a throwaway owner,
+# opens every page of every section at laptop and phone width, records the section tab bars and compares the pages of one
+# section, then clicks through each section. Keeps the JSON, the markdown table and screenshots as an artifact. Sample data
+# only, nothing is deployed or changed.
+name: nav-audit
+on:
+  workflow_dispatch:
+  # a workflow file that is not on main cannot be dispatched, so a push of this branch that touches it also runs it
+  push:
+    branches: [claude/nav-fix]
+    paths: [.github/workflows/nav-audit.yml, tools/nav-audit.mjs, tools/nav-audit-routes.json]
+permissions:
+  contents: read
+env:
+  PLAYWRIGHT_VERSION: 1.63.0
+  NODE_OPTIONS: --max-old-space-size=4096
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Next.js build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/messages/**', 'apps/web/public/**', 'apps/web/*.ts', 'apps/web/*.mjs', 'packages/*/src/**', 'packages/*/messages/**') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - name: Production image builds
+        run: docker build --progress=plain -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
+      - name: Pack the build
+        run: |
+          out="$RUNNER_TEMP/pack"
+          mkdir -p "$out/standalone"
+          cid="$(docker create extas-web:ci)"
+          docker cp "$cid:/app/." - | tar -x -C "$out/standalone"
+          docker rm "$cid" > /dev/null
+          cp -r "$out/standalone/apps/web/.next/static" "$out/static"
+          tar -czf "$RUNNER_TEMP/web-standalone.tgz" -C "$out" standalone static
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-standalone
+          path: ${{ runner.temp }}/web-standalone.tgz
+          compression-level: 0
+          retention-days: 1
+  shots:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+    env:
+      DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+      DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/seeded-app
+        with:
+          gate-owner-password-file: ${{ runner.temp }}/gate-password
+      - uses: ./.github/actions/playwright
+        with:
+          version: ${{ env.PLAYWRIGHT_VERSION }}
+          prefix: ${{ runner.temp }}/qa
+      - name: Audit the menu
+        env:
+          NODE_PATH: ${{ runner.temp }}/qa/node_modules
+        run: |
+          node tools/nav-audit.mjs --base=http://127.0.0.1:3000 --out=nav-audit \
+            --email=gate@example.test --password-file="$RUNNER_TEMP/gate-password"
+      - name: Server log
+        if: failure()
+        run: tail -n 200 /tmp/web-server.log || true
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: nav-audit
+          path: nav-audit
+          retention-days: 7
