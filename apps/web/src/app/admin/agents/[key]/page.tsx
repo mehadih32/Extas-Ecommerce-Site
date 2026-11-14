@@ -12,6 +12,9 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AgentAssignmentForm } from '@/components/admin/agents/AgentAssignmentForm';
+import { AgentMemoryItem } from '@/components/admin/agents/AgentMemoryItem';
+import { AgentMemoryNoteForm } from '@/components/admin/agents/AgentMemoryNoteForm';
+import { AgentMemorySwitch } from '@/components/admin/agents/AgentMemorySwitch';
 import { AgentProfileEditor } from '@/components/admin/agents/AgentProfileEditor';
 import { AgentRewardForm } from '@/components/admin/agents/AgentRewardForm';
 import { CompleteAssignmentButton } from '@/components/admin/agents/CompleteAssignmentButton';
@@ -20,6 +23,7 @@ import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { agentCurriculumView } from '@/lib/admin-ai/agent-curriculum';
+import { listAgentMemories, memoryEnabled, MEMORY_KINDS, weeklyAgentMemoryDigest, type MemoryKind } from '@/lib/admin-ai/agent-memory';
 import { agentProfileView, type AgentProfileAssignment } from '@/lib/admin-ai/agent-profile';
 import { isAiError } from '@/lib/admin-ai/errors';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -90,6 +94,20 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ k
   }
 
   const curriculum = await agentCurriculumView({ db: access.deps.db }, key);
+  const memDeps = { db: access.deps.db, resolver: access.deps.resolver };
+  const [memoryOn, memories, memoryDigest] = await Promise.all([
+    memoryEnabled(memDeps, MOTHER_STORE_ID),
+    listAgentMemories(memDeps, key, { includeArchived: true }),
+    weeklyAgentMemoryDigest(memDeps, key),
+  ]);
+  const memoryKindLabels: Record<MemoryKind, string> = {
+    fact: c('memory.kind.fact'),
+    decision: c('memory.kind.decision'),
+    instruction: c('memory.kind.instruction'),
+    campaign: c('memory.kind.campaign'),
+    task: c('memory.kind.task'),
+    lesson: c('memory.kind.lesson'),
+  };
   const statusLabels: Record<CurriculumStatusId, string> = {
     notStarted: c('curriculum.status.notStarted'),
     inProgress: c('curriculum.status.inProgress'),
@@ -232,6 +250,54 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ k
                 {curriculum.exam ? ` · ${c('curriculum.exam')}: ${curriculum.exam}` : ''}
                 {curriculum.levelEarnedNote ? ` · ${c('curriculum.levelEarnedNote')}: ${curriculum.levelEarnedNote}` : ''}
               </div>
+            ) : null}
+          </section>
+
+          <section className="a2-card ag-mt" data-testid="agent-memory">
+            <div className="ag-row">
+              <h2 className="a2-h3">{c('memory.heading')}</h2>
+              {canControl ? <AgentMemorySwitch agentKey={key} on={memoryOn} label={c('memory.switchLabel')} onText={c('memory.toastOn')} offText={c('memory.toastOff')} failedText={c('memory.toastFailed')} /> : null}
+            </div>
+            <p className="a2-xs a2-mute">{memoryOn ? c('memory.onNote') : c('memory.offNote')}</p>
+            {memoryOn ? (
+              <>
+                <p className="a2-xs a2-mute">{c('memory.digest', { since: memoryDigest.sinceDate, n: memoryDigest.totalCount })}</p>
+                {memories.length ? (
+                  memories.map((m) => (
+                    <AgentMemoryItem
+                      key={m.id}
+                      agentKey={key}
+                      memoryId={m.id}
+                      content={m.content}
+                      tags={m.tags}
+                      corrected={m.corrected}
+                      archived={m.archived}
+                      canControl={canControl}
+                      labels={{
+                        corrected: c('memory.correctedTag'),
+                        archived: c('memory.archivedTag'),
+                        edit: c('memory.edit'),
+                        save: c('memory.save'),
+                        cancel: c('memory.cancel'),
+                        archive: c('memory.archive'),
+                        restore: c('memory.restore'),
+                        savedText: c('memory.saved'),
+                        saveFailed: c('memory.saveFailed'),
+                        archiveFailed: c('memory.archiveFailed'),
+                      }}
+                    />
+                  ))
+                ) : (
+                  <p className="a2-sm a2-mute">{c('memory.none')}</p>
+                )}
+                {canControl ? (
+                  <AgentMemoryNoteForm
+                    agentKey={key}
+                    kinds={MEMORY_KINDS.map((k) => ({ id: k, label: memoryKindLabels[k] }))}
+                    labels={{ kind: c('memory.kind.label'), content: c('memory.contentPlaceholder'), tags: c('memory.tagsPlaceholder'), add: c('memory.add'), added: c('memory.added'), failed: c('memory.addFailed') }}
+                  />
+                ) : null}
+              </>
             ) : null}
           </section>
         </div>
