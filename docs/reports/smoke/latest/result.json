@@ -1,18 +1,13 @@
 {
-  "at": "2026-11-14 19:36 (Asia/Dhaka)",
+  "at": "2026-11-14 21:38 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
-  "sha": "c8af4543b3f1",
+  "sha": "eb2ee9875683",
   "kind": "after deploy",
   "rolledBack": true,
-  "ok": false,
-  "pages": 652,
-  "failed": 2,
-  "problems": [
-    "/status: request 404: /status (phone)",
-    "/status: console error: Failed to load resource: the server responded with a status of 404 () (/status) (phone)",
-    "/status: request 404: /status (desktop)",
-    "/status: console error: Failed to load resource: the server responded with a status of 404 () (/status) (desktop)"
-  ],
+  "ok": true,
+  "pages": 650,
+  "failed": 0,
+  "problems": [],
   "database": {
     "appendOnly": "ok: 41 tables append-only",
     "appRole": "extas_app"

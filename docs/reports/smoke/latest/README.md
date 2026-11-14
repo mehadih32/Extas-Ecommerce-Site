@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-14 19:36 (Asia/Dhaka)
+# Smoke test · 2026-11-14 21:38 (Asia/Dhaka)
 
-> **বাংলায়:** 2টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (650টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **FAIL** (652 page views, 2 failed)
+Site: https://extas.com.bd · commit `eb2ee9875683` · after deploy · result **PASS** (650 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -54,7 +54,6 @@ Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **
 | `/bn/combos` | phone | 200 | `/bn/combos` | ok | [picture](bn-combos-phone.jpg) |
 | `/combos/build-your-own` | phone | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-phone.jpg) |
 | `/bn/combos/build-your-own` | phone | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-phone.jpg) |
-| `/status` | phone | 404 | `/status` | **FAIL**: /status: request 404: /status; /status: console error: Failed to load resource: the server responded with a status of 404 () (/status) | [picture](status-phone.jpg) |
 | `/fresh-start` | phone | 200 | `/fresh-start` | ok | [picture](fresh-start-phone.jpg) |
 | `/bn/fresh-start` | phone | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-phone.jpg) |
 | `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
@@ -328,7 +327,7 @@ Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **
 | `/admin/ai/learning` | phone | 200 | `/admin/ai/learning` | ok | — |
 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | phone | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | phone | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
-| `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | phone | 200 | `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | ok | — |
+| `/admin/reports/health/history/01a1da51-0ac9-7032-8a3e-be2d3bcb450b` | phone | 200 | `/admin/reports/health/history/01a1da51-0ac9-7032-8a3e-be2d3bcb450b` | ok | — |
 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed?tab=wallet` | phone | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -380,7 +379,6 @@ Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **
 | `/bn/combos` | desktop | 200 | `/bn/combos` | ok | [picture](bn-combos-desktop.jpg) |
 | `/combos/build-your-own` | desktop | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-desktop.jpg) |
 | `/bn/combos/build-your-own` | desktop | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-desktop.jpg) |
-| `/status` | desktop | 404 | `/status` | **FAIL**: /status: request 404: /status; /status: console error: Failed to load resource: the server responded with a status of 404 () (/status) | [picture](status-desktop.jpg) |
 | `/fresh-start` | desktop | 200 | `/fresh-start` | ok | [picture](fresh-start-desktop.jpg) |
 | `/bn/fresh-start` | desktop | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-desktop.jpg) |
 | `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
@@ -654,7 +652,7 @@ Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **
 | `/admin/ai/learning` | desktop | 200 | `/admin/ai/learning` | ok | — |
 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | desktop | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | desktop | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
-| `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | desktop | 200 | `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | ok | — |
+| `/admin/reports/health/history/01a1da51-0ac9-7032-8a3e-be2d3bcb450b` | desktop | 200 | `/admin/reports/health/history/01a1da51-0ac9-7032-8a3e-be2d3bcb450b` | ok | — |
 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed?tab=wallet` | desktop | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |

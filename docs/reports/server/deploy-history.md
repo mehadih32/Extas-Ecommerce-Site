@@ -156,3 +156,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-14 05:25 | `4c40102c69ab` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-14 14:19 | `8d5faa410251` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-14 19:49 | `c8af4543b3f1` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/status: request 404: /status (phone); /status: console error: Failed to load resource: the server responded with a status of 404 () (/status) (phone); /status: request 404: /status (desktop)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-14 21:54 | `eb2ee9875683` | deploy | OK | ok | OK, smoke OK | — |
