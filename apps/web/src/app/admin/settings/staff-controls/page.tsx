@@ -10,7 +10,8 @@ import { ymdIn } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { moneyOf } from '@/components/admin/products/model';
 import { StaffControlsScreen } from '@/components/admin/staff/StaffControlsScreen';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -22,6 +23,7 @@ import '../../s28.css';
 
 export const dynamic = 'force-dynamic';
 const HERE = '/admin/settings/staff-controls';
+const KEY = 'staffControls';
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, staffControls: ((view.lang === 'bn' ? bn : en).staffControls as unknown) as Dict } };
@@ -59,7 +61,8 @@ export default async function StaffControlsPage() {
   const sheet = await handoverSheet(d.db, storeId, today);
   return (
     <div className="a2-z" data-testid="staff-controls-page" data-lm-ready="">
-      <PageHead view={view} place={null} title={t(view.dict, 'staffControls.title')} sub={t(view.dict, 'staffControls.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'staffControls.title')} sub={t(view.dict, 'staffControls.sub')} />
+      <SectionTabs view={view} current={KEY} />
       <StaffControlsScreen dict={view.dict} money={moneyOf(currency, view.locale)} view={v} canEdit={canEdit} canMakeRole={canMakeRole} day={today} today={today} sheet={sheet} exportKeys={EXPORT_KEYS} />
     </div>
   );

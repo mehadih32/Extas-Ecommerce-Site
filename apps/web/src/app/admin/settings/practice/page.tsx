@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PracticeScreen } from '@/components/admin/practice/PracticeScreen';
-import { PageHead, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -17,6 +18,7 @@ import en from '../../../../../messages/admin-practice.en.json';
 
 export const dynamic = 'force-dynamic';
 const HERE = '/admin/settings/practice';
+const KEY = 'practice';
 
 function withScreen(view: AdminView): AdminView {
   return {
@@ -51,7 +53,8 @@ export default async function PracticePage() {
   const v = await practiceView(access.deps, access.guard.actor, MOTHER_STORE_ID);
   return (
     <div className="a2-z" data-testid="practice-page" data-lm-ready="">
-      <PageHead view={view} place={null} title={t(view.dict, 'practice.title')} sub={t(view.dict, 'practice.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'practice.title')} sub={t(view.dict, 'practice.sub')} />
+      <SectionTabs view={view} current={KEY} />
       <PracticeScreen dict={view.dict} view={v} />
     </div>
   );

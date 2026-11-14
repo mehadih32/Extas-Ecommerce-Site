@@ -41,6 +41,8 @@ const SNAP = () => {
     moreOn: more ? more.classList.contains('on') : false,
     chips,
     crumb: txt(document.querySelector('[data-testid="a2-crumb"]')) || null,
+    head: document.querySelector('.a2-ph') ? 'page-head' : document.querySelector('[data-testid="a2-crumb"]') ? 'crumb-row' : 'none',
+    barBeforeH1: nav && document.querySelector('h1') ? !!(nav.compareDocumentPosition(document.querySelector('h1')) & Node.DOCUMENT_POSITION_FOLLOWING) : null,
     h1,
     sideSection: side ? side.getAttribute('data-testid').replace('a3-nav-', '') : null,
     sideSubs: subs,
@@ -176,6 +178,9 @@ for (const vp of ['desk', 'phone']) {
     const count = new Map();
     for (const r of ok) count.set(sigOf(r), (count.get(sigOf(r)) || 0) + 1);
     const modal = [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const mode = (arr) => { const m = new Map(); for (const x of arr) m.set(x, (m.get(x) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]; };
+    const modalHead = mode(rs.filter((r) => !r.failed).map((r) => r.head));
+    const modalBar = mode(ok.map((r) => r.barBeforeH1));
     for (const r of rs) {
       const why = [];
       if (r.failed) why.push('page failed to load');
@@ -189,7 +194,9 @@ for (const vp of ['desk', 'phone']) {
           if (act !== 1) why.push(`${act} tabs marked active`);
         }
         if (r.h1.length !== 1) why.push(`${r.h1.length} h1 headings`);
-        if (!r.crumb) why.push('no crumb row');
+        if (r.head !== modalHead) why.push(`page header pattern "${r.head}" (the section's usual: "${modalHead}")`);
+        if (r.hasTabBar && r.barBeforeH1 !== modalBar) why.push(`tab bar ${r.barBeforeH1 ? 'above' : 'below'} the heading (the section's usual: ${modalBar ? 'above' : 'below'})`);
+        if (vp === 'phone' && r.hasTabBar && !r.tabBarShown) why.push('tab bar hidden on the phone');
         if (r.sideSection && r.sideSection !== s.id) why.push('sidebar marks section ' + r.sideSection);
         if (!r.sideSection) why.push('sidebar marks no section');
         if (r.errors.length) why.push('console: ' + r.errors.slice(0, 2).join(' ; '));
@@ -206,9 +213,9 @@ for (const s of routes) {
   for (const c of cs.slice(1)) if (c.tabs !== start.tabs || !c.hasBar) clickFlags.push({ section: s.id, step: c.step, path: c.path, tabs: c.tabs, expected: start.tabs });
 }
 writeFileSync(`${out}/nav-audit.json`, JSON.stringify({ rows, clicks, flags, clickFlags }, null, 1));
-const md = ['# Admin menu audit', '', `Pages: ${queue.length} x 2 widths. Flags: ${flags.length}. Click flags: ${clickFlags.length}.`, '', '## Per page (desktop)', '', '| Section | Tab | Page | HTTP | Tab bar (active) | More items | Chips | h1 | Crumb | Errors |', '|---|---|---|---|---|---|---|---|---|---|'];
+const md = ['# Admin menu audit', '', `Pages: ${queue.length} x 2 widths. Flags: ${flags.length}. Click flags: ${clickFlags.length}.`, '', '## Per page (desktop)', '', '| Section | Tab | Page | HTTP | Tab bar (active) | More items | Chips | h1 | Header | Errors |', '|---|---|---|---|---|---|---|---|---|---|'];
 for (const r of rows.filter((x) => x.vp === 'desk')) {
-  md.push(`| ${r.section} | ${r.tab}${r.more ? ' (more)' : ''} | ${r.href} | ${r.status} | ${r.hasTabBar ? r.mains.map((m) => (m.on ? '**' + m.t + '**' : m.t)).join(', ') + (r.moreOn ? ' [More active]' : '') : 'NONE'} | ${(r.moreItems || []).map((m) => m.t).join(', ')} | ${(r.chips || []).map((m) => m.t).join(', ')} | ${(r.h1 || []).join(' / ')} | ${r.crumb ? 'y' : 'n'} | ${r.errors?.length || 0} |`);
+  md.push(`| ${r.section} | ${r.tab}${r.more ? ' (more)' : ''} | ${r.href} | ${r.status} | ${r.hasTabBar ? r.mains.map((m) => (m.on ? '**' + m.t + '**' : m.t)).join(', ') + (r.moreOn ? ' [More active]' : '') : 'NONE'} | ${(r.moreItems || []).map((m) => m.t).join(', ')} | ${(r.chips || []).map((m) => m.t).join(', ')} | ${(r.h1 || []).join(' / ')} | ${r.head} | ${r.errors?.length || 0} |`);
 }
 md.push('', '## Flags', '');
 for (const f of flags) md.push(`- [${f.vp}] ${f.section} / ${f.tab} ${f.path}: ${f.why.join('; ')}`);

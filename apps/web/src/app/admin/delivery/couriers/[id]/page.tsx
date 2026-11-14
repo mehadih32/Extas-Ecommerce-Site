@@ -58,7 +58,12 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
   const d = view.dict;
   const want = one(sp.s);
   const section: Section = (COURIER_SECTIONS as readonly string[]).includes(want ?? '') ? (want as Section) : 'overview';
-  const here = `/admin/delivery/couriers/${id}${section === 'overview' ? '' : `?s=${section}`}`;
+  // PR 727: Finance › Couriers and Reports › Couriers open this page with `from`, so it keeps the menu of the section the
+  // person came from (its tab bar, its tab marked) instead of switching to Delivery's.
+  const from = one(sp.from);
+  const menuKey = from === 'money' ? 'moneyCouriers' : from === 'reports' ? 'reportsCouriers' : 'courier';
+  const fromQ = menuKey === 'courier' ? '' : `from=${from}`;
+  const here = `/admin/delivery/couriers/${id}${section === 'overview' ? (fromQ ? `?${fromQ}` : '') : `?s=${section}${fromQ ? `&${fromQ}` : ''}`}`;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(here)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="courier" text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -90,6 +95,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
     const q = new URLSearchParams();
     if (s !== 'overview') q.set('s', s);
     for (const [k, v] of Object.entries(extra)) if (String(v) !== '' && !(k === 'page' && Number(v) <= 1) && !(k === 'f' && v === 'all')) q.set(k, String(v));
+    if (fromQ) q.set('from', from ?? '');
     const qs = q.toString();
     return `/admin/delivery/couriers/${id}${qs ? `?${qs}` : ''}`;
   };
@@ -666,7 +672,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
     <div className="a2-z" data-testid="courier-360" data-lm-ready="" data-section={section}>
       <PageHead
         view={view}
-        place={locateKey('courier')}
+        place={locateKey(menuKey)}
         crumb={
           <Link href="/admin/delivery">
             <ShellIcon name="cl" size={12} />
@@ -682,7 +688,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
           </>
         }
       />
-      <SectionTabs view={view} current="courier" />
+      <SectionTabs view={view} current={menuKey} />
       <nav className="a2-views a2-mt12" aria-label={cr('c.sections')} data-testid="c360-sections">
         {COURIER_SECTIONS.map((x) => (
           <Link key={x} className={`a2-view${x === section ? ' on' : ''}`} href={href(x)} aria-current={x === section ? 'page' : undefined}>

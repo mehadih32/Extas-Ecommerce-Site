@@ -725,9 +725,28 @@ export interface ShellPlace {
 
 const owns = (href: string, path: string) => path === href || path.startsWith(`${href}/`);
 
+/**
+ * PR 727: a record's own page that belongs to another tab than the list page whose address it sits under (Courier 360 and
+ * its statement are Delivery › Courier 360, though their addresses are under `/admin/delivery/couriers`, the Setup tab's
+ * list). Without this the sidebar marked Setup while the page's own tab bar marked Courier 360.
+ */
+const RECORD_PAGES: readonly { re: RegExp; key: string }[] = [
+  { re: /^\/admin\/delivery\/couriers\/[^/]+$/, key: 'courier' },
+  { re: /^\/admin\/delivery\/couriers\/[^/]+\/statement$/, key: 'courierStatement' },
+];
+
+/** `?from=` of a page opened from another section's tab (Finance › Couriers, Reports › Couriers open Courier 360). */
+const OPENED_FROM: Readonly<Record<string, string>> = { money: 'moneyCouriers', reports: 'reportsCouriers' };
+
 /** The section, tab and page an address belongs to: the longest page address that owns it, else a section base. */
-export function locate(pathname: string): ShellPlace | null {
+export function locate(pathname: string, from?: string | null): ShellPlace | null {
   const path = pathname.replace(/\/+$/, '') || '/admin';
+  const record = RECORD_PAGES.find((r) => r.re.test(path));
+  if (record) {
+    const via = record.key === 'courier' && from ? OPENED_FROM[from] : undefined;
+    const place = (via ? locateKey(via) : null) ?? locateKey(record.key);
+    if (place) return place;
+  }
   let best: ShellPlace | null = null;
   let len = -1;
   for (const section of SHELL_SECTIONS) {

@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/products/demo';
 // Until the menu has its own entry (docs/demo/admin-proto-v5/gap/NAV-PATCH-w4a.md) the page sits under Questions.
-const KEY = 'productQuestions';
+const KEY = 'productDemo';
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
@@ -33,7 +33,7 @@ export default async function DemoProductsPage() {
   const [view, access] = await Promise.all([adminView(deps), pageAccess('catalogue.read', deps, MOTHER_STORE_ID)]);
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
-  if (access.kind === 'unavailable') return <AdminNotice view={view} current="products" text={t(d, 'page.noDb')} />;
+  if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
     return (
       <div className="a2-z" data-testid="demo-products" data-lm-ready="">

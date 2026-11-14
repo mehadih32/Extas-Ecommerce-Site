@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { PageHead, PlaceGuide, ShellState } from '@/components/admin/shell/ShellParts';
+import { PageHead, PlaceGuide, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -48,6 +48,7 @@ export default async function HelpPage() {
   return (
     <div className="a2-z lm-hb" data-lm-ready="" data-testid="help">
       <PageHead view={view} place={here} title={t(d, 'help.title')} sub={t(d, 'help.sub')} />
+      <SectionTabs view={view} current="help" />
       {viewer.owner || viewer.perms.has('build.read') ? (
         <section className="a2-card a2-helpask" data-testid="help-ask">
           <span className="a2-sm">{t(d, 'help.askLine')}</span>

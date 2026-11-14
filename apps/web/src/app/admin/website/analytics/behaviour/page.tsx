@@ -7,7 +7,8 @@ import { requirePermission } from "@extas/auth";
 import { MOTHER_STORE_ID } from "@extas/db/client";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { BehaviourScreen } from "@/components/admin/analytics/BehaviourScreen";
-import { PageHead, ShellState } from "@/components/admin/shell/ShellParts";
+import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
+import { locateKey } from "@/lib/admin-shell/sections";
 import { adminDeps } from "@/lib/admin-auth";
 import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
@@ -19,6 +20,7 @@ import "../../../s28.css";
 
 export const dynamic = "force-dynamic";
 const HERE = "/admin/website/analytics/behaviour";
+const KEY = "webAnalytics.behaviour";
 
 function withScreen(view: AdminView): AdminView {
   return {
@@ -91,10 +93,11 @@ export default async function WebsiteBehaviourPage({
     <div className="a2-z" data-testid="web-behaviour-page" data-lm-ready="">
       <PageHead
         view={view}
-        place={null}
+        place={locateKey(KEY)}
         title={t(view.dict, "webAnalytics.behaviour.title")}
         sub={t(view.dict, "webAnalytics.behaviour.sub")}
       />
+      <SectionTabs view={view} current={KEY} />
       <BehaviourScreen
         dict={view.dict}
         view={v}
