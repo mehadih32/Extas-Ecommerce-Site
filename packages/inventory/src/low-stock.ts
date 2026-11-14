@@ -51,7 +51,7 @@ export function lowStockDecision(sellable: number, threshold: number): boolean {
 
 async function poolRows(db: Db, skus: string[] | null): Promise<PoolRow[]> {
   const rows = await db.stockLevel.findMany({
-    where: skus ? { variant: { sku: { in: skus }, product: { isDemo: false, isPractice: false } } } : { variant: { product: { isDemo: false, isPractice: false } } },
+    where: skus ? { variant: { sku: { in: skus }, product: { isDemo: false }, NOT: { product: { isPractice: true } } } } : { variant: { product: { isDemo: false }, NOT: { product: { isPractice: true } } } },
     select: {
       id: true,
       variantId: true,

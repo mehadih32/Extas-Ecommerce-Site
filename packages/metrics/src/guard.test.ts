@@ -35,6 +35,7 @@ export const ALLOWED: Record<string, string> = {
   'packages/orders/src/returns-erp.ts': 'the Returns section adds up money lost on returns per month (declined, exchange net, delivery charges, underpaid; PR 613), not a sales figure',
   'apps/web/src/lib/tracking/orders.ts': "a delivered or confirmed order's event value for the ad platforms from that one order's kept lines (PR 258), not a sales figure",
   'apps/web/src/lib/tracking/feed.ts': "a shipped, returned or qualified order's event value for the ad platforms from that one order's lines (PR 532), not a sales figure",
+  'apps/web/src/components/admin/orders/OrderListPage.tsx': "the list header's 'N orders · ৳value' (the prototype's ordered value of the orders that count), never shown as a sales figure",
   'apps/web/src/lib/marketing/audiences.ts': "a lookalike seed's per-person weight for the ad platforms from that person's own delivered orders (PR 263), never shown as a sales figure",
   'packages/rules/src/offers-service.ts': "an offer's own results tally (orders, sales and discount for the orders that used that offer's code; PR 677), a per-code view of one offer, not the shop's sales figure",
   'packages/shipping/src/couriers-v5.ts': "the COD amount still on the road with each courier (the courier scorecard, PR 670), money owed to the shop, not a sales figure",

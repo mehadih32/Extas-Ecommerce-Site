@@ -52,7 +52,7 @@ export async function completeExtras(db: Db, storeId: number, minor: (taka: numb
         data: c.items.map((i, k) => ({ id: practiceId(`comboitem:${c.id}:${k}`), storeId, comboId: id, position: k, productId: productIdOf(i), quantity: 1, allowedColourIds: [], allowedSizeIds: [] })),
         skipDuplicates: true,
       });
-    counts.practiceCombos += made.count;
+    counts.practiceCombos = (counts.practiceCombos ?? 0) + made.count;
   }
 
   // ---- journal posts, spread over the six months before now, each pointing at its product
@@ -92,7 +92,7 @@ export async function completeExtras(db: Db, storeId: number, minor: (taka: numb
       ],
       skipDuplicates: true,
     });
-    counts.practicePosts += made.count;
+    counts.practicePosts = (counts.practicePosts ?? 0) + made.count;
   }
   return counts;
 }
