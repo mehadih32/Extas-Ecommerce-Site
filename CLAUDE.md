@@ -1,5 +1,7 @@
 # CLAUDE.md — EXTAS e-commerce build
 
+> **PROJECT CLOSED — 14 Nov 2026 (owner, CN-051).** There is no open work. What is closed or parked stays closed until the owner says so; a new problem comes to the chat and is discussed first. Do not start a PR, lane or builder by yourself, and do not schedule check-ins or auto-continue. The lines below about "never idle", the build order, the wave boundary and auto-continue are ~~struck through~~ and no longer apply. There is one domain, **extas.com.bd** (new.extas.com.bd is retired); the owner signs in at **https://extas.com.bd/access**. Everything parked or closed, with what it would take to start, is in `docs/owner/PARKED.md`. The rest of this file (hard rules, gates, how to register and report) still holds for any work the owner asks for.
+
 Every session in this repository reads this file first, then `docs/START-HERE.md`.
 
 ## Who you work for
@@ -70,14 +72,12 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
 - The owner's computer and browser may be off. Everything runs in the cloud and on the VM runner; nothing waits for him.
 - **Never stop to ask permission** for building, testing, merging your own PRs, deploying to new.extas.com.bd or
   starting the next stage. Merge yourself once the gates pass.
-- Build order (CN-027): finish every PR in `docs/LAUNCH-TRACK.md` → Launch first, then continue the After-launch list automatically.
-- **The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report,
-  show it in chat, and **carry straight on** to the next wave.
-- Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.
+- ~~Build order (CN-027): finish every PR in `docs/LAUNCH-TRACK.md` → Launch first, then continue the After-launch list automatically.~~
+- ~~**The wave boundary is no longer a stop** (this replaces Blueprint A1.1 rule 7): write the Bengali wave report, show it in chat, and **carry straight on** to the next wave.~~
+- ~~Blocked on the owner? Add it to `BLOCKED.md` and move to the next PR. Never sit idle.~~
 - **Resume without the owner and without waste:** on every new or resumed session read `PROGRESS.md` and continue the exact next step. Read only the register rows and blueprint sections that step needs, not whole files. Never ask the owner to restart or re-explain anything.
-- **Never idle (owner, 31 Oct 2026, CN-031):** a session never stops between PRs and never waits for the owner. After a PR, the next one starts at once. Before a usage limit hits, write the exact point in `PROGRESS.md` and schedule your own continuation for the reset time, plus a check-in every 30 minutes until Launch is done; a session that finds `PROGRESS.md` untouched for 30 minutes while work is open starts the next PR. Launch first (one run), then the After-launch priority order in `docs/LAUNCH-TRACK.md`.
-- **Usage limit reached:** stop cleanly, with `PROGRESS.md` holding the exact point. When the limit resets, continue from
-  there by yourself (the project's auto-continue is on).
+- ~~**Never idle (owner, 31 Oct 2026, CN-031):** a session never stops between PRs and never waits for the owner. After a PR, the next one starts at once. Before a usage limit hits, write the exact point in `PROGRESS.md` and schedule your own continuation for the reset time, plus a check-in every 30 minutes until Launch is done; a session that finds `PROGRESS.md` untouched for 30 minutes while work is open starts the next PR. Launch first (one run), then the After-launch priority order in `docs/LAUNCH-TRACK.md`.~~
+- ~~**Usage limit reached:** stop cleanly, with `PROGRESS.md` holding the exact point. When the limit resets, continue from there by yourself (the project's auto-continue is on).~~
 - The only real stops are the hard-rule items (money, prices, deleting data, anything irreversible) and the go-live
   switch of extas.com.bd. None of these happens during the build.
 
@@ -111,7 +111,7 @@ E0 stage table**. Where a section has a "V2"/"V2.1" block, that block wins over 
   - Write `docs/reports/YYYY-MM-DD-<stage>.md` **in simple Bengali**: what got built, what passed, what is waiting
     for the owner.
   - Show the same short summary in the chat.
-- Wave boundary: report in Bengali and continue. Don't wait (CN-006).
+- ~~Wave boundary: report in Bengali and continue. Don't wait (CN-006).~~
 
 ## Nothing reaches the owner broken (owner, 20 Oct 14:24 — CN-016)
 - **Done means it works on new.extas.com.bd in a real browser,** not only that the tests pass on the branch.

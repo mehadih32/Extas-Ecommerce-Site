@@ -1,5 +1,18 @@
 # PROGRESS
 
+## CLOSED — 14 Nov 2026 (owner, CN-051): the project has no open work
+
+**State.** 710 PRs in the register, 701 active, 9 parked; **676 built**. S28 (admin v5) is complete, 52/52 (PR 700–710 merged 13–14 Nov). S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.
+
+**Not built, and why.** PR 646 (the AI Center in Lumen): superseded by S15 and the menu section (cosmetic leftover parked). PR 587 (main-domain switch and redirects): the domain is switched and holds, **but on 14 Nov the 45 old WordPress addresses answered 404** on the live site; it stays open until `seo.redirects.wordpressMapLive` is switched on and the 45 addresses answer 301. S17: 23 PRs closed. S26, S27, PR 649–651: parked.
+
+**What is parked.** Everything, one plain line each with what it would take to start, is in [`docs/owner/PARKED.md`](docs/owner/PARKED.md): closed and parked stages, the 8 prototype tabs with no register row, the switches that stay off, the owner's own steps, the open follow-up rows.
+
+**How to resume.** Nothing resumes by itself: no check-ins, no auto-continue, no lanes (the CN-031 "never idle" rule is struck through in `CLAUDE.md`). A new problem comes to the chat and is discussed first. When the owner names an item, file it first (a dated update on its register row, or the next free PR number and a change note), then build it with the same gates.
+
+**This closing change.** The record was checked against `git log` (PR 700–708 had no Build status row; PR 709 and 710 had no register row at all; the stage-table total said 707 and 698 active instead of 708 and 699; PR 706 was listed twice): all fixed in `docs/MASTER-REGISTER.md`, `docs/LAUNCH-TRACK.md`, `README.md`, `docs/stages/`, `BLOCKED.md`, `CLAUDE.md`.
+
+
 | When | Where we are |
 |---|---|
 | 2026-10-20 | **Session 0 done** (from the planning chat): docs, register (604 PRs), V2.1 final blueprint, demo V12, QA tools and agent files are in `docs/`. `CLAUDE.md` and `docs/START-HERE.md` written. **No application code yet.** |
