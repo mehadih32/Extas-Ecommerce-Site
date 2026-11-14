@@ -47,3 +47,11 @@ describe('tryIt with AI off', () => {
     await expect(tryIt(deps, { agent: 'nobody', sample: 'x' }, (k) => k, 'en')).rejects.toThrow();
   });
 });
+
+describe('sandboxAgentKey', () => {
+  it('is the chosen agent, and prohori only for "all"', async () => {
+    const { sandboxAgentKey } = await import('./training-extras');
+    expect(sandboxAgentKey('doot')).toBe('doot');
+    expect(sandboxAgentKey('all')).toBe('prohori');
+  });
+});

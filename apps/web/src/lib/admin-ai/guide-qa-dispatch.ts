@@ -36,6 +36,7 @@ import { pricerFor } from '../exchange-rate';
 import { agentDataClass, routeProvider } from './data-classes';
 import { estimateMicrosFor, jobOf, MODEL_CATALOG, microsToUsdMinor, modelOf, type ModelCatalogEntry } from './cost-book';
 import { recordDiaryEntry } from './diary';
+import type { AiAgentKey } from './agents';
 import { isWriterProvider, listWriterOptions } from './model-picks';
 import { agentCapState, wouldExceedCap } from './spend-cap';
 import { recordAiUsage } from './usage-ledger';
@@ -140,13 +141,24 @@ function modelForProvider(providerKey: string, tier: ModelCatalogEntry['tier']):
  * this function never throws; a caller that gets `null` falls back to showing the guide's own text, exactly as the
  * guide panel already did before this PR.
  */
-export async function guideQaAnswer(deps: GuideQaAiDeps, storeId: number, pageId: string, locale: 'en' | 'bn', question: string, guide: { title: string; blocks: Block[] }): Promise<string | null> {
+/** Optional attribution for a caller that is not the admin guide panel (the Training "Try it" sandbox, PR 719): the agent the call is
+ * billed to, the ledger/diary `refType`, and a prefix that keeps its idempotency keys apart. Omitted = exactly the old behaviour. */
+export interface GuideQaOptions {
+  agentKey?: AiAgentKey;
+  refType?: string;
+  keyPrefix?: string;
+  diarySummaryBn?: string;
+}
+
+export async function guideQaAnswer(deps: GuideQaAiDeps, storeId: number, pageId: string, locale: 'en' | 'bn', question: string, guide: { title: string; blocks: Block[] }, opts: GuideQaOptions = {}): Promise<string | null> {
+  const agentKey: AiAgentKey = opts.agentKey ?? GUIDE_QA_AGENT_KEY;
+  const refType = opts.refType ?? 'AdminGuidePage';
   const q = question.trim();
   if (!q) return null;
   const guideText = plainTextOfGuide(guide.blocks).trim();
   if (!guideText) return null; // nothing written to ground an answer on
   try {
-    const agent = await deps.db.aiAgent.findUnique({ where: { key: GUIDE_QA_AGENT_KEY } });
+    const agent = await deps.db.aiAgent.findUnique({ where: { key: agentKey } });
     if (!agent || agent.archivedAt) return null;
     const masterOn = await deps.resolver.value('ai.enabled', { storeId });
     const workingNow = (masterOn || agent.keepOnWhenMasterOff) && agent.enabled;
@@ -156,7 +168,7 @@ export async function guideQaAnswer(deps: GuideQaAiDeps, storeId: number, pageId
     const options = await listWriterOptions(deps.db);
     const selectedOpt = options.find((o) => o.provider === selectedProvider);
     const selectedReady = selectedProvider === null || Boolean(selectedOpt?.ready);
-    const routing = routeProvider(agentDataClass(GUIDE_QA_AGENT_KEY), selectedProvider, selectedReady, options);
+    const routing = routeProvider(agentDataClass(agentKey), selectedProvider, selectedReady, options);
     if (!routing.effectiveProvider) return null;
 
     const job = jobOf(GUIDE_QA_JOB_KEY);
@@ -190,11 +202,11 @@ export async function guideQaAnswer(deps: GuideQaAiDeps, storeId: number, pageId
     // same question again (a repeat press, a second tab) reuses the same ledger row rather than charging it again;
     // a different question, or a guide the owner later rewrote, naturally hashes differently and earns its own,
     // fresh answer and charge.
-    const idempotencyKey = `guide-qa:${pageId}:${createHash('sha1').update(`${locale}\u0000${cutGuideText}\u0000${cutQuestion}`).digest('hex')}`;
+    const idempotencyKey = `${opts.keyPrefix ?? 'guide-qa'}:${pageId}:${createHash('sha1').update(`${locale}\u0000${cutGuideText}\u0000${cutQuestion}`).digest('hex')}`;
     const usage: typeof job.usage = draft.usage ? { kind: 'text', ...draft.usage } : job.usage;
-    const recorded = await recordAiUsage({ db: deps.db, resolver: deps.resolver }, { idempotencyKey, storeId, agentKey: GUIDE_QA_AGENT_KEY, jobTypeKey: GUIDE_QA_JOB_KEY, modelKey: model.modelKey, usage, refType: 'AdminGuidePage', refId: pageId });
+    const recorded = await recordAiUsage({ db: deps.db, resolver: deps.resolver }, { idempotencyKey, storeId, agentKey, jobTypeKey: GUIDE_QA_JOB_KEY, modelKey: model.modelKey, usage, refType, refId: pageId });
     if (recorded.ok && !recorded.idempotent) {
-      await recordDiaryEntry({ db: deps.db, resolver: deps.resolver, now: deps.now }, { storeId, agentKey: GUIDE_QA_AGENT_KEY, summaryBn: 'অ্যাডমিনের একটা পাতার গাইড নিয়ে মালিকের একটা প্রশ্নের জবাব দিয়েছে, গাইডের নিজের লেখা থেকে।', refType: 'AdminGuidePage', refId: pageId });
+      await recordDiaryEntry({ db: deps.db, resolver: deps.resolver, now: deps.now }, { storeId, agentKey, summaryBn: opts.diarySummaryBn ?? 'অ্যাডমিনের একটা পাতার গাইড নিয়ে মালিকের একটা প্রশ্নের জবাব দিয়েছে, গাইডের নিজের লেখা থেকে।', refType, refId: pageId });
     }
     return draft.body;
   } catch {
