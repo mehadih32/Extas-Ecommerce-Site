@@ -187,6 +187,7 @@
     { "id": "ai/control", "route": "/admin/ai" },
     { "id": "ai/models", "route": "/admin/ai/models" },
     { "id": "ai/agents", "route": "/admin/agents" },
+    { "id": "ai/agents-chief", "route": "/admin/agents/chief" },
     { "id": "ai/agent-profile", "route": "/admin/agents/[key]" },
     { "id": "ai/audit", "route": "/admin/ai/audit" },
     { "id": "ai/cost-book", "route": "/admin/ai/cost-book" },

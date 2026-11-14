@@ -1,0 +1,59 @@
+{
+  "aiAgentsChief": {
+    "metaTitle": "Ask the chief",
+    "title": "Ask the chief",
+    "sub": "জ্ঞানী Gyani investigates any \"why\", names the responsible agent with evidence, and assigns the fix.",
+    "backToTeam": "All agents",
+    "org": {
+      "heading": "Chain of command",
+      "note": "Owner → the chief → the other six. The chief is free to research, report, assign and review work; anything that moves money, changes a price, a discount, an ad budget, a COD amount, blocks anyone or deletes anything still needs your written OK, for every agent including the chief.",
+      "owner": "You · Owner",
+      "chiefTag": "Chief"
+    },
+    "ask": {
+      "heading": "Ask the chief",
+      "note": "Name an agent, its employee code (e.g. A360-03) or just describe the area — the chief will find who owns it.",
+      "placeholder": "Type a question…",
+      "label": "Ask the chief",
+      "submit": "Ask",
+      "asked": "The chief is on it",
+      "failed": "Could not ask the chief"
+    },
+    "inv": {
+      "heading": "Investigations",
+      "none": "No investigations yet — ask the chief a question above.",
+      "open": "Open",
+      "closed": "Closed",
+      "responsible": "Responsible: {name}",
+      "selfReview": "The chief is reviewing this personally",
+      "evidence": "Evidence",
+      "close": "Close",
+      "closedToast": "Investigation closed",
+      "warn": "Warn {name} (goes to appraisal)",
+      "warned": "Warning written into {name}'s appraisal",
+      "failed": "Could not do that"
+    },
+    "perm": {
+      "heading": "What the chief may do",
+      "note": "The chief's own permission row, over the same seven resources every agent is measured against. Changing a cell applies only to the chief; every agent's full matrix is on the Permissions page.",
+      "freeHeading": "Always free (not in the resource list, so never gated)",
+      "freeResearch": "Research and analysis",
+      "freeReports": "Reports",
+      "freeAssign": "Assigning tasks to agents",
+      "freeReview": "Reviewing agents' work",
+      "freeWarn": "Warnings to agents (written into their appraisal)",
+      "resourceHeading": "Over the seven resources",
+      "defaultBadge": "Default",
+      "level": {
+        "alone": "May decide alone",
+        "propose": "Must ask first",
+        "none": "May not touch"
+      },
+      "selectLabel": "The chief's level for {resource}",
+      "toastChanged": "Changed — the chief's own permission",
+      "toastFailed": "Could not change that",
+      "readOnly": "You need \"AI control\" to change this.",
+      "viewAll": "See the full matrix for all seven agents"
+    }
+  }
+}

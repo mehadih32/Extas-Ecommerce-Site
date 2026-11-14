@@ -24,6 +24,7 @@
     "count": "{n} pages in {s} sections",
     "lines": {
       "ai.agents": "The 7 agents: what each does now, its spend, model and schedule, one-tap pause.",
+      "ai.agentsChief": "Ask the chief: Gyani finds who is responsible for a \"why\", with evidence, and assigns the fix.",
       "ai.approvals": "One queue of everything the AI proposes — budgets, declines, replies, ideas — with Approve / Reject.",
       "ai.audit": "The checklist the shop is checked against.",
       "ai.control": "AI switches, limits and what it may do.",

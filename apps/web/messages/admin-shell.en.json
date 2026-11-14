@@ -182,6 +182,7 @@
         "control": "Control room",
         "models": "Model picks",
         "agents": "AI agents",
+        "agentsChief": "Ask the chief",
         "audit": "Checklist audit",
         "costBook": "Costs & limits",
         "approvals": "Approvals",
