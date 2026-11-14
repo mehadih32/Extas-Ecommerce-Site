@@ -361,6 +361,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
     tabs: [
       // S02 · PR 76 (WEB-02) — Page layouts: each shop page's sections, their order, show / hide and screens.
       { id: 'layouts', pages: [{ href: '/admin/website/layouts', perm: 'website.read', keys: ['websiteLayouts'] }] },
+      // PR 726 — Brand & menus: the shop's name, logo and favicon, the header, the menu and the footer, with a live preview (More options).
+      { id: 'brand', more: true, pages: [{ href: '/admin/website/brand-menus', perm: 'website.read', keys: ['websiteBrand'] }] },
       // S02 · PR 78 (WEB-05) — Words & language: every word the shop shows, in English and Bengali, with the owner's own.
       { id: 'words', pages: [{ href: '/admin/website/words', perm: 'website.read', keys: ['websiteWords'] }] },
       // PR 718 (admin prototype v5 · Website › Policies): the policy pages, each in both languages with a preview, a state and a history.

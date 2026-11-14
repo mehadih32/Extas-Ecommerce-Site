@@ -18,6 +18,7 @@ import { Icon, MessengerGlyph, WaGlyph } from './Icon';
 import { LangSwitch } from './LangSwitch';
 import { LogoText } from './LogoText';
 import { MenuButton, type MenuData } from './MenuButton';
+import { ShopLogo } from './ShopLogo';
 
 function Slogan({ c, where }: { c: ShopContext; where: 'phone' | 'desk' }) {
   const h = c.s['shell.header'].slogan;
@@ -181,12 +182,12 @@ export function StoreHeader({ c, bagCount = 0, menuSubs }: { c: ShopContext; bag
           <div className="row" style={{ gap: 2 }}>
             <MenuButton label={t('header.menu')} data={menuData(c, menuSubs)} lang={<LangSwitch c={c} />} />
             <a className={`logo hide-m${hasSlogan('desk') ? ' sb-hasslog' : ''}`} href={home}>
-              <LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />
+              <ShopLogo c={c} where="desk" fallback={<LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />} />
               {sD}
             </a>
           </div>
           <a className={`logo hide-d${hasSlogan('phone') ? ' sb-hasslog' : ''}`} href={home}>
-            {c.storeName}
+            <ShopLogo c={c} where="phone" fallback={c.storeName} />
             {sP}
           </a>
           <DeskNav
