@@ -14,6 +14,7 @@
 .adm2 .cl-chip.on { background: var(--g); border-color: var(--g); color: var(--lm-on-ac, var(--sf)); }
 .adm2 .cl-go { background: var(--g); border-color: var(--g); color: var(--lm-on-ac, var(--sf)); cursor: pointer; }
 .adm2 .cl-link { border-radius: 9px; }
+.adm2 .cl-row a { display: inline-flex; align-items: center; min-height: 44px; }
 .adm2 .cl-row { min-width: 0; }
 .adm2 .cl-head { display: flex; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; align-items: flex-start; }
 .adm2 .cl-head > div { min-width: 0; overflow-wrap: anywhere; }
