@@ -1,0 +1,30 @@
+/* Reports › "This report answers" card (prototype v5 .rep-ins): navy, an icon, the question, 2-3 lines with an action each. */
+.adm2 .rpa { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px 16px; align-items: start; padding: 16px 18px; border-radius: 14px; background: linear-gradient(135deg, #1b2a5a, #263a7a); color: #fff; }
+.adm2 .rpa-ico { width: 38px; height: 38px; border-radius: 11px; background: rgba(255, 255, 255, 0.12); display: grid; place-items: center; }
+.adm2 .rpa-k { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); margin-bottom: 2px; }
+.adm2 .rpa-q { font-size: 17px; line-height: 1.35; margin: 0 0 8px; color: #fff; font-weight: 700; }
+.adm2 .rpa ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.adm2 .rpa li { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.92); flex-wrap: wrap; }
+.adm2 .rpa li > span { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .rpa li i { flex: none; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; background: #f59e0b; }
+.adm2 .rpa li i.good { background: #4ade80; }
+.adm2 .rpa li i.bad { background: #f87171; }
+.adm2 .rpa-act { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 9px; background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 650; font-size: 12.5px; text-decoration: none; white-space: nowrap; }
+.adm2 .rpa-act:hover { background: rgba(255, 255, 255, 0.24); }
+@media (max-width: 560px) { .adm2 .rpa { grid-template-columns: minmax(0, 1fr); padding: 14px; } .adm2 .rpa-ico { display: none; } }
+
+/* Bars and a small line chart shared by the report pages (profit by channel, margin week by week). */
+.adm2 .rpb { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.adm2 .rpb li { min-width: 0; }
+.adm2 .rpb-h { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.adm2 .rpb-h span { min-width: 0; overflow-wrap: anywhere; }
+.adm2 .rpb-h b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.adm2 .rpb-t { height: 6px; border-radius: 6px; background: var(--sf2, #f1efea); margin-top: 5px; overflow: hidden; }
+.adm2 .rpb-t i { display: block; height: 100%; border-radius: 6px; background: var(--g); }
+.adm2 .rpb-t i.c2 { background: var(--gold, #c8a24a); }
+.adm2 .rpb-t i.bad { background: var(--bad); }
+.adm2 .rpl { width: 100%; height: auto; display: block; margin-top: 8px; }
+.adm2 .rpl-leg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--mute); margin-top: 6px; }
+.adm2 .rp-grid2 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1200px) { .adm2 .rp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .adm2 .rp-grid3 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+.adm2 .rp-grid3 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }

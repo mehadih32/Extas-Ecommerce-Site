@@ -9,8 +9,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
+import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
+import { BarList, MarginLine } from '@/components/admin/reports/ReportCharts';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
 import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -24,7 +25,7 @@ import { marginPct } from '@/lib/group-profit-view';
 import { t } from '@/lib/i18n';
 import { makeFmt } from '@/lib/reports-v5/fmt';
 import { loadBase, loadProfit } from '@/lib/reports-v5/load';
-import { change, daysBetween, heroRange, leaves, seriesOf } from '@/lib/reports-v5/model';
+import { change, leaves } from '@/lib/reports-v5/model';
 import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
 import '../../money/money.css';
@@ -97,21 +98,40 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
     { key: 'losing', label: c('kLosing'), value: losing, shown: f.num(losing), format: { kind: 'number', locale: view.locale }, tone: losing > 0 ? 'bad' : undefined },
   ];
 
-  const days = daysBetween(q.from, q.to, rows);
-  const prevDays = daysBetween(b.before.from, b.before.to, rows);
-  const hero = heroRange({
-    key: 'p',
-    label: `${f.dayShort(q.from)} – ${f.dayShort(q.to)}`,
-    days,
-    values: seriesOf(days, now.byDay, (x) => x.contributionMinor),
-    before: seriesOf(prevDays, was.byDay, (x) => x.contributionMinor),
-    total: now.contributionMinor,
-    delta: change(now.contributionMinor, was.contributionMinor),
-    vs: cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) }),
-    amount: f.amount,
-    dayLabel: f.dayShort,
-    mini: [{ label: cc('orders'), shown: f.num(now.orders) }],
-  });
+  // "Margin, week by week": the period's days in blocks of seven, margin before ads = contribution ÷ delivered sales.
+  const dayAsc = [...now.byDay].sort((x, y) => x.day.localeCompare(y.day));
+  const weeks: { label: string; sales: number; contribution: number }[] = [];
+  for (let i = 0; i < dayAsc.length; i += 7) {
+    const chunk = dayAsc.slice(i, i + 7);
+    weeks.push({ label: f.dayShort(chunk[0]!.day), sales: chunk.reduce((a2, x) => a2 + x.salesMinor, 0), contribution: chunk.reduce((a2, x) => a2 + x.contributionMinor, 0) });
+  }
+  const weekPoints = weeks.slice(-8).map((w) => ({ label: w.label, value: w.sales > 0 ? Math.round((w.contribution / w.sales) * 1000) / 10 : null }));
+  const chRows = r.channels.rows.filter((x) => x.kind !== 'total');
+  const chValue = (x: (typeof chRows)[number]) => x.profitMinor ?? x.contributionMinor;
+  const chSorted = [...chRows].sort((x, y) => chValue(y) - chValue(x));
+  const topCh = chSorted[0];
+  const topChWas = topCh ? r.channelsWas.rows.find((x) => x.key === topCh.key) : undefined;
+  const catTop = r.categories.rows.filter((x) => x.depth === 0 && x.id !== null && x.salesMinor > 0 && marginPct(x) !== null);
+  const catSorted = [...catTop].sort((x, y) => (marginPct(y) ?? 0) - (marginPct(x) ?? 0));
+  const lowCat = catSorted[catSorted.length - 1];
+  const bestCat = catSorted[0];
+  const lines: AnswerLine[] = [];
+  if (lowCat && bestCat && lowCat.id !== bestCat.id)
+    lines.push({
+      text: c('ans.lowCat', { name: lowCat.name ?? '', pct: f.pctOf(marginPct(lowCat)), bestName: bestCat.name ?? '', bestPct: f.pctOf(marginPct(bestCat)) }),
+      tone: (marginPct(lowCat) ?? 100) < 25 ? 'bad' : undefined,
+      act: { label: c('ans.checkPrices'), href: '/admin/products' },
+    });
+  if (topCh && chValue(topCh) > 0) {
+    const was = topChWas ? (topChWas.profitMinor ?? topChWas.contributionMinor) : null;
+    const ch = change(chValue(topCh), was);
+    lines.push({
+      text: c('ans.bestCh', { name: channelName(topCh.key), amount: f.amount(chValue(topCh)), change: ch === null ? '—' : f.pct(ch) }),
+      tone: 'good',
+      act: { label: c('ans.raiseBudget'), href: '/admin/marketing' },
+    });
+  }
+  if (losing > 0) lines.push({ text: c('ans.losing', { n: losing }), tone: 'bad', act: { label: c('byStyle'), href: `/admin/money/profit/groups?by=style&from=${q.from}&to=${q.to}` } });
 
   const moreCategories = r.categories.rows.length > rows;
   const moreStyles = r.styles.rows.length > rows;
@@ -139,12 +159,32 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
       <p className="a2-xs a2-mute a2-mt12">
         {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) })}
       </p>
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
       <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
-      <div className="a2-mt12 mo-hero">
-        <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} prevName={cc('heroPrev')} testId="rp-hero" />
-      </div>
       {now.netProfitMinor === null ? <p className="a2-xs bk-warn a2-mt12" data-testid="rp-ads-unknown">{c('adsUnknown')}</p> : null}
       {now.uncosted.orders ? <p className="a2-xs bk-warn a2-mt6" data-testid="rp-uncosted">{c('uncosted', { n: now.uncosted.orders })}</p> : null}
+
+
+      <div className="rp-grid3 a2-mt12">
+        <section className="a2-card" aria-labelledby="rp-wk" data-testid="rp-weeks">
+          <h2 className="a2-h3" id="rp-wk">
+            {c('weeksTitle')}
+          </h2>
+          <p className="a2-cs">{c('weeksSub')}</p>
+          {weekPoints.length ? <MarginLine points={weekPoints} name={c('weeksSeries')} testId="rp-weeks-chart" /> : <p className="a2-sm a2-mute a2-mt6">{cc('none')}</p>}
+        </section>
+        <section className="a2-card" aria-labelledby="rp-ch" data-testid="rp-channels">
+          <h2 className="a2-h3" id="rp-ch">
+            {c('byChannel')}
+          </h2>
+          <p className="a2-cs">{c('byChannelSub')}</p>
+          {chSorted.length ? (
+            <BarList testId="rp-channels-table" items={chSorted.map((x) => ({ key: x.key, label: `${channelName(x.key)} · ${f.pctOf(channelMarginPct(x))}`, value: chValue(x), shown: f.amount(chValue(x)) }))} />
+          ) : (
+            <p className="a2-sm a2-mute a2-mt6">{cc('none')}</p>
+          )}
+        </section>
+      </div>
 
       <div className="a2-note a2-mt12" role="note">
         <span>
@@ -155,21 +195,8 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
         </span>
       </div>
 
-      <section className="a2-card a2-mt12" aria-labelledby="rp-ch" data-testid="rp-channels">
-        <h2 className="a2-h3" id="rp-ch">
-          {c('byChannel')}
-        </h2>
-        <p className="a2-cs">{c('byChannelSub')}</p>
-        <ReportTable
-          testId="rp-channels-table"
-          rowId="rp-channel-row"
-          empty={cc('none')}
-          cols={[{ h: c('colChannel') }, { h: c('colOrders'), right: true }, { h: c('colSales'), right: true }, { h: c('colProfitAfter'), right: true }, { h: c('colMargin'), right: true }]}
-          rows={r.channels.rows.map((x) => [<b key="n">{channelName(x.key)}</b>, f.num(x.orders), sales(x.salesMinor), <b key="p">{f.maybe(x.profitMinor, cc('unknown'))}</b>, f.pctOf(channelMarginPct(x))])}
-        />
-      </section>
-
-      <section className="a2-card a2-mt12" aria-labelledby="rp-cat" data-testid="rp-categories">
+      <div className="rp-grid2 a2-mt12">
+      <section className="a2-card" aria-labelledby="rp-cat" data-testid="rp-categories">
         <h2 className="a2-h3" id="rp-cat">
           {c('byCategory')}
         </h2>
@@ -178,7 +205,7 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
         {moreCategories ? <p className="a2-xs a2-mute a2-mt6">{cc('cut', { n: rows })}</p> : null}
       </section>
 
-      <section className="a2-card a2-mt12" aria-labelledby="rp-style" data-testid="rp-styles">
+      <section className="a2-card" aria-labelledby="rp-style" data-testid="rp-styles">
         <h2 className="a2-h3" id="rp-style">
           {c('byStyle')}
         </h2>
@@ -186,6 +213,7 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
         <ReportTable testId="rp-styles-table" rowId="rp-style-row" empty={cc('none')} cols={groupCols(c('colStyle'))} rows={groupRows(r.styles, t(d, 'reportsV5.channel.noStyle'))} />
         {moreStyles ? <p className="a2-xs a2-mute a2-mt6">{cc('cut', { n: rows })}</p> : null}
       </section>
+      </div>
 
       <HowFigures
         dict={d}

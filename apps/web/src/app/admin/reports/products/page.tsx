@@ -11,6 +11,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
+import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
 import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -78,6 +79,12 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
     ...(r.restock ? [num('restock', c('kRestock'), restock.length, { vs: c('kRestockSub'), tone: restock.length > 0 ? 'warn' : undefined }), num('unsold', c('kUnsold'), unsold.length, { vs: c('kUnsoldSub') })] : []),
   ];
 
+  const bestStyle = [...styleLeaves].sort((x, y) => y.pieces - x.pieces)[0];
+  const lines: AnswerLine[] = [];
+  if (bestStyle && bestStyle.pieces > 0) lines.push({ text: c('ans.best', { name: bestStyle.name ?? '', pieces: f.num(bestStyle.pieces), sales: f.amount(bestStyle.salesMinor) }), tone: 'good', act: { label: c('ans.combo'), href: '/admin/combos' } });
+  if (restock.length) lines.push({ text: c('ans.restock', { n: restock.length }), tone: 'bad', act: { label: c('ans.reorder'), href: '/admin/stock' } });
+  if (unsold.length) lines.push({ text: c('ans.unsold', { n: unsold.length }), act: { label: c('ans.combo'), href: '/admin/combos' } });
+
   const days = daysBetween(q.from, q.to, rows);
   const prevDays = daysBetween(b.before.from, b.before.to, rows);
   const hero = heroRange({
@@ -115,6 +122,7 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
       <p className="a2-xs a2-mute a2-mt12">
         {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) })}
       </p>
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
       <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
       <div className="a2-mt12 mo-hero">
         <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} prevName={cc('heroPrev')} testId="rp-hero" />
@@ -146,8 +154,8 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
       </section>
 
       {r.restock ? (
-        <>
-          <section className="a2-card a2-mt12" aria-labelledby="rp-rs" data-testid="rp-restock">
+        <div className="rp-grid2 a2-mt12">
+          <section className="a2-card" aria-labelledby="rp-rs" data-testid="rp-restock">
             <h2 className="a2-h3" id="rp-rs">
               {c('restock')}
             </h2>
@@ -159,7 +167,7 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
               </Link>
             </div>
           </section>
-          <section className="a2-card a2-mt12" aria-labelledby="rp-un" data-testid="rp-unsold">
+          <section className="a2-card" aria-labelledby="rp-un" data-testid="rp-unsold">
             <h2 className="a2-h3" id="rp-un">
               {c('unsold')}
             </h2>
@@ -171,7 +179,7 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
               </Link>
             </div>
           </section>
-        </>
+        </div>
       ) : (
         <p className="a2-xs a2-mute a2-mt12" data-testid="rp-no-reports-key">
           {cc('noKey')}

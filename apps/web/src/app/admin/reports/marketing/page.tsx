@@ -12,6 +12,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
+import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
 import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -107,6 +108,16 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
       : { key: 'profit', label: c('kProfit'), value: m.sales.netProfitMinor, shown: f.amount(m.sales.netProfitMinor), format: f.format },
   ];
 
+  const camps = r.campaigns.filter((x) => x.roasPercent !== null && x.spendMinor !== null && x.spendMinor > 0);
+  const bestCamp = [...camps].sort((x, y) => (y.roasPercent ?? 0) - (x.roasPercent ?? 0))[0];
+  const worstCamp = [...camps].sort((x, y) => (x.roasPercent ?? 0) - (y.roasPercent ?? 0))[0];
+  const lines: AnswerLine[] = [];
+  if (r.spendMinor !== null && r.roasPercent !== null)
+    lines.push({ text: c('ans.total', { spend: f.amount(r.spendMinor), sales: f.amount(r.shop.salesMinor), roas: perTk(r.roasPercent), was: perTk(w?.roasPercent ?? null) }), act: { label: c('ans.campaigns'), href: '/admin/marketing/campaigns' } });
+  if (bestCamp) lines.push({ text: c('ans.best', { name: m.now.campaigns[bestCamp.id]?.name ?? bestCamp.id, roas: perTk(bestCamp.roasPercent) }), tone: 'good', act: { label: c('ans.raise'), href: `/admin/marketing/campaigns/${bestCamp.id}` } });
+  if (worstCamp && worstCamp.id !== bestCamp?.id && (worstCamp.roasPercent ?? 100) < 100)
+    lines.push({ text: c('ans.worst', { name: m.now.campaigns[worstCamp.id]?.name ?? worstCamp.id, roas: perTk(worstCamp.roasPercent), spend: f.amount(worstCamp.spendMinor ?? 0) }), tone: 'bad', act: { label: c('ans.pause'), href: `/admin/marketing/campaigns/${worstCamp.id}` } });
+
   const days = daysBetween(q.from, q.to, maxRows);
   const hero = heroRange({
     key: 'p',
@@ -126,6 +137,7 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
       <p className="a2-xs a2-mute a2-mt12">
         {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {vs}
       </p>
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
       <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
       <div className="a2-mt12 mo-hero">
         <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} testId="rp-hero" />
