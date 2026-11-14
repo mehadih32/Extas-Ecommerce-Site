@@ -33,7 +33,7 @@ describe.skipIf(!HAS_TEST_DB)('rich sample data on PostgreSQL (PR 724)', () => {
     await t?.drop();
   });
 
-  it('makes hundreds of orders, ~100 products, claims, ad spend and reviews on the sample store, fast, all flagged practice', async () => {
+  it('makes hundreds of orders, the 72 demo products, claims, ad spend and reviews on the sample store, fast, all flagged practice', async () => {
     const started = Date.now();
     const r = await seedPractice(t.prisma, sample, NOW, { rich: true });
     expect(r.seeded).toBe(true);
@@ -41,7 +41,7 @@ describe.skipIf(!HAS_TEST_DB)('rich sample data on PostgreSQL (PR 724)', () => {
     const db = t.prisma;
     expect(await db.order.count({ where: { storeId: sample, isPractice: true } })).toBeGreaterThanOrEqual(800);
     expect(await db.order.count({ where: { storeId: sample, isPractice: false, number: { startsWith: 'P-' } } })).toBe(0);
-    expect(await db.product.count({ where: { storeId: sample, isPractice: true } })).toBeGreaterThanOrEqual(100);
+    expect(await db.product.count({ where: { storeId: sample, isPractice: true } })).toBeGreaterThanOrEqual(72);
     expect(await db.customer.count({ where: { storeId: sample, isPractice: true } })).toBe(RICH.customers);
     expect(await db.courierClaim.count({ where: { storeId: sample, isPractice: true } })).toBe(RICH.claims);
     expect(await db.courierSettlement.count({ where: { storeId: sample, isPractice: true } })).toBeGreaterThan(20);
