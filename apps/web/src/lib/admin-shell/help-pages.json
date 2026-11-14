@@ -197,6 +197,7 @@
     { "id": "ai/skills", "route": "/admin/ai/skills" },
     { "id": "ai/skills-sandbox", "route": "/admin/ai/skills/sandbox" },
     { "id": "ai/reports", "route": "/admin/ai/reports" },
+    { "id": "ai/learning", "route": "/admin/ai/learning" },
     { "id": "reports/server", "route": "/admin/server" },
     { "id": "reports/fraud", "route": "/admin/reports/fraud" },
     { "id": "reports/stopped", "route": "/admin/reports/stopped" },

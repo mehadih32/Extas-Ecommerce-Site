@@ -189,7 +189,8 @@
         "permissions": "Permissions",
         "diary": "Diary",
         "skills": "Skills",
-        "reports": "Agent reports"
+        "reports": "Agent reports",
+        "learning": "Learning"
       }
     },
     "purpose": {

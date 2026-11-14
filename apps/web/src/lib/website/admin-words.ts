@@ -17,6 +17,8 @@ import adminAgentsChiefEn from '../../../messages/admin-agents-chief.en.json';
 import adminAgentsChiefBn from '../../../messages/admin-agents-chief.bn.json';
 import adminAiEn from '../../../messages/admin-ai.en.json';
 import adminAiBn from '../../../messages/admin-ai.bn.json';
+import adminAiLearningEn from '../../../messages/admin-ai-learning.en.json';
+import adminAiLearningBn from '../../../messages/admin-ai-learning.bn.json';
 import adminAiReportsEn from '../../../messages/admin-ai-reports.en.json';
 import adminAiReportsBn from '../../../messages/admin-ai-reports.bn.json';
 import adminAreasEn from '../../../messages/admin-areas.en.json';
@@ -252,6 +254,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-agents': { en: adminAgentsEn, bn: adminAgentsBn },
   'admin-agents-chief': { en: adminAgentsChiefEn, bn: adminAgentsChiefBn },
   'admin-ai': { en: adminAiEn, bn: adminAiBn },
+  'admin-ai-learning': { en: adminAiLearningEn, bn: adminAiLearningBn },
   'admin-ai-reports': { en: adminAiReportsEn, bn: adminAiReportsBn },
   'admin-areas': { en: adminAreasEn, bn: adminAreasBn },
   'admin-audiences': { en: adminAudiencesEn, bn: adminAudiencesBn },

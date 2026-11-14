@@ -1,0 +1,110 @@
+{
+  "aiLearning": {
+    "metaTitle": "Learning engine",
+    "title": "Learning engine",
+    "sub": "Tirondaj and Doot's own continuous-learning loop: research a source → check it against the quality gate → either a new skill in the basket, or recorded as “doesn't work for us”. Plus their practice tasks and paid-tool proposals.",
+    "agent": "Agent",
+    "needPermission": "You can see this page, but only “AI control” can change anything on it.",
+    "card": {
+      "h": "Switch",
+      "d": "Off by default. Curating a learning source still works while this is off; everything else below refuses.",
+      "on": "Learning engine on",
+      "onHelp": "Research, the quality-gate check, promoting a verified tip into the skill basket, practice tasks and paid-tool proposals all need this on.",
+      "minIndependentSources": "Independent sources needed",
+      "minIndependentSourcesHelp": "When a tip has no official-docs source, this many distinct sources must back it before the quality gate lets it be tested.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "discard": "Discard",
+      "unsaved": "Unsaved changes.",
+      "readOnly": "Owner only.",
+      "err": {
+        "INVALID_INPUT": "Please check the highlighted field.",
+        "NOT_FOUND": "Not found — the page refreshed.",
+        "STALE": "Someone else saved this first — refreshed with the latest.",
+        "BUSY": "Someone else saved this first — refreshed with the latest.",
+        "forbidden": "You do not have permission for this.",
+        "unauthorized": "Please sign in again.",
+        "network": "Could not reach the server. Try again.",
+        "other": "Something went wrong."
+      }
+    },
+    "sources": {
+      "h": "Learning sources",
+      "d": "Where each power agent reads from — official docs, practitioner blogs, Reddit, YouTube transcripts, specialists on LinkedIn/Facebook, case studies.",
+      "col": { "agent": "Agent", "kind": "Kind", "url": "Source", "status": "Status", "tips": "Tips", "updated": "Updated", "action": "Action" },
+      "kind": {
+        "official_docs": "Official docs",
+        "practitioner_blog": "Practitioner blog",
+        "reddit": "Reddit",
+        "youtube_transcript": "YouTube transcript",
+        "specialist_social": "Specialist (LinkedIn/Facebook)",
+        "case_study": "Case study"
+      },
+      "status": { "on": "On", "off": "Off" },
+      "archive": "Archive",
+      "archived": "Archived.",
+      "empty": "No source yet — add one below.",
+      "form": { "agent": "Agent", "kind": "Kind", "url": "Source URL", "add": "Add source", "added": "Source added.", "failed": "Could not add the source." }
+    },
+    "tips": {
+      "h": "Tips — research, the quality gate, the basket",
+      "d": "A new tip starts as a candidate. Checking it either verifies it (official docs, or enough independent sources, plus a real test note) or fails it — recorded honestly as “doesn't work for us”, never thrown away.",
+      "col": { "agent": "Agent", "tip": "Tip", "source": "Source", "status": "Status", "confidence": "Confidence", "updated": "Updated" },
+      "status": { "candidate": "Waiting for the quality gate", "verified": "Verified", "failed": "Doesn't work for us", "promoted": "In the skill basket" },
+      "empty": "No tip yet — propose one below.",
+      "form": {
+        "agent": "Agent",
+        "source": "Primary source",
+        "sourceNone": "No source yet",
+        "tip": "What was found (the tip itself)",
+        "propose": "Propose tip",
+        "proposed": "Tip proposed.",
+        "failed": "Could not propose the tip."
+      },
+      "verify": {
+        "testNote": "What was tried, and what happened (sandbox or a small live test)",
+        "confidence": "Confidence",
+        "confidenceOptions": { "low": "Low", "medium": "Medium", "high": "High" },
+        "supporting": "Other source ids, comma-separated (optional)",
+        "run": "Run the quality gate",
+        "verified": "Checked — see the new status.",
+        "failedGate": "Did not pass the quality gate — recorded as “doesn't work for us”.",
+        "failed": "Could not run the check."
+      },
+      "promote": { "name": "Skill name", "purpose": "Purpose (optional)", "promote": "Add to the skill basket", "promoted": "Sent to the skill basket — waiting for approval.", "failed": "Could not promote the tip." }
+    },
+    "practice": {
+      "h": "Practice tasks",
+      "d": "A task with a deadline (e.g. “get a new page indexed within 3 days”, “a long-tail keyword into the top 10”, “a test campaign under the CPA cap”) — graded here, read into the agent's own appraisal.",
+      "col": { "agent": "Agent", "title": "Task", "goal": "Goal", "deadline": "Deadline", "status": "Status", "grade": "Grade" },
+      "status": { "open": "Open", "done": "Done", "missed": "Missed" },
+      "grade": { "pass": "Pass", "partial": "Partial", "fail": "Fail" },
+      "empty": "No practice task yet — add one below.",
+      "form": { "agent": "Agent", "title": "Title", "goal": "Goal (what counts as a pass)", "deadline": "Deadline", "create": "Add task", "created": "Task added.", "failed": "Could not add the task." },
+      "gradeForm": {
+        "status": "Status",
+        "statusOptions": { "done": "Done", "missed": "Missed" },
+        "grade": "Grade",
+        "gradeOptions": { "pass": "Pass", "partial": "Partial", "fail": "Fail" },
+        "save": "Save",
+        "saved": "Saved.",
+        "failed": "Could not save."
+      }
+    },
+    "paidTool": {
+      "h": "Paid data tool",
+      "d": "An SEO suite, an ads intelligence tool and the like — proposed here with its cost and the reason; it waits in AI › Approvals for the owner to approve and pay. Nothing here ever charges anything by itself.",
+      "form": {
+        "agent": "Agent",
+        "toolName": "Tool name",
+        "cost": "Cost",
+        "currency": "Currency",
+        "reason": "Why it is needed",
+        "propose": "Propose",
+        "proposed": "Proposed — waiting in AI › Approvals.",
+        "failed": "Could not send the proposal."
+      }
+    }
+  }
+}
