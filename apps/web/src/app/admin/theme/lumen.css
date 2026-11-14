@@ -20,24 +20,24 @@
 :root,
 [data-lm-look] {
   /* shape */
-  --lm-r-card: 22px;
-  --lm-r-side: 24px;
-  --lm-r-panel: 20px;
-  --lm-r-box: 16px;
-  --lm-r-ctl: 12px;
-  --lm-r-sm: 9px;
+  --lm-r-card: 14px;
+  --lm-r-side: 14px;
+  --lm-r-panel: 16px;
+  --lm-r-box: 12px;
+  --lm-r-ctl: 10px;
+  --lm-r-sm: 8px;
   --lm-r-pill: 999px;
   /* type */
   --lm-font: 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --lm-font-disp: 'EXTAS Admin Display', 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, sans-serif;
   --lm-font-bn: 'EXTAS Admin Bangla', 'EXTAS Admin Sans', system-ui, sans-serif;
   --lm-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --lm-fs-body: 15px;
+  --lm-fs-body: 14px;
   --lm-fs-card: 14px;
-  --lm-fs-h1: 1.9rem;
-  --lm-fs-h1-phone: 1.5rem;
-  --lm-fs-big: 3.4rem;
-  --lm-fs-big-phone: 2.4rem;
+  --lm-fs-h1: 1.625rem;
+  --lm-fs-h1-phone: 1.375rem;
+  --lm-fs-big: 2.125rem;
+  --lm-fs-big-phone: 1.75rem;
   --lm-lh-tight: 1.25; /* a label that wraps to two lines (sidebar) */
   /* motion (0s under "Reduce motion") */
   --lm-t-fast: 0.15s;
@@ -48,7 +48,7 @@
   --lm-ease-spring: cubic-bezier(0.3, 1.4, 0.5, 1);
   --lm-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* size */
-  --lm-side-w: 248px;
+  --lm-side-w: 252px;
   --lm-side-w-icons: 72px;
   --lm-side-inset: 12px;
   --lm-tap: 44px;
@@ -57,19 +57,19 @@
 /* ---- ঘ Lumen, light (the default) ---- */
 :root,
 [data-lm-look='lumen'] {
-  --lm-accent: #ff5a36;
-  --lm-swatch-ring: rgba(14, 26, 56, 0.18); /* the thin ring round a colour dot, so a white or black dot still shows (PR 634) */
-  --lm-bg: #eceff5;
+  --lm-accent: #c2410c;
+  --lm-swatch-ring: rgba(21, 26, 45, 0.18); /* the thin ring round a colour dot, so a white or black dot still shows (PR 634) */
+  --lm-bg: #eef0f6;
   --lm-sf: #ffffff;
-  --lm-sf2: #f4f6fb;
-  --lm-ln: #e2e7f0;
+  --lm-sf2: #f7f8fb;
+  --lm-ln: #e2e5ee;
   --lm-ln2: #edf0f6;
-  --lm-ink: #0e1a38;
-  --lm-ink2: #5b6885;
-  --lm-faint: #5b6885;
+  --lm-ink: #151a2d;
+  --lm-ink2: #5a6178;
+  --lm-faint: #5a6178;
   --lm-inp: #ffffff;
-  --lm-chip: #eaeef6;
-  --lm-hover: #f4f6fb;
+  --lm-chip: #e6e9f2;
+  --lm-hover: #f7f8fb;
   /* the accent, mixed so text stays AA: ink = accent-coloured text on a card, brand = a surface under white text.
      PR 625 follow-up (contrast audit): the mixes are deep enough for every ready swatch of Settings › Admin look (teal,
      the lightest, decides): ink 72% → 66%, brand 78% → 66% (the older pages also use it as text on light tints), the
@@ -87,25 +87,26 @@
   --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 58%, #000000));
   --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
   /* states (text + tint), each AA on its tint */
-  --lm-ok: #0b7a50;
-  --lm-okbg: #dcf4e9;
-  --lm-warn: #9c5a00;
-  --lm-warnbg: #fff0d2;
-  --lm-bad: #c02535;
-  --lm-badbg: #ffe4e8;
-  --lm-info: #1a63bf;
-  --lm-infobg: #e1edff;
+  --lm-ok: #147a3a;
+  --lm-okbg: #e3f5e9;
+  --lm-warn: #b04f09;
+  --lm-warnbg: #fdf3dc;
+  --lm-bad: #b91c1c;
+  --lm-badbg: #fde7e7;
+  --lm-info: #1d4ed8;
+  --lm-infobg: #e5edff;
   /* data colours (charts) */
   --lm-c1: var(--lm-accent);
-  --lm-c2: #12b5a6;
-  --lm-c3: #7c5cff;
-  --lm-c4: #f5a524;
-  --lm-c5: #2e9bff;
-  --lm-c2-rgb: 18, 181, 166;
+  --lm-c2: #0f766e;
+  --lm-c3: #7c3aed;
+  --lm-c4: #a16207;
+  --lm-c5: #2b3a80;
+  --lm-c6: #be185d;
+  --lm-c2-rgb: 15, 118, 110;
   --lm-cprev: #b6bfd1;
   /* the hero card (dark in both modes) and what sits on it */
-  --lm-hero: linear-gradient(135deg, #0e1a38, #1b2c66);
-  --lm-hero-solid: #14234f;
+  --lm-hero: linear-gradient(135deg, #1b2453, #2b3a80);
+  --lm-hero-solid: #1b2453;
   --lm-hero-glow: radial-gradient(520px 220px at 88% -10%, color-mix(in srgb, var(--lm-accent) 50%, transparent), transparent 62%);
   --lm-on-hero: #ffffff;
   --lm-on-hero2: rgba(255, 255, 255, 0.72);
@@ -113,80 +114,92 @@
   --lm-on-hero-line: rgba(255, 255, 255, 0.16);
   --lm-ok-on-hero: #6fe3b5;
   /* shadows and overlays */
-  --lm-sh: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 28px rgba(14, 26, 56, 0.07);
-  --lm-sh-sm: 0 1px 2px rgba(14, 26, 56, 0.06);
-  --lm-sh2: 0 30px 70px rgba(8, 13, 31, 0.4);
-  --lm-sh-drawer: -20px 0 50px rgba(8, 13, 31, 0.3);
+  --lm-sh: 0 1px 2px rgba(20, 26, 50, 0.05), 0 4px 16px rgba(20, 26, 50, 0.05);
+  --lm-sh-sm: 0 1px 2px rgba(20, 26, 50, 0.06);
+  --lm-sh2: 0 20px 60px rgba(0, 0, 0, 0.3);
+  --lm-sh-drawer: -10px 0 40px rgba(0, 0, 0, 0.2);
   --lm-sh-toast: 0 16px 40px rgba(8, 13, 31, 0.4);
-  --lm-scrim: rgba(8, 13, 31, 0.45);
-  --lm-glass: rgba(236, 239, 245, 0.86);
+  --lm-scrim: rgba(12, 16, 32, 0.45);
+  --lm-glass: rgba(238, 240, 246, 0.88);
   color-scheme: light;
 }
 
 /* ---- ঘ Lumen, dark (the moon button) ---- */
 [data-lm-look='lumen'][data-lm-mode='dark'] {
   --lm-swatch-ring: rgba(238, 242, 255, 0.3);
-  --lm-bg: #080d1f;
-  --lm-sf: #111936;
-  --lm-sf2: #18224a;
-  --lm-ln: #243059;
-  --lm-ln2: #1b2550;
-  --lm-ink: #eef2ff;
-  --lm-ink2: #9ba8cb;
-  --lm-faint: #9ba8cb;
-  --lm-inp: #0c1330;
-  --lm-chip: #1a2450;
-  --lm-hover: #18224a;
+  --lm-bg: #0f1220;
+  --lm-sf: #171c2e;
+  --lm-sf2: #1d2338;
+  --lm-ln: #262d45;
+  --lm-ln2: #1f2640;
+  --lm-ink: #eef0f8;
+  --lm-ink2: #949ab5;
+  --lm-faint: #949ab5;
+  --lm-inp: #171c2e;
+  --lm-chip: #1d2338;
+  --lm-hover: #1d2338;
   --lm-ac: color-mix(in srgb, var(--lm-accent) 90%, #ffffff);
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 18%, #141018);
-  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 78%, #ffffff);
-  --lm-focus: color-mix(in srgb, var(--lm-accent) 78%, #ffffff);
-  --lm-ok: #4cd3a0;
-  --lm-okbg: #10332a;
-  --lm-warn: #f5b94d;
-  --lm-warnbg: #3a2c0c;
-  --lm-bad: #ff7a89;
-  --lm-badbg: #3c1a22;
-  --lm-info: #7db3ff;
-  --lm-infobg: #142b52;
-  --lm-cprev: #4a5a8a;
-  --lm-hero: linear-gradient(135deg, #16224f, #0e1740);
-  --lm-hero-solid: #16224f;
-  --lm-sh: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.35);
-  --lm-sh-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --lm-glass: rgba(8, 13, 31, 0.86);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 72%, #ffffff);
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #ffffff);
+  --lm-ok: #4ade80;
+  --lm-okbg: #13321f;
+  --lm-warn: #fbbf24;
+  --lm-warnbg: #3a2c0d;
+  --lm-bad: #f87171;
+  --lm-badbg: #3a1515;
+  --lm-info: #7aa2ff;
+  --lm-infobg: #18244a;
+  --lm-cprev: #4a5373;
+  --lm-c2: #2dd4bf;
+  --lm-c3: #a78bfa;
+  --lm-c4: #facc15;
+  --lm-c5: #7f8fe6;
+  --lm-c6: #f472b6;
+  --lm-c2-rgb: 45, 212, 191;
+  --lm-hero: linear-gradient(135deg, #222c63, #3546a0);
+  --lm-hero-solid: #222c63;
+  --lm-sh: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --lm-sh-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --lm-glass: rgba(15, 18, 32, 0.88);
   color-scheme: dark;
 }
 
 /* ---- the light island: a page not yet moved into the look keeps the light tokens in dark mode ---- */
 [data-lm-look='lumen'][data-lm-mode='dark'] :is(.ad:not([data-lm-ready]), .lm-ct:not(:has(> [data-lm-ready])), .lm-island) {
-  --lm-bg: #eceff5;
+  --lm-bg: #eef0f6;
   --lm-sf: #ffffff;
-  --lm-sf2: #f4f6fb;
-  --lm-ln: #e2e7f0;
+  --lm-sf2: #f7f8fb;
+  --lm-ln: #e2e5ee;
   --lm-ln2: #edf0f6;
-  --lm-ink: #0e1a38;
-  --lm-ink2: #5b6885;
-  --lm-faint: #5b6885;
+  --lm-ink: #151a2d;
+  --lm-ink2: #5a6178;
+  --lm-faint: #5a6178;
   --lm-inp: #ffffff;
-  --lm-chip: #eaeef6;
-  --lm-hover: #f4f6fb;
+  --lm-chip: #e6e9f2;
+  --lm-hover: #f7f8fb;
   --lm-ac: var(--lm-accent);
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
   --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
   --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
-  --lm-ok: #0b7a50;
-  --lm-okbg: #dcf4e9;
-  --lm-warn: #9c5a00;
-  --lm-warnbg: #fff0d2;
-  --lm-bad: #c02535;
-  --lm-badbg: #ffe4e8;
-  --lm-info: #1a63bf;
-  --lm-infobg: #e1edff;
+  --lm-ok: #147a3a;
+  --lm-okbg: #e3f5e9;
+  --lm-warn: #b04f09;
+  --lm-warnbg: #fdf3dc;
+  --lm-bad: #b91c1c;
+  --lm-badbg: #fde7e7;
+  --lm-info: #1d4ed8;
+  --lm-infobg: #e5edff;
   --lm-cprev: #b6bfd1;
-  --lm-swatch-ring: rgba(14, 26, 56, 0.18);
-  --lm-sh: 0 1px 2px rgba(14, 26, 56, 0.05), 0 10px 28px rgba(14, 26, 56, 0.07);
-  --lm-sh-sm: 0 1px 2px rgba(14, 26, 56, 0.06);
+  --lm-c2: #0f766e;
+  --lm-c3: #7c3aed;
+  --lm-c4: #a16207;
+  --lm-c5: #2b3a80;
+  --lm-c6: #be185d;
+  --lm-c2-rgb: 15, 118, 110;
+  --lm-swatch-ring: rgba(21, 26, 45, 0.18);
+  --lm-sh: 0 1px 2px rgba(20, 26, 50, 0.05), 0 4px 16px rgba(20, 26, 50, 0.05);
+  --lm-sh-sm: 0 1px 2px rgba(20, 26, 50, 0.06);
   color-scheme: light;
   color: var(--lm-ink);
   background: var(--lm-bg);

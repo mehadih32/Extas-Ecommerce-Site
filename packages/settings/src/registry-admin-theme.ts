@@ -3,7 +3,7 @@
 //
 // - `admin.theme`: the team's admin look and its accent colour, and whether motion is reduced for everyone.
 //   `look` is one of the looks that are built (only "lumen" until PR 649–651 build the parked ones); `accent` is the
-//   colour every button, link and highlight is mixed from (coral as shipped; text on it stays readable, the theme
+//   colour every button, link and highlight is mixed from (burnt orange #C2410C as shipped (the prototype's accent; coral #FF5A36 before PR 724); text on it stays readable, the theme
 //   layer darkens it where needed); `reduceMotion` stops the admin's animations for everyone (each person can also
 //   turn it on for themselves, and the system's own "reduce motion" is always followed).
 // Light or dark is each person's own choice (the moon button), kept on their staff account (StaffUser.adminPrefs),
@@ -31,7 +31,7 @@ export const BUILT_ADMIN_LOOKS = ADMIN_THEME_LOOKS.filter((l) => l.built).map((l
  * any other #RRGGBB can be typed in too. The theme layer keeps text on any accent readable.
  */
 export const ADMIN_ACCENT_PRESETS = [
-  { id: 'coral', hex: '#FF5A36' },
+  { id: 'coral', hex: '#C2410C' },
   { id: 'teal', hex: '#12B5A6' },
   { id: 'violet', hex: '#7C5CFF' },
   { id: 'sky', hex: '#2E9BFF' },
@@ -61,7 +61,7 @@ export const adminThemeSettings = {
     isPublic: false,
     version: V,
     schema: adminThemeSchema,
-    default: { look: 'lumen', accent: '#FF5A36', reduceMotion: false },
+    default: { look: 'lumen', accent: '#C2410C', reduceMotion: false },
     labelKey: 'admin.theme.label',
     helpKey: 'admin.theme.help',
     sortOrder: 39,
