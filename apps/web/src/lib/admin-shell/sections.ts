@@ -547,6 +547,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'productsReport', guide: 'analytics', pages: [{ href: '/admin/reports/products', perm: 'books.read', keys: ['reportsProducts'] }] },
       // S28 · PR 716 (CN-048): Reports › Marketing & ads — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
       { id: 'marketingReport', guide: 'analytics', pages: [{ href: '/admin/reports/marketing', perm: 'marketing.campaigns.read', keys: ['reportsMarketing'] }] },
+      // S28 · PR 717 (CN-048): Reports › Monthly review — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
+      { id: 'monthlyReview', guide: 'analytics', pages: [{ href: '/admin/reports/review', perm: 'books.read', keys: ['reportsReview'] }] },
       // S02 · PR 72 follow-up 100 — Searches: what shoppers searched for and what found nothing (`search.insights`, off).
       { id: 'searches', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/searches', perm: 'reports.read', keys: ['reportsSearches'] }] },
       // S02 · PR 83 — REP-08 Experiments: A/B tests of the shop's words and shown or hidden parts, with how sure each result is.
