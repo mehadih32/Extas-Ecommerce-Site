@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-14 07:32 (Asia/Dhaka)
+# Smoke test · 2026-11-14 14:07 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (646টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (652টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://new.extas.com.bd · commit `4c40102c69ab` · nightly · result **PASS** (646 page views, 0 failed)
+Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · result **PASS** (652 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -323,9 +323,12 @@ Site: https://new.extas.com.bd · commit `4c40102c69ab` · nightly · result **P
 | `/admin/settings/start-fresh` | phone | 200 | `/admin/settings/start-fresh` | ok | — |
 | `/admin/map` | phone | 200 | `/admin/map` | ok | — |
 | `/admin/settings/practice` | phone | 200 | `/admin/settings/practice` | ok | — |
+| `/admin/marketing/ad-platforms/guardrails` | phone | 200 | `/admin/marketing/ad-platforms/guardrails` | ok | — |
+| `/admin/agents/chief` | phone | 200 | `/admin/agents/chief` | ok | — |
+| `/admin/ai/learning` | phone | 200 | `/admin/ai/learning` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d73b-5e32-7b22-90ba-1329a1498447` | phone | 200 | `/admin/reports/health/history/01a1d73b-5e32-7b22-90ba-1329a1498447` | ok | — |
+| `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | phone | 200 | `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -646,9 +649,12 @@ Site: https://new.extas.com.bd · commit `4c40102c69ab` · nightly · result **P
 | `/admin/settings/start-fresh` | desktop | 200 | `/admin/settings/start-fresh` | ok | — |
 | `/admin/map` | desktop | 200 | `/admin/map` | ok | — |
 | `/admin/settings/practice` | desktop | 200 | `/admin/settings/practice` | ok | — |
+| `/admin/marketing/ad-platforms/guardrails` | desktop | 200 | `/admin/marketing/ad-platforms/guardrails` | ok | — |
+| `/admin/agents/chief` | desktop | 200 | `/admin/agents/chief` | ok | — |
+| `/admin/ai/learning` | desktop | 200 | `/admin/ai/learning` | ok | — |
 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d73b-5e32-7b22-90ba-1329a1498447` | desktop | 200 | `/admin/reports/health/history/01a1d73b-5e32-7b22-90ba-1329a1498447` | ok | — |
+| `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | desktop | 200 | `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | ok | — |
 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
