@@ -44,9 +44,9 @@ Agent C checked the menu on 14 Nov: all 25 pages are in the menu and nothing is 
 
 | What | Plain line | What it would take |
 |---|---|---|
-| **PR 587 old-address redirects** | The main domain was switched on 11 Nov and holds. On 14 Nov the 45 old WordPress addresses answered 404 on the live site (the map is off). | The coordinator switches `seo.redirects.wordpressMapLive` on and the 45 addresses are checked for 301; then PR 587 is marked done. |
-| **PR 646 AI Center in Lumen** | Superseded by S15 and the menu section; not built as filed. Only a cosmetic leftover: the Approvals, Models, Cost book, Diary, Permissions and Skills pages do not use the Lumen page-header classes (`lm-ph`). | The owner asks for the look to be matched; a small styling change, file it as a new PR. |
 | **About 209 open follow-up rows** in `PROGRESS.md`, and the notes in [`docs/after-golive-notes.md`](../after-golive-notes.md) | Small "better later" items. All "can wait", none touches orders or money. | The owner picks any of them in the chat. |
+
+Closed on 15 Nov 2026 (CN-053), no longer open: **PR 587** (the old WordPress addresses answer 301 since the owner switched the map on; `/shop` and `/contact` were dropped on purpose) is done, and **PR 646** (AI Center in Lumen) is cancelled by the owner, so it is not parked and not counted.
 
 ## 4. Built, but switched off until the owner says
 

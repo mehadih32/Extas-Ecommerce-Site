@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — CN-053: PR 646 cancelled, PR 587 done (owner decisions; branch `claude/round1`, local, NOT pushed)
+
+PR 646 (Lumen section: AI Center) is cancelled by the owner and no longer counts as active: S00 is 46/46. PR 587 (WordPress migration) is done: the owner switched `seo.redirects.wordpressMapLive` on and the 45 old addresses answer 301 (`/shop` and `/contact` were deliberately dropped by the owner). S19 is 19/19, Launch 330/330, totals 726 PRs / 716 active / 693 built. Register, README, `docs/stages/`, `docs/LAUNCH-TRACK.md`, `docs/owner/PARKED.md` and `bn.json` are updated; the stage generator now treats a Build status row with state "cancelled …" as not built and not counted.
+
 ## 15 Nov 2026 — PR 719–726 filed in the register (branch `claude/round1`, local, NOT pushed)
 
 PR 725 (live practice shop) and PR 726 (Brand & menus) were merged onto the PR 720 photos work and the PR 724 rich seed: the background keeper makes pictures with `maxPhotos`, the manual "Add practice photos" button (`addPhotosBatch`, `practice.photoBatch`) uses the same `addPracticePhotos` (options `limit` and `maxPhotos`), `practice.autoFill` and `practice.notice` sit beside `practice.photoBatch`, and the rich option still works (its orders, claims, ads and reviews; the products are now the 72 demo styles). Register rows 719–726, S28 68/68, totals 726 / 717 active / 692 built, README PR log row and `docs/stages/bn.json` are updated. Nothing was type-checked or tested here (no node_modules): run `pnpm check` and the database tests before the first push.
@@ -15,9 +19,9 @@ PR 725 (live practice shop) and PR 726 (Brand & menus) were merged onto the PR 7
 
 ## CLOSED — 14 Nov 2026 (owner, CN-051): the project has no open work
 
-**State.** 718 PRs in the register, 709 active, 9 parked; **684 built**. S28 (admin v5) is complete, 60/60 (PR 700–718 merged 13–14 Nov; 711–718 are the eight prototype tabs). S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.
+**State.** 726 PRs in the register, 716 active, 9 parked, 1 cancelled (PR 646, owner, 15 Nov, CN-053); **693 built**; Launch 330/330. S28 (admin v5) is complete, 68/68 (PR 700–726 merged 13–15 Nov; 711–718 are the eight prototype tabs). ~~718 PRs, 709 active, 9 parked; 684 built; S28 60/60.~~ S15, S23, S24 and S25 are finished and their screens are switched on live with `stages.closedShown` (S17, S26, S27 stay off; `ai.enabled` stays off until the owner turns it on). One domain, **extas.com.bd**; the staging host new.extas.com.bd is retired (the owner deletes the Cloudflare `new` record afterwards). The owner signs in at **https://extas.com.bd/access**. Last deploy: 14 Nov about 14:00 (Dhaka), commit `8d5faa41`, success, smoke 652 page views OK.
 
-**Not built, and why.** PR 646 (the AI Center in Lumen): superseded by S15 and the menu section (cosmetic leftover parked). PR 587 (main-domain switch and redirects): the domain is switched and holds, **but on 14 Nov the 45 old WordPress addresses answered 404** on the live site; it stays open until `seo.redirects.wordpressMapLive` is switched on and the 45 addresses answer 301. S17: 23 PRs closed. S26, S27, PR 649–651: parked.
+**Not built, and why.** S17: 23 PRs closed. S26, S27, PR 649–651: parked. Cancelled by the owner on 15 Nov (CN-053): PR 646 (the AI Center in Lumen). Done on 15 Nov (CN-053): PR 587, the 45 old WordPress addresses answer 301 (`/shop` and `/contact` were dropped on purpose). ~~PR 646: superseded by S15 and the menu section (cosmetic leftover parked). PR 587: open, the 45 addresses answered 404 on 14 Nov.~~
 
 **What is parked.** Everything, one plain line each with what it would take to start, is in [`docs/owner/PARKED.md`](docs/owner/PARKED.md): closed and parked stages, the 8 prototype tabs with no register row, the switches that stay off, the owner's own steps, the open follow-up rows.
 

@@ -7554,7 +7554,7 @@ Generated from `master/MASTER-REGISTER.md` (title, stage) and the PR register da
 | 643 | Lumen section: Money 2 (Books, month end) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
 | 644 | Lumen section: Reports 1 (business reports) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
 | 645 | Lumen section: Reports 2 (Site health) (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
-| 646 | Lumen section: AI Center (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
+| 646 | Lumen section: AI Center (CN-036; 6 Nov 2026) | S00 | Cancelled (owner, 15 Nov 2026, CN-053) | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
 | 647 | Lumen section: Settings (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
 | 648 | Lumen section: Help (CN-036; 6 Nov 2026) | S00 | Filed | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |
 | 649 | Admin look ক Clear Day (parked) (CN-036; 6 Nov 2026) | S00 | Parked | Gyani | `docs/demo/admin-look/ADMIN-LOOKS-V1.html` |

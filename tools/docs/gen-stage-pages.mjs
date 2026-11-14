@@ -213,9 +213,15 @@ for (const s of stages) {
 const progressLine = plainMd((regLines.find((l) => /^\*\*Progress:/.test(l.trim())) ?? '').trim()).replace(/^Progress:\s*/, '');
 const asOf = (regLines.find((l) => /^\*\*\d+ PRs · \d+ stages · as of/.test(l)) ?? '').replace(/\*\*/g, '').trim();
 const built = new Map();
+// CN-053 (owner, 15 Nov 2026): a PR the owner cancelled has a Build status row of state "cancelled …"; it is not built and not counted
+const cancelled = new Map();
 tableAfter(register, '## Build status').forEach(([pr, stage, state, date, note], i) => {
   const n = Number(pr);
   if (!n) return;
+  if (/^cancelled/i.test(plainMd(state))) {
+    cancelled.set(n, { stage, state: plainMd(state), date, note });
+    return;
+  }
   built.set(n, { stage, state: state.toLowerCase(), date, note, order: i });
 });
 
@@ -539,7 +545,7 @@ for (const s of stages) {
     updates.forEach((u, i) => (u.order = i));
     updates.sort((x, y) => x.date.key - y.date.key || x.order - y.order);
 
-    const state = b ? b.state : (a?.status ?? (s.parked ? 'Parked' : 'Filed'));
+    const state = b ? b.state : (cancelled.get(n)?.state ?? a?.status ?? (s.parked ? 'Parked' : 'Filed'));
     const isBuilt = Boolean(b);
     const bnLine = bn.prs?.[String(n)];
     const st = bn.stages?.[s.id] ?? {};

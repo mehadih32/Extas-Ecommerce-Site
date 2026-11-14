@@ -1,6 +1,6 @@
 # EXTAS — Launch track
 
-**14 Nov 2026 (CN-051, owner): the project is closed; nothing is being built.** Launch is 329/331: PR 587 (the main-domain switch: done and verified on 11 Nov, but the 45 old WordPress redirects answer 404 on 14 Nov until the redirect switch is on) stays open; PR 646 (the AI Center in Lumen) is superseded by S15 and the shell. S28 is complete (52/52, 659–710). The After-launch list below is history: what is closed (S17, 23 PRs) or parked (S26, S27, PR 649–651) stays so until the owner says; the rules about lanes, batches and "never idle" below ~~keep running after each PR~~ no longer apply. All of it is in [`owner/PARKED.md`](owner/PARKED.md).
+**14 Nov 2026 (CN-051, owner): the project is closed; nothing is being built.** ~~Launch is 329/331: PR 587 (the main-domain switch: done and verified on 11 Nov, but the 45 old WordPress redirects answer 404 on 14 Nov until the redirect switch is on) stays open; PR 646 (the AI Center in Lumen) is superseded by S15 and the shell.~~ **15 Nov 2026 (CN-053, owner): Launch is 330/330.** PR 587 is done (the 45 old WordPress addresses answer 301 since the owner switched the map on; `/shop` and `/contact` were deliberately dropped), and PR 646 is cancelled by the owner, so it leaves the Launch list. S28 is complete (52/52, 659–710). The After-launch list below is history: what is closed (S17, 23 PRs) or parked (S26, S27, PR 649–651) stays so until the owner says; the rules about lanes, batches and "never idle" below ~~keep running after each PR~~ no longer apply. All of it is in [`owner/PARKED.md`](owner/PARKED.md).
 
 **11 Nov 2026, 23:37 (CN-044, replaces CN-040–CN-042):** Launch is done (go-live, CN-038/039). From here, up to 7 builders + qa-gate work the **After launch** list by lane, not strictly in the order below: **AI-1/AI-2/AI-3** = S15 (split ~43 PRs into 3 groups) → S24 (AI-1/AI-2, split in two) / S25 (AI-3) → whichever is free first takes S26/S27; **SOC** = S23 → S12/S13 leftovers; **FIX** = every stuck/red/conflicting PR first (309, 489, 440, the CN-043 white-screen branches, then watches all PRs so none waits unmerged more than a few hours), then the CAN-wait/Follow-ups list; **ERP** = the ERP link fix → SKU/stock comparison → Orders/Products/Dashboard B/C designs (CN-025 380–382). S17 stays closed. Batches of 10–15 PRs, several a day, same batch→qa-gate→rebase-merge→deploy shape as before go-live; full CN-044 text in `docs/MASTER-REGISTER.md`.
 
@@ -30,7 +30,7 @@
 
 | List | Done | Total | Left |
 |---|---:|---:|---:|
-| **Launch** | ~~222~~ 329 | ~~305~~ 331 | ~~**83**~~ **2** (PR 587 open: redirects; PR 646 superseded) |
+| **Launch** | ~~222~~ ~~329~~ 330 | ~~305~~ ~~331~~ 330 | ~~**83**~~ ~~**2**~~ **0** (15 Nov, CN-053: PR 587 done, PR 646 cancelled) |
 | **After launch** | ~~21~~ 347 | ~~313~~ 370 | ~~292~~ 23 closed (S17) · 9 parked, nothing is being built |
 | Active total | ~~243~~ 676 | ~~618~~ 701 | ~~375~~ 25 |
 
@@ -176,13 +176,13 @@ Build order, top to bottom. Group A finishes the stages already in progress (S02
 | 122 | 643 | S00 | Lumen section: Money 2 (Books, month end) *(CN-036; Lane A; before go-live)* | to build |
 | 123 | 644 | S00 | Lumen section: Reports 1 (business reports) *(CN-036; Lane A; before go-live)* | to build |
 | 124 | 645 | S00 | Lumen section: Reports 2 (Site health) *(CN-036; Lane A; before go-live)* | to build |
-| 125 | 646 | S00 | Lumen section: AI Center *(CN-036; Lane A; before go-live)* | to build |
+| 125 | ~~646~~ | S00 | ~~Lumen section: AI Center *(CN-036; Lane A; before go-live)*~~ | cancelled by the owner, 15 Nov 2026 (CN-053) |
 | 126 | 647 | S00 | Lumen section: Settings *(CN-036; Lane A; before go-live)* | to build |
 | 127 | 648 | S00 | Lumen section: Help *(CN-036; Lane A; before go-live)* | to build |
 | 128 | 652 | S19 | Closed stages hidden by a switch *(CN-036; Lane C; before go-live)* | to build |
 | 129 | 653 | S19 | Redirect import from the old public sitemap (read-only) *(CN-036; Lane C; before go-live)* | to build |
 | — | gate | CN-013 | **The 70-order real-life journey simulation rerun on new.extas.com.bd** (CN-013, CN-017 findings as acceptance tests, §13); real orders start only after it passes | to run |
-| 130 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate; after the admin look is merged and the go-live check is green, on the owner's typed "go live", CN-036)* | to build |
+| 130 | 587 | S19 | WordPress → new site migration (extas.com.bd) *(go-live day, after the gate; after the admin look is merged and the go-live check is green, on the owner's typed "go live", CN-036)* | ~~to build~~ built (15 Nov 2026, CN-053: the 45 old addresses answer 301) |
 
 <details><summary>Launch PRs already built (201)</summary>
 
