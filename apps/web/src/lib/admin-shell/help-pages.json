@@ -118,6 +118,7 @@
     { "id": "marketing/audience", "route": "/admin/marketing/audiences/[id]" },
     { "id": "website/layouts", "route": "/admin/website/layouts" },
     { "id": "website/words", "route": "/admin/website/words" },
+    { "id": "website/policies", "route": "/admin/website/policies" },
     { "id": "website/eye-toggles", "route": "/admin/website/eye-toggles" },
     { "id": "website/side-canvas", "route": "/admin/website/side-canvas" },
     { "id": "website/launch-default", "route": "/admin/website/launch-default" },

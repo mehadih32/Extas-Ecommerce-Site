@@ -1,0 +1,85 @@
+{
+  "pw": {
+    "metaTitle": "Policies",
+    "title": "Policies",
+    "sub": "The pages customers read before they order. Write each one in English and Bengali, check it in the preview, then publish.",
+    "note": "Your own words only: nothing is written for you. A page with no words stays a draft and does not show on the shop.",
+    "names": {
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "delivery": "Delivery",
+      "exchange": "Exchange & returns",
+      "payment": "Payment & COD",
+      "cancellation": "Cancellation & Refund",
+      "wallet": "Wallet & coupons",
+      "reviews": "Reviews",
+      "cookies": "Cookies"
+    },
+    "pages": "Policy pages",
+    "label": {
+      "title": "Title",
+      "lede": "Line under the title",
+      "body": "Page text"
+    },
+    "field": {
+      "title": "Title",
+      "lede": "Line under the title",
+      "body": "Page text",
+      "words": "Words",
+      "page": "Page",
+      "restore": "Version",
+      "version": "Version"
+    },
+    "preview": "Preview",
+    "previewLang": "Preview language",
+    "previewEmpty": "Nothing written yet.",
+    "previewHelp": "This is how the page reads on the shop. A blank line starts a new paragraph, “## ” starts a heading and “- ” starts a list line.",
+    "state": {
+      "published": "Live",
+      "published-draft": "Live, newer draft waiting",
+      "draft": "Draft"
+    },
+    "lastEdited": "Last edited {when} by {by}",
+    "neverEdited": "Not written yet",
+    "someone": "the system",
+    "notLive": "Not on the shop yet ({path})",
+    "sharedNote": "The shop already had this page. Its words are the same ones as in Settings › Policies & texts, so a change there shows here as a new version.",
+    "saveDraft": "Save draft",
+    "saving": "Saving…",
+    "publish": "Publish",
+    "saved": "Draft saved",
+    "published": "Published — the shop shows it now",
+    "restored": "Version {v} brought back as a new draft",
+    "restore": "Restore as new draft",
+    "unsaved": "You have changes that are not saved. Leave anyway?",
+    "unsavedShort": "Unsaved changes",
+    "readOnly": "You can look at these pages. Changing them needs the settings permission.",
+    "history": "Version history",
+    "historyHelp": "Every version is kept. Restoring one makes a new draft; nothing is ever removed.",
+    "noHistory": "No versions yet. Save a draft to start the history.",
+    "version": "Version {v}",
+    "vs": {
+      "PUBLISHED": "Live",
+      "DRAFT": "Draft",
+      "SUPERSEDED": "Replaced",
+      "DISCARDED": "Set aside"
+    },
+    "src": {
+      "settings": "Kept from Settings › Policies & texts",
+      "edit": "Written here",
+      "restore": "Restored from version {v}"
+    },
+    "err": {
+      "INVALID_INPUT": "Check the words: fill both English and Bengali for each box you use, and write the page text before publishing",
+      "STALE": "Someone else changed this page. Reload and try again",
+      "PLACEHOLDER": "Replace the stand-in text in square brackets with the real words",
+      "UNKNOWN_TOKEN": "A rule number in the words does not match any rule",
+      "NO_DRAFT": "There is no draft to publish",
+      "NOT_FOUND": "That version was not found",
+      "forbidden": "You do not have permission to do this",
+      "unauthorized": "Please sign in again",
+      "network": "No connection. Try again",
+      "other": "Something went wrong. Try again"
+    }
+  }
+}

@@ -22,6 +22,7 @@ import { filterItems } from '../shop/category-filter';
 import { parseState, Q } from '../shop/category-model';
 import { readPageSettings, shopContextFor } from '../shop/context';
 import { loadHelp } from '../shop/help-data';
+import { liveNewPolicies } from '../website-policies/shop';
 import { productPath } from '../shop/home-model';
 import { ROUTES } from '../shop/routes';
 import { settingsTimeoutMs, withTimeout } from '../settings';
@@ -74,6 +75,8 @@ export async function collectSitemap(storeId: number, set: SitemapSettings): Pro
   if (on.help) {
     const help = await withTimeout(loadHelp(await shopContextFor(storeId, 'en')), timeout);
     for (const [slug, m] of Object.entries(help.models)) if (!m.soon) add('pages', ROUTES.help(slug), `help-${slug}`);
+    // PR 718: the policy pages written in Website › Policies, only while published
+    for (const slug of await withTimeout(liveNewPolicies(db, storeId), timeout)) add('pages', ROUTES.help(slug), `help-${slug}`);
   }
   const deps = cartDeps();
   if (on.combosHub && set['combos.landing'].on) add('pages', ROUTES.combos, ROUTES.combos.slice(1));
