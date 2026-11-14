@@ -192,7 +192,8 @@
         "diary": "Diary",
         "skills": "Skills",
         "reports": "Agent reports",
-        "learning": "Learning"
+        "learning": "Learning",
+        "train": "Training"
       }
     },
     "purpose": {

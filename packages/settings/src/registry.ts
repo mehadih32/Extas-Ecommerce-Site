@@ -104,6 +104,7 @@ import { adsIntelSettings } from './registry-ads-intel';
 import { courierScoreSettings } from './registry-courier-score';
 import { autoConfirmSettings } from './registry-auto-confirm';
 import { learningEngineSettings } from './registry-learning-engine';
+import { aiTrainingSettings } from './registry-ai-training';
 import { incompleteV5Settings } from './registry-incomplete-v5';
 import { merchantFeedSettings } from './registry-merchant-feed';
 import { botCheckSettings } from './registry-bot-check';
@@ -1684,6 +1685,8 @@ export const registry = {
   // ---- S15 · PR 585 · the continuous learning engine's master switch and quality-gate source count, off
   // (registry-learning-engine.ts, version 585). ----
   ...learningEngineSettings,
+  // ---- S28 · PR 713 · AI Center › Training: the owner's instructions per agent and forbidden topics, versioned by the setting log (registry-ai-training.ts, version 713). ----
+  ...aiTrainingSettings,
   ...incompleteV5Settings,
   // ---- S28 · PR 706 (CN-049) · practice data: the practice-mode switch (off) and the Reset button's switch (on while practice is on) (registry-practice.ts, version 380). ----
   ...practiceSettings,
