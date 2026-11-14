@@ -80,12 +80,11 @@ export async function setPracticeMode(deps: AdminDeps, actor: Actor, ctx: Reques
 }
 
 /** "Add sample data": fills the practice world. Needs practice mode on; does nothing when practice orders already exist. */
-export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, media: MediaDeps | null = null): Promise<Out<{ result: SeedResult }>> {
+export async function addSampleData(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, media: MediaDeps | null = null, rich = false): Promise<Out<{ result: SeedResult }>> {
   if (!(await ownerOnly(deps, actor))) return { ok: false, error: 'OWNER_ONLY' };
   if (!(await deps.resolver.value('practice.enabled', { storeId })).on) return { ok: false, error: 'PRACTICE_OFF' };
-  const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date());
-  // The pictures of the sample products are NOT made here (about 100 pictures are too slow for one press): the owner
-  // presses "Add practice photos" (`addPhotosBatch`), which works in small steps.
+  const result = await seedPractice(deps.db, storeId, deps.now ? deps.now() : new Date(), { rich });
+  // The pictures of the sample products are NOT made here (too slow for one press): they come in small steps (`addPhotosBatch`).
   void media;
   if (result.seeded)
     await audit(
@@ -229,7 +228,9 @@ export async function practiceRoute(request: Request, deps: AdminDeps | null, pa
       return r.ok ? json({ ok: true, ...(await practiceView(deps!, g.actor, storeId)) }) : fail(STATUS[r.error] ?? 422, r.error);
     }
     if (a === 'fill' && m === 'POST') {
-      const r = await addSampleData(deps!, g.actor, g.ctx, storeId, media);
+      // PR 724: `{ "rich": true }` asks for the big sample world (screenshots); seedPractice honours it on the sample store only
+      const opts = z.object({ rich: z.boolean().optional() }).safeParse(await request.json().catch(() => ({})));
+      const r = await addSampleData(deps!, g.actor, g.ctx, storeId, media, opts.success && opts.data.rich === true);
       return r.ok
         ? json({
             ok: true,

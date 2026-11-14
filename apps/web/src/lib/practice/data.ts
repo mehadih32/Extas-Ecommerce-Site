@@ -324,3 +324,38 @@ export const ORDER_TOTAL = ORDER_PLAN.reduce((n, p) => n + p.count, 0);
 
 export const PRACTICE_CUSTOMERS = 60; // hardcode-ok: how many sample people the practice data makes
 export const PRACTICE_INCOMPLETE = 18; // hardcode-ok: how many started-but-not-finished checkouts the practice data makes
+
+/**
+ * PR 724 — the "rich" sample world (screenshots and the side-by-side comparison with the admin prototype only; never the
+ * owner's Practice button). It multiplies the plan above so Home, Orders, Products, Couriers, Claims and Reports show real
+ * figures: about 850 orders over six months, 240 people, ~108 products, 36 claims, 40 incomplete orders, ad spend for
+ * three platforms and ~140 reviews. It only ever runs on the sample store (seed.ts checks the sample marker).
+ */
+export const RICH = {
+  orderScale: 9, // hardcode-ok: sample multiplier (94 x 9 = 846 orders, the prototype shows ~850)
+  customers: 240, // hardcode-ok: sample people
+  incomplete: 40, // hardcode-ok: sample incomplete checkouts
+  claims: 36, // hardcode-ok: sample courier claims
+  /** every style name is made this many times, each with its own series label (27 styles x 4 = 108 products) */
+  seriesPerName: ['', 'Black Label', 'Summer Edit', 'Plus Fit'] as const,
+  reviews: 140, // hardcode-ok: sample reviews
+  adDays: 180, // hardcode-ok: days of ad spend
+} as const;
+
+/** The ad accounts and campaigns of the rich sample: platform, daily spend range (whole taka), click-to-order rate. */
+export const RICH_ADS = [
+  { platform: 'META', account: 'Practice Facebook ads', campaigns: ['Always-on prospecting', 'Retargeting visitors'], spend: [900, 2600], ctr: 0.021, cvr: 0.032 },
+  { platform: 'GOOGLE', account: 'Practice Google ads', campaigns: ['Brand search', 'Shopping feed'], spend: [350, 1100], ctr: 0.034, cvr: 0.041 },
+  { platform: 'TIKTOK', account: 'Practice TikTok ads', campaigns: ['Short video, new drops'], spend: [200, 700], ctr: 0.012, cvr: 0.018 },
+] as const;
+
+export const RICH_REVIEW_BODIES = [
+  'Fabric feels great and the fit is right.',
+  'Good quality for the price, will order again.',
+  'Colour is exactly as shown. Delivery was quick.',
+  'A little loose on the shoulder, otherwise fine.',
+  'Stitching is neat. My size ran true.',
+  'Nice and soft, washed twice with no fading.',
+  'Slightly long in the sleeve but I like it.',
+  'Worth every taka. Friends asked where I bought it.',
+] as const;
