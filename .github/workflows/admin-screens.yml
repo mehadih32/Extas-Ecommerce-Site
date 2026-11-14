@@ -1,0 +1,85 @@
+# PR 721 — real admin screens beside the approved prototype (docs/demo/admin-proto-v5). Run by hand (workflow_dispatch) on
+# a branch: builds the app, seeds the sample data, signs in as a throwaway owner, takes the real pages and the prototype
+# screens at phone and laptop width, and keeps them as an artifact. Sample data only, nothing is deployed or changed.
+name: admin-screens
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  PLAYWRIGHT_VERSION: 1.63.0
+  NODE_OPTIONS: --max-old-space-size=4096
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Next.js build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web/.next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/web/src/**', 'apps/web/messages/**', 'apps/web/public/**', 'apps/web/*.ts', 'apps/web/*.mjs', 'packages/*/src/**', 'packages/*/messages/**') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - name: Production image builds
+        run: docker build --progress=plain -f apps/web/Dockerfile --build-arg GIT_SHA="$GITHUB_SHA" -t extas-web:ci .
+      - name: Pack the build
+        run: |
+          out="$RUNNER_TEMP/pack"
+          mkdir -p "$out/standalone"
+          cid="$(docker create extas-web:ci)"
+          docker cp "$cid:/app/." - | tar -x -C "$out/standalone"
+          docker rm "$cid" > /dev/null
+          cp -r "$out/standalone/apps/web/.next/static" "$out/static"
+          tar -czf "$RUNNER_TEMP/web-standalone.tgz" -C "$out" standalone static
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-standalone
+          path: ${{ runner.temp }}/web-standalone.tgz
+          compression-level: 0
+          retention-days: 1
+  shots:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: extas
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: extas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U extas" --health-interval 2s --health-retries 30
+    env:
+      DATABASE_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+      DATABASE_DIRECT_URL: postgresql://extas:ci-only@127.0.0.1:5432/extas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/seeded-app
+        with:
+          gate-owner-password-file: ${{ runner.temp }}/gate-password
+      - uses: ./.github/actions/playwright
+        with:
+          version: ${{ env.PLAYWRIGHT_VERSION }}
+          prefix: ${{ runner.temp }}/qa
+      - name: Serve the prototype
+        run: |
+          nohup python3 -m http.server 8099 --directory docs/demo/admin-proto-v5 > /tmp/proto.log 2>&1 &
+          sleep 2; curl -fs -o /dev/null http://127.0.0.1:8099/index.html
+      - name: Take the screens
+        env:
+          NODE_PATH: ${{ runner.temp }}/qa/node_modules
+        run: |
+          node tools/admin-screens.mjs --base=http://127.0.0.1:3000 --proto=http://127.0.0.1:8099 --out=admin-screens \
+            --email=gate@example.test --password-file="$RUNNER_TEMP/gate-password"
+      - name: Server log
+        if: failure()
+        run: tail -n 200 /tmp/web-server.log || true
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: admin-screens
+          path: admin-screens
+          retention-days: 7
