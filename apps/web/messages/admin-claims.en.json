@@ -1,0 +1,99 @@
+{
+  "claimsOverview": {
+    "metaTitle": "Claims & payouts",
+    "title": "Claims & payouts",
+    "sub": "Every claim against a courier and the money each courier holds, has paid and still owes, in one place.",
+    "k": {
+      "open": "Open claims",
+      "openSub": "{amount} to get back",
+      "recovered": "Money recovered",
+      "recoveredSub": "of {asked} claimed and settled",
+      "due": "Due soon",
+      "dueSub": "{amount} at risk",
+      "late": "Past the deadline",
+      "lateSub": "{amount} at risk",
+      "dueOff": "No deadline set",
+      "dueOffSub": "Deadlines are off in Delivery settings",
+      "inProgress": "Payouts in progress",
+      "inProgressSub": "{amount} asked"
+    },
+    "f": {
+      "label": "Filter claims",
+      "courier": "Courier",
+      "allCouriers": "All couriers",
+      "kind": "Kind",
+      "allKinds": "All kinds",
+      "from": "Raised from",
+      "to": "Raised to",
+      "show": "Show",
+      "clear": "Clear the filter",
+      "status": "State",
+      "s": {
+        "all": "All",
+        "open": "Open",
+        "sent": "Sent",
+        "won": "Won",
+        "lost": "Lost"
+      }
+    },
+    "ledger": {
+      "title": "Claims ledger",
+      "sub": "Lost, damaged, short cash and more. Orders, Couriers and Finance read this same list.",
+      "count": "{n} claims",
+      "none": "No claims match.",
+      "age": "{n} days old",
+      "ageClosed": "closed after {n} days",
+      "claimed": "Claimed",
+      "paid": "Paid {amount}",
+      "raised": "Raised {date}",
+      "practice": "Practice",
+      "c360": "Courier 360 › Claims",
+      "page": "Page {n} of {m}",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "off": "Courier claims are switched off, so the steps below are hidden. Raising and moving claims is switched on in Delivery settings.",
+    "money": {
+      "title": "Courier money",
+      "sub": "What each courier holds for us, what its statements paid, a payout asked and not yet paid, and the claims it still owes. Nothing is asked or paid from here.",
+      "noPerm": "The money side needs the permission to see payments.",
+      "holds": "Holds for us",
+      "holdsN": "{n} parcels",
+      "onRoad": "On the road",
+      "paid": "Paid on statements",
+      "requested": "Payout asked",
+      "claims": "Claims to get back",
+      "owed": "Owes us",
+      "total": "All couriers",
+      "none": "No courier holds money or owes a claim.",
+      "open360": "Courier 360 › Payouts",
+      "latest": "Latest payout requests",
+      "noPayouts": "No payout requests yet.",
+      "covers": "covers {amount}",
+      "paidOn": "paid {amount}"
+    },
+    "opt": {
+      "h": "More options",
+      "d": "How many claims and how many of the latest payout requests this page lists at once. A display size only.",
+      "claimRows": "Claims on a page",
+      "claimRowsHelp": "From 5 to 200.",
+      "payoutRows": "Latest payout requests shown",
+      "payoutRowsHelp": "From 3 to 100.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "discard": "Discard",
+      "unsaved": "Not saved yet",
+      "readOnly": "You can see these sizes. Changing them needs the permission to change settings.",
+      "err": {
+        "STALE": "Someone saved first. The page shows their values; check and save again.",
+        "INVALID_INPUT": "A number is out of range.",
+        "FORBIDDEN": "You may not change this.",
+        "forbidden": "You may not change this.",
+        "unauthorized": "Sign in again.",
+        "network": "No connection. Try again.",
+        "other": "Could not save. Try again."
+      }
+    }
+  }
+}

@@ -84,3 +84,22 @@ describe("courier messages setting (v313)", () => {
     expect(spec.schema.safeParse({ ...spec.default, hold: { en: "x".repeat(241), bn: "রাখুন" } }).success).toBe(false);
   });
 });
+
+describe('claims & payouts list sizes setting (v711, PR 711)', () => {
+  it('delivery.courier.claimsPage is in the registry at the PR number, labelled in both languages, sizes within their range', () => {
+    const spec = couriersV5Settings['delivery.courier.claimsPage'];
+    expect(registry['delivery.courier.claimsPage']).toBe(spec);
+    expect(spec.version).toBe(711);
+    expect(spec.scope).toBe('store');
+    expect(spec.isOwnerData).toBe(false);
+    expect(spec.schema.safeParse(spec.default).success).toBe(true);
+    for (const lang of ['en', 'bn'] as const) {
+      expect(lookup(messages[lang], spec.labelKey), lang).toBeTruthy();
+      expect(lookup(messages[lang], spec.helpKey!), lang).toBeTruthy();
+    }
+    expect(spec.schema.safeParse({ claimRows: 4, payoutRows: 12 }).success).toBe(false);
+    expect(spec.schema.safeParse({ claimRows: 201, payoutRows: 12 }).success).toBe(false);
+    expect(spec.schema.safeParse({ claimRows: 25, payoutRows: 2 }).success).toBe(false);
+    expect(spec.schema.safeParse({ claimRows: 25, payoutRows: 12, extra: 1 }).success).toBe(false);
+  });
+});

@@ -16,6 +16,10 @@
       "messages": {
         "label": "Couriers: messages to the courier",
         "help": "Off as shipped. When on, the booking, delivery and COD texts go to the courier in the parcel's note (in the note language of the booking card), and the payout text in the payout request's note. The other texts are offered to copy in Courier 360. Placeholders: order, customer, cod, courier, date, amount, consignment. Nothing is sent to a courier by itself."
+      },
+      "claimsPage": {
+        "label": "Couriers: Claims & payouts list sizes",
+        "help": "How many claims, and how many of the latest payout requests, Couriers › Claims & payouts lists on one page. A display size only; nothing is sent or paid from there."
       }
     }
   }

@@ -231,6 +231,8 @@ import adminV5W5aEn from '../../../messages/admin-v5-w5a.en.json';
 import adminV5W5aBn from '../../../messages/admin-v5-w5a.bn.json';
 import adminBulkOrdersEn from '../../../messages/admin-bulk-orders.en.json';
 import adminBulkOrdersBn from '../../../messages/admin-bulk-orders.bn.json';
+import adminClaimsEn from '../../../messages/admin-claims.en.json';
+import adminClaimsBn from '../../../messages/admin-claims.bn.json';
 import adminMapEn from '../../../messages/admin-map.en.json';
 import adminMapBn from '../../../messages/admin-map.bn.json';
 import adminPeopleEn from '../../../messages/admin-people.en.json';
@@ -341,6 +343,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-reports-packs': { en: adminReportsPacksEn, bn: adminReportsPacksBn },
   'admin-v5-w5a': { en: adminV5W5aEn, bn: adminV5W5aBn },
   'admin-bulk-orders': { en: adminBulkOrdersEn, bn: adminBulkOrdersBn },
+  'admin-claims': { en: adminClaimsEn, bn: adminClaimsBn },
   'admin-map': { en: adminMapEn, bn: adminMapBn },
   'admin-people': { en: adminPeopleEn, bn: adminPeopleBn },
   'admin-practice': { en: adminPracticeEn, bn: adminPracticeBn },

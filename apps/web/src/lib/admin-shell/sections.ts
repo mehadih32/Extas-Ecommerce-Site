@@ -194,6 +194,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       // S28 · PR 670 (CN-048): the Couriers section opens on its Overview (every courier at a glance) and Courier 360 (one courier, eight sections; the default courier first)
       { id: 'overview', pages: [{ href: '/admin/delivery', perm: 'delivery.read', keys: ['couriersOverview'] }] },
       { id: 'courier360', pages: [{ href: '/admin/delivery/courier-360', perm: 'delivery.read', keys: ['courier', 'courierStatement'] }] },
+      // S28 · PR 711: Claims & payouts — every claim and the money of every courier on one page (read only; PR 673's steps).
+      { id: 'claims', guide: 'delivery', pages: [{ href: '/admin/delivery/claims', perm: 'delivery.read', keys: ['courierClaims'] }] },
       { id: 'zones', pages: [{ href: '/admin/delivery/zones', perm: 'delivery.read', keys: ['delivery'] }] },
       // PR 554: the courier accounts with their area lists (the zone sync); one courier's area pairs are under it
       { id: 'couriers', pages: [{ href: '/admin/delivery/couriers', perm: 'delivery.read', keys: ['couriers', 'courierAreas'] }] },
