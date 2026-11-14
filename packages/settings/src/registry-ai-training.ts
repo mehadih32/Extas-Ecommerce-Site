@@ -14,6 +14,12 @@ export const TRAINING_TEXT_MAX = 600; // hardcode-ok: technical bound
 export const TRAINING_PER_AGENT_MAX = 30; // hardcode-ok: technical bound
 export const TRAINING_FORBIDDEN_MAX = 40; // hardcode-ok: technical bound
 export const TRAINING_FORBIDDEN_TEXT_MAX = 120; // hardcode-ok: technical bound
+export const TRAINING_SAMPLE_MAX = 300; // hardcode-ok: technical bound (the one question the AI call layer takes)
+export const TRAINING_ANSWER_MAX = 1000; // hardcode-ok: technical bound
+export const TRAINING_DOC_TITLE_MAX = 120; // hardcode-ok: technical bound
+export const TRAINING_DOC_TEXT_MAX = 3000; // hardcode-ok: technical bound
+export const TRAINING_DOCS_MAX = 40; // hardcode-ok: technical bound
+export const TRAINING_NOTE_MAX = 1000; // hardcode-ok: technical bound
 /** The key that means "every agent". */
 export const TRAINING_ALL = 'all';
 
