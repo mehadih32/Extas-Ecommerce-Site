@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-14 14:07 (Asia/Dhaka)
+# Smoke test · 2026-11-14 19:36 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (652টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 2টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · result **PASS** (652 page views, 0 failed)
+Site: https://extas.com.bd · commit `c8af4543b3f1` · after deploy · result **FAIL** (652 page views, 2 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -54,7 +54,7 @@ Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · resul
 | `/bn/combos` | phone | 200 | `/bn/combos` | ok | [picture](bn-combos-phone.jpg) |
 | `/combos/build-your-own` | phone | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-phone.jpg) |
 | `/bn/combos/build-your-own` | phone | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-phone.jpg) |
-| `/status` | phone | 200 | `/status` | ok | [picture](status-phone.jpg) |
+| `/status` | phone | 404 | `/status` | **FAIL**: /status: request 404: /status; /status: console error: Failed to load resource: the server responded with a status of 404 () (/status) | [picture](status-phone.jpg) |
 | `/fresh-start` | phone | 200 | `/fresh-start` | ok | [picture](fresh-start-phone.jpg) |
 | `/bn/fresh-start` | phone | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-phone.jpg) |
 | `/account/orders/0/invoice` | phone | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-phone.jpg) |
@@ -326,10 +326,10 @@ Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · resul
 | `/admin/marketing/ad-platforms/guardrails` | phone | 200 | `/admin/marketing/ad-platforms/guardrails` | ok | — |
 | `/admin/agents/chief` | phone | 200 | `/admin/agents/chief` | ok | — |
 | `/admin/ai/learning` | phone | 200 | `/admin/ai/learning` | ok | — |
-| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | phone | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
-| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | phone | 200 | `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | ok | — |
-| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | phone | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
+| `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | phone | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
+| `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | phone | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
+| `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | phone | 200 | `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | ok | — |
+| `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed?tab=wallet` | phone | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -380,7 +380,7 @@ Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · resul
 | `/bn/combos` | desktop | 200 | `/bn/combos` | ok | [picture](bn-combos-desktop.jpg) |
 | `/combos/build-your-own` | desktop | 200 | `/combos/build-your-own` | ok | [picture](combos-build-your-own-desktop.jpg) |
 | `/bn/combos/build-your-own` | desktop | 200 | `/bn/combos/build-your-own` | ok | [picture](bn-combos-build-your-own-desktop.jpg) |
-| `/status` | desktop | 200 | `/status` | ok | [picture](status-desktop.jpg) |
+| `/status` | desktop | 404 | `/status` | **FAIL**: /status: request 404: /status; /status: console error: Failed to load resource: the server responded with a status of 404 () (/status) | [picture](status-desktop.jpg) |
 | `/fresh-start` | desktop | 200 | `/fresh-start` | ok | [picture](fresh-start-desktop.jpg) |
 | `/bn/fresh-start` | desktop | 200 | `/bn/fresh-start` | ok | [picture](bn-fresh-start-desktop.jpg) |
 | `/account/orders/0/invoice` | desktop | 200 | `/account/orders/0/invoice` | ok | [picture](account-orders-0-invoice-desktop.jpg) |
@@ -652,10 +652,10 @@ Site: https://new.extas.com.bd · commit `8d5faa410251` · after deploy · resul
 | `/admin/marketing/ad-platforms/guardrails` | desktop | 200 | `/admin/marketing/ad-platforms/guardrails` | ok | — |
 | `/admin/agents/chief` | desktop | 200 | `/admin/agents/chief` | ok | — |
 | `/admin/ai/learning` | desktop | 200 | `/admin/ai/learning` | ok | — |
-| `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | desktop | 200 | `/admin/orders/01a1b61a-a11b-7d82-bdea-f4c089401719` | ok | — |
-| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
-| `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | desktop | 200 | `/admin/reports/health/history/01a1d7b8-c1ec-7e13-bccf-778f87268a8c` | ok | — |
-| `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94?tab=wallet` | desktop | 200 | `/admin/customers/01a1b61a-a118-7bf3-acad-0f8b6b421a94` | ok | — |
+| `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | desktop | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
+| `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | desktop | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
+| `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | desktop | 200 | `/admin/reports/health/history/01a1d923-c3dd-7171-a182-d825cb290cf8` | ok | — |
+| `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed?tab=wallet` | desktop | 200 | `/admin/customers/d3488aca-f6c7-5011-ad3c-6184fd0f99ed` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
 
