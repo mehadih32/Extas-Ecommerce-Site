@@ -2,7 +2,7 @@
   "ly": {
     "metaTitle": "Page layouts",
     "title": "Page layouts",
-    "sub": "Which sections each shop page shows, in which order, on which screens and on which days.",
+    "sub": "Choose which blocks show on the shop and in what order. The phone on the right updates as you change it.",
     "note": "A section shows on the shop only when it has something to show. Your changes go live as soon as you save. On the home page and the category pages you can also add your own sections.",
     "pages": "Pages",
     "page": {

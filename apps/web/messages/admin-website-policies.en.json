@@ -2,13 +2,13 @@
   "pw": {
     "metaTitle": "Policies",
     "title": "Policies",
-    "sub": "The pages customers read before they order. Write each one in English and Bengali, check it in the preview, then publish.",
+    "sub": "Short, clear pages customers read before they order. Numbers come from Rules, so they always match checkout.",
     "note": "Your own words only: nothing is written for you. A page with no words stays a draft and does not show on the shop.",
     "names": {
       "terms": "Terms",
       "privacy": "Privacy",
       "delivery": "Delivery",
-      "exchange": "Exchange & returns",
+      "exchange": "Exchange",
       "payment": "Payment & COD",
       "cancellation": "Cancellation & Refund",
       "wallet": "Wallet & coupons",
@@ -92,7 +92,214 @@
     "sec": {
       "title": "Sections",
       "edit": "Edit",
-      "details": "Details"
+      "details": "Details",
+      "points": "Points (one short point per line)",
+      "help": "One short point per line. Starter text stays as it is until you save a change.",
+      "back": "Back to starter text",
+      "cancel": "Cancel",
+      "save": "Save",
+      "needOne": "Write at least one point."
+    },
+    "starter": {
+      "terms": [
+        {
+          "icon": "check",
+          "title": "Orders",
+          "points": [
+            "An order is confirmed when we call or send an SMS.",
+            "Photos are real; colour may look slightly different on screens."
+          ]
+        },
+        {
+          "icon": "wallet",
+          "title": "Prices",
+          "points": [
+            "Prices may change; your order keeps the price you saw."
+          ]
+        }
+      ],
+      "privacy": [
+        {
+          "icon": "users",
+          "title": "What we collect",
+          "points": [
+            "Name, phone, address and order history to deliver your parcels."
+          ],
+          "details": [
+            "Couriers get only what they need to deliver."
+          ]
+        },
+        {
+          "icon": "phone",
+          "title": "Offers",
+          "points": [
+            "We send offers only if you said yes. Reply STOP to stop."
+          ]
+        }
+      ],
+      "delivery": [
+        {
+          "icon": "truck",
+          "title": "How long it takes",
+          "points": [
+            "Inside Dhaka, the Dhaka suburbs and outside Dhaka each have their own time; the cards above show it."
+          ],
+          "details": [
+            "Friday and public holidays may add one day."
+          ]
+        },
+        {
+          "icon": "box",
+          "title": "Trial at the door",
+          "points": [
+            "Open the parcel and check it in front of the rider.",
+            "Do not like it? Return it and pay only the delivery charge."
+          ],
+          "details": [
+            "Partial delivery is allowed: keep some pieces, return the rest."
+          ]
+        },
+        {
+          "icon": "phone",
+          "title": "Tracking",
+          "points": [
+            "SMS with a tracking link when the courier takes the parcel."
+          ]
+        }
+      ],
+      "exchange": [
+        {
+          "icon": "uturn",
+          "title": "Wrong size: exchange",
+          "points": [
+            "Ask within the exchange hours after delivery.",
+            "Unworn, unwashed, with tags.",
+            "An exchange delivery charge applies."
+          ],
+          "details": [
+            "Caps and extras cannot be exchanged."
+          ]
+        },
+        {
+          "icon": "check",
+          "title": "Defective or wrong item: we send it again",
+          "points": [
+            "Tell us within the exchange hours, with a photo.",
+            "We collect it and send you the right product again, free, no charge at all.",
+            "Same for prepaid orders."
+          ],
+          "details": [
+            "These are replaced with the right product, not refunded or added to the wallet."
+          ]
+        },
+        {
+          "icon": "wallet",
+          "title": "What you can pick (size exchange)",
+          "points": [
+            "Same product in another size, then another colour, then the same category.",
+            "Higher price: pay the difference on delivery.",
+            "Lower price: the rest goes to your wallet after the old piece is checked."
+          ]
+        },
+        {
+          "icon": "truck",
+          "title": "Sending the old piece",
+          "points": [
+            "Hand it to the rider who brings the new one, within the days we tell you."
+          ]
+        }
+      ],
+      "payment": [
+        {
+          "icon": "wallet",
+          "title": "Ways to pay",
+          "points": [
+            "Cash to the rider, bKash, Nagad or card.",
+            "Prepaid orders are confirmed faster."
+          ]
+        },
+        {
+          "icon": "flag",
+          "title": "When we ask for advance",
+          "points": [
+            "Big first orders or past refused parcels: delivery charge first."
+          ]
+        }
+      ],
+      "cancellation": [
+        {
+          "icon": "x",
+          "title": "Cancelling",
+          "points": [
+            "Cancel free any time before the parcel goes to the courier.",
+            "After that, refuse at the door and pay only the delivery charge."
+          ]
+        },
+        {
+          "icon": "wallet",
+          "title": "Money back",
+          "points": [
+            "Paid in advance and the order is cancelled before dispatch (by you or by us): the full amount goes back to the same bKash, Nagad or card."
+          ]
+        },
+        {
+          "icon": "box",
+          "title": "After delivery",
+          "points": [
+            "No refunds after delivery.",
+            "Wrong size: exchange within the exchange hours.",
+            "Defective or wrong item: we send the right product again, free."
+          ]
+        }
+      ],
+      "wallet": [
+        {
+          "icon": "wallet",
+          "title": "Wallet",
+          "points": [
+            "Leftover from a lower-price exchange goes here.",
+            "Use it on your next order; it cannot be cashed out."
+          ]
+        },
+        {
+          "icon": "flag",
+          "title": "Coupons",
+          "points": [
+            "One coupon per order. Each coupon shows its minimum order and end date."
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "icon": "flag",
+          "title": "How reviews work",
+          "points": [
+            "Only customers with a delivered order can review.",
+            "We never delete negative reviews.",
+            "Spam or abusive words are hidden, with the reason shown."
+          ]
+        }
+      ],
+      "cookies": [
+        {
+          "icon": "shield",
+          "title": "Why we use cookies",
+          "points": [
+            "To keep your bag and login.",
+            "To see which pages help people shop."
+          ],
+          "details": [
+            "You can turn ad cookies off from the banner at any time."
+          ]
+        }
+      ]
+    },
+    "guide": "Delivery fees, free-delivery limit, COD limit, advance rule and exchange hours are read from Rules. Change them there and every page updates by itself.",
+    "allWords": "Edit all words, title and preview",
+    "legal": {
+      "licence": "Trade licence",
+      "updated": "Last updated",
+      "history": "History"
     }
   }
 }

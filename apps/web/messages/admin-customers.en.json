@@ -2,7 +2,7 @@
   "cus": {
     "review": {
       "title": "To review",
-      "sub": "Two profiles that may be one person, side by side. Only a person merges; nothing moves or is deleted, and a merge can be split again.",
+      "sub": "The same person sometimes appears twice — from a chat, a guest checkout or a second phone. Merging joins their orders, points and wallet.",
       "viewsAria": "To review views",
       "view": {
         "suggest": "Same person?",
@@ -97,7 +97,7 @@
     },
     "list": {
       "title": "All customers",
-      "sub": "One row per person, by phone. Opening a customer and copying a number are logged.",
+      "sub": "Everyone who ordered, with what they bought, what they spent and how reliable they are.",
       "viewsAria": "Customer views",
       "view": {
         "all": "All",
@@ -304,7 +304,7 @@
     },
     "seg": {
       "title": "Segments",
-      "sub": "Groups of customers by what they really did. Saved by name and used again in the Customers list and, later, in campaigns.",
+      "sub": "Groups update by themselves as people order. Use them for messages, offers and ads.",
       "new": "New segment",
       "offTitle": "Segments are off",
       "offBody": "Turn them on under More options below. Nothing is counted or saved while they are off.",
@@ -974,7 +974,7 @@
     },
     "loy": {
       "title": "Loyalty & wallet",
-      "sub": "Points by your own rule; the wallet ledger is always on. Nothing is given or becomes money until you set it.",
+      "sub": "Customers earn points on delivered orders and spend them as a discount. Wallet money comes from size exchanges at a lower price, rider overcharges given back, or your gifts.",
       "off": "Points are off. Switch them on and type your rule in the card; until then nobody gets points.",
       "kpi": {
         "members": "Customers with points",

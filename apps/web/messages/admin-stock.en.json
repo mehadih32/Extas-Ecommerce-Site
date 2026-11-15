@@ -83,7 +83,7 @@
     "metaTitle": "Stock and ERP sync",
     "eyebrow": "Stock",
     "title": "Stock and ERP sync",
-    "intro": "Stock comes from the ERP. Here you see when it last came in, what failed and what is still waiting to go to the ERP.",
+    "intro": "Stock lives in the ERP warehouse. The shop shows it and holds pieces for open orders.",
     "sep": " · ",
     "more": "{n} more",
     "noSync": "Re-sync and the ERP check need the \"run stock sync\" permission.",
