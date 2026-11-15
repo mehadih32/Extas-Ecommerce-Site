@@ -1,0 +1,91 @@
+/* PR 771-776 (lane B, owner order: the real admin matches docs/demo/admin-proto-v5 100%) — Orders, Products, Sets, Claims, Couriers,
+   Policies. Loaded after shell.css and the Lumen files, so it wins on equal weight. Colours and sizes are the theme's own tokens. */
+
+/* ---- the prototype's filter row: one row, "More filters" and "Custom" folded under small buttons ---- */
+.adm2 .a2-fmore{position:relative}
+.adm2 .a2-fmore>summary{list-style:none;cursor:pointer}
+.adm2 .a2-fmore>summary::-webkit-details-marker{display:none}
+.adm2 .a2-fmore-b{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:10px;background:var(--sf);border:1px solid var(--ln);border-radius:12px}
+@media (min-width:768px){.adm2 .a2-fmore[open]{flex-basis:100%}}
+.adm2 .a2-dbar,.adm2 [data-testid=orders-views]{flex-wrap:wrap;overflow:visible;margin:0 0 10px;padding:0}
+.adm2 [data-testid=orders-datebar] .a2-view[aria-hidden]{cursor:default}
+
+/* ---- Orders list: the prototype's six columns as a table at every width (phone: Order, Customer, Total, Status) ---- */
+.adm2 .a2-tblw:has(>.a2-ptbl){background:var(--sf);border:1px solid var(--ln);border-radius:var(--r);box-shadow:var(--sh);overflow-x:auto}
+.adm2 .a2-tbl.a2-ptbl{display:table;width:100%}
+.adm2 .a2-tbl.a2-ptbl thead{display:table-header-group}
+.adm2 .a2-tbl.a2-ptbl tbody{display:table-row-group}
+.adm2 .a2-tbl.a2-ptbl tbody tr,.adm2 .a2-tbl.a2-ptbl thead tr{display:table-row;background:none;border:0;border-radius:0;padding:0;margin:0;box-shadow:none;content-visibility:visible}
+.adm2 .a2-tbl.a2-ptbl tbody tr:hover td{background:var(--sf2)}
+.adm2 .a2-tbl.a2-ptbl td{display:table-cell;padding:10px 12px;border-bottom:1px solid var(--ln2);vertical-align:middle;text-align:left!important}
+.adm2 .a2-tbl.a2-ptbl td.r{text-align:right!important}
+.adm2 .a2-tbl.a2-ptbl td::before{display:none!important}
+.adm2 .a2-tbl.a2-ptbl td.a2-tdc{position:static}
+.adm2 .a2-tbl.a2-ptbl td.a2-tdh{padding-right:12px}
+.adm2 .a2-tbl.a2-ptbl td .a2-cell{display:flex;flex-direction:column;gap:1px;min-width:0}
+.adm2 .a2-tbl.a2-ptbl td.r b{white-space:nowrap}
+.adm2 .a2-tbl.a2-ptbl td.a2-tdm{max-width:260px;min-width:170px}
+.adm2 .a2-tbl.a2-ptbl td.a2-tdw{min-width:120px}
+.adm2 .a2-tbl.a2-ptbl .a2-st4{display:flex;flex-wrap:wrap;gap:4px}
+.adm2 .a2-tbl.a2-ptbl .a2-pill{white-space:nowrap;max-width:none}
+@media (max-width:767px){
+  .adm2 .a2-tbl.a2-ptbl .a2-hm{display:none}
+  .adm2 .a2-tbl.a2-ptbl td{padding:9px 8px}
+  .adm2 .a2-tbl.a2-ptbl th{padding:9px 8px}
+  .adm2 .a2-tbl.a2-ptbl td.a2-tdw .a2-pill{white-space:normal}
+}
+
+/* ---- Sets (PR 773, prototype m-products.js renderSets): four figures, cards with the two pieces, colour chips, sizes, price rows, switch ---- */
+@media (min-width:560px){.adm2 .st-figs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:900px){.adm2 .st-figs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.adm2 .st-pcs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.adm2 .st-pcw{display:flex;align-items:center;gap:8px;min-width:0}
+.adm2 .st-pc{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;background:var(--sf2);color:inherit;text-decoration:none}
+.adm2 .st-pcn{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.adm2 .st-plus{font-size:16px}
+.adm2 .st-link-line{margin-top:10px}
+.adm2 .st-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.adm2 .st-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--ln);border-radius:16px;font-size:12.5px;background:var(--sf)}
+.adm2 .st-chip i{width:12px;height:12px;border-radius:50%;border:1px solid var(--ln);display:inline-block}
+.adm2 .st-chip.off{opacity:.5;text-decoration:line-through}
+.adm2 .st-gone{text-decoration:line-through}
+.adm2 .st-list{margin:10px 0 0;display:grid;gap:0}
+.adm2 .st-list>div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--ln2)}
+.adm2 .st-list dt{color:var(--mute);font-size:13px}
+.adm2 .st-list dd{margin:0;text-align:right;font-size:13.5px;overflow-wrap:anywhere}
+.adm2 .st-was{margin-left:8px;color:var(--mute);font-size:12px}
+.adm2 .st-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.adm2 .st-sw{display:inline-flex;align-items:center;gap:8px;font-size:13px;min-height:44px}
+.adm2 .st-btns{display:inline-flex;gap:6px;flex-wrap:wrap}
+.adm2 .st-ask{flex-basis:100%;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--ln);border-radius:10px;background:var(--sf2);font-size:13px}
+
+/* ---- Website > Policies (PR 776, prototype m-website.js renderPolicies2): chips, EN/বাংলা row, number cards, section cards, legal strip ---- */
+.adm2 .polb-chips .a2-chipt{display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:20px;border:1px solid var(--ln);background:var(--sf);color:var(--ink2);font-weight:500;cursor:pointer}
+.adm2 .polb-chips .a2-chipt.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.adm2 .polb-ttl{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.adm2 .polb-ttl .a2-seg button{min-height:44px}
+.adm2 .polb-glance{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:1000px){.adm2 .polb-glance{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.adm2 .polb-g2{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.adm2 .polb-g2 b{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.adm2 .polb-g2 span{font-size:12px;color:var(--mute)}
+.adm2 .polb-g2 i{width:30px;height:30px;border-radius:9px;background:var(--g0);color:var(--g);display:grid;place-items:center}
+.adm2 .polb-sech{flex-wrap:nowrap;align-items:flex-start}
+.adm2 .polb-sech b{flex:1 1 0}
+.adm2 .polb-sic{width:36px;height:36px;border-radius:10px;background:var(--sf2);display:grid;place-items:center;flex:none;color:var(--g)}
+.adm2 .polb-se{display:grid;gap:8px}
+.adm2 .polb-legal{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--mute);padding:10px 12px;border:1px dashed var(--ln);border-radius:10px}
+
+/* ---- Claims & payouts (PR 774): "Payouts across couriers" cards, the filters under "More filters" ---- */
+.adm2 .cl-mh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.adm2 .cl-det{margin-top:8px}
+.adm2 .cl-det>summary{cursor:pointer;min-height:32px}
+.adm2 .cl-more{flex-basis:100%}
+
+/* ---- Products list (PR 772): numbers and status never break; the prototype's compact phone table ---- */
+.adm2 .pa-tbl td{overflow-wrap:normal}
+.adm2 .pa-tbl td.r,.adm2 .pa-tbl td.r b,.adm2 .pa-tbl .pa-status,.adm2 .pa-tbl .pa-low,.adm2 .pa-tbl .pa-was{white-space:nowrap}
+.adm2 .pa-tbl td.pa-bm .a2-pill{margin-left:6px;white-space:nowrap}
+.adm2 .pa-tbl .pa-pc{min-width:200px}
+.adm2 .pa-tbl .pa-nm{overflow-wrap:normal;word-break:normal}
+@media (max-width:767px){.adm2 .pa-tbl .pa-pc{min-width:0}.adm2 .pa-tbl td.a2-tdc{padding:0 0 0 8px}}

@@ -36,6 +36,8 @@ import './lumen-help.css';
 import './lumen-settings.css';
 import './lumen-reports.css';
 import './lumen-books.css';
+// PR 771-776 (lane B, prototype v5 parity): Orders, Products, Sets, Claims, Couriers and Policies match docs/demo/admin-proto-v5.
+import './parity-b.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

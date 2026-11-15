@@ -91,7 +91,8 @@ export const SUPPORT_SOURCES = ['MESSENGER', 'WHATSAPP', 'LIVE_CHAT'] as const s
 export const LIST_SOURCES = ['SUPPORT', ...ORDER_SOURCES] as const;
 
 /** PR 541 (follow-up 295): newest first, or the highest risk score first (unscored last, then newest). */
-export const LIST_SORTS = ['new', 'risk'] as const;
+// PR 771 (prototype v5 parity): the prototype's sorts too: oldest first and highest value first.
+export const LIST_SORTS = ['new', 'old', 'value', 'risk'] as const;
 export type ListSort = (typeof LIST_SORTS)[number];
 
 const dayText = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'a day like 2026-11-13' });
@@ -239,6 +240,8 @@ export function listWhere(storeId: number, q: ListFilters, reviews: string[]): P
 
 /** The list's order: newest first, or (follow-up 295) the highest score first, unscored orders last. */
 export function orderOf(sort: ListSort): Prisma.OrderOrderByWithRelationInput[] {
+  if (sort === 'old') return [{ placedAt: 'asc' }, { id: 'asc' }];
+  if (sort === 'value') return [{ totalMinor: 'desc' }, { placedAt: 'desc' }, { id: 'desc' }];
   if (sort === 'risk') return [{ riskScore: { sort: 'desc', nulls: 'last' } }, { placedAt: 'desc' }, { id: 'desc' }];
   return [{ placedAt: 'desc' }, { id: 'desc' }];
 }

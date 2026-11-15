@@ -53,7 +53,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
       }))}
       bulk={bulk}
     >
-      <table className="a2-tbl" data-testid="orders-table">
+      <table className="a2-tbl a2-ptbl" data-testid="orders-table">
         <thead>
           <tr>
             {bulk ? (
@@ -65,14 +65,10 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
             ) : null}
             <th>{col('order')}</th>
             <th>{col('customer')}</th>
-            <th>{col('items')}</th>
+            <th className="a2-hm">{col('items')}</th>
             <th className="r">{col('total')}</th>
-            <th className="r">{col('score')}</th>
+            <th className="r a2-hm">{col('score')}</th>
             <th>{col('status')}</th>
-            <th>{col('risk')}</th>
-            <th>{col('courier')}</th>
-            <th>{col('docs')}</th>
-            <th>{col('flags')}</th>
           </tr>
         </thead>
         <tbody>
@@ -111,7 +107,7 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                     {r.phone ? <span className="a2-nowrap">{r.phone}</span> : null}
                   </div>
                 </td>
-                <td className="a2-tdm" data-l={col('items')}>
+                <td className="a2-tdm a2-hm" data-l={col('items')}>
                   <div className="a2-itm" data-testid="order-items">
                     <span className="a2-ith" aria-hidden={r.thumb ? undefined : 'true'}>
                       {r.thumb ? <ResponsiveImage image={r.thumb} slot="thumb" sizes="32px" alt={r.firstItem ?? ''} /> : <ShellIcon name="bag" size={14} />}
@@ -128,36 +124,11 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                     {r.method ? <span>{r.method}</span> : null}
                   </div>
                 </td>
-                <td className="r" data-l={col('score')} data-testid="order-score">
+                <td className="r a2-hm" data-l={col('score')} data-testid="order-score">
                   {r.score ? <b className={`a2-num a2-sc ${r.score.tone}`}>{r.score.value}</b> : <span className="a2-faint">{dash}</span>}
                 </td>
-                <td className="a2-tdw" data-l={col('status')}>
-                  <Chips chips={r.chips} />
-                </td>
-                <td data-l={col('risk')} data-testid="order-risk">
-                  {r.risk.band || r.risk.section ? (
-                    <div className="a2-cell">
-                      <Chips chips={[r.risk.band, r.risk.section].filter((c): c is Chip => c !== null)} />
-                    </div>
-                  ) : (
-                    <span className="a2-faint">{dash}</span>
-                  )}
-                </td>
-                <td data-l={col('courier')}>
-                  {r.courier ? (
-                    <div className="a2-cell">
-                      <b>{r.courier.name}</b>
-                      {r.courier.tracking ? <span className="a2-mono a2-nowrap">{r.courier.tracking}</span> : null}
-                    </div>
-                  ) : (
-                    <span className="a2-faint">{dash}</span>
-                  )}
-                </td>
-                <td data-l={col('docs')} data-testid="order-docs">
-                  <Chips chips={r.docs} empty={dash} />
-                </td>
-                <td className="a2-tdx" data-l={col('flags')}>
-                  <Chips chips={r.flags} empty={dash} />
+                <td className="a2-tdw" data-l={col('status')} data-testid="order-status" title={[r.chips.slice(1).map((c) => c.label).join(' · '), r.courier ? `${r.courier.name}${r.courier.tracking ? ` ${r.courier.tracking}` : ''}` : '', r.docs.map((c) => c.label).join(' · ')].filter(Boolean).join(' | ') || undefined}>
+                  <Chips chips={[...r.chips.slice(0, 1), ...[r.risk.band, r.risk.section].filter((c): c is Chip => c !== null), ...r.flags]} />
                 </td>
               </tr>
             );
