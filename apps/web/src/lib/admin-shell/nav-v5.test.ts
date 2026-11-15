@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { adminDicts, type AdminLang } from '../admin-i18n';
 import { t } from '../i18n';
-import { AWAITING, applyNavV5, NAV_V5, PENDING, stillPending, V5_SECTION, withLandedPages } from './nav-v5';
+import { AWAITING, applyNavV5, EXTRA_TABS, NAV_V5, PENDING, stillPending, V5_SECTION, withLandedPages } from './nav-v5';
 import pendingJson from './nav-pending.json';
 import { lumenNav } from './lumen-nav';
 import { RAW_SECTIONS, SHELL_SECTIONS, locate, sectionById, sectionHome, visibleTabs, type ShellSection, type ShellViewer } from './sections';
@@ -26,7 +26,9 @@ function protoNav(): ProtoSection[] {
 }
 
 const label = (lang: AdminLang, key: string) => t(adminDicts[lang], key);
-const mainTabs = (s: ShellSection) => visibleTabs(s, OWNER).filter((x) => !x.more);
+// PR 778: tabs the owner asked for beyond the prototype (nav-v5.ts EXTRA_TABS) are left out of every comparison with A.NAV
+const extra = (sec: string, tab: string) => EXTRA_TABS.includes(`${sec}.${tab}`);
+const mainTabs = (s: ShellSection) => visibleTabs(s, OWNER).filter((x) => !x.more && !extra(s.id, x.id));
 const pageFile = (href: string) => join(APP, href.replace(/^\//, ''), 'page.tsx');
 
 /** The menu as it would be with every pending page merged. */
@@ -49,7 +51,7 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
   it('the spec lists exactly the prototype tabs of each section, in its order', () => {
     for (const s of proto) {
       const spec = NAV_V5[V5_SECTION[s.id]!] ?? [];
-      expect(spec.map((x) => x.proto), s.id).toEqual(s.tabs.map((x) => x.id));
+      expect(spec.map((x) => x.proto).filter((x) => !extra(V5_SECTION[s.id]!, x)), s.id).toEqual(s.tabs.map((x) => x.id));
     }
   });
 
@@ -78,7 +80,7 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     for (const s of proto) {
       const id = V5_SECTION[s.id]!;
       const sec = landed.find((x) => x.id === id)!;
-      const main = sec.tabs.filter((x) => !x.more).map((x) => x.id);
+      const main = sec.tabs.filter((x) => !x.more && !extra(id, x.id)).map((x) => x.id);
       const expected = s.tabs.filter((x) => !AWAITING.includes(`${id}.${x.id}`));
       expect(main.map((x) => label('en', `shell.tab.${id}.${x}`)), s.id).toEqual(expected.map((x) => x.en));
       expect(main.map((x) => label('bn', `shell.tab.${id}.${x}`)), s.id).toEqual(expected.map((x) => x.bn));
@@ -104,6 +106,14 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     expect(hrefs(SHELL_SECTIONS)).toEqual([...raw, ...extra((k) => !stillPending().has(k))].sort());
     expect(new Set(raw).size).toBe(raw.length);
     expect(hrefs(landed)).toEqual([...raw, ...extra(() => true)].sort());
+  });
+
+  it('the owner asked for one extra first tab: Website opens on Control and its prototype tabs follow it unchanged (PR 778)', () => {
+    const web = landed.find((x) => x.id === 'website')!;
+    const main = web.tabs.filter((x) => !x.more).map((x) => x.id);
+    expect(main.slice(0, 7)).toEqual(['control', 'layouts', 'words', 'policies', 'blog', 'analytics', 'seo']);
+    expect(label('en', 'shell.tab.website.control')).toBe('Control');
+    expect(sectionHome(sectionById('website')!, OWNER)).toBe('/admin/website/control');
   });
 
   it('a section opens on its first prototype tab', () => {

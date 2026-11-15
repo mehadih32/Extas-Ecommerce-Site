@@ -1,0 +1,126 @@
+{
+  "wc": {
+    "metaTitle": "Website control · Admin",
+    "title": "Website control",
+    "sub": "Every website setting in one place. Pick a card to open the page where it lives.",
+    "search": "Search settings, e.g. logo, cookie, footer",
+    "searchLabel": "Search website settings",
+    "count": "{n} settings",
+    "none": "No setting matches “{q}”. Try another word.",
+    "open": "Open",
+    "clear": "Clear",
+    "note": "Nothing is moved here. Each card opens the same page you already use.",
+    "denied": "You may not open any website setting.",
+    "group": {
+      "identity": "Shop identity",
+      "frame": "Header, menu and footer",
+      "look": "Look and pages",
+      "screens": "Notices and icons",
+      "policies": "Policies",
+      "find": "Search and numbers",
+      "buy": "Buying and delivery"
+    },
+    "card": {
+      "shopName": {
+        "t": "Shop name",
+        "d": "The name in the header, footer, invoices and the browser tab.",
+        "k": "name brand title slogan"
+      },
+      "logo": {
+        "t": "Logo",
+        "d": "The logo for computer and phone, and its size.",
+        "k": "logo picture image brand"
+      },
+      "favicon": {
+        "t": "Favicon (tab icon)",
+        "d": "The small square icon in the browser tab.",
+        "k": "favicon tab icon"
+      },
+      "contact": {
+        "t": "Contact card",
+        "d": "Hotline, WhatsApp, email, address, opening hours and the link preview picture.",
+        "k": "contact phone hotline whatsapp email address hours share preview"
+      },
+      "header": {
+        "t": "Header",
+        "d": "The announcement bar and the header icons.",
+        "k": "header announcement bar icons top"
+      },
+      "menu": {
+        "t": "Menu",
+        "d": "The links in the shop menu, in your order.",
+        "k": "menu navigation links"
+      },
+      "footer": {
+        "t": "Footer",
+        "d": "Footer boxes, link columns, social and payment marks, copyright line.",
+        "k": "footer links social payment copyright"
+      },
+      "look": {
+        "t": "Shop look",
+        "d": "Save the whole shop look, restore it or a named look.",
+        "k": "look theme design restore launch snapshot"
+      },
+      "layouts": {
+        "t": "Page layouts",
+        "d": "Each shop page's sections, their order and where they show.",
+        "k": "layout page sections home category product"
+      },
+      "eye": {
+        "t": "Show or hide parts",
+        "d": "Every part of a shop page that can be shown or hidden, in one list.",
+        "k": "eye toggle show hide parts"
+      },
+      "text": {
+        "t": "Shop text",
+        "d": "Every word the shop shows, in English and Bengali.",
+        "k": "text words language translation wording"
+      },
+      "cookie": {
+        "t": "Cookie banner",
+        "d": "The cookie notice shown to visitors.",
+        "k": "cookie banner consent privacy notice"
+      },
+      "appicon": {
+        "t": "Home-screen icon",
+        "d": "The icon when a customer adds the shop to a phone home screen.",
+        "k": "home screen icon app phone install"
+      },
+      "email": {
+        "t": "Email look",
+        "d": "How the emails the shop sends look.",
+        "k": "email look design template colour"
+      },
+      "policies": {
+        "t": "Policies",
+        "d": "Delivery, returns, privacy and terms pages, in both languages.",
+        "k": "policy policies returns terms privacy delivery refund"
+      },
+      "seo": {
+        "t": "SEO & Google ranking",
+        "d": "Titles, descriptions, redirects and what Google sees.",
+        "k": "seo google ranking title description redirect sitemap"
+      },
+      "analytics": {
+        "t": "Analytics",
+        "d": "Visits, where they come from and what they do.",
+        "k": "analytics visits traffic behaviour stats"
+      },
+      "checkout": {
+        "t": "Checkout and payment display",
+        "d": "What customers see at checkout and how payment choices show.",
+        "k": "checkout payment display bkash nagad cod"
+      },
+      "delivery": {
+        "t": "Delivery information",
+        "d": "Delivery times and notes the shop shows, and holiday mode.",
+        "k": "delivery shipping time holiday courier info"
+      },
+      "categories": {
+        "t": "Categories and tags order",
+        "d": "The order of categories and tags in the shop.",
+        "k": "category categories tags order collection sort"
+      }
+    }
+  }
+}
