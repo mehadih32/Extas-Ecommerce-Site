@@ -656,6 +656,9 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/settings/system/backups', perm: 'system.read', keys: ['backups'] },
           // S19 · PR 393 (CN-031) — the go-live checklist.
           { href: '/admin/settings/system/go-live', perm: 'system.read', keys: ['golive'] },
+          // PR 791 — Site health and Updates & versions, built from what the server already writes (lib/status.ts).
+          { href: '/admin/settings/system/health', perm: 'system.read', keys: ['siteHealth'] },
+          { href: '/admin/settings/system/updates', perm: 'system.read', keys: ['updates'] },
         ],
       },
       // S02 · PR 598 — Settings › More › Shimmer: every shimmer's switch, speed and strength (demo 89t-shimmer.js).

@@ -620,6 +620,14 @@
         "help": {
           "n": "সাহায্য ও ম্যানুয়াল",
           "k": "manual guide help blueprint register project files"
+        },
+        "health": {
+          "n": "সাইটের অবস্থা",
+          "k": "uptime speed error disk memory domain ssl optimise optimize diagnose health audit"
+        },
+        "updates": {
+          "n": "আপডেট ও ভার্সন",
+          "k": "version update roll back changelog staging"
         }
       }
     }

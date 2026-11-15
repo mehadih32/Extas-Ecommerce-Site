@@ -147,7 +147,7 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
     {
       proto: 'keys',
       real: ['keys', 'telegramApprovals', 'system', 'security', 'activity', 'privacy', 'startFresh'],
-      order: ['/admin/integrations', '/admin/settings/telegram-approvals', '/admin/settings/system/cache', '/admin/settings/system/backups', '/admin/settings/system/go-live', '/admin/settings/security', '/admin/settings/security/edge', '/admin/settings/activity', '/admin/settings/privacy', '/admin/settings/start-fresh'],
+      order: ['/admin/integrations', '/admin/settings/telegram-approvals', '/admin/settings/system/cache', '/admin/settings/system/backups', '/admin/settings/system/go-live', '/admin/settings/system/health', '/admin/settings/system/updates', '/admin/settings/security', '/admin/settings/security/edge', '/admin/settings/activity', '/admin/settings/privacy', '/admin/settings/start-fresh'],
     },
   ],
 };

@@ -1,0 +1,93 @@
+{
+  "sysinfo": {
+    "health": {
+      "metaTitle": "Site health",
+      "title": "Site health",
+      "sub": "Is the shop up, fast and error-free? Green means nothing to do.",
+      "allGreen": "All clear. Nothing to do.",
+      "needs": "Something needs a look: {n} of the lights below is not green.",
+      "light": {
+        "up": {
+          "n": "Shop is up",
+          "none": "The server has not reported its own check yet.",
+          "ok": "The server's own check found nothing wrong.",
+          "problems": "The server's own check found {n} problem(s). See below.",
+          "stale": "The server's own check last ran {hours} hours ago."
+        },
+        "nightly": {
+          "n": "Nightly page check",
+          "none": "No page check has been reported yet.",
+          "ok": "{pages} pages opened, none broken.",
+          "failed": "{failed} of {pages} pages are broken.",
+          "stale": "The page check last ran {hours} hours ago."
+        },
+        "backup": {
+          "n": "Backup",
+          "none": "No server backup has been reported yet.",
+          "ok": "The last server backup went through.",
+          "failed": "The last server backup failed.",
+          "stale": "The last server backup was {hours} hours ago."
+        },
+        "drill": {
+          "n": "Restore test",
+          "none": "No restore test has run yet.",
+          "ok": "The last restore test brought a backup back successfully.",
+          "failed": "The last restore test failed."
+        },
+        "ssl": {
+          "n": "Domain & SSL lock",
+          "none": "No certificate check has been reported yet.",
+          "days": "The lock renews by itself; {n} days left on this one.",
+          "expired": "The lock has expired."
+        },
+        "build": {
+          "n": "Version running",
+          "ok": "Build {build}.",
+          "dev": "A development build (no version number)."
+        }
+      },
+      "found": {
+        "h": "What the server found",
+        "none": "Nothing. The server's own check reports no problems.",
+        "when": "Checked {when}."
+      },
+      "alerts": {
+        "h": "Alerts & checks",
+        "d": "Alerts for a shop that is down, a failed backup or a lost ERP link go to Telegram. The page check runs after every update and every night.",
+        "telegram": "Telegram control",
+        "backups": "Backups & restore",
+        "golive": "Go-live checks"
+      },
+      "empty": "Not reported yet"
+    },
+    "updates": {
+      "metaTitle": "Updates & versions",
+      "title": "Updates & versions",
+      "sub": "Which version runs now, what changed in plain words, and a safe way back.",
+      "version": "Version",
+      "dev": "development build",
+      "installed": "Installed {when}.",
+      "notInstalled": "No install time has been reported yet.",
+      "how": {
+        "h": "How updates arrive",
+        "d": "An update is installed only after every check passes. Before it goes live the server tests the new version on the staging shop; if the page check fails afterwards, the shop goes back to the last good version by itself.",
+        "back": "Going back to an earlier version is done through a new update from the build list, so orders and data stay as they are.",
+        "go": "Backups & restore"
+      },
+      "last": {
+        "h": "Last good deploy",
+        "commit": "Version",
+        "at": "Installed",
+        "color": "Running on",
+        "none": "The server has not reported a deploy yet."
+      },
+      "build": {
+        "h": "What is built so far",
+        "d": "From the build register: finished work over all planned work.",
+        "of": "{done} of {total} steps finished",
+        "launch": "Needed before real orders: {done} of {total}",
+        "list": "Open the build list"
+      }
+    }
+  }
+}
