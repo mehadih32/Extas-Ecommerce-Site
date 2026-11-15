@@ -6,7 +6,8 @@
 //
 //   GET   /api/admin/rules/hub                 the rows, pills and counts (`rules.read`)
 //   PUT   /api/admin/rules/hub/:id             {version, values, pin?} one row's fields (`rules.write`; money rows: the owner's OK and PIN)
-//   POST  /api/admin/rules/hub/:id/reset       {version, pin?} back to the shipped value
+//   POST  /api/admin/rules/hub/:id/try         {values} PR 848: the typed numbers counted on the last 30 days' orders (read only; `rules.read`)
+//   POST  /api/admin/rules/hub/:id/reset      {version, pin?} back to the shipped value
 //   GET   /api/admin/rules/popups              the twelve placements
 //   PUT   /api/admin/rules/popups/:key         {entry, version} the owner's words, window and switch (`rules.write`)
 //   GET   /api/admin/rules/offers              the one list: offers, coupons, built-in rules, points, wallet, results
@@ -59,6 +60,14 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
   if (a === 'hub') {
     if (!b) return m === 'GET' ? handle(request, deps, 'rules.read', async (x) => ({ hub: await rl.hubScreen(hubDeps(x), x.who) })) : notAllowed();
     if (path.length > 3) return fail(404, 'not-found');
+    if (c === 'try') {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'rules.read', async (x) => {
+        const input = await body(request);
+        const values = input.values && typeof input.values === 'object' && !Array.isArray(input.values) ? (input.values as Record<string, unknown>) : {};
+        return { tried: await rl.tryHubRow(hubDeps(x), x.who, { id: b, values }) };
+      });
+    }
     if (c === 'reset') {
       if (m !== 'POST') return notAllowed();
       return handle(request, deps, 'rules.write', async (x) => {

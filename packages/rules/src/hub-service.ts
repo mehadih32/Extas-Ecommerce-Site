@@ -13,6 +13,7 @@ import { registry, storeTarget, POPUP_KEYS, popupEntrySchema, type PopupEntry } 
 import { allow, found, holds, logChange, nowOf, type RulesDeps, type SettingsReader, type Who } from './context';
 import { RulesError } from './errors';
 import { HUB_ROWS, POPUPS, smartGroupOf, type HubField, type HubGroupId, type HubRow, type HubSettingRow, type PopupSpec } from './hub-catalog';
+import { isTryable, tryRow, TRY_DAYS, type TryOrder, type TryResult } from './hub-try';
 import { listNotices } from './notices-service';
 import { listRules } from './rules-service';
 import type { SettingsWriter } from './eid-service';
@@ -230,6 +231,29 @@ export async function saveHubRow(deps: HubDeps, who: Who, input: SaveHubInput): 
   }
   await logChange(deps.db, who, { action: 'rules.hub.save', entityType: 'HubRule', entityId: row.id, before, after: next });
   return { id: row.id, value: next, version: versionOf(next) };
+}
+
+/**
+ * "Try on last 30 days' orders" (prototype Rules › More options): the typed, unsaved numbers of a row counted against the shop's own
+ * orders of the last days, set beside the saved numbers. Read only: nothing is saved, nothing is sent, no order changes
+ * (`rules.read`). Only the rows named in `TRYABLE_ROWS` can be tried.
+ */
+export async function tryHubRow(deps: HubDeps, who: Who, input: { id: string; values: Record<string, unknown> }): Promise<TryResult> {
+  await allow(deps, who, 'rules.read');
+  const row = rowFor(input.id);
+  if (!isTryable(row.id)) throw new RulesError('NOT_FOUND', 'this rule cannot be tried on past orders');
+  const allowed = new Set(row.fields.map((f) => f.path));
+  for (const path of Object.keys(input.values)) if (!allowed.has(path)) throw new RulesError('INVALID_INPUT', 'a field is not part of this rule', [path]);
+  const saved = await anySettings(deps).value(row.key, { storeId: who.storeId });
+  const since = new Date(nowOf(deps).getTime() - TRY_DAYS * 86_400_000); // hardcode-ok: ms in a day
+  const rows = await deps.db.order.findMany({
+    where: { storeId: who.storeId, createdAt: { gte: since }, status: { notIn: ['DRAFT', 'CANCELLED'] } },
+    select: { subtotalMinor: true, discountMinor: true, deliveryChargeMinor: true, phone: true, createdAt: true },
+    orderBy: { createdAt: 'asc' },
+    take: 20_000, // hardcode-ok: a safety cap on one read
+  });
+  const orders: TryOrder[] = rows.map((o) => ({ goodsMinor: o.subtotalMinor - o.discountMinor, chargeMinor: o.deliveryChargeMinor, phone: o.phone, at: o.createdAt }));
+  return tryRow(row.id, saved, input.values, orders);
 }
 
 export async function resetHubRow(deps: HubDeps, who: Who, input: { id: string; version: string }): Promise<{ id: string; value: unknown; version: string }> {
