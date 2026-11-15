@@ -40,6 +40,8 @@ import './lumen-books.css';
 import './parity-b.css';
 // PR 783-788 (lane D1, prototype v5 parity): the Orders chips and order page, Products tabs, Sets, Claims, Couriers, Customers, Website tabs.
 import './parity-d1.css';
+// PR 814, 827-831 (lane D4, prototype v5 parity): To ship bar and day-end check, With courier, Returns, call desk, Combos, new product, product page, size charts.
+import './parity-d4.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

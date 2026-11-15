@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { mockCourierWorld, STEADFAST_PROVIDER } from "@extas/adapters";
 import { HAS_TEST_DB } from "@extas/auth/testing";
 import { confirmOrder } from "@extas/orders";
-import { bookOrders, bookedFigures, printStickers } from "./index";
+import { bookOrders, bookedFigures, dayEndFigures, packContacts, printStickers } from "./index";
 import { setUpShipping, type ShippingFixture } from "./testing";
 
 async function refusal(p: Promise<unknown>): Promise<string> {
@@ -141,5 +141,25 @@ describe.skipIf(!HAS_TEST_DB)("PR 666 · To ship switches (PostgreSQL)", () => {
     expect(held.problems).toBe(before.problems + 1);
     expect(held.short).toBe(before.short + 1);
     expect(a.orderId).not.toBe(b.orderId);
+  });
+
+  // PR 814 (prototype v5): the day-end check and the Owner / Packer phone view
+  it("day-end figures: a packed order counts as packed today and as not handed over; nothing is handed over by a print", async () => {
+    const before = await dayEndFigures(f.shippingDeps(), f.shipper);
+    const o = await booked("de-a");
+    await db().order.update({ where: { id: o.orderId }, data: { status: "PACKED", packedAt: f.clock.now } });
+    const after = await dayEndFigures(f.shippingDeps(), f.shipper);
+    expect(after.packedToday).toBe(before.packedToday + 1);
+    expect(after.notHanded).toBe(before.notHanded + 1);
+    expect(after.handedToday).toBe(before.handedToday);
+  });
+
+  it("pack contacts: the phone is masked to its first and last three digits, and an unknown order gives nothing", async () => {
+    const o = await booked("pc-a");
+    const rows = await packContacts(f.shippingDeps(), f.shipper, [o.orderId, "00000000-0000-7000-8000-000000000000"]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.phone).toMatch(/^0170000/);
+    expect(rows[0]!.phoneMasked).toBe(`${rows[0]!.phone.slice(0, 3)}•••••${rows[0]!.phone.slice(-3)}`);
+    expect(await packContacts(f.shippingDeps(), f.shipper, [])).toEqual([]);
   });
 });

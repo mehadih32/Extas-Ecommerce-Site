@@ -39,15 +39,23 @@ interface Props {
   canPrint: boolean;
   couriers: { id: string; name: string }[];
   codeWords: Record<string, string>;
+  /** PR 814 (prototype v5): which To ship chip the list sits on: the bar then shows that chip's own buttons at all times. */
+  mode?: 'confirmed' | 'booked' | 'plain';
+  /** PR 814: the courier the shop uses by default (marked "default" in the bar's courier list). */
+  defaultCourierId?: string;
+  /** PR 814: where "Print all" goes (the print run: summary, picking list and stickers). */
+  printAllHref?: string;
+  /** PR 814: a line under each row (the Owner / Packer view's phone and delivery place). */
+  extra?: Record<string, string>;
 }
 
 type Msg = { ok: boolean; text: string } | null;
 
-export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers, codeWords }: Props) {
+export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers, codeWords, mode = 'plain', defaultCourierId, printAllHref, extra }: Props) {
   const router = useRouter();
   const id = useId();
   const [ticked, setTicked] = useState<Set<string>>(new Set());
-  const [courierAccountId, setCourier] = useState(couriers[0]?.id ?? '');
+  const [courierAccountId, setCourier] = useState(couriers.find((c) => c.id === defaultCourierId)?.id ?? couriers[0]?.id ?? '');
   // PR 674: a one-off note for the courier, for every order of this press
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -83,7 +91,79 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
   };
   return (
     <div className="a2-stack" style={{ gap: 8 }}>
-      {selectable && rows.length ? (
+      {selectable && rows.length && mode !== 'plain' ? (
+        <div className="d4-bulk" data-testid="pack-select-bar" data-mode={mode}>
+          <label className="ps-tick d4-bulk-all">
+            <input type="checkbox" checked={all} onChange={() => setTicked(all ? new Set() : new Set(rows.map((r) => r.orderId)))} data-testid="pack-select-all" />
+            <span>{t(dict, 'ful.pack.sel.bar.all')}</span>
+          </label>
+          <span className="a2-xs" data-testid="pack-select-n">
+            {t(dict, 'ful.pack.sel.count', { n: String(chosen.length) })}
+          </span>
+          <span className="d4-grow" />
+          {mode === 'confirmed' ? (
+            canBook && couriers.length ? (
+              <>
+                <span className="a2-xs">{t(dict, 'ful.pack.sel.bar.courier')}</span>
+                <label className="a2-sr" htmlFor={`${id}-c`}>
+                  {t(dict, 'ful.pack.bookPick')}
+                </label>
+                <select id={`${id}-c`} className="a2-sel d4-bulk-sel" value={courierAccountId} onChange={(e) => setCourier(e.target.value)} disabled={busy} data-testid="pack-select-courier">
+                  {couriers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {c.id === defaultCourierId ? ` · ${t(dict, 'ful.pack.sel.bar.default')}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <label className="a2-sr" htmlFor={`${id}-n`}>
+                  {t(dict, 'ful.pack.bookNote')}
+                </label>
+                <input id={`${id}-n`} className="a2-input d4-bulk-note" value={note} maxLength={200} placeholder={t(dict, 'ful.pack.bookNote')} onChange={(e) => setNote(e.target.value)} disabled={busy} data-testid="pack-select-note" />
+                <button
+                  type="button"
+                  className="a2-btn d4-bulk-btn"
+                  onClick={() => (toBook.length ? book() : setMsg({ ok: false, text: t(dict, 'ful.pack.sel.bar.pickFirst') }))}
+                  disabled={busy || !courierAccountId}
+                  data-testid="pack-select-book"
+                >
+                  {busy ? t(dict, 'ful.pack.booking') : t(dict, 'ful.pack.sel.bar.book')}
+                </button>
+              </>
+            ) : (
+              <span className="a2-xs">{t(dict, 'ful.pack.noCourier')}</span>
+            )
+          ) : (
+            <>
+              {canPrint ? (
+                <PdfButton
+                  dict={dict}
+                  url="/api/admin/packing/stickers"
+                  body={{ shipmentIds: toPrint.map((r) => r.shipmentId) }}
+                  label={t(dict, 'ful.pack.sel.bar.stickers')}
+                  busyLabel={t(dict, 'ful.packing.printing')}
+                  size=""
+                  keyed
+                  fileName="print-run.pdf"
+                  testId="pack-select-print"
+                  disabled={!toPrint.length}
+                />
+              ) : null}
+              {printAllHref ? (
+                <Link className="a2-btn d4-bulk-btn" href={printAllHref} data-testid="pack-select-print-all">
+                  {t(dict, 'ful.pack.sel.bar.printAll')}
+                </Link>
+              ) : null}
+            </>
+          )}
+          {msg ? (
+            <span className="a2-xs d4-bulk-msg" role={msg.ok ? 'status' : 'alert'} data-testid="pack-select-said">
+              {msg.text}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {selectable && rows.length && mode === 'plain' ? (
         <div className="a2-card tight ps-bar" data-testid="pack-select-bar">
           <label className="ps-tick">
             <input type="checkbox" checked={all} onChange={() => setTicked(all ? new Set() : new Set(rows.map((r) => r.orderId)))} data-testid="pack-select-all" />
@@ -144,6 +224,7 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
               <b>{r.title}</b>
               <span>{r.sub}</span>
               <span data-testid="pack-docs">{r.docs}</span>
+              {extra?.[r.orderId] ? <span data-testid="pack-deliver-to">{extra[r.orderId]}</span> : null}
             </div>
           </Link>
         </div>
