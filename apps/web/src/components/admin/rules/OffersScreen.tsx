@@ -34,6 +34,17 @@ type Noop = () => void;
 type SaveFn = (send: boolean) => void;
 const API = '/api/admin/rules/offers';
 type Tab = 'all' | 'calendar' | 'awaiting' | 'history';
+// prototype v5: the kind chips above the list (the ones the real offer rows can tell apart)
+const SEGS = ['all', 'coupons', 'auto', 'ship', 'online', 'points'] as const;
+type Seg = (typeof SEGS)[number];
+const inSeg = (r: OfferListRow, seg: Seg): boolean => {
+  if (seg === 'coupons') return r.source === 'coupon' || !!r.code;
+  if (seg === 'auto') return !r.code && (r.source === 'offer' || r.source === 'rule') && (r.kind === 'PERCENT' || r.kind === 'FLAT' || r.kind === null);
+  if (seg === 'ship') return r.kind === 'FREE_DELIVERY';
+  if (seg === 'online') return r.source === 'reward';
+  if (seg === 'points') return r.kind === 'POINTS' || r.kind === 'WALLET_CREDIT' || r.source === 'points' || r.source === 'wallet';
+  return true;
+};
 type Form = {
   id: string | null;
   kind: OfferKindName;
@@ -89,6 +100,8 @@ export function OffersScreen(props: OffersScreenProps) {
   const cur = env.ctx.currency;
   const [screen, setScreen] = useState(props.screen);
   const [tab, setTab] = useState<Tab>('all');
+  const [seg, setSeg] = useState<Seg>('all');
+  const [q, setQ] = useState('');
   const [wizard, setWizard] = useState<Form | null>(null);
   const [step, setStep] = useState(0);
   const [detail, setDetail] = useState<string | null>(null);
@@ -124,14 +137,18 @@ export function OffersScreen(props: OffersScreenProps) {
     if (a.status === 200) setInfo({ offer: a.data.offer as OfferView, history: a.data.history as never });
   };
 
+  const lf = (k: string, vars?: Record<string, string | number>) => t(d, `lf.of.${k}`, vars);
   const rows = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const keep = (r: OfferListRow) => inSeg(r, seg) && (!needle || `${r.nameEn} ${r.nameBn ?? ''} ${r.code ?? ''}`.toLowerCase().includes(needle));
     const live = (r: OfferListRow) => r.state === 'LIVE' || r.state === 'SCHEDULED';
-    if (tab === 'awaiting') return screen.rows.filter((r) => r.state === 'AWAITING_OK');
-    if (tab === 'history') return screen.rows.filter((r) => r.state === 'ENDED');
+    if (tab === 'awaiting') return screen.rows.filter((r) => r.state === 'AWAITING_OK' && keep(r));
+    if (tab === 'history') return screen.rows.filter((r) => r.state === 'ENDED' && keep(r));
     if (tab === 'calendar')
-      return screen.rows.filter((r) => (r.startsAt || r.endsAt) && r.state !== 'DRAFT').sort((a, b) => (a.startsAt ?? a.endsAt ?? '').localeCompare(b.startsAt ?? b.endsAt ?? ''));
-    return screen.rows.filter((r) => r.state !== 'ENDED' || live(r));
-  }, [screen.rows, tab]);
+      return screen.rows.filter((r) => (r.startsAt || r.endsAt) && r.state !== 'DRAFT' && keep(r)).sort((a, b) => (a.startsAt ?? a.endsAt ?? '').localeCompare(b.startsAt ?? b.endsAt ?? ''));
+    return screen.rows.filter((r) => (r.state !== 'ENDED' || live(r)) && keep(r));
+  }, [screen.rows, tab, seg, q]);
+  const scheduled = screen.rows.filter((r) => r.state === 'SCHEDULED').length;
   const running = screen.rows.filter((r) => r.state === 'LIVE').length;
   const best = [...screen.rows].filter((r) => r.results && r.results.orders > 0).sort((a, b) => (b.results?.salesMinor ?? 0) - (a.results?.salesMinor ?? 0))[0];
 
@@ -238,7 +255,7 @@ export function OffersScreen(props: OffersScreenProps) {
 
   return (
     <div className="rh of">
-      <PageHead view={{ dict: props.dict }} place={locateKey('rulesOffers')} title={tt('title')} sub={tt('intro')} right={
+      <PageHead view={{ dict: props.dict }} place={locateKey('rulesOffers')} title={lf('title')} sub={lf('sub')} right={
         perms.write ? (
         <button
           type="button"
@@ -254,13 +271,19 @@ export function OffersScreen(props: OffersScreenProps) {
       } />
       <div className="of-kpis">
         <div className="of-kpi">
-          <span>{tt('kpi.running')}</span>
+          <span>{lf('kActive')}</span>
           <b>{running}</b>
+          <small>{scheduled ? lf('kSched', { n: scheduled }) : lf('kActiveSub')}</small>
         </div>
         <div className="of-kpi">
-          <span>{tt('kpi.given')}</span>
+          <span>{lf('kOrders')}</span>
+          <b>{screen.discount30.orders}</b>
+          <small>{lf('k30')}</small>
+        </div>
+        <div className="of-kpi">
+          <span>{lf('kGiven')}</span>
           <b>{money(screen.discount30.discountMinor)}</b>
-          <small>{tt('kpi.orders', { n: screen.discount30.orders })}</small>
+          <small>{lf('k30')}</small>
         </div>
         <div className="of-kpi">
           <span>{tt('kpi.awaiting')}</span>
@@ -272,6 +295,16 @@ export function OffersScreen(props: OffersScreenProps) {
           {best?.results ? <small>{money(best.results.salesMinor)}</small> : null}
         </div>
       </div>
+      <div className="of-tabs of-segs" data-testid="of-segs">
+        {SEGS.map((x) => (
+          <button type="button" key={x} className={seg === x ? 'on' : ''} aria-pressed={seg === x} onClick={() => setSeg(x)} data-testid={`of-seg-${x}`}>
+            {lf(`seg.${x}`)}
+            <span className="n">{screen.rows.filter((r) => inSeg(r, x)).length}</span>
+          </button>
+        ))}
+      </div>
+      <p className="rh-hint">{lf(`seg.${seg}D`)}</p>
+      <input className="ad-inp of-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={lf('search')} aria-label={lf('search')} data-testid="of-search" />
       <div className="of-tabs" role="tablist" aria-label={tt('tabs.label')}>
         {(['all', 'calendar', 'awaiting', 'history'] as Tab[]).map((x) => (
           <button type="button" role="tab" aria-selected={tab === x} key={x} className={tab === x ? 'on' : ''} onClick={() => setTab(x)}>

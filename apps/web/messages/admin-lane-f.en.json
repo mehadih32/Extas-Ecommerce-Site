@@ -293,6 +293,33 @@
         "title": "Costs & budgets",
         "sub": "Fixed costs record themselves; you add the rest with a receipt."
       }
+    },
+    "of": {
+      "title": "Offers & discounts",
+      "sub": "Every way a customer can pay less or get more: one place to see what runs, what it costs and what it earns.",
+      "kActive": "Active offers",
+      "kActiveSub": "right now",
+      "kSched": "{n} scheduled",
+      "kOrders": "Orders with an offer",
+      "k30": "last 30 days",
+      "kGiven": "Discount given",
+      "search": "Search offers or codes…",
+      "seg": {
+        "all": "All offers",
+        "allD": "Everything customers can get: codes, automatic discounts, free delivery, rewards and points.",
+        "coupons": "Coupons",
+        "couponsD": "Customers type a code at checkout.",
+        "auto": "Automatic discounts",
+        "autoD": "No code needed. Sale prices and automatic offers show by themselves.",
+        "ship": "Free delivery",
+        "shipD": "Delivery charge taken off. The basic Free delivery rule is under \"Built-in rules\" below.",
+        "online": "Online-payment reward",
+        "onlineD": "A reward for paying by bKash, Nagad or card: free delivery, % or ৳ off, points or wallet credit.",
+        "points": "Points & wallet",
+        "pointsD": "Rewards that are given back later, not taken off the price now."
+      },
+      "none": "No offers here yet.",
+      "costNote": "Cost = discount given. Click a row for the full picture."
     }
   }
 }
