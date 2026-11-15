@@ -11,7 +11,7 @@
     },
     "missing": "Still missing before go-live: {list}.",
     "legal": {
-      "h": "Legal numbers",
+      "h": "Business & legal",
       "d": "Printed in the footer on one line with the copyright, on every invoice and on the help page. Leave a box empty until you have the number: the shop then leaves that line out.",
       "registeredName": "Registered business name",
       "registeredNameHelp": "As on the trade licence.",
@@ -42,6 +42,35 @@
     "discard": "Discard",
     "unsaved": "Not saved yet",
     "readOnly": "You can see these details; changing them needs the settings permission.",
-    "pairHelp": "Write both languages."
+    "pairHelp": "Write both languages.",
+    "where": {
+      "h": "More store details",
+      "d": "These live where the shop uses them. Open a card to change them there.",
+      "open": "Open",
+      "addresses": {
+        "t": "Addresses",
+        "d": "Office, warehouse and returns address."
+      },
+      "contact": {
+        "t": "Contact",
+        "d": "Hotline, WhatsApp, email and opening hours."
+      },
+      "logos": {
+        "t": "Logo set & brand colours",
+        "d": "Logos, favicon and the shop name."
+      },
+      "social": {
+        "t": "Social links",
+        "d": "Facebook, Instagram, TikTok, YouTube and other links in the footer."
+      },
+      "invoice": {
+        "t": "Invoice & sticker",
+        "d": "Invoice header, footer and the parcel sticker."
+      },
+      "tax": {
+        "t": "Tax & VAT",
+        "d": "VAT figures and the VAT BIN on invoices."
+      }
+    }
   }
 }
