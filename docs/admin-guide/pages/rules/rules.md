@@ -6,6 +6,9 @@
 নমুনা) দেখায়। **Edit** চাপলে ডান পাশে (ফোনে নিচে) সম্পাদনার ঘর খোলে, পাতা ছেড়ে যেতে হয় না। লম্বা নিয়ম লেখার পাতা
 আলাদা: **Smart Rules**।
 
+> [!NOTE]
+> প্রোটোটাইপের সাথে মিলিয়ে ফর্মের কিছু ঘরের নাম বদলেছে: "Replace defective or wrong items for free", "Customer tells us within (hours)", "Old piece must come back within (days)", "ERP check within (days)", "Remind the customer after (hours)" আর "Merge by itself when phone and address are the same"। কাজ আগের মতোই, শুধু শব্দ বদলেছে।
+
 ## কেন দরকার
 আগে একই কাজের নিয়ম দশটা পাতায় ছড়ানো ছিল, তাই কোনটা চালু আর কোনটা শুরুর সংখ্যায় পড়ে আছে বোঝা যেত না। এখন এক
 নজরে দেখা যায়, আর বদলালে নতুন অর্ডার থেকেই দোকান সেটা মানে।
