@@ -55,7 +55,10 @@ describe('wave 4 settings (PR 686–691)', () => {
 
   it('report library: restock within 14 days of stock, unsold after 60 days, nothing out of range', () => {
     const d = productsFinanceV5Settings['reports.library'].default;
-    expect(d).toEqual({ restockCoverDays: 14, deadAfterDays: 60 });
+    expect(d).toEqual({ restockCoverDays: 14, deadAfterDays: 60, bulkPieces: 20, bulkMarginPct: 45, stopPieces: 2, stopMarginPct: 15 });
+    // a value saved before PR 732 (two fields) still reads, with the new rules at their defaults
+    expect(reportsLibrarySchema.parse({ restockCoverDays: 10, deadAfterDays: 30 })).toEqual({ restockCoverDays: 10, deadAfterDays: 30, bulkPieces: 20, bulkMarginPct: 45, stopPieces: 2, stopMarginPct: 15 });
+    expect(reportsLibrarySchema.safeParse({ ...d, bulkMarginPct: 101 }).success).toBe(false);
     expect(reportsLibrarySchema.safeParse({ ...d, restockCoverDays: 0 }).success).toBe(false);
     expect(reportsLibrarySchema.safeParse({ ...d, deadAfterDays: 6 }).success).toBe(false);
   });

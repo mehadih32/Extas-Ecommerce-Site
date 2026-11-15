@@ -98,19 +98,28 @@ export interface ProductsData {
   sales: ProfitReport;
   salesWas: ProfitReport;
   restock: { restock: RestockLine[]; unsold: RestockLine[] } | null;
+  /** PR 732: the same period by category, and the span before (the Categories table). */
+  categories: GroupProfit;
+  categoriesWas: GroupProfit;
+  /** The verdict rules of the style tree (`reports.library`). */
+  rules: { bulkPieces: number; bulkMarginPct: number; stopPieces: number; stopMarginPct: number };
 }
 
 /** Reports › Products: profit by style for the period and the span before, daily Sales, and what to restock or stop. */
 export async function loadProducts(a: Access, b: Base): Promise<ProductsData> {
   const { from, to } = b.period.q;
-  const [styles, stylesWas, sales, salesWas, restock] = await Promise.all([
+  const [styles, stylesWas, sales, salesWas, restock, categories, categoriesWas, lib] = await Promise.all([
     groupProfitView(a.deps, S, { from, to, by: 'style' }, b.limits),
     groupProfitView(a.deps, S, { from: b.before.from, to: b.before.to, by: 'style' }, b.limits),
     profitReport(a.deps, S, from, to),
     profitReport(a.deps, S, b.before.from, b.before.to),
     loadRestock(a),
+    groupProfitView(a.deps, S, { from, to, by: 'category' }, b.limits),
+    groupProfitView(a.deps, S, { from: b.before.from, to: b.before.to, by: 'category' }, b.limits),
+    a.deps.resolver.value('reports.library', { storeId: S }),
   ]);
-  return { styles: styles.report, stylesWas: stylesWas.report, sales, salesWas, restock };
+  const { bulkPieces, bulkMarginPct, stopPieces, stopMarginPct } = lib as { bulkPieces: number; bulkMarginPct: number; stopPieces: number; stopMarginPct: number };
+  return { styles: styles.report, stylesWas: stylesWas.report, sales, salesWas, restock, categories: categories.report, categoriesWas: categoriesWas.report, rules: { bulkPieces, bulkMarginPct, stopPieces, stopMarginPct } };
 }
 
 export interface AdDay {

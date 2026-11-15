@@ -13,6 +13,7 @@ import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
+import { StyleTree, type TreeRow, type TreeTexts } from '@/components/admin/reports/StyleTree';
 import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -29,6 +30,7 @@ import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
 import '../../money/money.css';
 import '../delivery/report.css';
+import '@/components/admin/reports/report-tree.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,6 +103,22 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
     mini: [{ label: cc('orders'), shown: f.num(r.sales.orders) }],
   });
 
+  // PR 732: the style tree (a verdict from the owner's rules), best sellers, slow sellers and the categories table
+  const rules = r.rules;
+  const verdictOf = (x: (typeof r.styles.rows)[number]): TreeRow['verdict'] => {
+    const m = marginPct(x);
+    if (x.pieces >= rules.bulkPieces && m !== null && m >= rules.bulkMarginPct) return 'bulk';
+    if (x.pieces > 0 && (x.pieces <= rules.stopPieces || (m !== null && m < rules.stopMarginPct))) return 'stop';
+    return 'keep';
+  };
+  const treeRows: TreeRow[] = r.styles.rows
+    .filter((x) => x.id !== null)
+    .map((x) => ({ id: x.id as string, parentId: x.parentId, depth: x.depth, name: x.name ?? t(d, 'reportsV5.channel.noStyle'), pieces: f.num(x.pieces), sales: f.amount(x.salesMinor), profit: f.amount(x.profitMinor), margin: f.pctOf(marginPct(x)), loss: x.profitMinor < 0, verdict: verdictOf(x) }));
+  const treeTexts: TreeTexts = { label: c('treeLabel'), name: c('treeName'), pieces: c('treePieces'), sales: c('treeSales'), profit: c('treeProfit'), margin: c('treeMargin'), verdict: c('treeVerdict'), bulk: c('vBulk'), stop: c('vStop'), keep: c('vKeep'), openAll: c('openAll'), closeAll: c('closeAll') };
+  const bestSellers = [...styleLeaves].filter((x) => x.pieces > 0).sort((x, y) => y.pieces - x.pieces).slice(0, 8);
+  const bestMax = Math.max(1, ...bestSellers.map((x) => x.pieces));
+  const catWas = new Map(r.categoriesWas.rows.map((x) => [x.id, x]));
+  const catRows = [...r.categories.rows].filter((x) => x.depth === 0 && (x.pieces > 0 || x.salesMinor > 0)).sort((x, y) => y.salesMinor - x.salesMinor);
   const ranked = [...r.styles.rows].sort((a, z) => z.profitMinor - a.profitMinor);
   const moreStyles = ranked.length > rows;
   const listCols = [{ h: c('colProduct') }, { h: c('colSizes'), right: true }, { h: c('colDays'), right: true }, { h: c('colSold30'), right: true }];
@@ -151,6 +169,95 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
           ])}
         />
         {moreStyles ? <p className="a2-xs a2-mute a2-mt6">{cc('cut', { n: rows })}</p> : null}
+      </section>
+
+      <section className="a2-card a2-mt12" aria-labelledby="rp-tr" data-testid="rp-style-tree">
+        <h2 className="a2-h3" id="rp-tr">
+          {c('tree')}
+        </h2>
+        <p className="a2-cs">{c('treeSub')}</p>
+        <div className="rt-rules" data-testid="rp-rules">
+          <span>
+            <span className="a2-pill ok">{c('vBulk')}</span>
+            {c('rBulk', { pieces: f.num(rules.bulkPieces), margin: f.num(rules.bulkMarginPct) })}
+          </span>
+          <span>
+            <span className="a2-pill bad">{c('vStop')}</span>
+            {c('rStop', { pieces: f.num(rules.stopPieces), margin: f.num(rules.stopMarginPct) })}
+          </span>
+          <span>
+            <span className="a2-pill line">{c('vKeep')}</span>
+            {c('rKeep')}
+          </span>
+        </div>
+        {treeRows.length ? <StyleTree rows={treeRows} texts={treeTexts} /> : <p className="a2-sm a2-mute">{cc('none')}</p>}
+      </section>
+
+      <div className="rp-grid2 a2-mt12">
+        <section className="a2-card" aria-labelledby="rp-bs" data-testid="rp-best">
+          <h2 className="a2-h3" id="rp-bs">
+            {c('best')}
+          </h2>
+          <p className="a2-cs">{c('bestSub')}</p>
+          {bestSellers.length ? (
+            <ul className="rt-bars">
+              {bestSellers.map((x) => (
+                <li key={x.id} className="rt-bar" data-testid="rp-best-row">
+                  <b>{x.name ?? t(d, 'reportsV5.channel.noStyle')}</b>
+                  <span>{c('pcs', { n: f.num(x.pieces), sales: f.amount(x.salesMinor) })}</span>
+                  <span className="rt-track" aria-hidden="true">
+                    <i style={{ width: `${Math.max(2, (x.pieces / bestMax) * 100)}%` }} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="a2-sm a2-mute">{c('bestNone')}</p>
+          )}
+        </section>
+        {r.restock ? (
+          <section className="a2-card" aria-labelledby="rp-sl" data-testid="rp-slow">
+            <h2 className="a2-h3" id="rp-sl">
+              {c('slow')}
+            </h2>
+            <p className="a2-cs">{c('slowSub')}</p>
+            {unsold.length ? (
+              <ul className="rt-list">
+                {unsold.slice(0, 6).map((x) => (
+                  <li key={x.productId} data-testid="rp-slow-row">
+                    <div>
+                      <Link className="a2-lnk" href={`/admin/products/${x.productId}`}>
+                        {x.name}
+                      </Link>
+                      <span className="a2-xs a2-mute cl-sub">{c('slowItem', { n: f.num(x.sold30) })}</span>
+                    </div>
+                    <span className="a2-pill warn">{c('inStock', { n: x.sizesInStock, total: x.sizesTotal })}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute">{c('noneUnsold')}</p>
+            )}
+          </section>
+        ) : null}
+      </div>
+
+      <section className="a2-card a2-mt12" aria-labelledby="rp-ct" data-testid="rp-cats">
+        <h2 className="a2-h3" id="rp-ct">
+          {c('cats')}
+        </h2>
+        <p className="a2-cs">{c('catsSub')}</p>
+        <ReportTable
+          testId="rp-cats-table"
+          rowId="rp-cat-row"
+          empty={cc('none')}
+          cols={[{ h: c('colCategory') }, { h: c('colPieces'), right: true }, { h: c('colSales'), right: true }, { h: c('colVs'), right: true }, { h: c('colMargin'), right: true }]}
+          rows={catRows.slice(0, rows).map((x) => {
+            const was = catWas.get(x.id);
+            const ch = was ? change(x.salesMinor, was.salesMinor) : null;
+            return [<b key="n">{x.name ?? c('catNone')}</b>, f.num(x.pieces), f.amount(x.salesMinor), ch === null ? '—' : f.pct(ch), f.pctOf(marginPct(x))];
+          })}
+        />
       </section>
 
       {r.restock ? (
