@@ -24,6 +24,9 @@ import {
 import { groupProfitView } from "../group-profit-view";
 import { reportOverview, type ReportOverview } from "../marketing/report";
 import { profitReport, type ProfitReport } from "../profit-report";
+import { sellableReader } from "../shop/sellable";
+import { loadProductsExtra, type ProductsExtra } from "./products-extra";
+import { practiceScope } from "./practice";
 import { previousSpan } from "./model";
 import { withProtoPeriod } from "./period";
 import type { Who } from "@extas/inventory";
@@ -231,6 +234,30 @@ export async function loadProducts(a: Access, b: Base): Promise<ProductsData> {
     categoriesWas: categoriesWas.report,
     rules: { bulkPieces, bulkMarginPct, stopPieces, stopMarginPct },
   };
+}
+
+/** PR 863: the rest of Reports › Products (size and colour demand, looked at a lot, returns, all products) for the period; `pool` = the category filter's products. */
+export async function loadProductsMore(
+  a: Access,
+  b: Base,
+  pool: ReadonlySet<string> | null,
+): Promise<ProductsExtra> {
+  const cdep = {
+    db: a.deps.db,
+    settings: a.deps.resolver,
+    now: a.deps.now,
+    sellable: sellableReader(a.deps.db, a.deps.resolver, S),
+  } as unknown as cat.CatalogueDeps;
+  const rank = await cat.loadRankInputs(cdep, S);
+  return loadProductsExtra(
+    a.deps.db,
+    rank,
+    b.timeZone,
+    b.period.q.from,
+    b.period.q.to,
+    pool,
+    await practiceScope(a.deps),
+  );
 }
 
 export interface AdDay {

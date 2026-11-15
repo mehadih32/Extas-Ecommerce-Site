@@ -313,6 +313,7 @@ export function ReportDeliveryProto({
             { h: c("proto.colReturned"), right: true, hide: true },
             { h: c("proto.colSuccess"), right: true },
             { h: c("proto.colDays"), right: true },
+            { h: c("proto.colReturnCost"), right: true, hide: true },
           ]}
           rows={f.grid.map((g): STRow => ({
             key: `${g.courierId}-${g.zoneKey}`,
@@ -331,8 +332,9 @@ export function ReportDeliveryProto({
                 {`${Math.round(g.success)}%`}
               </span>,
               g.days === null ? "—" : dec(g.days),
+              money(g.returnMinor),
             ],
-            sort: [g.courier, g.n, g.d, g.rt, g.success, g.days ?? 0],
+            sort: [g.courier, g.n, g.d, g.rt, g.success, g.days ?? 0, g.returnMinor],
             drawer: {
               title: `${g.courier} · ${g.zoneEn}`,
               sub: c("proto.gridDrawerSub", { n: num(g.n) }),

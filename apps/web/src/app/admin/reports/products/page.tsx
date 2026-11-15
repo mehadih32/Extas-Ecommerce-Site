@@ -28,6 +28,7 @@ import {
   type TreeTexts,
 } from "@/components/admin/reports/StyleTree";
 import { ReportTable } from "@/components/admin/reports/ReportParts";
+import { ReportProductsMore } from "@/components/admin/reports/ReportProductsMore";
 import { SortTable, type STRow } from "@/components/admin/reports/SortTable";
 import "@/components/admin/reports/report-bar.css";
 import {
@@ -42,7 +43,12 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { marginPct } from "@/lib/group-profit-view";
 import { t } from "@/lib/i18n";
 import { makeFmt } from "@/lib/reports-v5/fmt";
-import { loadBase, loadProducts, loadViews } from "@/lib/reports-v5/load";
+import {
+  loadBase,
+  loadProducts,
+  loadProductsMore,
+  loadViews,
+} from "@/lib/reports-v5/load";
 import { change, leaves } from "@/lib/reports-v5/model";
 import { categoryScope, styleRowsFor } from "@/lib/reports-v5/products-filter";
 import { withReportsV5 } from "@/lib/reports-v5/words";
@@ -134,6 +140,12 @@ export default async function ProductsReportPage({
     !scope || scope.productIds.has(x.productId);
   const restock = (r.restock?.restock ?? []).filter(inScope);
   const unsold = (r.restock?.unsold ?? []).filter(inScope);
+  // PR 863: heat maps, colours, looked-at-a-lot, returns and the all-products table follow the category filter too
+  const more = await loadProductsMore(
+    access,
+    b,
+    scope ? scope.productIds : null,
+  );
   const num = (
     id: string,
     label: string,
@@ -584,17 +596,25 @@ export default async function ProductsReportPage({
         />
       </section>
 
-      {r.restock ? (
-        <div className="rp-grid2 a2-mt12">
-          <section
-            className="a2-card"
-            aria-labelledby="rp-rs"
-            data-testid="rp-restock"
-          >
-            <h2 className="a2-h3" id="rp-rs">
-              {c("restock")}
-            </h2>
-            <p className="a2-cs">{c("restockSub")}</p>
+      <ReportProductsMore
+        extra={more}
+        restock={r.restock ? restock : null}
+        lang={view.lang}
+        f={f}
+        c={c}
+        tableTexts={tx}
+        rows={rows}
+        reorder={{
+          button: c("reorderButton"),
+          title: c("reorderTitle"),
+          body: c("reorderBody"),
+          confirm: c("reorderConfirm"),
+          cancel: c("reorderCancel"),
+          done: c("reorderDone"),
+          failed: c("reorderFailed"),
+        }}
+        restockTable={
+          <>
             <SortTable
               testId="rp-restock-table"
               rowId="rp-restock-row"
@@ -610,33 +630,35 @@ export default async function ProductsReportPage({
                 {c("toStock")}
               </Link>
             </div>
-          </section>
-          <section
-            className="a2-card"
-            aria-labelledby="rp-un"
-            data-testid="rp-unsold"
-          >
-            <h2 className="a2-h3" id="rp-un">
-              {c("unsold")}
-            </h2>
-            <p className="a2-cs">{c("unsoldSub")}</p>
-            <SortTable
-              testId="rp-unsold-table"
-              rowId="rp-unsold-row"
-              texts={{ ...tx, empty: c("noneUnsold") }}
-              sortCol={3}
-              sortDir="asc"
-              limit={6}
-              cols={listCols}
-              rows={listRows(unsold)}
-            />
-            <div className="ct-actions a2-mt12">
-              <Link className="a2-btn cr-tap" href="/admin/combos">
-                {c("toCombos")}
-              </Link>
-            </div>
-          </section>
-        </div>
+          </>
+        }
+      />
+      {r.restock ? (
+        <section
+          className="a2-card a2-mt12"
+          aria-labelledby="rp-un"
+          data-testid="rp-unsold"
+        >
+          <h2 className="a2-h3" id="rp-un">
+            {c("unsold")}
+          </h2>
+          <p className="a2-cs">{c("unsoldSub")}</p>
+          <SortTable
+            testId="rp-unsold-table"
+            rowId="rp-unsold-row"
+            texts={{ ...tx, empty: c("noneUnsold") }}
+            sortCol={3}
+            sortDir="asc"
+            limit={6}
+            cols={listCols}
+            rows={listRows(unsold)}
+          />
+          <div className="ct-actions a2-mt12">
+            <Link className="a2-btn cr-tap" href="/admin/combos">
+              {c("toCombos")}
+            </Link>
+          </div>
+        </section>
       ) : (
         <p className="a2-xs a2-mute a2-mt12" data-testid="rp-no-reports-key">
           {cc("noKey")}
