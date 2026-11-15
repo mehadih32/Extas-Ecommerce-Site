@@ -59,3 +59,4 @@
 .lf-cs { display: block; overflow-wrap: anywhere; margin-top: 2px; }
 .lf-alerts { display: flex; flex-direction: column; gap: 8px; }
 @media (min-width: 900px) { .lf-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lf-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
