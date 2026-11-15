@@ -180,7 +180,7 @@ export function CheckoutForm({
   /** PR 560: the name and number, once both are finished (the owner's Parameter for Checkout looks only then). */
   const detailsNow = () => {
     const name = nameNow.current.trim();
-    return [...name].length >= Math.max(1, limits.nameMin) && phoneNormalizeBD(phoneNow.current).ok ? { name, phone: phoneNow.current } : null;
+    return (limits.nameMin <= 0 || [...name].length >= limits.nameMin) && phoneNormalizeBD(phoneNow.current).ok ? { name, phone: phoneNow.current } : null;
   };
   /** Prices the checkout again for what the customer chose; only the newest answer is drawn. */
   const requote = async (patch: Partial<Choices>) => {
@@ -283,7 +283,7 @@ export function CheckoutForm({
     hidePrices: typeof keptGift?.hidePrices === 'boolean' ? keptGift.hidePrices : (giftCfg?.hidePricesDefault ?? true),
   };
   const giftCheck = giftCfg
-    ? checkGift(giftForm, { nameMin: limits.nameMin, noteMax: giftCfg.noteMax, maxDays: giftCfg.maxDays }, giftCfg.today, giftCfg.hidePricesDefault)
+    ? checkGift(giftForm, { nameMin: Math.max(1, limits.nameMin), noteMax: giftCfg.noteMax, maxDays: giftCfg.maxDays }, giftCfg.today, giftCfg.hidePricesDefault)
     : null;
   const [giftAsk, setGiftAsk] = useState<GiftField | null>(null);
   const giftAsking = giftAsk && giftCheck && !giftCheck.ok && giftCheck.field === giftAsk ? giftAsk : null;
@@ -297,7 +297,8 @@ export function CheckoutForm({
   }, [form.name]);
   // PR 560: the name and number just got finished (or a finished one changed, or was taken back): price it again, so a
   // checkout the owner's layers flag shows its payment section on this same page
-  const nameDone = [...form.name.trim()].length >= Math.max(1, limits.nameMin);
+  // a name the owner does not ask for (`checkout.form.nameMin` 0) is always done
+  const nameDone = limits.nameMin <= 0 || [...form.name.trim()].length >= limits.nameMin;
   const typedNow = phoneNormalizeBD(form.phone);
   const detailsKey = nameDone && typedNow.ok ? typedNow.e164 : null;
   const seenDetails = useRef<string | null>(null);
@@ -663,7 +664,7 @@ export function CheckoutForm({
               ) : null}
               <div className="stack s16 mt16">
                 <DetailsFields
-                  fields={fields}
+                  fields={fields.filter((f) => f !== 'name' || limits.nameMin > 0)}
                   form={form}
                   onChange={change}
                   phoneChecked={phoneChecked}

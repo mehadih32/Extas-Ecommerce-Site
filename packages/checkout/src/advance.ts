@@ -72,7 +72,7 @@ export interface CheckoutDetails {
 /** He has filled everything in: a name as long as the form asks, a real mobile number, and a settled address. */
 export function detailsFinished(d: CheckoutDetails | null | undefined, nameMin: number, addressSettled: boolean): { phone: string; name: string } | null {
   if (!d || !addressSettled) return null;
-  if ([...d.name.trim()].length < Math.max(1, nameMin)) return null;
+  if (nameMin > 0 && [...d.name.trim()].length < nameMin) return null;
   const p = phoneNormalizeBD(d.phone);
   return p.ok ? { phone: p.e164, name: d.name.trim() } : null;
 }

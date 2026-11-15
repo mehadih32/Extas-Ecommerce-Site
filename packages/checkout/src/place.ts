@@ -392,7 +392,7 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
   let gift = null;
   if (giftOn && d.gift) {
     const today = storeToday(nowOf(deps), timeZone ?? 'UTC');
-    const g = checkGift(d.gift, { nameMin, noteMax: giftOn.noteMaxChars, maxDays: giftOn.deliverAfterMaxDays }, today, giftOn.hidePricesDefault);
+    const g = checkGift(d.gift, { nameMin: Math.max(1, nameMin), noteMax: giftOn.noteMaxChars, maxDays: giftOn.deliverAfterMaxDays }, today, giftOn.hidePricesDefault);
     if (!g.ok) throw new CheckoutError('FORM', 'a gift field is not finished', [g.field], { field: g.field, problem: g.problem, gift: true });
     gift = g.gift;
   }
@@ -520,7 +520,8 @@ export async function placeOrder(deps: CheckoutDeps, req: PlaceRequest): Promise
           // PR 505 follow-up (SIM-F-025): the language he ordered in; his messages follow it
           lang: d.lang,
           phone: check.phone.e164,
-          customerName: d.form.name.trim(),
+          // a name the owner does not ask for (nameMin 0) is left empty by the customer: the order carries his number instead
+          customerName: d.form.name.trim() || check.phone.e164,
           shippingAddressText: d.form.address.trim(),
           backfilledAddress: resolved?.backfill?.line ?? null,
           areaId: charged?.area.areaId ?? null,

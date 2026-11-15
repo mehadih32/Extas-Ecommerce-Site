@@ -398,7 +398,17 @@
       "giftTitle": "{name}-এর জন্য উপহার",
       "giftFrom": "পাঠিয়েছেন {sender}",
       "giftAfter": "{date} বা তার পরে ডেলিভারি",
-      "giftHidden": "যিনি পাবেন তাঁর ইনভয়েসে দাম দেখানো হবে না।"
+      "giftHidden": "যিনি পাবেন তাঁর ইনভয়েসে দাম দেখানো হবে না।",
+      "sendTitle": "টাকা পাঠান এই নম্বরে",
+      "sendNote": "রেফারেন্সে আপনার অর্ডার নম্বর {number} লিখুন।",
+      "sendWallet": "{provider} ({kind})",
+      "sendKind_merchant": "মার্চেন্ট",
+      "sendKind_personal": "পার্সোনাল",
+      "sendKind_agent": "এজেন্ট",
+      "sendBank": "{bank}, অ্যাকাউন্টের নাম {account}",
+      "sendBankNo": "অ্যাকাউন্ট নম্বর {no}",
+      "sendBankBranch": "শাখা {branch}",
+      "sendBankRouting": "রাউটিং নম্বর {routing}"
     },
     "gift": {
       "title": "উপহার পাঠাচ্ছেন",

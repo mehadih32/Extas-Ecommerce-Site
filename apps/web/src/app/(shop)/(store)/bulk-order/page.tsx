@@ -26,5 +26,5 @@ export default async function BulkOrder(props: Props) {
   if (!lane.enabled) shopNotFound(c);
   const source = sourceOf(sp.from);
   const [bag, s] = await Promise.all([source === 'bag' ? currentBag(c) : Promise.resolve(null), readPageSettings(['checkout.form.nameMin'] as const, c.storeId)]);
-  return <BulkPage c={c} lane={lane} source={source} bag={bag} nameMin={s['checkout.form.nameMin']} />;
+  return <BulkPage c={c} lane={lane} source={source} bag={bag} nameMin={Math.max(1, s['checkout.form.nameMin'])} />;
 }

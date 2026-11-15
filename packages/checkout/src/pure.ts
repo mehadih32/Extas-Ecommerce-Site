@@ -58,6 +58,8 @@ export function fieldProblem(field: Field, form: DetailsForm, limits: FormLimits
     const p = phoneNormalizeBD(form.phone);
     return p.ok ? null : p.empty ? 'empty' : 'phone';
   }
+  // `checkout.form.nameMin` 0: the owner does not ask for a name, so there is nothing to finish
+  if (field === 'name' && limits.nameMin <= 0) return null;
   const v = field === 'name' ? form.name : form.address;
   const min = field === 'name' ? limits.nameMin : limits.addressMin;
   if (!v.trim()) return 'empty';

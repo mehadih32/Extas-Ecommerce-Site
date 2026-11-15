@@ -41,3 +41,14 @@ describe('PR 116 · the form checks (the browser and the order judge it the same
     expect(latinDigits('০১৭ ab')).toBe('017 ab');
   });
 });
+
+describe('PR 749 · a name the owner does not ask for (checkout.form.nameMin 0)', () => {
+  const limits = { nameMin: 0, addressMin: 8 };
+  it('never stops the form, and the phone and the address are still asked', () => {
+    const rest = { phone: '01712345678', address: 'House 4, Road 2, Mirpur 10' };
+    expect(fieldProblem('name', { name: '', ...rest }, limits)).toBeNull();
+    expect(checkForm({ name: '', ...rest }, limits).ok).toBe(true);
+    expect(checkForm({ name: '', phone: '', address: rest.address }, limits)).toMatchObject({ ok: false, field: 'phone', problem: 'empty' });
+    expect(checkForm({ name: '', phone: rest.phone, address: '' }, limits)).toMatchObject({ ok: false, field: 'address', problem: 'empty' });
+  });
+});

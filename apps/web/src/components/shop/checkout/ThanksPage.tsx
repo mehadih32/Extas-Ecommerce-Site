@@ -35,6 +35,7 @@ import type { LookData } from '@/lib/shop/thanks-look';
 import { Icon, WaGlyph } from '../Icon';
 import { nameOf, Thumb } from '../bag/BagLines';
 import { CopyNumber, RetryPayment } from './ThanksActions';
+import { SendTo, type SendToView } from './SendTo';
 import { Upsell } from '../bag/Upsell';
 import type { ShopCard } from '@/lib/shop/catalogue';
 import type { Reassurance } from '@/lib/shop/bag-model';
@@ -115,6 +116,7 @@ export async function ThanksPage({
   upsell = null,
   reviewOn = false,
   photoRewardMinor = null,
+  sendTo = null,
 }: {
   c: ShopContext;
   r: Receipt;
@@ -134,6 +136,8 @@ export async function ThanksPage({
   reviewOn?: boolean;
   /** Follow-up 237: what an approved photo review is worth, while it may be said (lib/shop/review-link shownPhotoReward). */
   photoRewardMinor?: number | null;
+  /** The numbers and accounts to send a waiting prepaid payment to (`checkout.pay.showNumbers`; null: off, or none are set). */
+  sendTo?: SendToView | null;
 }) {
   const words = checkoutWords(c);
   const w = (k: string, vars: Record<string, string> = {}) => fill(words[k] ?? k, vars);
@@ -254,6 +258,7 @@ export async function ThanksPage({
           <div className="small text2" style={{ marginTop: 2 }}>
             {w(pay.kind === 'failed' ? 'ty.failedNote' : 'ty.dueNote')}
           </div>
+          {pay.kind !== 'failed' ? <SendTo sendTo={sendTo} words={words} number={r.number} /> : null}
           {pay.kind === 'failed' ? (
             <RetryPayment number={r.number} lang={c.lang} words={words} />
           ) : (

@@ -104,7 +104,7 @@ export async function sendBulkEnquiry(deps: CheckoutDeps, req: BulkRequest): Pro
   const now = nowOf(deps);
   const lines = d.withBag ? await bagLinesOf(deps, req.storeId, req.visitorId) : [];
   const c = checkBulk(d, {
-    nameMin,
+    nameMin: Math.max(1, nameMin),
     textMax: TEXT_MAX,
     noteMax: lane.noteMaxChars,
     minQuantity: lane.minQuantity,
