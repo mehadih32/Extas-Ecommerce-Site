@@ -4,6 +4,7 @@
 // (the set tiers from Smart Rules), and the combo report (?tab=report&days=). Reading needs `combos.read`; changing `combos.write`; switching on or off
 // `combos.publish`; a set price `combos.prices` (the owner's decision). The API checks each again on every call.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
@@ -11,7 +12,9 @@ import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { registry } from '@extas/settings';
+import { isArchivedState } from '@extas/combos/pure';
 import { ComboReportView } from '@/components/admin/combos/ComboReportView';
+import { ComboSummary } from '@/components/admin/combos/ComboSummary';
 import { CombosScreen } from '@/components/admin/combos/CombosScreen';
 import { combosTab, money } from '@/components/admin/combos/model';
 import { SetTiers } from '@/components/admin/combos/SetTiers';
@@ -64,6 +67,8 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
   // CN-018 (4): the store's set-split setting (Fixed / Flexible), on the fixed tab only
   const split = tab === 'fixed' ? await cb.splitOptions(a.deps, a.who) : null;
   const report = tab === 'report' ? await cb.comboReport(a.deps, a.who, { days: daysOf(one(sp.days)) }) : null;
+  // PR 829 (prototype v5): the four figures and the note above the lists (30 days when the setting's limits allow it)
+  const summaryReport = tab === 'auto' || tab === 'fixed' || tab === 'archive' ? await cb.comboReport(a.deps, a.who, { days: daysOf('30') }) : null;
   const photos = await setPhotoUrls(a, combos);
   const editRule = ruleId ? (rules.find((r) => r.id === ruleId && !r.upsellOf) ?? null) : null;
   const upsellRule = editRule?.upsell ? (rules.find((r) => r.id === editRule.upsell!.id) ?? null) : null;
@@ -89,6 +94,20 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
         photos={photos}
         perms={a.perms}
         split={split}
+        openNew={one(sp.make) === '1'}
+        summary={
+          summaryReport ? (
+            <ComboSummary
+              dict={view.dict}
+              combos={combos}
+              report={summaryReport}
+              liveRules={rules.filter((r) => !r.upsellOf && !isArchivedState(r.state)).length}
+              name={(c) => (view.lang === 'bn' && c.nameBn ? c.nameBn : c.nameEn)}
+              num={(n) => n.toLocaleString(view.locale)}
+              fmt={(m) => money(m, view.locale, currency)}
+            />
+          ) : null
+        }
         tiers={
           tab === 'fixed' ? (
             <SetTiers
@@ -120,6 +139,18 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
             view={view}
             place={locateKey(KEY)}
             title={t(view.dict, 'combos.title')}
+            right={
+              a.perms.write ? (
+                <>
+                  <Link className="a2-btn" href={`${HERE}?tab=new`} data-testid="cb-auto-generate">
+                    {t(view.dict, 'combos.head.auto')}
+                  </Link>
+                  <Link className="a2-btn pri" href={`${HERE}?tab=fixed&make=1`} data-testid="cb-build">
+                    {t(view.dict, 'combos.head.build')}
+                  </Link>
+                </>
+              ) : undefined
+            }
             sub={
               <>
                 <span className="cb-bn-sub">{t(view.dict, 'combos.subtitle')}</span> {t(view.dict, 'combos.intro')}
