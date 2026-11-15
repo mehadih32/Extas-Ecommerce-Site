@@ -271,3 +271,11 @@
   .adm2 .pa-tbl td.a2-tdh { grid-row: 1; padding-right: 40px; }
   .adm2 .pa-tbl tr { min-width: 0; max-width: 100%; }
 }
+
+/* PR 734 (device gate: /admin/products stuck out about 11 px to the right at 390 px). The head's action row, the insight line, the
+   search row and the chip rows are flex items whose automatic minimum is their widest unbroken part; each may now shrink to the
+   screen, and a word too long to fit wraps. Nothing is clipped: the page is as wide as the phone, never wider. */
+.pa-hd-actions, .pa-hd-btn, .pa-sbar > *, .pa-insight > span, .pa-meta { min-width: 0; max-width: 100%; }
+.pa-hd-btn { white-space: normal; text-align: center; }
+.pa-insight > span { overflow-wrap: anywhere; }
+@media (max-width: 599px) { .pa-hd-actions { flex: 1 1 100%; } .pa-search { flex-basis: 100%; } }
