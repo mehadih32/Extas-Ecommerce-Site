@@ -6,6 +6,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readAdmin, smallSizes, styleLiterals, unmarkedDenied, unreadyRoots } from '@/lib/admin-lumen/section-check';
 
+/** The source with every run of white space as one space (a page may wrap its attributes over lines). */
+const flat = (s: string): string => s.replace(/\s+/g, ' ');
 const comp = (rel: string) => readFileSync(join(__dirname, '..', '..', 'components', 'admin', rel), 'utf8');
 const HEALTH = ['', '/history', '/history/[id]', '/fixes', '/smoke', '/problems', '/problems/[id]', '/speed'].map((p) => `reports/health${p}/page.tsx`);
 
@@ -14,7 +16,7 @@ describe('Reports part 2: Site health in the Lumen look (PR 645)', () => {
     const src = readAdmin(p);
     expect(unreadyRoots(src)).toEqual([]);
     expect(unmarkedDenied(src)).toEqual([]);
-    expect(src).toMatch(/className="a2-z lm-rp" data-lm-ready=""/);
+    expect(flat(src)).toMatch(/className="a2-z lm-rp" data-lm-ready=""/);
   });
 
   it('the section styles hold no colour literal or font family, and no text under 14 px', () => {
@@ -42,7 +44,7 @@ describe('Reports part 1: the reports and Experiments in the Lumen look (PR 644)
     const src = readAdmin(p);
     expect(unreadyRoots(src)).toEqual([]);
     expect(unmarkedDenied(src)).toEqual([]);
-    expect(src).toMatch(/className="a2-z lm-rp" data-lm-ready="" data-testid="/);
+    expect(flat(src)).toMatch(/className="a2-z lm-rp" data-lm-ready="" data-testid="/);
   });
 
   it('the report styles it lifts to 14 px are in tokens, and the old files keep no colour literal', () => {
@@ -68,8 +70,7 @@ describe('Reports part 1: the figures rows are the shared summary tiles (PR 644 
   });
 
   const ROWS: [string, string][] = [
-    ['delivery', 'delivery-kpis'],
-    ['customers', 'customers-kpis'],
+    ['delivery', 'delivery-kpis'], // PR 798: Customers moved to the prototype's own tiles (ReportCustomersProto)
     ['stopped', 'stopped-kpis'],
     ['fraud', 'fraud-kpis'],
     ['flags', 'flags-kpis'],
@@ -77,7 +78,7 @@ describe('Reports part 1: the figures rows are the shared summary tiles (PR 644 
     ['areas', 'ar-kpi'],
   ];
   it.each(ROWS)('reports/%s: <SummaryTiles> with figureTiles, no old a2-kpi tile', (page, testId) => {
-    const src = readAdmin(`reports/${page}/page.tsx`);
+    const src = flat(readAdmin(`reports/${page}/page.tsx`));
     expect(src).toContain('<SummaryTiles ');
     expect(src).toContain('figureTiles(');
     expect(src).toContain(`testId="${testId}"`);
@@ -97,7 +98,7 @@ describe('Reports part 2: Site health figures rows are the shared summary tiles 
     ['/speed', 'speed-kpi'],
   ];
   it.each(ROWS)('reports/health%s: <SummaryTiles> with figureTiles, no old a2-kpi tile', (page, testId) => {
-    const src = readAdmin(`reports/health${page}/page.tsx`);
+    const src = flat(readAdmin(`reports/health${page}/page.tsx`));
     expect(src).toContain('<SummaryTiles');
     expect(src).toContain('figureTiles(');
     expect(src).toContain(`testId="${testId}"`);
@@ -105,8 +106,8 @@ describe('Reports part 2: Site health figures rows are the shared summary tiles 
   });
 
   it('the smoke checks still find their tiles (history-kpi-kept, problems-kpi-open), and the old figure skin is gone', () => {
-    expect(readAdmin('reports/health/history/page.tsx')).toContain("id: 'kept'");
-    expect(readAdmin('reports/health/problems/page.tsx')).toContain("id: 'open'");
+    expect(readAdmin('reports/health/history/page.tsx').replace(/"/g, "'")).toContain("id: 'kept'");
+    expect(readAdmin('reports/health/problems/page.tsx').replace(/"/g, "'")).toContain("id: 'open'");
     expect(readAdmin('lumen-reports.css')).not.toMatch(/\.a2-kpi|\.a2-kv/);
   });
 });
