@@ -2,7 +2,7 @@
 
 ## 15 Nov 2026 — CN-054: Geography map planned and parked (branch `claude/geo-map-plan`, docs only)
 
-Plan in Bengali: `docs/reports/2026-11-15-geo-map-plan.md`. PR 750–755 (stage S29) are filed as PARKED in the register; nothing is built, nothing starts until the owner says so (CN-051). Recommendation: park, or build the light version (750–753) first.
+Plan in Bengali: `docs/reports/2026-11-15-geo-map-plan.md`. PR 750–761 (stage S29, with the owner's 360° and AI additions) are filed as PARKED in the register; nothing is built, nothing starts until the owner says so (CN-051). Recommendation: park, or build the light version (750–753) first.
 
 ## 15 Nov 2026 — PR 728 filed: practice pictures load (branch `claude/fix-media-path`, from `origin/main` 6da62662, local, NOT pushed)
 
