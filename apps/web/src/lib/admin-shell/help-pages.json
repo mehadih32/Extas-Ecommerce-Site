@@ -237,6 +237,8 @@
     { "id": "settings/cache", "route": "/admin/settings/system/cache" },
     { "id": "settings/backups", "route": "/admin/settings/system/backups" },
     { "id": "settings/go-live", "route": "/admin/settings/system/go-live" },
+    { "id": "settings/health", "route": "/admin/settings/system/health" },
+    { "id": "settings/updates", "route": "/admin/settings/system/updates" },
     { "id": "settings/shimmer", "route": "/admin/settings/shimmer" },
     { "id": "settings/shell", "route": "/admin/settings/shell" },
     { "id": "settings/look", "route": "/admin/settings/look" },

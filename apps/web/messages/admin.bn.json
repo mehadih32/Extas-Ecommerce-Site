@@ -94,6 +94,8 @@
     "edge": "Cloudflare সুরক্ষা",
     "health": "সাইটের অবস্থা",
     "golive": "চালুর আগে",
+    "siteHealth": "সাইটের অবস্থা",
+    "updates": "আপডেট ও ভার্সন",
     "healthProblems": "কাস্টমারের সমস্যা",
     "reportsDelivery": "ডেলিভারি আর ফেরত",
     "reportsCustomers": "কাস্টমার রিপোর্ট",

@@ -2002,6 +2002,18 @@
       ]
      },
      {
+      "href": "/admin/settings/system/health",
+      "keys": [
+       "siteHealth"
+      ]
+     },
+     {
+      "href": "/admin/settings/system/updates",
+      "keys": [
+       "updates"
+      ]
+     },
+     {
       "href": "/admin/settings/security",
       "keys": [
        "security"
