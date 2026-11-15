@@ -13,13 +13,17 @@ import { pct } from '@/components/admin/courier-report/PerfTable';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { SupportAnalyticsTable, type AnalyticsTexts } from '@/components/admin/support/SupportAnalyticsTable';
+import { HourChart } from '@/components/admin/lane-f/HourChart';
+import { Kpi, KpiGrid } from '@/components/admin/lane-f/Parts';
 import { adminDeps } from '@/lib/admin-auth';
+import { loadInboxStats, peakHour } from '@/lib/lane-f/inbox-stats';
 import { withLaneF } from '@/lib/admin-lane-f';
-import { kindName, span, withInbox } from '@/lib/admin-support/i18n';
+import { ago, kindName, span, withInbox } from '@/lib/admin-support/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
+import '@/components/admin/lane-f/lane-f.css';
 import '../support.css';
 
 export const dynamic = 'force-dynamic';
@@ -59,6 +63,13 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
     r = await sp.supportAnalytics(sd, who, {});
   }
   const currency = await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID });
+  // prototype v5: the quick tiles, the hour charts and who is waiting
+  const now = new Date();
+  const tz = await access.deps.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID });
+  const [hourly, openBox] = await Promise.all([loadInboxStats(access.deps.db, MOTHER_STORE_ID, tz, now), sp.supportInbox(sd, who, { view: 'open' }).catch(() => null)]);
+  const waiting = (openBox?.rows ?? []).filter((x) => x.waitingSince && x.status !== 'SOLVED').sort((x, y) => x.waitingSince!.getTime() - y.waitingSince!.getTime());
+  const longestMin = waiting.length ? (now.getTime() - waiting[0]!.waitingSince!.getTime()) / 60_000 : null; // hardcode-ok: ms per minute
+  const peak = peakHour(hourly.orders, hourly.hours);
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
   const n = (x: number) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' }).format(x);
@@ -124,7 +135,24 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
       ) : null}
       {r.scope === 'own' ? <p className="a2-sm a2-mute">{a('own')}</p> : null}
 
-      <div className="a2-kpis" data-testid="support-analytics-kpis">
+      <KpiGrid cols={5}>
+        <Kpi label={t(d, 'lf.st.kFirst')} value={mins(tot.firstAverage)} testId="st-first" />
+        <Kpi label={t(d, 'lf.st.kFast')} value={hourly.fastPct === null ? '—' : pct(hourly.fastPct / 100, view.locale)} testId="st-fast" />
+        <Kpi label={t(d, 'lf.st.kOpen')} value={n(openBox?.counts.open ?? 0)} sub={<Link href="/admin/support">{t(d, 'lf.st.kOpenGo')} →</Link>} testId="st-open" />
+        <Kpi label={t(d, 'lf.st.kLongest')} value={mins(longestMin)} testId="st-longest" />
+        <Kpi label={t(d, 'lf.st.kDone')} value={n(hourly.doneToday)} testId="st-done" />
+      </KpiGrid>
+      {peak !== null ? (
+        <p className="a2-note a2-mt12 lf-st-callout" data-testid="st-peak">
+          {t(d, 'lf.st.peak', { h: n(peak), h2: n(peak + 1) })}
+        </p>
+      ) : null}
+      <div className="lf-st-g2">
+        <HourChart title={t(d, 'lf.st.byHour')} sub={t(d, 'lf.st.byHourSub')} hours={hourly.hours} values={hourly.messages} testId="st-hours-msgs" />
+        <HourChart title={t(d, 'lf.st.ordHour')} sub={t(d, 'lf.st.ordHourSub')} hours={hourly.hours} values={hourly.orders} tone="ok" testId="st-hours-orders" />
+      </div>
+
+      <div className="a2-kpis a2-mt12" data-testid="support-analytics-kpis">
         {kpis.map((k) => (
           <div key={k.id} className="a2-card a2-kpi" data-kpi={k.id}>
             <div className="a2-kl">{k.l}</div>
@@ -143,6 +171,27 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
       <section className="a2-card a2-mt12" data-testid="support-analytics-people">
         <h2 className="a2-h3">{a('byPerson')}</h2>
         <SupportAnalyticsTable rows={r.byPerson} first="person" texts={texts} cell={cell} label={label} sub={sub} testId="support-analytics-person-table" />
+      </section>
+
+      <section className="a2-card a2-mt12" data-testid="st-waiting">
+        <h2 className="a2-h3">{t(d, 'lf.st.waiting')}</h2>
+        <p className="a2-xs a2-mute">{t(d, 'lf.st.waitingSub')}</p>
+        {waiting.length ? (
+          <ul className="sp-same">
+            {waiting.slice(0, 8).map((x) => (
+              <li key={x.id}>
+                <Link className="sp-same-row" href={`/admin/support/c/${x.id}`}>
+                  <span>{x.contact.name ?? x.contact.phone ?? t(d, 'sup.unnamed')}</span>
+                  <span className="a2-mute">{x.lastPreview ?? ''}</span>
+                  <span className="a2-pill line">{kindName(d, x.channel.kind)}</span>
+                  <span className={`a2-pill ${now.getTime() - x.waitingSince!.getTime() > 3_600_000 /* hardcode-ok: an hour in ms */ ? 'bad' : 'warn'}`}>{ago(d, view.locale, x.waitingSince, now)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="a2-sm a2-mute">{t(d, 'lf.st.nobody')}</p>
+        )}
       </section>
 
       <details className="a2-more-opts a2-mt12 sp-an-how">
