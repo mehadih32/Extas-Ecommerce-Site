@@ -29,11 +29,13 @@ import {
 } from "@/components/admin/ai/TrainingControls";
 import { MasterSwitch } from "@/components/admin/ai/MasterSwitch";
 import {
-  DocAddForm,
+  DocAddDialog,
   DocRow,
   NoteForm,
   TryItBox,
+  UseSwitch,
 } from "@/components/admin/ai/TrainingExtras";
+import { trainingOffIds } from "@/lib/admin-ai/training-use";
 import {
   FieldsCard,
   type FieldsCardField,
@@ -105,11 +107,17 @@ export default async function AiTrainingPage() {
   const c = (k: string, vars?: Record<string, string | number>) =>
     t(view.dict, `aiTraining.${k}`, vars);
   const canControl = access.guard.permissions?.has("ai.control") ?? false;
-  const [screen, aiOn, extras] = await Promise.all([
+  const [screen, aiOn, extras, off] = await Promise.all([
     instructionsScreen(access.deps),
     access.deps.resolver.value("ai.enabled"),
     extrasState(access.deps.db),
+    trainingOffIds(access.deps.resolver), // PR 820: corrections and documents the owner switched off
   ]);
+  const useTexts = {
+    onText: c("use.on"),
+    offText: c("use.off"),
+    failedText: c("use.failed"),
+  };
   const { state, versions, card } = screen;
   const at = (x: Date) => dateTime(x.toISOString(), view.locale, view.timeZone);
   // "3 d ago" next to each version's date (prototype v5 Version history).
@@ -361,6 +369,11 @@ export default async function AiTrainingPage() {
                 </span>
                 <span className="a2-sm a2-blk">{`→ ${e.expected}`}</span>
                 <span className="a2-xs a2-mute a2-blk">{`${agentName(e.agentKey)} · ${at(e.at)}`}</span>
+                {canControl ? (
+                  <UseSwitch id={e.id} on={!off.has(e.id)} label={c("corr.useLabel")} testId="training-example-use" {...useTexts} />
+                ) : (
+                  <span className="a2-pill line">{off.has(e.id) ? c("use.offPill") : c("use.onPill")}</span>
+                )}
               </div>
             ))
           ) : (
@@ -388,6 +401,7 @@ export default async function AiTrainingPage() {
                   title={d.title}
                   text={d.text}
                   meta={`${agentName(d.agentKey)} · ${c("doc.v", { n: d.version })} · ${at(d.at)}`}
+                  use={{ on: !off.has(d.id), label: c("use.docLabel"), ...useTexts }}
                   texts={{
                     edit: c("doc.edit"),
                     save: c("doc.save"),
@@ -416,8 +430,11 @@ export default async function AiTrainingPage() {
             <p className="a2-sm a2-mute a2-mt6">{c("doc.none")}</p>
           )}
           {canControl ? (
-            <DocAddForm
+            <DocAddDialog
               scopes={scopes}
+              buttonLabel={c("doc.add")}
+              title={c("docDialog.title")}
+              close={c("docDialog.close")}
               texts={{
                 agent: c("doc.agent"),
                 title: c("doc.title"),

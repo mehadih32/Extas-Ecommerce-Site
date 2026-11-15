@@ -151,7 +151,20 @@
     "corr": {
       "h": "Corrections that became examples",
       "d": "Made when you edit a draft or say no with a reason.",
-      "none": "No corrections yet. Use \"Try it safely\" and save a better answer."
+      "none": "No corrections yet. Use \"Try it safely\" and save a better answer.",
+      "useLabel": "Use this correction"
+    },
+    "use": {
+      "on": "Used again.",
+      "off": "Switched off. It stays in the list; the agents stop using it.",
+      "failed": "Could not change that. Try again.",
+      "docLabel": "Use this document",
+      "onPill": "In use",
+      "offPill": "Switched off"
+    },
+    "docDialog": {
+      "title": "Add document",
+      "close": "Close"
     }
   }
 }

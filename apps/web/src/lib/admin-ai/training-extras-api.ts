@@ -7,6 +7,7 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../
 import { aiAgentDef, isAiAgentKey } from './agents';
 import { isAiError } from './errors';
 import { changeExtras, tryIt } from './training-extras';
+import { setTrainingUse } from './training-use';
 
 export async function extrasHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
   if (request.method.toUpperCase() !== 'POST') return fail(405, 'method-not-allowed');
@@ -20,6 +21,11 @@ export async function extrasHandler(request: Request, deps: AdminDeps | null): P
       const name = (k: string) => (isAiAgentKey(k) ? aiAgentDef(k).nameEn : k);
       const r = await tryIt({ db: d.db, resolver: d.resolver, vault: d.vault, now: d.now }, b, name, b.locale === 'bn' ? 'bn' : 'en');
       return json({ ok: true, ...r });
+    }
+    if (b.action === 'setUse') {
+      // PR 820: stop using a correction or a document without removing it
+      await setTrainingUse({ db: d.db, resolver: d.resolver }, { actor: g.actor, ctx: g.ctx }, b);
+      return json({ ok: true });
     }
     await changeExtras({ db: d.db }, { actor: g.actor, ctx: g.ctx }, b);
     return json({ ok: true });
