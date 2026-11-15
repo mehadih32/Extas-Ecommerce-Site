@@ -140,7 +140,7 @@ After launch; the owner-approved prototype is the admin UI truth; S15, S24, S25 
 
 | Stage | Name | PR numbers | Done / total | বাংলায় |
 |---|---|---|:-:|---|
-| [S28](S28.md) | [Admin v5 (prototype alignment)](S28.md) | 659–728, 740–744 | 75 / 75 | আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ v5 আসল অ্যাডমিনে বানানো। |
+| [S28](S28.md) | [Admin v5 (prototype alignment)](S28.md) | 659–728, 745–749 | 75 / 75 | আপনার অনুমোদন করা অ্যাডমিন প্রোটোটাইপ v5 আসল অ্যাডমিনে বানানো। |
 
 ## Parked
 
