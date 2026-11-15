@@ -30,7 +30,7 @@ export interface ProductListPageProps {
 
 /** PR 657: the title row and "+ Add product" / "···" menu — shared so B and C can put their own hero or flow strip
  *  between this and the tiles below without touching it. */
-export function ProductsHeader({ view, canWrite, menu, canExport, canImport }: { view: AdminView; canWrite: boolean; menu?: LookMenuProps | null; /** PR 722: Export (`catalogue.export`) and Quick import (`catalogue.import`), as in the prototype. */ canExport?: boolean; canImport?: boolean }) {
+export function ProductsHeader({ view, canWrite, menu, canExport, canImport, count }: { view: AdminView; canWrite: boolean; /** PR 772 (prototype v5 parity): the product count for the sub line ("120 products · stock and buying prices come from the ERP"). */ count?: number; menu?: LookMenuProps | null; /** PR 722: Export (`catalogue.export`) and Quick import (`catalogue.import`), as in the prototype. */ canExport?: boolean; canImport?: boolean }) {
   const d = view.dict;
   return (
     <>
@@ -38,7 +38,7 @@ export function ProductsHeader({ view, canWrite, menu, canExport, canImport }: {
         view={view}
         place={locateKey('products')}
         title={t(d, 'products.title')}
-        sub={t(d, 'products.intro')}
+        sub={count === undefined ? t(d, 'products.intro') : t(d, 'products.introCount', { n: formatNumber(count, view.locale) })}
         right={
           <div className="pa-hd-actions">
             {canExport ? (
@@ -77,29 +77,29 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
   const counts = list.counts;
   const countFmt: CountFormat = { kind: 'number', locale: view.locale };
   const tile = (key: string, value: number, vs: string, icon: ShellIconName, linkHref?: string): SummaryTile => ({ key, label: t(d, `products.kpi.${key}`), value, shown: num(value), format: countFmt, vs, icon, href: linkHref });
-  const tiles: SummaryTile[] = [
-    tile('products', counts.products, t(d, 'products.kpi.productsSub', { n: num(counts.categories) }), 'shirt', href({ status: undefined, category: undefined, q: undefined, page: 1 })),
-    tile('live', counts.live, t(d, 'products.kpi.liveSub', { n: num(counts.ready) }), 'eye', href({ status: 'live', page: 1 })),
-    tile('lowStock', counts.lowStockSizes, t(d, 'products.kpi.lowStockSub', { n: num(lowPieces) }), 'alert'),
-    tile('needPhotos', counts.needPhotos, t(d, 'products.kpi.needPhotosSub', { n: num(photoMin) }), 'file', `${AUDIT_HOME}?check=photos`),
-  ];
-  // PR 722 (prototype v5 parity): the average margin as a fifth figure (only for a person who may see buying prices) and the
-  // one-line insight under the figures: the best seller, and how many products sold nothing in 30 days.
+  // PR 772 (prototype v5 parity, m-products.js renderAll): On the shop, Drafts & scheduled, Sizes almost out, Need photos, Average margin.
   const strip = data.strip;
-  if (data.showsBuying && strip.avgMarginPct !== null) {
+  const tiles: SummaryTile[] = [
+    tile('live', counts.live, t(d, 'products.kpi.liveSub2', { n: num(strip.sold30Pieces) }), 'eye', href({ status: 'live', page: 1 })),
+    tile('drafts', strip.statusCounts.draft + strip.statusCounts.ready, t(d, 'products.kpi.draftsSub'), 'file', href({ status: 'draft', page: 1 })),
+    tile('lowStock', counts.lowStockSizes, t(d, 'products.kpi.lowStockSub2'), 'alert', '/admin/products/stock'),
+    tile('needPhotos', counts.needPhotos, t(d, 'products.kpi.needPhotosSub2'), 'file', `${AUDIT_HOME}?check=photos`),
+  ];
+  if (data.showsBuying) {
     tiles.push({
       key: 'margin',
       label: t(d, 'products.kpi.margin'),
-      value: strip.avgMarginPct / 100,
-      shown: `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(strip.avgMarginPct)}%`,
+      value: (strip.avgMarginPct ?? 0) / 100,
+      shown: strip.avgMarginPct === null ? '—' : `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(strip.avgMarginPct)}%`,
       format: { kind: 'percent', locale: view.locale, digits: 1 },
       vs: strip.floorMarginPct !== null ? t(d, 'products.kpi.marginSub', { n: num(strip.belowFloor), min: num(Math.round(strip.floorMarginPct)) }) : t(d, 'products.kpi.marginNoFloor'),
       icon: 'chart',
     });
   }
+  // PR 772: the blue insight box is always there; with no sales yet it says so (the prototype shows the same box with figures).
   const insight = strip.best
     ? t(d, 'products.insight.best', { name: strip.best.name, n: num(strip.best.sold30), sold: num(strip.sold30Pieces) }) + (strip.notSelling ? ' ' + t(d, 'products.insight.notSelling', { n: num(strip.notSelling) }) : '')
-    : null;
+    : t(d, 'products.insight.none');
 
   return (
     <>
@@ -197,7 +197,7 @@ export function ProductListPage({ view, c, query, data, menu }: ProductListPageP
   const canPublish = c.can('catalogue.publish');
   return (
     <div className="a2-z" data-testid="products-list" data-lm-ready="">
-      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} />
+      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} count={data.list.counts.products} />
       <ProductListBody view={view} query={query} data={data} canWrite={canWrite} canPublish={canPublish} />
     </div>
   );
