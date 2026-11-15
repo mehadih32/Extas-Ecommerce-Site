@@ -47381,12 +47381,12 @@
   {
    "number": 753,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: the screen and the drill-down (S29; parked; CN-054; Size L; depends on 750, 752) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: the screen and the drill-down** (S29; **parked**; CN-054; Size L; depends on 750, 752) — Reports › Geography map at `/admin/reports/geo-map` (a Reports tab; Sales by area stays as it is, and gets an \"Open on map\" link): period bar (Day, Month, 6 months, Year, Custom range, the existing bar of PR 689), figure picker (Orders, Sales, Delivered, Returned, Return rate), filters (category, product), the map in one colour ramp from the design tokens with a legend, grey for no data or fewer orders than `minOrders`, district → thana → area with a breadcrumb (areas as pins where no shape exists), \"Unknown area X%\" always shown, the same figures in a sortable table beside it (the table is the full answer when a shape is missing). Phone (390 px): the map full width over a list, big + / − / reset buttons, a tap opens a bottom sheet, a Map/List switch, text at least 14 px; tablet, laptop and large desktop checked by the device gate. Words English by default with the বাং toggle. Tests first; no overflow at the four widths. No migration.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–755 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750755-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47400,10 +47400,12 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    689
+   ],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপের স্ক্রিন: ফিল্টার, রঙ, জেলা থেকে থানা থেকে এলাকা, টেবিল, ফোনের লেআউট। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-753"
   },
