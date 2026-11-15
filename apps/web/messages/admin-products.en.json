@@ -4,7 +4,7 @@
     "eyebrow": "Admin · Catalogue",
     "title": "Products",
     "intro": "Add a new product or change an old one. A product goes on the shop only when its checklist is complete.",
-    "newProduct": "New product",
+    "newProduct": "Add product",
     "back": "All products",
     "empty": "No product matches this search.",
     "emptyAll": "No products yet — add the first one.",
@@ -19,11 +19,16 @@
       "needPhotosSub": "fewer than {n}, or a kind missing",
       "margin": "Average margin",
       "marginSub": "{n} below your {min}% minimum",
-      "marginNoFloor": "on the shop, buying price to selling price"
+      "marginNoFloor": "on the shop, buying price to selling price",
+      "drafts": "Drafts & scheduled",
+      "liveSub2": "{n} pieces sold in 30 days",
+      "draftsSub": "See what is left →",
+      "lowStockSub2": "See stock →",
+      "needPhotosSub2": "front photo missing for a colour"
     },
     "search": {
       "label": "Search products",
-      "placeholder": "Search name, SKU, category or colour",
+      "placeholder": "Search name, style code or SKU",
       "submit": "Search"
     },
     "filters": {
@@ -37,7 +42,7 @@
     },
     "cats": {
       "label": "Categories",
-      "all": "All {n}"
+      "all": "All categories {n}"
     },
     "status": {
       "PUBLISHED": "On the shop",
@@ -655,7 +660,8 @@
       "margin": "Margin",
       "stock": "Stock",
       "sold30": "Sold 30d",
-      "status": "Status"
+      "status": "Status",
+      "buyingMargin": "Buying price (ERP) · margin"
     },
     "actions": {
       "export": "Export",
@@ -663,13 +669,15 @@
     },
     "insight": {
       "best": "{name} is your best seller ({n} pieces in 30 days). {sold} pieces sold on the shop in 30 days.",
-      "notSelling": "{n} products on the shop sold nothing in 30 days — push them down in Shop ranking or put them in a combo."
+      "notSelling": "{n} products on the shop sold nothing in 30 days — push them down in Shop ranking or put them in a combo.",
+      "none": "Nothing has sold in the last 30 days yet. Your best seller and the products that sold nothing show here once orders come in."
     },
     "sort": {
       "label": "Sort",
-      "new": "Sort: newest first",
+      "new": "Sort: newest",
       "best": "Sort: best selling"
-    }
+    },
+    "introCount": "{n} products · stock and buying prices come from the ERP"
   },
   "checks": {
     "sep": ", ",

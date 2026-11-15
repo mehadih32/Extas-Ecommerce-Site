@@ -133,7 +133,7 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
 
       {rows.length ? (
         <div className="a2-tblw pa-tblw" data-testid="products-table">
-          <table className="a2-tbl pa-tbl">
+          <table className="a2-tbl a2-ptbl pa-tbl">
             <thead>
               <tr>
                 <th className="w0">
@@ -142,13 +142,12 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
                   </label>
                 </th>
                 <th>{t(d, 'products.cols.product')}</th>
-                <th>{t(d, 'products.cols.category')}</th>
-                <th>{t(d, 'products.cols.colours')}</th>
+                <th className="a2-hm">{t(d, 'products.cols.category')}</th>
+                <th className="a2-hm">{t(d, 'products.cols.colours')}</th>
                 <th className="r">{t(d, 'products.cols.price')}</th>
-                {showsBuying ? <th className="r">{t(d, 'products.cols.buying')}</th> : null}
-                {showsBuying ? <th className="r">{t(d, 'products.cols.margin')}</th> : null}
+                {showsBuying ? <th className="r a2-hm">{t(d, 'products.cols.buyingMargin')}</th> : null}
                 <th className="r">{t(d, 'products.cols.stock')}</th>
-                <th className="r">{t(d, 'products.cols.sold30')}</th>
+                <th className="r a2-hm">{t(d, 'products.cols.sold30')}</th>
                 <th>{t(d, 'products.cols.status')}</th>
               </tr>
             </thead>
@@ -181,11 +180,7 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
                             {name}
                           </Link>
                           {x?.styleCode ? <div className="ad-mini pa-code">{x.styleCode}</div> : null}
-                          {r.issues === null ? (
-                            <div className="pa-health">
-                              <span className="pa-miss off">{t(d, 'products.row.notChecked')}</span>
-                            </div>
-                          ) : shown.length ? (
+                          {r.issues !== null && shown.length ? (
                             <div className="pa-health">
                               {shown.map((i) => (
                                 <span key={i.key} className={`pa-miss${i.level === 'warn' ? ' soft' : ''}`}>
@@ -198,8 +193,8 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
                         </div>
                       </div>
                     </td>
-                    <td data-l={t(d, 'products.cols.category')}>{leaf || t(d, 'products.row.none')}</td>
-                    <td data-l={t(d, 'products.cols.colours')}>
+                    <td className="a2-hm" data-l={t(d, 'products.cols.category')}>{leaf || t(d, 'products.row.none')}</td>
+                    <td className="a2-hm" data-l={t(d, 'products.cols.colours')}>
                       {r.colours.length ? (
                         <span className="pa-dots" title={r.colours.map((c) => (lang === 'bn' && c.nameBn ? c.nameBn : c.nameEn)).join(', ')}>
                           {r.colours.slice(0, 5).map((c, i) => (
@@ -216,25 +211,20 @@ export function ProductList({ dict, lang, rows, photos, money, issuesShown, bulk
                       {x?.compareAtMinor ? <s className="ad-mini pa-was">{formatMoney(x.compareAtMinor, money)}</s> : null}
                     </td>
                     {showsBuying ? (
-                      <td className="r" data-l={t(d, 'products.cols.buying')}>
-                        {x?.buyingMinor != null ? formatMoney(x.buyingMinor, money) : <span className="a2-faint">{t(d, 'products.row.none')}</span>}
-                      </td>
-                    ) : null}
-                    {showsBuying ? (
-                      <td className="r" data-l={t(d, 'products.cols.margin')}>
-                        {mg !== null ? <span className={`a2-pill ${mgTone}`}>{`${num(Math.round(mg))}%`}</span> : <span className="a2-faint">{t(d, 'products.row.none')}</span>}
+                      <td className="r pa-bm a2-hm" data-l={t(d, 'products.cols.buyingMargin')}>
+                        {x?.buyingMinor != null ? <span className="pa-buy">{formatMoney(x.buyingMinor, money)}</span> : <span className="a2-faint">{t(d, 'products.row.none')}</span>}
+                        {mg !== null ? <span className={`a2-pill ${mgTone}`}>{`${num(Math.round(mg))}%`}</span> : null}
                       </td>
                     ) : null}
                     <td className="r" data-l={t(d, 'products.cols.stock')}>
                       <b>{num(r.stockPieces)}</b>
                       {x && x.lowSizes > 0 ? <span className="ad-mini pa-low">{t(d, 'products.row.lowSizes', { n: num(x.lowSizes) })}</span> : null}
                     </td>
-                    <td className="r" data-l={t(d, 'products.cols.sold30')}>
+                    <td className="r a2-hm" data-l={t(d, 'products.cols.sold30')}>
                       {num(x?.sold30 ?? 0)}
                     </td>
                     <td data-l={t(d, 'products.cols.status')}>
                       <span className={`pa-status s-${st}`}>{t(d, `products.status.${st}`)}</span>
-                      <span className="ad-mini">{t(d, 'products.row.score', { n: num(r.healthScore) })}</span>
                     </td>
                   </tr>
                 );
