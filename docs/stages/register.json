@@ -47321,12 +47321,12 @@
   {
    "number": 751,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: the figures (S29; parked; CN-054; Size M; no dependency) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: the figures** (S29; **parked**; CN-054; Size M; no dependency) — `geoByArea` in `@extas/metrics`, built on the rules of `salesByArea` (PR 568, the same days and basis): orders placed (by placed day), Sales and Delivered (delivered day, goods = subtotal − discount), Returned (returned day), return rate = returned ÷ (delivered + returned), the top category of every area and, for one area on demand, its top products (pieces, then sales), for any period and, side by side, a second period (previous period, same period last year or own dates), by district, upazila/thana or area, parts adding up to the whole, unknown area counted apart. Read-only, store-scoped, no customer names or phones. Tests on PostgreSQL, including a large sample (about 100,000 orders over 6 months at the upazila level) to measure speed; if it is too slow, a daily roll-up table (additive, filled by the night clock) is filed as its own PR, not built before. No migration, no setting.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–755 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750755-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47340,10 +47340,12 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    568
+   ],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপ: এলাকা ধরে অর্ডার, বিক্রি, ডেলিভারড, ফেরত, ফেরতের হার আর টপ পণ্য-ক্যাটাগরির হিসাব, দুই সময়ের তুলনা সহ। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-751"
   },
