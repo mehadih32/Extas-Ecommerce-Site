@@ -110,7 +110,12 @@ export default async function AudiencesPage(props: Props) {
   ];
   const exclWhen = refused.value.days ? s('lastDays', { days: refused.value.days }) : s('anyTime');
   const exclSum = refused.value.everyRefusal ? s('excl.sumEvery', { when: exclWhen }) : s('excl.sumListed');
-  const names = new Map([...choices.sizes.map((x) => [x.id, x.label] as const), ...choices.grades.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const)]);
+  const names = new Map([
+    ...choices.sizes.map((x) => [x.id, x.label] as const),
+    ...choices.grades.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const),
+    ...choices.categories.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const),
+    ...(['inside', 'sub', 'outside'] as const).map((z) => [z, s(`zone.${z}`)] as const),
+  ]);
   const day = (iso: string) => new Intl.DateTimeFormat(view.locale, { timeZone, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', numberingSystem: 'latn' }).format(new Date(iso));
   const rows = list.filter((r) => (v === 'archived' ? r.state === 'ARCHIVED' : r.state !== 'ARCHIVED'));
   const lastBuilt = list.map((r) => r.countedAt).filter((x): x is string => !!x).sort().pop() ?? null;

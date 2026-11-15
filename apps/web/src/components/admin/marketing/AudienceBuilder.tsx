@@ -10,7 +10,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { t, type Dict } from '@/lib/i18n';
-import { AUDIENCE_DAYS_MAX, AUDIENCE_RULES, AUDIENCE_RULES_MAX, RULE_NEEDS, type AudienceAction, type AudienceRuleKind, type AudienceState } from '@/lib/marketing/audience-model';
+import { AUDIENCE_DAYS_MAX, AUDIENCE_ZONES, AUDIENCE_RULES, AUDIENCE_RULES_MAX, RULE_NEEDS, type AudienceAction, type AudienceRuleKind, type AudienceState } from '@/lib/marketing/audience-model';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 
@@ -57,7 +57,7 @@ function ready(rules: Draft[]) {
   return out.length && out.some((r) => !r.exclude) ? out : null;
 }
 
-export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; sizes: { id: string; label: string }[]; grades: { id: string; name: string }[]; canWrite: boolean; listHref: string }) {
+export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; sizes: { id: string; label: string }[]; grades: { id: string; name: string }[]; categories: { id: string; name: string }[]; canWrite: boolean; listHref: string }) {
   const id = useId();
   const router = useRouter();
   const a = (k: string, vars?: Record<string, string | number>) => t(p.words, `au.${k}`, vars);
@@ -75,6 +75,9 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
   const ro = !p.canWrite || au.state === 'ARCHIVED';
   const off = ro || busy;
+  /** What a condition's picker offers: sizes, grades, categories, or the three delivery areas. */
+  const refChoices = (kind: 'size' | 'grade' | 'area' | 'category') =>
+    kind === 'size' ? p.sizes.map((x) => ({ id: x.id, name: x.label })) : kind === 'grade' ? p.grades : kind === 'category' ? p.categories : AUDIENCE_ZONES.map((z) => ({ id: z, name: a(`zone.${z}`) }));
   const seedDays = /^\d+$/.test(seed) && Number(seed) >= 1 && Number(seed) <= AUDIENCE_DAYS_MAX ? Number(seed) : null;
   const def = useMemo(() => (isLal ? null : ready(rules)), [isLal, rules]);
   const ok = isLal ? seedDays != null : !!def;
@@ -224,13 +227,13 @@ export function AudienceBuilder(p: { words: Dict; audience: EditorAudience; size
                         </label>
                         <select id={`${k}-ref`} className="a2-sel" value={r.ref} disabled={off} onChange={(e) => change(r.key, { ref: e.target.value })} data-testid="au-ref">
                           <option value="">{a('pick')}</option>
-                          {(need.ref === 'size' ? p.sizes.map((x) => ({ id: x.id, name: x.label })) : p.grades).map((x) => (
+                          {refChoices(need.ref).map((x) => (
                             <option key={x.id} value={x.id}>
                               {x.name}
                             </option>
                           ))}
                         </select>
-                        {(need.ref === 'size' ? p.sizes : p.grades).length ? null : <div className="a2-help a2-xs a2-mute">{a(need.ref === 'size' ? 'sizesNone' : 'gradesNone')}</div>}
+                        {refChoices(need.ref).length ? null : <div className="a2-help a2-xs a2-mute">{a(need.ref === 'category' ? 'categoriesNone' : `${need.ref}sNone`)}</div>}
                       </div>
                     ) : null}
                     {!ro && rules.length > 1 ? (

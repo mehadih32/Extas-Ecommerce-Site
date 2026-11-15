@@ -8,7 +8,7 @@
 // the owner allowed it), and points to Messages › E-mail for an e-mail campaign.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { CampaignChannel, CampaignKind, CampaignTemplate, WinbackRule } from '@extas/customers';
 import { t, type Dict } from '@/lib/i18n';
 import { emailPost } from './emailPost';
@@ -52,6 +52,22 @@ export function smsParts(text: string): { n: number; parts: number; uni: boolean
   const multi = uni ? 67 : 153; // hardcode-ok: the carrier's SMS size
   return { n, parts: n === 0 ? 0 : n <= one ? 1 : Math.ceil(n / multi), uni, one };
 }
+/** The key every message the owner writes here starts with (a campaign template, never one of the order-journey keys). */
+export const OWN_KEY = 'campaignOwn';
+/** How much of an own message the template list shows, and the longest body the box takes (typing guards, not shop policy). */
+const OWN_LABEL = 40; // hardcode-ok: a label length
+const OWN_MAX = 1000; // hardcode-ok: a typing guard
+/** The prototype's two Insert chips: the customer's first name and the coupon code (the template words `customerName`, `offerCode`). */
+export const INSERTS = [
+  { token: '{customerName}', label: 'insName' },
+  { token: '{offerCode}', label: 'insCoupon' },
+] as const;
+/** Puts `token` where the caret is (over the selection, if any) and says where the caret goes next. */
+export function insertToken(text: string, token: string, from: number, to: number): { text: string; caret: number } {
+  const a = Math.max(0, Math.min(from, text.length));
+  const b = Math.max(a, Math.min(to, text.length));
+  return { text: text.slice(0, a) + token + text.slice(b), caret: a + token.length };
+}
 /** The segment choice that means every customer (a blast, only when allowed). */
 const ALL = '*';
 
@@ -73,6 +89,10 @@ export function CampaignForm(p: CampaignFormProps) {
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // PR 857: the prototype's "Write the message" box with its Insert chips; saving it makes the shop's own template (key `campaignOwn…`)
+  const [own, setOwn] = useState('');
+  const [ownOpen, setOwnOpen] = useState(false);
+  const ownRef = useRef<HTMLTextAreaElement>(null);
   const ruleNow = `${lapsed}|${maxLapsed}|${minDelivered}`;
   const ruleWas = `${p.rule.lapsedDays}|${p.rule.maxLapsedDays ?? ''}|${p.rule.minDelivered}`;
   const segWas = p.segmentId ?? (blast && p.id && p.allowEveryone ? ALL : '');
@@ -80,6 +100,35 @@ export function CampaignForm(p: CampaignFormProps) {
   const choices = p.templates.filter((tp) => tp.channel === channel);
   const picked = choices.find((tp) => tp.id === templateId) ?? null;
   const sms = smsParts(picked ? picked.body.replace('{customerName}', x('sampleName')) : '');
+
+  const insert = (token: string) => {
+    const el = ownRef.current;
+    const at = el ? [el.selectionStart ?? own.length, el.selectionEnd ?? own.length] : [own.length, own.length];
+    const r = insertToken(own, token, at[0]!, at[1]!);
+    setOwn(r.text);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(r.caret, r.caret);
+    });
+  };
+
+  const saveOwn = async () => {
+    const body = own.trim();
+    if (!body) return setMsg({ ok: false, text: t(d, 'cus.err.INVALID_INPUT', { fields: x('ownText') }) });
+    setBusy(true);
+    setMsg(null);
+    const key = `${OWN_KEY}${Date.now().toString(36)}`;
+    const r = await emailPost(d, '/api/admin/messages/templates', { key, channel, locale: /[^\x00-\x7F]/.test(body) ? 'bn' : 'en', body });
+    setBusy(false);
+    if (!r.ok) return setMsg({ ok: false, text: r.text });
+    const groups = (r.data.templates as { groups?: { key: string; rows: { id: string; channel: string }[] }[] } | undefined)?.groups ?? [];
+    const id = groups.find((g) => g.key === key)?.rows.find((row) => row.channel === channel)?.id;
+    if (id) setTemplateId(id);
+    setOwn('');
+    setOwnOpen(false);
+    showToast({ text: x('ownSaved'), tone: 'ok' });
+    router.refresh();
+  };
 
   const save = async () => {
     const bad = blast
@@ -224,11 +273,38 @@ export function CampaignForm(p: CampaignFormProps) {
           <option value="">{x('pickTemplate')}</option>
           {choices.map((tp) => (
             <option key={tp.id} value={tp.id}>
-              {tp.name}
+              {tp.key.startsWith(OWN_KEY) ? `${x('ownTag')}: ${tp.body.slice(0, OWN_LABEL)}` : tp.name}
             </option>
           ))}
         </select>
         {!choices.length ? <p className="a2-xs a2-mute a2-mt6">{x('noTemplates')}</p> : null}
+        {p.canWrite ? (
+          <div className="a2-mt6">
+            <button type="button" className="a2-btn sm" aria-expanded={ownOpen} onClick={() => setOwnOpen((v) => !v)} data-testid="wb-own-toggle">
+              {x('ownToggle')}
+            </button>
+            {ownOpen ? (
+              <div className="wb-own a2-mt6" data-testid="wb-own">
+                <label className="a2-lbl" htmlFor={`${uid}-own`}>
+                  {x('ownText')}
+                </label>
+                <textarea id={`${uid}-own`} ref={ownRef} className="a2-inp" rows={5} value={own} maxLength={OWN_MAX} onChange={(e) => setOwn(e.target.value)} data-testid="wb-own-text" />
+                <div className="wb-ins a2-sm a2-mt6" role="group" aria-label={x('insert')}>
+                  <span className="a2-mute">{x('insert')}</span>
+                  {INSERTS.map((i) => (
+                    <button key={i.token} type="button" className="a2-btn sm wb-chip" onClick={() => insert(i.token)} data-testid="wb-insert">
+                      {x(i.label)}
+                    </button>
+                  ))}
+                </div>
+                <p className="a2-xs a2-mute a2-mt6">{x(channel === 'WHATSAPP' ? 'ownNoteWa' : 'ownNote')}</p>
+                <button type="button" className="a2-btn pri a2-mt6" disabled={busy || !own.trim()} onClick={saveOwn} data-testid="wb-own-save">
+                  {x('ownSave')}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {picked ? (
         <div>

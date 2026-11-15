@@ -35,7 +35,9 @@
       "grade": "Has the grade",
       "size": "Bought the size",
       "refused": "Refused a parcel (not our fault)",
-      "noOffers": "Said no to offers"
+      "noOffers": "Said no to offers",
+      "area": "Lives in the area",
+      "category": "Bought from the category"
     },
     "lastDays": "last {days} days",
     "anyTime": "any time",
@@ -234,6 +236,15 @@
       "onHelp": "Off: audiences are counted and sent only when someone presses the button.",
       "hour": "From this hour (store time)",
       "hourHelp": "0–23. The refresh runs once a day at or after this hour."
-    }
+    },
+    "area": "Area",
+    "category": "Category",
+    "zone": {
+      "inside": "Inside Dhaka",
+      "sub": "Dhaka suburbs",
+      "outside": "Outside Dhaka"
+    },
+    "categoriesNone": "No categories yet: add them in Products › Categories.",
+    "areasNone": "No areas."
   }
 }

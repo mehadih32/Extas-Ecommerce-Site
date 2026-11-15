@@ -13,3 +13,7 @@
 .adm2 .wb-sms{display:flex;flex-wrap:wrap;gap:6px 16px}
 .adm2 .mail-when .a2-seg button{min-height:44px}
 .adm2 .wb-phone{max-width:320px;white-space:pre-wrap;padding:12px;border:1px solid var(--ln2);border-radius:14px;background:var(--bg2)}
+/* parity F5 · PR 857 — the campaign's own-writing box and its Insert chips (prototype "Write the message") */
+.adm2 .wb-own textarea{width:100%;min-height:110px;resize:vertical}
+.adm2 .wb-ins{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.adm2 .wb-chip,.adm2 [data-testid="wb-own-toggle"],.adm2 [data-testid="wb-own-save"]{min-height:44px}

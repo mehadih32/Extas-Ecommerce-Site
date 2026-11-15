@@ -1,6 +1,6 @@
 // S13 · PR 262 — the audience's conditions without a database: what each condition needs, the "and" and the "leave out".
 import { describe, expect, it } from 'vitest';
-import { AUDIENCE_RULES, RULE_NEEDS, audienceInputSchema, canAudienceStep, combine, definitionOf, definitionSchema } from './audience-model';
+import { AUDIENCE_RULES, AUDIENCE_ZONES, RULE_NEEDS, audienceInputSchema, canAudienceStep, combine, definitionOf, definitionSchema } from './audience-model';
 
 const SIZE = '0192f000-0000-7000-8000-000000000001';
 
@@ -38,5 +38,20 @@ describe('audience conditions (PR 262)', () => {
     expect(canAudienceStep('recount', 'ARCHIVED')).toBe(false);
     expect(canAudienceStep('archive', 'ARCHIVED')).toBe(false);
     expect(canAudienceStep('restore', 'ARCHIVED')).toBe(true);
+  });
+});
+
+describe('audience conditions: Area and Category (PR 857, the prototype\'s New audience form)', () => {
+  const CAT = '0192f000-0000-7000-8000-000000000002';
+  it('Area takes one of the three delivery areas and no days; Category takes a category and optional days', () => {
+    for (const z of AUDIENCE_ZONES) expect(definitionSchema.safeParse({ rules: [{ kind: 'area', ref: z }] }).success).toBe(true);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'area', ref: 'mars' }] }).success).toBe(false);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'area' }] }).success).toBe(false);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'area', ref: 'inside', days: 5 }] }).success).toBe(false);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'category', ref: CAT }] }).success).toBe(true);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'category', ref: CAT, days: 90 }] }).success).toBe(true);
+    expect(definitionSchema.safeParse({ rules: [{ kind: 'category' }] }).success).toBe(false);
+    expect(RULE_NEEDS.area).toEqual({ days: 'none', ref: 'area' });
+    expect(RULE_NEEDS.category).toEqual({ days: 'optional', ref: 'category' });
   });
 });

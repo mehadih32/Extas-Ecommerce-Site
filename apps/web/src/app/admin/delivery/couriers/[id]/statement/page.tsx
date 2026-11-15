@@ -11,6 +11,7 @@ import * as pay from '@extas/payments';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { MatchControls } from '@/components/admin/couriers/MatchControls';
 import { OpenLines } from '@/components/admin/couriers/OpenLines';
+import { chipCounts, splitLines, statementShow, type StatementShow } from '@/components/admin/couriers/statement-view';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -97,6 +98,14 @@ export default async function CourierStatementPage({ params, searchParams }: { p
     return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}`;
   });
   const href = (ym: string) => `/admin/delivery/couriers/${id}/statement?month=${ym}`;
+  // PR 858: the prototype's Mismatches chips (To check / Claimed or resolved / All)
+  const show = statementShow(one(sp.show));
+  const parts = splitLines(st.open, st.claimedShipmentIds, st.resolved);
+  const counts = chipCounts(parts);
+  const showHref = (k: StatementShow) => `/admin/delivery/couriers/${id}/statement?month=${st.ym}${k === 'check' ? '' : `&show=${k}`}`;
+  const canSettle = access.guard.permissions?.has('payments.settle') ?? false;
+  const canClaimLines = access.guard.permissions?.has('delivery.claims') ?? false;
+  const noteDay = (x: Date) => day.format(x);
 
   return (
     <div className="a2-z" data-testid="courier-statement" data-lm-ready="" data-month={st.ym}>
@@ -195,14 +204,46 @@ export default async function CourierStatementPage({ params, searchParams }: { p
           {cr('m.open')} <span className={`a2-pill ${st.openCount ? 'warn' : 'ok'}`} data-testid="statement-open-state">{st.openCount ? cr('z.toCheck', { n: n(st.openCount) }) : cr('z.allMatched')}</span>
         </h2>
         <p className="a2-xs a2-mute">{cr('z.openSub')}</p>
-        {st.open.length ? (
+        <nav className="a2-views a2-mt12" aria-label={cr('m.open')} data-testid="statement-chips">
+          {(['check', 'done', 'all'] as const).map((k) => (
+            <Link key={k} className={`a2-view${show === k ? ' on' : ''}`} href={showHref(k)} aria-current={show === k ? 'page' : undefined} data-testid={`statement-chip-${k}`}>
+              {cr(`z.chip.${k}`)} <span className="a2-xs a2-mute">{n(counts[k])}</span>
+            </Link>
+          ))}
+        </nav>
+        {(show === 'check' || show === 'all') && parts.check.length ? (
           <>
-            <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} canClaim={access.guard.permissions?.has('delivery.claims') ?? false} lines={st.open} />
+            <OpenLines dict={d} money={m} canAccept={canSettle} canClaim={canClaimLines} lines={parts.check} />
             {moreLines ? <p className="a2-xs a2-mute">{cr('m.openMore', { n: n(moreLines) })}</p> : null}
           </>
-        ) : (
-          <p className="a2-sm a2-mute a2-mt6">{cr('m.openNone')}</p>
-        )}
+        ) : null}
+        {(show === 'done' || show === 'all') && (parts.claimed.length || parts.resolved.length) ? (
+          <ul className="a2-stack a2-mt12" style={{ listStyle: 'none', padding: 0 }} data-testid="statement-done">
+            {parts.claimed.map((l) => (
+              <li key={l.lineId} className="a2-between a2-sm" data-testid="statement-claimed-line">
+                <span>
+                  <b>{l.orderNumber ?? l.consignmentId ?? l.reference}</b> · {l.reasonCode ? cr(`m.reasons.${l.reasonCode}`) : l.matchState === 'LATE' ? cr('m.late') : ''}
+                </span>
+                <span className="a2-pill info">{cr('z.claimRaised')}</span>
+              </li>
+            ))}
+            {parts.resolved.map((l) => (
+              <li key={l.lineId} className="a2-between a2-sm" data-testid="statement-resolved-line">
+                <span>
+                  <b>{l.orderNumber ?? l.consignmentId ?? l.lineId.slice(0, 8)}</b> · {l.reasonCode ? cr(`m.reasons.${l.reasonCode}`) : ''}
+                  {l.note ? <span className="a2-xs a2-mute a2-blk">{l.note}</span> : null}
+                  <span className="a2-xs a2-mute a2-blk">{noteDay(l.at)}</span>
+                </span>
+                <span className="a2-pill ok">{cr('z.resolvedTag')}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {(show === 'check' && !parts.check.length) || (show === 'done' && !parts.claimed.length && !parts.resolved.length) || (show === 'all' && !counts.all) ? (
+          <p className="a2-sm a2-mute a2-mt6" data-testid="statement-empty">
+            {show === 'done' ? cr('z.doneNone') : cr('m.openNone')}
+          </p>
+        ) : null}
       </section>
 
       <section className="a2-card a2-mt12" data-testid="statement-accepted">
