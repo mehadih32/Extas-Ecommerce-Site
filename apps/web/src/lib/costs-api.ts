@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { audit, requireAnyPermission } from '@extas/auth';
 import * as inv from '@extas/inventory';
-import { registry, SettingsError, staffCostsSchema, statementCostsSchema, storeTarget, type StaffCostsSettings, type StatementCostsSettings } from '@extas/settings';
+import { registry, salaryPlan, SettingsError, staffCostsSchema, statementCostsSchema, storeTarget, type StaffCostsSettings, type StatementCostsSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 
@@ -171,7 +171,11 @@ export function staffCostsHandler(request: Request, deps: AdminDeps | null): Pro
       const next = now.get(old.id);
       if (!next) return fail(400, 'INVALID_INPUT', ['people']);
       if (!old.amounts.every((a) => next.amounts.some((x) => x.from === a.from && x.minor === a.minor))) return fail(400, 'INVALID_INPUT', ['amounts']);
+      // PR 859: the payments are written by the pay route only, and a paid month's advance, bonus and deduction are locked
+      if (JSON.stringify(old.paid ?? {}) !== JSON.stringify(next.paid ?? {})) return fail(400, 'INVALID_INPUT', ['paid']);
+      for (const m of Object.keys(old.paid ?? {})) if (JSON.stringify(old.adj?.[m] ?? null) !== JSON.stringify(next.adj?.[m] ?? null)) return fail(409, 'MONTH_PAID', [m]);
     }
+    if (parsed.data.people.some((p) => !before.value.people.some((o) => o.id === p.id) && p.paid && Object.keys(p.paid).length)) return fail(400, 'INVALID_INPUT', ['paid']);
     if (JSON.stringify(parsed.data) !== JSON.stringify(before.value)) {
       const key = 'books.staffCosts' as const;
       await c.admin.resolver.set(key, parsed.data, storeTarget(c.who.storeId), { actorId: c.who.actor.staffUserId ?? null, reason: 'Money › Costs: salaries and monthly costs' });
@@ -179,4 +183,60 @@ export function staffCostsHandler(request: Request, deps: AdminDeps | null): Pro
     }
     return { staff: await staffCostsCard(c.admin, c.who.storeId) };
   });
+}
+
+// ---- PR 859 (parity F5): "Pay salary" (POST /api/admin/costs/staff/pay) -------------------------------------------------------
+
+/** One person's payment in the answer. */
+export interface SalaryPaid {
+  id: string;
+  name: string;
+  minor: number;
+  repeated: boolean;
+}
+
+/**
+ * POST {month, accountKey, ids?, pin}: pays the month's salaries by writing one cashbook entry per person (kind EXPENSE, out of
+ * `accountKey`, a request key of its own so a retry never pays twice) and then marks those people paid in the list. Only the roles
+ * that hold BOTH `fixedcosts.write` and `cash.record` (Accounts and the owner: the money rule), checked here and again by the
+ * cashbook, which also asks for the owner's PIN on every entry. Nothing is automatic: it runs when this is posted, never by a
+ * clock; no message is sent to anyone. A person without anything to pay (nothing left after the advance) is skipped. It stops
+ * at the first refusal (a wrong PIN, a closed cashbook) and says who was paid before it.
+ */
+export function staffPayHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'POST') return notAllowed();
+  return handle(request, deps, 'fixedcosts.write', async (c) => {
+    await requireAnyPermission(c.admin.db, c.who.actor, ['cash.record'], { storeId: c.who.storeId });
+    const b = await body(request);
+    const month = typeof b.month === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(b.month) ? b.month : null;
+    const accountKey = typeof b.accountKey === 'string' && b.accountKey.trim() ? b.accountKey.trim().slice(0, 40) : null; // hardcode-ok: a key's length guard
+    if (!month || !accountKey) return fail(400, 'INVALID_INPUT', [!month ? 'month' : 'accountKey']);
+    const ids = Array.isArray(b.ids) ? b.ids.filter((x): x is string => typeof x === 'string') : undefined;
+    const card = await staffCostsCard(c.admin, c.who.storeId);
+    const plan = salaryPlan(card.value.people, month, ids);
+    if (!plan.length) return fail(409, 'NOTHING_TO_PAY');
+    const day = (c.admin.now ?? (() => new Date()))().toISOString().slice(0, 10); // hardcode-ok: ISO date
+    const paid: SalaryPaid[] = [];
+    let stopped: Response | null = null;
+    for (const x of plan) {
+      try {
+        const r = await inv.recordCash(c.deps, c.who, { kind: 'EXPENSE', accountKey, amountMinor: x.minor, day, note: `Salary ${month} · ${x.name}`.slice(0, 300), requestKey: `salary:${month}:${x.id}`, pin: typeof b.pin === 'string' ? b.pin : '' }); // hardcode-ok: note length guard
+        paid.push({ id: x.id, name: x.name, minor: x.minor, repeated: r.repeated });
+      } catch (e) {
+        stopped = errorResponse(e);
+        break;
+      }
+    }
+    if (paid.length) {
+      // read the list again and mark only the people the cashbook took (another save may have come in between)
+      const fresh = await staffCostsCard(c.admin, c.who.storeId);
+      const mark = new Map(paid.map((p) => [p.id, p]));
+      const next: StaffCostsSettings = { people: fresh.value.people.map((p) => (mark.has(p.id) ? { ...p, paid: { ...(p.paid ?? {}), [month]: { at: day, minor: mark.get(p.id)!.minor, account: accountKey } } } : p)) };
+      const key = 'books.staffCosts' as const;
+      await c.admin.resolver.set(key, next, storeTarget(c.who.storeId), { actorId: c.who.actor.staffUserId ?? null, reason: 'Money › Costs: salary paid' });
+      await audit(c.admin.db, c.who.actor, { storeId: c.who.storeId, action: 'books.staffCosts.pay', entityType: 'Setting', entityId: key, before: null, after: { month, accountKey, people: paid.map((p) => p.id), totalMinor: paid.reduce((a, p) => a + p.minor, 0) } }, { source: 'admin-api', ...c.who.ctx });
+    }
+    if (stopped) return stopped;
+    return { paid, staff: await staffCostsCard(c.admin, c.who.storeId) };
+  }, 201);
 }

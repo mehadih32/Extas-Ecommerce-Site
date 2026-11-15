@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { staffAmountAt, staffCostsSchema, staffCostsSettings, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostPerson } from '../src/registry-books-staff-costs';
+import { salaryPlan, staffAmountAt, staffCostsSchema, staffCostsSettings, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostPerson } from '../src/registry-books-staff-costs';
 
 const person = (over: Partial<StaffCostPerson> = {}): StaffCostPerson => ({
   id: 'p1',
@@ -84,5 +84,24 @@ describe('salaries and monthly costs (v837)', () => {
     expect(staffCostsSchema.safeParse({ people: [person({ amounts: [{ from: '2026-01', minor: 1.5 }] })] }).success).toBe(false);
     expect(staffCostsSchema.safeParse({ people: [person({ payDay: 31 })] }).success).toBe(false);
     expect(staffCostsSchema.safeParse({ people: [], extra: 1 }).success).toBe(false);
+  });
+});
+
+describe('Pay salary plan (PR 859)', () => {
+  it('lists salary heads with something to pay and leaves out paid, bills and people with nothing left', () => {
+    const paid = person({ id: 'p2', name: 'Karim', paid: { '2026-10': { at: '2026-10-05', minor: 1_500_000, account: 'cash' } } });
+    const bill = person({ id: 'p3', name: 'Rent', kind: 'rent' });
+    const empty = person({ id: 'p4', name: 'Salma', adj: { '2026-10': { adv: 1_500_000, bonus: 0, ded: 0, note: '' } } });
+    expect(salaryPlan([person(), paid, bill, empty], '2026-10')).toEqual([{ id: 'p1', name: 'Rahim', minor: 1_500_000 }]);
+  });
+  it('pays net of the advance, bonus and deduction, and narrows to the ids asked for', () => {
+    const a = person({ adj: { '2026-10': { adv: 200_000, bonus: 100_000, ded: 50_000, note: '' } } });
+    const b = person({ id: 'p9', name: 'Other' });
+    expect(salaryPlan([a, b], '2026-10', ['p1'])).toEqual([{ id: 'p1', name: 'Rahim', minor: 1_350_000 }]);
+    expect(salaryPlan([a, b], '2026-10').length).toBe(2);
+  });
+  it('a paid record must carry a day, an amount and an account', () => {
+    expect(staffCostsSchema.safeParse({ people: [person({ paid: { '2026-10': { at: '2026-10-05', minor: 1, account: 'bank' } } })] }).success).toBe(true);
+    expect(staffCostsSchema.safeParse({ people: [person({ paid: { '2026-10': { at: 'x', minor: 1, account: 'bank' } } })] }).success).toBe(false);
   });
 });

@@ -40,6 +40,9 @@ export interface CostsScreenProps {
   canEnterLines?: boolean;
   /** PR 837: the salaries and monthly costs list (null = the card is not shown). */
   staff?: StaffCostsData | null;
+  /** PR 859: may pay salaries (fixed costs + cashbook rights) and the cashbook accounts to pay from. */
+  canPaySalary?: boolean;
+  cashAccounts?: { key: string; name: string }[];
 }
 
 /** A new request key for one cost entry (kept until the entry is written). */
@@ -305,10 +308,12 @@ export function CostsScreen(p: CostsScreenProps) {
           data={p.staff}
           month={pick}
           canEdit={p.canEdit}
+          canPay={p.canPaySalary ?? false}
+          accounts={p.cashAccounts ?? []}
           onUse={(totals) => {
             // the fixed-costs form above is filled for the owner to check; Save there is what records it
             setDraft((d) => ({ ...d, form: { ...d.form, ...totals } }));
-            setFSaid({ text: c('staff.filled'), bad: false });
+            showToast({ text: c('staff.filled'), tone: 'ok' });
           }}
         />
       ) : null}
