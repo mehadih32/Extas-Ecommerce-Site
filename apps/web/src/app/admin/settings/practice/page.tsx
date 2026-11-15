@@ -13,6 +13,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { t, type Dict } from '@/lib/i18n';
 import { practiceView } from '@/lib/practice/api';
+import '../system/sysinfo.css';
 import bn from '../../../../../messages/admin-practice.bn.json';
 import en from '../../../../../messages/admin-practice.en.json';
 
