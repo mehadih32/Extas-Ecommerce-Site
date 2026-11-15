@@ -1,0 +1,12 @@
+/* PR 798 (prototype v5 .rep-tbl): sortable headings, clickable rows, "Show all". */
+.adm2 .rp-sort th { padding: 0; }
+.adm2 .rp-sort .rp-sb { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 9px 10px; min-height: 44px; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; white-space: nowrap; }
+.adm2 .rp-sort th.r .rp-sb { text-align: right; }
+.adm2 .rp-sort .rp-sb:hover, .adm2 .rp-sort .rp-sb:focus-visible { color: var(--lm-ink); }
+.adm2 .rp-sort th.sorted { color: var(--lm-ink); }
+.adm2 .rp-sort th.sorted span { color: var(--lm-ac); }
+.adm2 .rp-sort tbody td { height: 44px; }
+.adm2 .rp-sort tr.rp-live { cursor: pointer; }
+.adm2 .rp-sort tr.rp-live:hover td, .adm2 .rp-sort tr.rp-live:focus-visible td { background: var(--lm-sf2); }
+.adm2 .rp-more { display: block; margin: 10px auto 0; }
+@media (max-width: 700px) { .adm2 .rp-sort .hide-sm { display: none; } }

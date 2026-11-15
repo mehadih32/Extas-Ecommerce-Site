@@ -4,18 +4,26 @@
 //   GET /api/admin/reports/export/marketing?from=&to=         (`marketing.campaigns.read`; empty while Marketing › Report is off)
 //   GET /api/admin/reports/export/review?m=last|this          (`books.read`)
 //   GET /api/admin/reports/export/orders?from=&to=&ch=        (`books.read`; the Sales report: day or week, channel, payment)
+//   GET /api/admin/reports/export/customers?from=&to=         (`reports.read`; PR 798: who ordered, new against returning, at-risk buyers)
+//   GET /api/admin/reports/export/team?from=&to=            (`staff.performance`; PR 798: what each person did)
+//   GET /api/admin/reports/export/areas?from=&to=&path=       (`books.read`; PR 798: every place one level under the path)
+// Every heading and word in these files is English, whatever the admin's language (the Excel and PDF rule, tested in words.test.ts).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
 import { errorResponse, fail, guardAdmin, type AdminDeps } from '../admin-auth';
 import { channelMarginPct } from '../channel-profit-view';
 import { marginPct } from '../group-profit-view';
+import { areaStats, loadGeoOrders } from './areas';
+import { avg, loadTeam, total as teamTotal } from './team';
+import { customerFacts, loadCustomers, whoOrdered } from './customers';
+import { PLACE_LEVELS, nameAt, underPath } from './geo';
 import { loadBase, loadMarketing, loadProducts, loadProfit, loadReview, loadReviewBase } from './load';
 import { isSaleSource, loadSaleOrders, saleBuckets, saleFacts } from './sales';
 import { toCsv } from './model';
 
-export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders'] as const;
+export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders', 'customers', 'areas', 'team'] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
-export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read', orders: 'books.read' };
+export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read', orders: 'books.read', customers: 'reports.read', areas: 'books.read', team: 'staff.performance' };
 
 type Cell = string | number | null;
 type Group = { rows: { name: string | null; depth: number; orders: number; pieces: number; salesMinor: number; costedSalesMinor: number; profitMinor: number }[] };
@@ -94,6 +102,50 @@ export async function exportRoute(kind: string, request: Request, deps: AdminDep
         ...[...new Set(rows.map((r) => r.method ?? ''))].map((m): Cell[] => [m, saleFacts(rows.filter((r) => (r.method ?? '') === m)).orders]),
       ]);
       name = `sales-${from}-${to}`;
+    } else if (k === 'customers') {
+      const b = await loadBase(d, sp);
+      const { from, to } = b.period.q;
+      const data = await loadCustomers(d, b.timeZone, from, to, b.before, new Date());
+      const w = whoOrdered(data.cur, data.first);
+      const f = customerFacts(data.cur, data.buyers, data.first, Date.now(), data.quietDays);
+      csv = toCsv([
+        ['from', 'to', 'customersOrdered', 'new', 'returning', 'repeatRatePct', 'averageCustomerValueMinor', 'atRisk'],
+        [from, to, w.n, w.nw, w.ret, Math.round(f.repeat * 10) / 10, f.avgValue, f.atRisk.length],
+        [],
+        ['customer', 'orders', 'spentMinor', 'isNew'],
+        ...f.topCustomers.map((x): Cell[] => [x.buyer?.name ?? '', x.n, x.v, x.isNew ? 'yes' : 'no']),
+        [],
+        ['district', 'customers', 'orders', 'orderValueMinor'],
+        ...f.byDistrict.map((x): Cell[] => [x.d, x.n, x.o, x.v]),
+        [],
+        ['atRiskCustomer', 'orders', 'spentMinor', 'lastOrder'],
+        ...f.atRisk.map((x): Cell[] => [x.name, x.orders, x.spentMinor, x.lastOrderAt ? new Date(x.lastOrderAt).toISOString().slice(0, 10) : null]),
+      ]);
+      name = `customers-${from}-${to}`;
+    } else if (k === 'areas') {
+      const b = await loadBase(d, sp);
+      const { from, to } = b.period.q;
+      const path = (sp.path ?? '').split('/').map((x) => x.trim()).filter(Boolean).slice(0, PLACE_LEVELS.length - 1);
+      const orders = (await loadGeoOrders(d, b.timeZone, from, to, { source: isSaleSource(sp.ch) ? sp.ch : null })).filter((o) => underPath(o.place, path));
+      const level = PLACE_LEVELS[Math.min(path.length, PLACE_LEVELS.length - 1)]!;
+      csv = toCsv([
+        [level, 'orders', 'pieces', 'productValueMinor', 'delivered', 'returned', 'returnRatePct', 'collectedMinor', 'profitMinor', 'averageOrderMinor'],
+        ...areaStats(orders, (o) => nameAt(o.place, level)).map((x): Cell[] => [x.key, x.n, x.pcs, x.mrp, x.d, x.rt, Math.round(x.rr * 10) / 10, x.col, x.pr, x.aov]),
+      ]);
+      name = `areas-${from}-${to}`;
+    } else if (k === 'team') {
+      const b = await loadBase(d, sp);
+      const { from, to } = b.period.q;
+      const data = await loadTeam(d, b.timeZone, from, to, b.before);
+      csv = toCsv([
+        ['person', 'role', 'confirmed', 'cancelled', 'packed', 'handedToCourier', 'exchanges', 'messagesAnswered', 'chatsAnswered', 'chatsToOrders', 'avgFirstReplyMin', 'avgHoursToConfirm', 'total'],
+        ...data.people.map((p): Cell[] => {
+          const a = data.cur.get(p.id);
+          const cv = data.conv.get(p.id);
+          return [p.name, p.role, a?.confirm ?? 0, a?.cancel ?? 0, a?.pack ?? 0, a?.hand ?? 0, a?.exch ?? 0, a?.msgs ?? 0, cv?.chats ?? 0, cv?.orders ?? 0, a ? Math.round(avg(a.rt)) : 0, a ? Math.round(avg(a.ct) * 10) / 10 : 0, a ? teamTotal(a) : 0];
+        }),
+      ]);
+      name = `team-${from}-${to}`;
     } else {
       const b = await loadReviewBase(d, sp);
       const r = await loadReview(access, b);
