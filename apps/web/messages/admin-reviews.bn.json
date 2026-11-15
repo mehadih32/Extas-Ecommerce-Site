@@ -11,6 +11,8 @@
       "average": "গড় তারা",
       "averageNone": "এখনো নেই",
       "averageNote": "প্রকাশিত রিভিউগুলোর",
+      "unreplied": "উত্তর ছাড়া 1–2 স্টার",
+      "unrepliedNote": "পাবলিশ হয়েছে, উত্তর দেওয়া হয়নি",
       "asked": "ডেলিভারির পর চাওয়া",
       "askedNote": "{answered} জন দিয়েছেন ({pct}%) · গত {days} দিন"
     },

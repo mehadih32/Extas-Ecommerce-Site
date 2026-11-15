@@ -139,3 +139,16 @@
 /* PR 709: the measurement buttons wrap inside the card on a phone (360 px: "Paste" row stuck out at 364 px). */
 .ad .ad-btn-sm{max-width:100%;white-space:normal;text-align:center}
 .sc-m0{min-width:0;flex-wrap:wrap}
+
+/* PR 806 (prototype v5): the category cards, and the editor on a page of its own with a way back */
+.sc-grid.sc-one, .sc-grid.sc-editing { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+.sc-grid.sc-one .sc-addw, .sc-grid.sc-editing .sc-edw { grid-column: 1; grid-row: auto; }
+.sc-cats { display: grid; gap: 6px; margin-bottom: 18px; }
+.sc-grp { margin-top: 10px; }
+.sc-cards { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) { .sc-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .sc-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sc-card { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.sc-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.sc-acts .ad-btn, .sc-cats .sc-listhd .ad-btn, .sc-edw > .ad-btn { min-height: 44px; }
+.sc-mb8 { margin-bottom: 8px; }
