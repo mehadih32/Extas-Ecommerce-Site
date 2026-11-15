@@ -68,12 +68,13 @@ export function sentences(text: string): string[] {
 // ---- product cards ----
 
 /** The badge on the photo: the saving when the honesty rule allows a struck price, else the product's first tag. */
-export function cardBadge(card: Pick<ShopCard, 'priceMinor' | 'wasMinor' | 'badge'>, t: ShopT, num: (n: number) => string): { text: string; sale: boolean } | null {
+export function cardBadge(card: Pick<ShopCard, 'priceMinor' | 'wasMinor' | 'badge'> & { badgeBn?: string | null }, t: ShopT, num: (n: number) => string, lang: 'en' | 'bn' = 'en'): { text: string; sale: boolean } | null {
   if (card.priceMinor != null && card.wasMinor != null && card.wasMinor > card.priceMinor) {
     const pct = Math.round((1 - card.priceMinor / card.wasMinor) * 100);
     if (pct > 0) return { text: t('card.off', { n: num(pct) }), sale: true };
   }
-  return card.badge ? { text: card.badge, sale: false } : null;
+  const words = lang === 'bn' ? (card.badgeBn ?? card.badge) : card.badge;
+  return words ? { text: words, sale: false } : null;
 }
 
 /** The swatches a card draws (the demo's four) and how many more colours there are. */

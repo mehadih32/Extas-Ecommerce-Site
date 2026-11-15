@@ -11,6 +11,7 @@ import type { OverlayBadge } from '@extas/creative-studio';
 import { activeOverlayFor } from '@extas/creative-studio';
 import { cachedCategoryPage } from '../cache';
 import { liveCampaignOverlays } from './campaign-overlay';
+import { pickBadge } from './tag-badge';
 import { settingsResolver, settingsTimeoutMs, withTimeout } from '../settings';
 import type { SizeMeta } from './category-filter';
 import type { CatItem } from './category-model';
@@ -37,8 +38,10 @@ export interface ShopCard {
   /** The struck price, only when the honesty rule allows one (PR 38). */
   wasMinor: number | null;
   colours: ShopColour[];
-  /** The first live tag's words ("New", "Bestseller"), drawn as the card's badge. */
+  /** The first live tag's words ("New", "Bestseller"), drawn as the card's badge (PR 747: the owner's own order and words). */
   badge: string | null;
+  /** The same badge in Bengali (the owner's own Bengali words, else the tag's name). */
+  badgeBn?: string | null;
   /** The front photo of each colour (by colour key), or of the product ('*'). */
   photos: Record<string, ImageSource>;
   inStock: boolean;
@@ -167,8 +170,9 @@ async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: 
   const tags = await prisma.productTag.findMany({
     where: { storeId, archivedAt: null, productId: { in: rows.map((p) => p.id) }, tag: { archivedAt: null } },
     orderBy: { createdAt: 'asc' },
-    select: { productId: true, tag: { select: { name: true } } },
+    select: { productId: true, tag: { select: { slug: true, name: true } } },
   });
+  const badgeSetting = await settingsResolver()?.value('card.tagBadges', { storeId });
   const photos = withPhotos ? await photoMap(storeId, rows) : new Map<string, Record<string, ImageSource>>();
   // S25 · PR 489: one batched read of every live overlay, matched per row (never stored on the product, read fresh).
   const overlays = await liveCampaignOverlays(storeId);
@@ -186,6 +190,7 @@ async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: 
           now,
         }).wasMinor
       : null;
+    const badge = pickBadge(tags.filter((t) => t.productId === p.id).map((t) => t.tag), badgeSetting);
     return {
       id: p.id,
       slug: p.slug,
@@ -197,7 +202,8 @@ async function toCards(storeId: number, rows: Row[], withPhotos = true, trial?: 
       priceMinor: v?.priceMinor ?? null,
       wasMinor: was,
       colours: p.colours.map((c) => ({ key: c.colour.key, nameEn: c.colour.nameEn, nameBn: c.colour.nameBn, hex: c.colour.hex })),
-      badge: tags.find((t) => t.productId === p.id)?.tag.name ?? null,
+      badge: badge?.en ?? null,
+      badgeBn: badge?.bn ?? null,
       photos: photos.get(p.id) ?? {},
       inStock: p.inStock,
       sortRank: p.sortRank,

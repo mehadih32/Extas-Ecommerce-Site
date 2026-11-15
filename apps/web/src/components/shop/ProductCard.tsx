@@ -25,7 +25,7 @@ export function ProductCard({ card, c, priority = false, colour: pick, copy = fa
   const href = hrefIn(c.lang, chosen ? productColourPath(prefix, card.slug, chosen.key) : productPath(prefix, card.slug));
   const price = card.priceMinor != null ? c.money(card.priceMinor) : null;
   const was = price && card.wasMinor != null && card.wasMinor > (card.priceMinor ?? 0) ? c.money(card.wasMinor) : null;
-  const badge = cardBadge(card, c.t, c.num);
+  const badge = cardBadge(card, c.t, c.num, c.lang);
   const sw = cardSwatches(card.colours);
   return (
     <div className="pcard-w" data-pid={card.id} data-c={colour?.key} aria-hidden={copy || undefined} data-copy={copy ? '1' : undefined}>
