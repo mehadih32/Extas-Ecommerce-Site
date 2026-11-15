@@ -29,6 +29,8 @@ export interface OpenStatementLine {
   reference: string;
   consignmentId: string | null;
   orderId: string | null;
+  /** PR 849: the parcel the line is about, so a claim can be raised from the line. */
+  shipmentId: string | null;
   orderNumber: string | null;
   matchState: 'MISMATCH' | 'LATE';
   reasonCode: LineMismatch | null;
@@ -83,6 +85,7 @@ export async function courierMoney(deps: PaymentsDeps, who: Who, courierAccountI
         settlementId: true,
         consignmentId: true,
         orderId: true,
+        shipmentId: true,
         matchState: true,
         reasonCode: true,
         courierStatus: true,
@@ -118,6 +121,7 @@ export async function courierMoney(deps: PaymentsDeps, who: Who, courierAccountI
       reference: l.settlement.reference,
       consignmentId: l.consignmentId,
       orderId: l.orderId,
+      shipmentId: l.shipmentId,
       orderNumber: l.orderId ? (numbers.get(l.orderId) ?? null) : null,
       matchState: l.matchState as 'MISMATCH' | 'LATE',
       reasonCode: l.reasonCode as LineMismatch | null,

@@ -5,7 +5,7 @@
 // month" puts the totals in the fixed-costs form above for the owner to check and Save there: nothing is paid or moved here.
 // The whole list is sent with the version it was read at (a second editor gets "STALE"), to /api/admin/costs/staff.
 import { useId, useMemo, useState } from 'react';
-import { STAFF_COST_KINDS, staffAmountAt, staffNextChange, staffTotalsFor, type StaffCostKind, type StaffCostPerson } from '@extas/settings/staff-costs';
+import { STAFF_COST_KINDS, staffAmountAt, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostKind, type StaffCostPerson } from '@extas/settings/staff-costs';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -49,6 +49,8 @@ export function StaffCostsCard({
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
   const [edit, setEdit] = useState<{ id: string; amount: string; from: string } | null>(null);
+  // PR 849: the advance, bonus and deduction of the month picked (prototype Salaries)
+  const [adjust, setAdjust] = useState<{ id: string; adv: string; bonus: string; ded: string; note: string } | null>(null);
   const [add, setAdd] = useState<{ name: string; post: string; kind: StaffCostKind; amount: string; from: string; payDay: string } | null>(null);
   const dirty = JSON.stringify(people) !== JSON.stringify(data.people) || version !== data.version;
   const useMonth = month || new Date().toISOString().slice(0, 7);
@@ -80,6 +82,43 @@ export function StaffCostsCard({
     );
     setEdit(null);
     setSaid(null);
+  }
+  function startAdjust(p: StaffCostPerson) {
+    const a = p.adj?.[useMonth];
+    setEdit(null);
+    setAdd(null);
+    setAdjust({ id: p.id, adv: a?.adv ? toMajor(a.adv, money) : '', bonus: a?.bonus ? toMajor(a.bonus, money) : '', ded: a?.ded ? toMajor(a.ded, money) : '', note: a?.note ?? '' });
+  }
+  function commitAdjust() {
+    if (!adjust) return;
+    const parts = { adv: typed(adjust.adv), bonus: typed(adjust.bonus), ded: typed(adjust.ded) };
+    if ((adjust.adv.trim() && parts.adv === undefined) || (adjust.bonus.trim() && parts.bonus === undefined) || (adjust.ded.trim() && parts.ded === undefined)) return setSaid({ text: c('needAmount'), bad: true });
+    const next = { adv: parts.adv ?? 0, bonus: parts.bonus ?? 0, ded: parts.ded ?? 0, note: adjust.note.trim() };
+    const none = !next.adv && !next.bonus && !next.ded && !next.note;
+    setPeople((l) =>
+      l.map((p) => {
+        if (p.id !== adjust.id) return p;
+        const rest = Object.fromEntries(Object.entries(p.adj ?? {}).filter(([k]) => k !== useMonth));
+        return { ...p, adj: none ? rest : { ...rest, [useMonth]: next } };
+      }),
+    );
+    setAdjust(null);
+    setSaid(null);
+  }
+  /** A pay slip of one person for the month picked: opens the browser's print page (nothing is sent to the person from here). */
+  function paySlip(p: StaffCostPerson) {
+    const x = staffNetAt(p, useMonth);
+    const w = window.open('', '_blank', 'width=640,height=720');
+    if (!w) return setSaid({ text: c('slipBlocked'), bad: true });
+    const esc = (v: string) => v.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch] as string);
+    const row = (label: string, v: number, bold = false) => `<tr><td>${esc(label)}</td><td style="text-align:right">${bold ? '<b>' : ''}${esc(m(v))}${bold ? '</b>' : ''}</td></tr>`;
+    const note = p.adj?.[useMonth]?.note ?? '';
+    w.document.write(
+      `<!doctype html><meta charset="utf-8"><title>${esc(c('slipTitle'))}</title><body style="font:14px system-ui,sans-serif;margin:32px;max-width:520px"><h2>${esc(c('slipTitle'))} · ${esc(monthName(useMonth))}</h2><p><b>${esc(p.name)}</b>${p.post ? ` · ${esc(p.post)}` : ''}</p><table style="width:100%;border-collapse:collapse" cellpadding="6">${row(c('colAmountShort'), x.base)}${row(c('bonus'), x.bonus)}${row(c('deduction'), x.ded)}${row(c('advance'), x.adv)}${row(c('netToPay'), x.net, true)}</table>${note ? `<p>${esc(note)}</p>` : ''}</body>`,
+    );
+    w.document.close();
+    w.focus();
+    w.print();
   }
   function stop(pid: string) {
     setPeople((l) => l.map((p) => (p.id === pid ? { ...p, stoppedFrom: useMonth } : p)));
@@ -118,6 +157,10 @@ export function StaffCostsCard({
                 <th>{c('colKind')}</th>
                 <th>{c('colPayDay')}</th>
                 <th className="r">{c('colAmount', { month: monthName(useMonth) })}</th>
+                <th className="r">{c('advance')}</th>
+                <th className="r">{c('bonus')}</th>
+                <th className="r">{c('deduction')}</th>
+                <th className="r">{c('netToPay')}</th>
                 <th aria-label={c('colActions')} />
               </tr>
             </thead>
@@ -125,6 +168,8 @@ export function StaffCostsCard({
               {sorted.map((p) => {
                 const next = staffNextChange(p, useMonth);
                 const stopped = p.stoppedFrom !== null && p.stoppedFrom <= useMonth;
+                const nx = staffNetAt(p, useMonth);
+                const dash = <span className="a2-mute">—</span>;
                 return (
                   <tr key={p.id} data-testid="staff-row">
                     <td>
@@ -154,9 +199,23 @@ export function StaffCostsCard({
                         </div>
                       ) : null}
                     </td>
+                    <td className="r">{nx.adv ? `−${m(nx.adv)}` : dash}</td>
+                    <td className="r">{nx.bonus ? `+${m(nx.bonus)}` : dash}</td>
+                    <td className="r">{nx.ded ? `−${m(nx.ded)}` : dash}</td>
+                    <td className="r">{nx.base ? <b data-testid="staff-net">{m(nx.net)}</b> : dash}</td>
                     <td className="r">
                       {canEdit ? (
                         <div className="a2-row" style={{ justifyContent: 'flex-end', gap: 6 }}>
+                          {nx.base ? (
+                            <button type="button" className="a2-btn sm" onClick={() => startAdjust(p)} data-testid="staff-adjust-open">
+                              {c('adjust')}
+                            </button>
+                          ) : null}
+                          {nx.base ? (
+                            <button type="button" className="a2-btn sm" onClick={() => paySlip(p)} data-testid="staff-slip">
+                              {c('slip')}
+                            </button>
+                          ) : null}
                           <button type="button" className="a2-btn sm" onClick={() => { setAdd(null); setEdit({ id: p.id, amount: toMajor(staffAmountAt(p, useMonth) || p.amounts.at(-1)!.minor, money), from: useMonth }); }} data-testid="staff-change">
                             <ShellIcon name="edit" size={14} />
                             {c('change')}
@@ -204,6 +263,36 @@ export function StaffCostsCard({
               {c('apply')}
             </button>
             <button type="button" className="a2-btn" onClick={() => setEdit(null)}>
+              {c('cancel')}
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {adjust ? (
+        <div className="ct-form a2-mt12" data-testid="staff-adjust">
+          <p className="a2-sm">
+            <b>{people.find((x) => x.id === adjust.id)?.name}</b> · {monthName(useMonth)}
+          </p>
+          {(['adv', 'bonus', 'ded'] as const).map((k) => (
+            <div className="a2-fld" key={k}>
+              <label className="a2-lbl" htmlFor={`${id}-j${k}`}>
+                {c(k === 'adv' ? 'advanceTaken' : k === 'bonus' ? 'bonus' : 'deduction')}
+              </label>
+              <input id={`${id}-j${k}`} className="a2-inp" inputMode="decimal" value={adjust[k]} onChange={(e) => setAdjust({ ...adjust, [k]: e.target.value })} />
+            </div>
+          ))}
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${id}-jn`}>
+              {c('adjustNote')}
+            </label>
+            <input id={`${id}-jn`} className="a2-inp" maxLength={120} value={adjust.note} onChange={(e) => setAdjust({ ...adjust, note: e.target.value })} />
+          </div>
+          <p className="a2-xs a2-mute">{c('adjustHelp')}</p>
+          <div className="a2-row" style={{ gap: 8 }}>
+            <button type="button" className="a2-btn pri" onClick={commitAdjust} data-testid="staff-adjust-ok">
+              {c('apply')}
+            </button>
+            <button type="button" className="a2-btn" onClick={() => setAdjust(null)}>
               {c('cancel')}
             </button>
           </div>
