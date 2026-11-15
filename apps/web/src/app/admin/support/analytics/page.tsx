@@ -14,6 +14,7 @@ import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { SupportAnalyticsTable, type AnalyticsTexts } from '@/components/admin/support/SupportAnalyticsTable';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { kindName, span, withInbox } from '@/lib/admin-support/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -34,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SupportAnalyticsPage({ searchParams }: { searchParams: Promise<{ days?: string; from?: string; to?: string }> }) {
   const deps = adminDeps();
   const [plain, access, q] = await Promise.all([adminView(deps), pageAccess('support.read', deps, MOTHER_STORE_ID), searchParams]);
-  const view = withInbox(plain);
+  const view = withLaneF(withInbox(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
@@ -91,7 +92,7 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
 
   return (
     <div className="a2-z" data-testid="support-analytics" data-lm-ready="" data-scope={r.scope} data-days={r.days ?? ''}>
-      <PageHead view={view} place={locateKey(KEY)} title={a('title')} sub={a('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.st.title')} sub={t(d, 'lf.st.sub')} />
       <SectionTabs view={view} current={KEY} />
       <nav className="a2-views a2-mt12" aria-label={a('period.label')}>
         {sp.SUPPORT_ANALYTICS_PERIODS.map((p) => (

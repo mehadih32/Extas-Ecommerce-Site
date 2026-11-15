@@ -188,6 +188,44 @@
     "tl": {
       "title": "Ad accounts",
       "sub": "Which ad platforms are linked, and whether they can see your sales correctly."
+    },
+    "ib": {
+      "title": "Inbox",
+      "sub": "{open} open · {un} not assigned · first reply in {avg} on average · longest wait {wait}",
+      "viewMsgs": "Messages",
+      "viewComments": "Comments",
+      "viewNoteMsgs": "Messenger, WhatsApp, Instagram and website chat",
+      "view": {
+        "open": "Open",
+        "mine": "Mine",
+        "unassigned": "Unassigned",
+        "solved": "Done",
+        "all": "All"
+      },
+      "channels": "All channels",
+      "noOwner": "No owner",
+      "you": "You",
+      "search": "Search name, phone or message",
+      "unassignedNote": "{n} chats have no owner. Assign them so nobody waits.",
+      "allAssigned": "Every open chat has an owner."
+    },
+    "st": {
+      "title": "Response times",
+      "sub": "How fast customers hear back. Every hour a buyer waits, the chance of an order drops.",
+      "kFirst": "Average first reply",
+      "kFast": "Answered within 15 min",
+      "kOpen": "Open now",
+      "kOpenGo": "Open inbox",
+      "kLongest": "Longest waiting",
+      "kDone": "Finished today",
+      "peak": "Most orders come around {h}:00–{h2}:00 — keep someone on chat then.",
+      "byHour": "Messages by hour",
+      "byHourSub": "Customer messages, by hour of the day",
+      "ordHour": "Orders by hour · 30 days",
+      "ordHourSub": "Plan chat staff around these hours",
+      "waiting": "Waiting for a reply",
+      "waitingSub": "Oldest first",
+      "nobody": "Nobody is waiting. Well done!"
     }
   }
 }
