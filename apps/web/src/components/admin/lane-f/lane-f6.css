@@ -1,0 +1,39 @@
+/* Parity round 3, lane F6 (PR 865-867): ad campaign page, Plan, Studio jobs, Shopping feed, Rules history (prototype v5 look; --lm-* tokens only). */
+.lf6-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lf6-btns .a2-btn { min-height: 44px; }
+.lf6-act { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lf6-panel { border: 1px solid var(--lm-ln); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.lf6-refresh { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lf6-span2 { grid-column: 1 / -1; }
+@media (min-width: 768px) { .lf6-g3 > .lf6-span2 { grid-column: span 2; } }
+.lf6-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lf6-trio > div { background: var(--lm-sf2); border-radius: 12px; padding: 12px; min-width: 0; }
+.lf6-trio b { display: block; font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.lf6-trio span { font-size: 12px; color: var(--lm-ink2); }
+@media (max-width: 700px) { .lf6-trio { grid-template-columns: minmax(0, 1fr); } .lf6-trio b { font-size: 20px; } }
+.lf6-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: var(--lm-c1); }
+.lf6-rows { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.lf6-rows > div { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lf6-ad { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--lm-ln); min-width: 0; flex-wrap: wrap; }
+.lf6-ad:last-child { border-bottom: 0; }
+.lf6-ad .tx { flex: 1; min-width: 180px; }
+.lf6-ad .tx b { display: block; font-size: 13.5px; overflow-wrap: anywhere; }
+.lf6-ad .tx span { font-size: 12px; color: var(--lm-ink2); }
+.lf6-pos { color: var(--lm-ok); }
+.lf6-neg { color: var(--lm-bad); }
+.lf6-prop { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--lm-ln); flex-wrap: wrap; }
+.lf6-prop:last-child { border-bottom: 0; }
+.lf6-prop .tx { flex: 1; min-width: 200px; }
+.lf6-li { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--lm-ln); flex-wrap: wrap; }
+.lf6-li:last-child { border-bottom: 0; }
+.lf6-li .grow { flex: 1; min-width: 160px; overflow-wrap: anywhere; }
+.lf6-job { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--lm-ln); }
+.lf6-job:last-child { border-bottom: 0; }
+.lf6-job .grow { flex: 1; min-width: 180px; }
+.lf6-types { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) { .lf6-types { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lf6-hist { display: flex; flex-direction: column; gap: 6px; }
+.lf6-hist > div { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: space-between; border: 1px solid var(--lm-ln); border-radius: 10px; padding: 8px 10px; }
+.lf6-ta { width: 100%; min-height: 64px; }
+.lf6-warn { color: var(--lm-warn); font-size: 12px; margin-top: 4px; }
+@media (min-width: 768px) { .lf6-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
