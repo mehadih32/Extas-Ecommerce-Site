@@ -1787,12 +1787,12 @@
    "id": "S28",
    "name": "Admin v5 (prototype alignment)",
    "wave": "9",
-   "range": "659–728, 740–744",
+   "range": "659–728, 745–749",
    "total": 75,
    "done": 75,
    "state": "Done",
    "parked": false,
-   "registerStatus": "Complete, 75/75 merged 13–15 Nov 2026; filed 13 Nov 2026 (CN-048); 709, 710 filed 14 Nov (CN-051); 719–728 and 740–744 filed and built 15 Nov (Website page settings, e-mail look, currency and time, cookie banner, home-screen icon; practice pictures that load; the admin menu: every page draws its section's tab bar; the practice shop live, photos, parity rounds, rich sample data, Brand & menus); 711–718 filed and built 14 Nov (the eight prototype tabs that had no PR) — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look",
+   "registerStatus": "Complete, 75/75 merged 13–15 Nov 2026; filed 13 Nov 2026 (CN-048); 709, 710 filed 14 Nov (CN-051); 719–728 and 745–749 filed and built 15 Nov (checkout, categories and tags, brand and footer settings the owner asked for; practice pictures that load; the admin menu: every page draws its section's tab bar; the practice shop live, photos, parity rounds, rich sample data, Brand & menus); 711–718 filed and built 14 Nov (the eight prototype tabs that had no PR) — the owner-approved admin prototype v5 becomes the real admin; Lumen stays the look",
    "intro": "Filed 13 Nov 2026 (CN-048). The owner-approved admin prototype v5 (`docs/demo/admin-proto-v5/`) becomes the real admin: mostly re-arranging screens to the prototype's menu and wiring the backend that is already built. Lumen stays the look. Backend that exists (courier booking and stickers, merge rules, incomplete-order capture, coupons, claims, size charts, exchanges, Customer 360, refunds and wallet, Calls to make, Rider issues, notices) is re-used. Full check: `docs/demo/admin-proto-v5/GAP-MAP.md`. Every new number or switch is a backend setting, off by default; every integration runs on a mock until the owner types the key.",
    "bn": {
     "name": "অ্যাডমিন v5 (প্রোটোটাইপ মেলানো)",
@@ -1873,11 +1873,11 @@
     726,
     727,
     728,
-    740,
-    741,
-    742,
-    743,
-    744
+    745,
+    746,
+    747,
+    748,
+    749
    ],
    "notes": [],
    "page": "docs/stages/S28.md",
@@ -47175,12 +47175,12 @@
    "page": "docs/stages/S28.md#pr-728"
   },
   {
-   "number": 740,
+   "number": 745,
    "stage": "S28",
-   "title": "Website › Page settings (owner order 15 Nov 2026; S28; settings only, no migration): one page /admin/website/page-settings?screen=… with …",
+   "title": "Contact & sharing, footer boxes —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Website › Page settings** (owner order 15 Nov 2026; S28; settings only, no migration): one page `/admin/website/page-settings?screen=…` with the inside settings of the home (flash sale), category (filters), product (delivery and return lines), thank-you, bag, account and search (synonyms) pages, and a card for currency and time (PR 742); every field is a registry setting, empty or off by default, so the shop is unchanged until used; audited; guide and words in both languages.",
+   "scope": "**Contact & sharing, footer boxes** — the Brand & menus page gets the Contact & sharing card (`contact.phone`, `contact.whatsapp`, `contact.email`, `contact.address`, `contact.hours`, `brand.ogImage`) and the footer's seven boxes in the owner's order (`blockOrder`, ordered mode of `StoreFooter` only when set) with link icons and screens. Guide: `admin-guide/pages/website/brand-menus.md`.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -47191,39 +47191,83 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-15",
-    "note": "Website › Page settings: one page `/admin/website/page-settings?screen=…` (`website.read` to see, `website.layout.write` to save, audited) holding the inside settings of the home (flash sale), category (filters), product (delivery and return lines), thank-you, bag, account and search (synonyms) pages. Every field is a registry setting with an empty or off default; nothing saved means the shop looks exactly as before. Guide `docs/admin-guide/pages/website/page-settings.md`, words in `admin-pagesettings.{en,bn}.json`.",
+    "note": "Website › Brand & menus, more cards (gaps report group ক, owner order 15 Nov 2026): a new Contact & sharing card (hotline, WhatsApp, email, shop address, opening hours, each in both languages; a Bangladesh mobile typed 01… is kept as +880…) and the link preview picture (the new setting `brand.ogImage`, owner data, used in the shop's Open Graph tags; none = no picture, as before); the Footer card gains a Footer boxes list (seven boxes dragged, shown or hidden, `shell.footer` gains the optional `blockOrder`, the last line always stays) and per-link little picture (`icon`) and screens (`dev`); nothing set = the approved footer exactly as before (S28; no migration; registry version 745).",
+    "github": []
+   },
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "brand.ogImage",
+     "shell.footer"
+    ],
+    "code": [],
+    "names": [
+     "blockOrder",
+     "icon",
+     "dev"
+    ],
+    "tests": []
+   },
+   "updates": [],
+   "mentions": [],
+   "blueprint": [],
+   "bn": "ব্র্যান্ড আর মেনু পাতায় যোগাযোগ আর শেয়ারের কার্ড (নম্বর, ইমেইল, ঠিকানা, খোলার সময়, লিংকের ছবি) আর ফুটারের বক্স টেনে সাজানো, দেখানো-লুকানো",
+   "bnAuto": false,
+   "bnMissingForBuilt": false,
+   "page": "docs/stages/S28.md#pr-745"
+  },
+  {
+   "number": 746,
+   "stage": "S28",
+   "title": "Categories & tags —",
+   "titleDerived": false,
+   "itemised": true,
+   "scope": "**Categories & tags** — `/admin/products/structure`, `lib/admin-structure`, `reorderCategories`, `catalogue.collections.order`. Guide: `admin-guide/pages/products/structure.md`.",
+   "scopeRewritten": false,
+   "filedUnder": "S28 Wave 5 — the rest",
+   "registerAnchor": "s28-wave-5--the-rest",
+   "appendixTitle": "",
+   "owner": "",
+   "demo": null,
+   "status": {
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-15",
+    "note": "Products › Categories & tags (gaps report group খ): `/admin/products/structure` (a Products tab; `catalogue.read` to see, `catalogue.write` to save, audited): the live categories of each level dragged into the owner's order (`reorderCategories`, audit `category.reorder`) and shown or hidden in the shop, the collection order (new setting `catalogue.collections.order`, `listCollections` follows it; empty = by name as before). Each card saved whole with its version (STALE read again). Guide, nav, device gate, smoke (S28; no migration).",
     "github": []
    },
    "builtFacts": {
     "routes": [
-     "/admin/website/page-settings?screen=…"
+     "/admin/products/structure"
     ],
     "settings": [
-     "website.read",
-     "website.layout.write"
+     "catalogue.read",
+     "catalogue.write",
+     "category.reorder",
+     "catalogue.collections.order"
     ],
-    "code": [
-     "docs/admin-guide/pages/website/page-settings.md",
-     "admin-pagesettings.{en,bn}.json"
+    "code": [],
+    "names": [
+     "reorderCategories",
+     "listCollections"
     ],
-    "names": [],
     "tests": []
    },
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "ওয়েবসাইট › পেজের সেটিং: হোম পেজের ফ্ল্যাশ সেল, ক্যাটাগরির ফিল্টার, প্রোডাক্ট পেজের ডেলিভারি-রিটার্নের লাইন, ধন্যবাদ পেজ, ব্যাগ, অ্যাকাউন্ট আর সার্চের সমার্থক শব্দ এক জায়গা থেকে বদলানো যায়; কিছু না বদলালে দোকান আগের মতোই।",
+   "bn": "প্রোডাক্ট › ক্যাটাগরি আর ট্যাগ: ক্যাটাগরি আর কালেকশনের ক্রম টেনে সাজানো, ক্যাটাগরি দেখানো-লুকানো",
    "bnAuto": false,
    "bnMissingForBuilt": false,
-   "page": "docs/stages/S28.md#pr-740"
+   "page": "docs/stages/S28.md#pr-746"
   },
   {
-   "number": 741,
+   "number": 747,
    "stage": "S28",
-   "title": "E-mail look (card of Page settings): logo, colours, font, header and footer lines for offer e-mails, with a live sample; off means …",
+   "title": "Tag badges —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**E-mail look** (card of Page settings): logo, colours, font, header and footer lines for offer e-mails, with a live sample; off means e-mails go as before.",
+   "scope": "**Tag badges** — `card.tagBadges`, `lib/shop/tag-badge.ts`, `ShopCard.badgeBn`.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -47234,49 +47278,14 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-15",
-    "note": "E-mail look (card of Page settings): logo, colours, font, header and footer lines for offer e-mails with a live sample; `packages/messages/src/email-look.ts`; off means e-mails go as before.",
+    "note": "Tag badges (gaps report group খ): the badge on a product card follows the new setting `card.tagBadges` (tag order, tags that never show, own words in English and Bengali), edited in the third card of Products › Categories & tags; nothing set = the product's first tag as before; a sale badge still wins (S28; no migration).",
     "github": []
    },
    "builtFacts": {
     "routes": [],
-    "settings": [],
-    "code": [
-     "packages/messages/src/email-look.ts"
+    "settings": [
+     "card.tagBadges"
     ],
-    "names": [],
-    "tests": []
-   },
-   "updates": [],
-   "mentions": [],
-   "blueprint": [],
-   "bn": "ইমেইলের চেহারা: অফার ইমেইলে দোকানের লোগো, রং, ফন্ট, মাথার আর নিচের লাইন; পাশে নমুনা দেখা যায়। বন্ধ থাকলে ইমেইল আগের মতোই যায়।",
-   "bnAuto": false,
-   "bnMissingForBuilt": false,
-   "page": "docs/stages/S28.md#pr-741"
-  },
-  {
-   "number": 742,
-   "stage": "S28",
-   "title": "Currency and time (card of Page settings): currency code, language tag, time zone and digits as settings; a wrong code is refused on …",
-   "titleDerived": false,
-   "itemised": true,
-   "scope": "**Currency and time** (card of Page settings): currency code, language tag, time zone and digits as settings; a wrong code is refused on save; the Page settings guide, QA routes and nav-audit routes.",
-   "scopeRewritten": false,
-   "filedUnder": "S28 Wave 5 — the rest",
-   "registerAnchor": "s28-wave-5--the-rest",
-   "appendixTitle": "",
-   "owner": "",
-   "demo": null,
-   "status": {
-    "state": "merged",
-    "built": true,
-    "date": "2026-11-15",
-    "note": "Currency and time (card of Page settings): currency code, language tag, time zone and digits as settings; a wrong code is refused on save.",
-    "github": []
-   },
-   "builtFacts": {
-    "routes": [],
-    "settings": [],
     "code": [],
     "names": [],
     "tests": []
@@ -47284,18 +47293,18 @@
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "মুদ্রা আর সময়: মুদ্রার কোড, ভাষার ট্যাগ, সময় অঞ্চল আর অঙ্ক একটা পাতা থেকে বদলানো যায়; ভুল কোড সেভ হয় না।",
+   "bn": "প্রোডাক্ট কার্ডের ব্যাজ কোন ট্যাগ থেকে আসবে, কোন ক্রমে, কী লেখা, সেটা নিজে ঠিক করা",
    "bnAuto": false,
    "bnMissingForBuilt": false,
-   "page": "docs/stages/S28.md#pr-742"
+   "page": "docs/stages/S28.md#pr-747"
   },
   {
-   "number": 743,
+   "number": 748,
    "stage": "S28",
-   "title": "Cookie banner (card of Page settings): the owner's own short notice, button names, place and how long the answer is remembered; \"No\" …",
+   "title": "Checkout: payments —",
    "titleDerived": false,
    "itemised": true,
-   "scope": "**Cookie banner** (card of Page settings): the owner's own short notice, button names, place and how long the answer is remembered; \"No\" stops the analytics and ad beacons; off by default.",
+   "scope": "**Checkout: payments** — `/admin/settings/checkout`, `lib/admin-checkout`; Cash on Delivery owner only; `checkout.pay.showNumbers` and the thank-you page's \"Send the money to\" (`SendTo`). Guide: `admin-guide/pages/settings/checkout.md`.",
    "scopeRewritten": false,
    "filedUnder": "S28 Wave 5 — the rest",
    "registerAnchor": "s28-wave-5--the-rest",
@@ -47306,51 +47315,20 @@
     "state": "merged",
     "built": true,
     "date": "2026-11-15",
-    "note": "Cookie banner (card of Page settings): first-time visitors see the owner's own short notice, button names, place and how long the answer is remembered; \"No\" stops the trackers. `CookieBanner.tsx`, off by default.",
-    "github": []
-   },
-   "builtFacts": {
-    "routes": [],
-    "settings": [],
-    "code": [
-     "CookieBanner.tsx"
-    ],
-    "names": [],
-    "tests": []
-   },
-   "updates": [],
-   "mentions": [],
-   "blueprint": [],
-   "bn": "কুকি ব্যানার: প্রথমবার আসা কাস্টমারকে নিজের লেখার ছোট নোটিশ, বাটনের নাম, জায়গা আর কত দিন মনে রাখবে; \"না\" বললে ট্র্যাকার থামানো যায়। বন্ধ অবস্থায় আসে।",
-   "bnAuto": false,
-   "bnMissingForBuilt": false,
-   "page": "docs/stages/S28.md#pr-743"
-  },
-  {
-   "number": 744,
-   "stage": "S28",
-   "title": "Home-screen icon (card of Page settings): /manifest.webmanifest and the touch icon give a phone the shop's name, icon and colour when …",
-   "titleDerived": false,
-   "itemised": true,
-   "scope": "**Home-screen icon** (card of Page settings): `/manifest.webmanifest` and the touch icon give a phone the shop's name, icon and colour when added to the home screen; off by default.",
-   "scopeRewritten": false,
-   "filedUnder": "S28 Wave 5 — the rest",
-   "registerAnchor": "s28-wave-5--the-rest",
-   "appendixTitle": "",
-   "owner": "",
-   "demo": null,
-   "status": {
-    "state": "merged",
-    "built": true,
-    "date": "2026-11-15",
-    "note": "Home-screen icon (card of Page settings): `/manifest.webmanifest` gives the phone the shop's name, icon and colour when it is added to the home screen; off by default.",
+    "note": "Settings › Checkout, Payments card (gaps report group খ): `/admin/settings/checkout` (a Settings tab; `settings.read` to see, `settings.write` to save, audited): mobile wallets and card types in the owner's order and shown or hidden, online payment, Cash on Delivery (the owner's decision: no value until set, only an owner changes it, written with his OK), the numbers and bank accounts customers send money to (`payment.wallet.numbers`, `payment.bank.accounts`, saved in +880… form; the audit row names the setting, never a number), and a switch (new setting `checkout.pay.showNumbers`, off as before) that shows those numbers and accounts, with the order number to write, on the thank-you page of an order whose prepaid payment is still waiting. Nothing moves money (S28; no migration).",
     "github": []
    },
    "builtFacts": {
     "routes": [
-     "/manifest.webmanifest"
+     "/admin/settings/checkout"
     ],
-    "settings": [],
+    "settings": [
+     "settings.read",
+     "settings.write",
+     "payment.wallet.numbers",
+     "payment.bank.accounts",
+     "checkout.pay.showNumbers"
+    ],
     "code": [],
     "names": [],
     "tests": []
@@ -47358,10 +47336,47 @@
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "হোম স্ক্রিনের আইকন: ফোনে দোকান হোম স্ক্রিনে যোগ করলে নাম, আইকন আর রং আপনার ঠিক করা মতো দেখায়। বন্ধ অবস্থায় আসে।",
+   "bn": "সেটিংস › চেকআউট: পেমেন্টের উপায়ের ক্রম, ক্যাশ অন ডেলিভারি (শুধু মালিক), ক্রেতারা যে নম্বর আর ব্যাংক অ্যাকাউন্টে টাকা পাঠাবে, আর সেগুলো ক্রেতাকে দেখানোর সুইচ",
    "bnAuto": false,
    "bnMissingForBuilt": false,
-   "page": "docs/stages/S28.md#pr-744"
+   "page": "docs/stages/S28.md#pr-748"
+  },
+  {
+   "number": 749,
+   "stage": "S28",
+   "title": "Checkout: delivery details and gift —",
+   "titleDerived": false,
+   "itemised": true,
+   "scope": "**Checkout: delivery details and gift** — the second and third cards of the same page: the shortest name 0 (`checkout.form.nameMin`), the gift card (`checkout.gift`, owner only).",
+   "scopeRewritten": false,
+   "filedUnder": "S28 Wave 5 — the rest",
+   "registerAnchor": "s28-wave-5--the-rest",
+   "appendixTitle": "",
+   "owner": "",
+   "demo": null,
+   "status": {
+    "state": "merged",
+    "built": true,
+    "date": "2026-11-15",
+    "note": "Settings › Checkout, Delivery details card and Gift orders card (gaps report group খ): the order of the three fields, the shortest name and address (the shortest name 0 means the checkout does not ask for a name: the order then carries the phone number in its place; the phone and the address are always asked, the courier, the delivery charge and the messages need them), the help, try-on, note and size-mix lines and their lengths, the Confirm button style; every value is checked against its own setting before any is written. The Gift orders card edits `checkout.gift` (on or off as shipped: off; note length, latest delivery day, hide prices, and the advance: none, the whole gift, a percentage or a fixed amount typed in whole units); its advance is money, so only an owner saves it (S28; no migration).",
+    "github": []
+   },
+   "builtFacts": {
+    "routes": [],
+    "settings": [
+     "checkout.gift"
+    ],
+    "code": [],
+    "names": [],
+    "tests": []
+   },
+   "updates": [],
+   "mentions": [],
+   "blueprint": [],
+   "bn": "সেটিংস › চেকআউট: ডেলিভারির তথ্যের ঘরের ক্রম, নাম আর ঠিকানার ন্যূনতম (নাম না নিতে চাইলে 0), সাহায্য-নোট-ট্রাই-অনের লাইন, কনফার্ম বোতাম আর গিফট অর্ডারের কার্ড (শুধু মালিক)",
+   "bnAuto": false,
+   "bnMissingForBuilt": false,
+   "page": "docs/stages/S28.md#pr-749"
   }
  ]
 }
