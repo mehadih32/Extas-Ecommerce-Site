@@ -88,6 +88,7 @@ export async function feedProducts(
         select: { id: true, priceMinor: true, compareAtMinor: true },
       },
       media: { where: { archivedAt: null, role: 'FRONT' }, orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }], take: 1, select: { assetId: true } },
+      _count: { select: { media: { where: { archivedAt: null } } } },
     },
   });
   // PR 589 follow-up: each product's live sizes and colours, and the front photo of each colour
@@ -194,6 +195,8 @@ export async function feedProducts(
       inStock: p.inStock,
       brand: p.brand?.name ?? shop,
       category: p.category?.nameEn ?? null,
+      photos: p._count.media,
+      ownLabel: p.brand ? p.brand.isOwnLabel : true,
       ...(variants ? { variants } : {}),
     };
   });

@@ -37,3 +37,5 @@
 .lf6-ta { width: 100%; min-height: 64px; }
 .lf6-warn { color: var(--lm-warn); font-size: 12px; margin-top: 4px; }
 @media (min-width: 768px) { .lf6-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lf6-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.lf6-cols > section { min-width: 0; }
