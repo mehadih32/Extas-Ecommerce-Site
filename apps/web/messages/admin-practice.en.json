@@ -39,7 +39,8 @@
       "pin": "Owner PIN",
       "cancel": "Cancel",
       "go": "Reset now",
-      "working": "Working…"
+      "working": "Working…",
+      "once": "The reset removes only practice records. Real orders, customers and your own products stay."
     },
     "resetDone": "Practice data reset.",
     "ownerOnly": "Only the owner can use this page.",
@@ -65,6 +66,25 @@
       "complete": "All {total} sample products have their pictures.",
       "finished": "Practice photos are ready.",
       "note": "Each sample product gets a front, back, detail and on-model picture. They stay inside the practice area and a reset removes them."
+    },
+    "hero": {
+      "line": "{n} practice records · {kept} products you uploaded are kept"
+    },
+    "clears": "Will be cleared",
+    "stays": "Will be kept",
+    "actions": "Sample data and pictures",
+    "close": "Close",
+    "stay": {
+      "real": "Real orders and customers",
+      "settings": "Settings, rules, policies and shop text",
+      "staff": "Staff accounts",
+      "keys": "Connections and keys"
+    },
+    "preview": {
+      "open": "Preview (nothing changes)",
+      "title": "Preview — nothing has changed",
+      "lead": "{n} records would be cleared:",
+      "kept": "Kept: settings, rules, policies, shop text, staff, keys and the {n} products you uploaded."
     }
   }
 }
