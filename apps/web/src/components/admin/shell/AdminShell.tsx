@@ -34,6 +34,7 @@ import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
 import { lumenNav } from '@/lib/admin-shell/lumen-nav';
 import { RAIL_COOKIE, viewerOf, type ShellModel, type TodoItem } from '@/lib/admin-shell/model';
 import { jumpStep, recentPath } from '@/lib/admin-shell/shortcuts';
+import { currentItem, settingsItems } from '@/lib/admin-shell/settings-list';
 import { locate, sectionHome, sectionVisible, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellSection } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { ChartTips } from '../look/ChartTips';
@@ -45,6 +46,7 @@ import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsP
 import { Palette } from './Palette';
 import { ShellIcon } from './ShellIcon';
 import { SettingsFrame } from './SettingsFrame';
+import './shell-v5.css';
 import { ShellTabBar } from './ShellTabBar';
 import { readLater, TodoDrawer } from './TodoDrawer';
 
@@ -268,6 +270,18 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const tabsOf = (s: ShellSection) => visibleTabs(s, viewer).filter((tb) => !tb.more).map((tb) => ({ id: tb.id, href: visiblePages(tb, viewer)[0]!.href, label: tt(`tab.${s.id}.${tb.id}`) }));
   const badge = (s: ShellSection) => model.badges?.[s.id] ?? 0;
   const unread = (notes ?? []).filter((n) => noteUnread(n, seen)).length;
+  const inSettings = active === 'settings' && !!here?.tab;
+  // PR 780: the top bar's crumb as the prototype draws it: "Section › Tab"; Settings names the open setting (settings-list.ts)
+  const crumb: string[] | null = (() => {
+    if (!here) return null;
+    const sec = label(here.section);
+    if (here.section.id === 'settings') {
+      const it = currentItem(settingsItems(viewer), pathname);
+      return it ? [sec, tt(`setlist.item.${it.id}.n`)] : [sec];
+    }
+    const tab = here.tab ? tt(`tab.${here.section.id}.${here.tab.id}`) : '';
+    return tab && tab !== sec ? [sec, tab] : [sec];
+  })();
   const openHere = () => {
     remember();
     setPop(null);
@@ -450,6 +464,8 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
               </span>
               <span className="lm-bt" data-script={bnScript}>
                 {brand}
+                {/* PR 780 (prototype v5): the small "Admin" line under the shop's name */}
+                <small className="lm-bsub">{tt('admin')}</small>
               </span>
             </Link>
             <button type="button" className="lm-iconb lm-colb" aria-pressed={col} aria-label={col ? tt('nav.expand') : tt('nav.collapse')} title={col ? tt('nav.expand') : tt('nav.collapse')} onClick={toggleCol} data-testid="a3-rail-toggle">
@@ -463,13 +479,16 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
           </button>
           <nav className="lm-nav">
             {groups.map((g) => (
+              // PR 780 (prototype v5): one plain list, no group names (the groups stay as the order and, in the icons-only rail, as dividers)
               <div key={g.group} role="group" aria-label={tt(`groups.${g.group}`)} className="lm-gw">
-                <div className="lm-gl" aria-hidden="true">
-                  {tt(`groups.${g.group}`)}
-                </div>
                 {g.sections.map(item)}
               </div>
             ))}
+            {/* PR 780 (prototype v5): "Admin map" closes the list; the map opens in its own window */}
+            <a className="lm-it lm-mapbtn" href="/admin/map" target="_blank" rel="noopener" data-testid="a3-nav-map" title={tt('nav.map')} aria-label={tt('nav.map')}>
+              <ShellIcon name="menu" size={19} />
+              <span className="lm-nl">{tt('nav.map')}</span>
+            </a>
           </nav>
           <div className="lm-foot">
             <button type="button" className="lm-me" data-a2pop-btn aria-haspopup="menu" aria-expanded={pop === 'me'} onClick={() => setPop(pop === 'me' ? null : 'me')} data-testid="a2-me">
@@ -491,6 +510,17 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             <button type="button" className="lm-tb lm-tsearch" aria-label={tt('top.searchAria')} onClick={openPal}>
               <ShellIcon name="search" size={19} />
             </button>
+            {/* PR 780 (prototype v5): the crumb "Section › Tab" at the left of the top bar (Settings: the open setting) */}
+            {crumb ? (
+              <div className="lm-crumb" data-testid="lm-crumb" aria-label={crumb.join(' › ')}>
+                {crumb.map((c, i) => (
+                  <span key={i} className={i === crumb.length - 1 ? 'lm-crumb-now' : undefined}>
+                    {i > 0 ? ' › ' : ''}
+                    {c}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div className="lm-tbr">
               <a className="lm-shop" href="/" target="_blank" rel="noopener" title={tt('top.shopTitle')}>
                 <ShellIcon name="ext" size={15} />
@@ -544,15 +574,13 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
           <main className="a2-ct a3-ct lm-ct" id="main" tabIndex={-1}>
             {/* PR 762: the section's tab bar is drawn here, once, so it stays in the same place on every page */}
             {/* PR 779 (prototype v5): Settings is one page with a searchable list on the left (two groups) instead of tabs */}
-            {active === 'settings' && here?.tab ? (
+            {inSettings ? null : <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />}
+            {inSettings ? (
               <SettingsFrame dict={d} pathname={pathname} viewer={viewer}>
                 {children}
               </SettingsFrame>
             ) : (
-              <>
-                <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />
-                {children}
-              </>
+              children
             )}
           </main>
           {/* CN-053: which build this browser really runs, readable without clearing anything */}

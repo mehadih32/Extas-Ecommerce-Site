@@ -1,0 +1,9 @@
+/* PR 780 — the shell as prototype v5 draws it: the "Admin" line under the shop's name, the "Admin map" button that closes the
+   list, and the crumb "Section › Tab" at the left of the top bar. Lumen tokens only; targets 44 px. */
+.lm-shell .lm-bt { display: flex; flex-direction: column; line-height: 1.15; }
+.lm-shell .lm-bsub { font: 500 0.72rem var(--lm-font); letter-spacing: 0; color: var(--lm-ink2); text-transform: none; }
+.lm-shell .lm-mapbtn { flex: none; margin-top: 6px; min-height: 44px; font-weight: 500; color: var(--lm-ink2); text-decoration: none; }
+.lm-shell .lm-mapbtn:focus-visible { outline: 2px solid var(--lm-focus); outline-offset: -2px; }
+.lm-shell .lm-crumb { flex: 1 1 auto; min-width: 0; margin-inline: 4px; font-weight: 600; font-size: 0.95rem; color: var(--lm-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lm-shell .lm-crumb-now { color: var(--lm-ink); }
+@media (max-width: 899px) { .lm-shell .lm-bsub { display: none; } }
