@@ -249,7 +249,7 @@
 .pa-pc .pa-th { width: 40px; height: 40px; flex: none; grid-row: auto; border-radius: 8px; }
 .pa-pc .pa-nm { line-height: 18px; min-width: 0; }
 .pa-code { font-family: var(--ad-mono, ui-monospace, monospace); font-size: 11px; color: var(--ad-muted); }
-.pa-chkw { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+.pa-chkw { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; height: 44px; max-width: 100%; }
 .pa-chkw input { width: 18px; height: 18px; accent-color: var(--ad-brand); margin: 0; }
 .pa-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .pa-tbl .pa-was { display: block; text-decoration: line-through; color: var(--ad-muted); }
@@ -262,4 +262,12 @@
 .pa-strip a { font-size: 12px; }
 .pa-insight { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 12px; background: var(--infobg, var(--ad-line2)); color: var(--ink, inherit); font-size: 13.5px; margin-bottom: 12px; }
 .pa-hd-actions .ad-btn { min-height: 44px; }
-@media (max-width: 767px) { .pa-tbl td.a2-tdc { right: 4px; top: 4px; } }
+/* Device gate (Products designs B and C: the tick box's right edge was 12 px past a 320-440 px phone, and the page grew to match).
+   On a phone the row is a card; the tick box is no longer pinned to a corner with position:absolute, whose box depended on
+   which parent it was measured from. It is the card grid's own first row, at the right: a fixed 44 x 44 box that is always
+   inside the card, with the name beside it keeping room (padding) for it. */
+@media (max-width: 767px) {
+  .adm2 .pa-tbl td.a2-tdc { position: static; grid-column: 1 / -1; grid-row: 1; justify-self: end; align-self: start; width: 44px; height: 44px; padding: 0; margin: -8px -8px 0 0; z-index: 1; }
+  .adm2 .pa-tbl td.a2-tdh { grid-row: 1; padding-right: 40px; }
+  .adm2 .pa-tbl tr { min-width: 0; max-width: 100%; }
+}
