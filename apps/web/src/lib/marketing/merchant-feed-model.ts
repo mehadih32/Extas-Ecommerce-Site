@@ -24,6 +24,9 @@ export interface FeedProduct {
   category: string | null;
   /** PR 589 follow-up: its live sizes and colours (read only while the feed lists one item per variant). */
   variants?: readonly FeedVariant[];
+  /** PR 866: its live photos (the Shopping feed page asks for four or more) and whether its brand is marked as the shop's own (no barcode needed). */
+  photos?: number;
+  ownLabel?: boolean;
 }
 
 /** PR 589 follow-up: one size and colour of a product, as its own feed item. */
@@ -83,6 +86,8 @@ export interface FeedItem {
   /** PR 589 follow-up: the shop's gender and age group for clothes (null: not sent). */
   gender: string | null;
   ageGroup: string | null;
+  /** PR 866: the brand is the shop's own, so Google needs no barcode (`identifier_exists` no). Absent otherwise. */
+  ownLabel?: boolean;
 }
 
 /** Plain words from an article-like description (tags out, spaces folded), at most Google's 5,000 characters. */
@@ -135,6 +140,7 @@ export function feedItems(products: readonly FeedProduct[], currency: string, ou
           size: v.size,
           gender,
           ageGroup,
+          ...(p.ownLabel ? { ownLabel: true } : {}),
         });
       continue;
     }
@@ -153,6 +159,7 @@ export function feedItems(products: readonly FeedProduct[], currency: string, ou
       size: null,
       gender,
       ageGroup,
+      ...(p.ownLabel ? { ownLabel: true } : {}),
     });
   }
   return { items, left };
@@ -167,7 +174,7 @@ export function feedXml(head: { title: string; link: string; country: string }, 
     (i) =>
       `<item>${tag('g:id', i.id)}${tag('g:title', i.title)}${tag('g:description', i.description)}${tag('g:link', i.link)}${tag('g:image_link', i.image)}` +
       `${tag('g:availability', i.availability)}${tag('g:price', i.price)}${tag('g:sale_price', i.salePrice)}${tag('g:brand', i.brand)}` +
-      `${tag('g:condition', 'new')}${tag('g:product_type', i.productType)}${tag('g:item_group_id', i.groupId)}${tag('g:color', i.colour)}${tag('g:size', i.size)}` +
+      `${tag('g:condition', 'new')}${tag('g:identifier_exists', i.ownLabel ? 'no' : null)}${tag('g:product_type', i.productType)}${tag('g:item_group_id', i.groupId)}${tag('g:color', i.colour)}${tag('g:size', i.size)}` +
       `${tag('g:gender', i.gender)}${tag('g:age_group', i.ageGroup)}<g:shipping>${tag('g:country', head.country)}</g:shipping></item>`,
   );
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel>${tag('title', head.title)}${tag('link', head.link)}\n${lines.join('\n')}\n</channel></rss>\n`;

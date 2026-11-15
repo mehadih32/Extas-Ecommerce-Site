@@ -27,7 +27,8 @@ describe('lane F6 messages', () => {
   it('has no empty line and a Bengali line that is Bengali', () => {
     for (const k of Object.keys(en)) {
       expect((en[k] ?? '').trim(), k).not.toBe('');
-      expect(/[ঀ-৿]/.test(bn[k] ?? ''), k).toBe(true);
+      // the shop's product descriptions are written in English on purpose (lf6.sf.desc.*); the Google product name stays
+      if (!k.startsWith('lf6.sf.desc.') && k !== 'lf6.sf.google') expect(/[ঀ-৿]/.test(bn[k] ?? ''), k).toBe(true);
     }
   });
 });
