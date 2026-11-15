@@ -27,7 +27,7 @@ import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
 import type { LookMenuProps } from '../look/LookMenu';
 import { LookMenu } from '../look/LookMenu';
-import { DATE_PRESETS, dayOf, presetOf, presetValue } from '@/lib/admin-orders/range';
+import { DATE_PRESETS, dayOf, presetOf, presetRange, presetValue } from '@/lib/admin-orders/range';
 import { OrderFilters, type FilterSelect } from './OrderFilters';
 import { CancelledSummary } from './CancelledSummary';
 import { OrderTable } from './OrderTable';
@@ -147,7 +147,7 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
     sel('source', od.LIST_SOURCES, 'source'),
     { name: 'risk', label: risk, any: t(d, 'orders.list.any', { name: risk }), value: q.risk ?? '', options: bands.map((b) => ({ value: b.value, label: b.label })) },
     sel('section', RISK_SECTIONS, 'section'),
-    { name: 'sort', label: t(d, 'orders.list.sort'), any: t(d, 'orders.list.sortNew'), value: q.sort ?? '', options: [{ value: 'risk', label: t(d, 'orders.list.sortRisk') }] },
+    { name: 'sort', label: t(d, 'orders.list.sort'), any: t(d, 'orders.list.sortNew'), value: q.sort ?? '', options: [{ value: 'old', label: t(d, 'orders.list.sortOld') }, { value: 'value', label: t(d, 'orders.list.sortValue') }, { value: 'risk', label: t(d, 'orders.list.sortRisk') }] },
   ];
 }
 
@@ -172,6 +172,35 @@ export async function ordersSubtitle(view: AdminView, a: ListAccess, query: List
   return t(d, 'orders.list.sub');
 }
 
+/**
+ * PR 771 (prototype v5 parity, m-orders.js `dateBar`): the date bar as chips: Any date, Today, Yesterday, 7 days, This month,
+ * Last month (and Custom, the two day boxes in the filter row). A chip is a link, so the list opens the same in a shared address.
+ */
+export function DateBar({ view, page, query }: { view: AdminView; page: ListPageId; query: ListQuery }) {
+  const d = view.dict;
+  const today = dayOf(new Date(), view.timeZone);
+  const cur = presetOf(query.from, query.to, today);
+  const custom = !!(query.from || query.to) && !cur;
+  return (
+    <nav className="a2-views a2-dbar" aria-label={t(d, 'orders.list.dateLabel')} data-testid="orders-datebar">
+      <Link className={`a2-view${!query.from && !query.to ? ' on' : ''}`} href={listHref(page, query, { from: undefined, to: undefined, cursor: undefined })} scroll={false} aria-current={!query.from && !query.to ? 'page' : undefined}>
+        {t(d, 'orders.list.dateAny')}
+      </Link>
+      {DATE_PRESETS.map((p) => {
+        const r = presetRange(p, today);
+        return (
+          <Link key={p} className={`a2-view${cur === p ? ' on' : ''}`} href={listHref(page, query, { from: r.from, to: r.to, cursor: undefined })} scroll={false} aria-current={cur === p ? 'page' : undefined}>
+            {t(d, `orders.list.dateChip.${p}`)}
+          </Link>
+        );
+      })}
+      <span className={`a2-view${custom ? ' on' : ''}`} aria-hidden="true">
+        {t(d, 'orders.list.dateCustom')}
+      </span>
+    </nav>
+  );
+}
+
 export async function OrderListPage({ view, a, query, now, menu }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date; /** PR 656 (follow-up 381): the "…" menu that lets a person switch to design B or C; `null` keeps this page exactly as it drew before. */ menu?: LookMenuProps | null }) {
   const d = view.dict;
   const page: ListPageId = 'all';
@@ -186,15 +215,16 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
       <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />
       <SectionTabs view={view} current="orders" />
-      <Kpis view={view} a={a} counts={data.counts} now={now} />
       <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />
+      <DateBar view={view} page={page} query={query} />
       <OrderFilters
         key={listHref(page, query)}
         action={LIST_PAGES[page].base}
         view={query.view}
         defaultView={LIST_PAGES[page].views[0]}
         q={query.q ?? ''}
-        search={t(d, 'orders.list.search')}
+        search={t(d, 'orders.list.searchProto')}
+        proto={{ primary: ['payment', 'sort'], more: t(d, 'orders.list.moreFilters'), custom: t(d, 'orders.list.dateCustom') }}
         go={t(d, 'orders.list.searchGo')}
         aria={t(d, 'orders.list.filtersAria')}
         selects={filterSelects(view, query, data.bands)}

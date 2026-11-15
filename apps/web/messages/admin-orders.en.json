@@ -95,7 +95,7 @@
       "section": "Section",
       "sort": "Order",
       "sortNew": "Newest first",
-      "sortRisk": "Lowest courier score first (highest risk)",
+      "sortRisk": "Lowest score",
       "docs": {
         "sticker": "Sticker",
         "stickerAgain": "Sticker ×{n}",
@@ -133,7 +133,19 @@
         "bulk": "New bulk order",
         "phone": "Phone order"
       },
-      "subTotal": "{n} orders · {v}"
+      "subTotal": "{n} orders · {v}",
+      "searchProto": "Search order, name, phone, district",
+      "moreFilters": "More filters",
+      "dateCustom": "Custom",
+      "sortOld": "Oldest first",
+      "sortValue": "Highest value",
+      "dateChip": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "days7": "7 days",
+        "month": "This month",
+        "lastMonth": "Last month"
+      }
     },
     "kpi": {
       "today": "Orders today",
