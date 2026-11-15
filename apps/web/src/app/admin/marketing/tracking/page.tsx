@@ -25,6 +25,7 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { TRACKING_DAYS, trackingOverview } from '@/lib/tracking/admin';
 import { ALL_TRACKING_EVENTS, ORDER_TRACKING_EVENTS, TRACKING_EVENTS, TRACKING_PLATFORMS, type DeliveryState } from '@/lib/tracking/model';
+import { platformsWithIssues } from '@/lib/tracking-issues';
 import bn from '../../../../../messages/admin-tracking.bn.json';
 import en from '../../../../../messages/admin-tracking.en.json';
 import '../../settings-cards.css';
@@ -163,6 +164,12 @@ export default async function TrackingPage(props: Props) {
       {dp.on && dp.purchaseMeans === 'delivered' ? (
         <div className="a2-note" role="note" data-testid="tracking-dp-means">
           <span>{s('dpMeansDelivered')}</span>
+        </div>
+      ) : null}
+
+      {v.on && tickedPlatforms(v).length ? (
+        <div className={`a2-note${platformsWithIssues(o.platforms) ? ' warn' : ''}`} role="note" data-testid="tracking-sees">
+          <span>{platformsWithIssues(o.platforms) ? s('issues', { n: platformsWithIssues(o.platforms) }) : s('allSee')}</span>
         </div>
       ) : null}
 
