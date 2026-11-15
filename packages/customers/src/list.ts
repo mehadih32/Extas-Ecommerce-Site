@@ -66,6 +66,8 @@ export interface CustomerRow {
   lastOrderAt: Date | null;
   consent: { sms: boolean | null; whatsapp: boolean | null };
   codPolicy: string | null;
+  /** PR 801: the district and area of his latest order with a resolved place (names in both languages), for the District column. */
+  place: { districtEn: string; districtBn: string | null; areaEn: string | null } | null;
   /** PR 534: his grade and verified mark from this row's counts (null while grading is off). */
   mark: GradeMark | null;
 }
@@ -86,6 +88,18 @@ export interface CustomerList {
   /** Follow-up 473: the districts the store's orders reached, for the district filter. */
   districts: District[];
   viewer: Viewer;
+  /** PR 801: the figures of the prototype's strip and note — new this month (and the same days last month), average spend
+   *  of people with a delivery, and the share of all Sales the ten biggest spenders bring. */
+  extra: ListExtra;
+}
+
+export interface ListExtra {
+  newThisMonth: number;
+  newLastMonth: number;
+  avgSalesMinor: number;
+  top10Pct: number;
+  /** The service clock (ms) the group pills are worked out against. */
+  now: number;
 }
 
 /** Follow-up 473: a district of the filter, named in both languages. */
@@ -162,7 +176,13 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const [{ rules, views, view, sort, q, source, district, segmentId, seg, base, viewSql, order }, mask, grading] = await Promise.all([listSql(deps, S, d), maskOf(deps, S), gradingOf(deps, S)]);
   const page = d.page ?? 1;
 
-  const [rows, countRows, sourceRows, districtRows] = await Promise.all([
+  const now = nowOf(deps);
+  const OFFSET_MS = 6 * 3_600_000; // Dhaka is UTC+6 all year
+  const local = new Date(now.getTime() + OFFSET_MS);
+  const monthStart = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1) - OFFSET_MS);
+  const lastStart = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth() - 1, 1) - OFFSET_MS);
+  const lastSame = new Date(Math.min(lastStart.getTime() + (now.getTime() - monthStart.getTime()), monthStart.getTime()));
+  const [rows, countRows, sourceRows, districtRows, extraRows] = await Promise.all([
     deps.db.$queryRaw<PeopleRow[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${rules.pageSize + 1} OFFSET ${(page - 1) * rules.pageSize}`,
     deps.db.$queryRaw<Record<string, bigint>[]>`${base} SELECT ${Prisma.join(
       views.map((v) => Prisma.sql`count(*) FILTER (WHERE ${viewSql(v)}) AS ${Prisma.raw(`"${v}"`)}`),
@@ -172,10 +192,33 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     deps.db.$queryRaw<District[]>`SELECT DISTINCT d."id"::text AS "id", d."nameEn", d."nameBn" FROM "Order" o JOIN "GeoArea" a ON a."id" = o."areaId"
       JOIN "GeoArea" d ON d."level"::text = 'DISTRICT' AND (d."id" = a."id" OR d."id" = ANY(a."ancestorIds"))
       WHERE o."storeId" = ${S} AND o."archivedAt" IS NULL ORDER BY d."nameEn", 1`,
+    deps.db.$queryRaw<Record<string, bigint | number | null>[]>`${base} SELECT
+      count(*) FILTER (WHERE b.orders > 0 AND b."createdAt" >= ${monthStart}) AS new_m,
+      count(*) FILTER (WHERE b.orders > 0 AND b."createdAt" >= ${lastStart} AND b."createdAt" < ${lastSame}) AS new_lm,
+      COALESCE(avg(b.sales_value) FILTER (WHERE b.delivered > 0), 0) AS avg_sales,
+      COALESCE(sum(b.sales_value), 0) AS total_sales,
+      COALESCE((SELECT sum(x.sales_value) FROM (SELECT sales_value FROM base ORDER BY sales_value DESC LIMIT 10) x), 0) AS top10
+      FROM base b`,
   ]);
+  const ex = extraRows[0] ?? {};
+  const totalSales = num(ex.total_sales);
   const c = countRows[0] ?? {};
+  const shown = rows.slice(0, rules.pageSize);
+  const placeRows = shown.length
+    ? await deps.db.$queryRaw<{ id: string; de: string | null; db: string | null; ae: string | null }[]>`${base} SELECT b."id"::text AS id,
+        (SELECT d."nameEn" FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL JOIN "GeoArea" a ON a."id" = o."areaId"
+           JOIN "GeoArea" d ON d."level"::text = 'DISTRICT' AND (d."id" = a."id" OR d."id" = ANY(a."ancestorIds"))
+           WHERE own.k = b."id"::text ORDER BY o."placedAt" DESC, o."id" DESC LIMIT 1) AS de,
+        (SELECT d."nameBn" FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL JOIN "GeoArea" a ON a."id" = o."areaId"
+           JOIN "GeoArea" d ON d."level"::text = 'DISTRICT' AND (d."id" = a."id" OR d."id" = ANY(a."ancestorIds"))
+           WHERE own.k = b."id"::text ORDER BY o."placedAt" DESC, o."id" DESC LIMIT 1) AS db,
+        (SELECT a."nameEn" FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL JOIN "GeoArea" a ON a."id" = o."areaId"
+           WHERE own.k = b."id"::text ORDER BY o."placedAt" DESC, o."id" DESC LIMIT 1) AS ae
+      FROM base b WHERE b."id" = ANY(${shown.map((r) => r.id)}::uuid[])`
+    : [];
+  const placeOf = new Map(placeRows.map((r) => [r.id, r.de ? { districtEn: r.de, districtBn: r.db, areaEn: r.ae } : null]));
   return {
-    rows: rows.slice(0, rules.pageSize).map((r) => ({
+    rows: shown.map((r) => ({
       id: r.id,
       name: r.name,
       phone: phoneShown(r.phone, viewer.fullPhone, mask),
@@ -192,6 +235,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
       lastOrderAt: r.last_at,
       consent: { sms: r.smsMarketingConsent, whatsapp: r.whatsappMarketingConsent },
       codPolicy: r.codPolicy,
+      place: placeOf.get(r.id) ?? null,
       mark: grading ? markOf(grading, { delivered: num(r.delivered), refused: num(r.refused) }) : null,
     })),
     counts: Object.fromEntries(views.map((v) => [v, num(c[v])])),
@@ -203,5 +247,12 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     sources: sourceRows.map((r) => r.s),
     districts: districtRows.map((r) => ({ id: r.id, nameEn: r.nameEn, nameBn: r.nameBn })),
     viewer,
+    extra: {
+      newThisMonth: num(ex.new_m),
+      newLastMonth: num(ex.new_lm),
+      avgSalesMinor: Math.round(Number(ex.avg_sales ?? 0)),
+      top10Pct: totalSales > 0 ? (num(ex.top10) / totalSales) * 100 : 0,
+      now: now.getTime(),
+    },
   };
 }

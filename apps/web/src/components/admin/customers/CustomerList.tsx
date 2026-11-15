@@ -7,13 +7,12 @@
 // shop's fault, last order and whether he takes offers. Never his address (it stays inside an order). PR 299: "Export"
 // above the table for a person allowed it (the owner's switch and `customers.export`), with a reason.
 import Link from 'next/link';
-import type { CustomerList as ListData, CustomerRow, CustomerView } from '@extas/customers';
+import type { CustomerList as ListData, CustomerRow } from '@extas/customers';
 import { OrderFilters, type FilterSelect } from '@/components/admin/orders/OrderFilters';
 import { formatMoney, formatNumber, type Money } from '@/components/admin/products/model';
 import { customersHref, CUSTOMERS_BASE, share, type CustomerQuery } from '@/lib/admin-customers/model';
 import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { AdminView } from '@/lib/admin-page';
-import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
@@ -26,6 +25,8 @@ import { initials } from './PairCard';
 export interface ListSettings {
   returningMinOrders: number;
   atRiskDays: number;
+  /** PR 801: the owner's VIP figure (null or left out: none), so the Group column can say VIP. */
+  vipMinSalesMinor?: number | null;
 }
 
 /** Where a person first came from, in words (the order channels' names), else as stored. */
@@ -67,81 +68,133 @@ export function PersonCell({ view, r, href }: { view: AdminView; r: Pick<Custome
 
 /** PR 636 (CN-036): the four figures as Lumen summary tiles (components/admin/lumen/SummaryTiles.tsx); every tile but
  *  "People" opens the list on its view, as before. */
-export function customerKpiTiles(view: AdminView, data: ListData, s: ListSettings, segment?: string): SummaryTile[] {
+export function customerKpiTiles(view: AdminView, data: ListData, s: ListSettings, segment?: string, money?: Money): SummaryTile[] {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const c = data.counts;
   const all = c.all ?? 0;
   const pct = share(c.returning ?? 0, all);
   const num: CountFormat = { kind: 'number', locale: view.locale };
-  const tile = (id: CustomerView | 'people', label: string, value: number, shown: string, vs: string, icon: ShellIconName, format: CountFormat = num): SummaryTile => ({
-    key: id,
-    label,
-    value,
-    shown,
-    format,
-    vs,
-    icon,
-    href: id === 'people' ? undefined : customersHref({ segment }, { view: id }),
-  });
+  const x = data.extra ?? { newThisMonth: 0, newLastMonth: 0, avgSalesMinor: 0, top10Pct: 0 };
+  // PR 801: the prototype's four figures — Customers, New this month (against the same days last month), Repeat customers, Average spend
+  const delta = x.newLastMonth > 0 ? (x.newThisMonth - x.newLastMonth) / x.newLastMonth : null;
   const tiles: SummaryTile[] = [
-    tile('people', t(d, 'cus.list.kpi.people'), all, n(all), t(d, 'cus.list.kpi.peopleNote'), 'users'),
-    tile('returning', t(d, 'cus.list.kpi.returning'), (pct ?? 0) / 100, pct === null ? t(d, 'cus.list.none') : `${n(pct)}%`, t(d, 'cus.list.kpi.returningNote', { n: n(s.returningMinOrders) }), 'refresh', { kind: 'percent', locale: view.locale }),
-    tile('atrisk', t(d, 'cus.list.kpi.atrisk'), c.atrisk ?? 0, n(c.atrisk ?? 0), t(d, 'cus.list.kpi.atriskNote', { n: n(s.atRiskDays) }), 'clock'),
-    tile('refused', t(d, 'cus.list.kpi.refused'), c.refused ?? 0, n(c.refused ?? 0), t(d, 'cus.list.kpi.refusedNote'), 'uturn'),
+    { key: 'people', label: t(d, 'cus.list.kpi.people'), value: all, shown: n(all), format: num, vs: t(d, 'cus.list.kpi.peopleNote'), icon: 'users' },
+    { key: 'newmonth', label: t(d, 'cus.list.kpi.newMonth'), value: x.newThisMonth, shown: n(x.newThisMonth), format: num, delta, vs: t(d, 'cus.list.kpi.newMonthNote'), icon: 'plus' },
+    {
+      key: 'returning',
+      label: t(d, 'cus.list.kpi.repeat'),
+      value: (pct ?? 0) / 100,
+      shown: pct === null ? t(d, 'cus.list.none') : `${n(pct)}%`,
+      format: { kind: 'percent', locale: view.locale },
+      vs: t(d, 'cus.list.kpi.repeatNote', { n: n(s.returningMinOrders) }),
+      icon: 'refresh',
+      href: customersHref({ segment }, { view: 'returning' }),
+    },
+    {
+      key: 'avg',
+      label: t(d, 'cus.list.kpi.avg'),
+      value: x.avgSalesMinor,
+      shown: money ? formatMoney(x.avgSalesMinor, money) : n(x.avgSalesMinor),
+      format: money ? { kind: 'money', locale: view.locale, currency: money.currency, digits: money.digits } : num,
+      vs: t(d, 'cus.list.kpi.avgNote'),
+      icon: 'wallet',
+    },
   ];
   return tiles;
 }
 
-function Kpis({ view, data, s, segment }: { view: AdminView; data: ListData; s: ListSettings; segment?: string }) {
-  return <SummaryTiles tiles={customerKpiTiles(view, data, s, segment)} label={t(view.dict, 'cus.list.kpi.people')} testId="cus-kpis" />;
+function Kpis({ view, data, s, segment, money }: { view: AdminView; data: ListData; s: ListSettings; segment?: string; money?: Money }) {
+  return <SummaryTiles tiles={customerKpiTiles(view, data, s, segment, money)} label={t(view.dict, 'cus.list.kpi.people')} testId="cus-kpis" />;
 }
 
-export function CustomerTable({ view, rows, money, when, hrefOf }: { view: AdminView; rows: CustomerRow[]; money: Money; when: Intl.DateTimeFormat; hrefOf?: (id: string) => string }) {
+/** PR 801: the prototype's one-paragraph note under the figures — the top 10's share, the quiet regulars, the refusers. */
+export function CustomerNote({ view, data, s }: { view: AdminView; data: ListData; s: ListSettings }) {
+  const d = view.dict;
+  const n = (x: number) => formatNumber(x, view.locale);
+  const x = data.extra;
+  if (!x || !data.counts.all) return null;
+  const risk = data.counts.atrisk ?? 0;
+  const refused = data.counts.refused ?? 0;
+  return (
+    <div className="a2-note a2-mt12" role="note" data-testid="cus-note">
+      <p>
+        {[
+          t(d, 'cus.list.noteTop', { pct: n(Math.round(x.top10Pct)) }),
+          risk ? t(d, 'cus.list.noteRisk', { n: n(risk), days: n(s.atRiskDays) }) : t(d, 'cus.list.noteNoRisk'),
+          refused ? t(d, 'cus.list.noteRefused', { n: n(refused) }) : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      </p>
+    </div>
+  );
+}
+
+const VIEW_ORDER: readonly string[] = ['all', 'vip', 'atrisk', 'returning', 'new', 'refused', 'exchanged', 'nooffers'];
+const GROUP_TONE = { vip: 'info', risk: 'warn', repeat: 'ok', new: 'line' } as const;
+
+/** PR 801: the Group column's pill — VIP, At risk, Repeat or New, as the prototype's segOf says. */
+export function groupOf(r: Pick<CustomerRow, 'orders' | 'salesMinor' | 'delivered' | 'lastOrderAt'>, s: ListSettings, now: number): keyof typeof GROUP_TONE {
+  if (s.vipMinSalesMinor != null && r.salesMinor >= s.vipMinSalesMinor) return 'vip';
+  if (r.delivered > 0 && r.lastOrderAt && now - r.lastOrderAt.getTime() >= s.atRiskDays * 86_400_000) return 'risk';
+  if (r.orders >= s.returningMinOrders) return 'repeat';
+  return 'new';
+}
+
+export function CustomerTable({ view, rows, money, when, hrefOf, settings, nowMs = 0 }: { view: AdminView; rows: CustomerRow[]; money: Money; when: Intl.DateTimeFormat; hrefOf?: (id: string) => string; settings?: ListSettings; nowMs?: number }) {
   const d = view.dict;
   const col = (k: string) => t(d, `cus.list.cols.${k}`);
   const dash = t(d, 'cus.list.none');
   const n = (x: number) => formatNumber(x, view.locale);
+  const now = nowMs;
+  const s: ListSettings = settings ?? { returningMinOrders: 2, atRiskDays: 45 };
+  // PR 801: the prototype's columns — Customer, District, Orders, Delivered / refused, Spent, Last order, Group
   return (
     <div className="a2-tblw a2-mt12">
       <table className="a2-tbl" data-testid="cus-table">
         <thead>
           <tr>
             <th>{col('customer')}</th>
+            <th>{col('district')}</th>
             <th className="r">{col('orders')}</th>
-            <th className="r">{col('sales')}</th>
-            <th className="r">{col('delivery')}</th>
-            <th className="r">{col('refused')}</th>
+            <th className="r">{col('dr')}</th>
+            <th className="r">{col('spent')}</th>
             <th>{col('last')}</th>
-            <th>{col('offers')}</th>
+            <th>{col('group')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => {
-            const pct = share(r.delivered, r.orders);
-            const offers = [r.consent.sms ? t(d, 'cus.list.offerSms') : null, r.consent.whatsapp ? t(d, 'cus.list.offerWa') : null].filter(Boolean).join(' · ');
+            const g = groupOf(r, s, now);
+            const district = r.place ? (view.lang === 'bn' && r.place.districtBn ? r.place.districtBn : r.place.districtEn) : null;
             return (
               <tr key={r.id} data-testid="cus-row">
                 <td className="a2-tdh">
                   <PersonCell view={view} r={r} href={hrefOf ? hrefOf(r.id) : null} />
                 </td>
+                <td data-l={col('district')}>
+                  {district ?? dash}
+                  {r.place?.areaEn && r.place.areaEn !== r.place.districtEn ? <span className="a2-xs a2-mute a2-blk">{r.place.areaEn}</span> : null}
+                </td>
                 <td className="r" data-l={col('orders')}>
                   <b className="a2-num">{n(r.orders)}</b>
                 </td>
-                <td className="r" data-l={col('sales')}>
-                  <span className="a2-num">{formatMoney(r.salesMinor, money)}</span>
-                  <span className="a2-xs a2-mute a2-blk">
-                    {col('ordered')} {formatMoney(r.orderedMinor, money)}
+                <td className="r" data-l={col('dr')}>
+                  <span className="a2-num">
+                    {n(r.delivered)} / {r.refused ? <span className="a2-pill bad">{n(r.refused)}</span> : n(0)}
                   </span>
                 </td>
-                <td className="r" data-l={col('delivery')}>
-                  {pct === null ? dash : `${n(pct)}%`}
-                </td>
-                <td className="r" data-l={col('refused')}>
-                  {r.refused ? <span className={`a2-pill ${r.refused > 1 ? 'bad' : 'warn'}`}>{n(r.refused)}</span> : n(0)}
+                <td className="r" data-l={col('spent')}>
+                  <b className="a2-num">{formatMoney(r.salesMinor, money)}</b>
                 </td>
                 <td data-l={col('last')}>{r.lastOrderAt ? when.format(r.lastOrderAt) : dash}</td>
-                <td data-l={col('offers')}>{offers || <span className="a2-faint">{t(d, 'cus.list.offerNone')}</span>}</td>
+                <td data-l={col('group')}>
+                  <span className="a2-gap8" style={{ display: 'inline-flex', flexWrap: 'wrap' }}>
+                    <span className={`a2-pill ${GROUP_TONE[g]}`}>{t(d, `cus.list.group.${g}`)}</span>
+                    {r.refused ? <span className="a2-pill bad">{t(d, 'cus.list.refusedN', { n: n(r.refused) })}</span> : null}
+                  </span>
+                </td>
               </tr>
             );
           })}
@@ -192,9 +245,11 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
           </div>
         </section>
       ) : null}
-      <Kpis view={view} data={data} s={settings} segment={query.segment} />
+      <Kpis view={view} data={data} s={settings} segment={query.segment} money={money} />
+      <CustomerNote view={view} data={data} s={settings} />
       <nav className="a2-views" aria-label={t(d, 'cus.list.viewsAria')} data-testid="cus-views">
-        {data.views.map((v) => {
+        {/* PR 801: the prototype's chip order — All, VIP, At risk, Repeat, New, Refuser — the extra views after them */}
+        {[...data.views].sort((a, b) => VIEW_ORDER.indexOf(a) - VIEW_ORDER.indexOf(b)).map((v) => {
           const on = v === current;
           return (
             <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, district: query.district, sort: query.sort, segment: query.segment }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
@@ -228,7 +283,7 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
       {exportLimits && data.rows.length ? <CustomerExport dict={{ cus: d.cus as Dict }} query={{ view: data.query.view, q: data.query.q, source: data.query.source, district: data.query.district, sort: query.sort, segment: data.query.segment }} limits={exportLimits} /> : null}
       {data.rows.length ? (
         <>
-          <CustomerTable view={view} rows={data.rows} money={money} when={when} hrefOf={hrefOf} />
+          <CustomerTable view={view} rows={data.rows} money={money} when={when} hrefOf={hrefOf} settings={settings} nowMs={data.extra?.now ?? 0} />
           <div className="a2-tblf a2-tblf-o" data-testid="cus-foot">
             <span>{t(d, 'cus.list.shown', { n: n(data.rows.length) })}</span>
             <span className="a2-gap8">

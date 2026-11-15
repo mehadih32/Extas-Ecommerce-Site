@@ -102,10 +102,10 @@
       "view": {
         "all": "All",
         "new": "New",
-        "returning": "Returning",
+        "returning": "Repeat",
         "vip": "VIP",
         "atrisk": "At risk",
-        "refused": "Refused before",
+        "refused": "Refuser",
         "exchanged": "Exchanged",
         "nooffers": "No offers"
       },
@@ -117,9 +117,15 @@
         "atrisk": "At risk",
         "atriskNote": "no order for {n} days",
         "refused": "Refused before",
-        "refusedNote": "not counting the shop's own mistakes"
+        "refusedNote": "not counting the shop's own mistakes",
+        "newMonth": "New this month",
+        "newMonthNote": "vs same days last month",
+        "repeat": "Repeat customers",
+        "repeatNote": "ordered {n} or more times",
+        "avg": "Average spend",
+        "avgNote": "per customer, delivered orders"
       },
-      "search": "Name, e-mail or phone",
+      "search": "Search name, phone or area",
       "searchGo": "Search",
       "filtersAria": "Search and filter customers",
       "source": "First came from",
@@ -127,10 +133,10 @@
       "district": "District (latest order)",
       "anyDistrict": "Any district",
       "sort": "Sort",
-      "sortLast": "Last order first",
+      "sortLast": "Ordered recently",
       "sortNew": "Newest customer first",
-      "sortSpend": "Highest spend first",
-      "sortOrders": "Most orders first",
+      "sortSpend": "Most spent",
+      "sortOrders": "Most orders",
       "sortName": "Name A–Z",
       "clear": "Clear",
       "cols": {
@@ -141,7 +147,11 @@
         "delivery": "True delivery",
         "refused": "Refusals",
         "last": "Last order",
-        "offers": "Offers"
+        "offers": "Offers",
+        "district": "District",
+        "dr": "Delivered / refused",
+        "spent": "Spent",
+        "group": "Group"
       },
       "none": "—",
       "offerSms": "SMS",
@@ -161,7 +171,18 @@
         "viewBody": "Other views may have them."
       },
       "exclNote": "“Refused before” here counts every refused parcel. The list sent to the ad platforms to leave people out (hashed phone numbers only) is in Marketing › Audiences.",
-      "exclLink": "See the exclusion list"
+      "exclLink": "See the exclusion list",
+      "noteTop": "Your top 10 customers bring {pct}% of all sales.",
+      "noteRisk": "{n} regular buyers have not ordered in {days}+ days — a personal message now usually wins them back.",
+      "noteNoRisk": "No regular buyer has gone quiet yet.",
+      "noteRefused": "{n} customers refused a parcel at least once — ask them for the delivery charge in advance.",
+      "group": {
+        "vip": "VIP",
+        "risk": "At risk",
+        "repeat": "Repeat",
+        "new": "New"
+      },
+      "refusedN": "Refused {n}"
     },
     "profile": {
       "crumb": "All customers",
@@ -303,9 +324,9 @@
       }
     },
     "seg": {
-      "title": "Segments",
+      "title": "Customer groups",
       "sub": "Groups update by themselves as people order. Use them for messages, offers and ads.",
-      "new": "New segment",
+      "new": "Create group",
       "offTitle": "Segments are off",
       "offBody": "Turn them on under More options below. Nothing is counted or saved while they are off.",
       "offAsk": "Segments are switched off. Ask the owner to turn them on.",
@@ -313,7 +334,7 @@
       "noneYet": "None yet. Press New segment to make one.",
       "noneYetRead": "None yet.",
       "ofMost": "{n} of at most {max} kept",
-      "builtIn": "Built-in segments",
+      "builtIn": "Other ready-made views",
       "builtInSub": "The Customers list's own views, counted the same way. Each one opens that view.",
       "live": "Built in · counted live",
       "more": "More options · settings and archived ({n})",
@@ -405,7 +426,13 @@
         "saved": "Settings saved."
       },
       "listShowsName": "Showing only the segment “{name}”",
-      "listOpen": "Open the segment"
+      "listOpen": "Open the segment",
+      "readyMade": "Ready-made",
+      "yours": "Yours",
+      "customersWord": "customers",
+      "campaignBtn": "Send campaign",
+      "export": "Export",
+      "remove": "Remove"
     },
     "jr": {
       "offTitle": "The journey view is off",

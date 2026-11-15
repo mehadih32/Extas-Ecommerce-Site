@@ -52,6 +52,10 @@ export default async function SegmentsPage() {
   const n = (x: number | null) => (x === null ? '—' : formatNumber(x, view.locale));
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
   const cdict: Dict = { cus: d.cus as Dict };
+  // PR 801: the prototype's five ready-made groups first (VIP, At risk, Repeat, New, Refuser); the other built-in views stay in a list below
+  const READY = ['vip', 'atrisk', 'returning', 'new', 'refused'] as const;
+  const readyMade = READY.flatMap((id) => s.builtIn.filter((b) => b.id === id));
+  const otherViews = s.builtIn.filter((b) => !(READY as readonly string[]).includes(b.id));
   const sub = (r: cu.SegmentRow) => [r.readable ? t(d, 'cus.seg.conds', { n: formatNumber(r.conditions, view.locale) }) : t(d, 'cus.seg.unreadable'), t(d, 'cus.seg.changed', { at: when.format(r.updatedAt) })].join(' · ');
 
   return (
@@ -76,42 +80,83 @@ export default async function SegmentsPage() {
           <p className="a2-sm a2-mute a2-mt6">{t(d, canWrite ? 'cus.seg.offBody' : 'cus.seg.offAsk')}</p>
         </section>
       ) : (
-        <div className="a2-row a2-r2 a2-mt12">
-          <section className="a2-card seg-list" data-testid="seg-own">
-            <h2 className="a2-h3">{t(d, 'cus.seg.own')}</h2>
-            <div className="a2-mt6">
-              {s.segments.length ? (
-                s.segments.map((r) => (
-                  <Link key={r.id} className="a2-prow" href={`${HERE}/${r.id}`} data-testid="seg-row">
-                    <div className="a2-prt">
-                      <b>{r.name}</b>
-                      <span>{sub(r)}</span>
-                    </div>
-                    <span className="a2-prs">{n(r.count)}</span>
+        <>
+          {/* PR 801: the prototype's group cards — ready-made first, then the owner's own; each with its count, a Send campaign link, Export and Remove */}
+          <div className="a2-row a2-r3 a2-mt12 seg-cards" data-testid="seg-own">
+            {readyMade.map((b) => (
+              <section key={b.id} className="a2-card seg-card" data-testid="seg-builtin-row">
+                <div className="a2-between">
+                  <b>{t(d, `cus.list.view.${b.id}`)}</b>
+                  <span className="a2-pill line">{t(d, 'cus.seg.readyMade')}</span>
+                </div>
+                <div>
+                  <span className="seg-big">{n(b.count)}</span> <span className="a2-sm a2-mute">{t(d, 'cus.seg.customersWord')}</span>
+                </div>
+                <p className="a2-xs a2-mute">{t(d, 'cus.seg.live')}</p>
+                <div className="a2-gap8 seg-acts">
+                  <Link className="a2-btn sm pri" href="/admin/messages/campaigns" data-testid="seg-camp">
+                    {t(d, 'cus.seg.campaignBtn')}
                   </Link>
-                ))
-              ) : (
-                <p className="a2-sm a2-mute">{t(d, canWrite ? 'cus.seg.noneYet' : 'cus.seg.noneYetRead')}</p>
-              )}
-            </div>
-            <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.seg.ofMost', { n: n(s.segments.length), max: n(s.settings.maxSegments) })}</p>
-          </section>
-          <section className="a2-card seg-list" data-testid="seg-builtin">
-            <h2 className="a2-h3">{t(d, 'cus.seg.builtIn')}</h2>
-            <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.seg.builtInSub')}</p>
-            <div className="a2-mt6">
-              {s.builtIn.map((b) => (
-                <Link key={b.id} className="a2-prow" href={customersHref({}, { view: b.id })} data-testid="seg-builtin-row">
-                  <div className="a2-prt">
-                    <b>{t(d, `cus.list.view.${b.id}`)}</b>
-                    <span>{t(d, 'cus.seg.live')}</span>
-                  </div>
-                  <span className="a2-prs">{n(b.count)}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </div>
+                  <Link className="a2-btn sm" href={customersHref({}, { view: b.id })}>
+                    {t(d, 'cus.seg.export')}
+                  </Link>
+                </div>
+              </section>
+            ))}
+            {s.segments.map((r) => (
+              <section key={r.id} className="a2-card seg-card" data-testid="seg-row">
+                <div className="a2-between">
+                  <Link className="a2-b" href={`${HERE}/${r.id}`}>
+                    {r.name}
+                  </Link>
+                  <span className="a2-pill info">{t(d, 'cus.seg.yours')}</span>
+                </div>
+                <div>
+                  <span className="seg-big">{n(r.count)}</span> <span className="a2-sm a2-mute">{t(d, 'cus.seg.customersWord')}</span>
+                </div>
+                <p className="a2-xs a2-mute">{sub(r)}</p>
+                <div className="a2-gap8 seg-acts">
+                  <Link className="a2-btn sm pri" href="/admin/messages/campaigns" data-testid="seg-camp">
+                    {t(d, 'cus.seg.campaignBtn')}
+                  </Link>
+                  <Link className="a2-btn sm" href={customersHref({ segment: r.id })}>
+                    {t(d, 'cus.seg.export')}
+                  </Link>
+                  {canWrite ? (
+                    <CustomerAct
+                      dict={cdict}
+                      url={`/api/admin/customers/segments/${r.id}/archive`}
+                      body={{ archived: true }}
+                      label={t(d, 'cus.seg.remove')}
+                      tone="ghost"
+                      testId="seg-archive-card"
+                      ask={{ title: t(d, 'cus.seg.archiveAsk'), effects: [t(d, 'cus.seg.archiveEff1'), t(d, 'cus.seg.archiveEff2')], confirm: t(d, 'cus.seg.archiveYes') }}
+                    />
+                  ) : null}
+                </div>
+              </section>
+            ))}
+          </div>
+          {!s.segments.length ? <p className="a2-sm a2-mute a2-mt12">{t(d, canWrite ? 'cus.seg.noneYet' : 'cus.seg.noneYetRead')}</p> : null}
+          <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.seg.ofMost', { n: n(s.segments.length), max: n(s.settings.maxSegments) })}</p>
+          {otherViews.length ? (
+            <section className="a2-card seg-list a2-mt12" data-testid="seg-builtin">
+              <h2 className="a2-h3">{t(d, 'cus.seg.builtIn')}</h2>
+              <p className="a2-xs a2-mute a2-mt6">{t(d, 'cus.seg.builtInSub')}</p>
+              <div className="a2-mt6">
+                {otherViews.map((b) => (
+                  <Link key={b.id} className="a2-prow" href={customersHref({}, { view: b.id })}>
+                    <div className="a2-prt">
+                      <b>{t(d, `cus.list.view.${b.id}`)}</b>
+                      <span>{t(d, 'cus.seg.live')}</span>
+                    </div>
+                    <span className="a2-prs">{n(b.count)}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
       )}
       <details className="a2-mt12 a2-more-opts" data-testid="seg-more">
         <summary className="a2-sm a2-b">{t(d, 'cus.seg.more', { n: formatNumber(s.archived.length, view.locale) })}</summary>
