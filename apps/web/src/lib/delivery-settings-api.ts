@@ -19,13 +19,13 @@
 import { createHash } from 'node:crypto';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { couriersSchema, courierPayoutsSchema, courierClaimTermsSchema, courierMessagesSchema, courierBookingSchema, courierSelectionSchema, courierTrackingSchema, courierWebhooksSchema, courierZoneSyncSchema, districtPromiseSchema, holidaySchema, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
+import { couriersSchema, courierPayoutsSchema, courierClaimTermsSchema, courierMessagesSchema, courierBookingSchema, courierSelectionSchema, courierSetupSchema, courierWatchSchema, courierTrackingSchema, courierWebhooksSchema, courierZoneSyncSchema, districtPromiseSchema, holidaySchema, packingCheckSchema, packingIssuesSchema, packingPhotoSchema, packingQueueSchema, packingWeightSchema, stickerLatinSchema, storeTarget, voiceAddressSchema } from '@extas/settings';
 import type { ZodType } from 'zod';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './admin-auth';
 
 const S = MOTHER_STORE_ID;
 /** The keys this page saves (one card each). */
-export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice', 'delivery.courier.tracking', 'delivery.courier.booking', 'delivery.courier.selection', 'delivery.courier.webhooks', 'delivery.courier.zoneSync', 'delivery.couriers', 'delivery.courier.payouts', 'delivery.courier.claimTerms', 'delivery.courier.messages', 'fulfilment.packing.check', 'fulfilment.packing.photo', 'fulfilment.packing.weight', 'fulfilment.packing.queue', 'fulfilment.packing.issues'] as const;
+export const DELIVERY_SETTING_KEYS = ['delivery.holiday', 'delivery.sticker.latin', 'delivery.promise.districts', 'checkout.voice', 'delivery.courier.tracking', 'delivery.courier.booking', 'delivery.courier.selection', 'delivery.courier.webhooks', 'delivery.courier.zoneSync', 'delivery.couriers', 'delivery.courier.payouts', 'delivery.courier.claimTerms', 'delivery.courier.messages', 'fulfilment.packing.check', 'fulfilment.packing.photo', 'fulfilment.packing.weight', 'fulfilment.packing.queue', 'fulfilment.packing.issues', 'delivery.courier.setup', 'fulfilment.courierWatch'] as const;
 export type DeliverySettingKey = (typeof DELIVERY_SETTING_KEYS)[number];
 
 /** Each card's schema, its line in the settings change log and its audit action. */
@@ -50,6 +50,9 @@ const CARDS: Record<DeliverySettingKey, { schema: ZodType<Record<string, unknown
   'delivery.courier.claimTerms': { schema: courierClaimTermsSchema, reason: 'Delivery › Delivery settings › Courier claims', action: 'delivery.courier.claimTerms.save' },
   // S28 · PR 674: the texts to a courier (off)
   'delivery.courier.messages': { schema: courierMessagesSchema, reason: 'Delivery › Delivery settings › Messages to the courier', action: 'delivery.courier.messages.save' },
+  // S28 · PR 803: Couriers › Setup — pick-up, minimum payout and pay days per courier; the stuck-parcel hours and the backup courier
+  'delivery.courier.setup': { schema: courierSetupSchema, reason: 'Couriers › Setup › Courier cards', action: 'delivery.courier.setup.save' },
+  'fulfilment.courierWatch': { schema: courierWatchSchema, reason: 'Couriers › Setup › Alerts and backup courier', action: 'fulfilment.courierWatch.save' },
   // follow-up 462: the packing step's cards, under More options
   'fulfilment.packing.check': { schema: packingCheckSchema, reason: 'Delivery › Delivery settings › More options › Checking the pieces', action: 'fulfilment.packing.check.save' },
   'fulfilment.packing.photo': { schema: packingPhotoSchema, reason: 'Delivery › Delivery settings › More options › The packing photo', action: 'fulfilment.packing.photo.save' },
@@ -127,7 +130,18 @@ export async function saveDeliverySetting(deps: Deps, who: Who, input: unknown):
   if (key === 'delivery.couriers') {
     // the default must be a courier account of this store (or empty: the first one)
     const id = (ok.data as { defaultCourierId: string }).defaultCourierId;
-    if (id && !(await deps.db.courierAccount.findFirst({ where: { id, storeId: S, archivedAt: null }, select: { id: true } }))) throw new DeliverySettingsError('INVALID_INPUT', 400, ['defaultCourierId']);
+    // PR 803: and switched on — a courier that is off can never be the one new orders go to
+    if (id && !(await deps.db.courierAccount.findFirst({ where: { id, storeId: S, archivedAt: null, enabled: true }, select: { id: true } }))) throw new DeliverySettingsError('INVALID_INPUT', 400, ['defaultCourierId']);
+  }
+  if (key === 'delivery.courier.setup' || key === 'fulfilment.courierWatch') {
+    // PR 803: every courier named is one of this store's accounts; the backup is one that is on and not the default
+    const d = ok.data as { couriers?: Record<string, unknown>; backupCourierId?: string };
+    const ids = key === 'delivery.courier.setup' ? Object.keys(d.couriers ?? {}) : d.backupCourierId ? [d.backupCourierId] : [];
+    if (ids.length) {
+      const found = await deps.db.courierAccount.findMany({ where: { id: { in: ids }, storeId: S, archivedAt: null, ...(key === 'fulfilment.courierWatch' ? { enabled: true } : {}) }, select: { id: true } });
+      if (found.length !== ids.length) throw new DeliverySettingsError('INVALID_INPUT', 400, [key === 'delivery.courier.setup' ? 'couriers' : 'backupCourierId']);
+    }
+    if (key === 'fulfilment.courierWatch' && d.backupCourierId && d.backupCourierId === ((await deps.resolver.value('delivery.couriers', { storeId: S })) as { defaultCourierId: string }).defaultCourierId) throw new DeliverySettingsError('INVALID_INPUT', 400, ['backupCourierId']);
   }
   if (versionOf(ok.data) !== versionOf(before)) {
     await deps.resolver.set(key, ok.data as never, storeTarget(S), { actorId: who.actor.staffUserId ?? null, reason: card.reason });

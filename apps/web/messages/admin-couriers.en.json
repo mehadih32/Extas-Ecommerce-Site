@@ -427,6 +427,46 @@
           "other": "The books did not take the cost. Nothing was changed."
         }
       }
+    },
+    "su": {
+      "heading": "Courier setup",
+      "sub": "Connection, pickup, rates and payout settings for each courier.",
+      "keys": "Keys & connections",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "default": "Default",
+      "backup": "Backup",
+      "test": "Test connection",
+      "testOk": "{name}: connected, the courier answers",
+      "testOff": "{name} is not connected. Add the keys in Settings › System › Keys & connections.",
+      "pickup": "Pickup",
+      "pickupFrom": "From",
+      "warehouse": "Warehouse",
+      "pickupTime": "Pickup time",
+      "rates": "Rate card (what the courier charges us)",
+      "codFee": "Cash-collection fee",
+      "returnCharge": "Return charge",
+      "noRate": "Not set",
+      "ofDelivery": "of delivery",
+      "payout": "Payout and alerts",
+      "minPayout": "Smallest payout to request",
+      "payDays": "Days the courier takes to pay",
+      "payDaysHelp": "Used to show the expected date",
+      "save": "Save",
+      "useBackup": "Use as backup courier",
+      "editRates": "Edit rates in Settings",
+      "alerts": "Alerts",
+      "alertsSub": "Applies to every courier",
+      "stuckAfter": "Parcel stuck after (hours)",
+      "defaultCard": "Default courier",
+      "newOrders": "New orders go to",
+      "defaultNote": "Change the default on All couriers (needs your PIN).",
+      "openAll": "All couriers",
+      "saved": "Saved",
+      "stale": "Someone else changed this. Refresh and try again.",
+      "failed": "Could not save",
+      "fromRate": "from {amount}",
+      "moreSetup": "Delivery charges, areas and the area lists"
     }
   }
 }

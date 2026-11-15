@@ -214,7 +214,7 @@ export default async function CouriersOverviewPage() {
                       {cr('ov.open360')}
                     </Link>
                     {/* PR 787 (prototype parity): "Make default" is on every courier that is not the default (the setting itself still checks the choice) */}
-                    {!c.isDefault && canSetDefault && defCard0 ? (
+                    {!c.isDefault && c.enabled && canSetDefault && defCard0 ? (
                       <MakeDefaultButton courierId={c.id} version={defCard0.version} value={defCard0.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} />
                     ) : null}
                   </div>

@@ -242,6 +242,8 @@ export * from './registry-handover-check';
 export * from './registry-to-ship';
 // S28 · PR 667 — the With courier screen's watch: stuck-parcel alert (off, 48 hours) and the backup courier (registry-courier-watch.ts, version 294).
 export * from './registry-courier-watch';
+// S28 · PR 803 — Couriers › Setup: pick-up, minimum payout and pay days per courier (registry-courier-setup.ts, version 803).
+export * from './registry-courier-setup';
 // S28 · PR 678, 679 — the Rules page's pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts, version 320).
 export * from './registry-rules-hub';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).

@@ -79,3 +79,12 @@
 .adm2 .cr-note { border: 1px dashed var(--ln); border-radius: 9px; padding: 10px 14px; font-size: 12.5px; color: var(--ink2); }
 .adm2 .cr-card .a2-btn, .adm2 .cr-list a { min-height: 44px; }
 .adm2 .cr-list a { display: inline-flex; align-items: center; }
+
+/* ---------- PR 803: Couriers › Setup cards (prototype v5 renderSetup): one card per courier, three across from 1280 px ---------- */
+.adm2 .cs-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); margin-top: 14px; align-items: start; }
+.adm2 .cs-grid2 { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 768px) { .adm2 .cs-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .adm2 .cs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .adm2 .cs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.adm2 .cs-grid .a2-inp, .adm2 .cs-grid2 .a2-inp { max-width: 100%; min-height: 44px; font-size: 16px; }
+.adm2 .cs-grid .a2-btn, .adm2 .cs-grid2 .a2-btn { min-height: 44px; }

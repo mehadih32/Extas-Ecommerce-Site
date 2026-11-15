@@ -1,0 +1,10 @@
+{
+  "delivery": {
+    "courier": {
+      "setup": {
+        "label": "Couriers: setup per courier",
+        "help": "For each courier: where and when it picks up, the smallest payout worth asking for and how many days it takes to pay. Empty as shipped. A courier with no minimum here uses the shop-wide minimum of Courier payouts."
+      }
+    }
+  }
+}
