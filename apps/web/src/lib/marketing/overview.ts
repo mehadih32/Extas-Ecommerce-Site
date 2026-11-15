@@ -4,10 +4,11 @@
 // days and the delivered orders that came through each, the ad-level rows from `AdCreativeDay`. Nothing here pauses, changes
 // or sends anything; chips and the plan are advice from the owner's `marketing.verdicts` numbers.
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { daysPeriod, deliveredSalesByCampaign, kpiByDay, marketingReport, ymdIn } from '@extas/metrics';
+import { daysPeriod, deliveredSalesByCampaign, kpiByDay, marketingReport, profitByAdCampaign, ymdIn } from '@extas/metrics';
 import type { MarketingVerdictsSettings, ReportChannels } from '@extas/settings';
 import type { AdminDeps } from '../admin-auth';
 import { channelProfitView } from '../channel-profit-view';
+import { profitInputs } from '../order-profit-view';
 import { calendarOverview } from './calendar';
 import { resolvePeriod, type PeriodKey } from '../lane-f/period';
 import { fatigueOf, overlaps, planBudget, salesPerTk, verdictOf, type PlanRow, type Verdict, type WarnItem } from './overview-model';
@@ -37,6 +38,9 @@ export interface OverviewCampaignRow {
   clicks: number;
   purchases: number;
   dailyBudgetMinor: number | null;
+  /** PR 865: parcels of the campaign that came back in the period, and its profit after ads (null: spend or a cost not known). */
+  returned: number;
+  profitMinor: number | null;
 }
 export interface OverviewAdRow {
   id: string;
@@ -124,10 +128,12 @@ export async function marketingOverview(deps: OverviewDeps, days: number | Perio
   const messages = { sent: report.sends.reduce((a, x) => a + x.sent, 0), orders: report.sends.reduce((a, x) => a + x.orders, 0), salesMinor: report.sends.reduce((a, x) => a + x.salesMinor, 0), costMinor: report.messageSpendMinor };
   const perTk = salesPerTk(report.shop.salesMinor, report.spendMinor);
 
-  const [adCampaigns, spendRows, saleOf] = await Promise.all([
+  const costs = await profitInputs(deps.resolver as never, S);
+  const [adCampaigns, spendRows, saleOf, campProfit] = await Promise.all([
     deps.db.adCampaign.findMany({ where: { storeId: S, archivedAt: null }, select: { id: true, name: true, status: true, dailyBudgetMinor: true, adAccount: { select: { platform: true } } }, take: 500 }), // hardcode-ok: a list guard
     deps.db.adSpendDaily.groupBy({ by: ['adCampaignId'], where: { storeId: S, adCampaignId: { not: null }, date: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }, _sum: { spendStoreMinor: true, clicks: true, purchases: true } }),
     deliveredSalesByCampaign(deps.db, S, period),
+    profitByAdCampaign(deps.db, S, { from, to }, costs).catch(() => new Map()),
   ]);
   const spendOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.spendStoreMinor ?? 0]));
   const clicksOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.clicks ?? 0]));
@@ -138,7 +144,7 @@ export async function marketingOverview(deps: OverviewDeps, days: number | Perio
       const sale = saleOf.get(c.id) ?? { salesMinor: 0, delivered: 0 };
       const s = { v: sale.salesMinor, n: sale.delivered };
       const p = salesPerTk(s.v, spendMinor);
-      return { id: c.id, name: c.name, platform: String(c.adAccount.platform), status: c.status, spendMinor, salesMinor: s.v, delivered: s.n, perTk: p, verdict: verdictOf(p, thresholds), clicks: clicksOf.get(c.id) ?? 0, purchases: buysOf.get(c.id) ?? 0, dailyBudgetMinor: c.dailyBudgetMinor };
+      return { id: c.id, name: c.name, platform: String(c.adAccount.platform), status: c.status, spendMinor, salesMinor: s.v, delivered: s.n, perTk: p, verdict: verdictOf(p, thresholds), clicks: clicksOf.get(c.id) ?? 0, purchases: buysOf.get(c.id) ?? 0, returned: campProfit.get(c.id)?.returned ?? 0, profitMinor: campProfit.get(c.id)?.profitMinor ?? null, dailyBudgetMinor: c.dailyBudgetMinor };
     })
     .filter((c) => c.spendMinor > 0 || c.salesMinor > 0)
     .sort((a, b) => b.spendMinor - a.spendMinor);

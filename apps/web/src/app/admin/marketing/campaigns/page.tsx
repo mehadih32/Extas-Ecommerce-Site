@@ -21,6 +21,9 @@ import { campaignList } from '@/lib/marketing/campaigns';
 import { marketingOverview } from '@/lib/marketing/overview';
 import { AdCampaigns } from '@/components/admin/lane-f/AdCampaigns';
 import { withLaneF } from '@/lib/admin-lane-f';
+import { withLaneF6 } from '@/lib/admin-lane-f6';
+import { RefreshAds } from '@/components/admin/lane-f/AdCampaignActions';
+import '../../../../components/admin/lane-f/lane-f6.css';
 import { periodKey } from '@/lib/lane-f/period';
 import calBn from '../../../../../messages/admin-calendar.bn.json';
 import calEn from '../../../../../messages/admin-calendar.en.json';
@@ -38,7 +41,7 @@ const KEY = 'marketingCampaigns';
 const VIEWS = ['all', 'running', 'planned', 'ended', 'archived'] as const;
 
 function withScreen(view: AdminView): AdminView {
-  return withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? calBn : calEn) as unknown as Dict), ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
+  return withLaneF6(withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? calBn : calEn) as unknown as Dict), ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } }));
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -91,18 +94,26 @@ export default async function CampaignsPage(props: Props) {
         title={t(d, 'lf.ac.title')}
         sub={t(d, 'lf.ac.sub')}
         right={
-          canWrite ? (
-            <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="cp-create">
-              {s('new')}
+          <span className="a2-gap8">
+            {canWrite ? <RefreshAds url="/api/admin/marketing/ad-platforms/spend" label={t(d, 'lf6.ac.refresh')} working={t(d, 'lf6.ac.working')} done={t(d, 'lf6.ac.done')} failed={t(d, 'lf6.ac.failed')} /> : null}
+            <Link className="a2-btn pri" href="/admin/marketing/ad-platforms/campaigns" data-testid="ac-new">
+              {t(d, 'lf6.ac.new')}
             </Link>
-          ) : undefined
+          </span>
         }
       />
       <SectionTabs view={view} current={KEY} />
       <AdCampaigns d={d} here={HERE} o={overview} period={period} chip={chip} q={(sp.q ?? '').trim().slice(0, 60)} sort={sp.sort === 'per' ? 'per' : 'spend'} />
-      <h2 className="a2-h3 a2-mt12" data-testid="cp-plans-h">
-        {t(d, 'lf.ac.plans')}
-      </h2>
+      <div className="lf-bar a2-mt12">
+        <h2 className="a2-h3" data-testid="cp-plans-h">
+          {t(d, 'lf.ac.plans')}
+        </h2>
+        {canWrite ? (
+          <Link className="a2-btn" href={`${HERE}/new`} data-testid="cp-create">
+            {s('new')}
+          </Link>
+        ) : null}
+      </div>
       <div className="a2-note a2-mt12" role="note">
         {s('planNote')}
       </div>

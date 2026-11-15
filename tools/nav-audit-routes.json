@@ -701,7 +701,8 @@
       "href": "/admin/marketing/campaigns",
       "keys": [
        "marketingCampaigns",
-       "marketingCampaign"
+       "marketingCampaign",
+       "marketingAdCampaignOne"
       ]
      }
     ]

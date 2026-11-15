@@ -25,6 +25,7 @@ export interface AdCampaignsProps {
 
 export function AdCampaigns({ d, here, o, period, chip, q, sort }: AdCampaignsProps) {
   const f = (k: string, v?: Record<string, string | number>) => t(d, `lf.${k}`, v);
+  const g = (k: string, v?: Record<string, string | number>) => t(d, `lf6.ac.${k}`, v);
   const cur = symbolOf(o.currency);
   const money = (m: number | null) => moneyOf(m, o.currency);
   const link = (over: Record<string, string>) => {
@@ -91,8 +92,10 @@ export function AdCampaigns({ d, here, o, period, chip, q, sort }: AdCampaignsPr
                   <th className="r">{f('ac.col.clicks')}</th>
                   <th className="r">{f('ac.col.orders')}</th>
                   <th className="r">{f('ac.col.delivered')}</th>
+                  <th className="r">{g('colReturned')}</th>
                   <th className="r">{f('ac.col.sales')}</th>
                   <th className="r">{f('ac.col.per', { cur })}</th>
+                  <th className="r">{g('colProfit')}</th>
                   <th>{f('ac.col.verdict')}</th>
                 </tr>
               </thead>
@@ -102,7 +105,9 @@ export function AdCampaigns({ d, here, o, period, chip, q, sort }: AdCampaignsPr
                   return (
                     <tr key={x.id} data-testid="ac-row" data-verdict={x.verdict}>
                       <td>
-                        <b className="lf-cn">{x.name}</b>
+                        <Link className="lf-cn a2-b" href={`/admin/marketing/campaigns/ad/${x.id}`} data-testid="ac-open" aria-label={g('open', { name: x.name })}>
+                          {x.name}
+                        </Link>
                         <span className="a2-xs a2-mute lf-cs">
                           {f(`ac.chip.${x.platform}`) === `lf.ac.chip.${x.platform}` ? x.platform : f(`ac.chip.${x.platform}`)}
                           {x.dailyBudgetMinor ? ` · ${money(x.dailyBudgetMinor)}${f('ac.day')}` : ''}
@@ -115,9 +120,13 @@ export function AdCampaigns({ d, here, o, period, chip, q, sort }: AdCampaignsPr
                       <td className="r a2-num">{numOf(x.clicks)}</td>
                       <td className="r a2-num">{numOf(x.purchases)}</td>
                       <td className="r a2-num">{numOf(x.delivered)}</td>
+                      <td className="r a2-num">{numOf(x.returned)}</td>
                       <td className="r a2-num">{money(x.salesMinor)}</td>
                       <td className="r a2-num">
                         <b>{perOf(x.perTk, o.currency)}</b>
+                      </td>
+                      <td className={`r a2-num ${x.profitMinor === null ? '' : x.profitMinor < 0 ? 'lf6-neg' : 'lf6-pos'}`} data-testid="ac-profit-cell">
+                        <b>{money(x.profitMinor)}</b>
                       </td>
                       <td>
                         <span className={`a2-pill ${TONE[x.verdict]}`}>{f(`ac.verdict.${x.verdict}`)}</span>
@@ -134,7 +143,7 @@ export function AdCampaigns({ d, here, o, period, chip, q, sort }: AdCampaignsPr
             {f('ac.empty')}
           </p>
         )}
-        <GuideNote>{f('ac.note')}</GuideNote>
+        <GuideNote>{g('note')}</GuideNote>
       </section>
       <p className="a2-xs a2-mute a2-mt12">
         <Link className="a2-lnk" href="/admin/marketing/ad-platforms/campaigns">
