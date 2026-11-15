@@ -17,6 +17,7 @@ import { showToast } from '../lumen/Toast';
 import { typedMinor } from '@/lib/admin-books/money';
 import { formatMoney, toMajor, type Money } from '../products/model';
 import { ShellIcon } from '../shell/ShellIcon';
+import { StaffCostsCard, type StaffCostsData } from './StaffCostsCard';
 
 type Line = CostEntryRow['line'];
 const FIELDS = ['salary', 'rent', 'utilities', 'other'] as const;
@@ -37,6 +38,8 @@ export interface CostsScreenProps {
   canEdit: boolean;
   /** Follow-up 567: may enter and reverse the daily cost lines (`costlines.write`, or `canEdit`). */
   canEnterLines?: boolean;
+  /** PR 837: the salaries and monthly costs list (null = the card is not shown). */
+  staff?: StaffCostsData | null;
 }
 
 /** A new request key for one cost entry (kept until the entry is written). */
@@ -293,6 +296,22 @@ export function CostsScreen(p: CostsScreenProps) {
         </div>
       </section>
 
+      {p.staff ? (
+        <StaffCostsCard
+          key={p.staff.version}
+          dict={p.dict}
+          locale={p.locale}
+          money={p.money}
+          data={p.staff}
+          month={pick}
+          canEdit={p.canEdit}
+          onUse={(totals) => {
+            // the fixed-costs form above is filled for the owner to check; Save there is what records it
+            setDraft((d) => ({ ...d, form: { ...d.form, ...totals } }));
+            setFSaid({ text: c('staff.filled'), bad: false });
+          }}
+        />
+      ) : null}
       <section className="a2-card" data-testid="cl-card" aria-labelledby={`${id}-lh`}>
         <h2 className="a2-h3" id={`${id}-lh`}>
           {c('lines.title')}

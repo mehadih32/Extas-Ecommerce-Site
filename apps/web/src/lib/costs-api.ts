@@ -21,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { audit, requireAnyPermission } from '@extas/auth';
 import * as inv from '@extas/inventory';
-import { registry, SettingsError, statementCostsSchema, storeTarget, type StatementCostsSettings } from '@extas/settings';
+import { registry, SettingsError, staffCostsSchema, statementCostsSchema, storeTarget, type StaffCostsSettings, type StatementCostsSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
 
@@ -138,5 +138,45 @@ export function statementCostsHandler(request: Request, deps: AdminDeps | null):
       await audit(c.admin.db, c.who.actor, { storeId: c.who.storeId, action: 'books.statementCosts', entityType: 'Setting', entityId: key, before: { ...before.value }, after: { ...parsed.data } }, { source: 'admin-api', ...c.who.ctx });
     }
     return { cards: { statements: await statementCostsCard(c.admin, c.who.storeId) } };
+  });
+}
+
+// ---- PR 837: "Salaries and monthly costs" (each person's amount from a month on; GET/PUT /api/admin/costs/staff) ----------
+
+export interface StaffCostsCard {
+  value: StaffCostsSettings;
+  version: string;
+}
+
+/** The card as the Costs page shows it, read from the store's settings (`books.staffCosts`, v837). */
+export async function staffCostsCard(admin: Pick<AdminDeps, 'resolver'>, storeId: number): Promise<StaffCostsCard> {
+  const value = await admin.resolver.value('books.staffCosts', { storeId });
+  return { value, version: createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 16) };
+}
+
+/** GET the list (`books.read`); PUT it whole with its version (`fixedcosts.write`, audited `books.staffCosts`). Nothing is paid or moved. */
+export function staffCostsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const m = method(request);
+  if (m === 'GET') return handle(request, deps, 'books.read', async (c) => ({ staff: await staffCostsCard(c.admin, c.who.storeId) }));
+  if (m !== 'PUT') return notAllowed();
+  return handle(request, deps, 'fixedcosts.write', async (c) => {
+    const b = await body(request);
+    const before = await staffCostsCard(c.admin, c.who.storeId);
+    if (b.version !== before.version) return fail(409, 'STALE');
+    const parsed = staffCostsSchema.safeParse(b.value);
+    if (!parsed.success) return fail(400, 'INVALID_INPUT', [...new Set(parsed.error.issues.map((i) => String(i.path[0] ?? 'value')))]);
+    // nothing is ever deleted: a person already in the list stays in it (stopped from a month instead), and an earlier amount stays
+    const now = new Map(parsed.data.people.map((p) => [p.id, p]));
+    for (const old of before.value.people) {
+      const next = now.get(old.id);
+      if (!next) return fail(400, 'INVALID_INPUT', ['people']);
+      if (!old.amounts.every((a) => next.amounts.some((x) => x.from === a.from && x.minor === a.minor))) return fail(400, 'INVALID_INPUT', ['amounts']);
+    }
+    if (JSON.stringify(parsed.data) !== JSON.stringify(before.value)) {
+      const key = 'books.staffCosts' as const;
+      await c.admin.resolver.set(key, parsed.data, storeTarget(c.who.storeId), { actorId: c.who.actor.staffUserId ?? null, reason: 'Money › Costs: salaries and monthly costs' });
+      await audit(c.admin.db, c.who.actor, { storeId: c.who.storeId, action: 'books.staffCosts', entityType: 'Setting', entityId: key, before: { people: before.value.people.length }, after: { people: parsed.data.people.length } }, { source: 'admin-api', ...c.who.ctx });
+    }
+    return { staff: await staffCostsCard(c.admin, c.who.storeId) };
   });
 }

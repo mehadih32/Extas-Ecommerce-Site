@@ -145,6 +145,7 @@ import { healthReopenSettings } from './registry-health-reopen';
 import { loginNetworkSettings } from './registry-login-network';
 import { exchangeRetrySettings } from './registry-exchange-retry';
 import { statementCostsSettings } from './registry-books-statement-costs';
+import { staffCostsSettings } from './registry-books-staff-costs';
 import { productsFinanceV5Settings } from './registry-products-finance-v5';
 import { studioSettings } from './registry-studio';
 import { practiceSettings } from './registry-practice';
@@ -1646,6 +1647,8 @@ export const registry = {
   ...supportFileCopySettings,
   // ---- Follow-up 565 (PR 618, 166, 174) · the courier's charges and the gateways' fees from their imported statements as cost lines, off (registry-books-statement-costs.ts, version 274). ----
   ...statementCostsSettings,
+  // ---- S28 · PR 837 · each person's salary and each monthly cost with the amount from a month on (registry-books-staff-costs.ts, version 837). ----
+  ...staffCostsSettings,
   // ---- S28 · PR 686–691 (admin prototype v5, wave 4): shop ranking, cashbook, budgets, report library and packs, Home Command (registry-products-finance-v5.ts, versions 686–691). ----
   ...productsFinanceV5Settings,
   // ---- S23 · PR 437 · the social studio's cadence, voice and AI-caption switches, off (registry-studio.ts, version 281). ----
