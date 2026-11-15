@@ -22,6 +22,7 @@ import {
   fixProductPhoto,
   regenerateAll,
   renditionFile,
+  isRenditionKey,
   restoreMedia,
   searchMedia,
   updateMedia,
@@ -33,6 +34,7 @@ import {
 import { createVault, type Vault } from '@extas/vault';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { settingsResolver } from './settings';
+import { healPracticeRendition } from './practice/photos';
 import { autoAltAfterAttach } from './seo/alt-text-data';
 
 const holder = globalThis as unknown as { __mediaDeps?: MediaDeps; __mediaVault?: Pick<Vault, 'get'> | null };
@@ -279,7 +281,9 @@ export async function mediaFileHandler(_request: Request, media: MediaDeps | nul
   if (!media) return new Response(null, { status: 503, headers: { 'cache-control': 'no-store' } });
   const key = parts.map((p) => decodeURIComponent(p)).join('/');
   try {
-    const f = await renditionFile(media, key);
+    let f = await renditionFile(media, key);
+    // PR 764: a practice picture whose file is missing is drawn again on the spot (never a 404 on a live page)
+    if (!f && isRenditionKey(key)) f = await healPracticeRendition(media, key);
     if (!f) return new Response(null, { status: 404, headers: { 'cache-control': 'no-store' } });
     const maxAge = await media.settings.value('media.serve.maxAgeSeconds', {});
     return new Response(new Blob([f.body as Uint8Array<ArrayBuffer>], { type: f.contentType }), {

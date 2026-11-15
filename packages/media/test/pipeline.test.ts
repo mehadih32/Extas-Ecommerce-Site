@@ -241,6 +241,16 @@ describe('responsive delivery (PR 24)', () => {
     expect(isRenditionKey(key)).toBe(true);
   });
 
+  it('PR 764: a size already stored with capital letters (made before PR 728) is served; nothing else gets through', () => {
+    const id = '01a1dd66-0186-7e12-bb74-6ea0d978e6bc';
+    const legacy = `media/s1/r/${id}/practice-polo-F5F5F5-front-card.40afa9be2b3c.avif`;
+    expect(isRenditionKey(legacy)).toBe(true);
+    expect(mediaUrl(legacy, null)).toBe(`/media/${legacy}`);
+    expect(isRenditionKey(`media/s1/r/${id}/../o/AB.40afa9be2b3c.avif`)).toBe(false);
+    expect(isRenditionKey(`media/s1/r/${id}/a_b.40afa9be2b3c.avif`)).toBe(false);
+    expect(isRenditionKey('media/s1/o/2026/11/0123456789abcdef-Practice-F5F5F5.png')).toBe(false);
+  });
+
   it('addresses: this site /media by default, the CDN base when set', () => {
     expect(mediaUrl('media/s1/r/a/b.jpg', null)).toBe('/media/media/s1/r/a/b.jpg');
     expect(mediaUrl('media/s1/r/a/b.jpg', 'https://cdn.example.com/')).toBe('https://cdn.example.com/media/s1/r/a/b.jpg');
