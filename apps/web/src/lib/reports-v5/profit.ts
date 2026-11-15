@@ -159,3 +159,41 @@ export function filteredFigures(
     orders: del.length,
   };
 }
+
+// PR 863 (prototype v5 Reports › Profit): with a category or area filter on, the week chart, the channel table and the style table follow it
+// too, from the filtered orders' own lines (the same profit shared over lines by value as every other table here).
+
+/** Delivered sales and profit before ads per day, from the orders' own lines. */
+export function dayFigures(
+  orders: readonly GeoOrder[],
+  lineOk: (l: GeoLine) => boolean = () => true,
+): Map<string, { sales: number; contribution: number }> {
+  const out = new Map<string, { sales: number; contribution: number }>();
+  const byDay = new Map<string, GeoOrder[]>();
+  for (const o of orders) byDay.set(o.day, [...(byDay.get(o.day) ?? []), o]);
+  for (const [day, list] of byDay) {
+    const g = profitGroups(list, () => "all", lineOk)[0];
+    if (g) out.set(day, { sales: g.sales, contribution: g.profit });
+  }
+  return out;
+}
+
+/** The period's days in blocks of seven: margin before ads = profit ÷ delivered sales, in percent with one decimal (null with no sales). */
+export function weekMargins(
+  days: readonly string[],
+  figs: ReadonlyMap<string, { sales: number; contribution: number }>,
+  size = 7, // hardcode-ok: a week
+): { first: string; value: number | null }[] {
+  const asc = [...days].sort((x, y) => x.localeCompare(y));
+  const out: { first: string; value: number | null }[] = [];
+  for (let i = 0; i < asc.length; i += size) {
+    const chunk = asc.slice(i, i + size);
+    const sales = sum(chunk, (d) => figs.get(d)?.sales ?? 0);
+    const contribution = sum(chunk, (d) => figs.get(d)?.contribution ?? 0);
+    out.push({
+      first: chunk[0]!,
+      value: sales > 0 ? Math.round((contribution / sales) * 1000) / 10 : null, // hardcode-ok: a share in percent, one decimal
+    });
+  }
+  return out;
+}

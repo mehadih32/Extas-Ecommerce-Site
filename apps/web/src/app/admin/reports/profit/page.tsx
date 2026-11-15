@@ -52,7 +52,9 @@ import { DIVISIONS } from "@/lib/reports-v5/geo";
 import { loadBase, loadProfit, loadViews } from "@/lib/reports-v5/load";
 import { change, leaves } from "@/lib/reports-v5/model";
 import {
+  dayFigures,
   divOfOrder,
+  weekMargins,
   filteredFigures,
   filterOrders,
   losingProducts,
@@ -257,23 +259,21 @@ export default async function ProfitReportPage({
   ];
 
   // "Margin, week by week": the period's days in blocks of seven, margin before ads = contribution ÷ delivered sales.
-  const dayAsc = [...now.byDay].sort((x, y) => x.day.localeCompare(y.day));
-  const weeks: { label: string; sales: number; contribution: number }[] = [];
-  for (let i = 0; i < dayAsc.length; i += 7) {
-    const chunk = dayAsc.slice(i, i + 7);
-    weeks.push({
-      label: f.dayShort(chunk[0]!.day),
-      sales: chunk.reduce((a2, x) => a2 + x.salesMinor, 0),
-      contribution: chunk.reduce((a2, x) => a2 + x.contributionMinor, 0),
-    });
-  }
-  const weekPoints = weeks
+  // With a filter on, each day's figures come from the filtered orders' own lines (PR 863).
+  const dayFigs = filtered
+    ? dayFigures(ordersNow, lineOk)
+    : new Map(
+        now.byDay.map((x) => [
+          x.day,
+          { sales: x.salesMinor, contribution: x.contributionMinor },
+        ]),
+      );
+  const weekPoints = weekMargins(
+    now.byDay.map((x) => x.day),
+    dayFigs,
+  )
     .slice(-8)
-    .map((w) => ({
-      label: w.label,
-      value:
-        w.sales > 0 ? Math.round((w.contribution / w.sales) * 1000) / 10 : null,
-    }));
+    .map((w) => ({ label: f.dayShort(w.first), value: w.value }));
   const chRows = r.channels.rows.filter((x) => x.kind !== "total");
   const chValue = (x: (typeof chRows)[number]) =>
     x.profitMinor ?? x.contributionMinor;
@@ -446,7 +446,7 @@ export default async function ProfitReportPage({
       sub: c("drawerPieces", { n: f.num(g.pieces) }),
     }),
   );
-  const styleRows = r.styles.rows
+  const styleRowsAll = r.styles.rows
     .filter((x) => x.depth === 0 || x.id !== null)
     .filter((x) => !(x.depth > 1))
     .map((x) => {
@@ -462,6 +462,58 @@ export default async function ProfitReportPage({
         href: "/admin/reports/products",
       });
     });
+  // PR 863: with a filter on, the channel bars and the style table come from the filtered orders' own lines
+  const chItems = filtered
+    ? profitGroups(ordersNow, (l, o) => o.source, lineOk)
+        .sort((x, y) => y.profit - x.profit)
+        .map((g) => ({
+          key: g.key,
+          label: `${channelName(g.key)} · ${f.pctOf(g.sales ? g.margin : null)}`,
+          value: g.profit,
+          shown: f.amount(g.profit),
+        }))
+    : chSorted.map((x) => ({
+        key: x.key,
+        label: `${channelName(x.key)} · ${f.pctOf(channelMarginPct(x))}`,
+        value: chValue(x),
+        shown: f.amount(chValue(x)),
+      }));
+  const styleOfPid = new Map(
+    filtered
+      ? (
+          await access.deps.db.product.findMany({
+            where: {
+              storeId: MOTHER_STORE_ID,
+              id: {
+                in: [
+                  ...new Set(
+                    ordersNow.flatMap((o) =>
+                      o.lines.map((l) => l.pid).filter((x): x is string => !!x),
+                    ),
+                  ),
+                ],
+              },
+            },
+            select: { id: true, styleGroupId: true },
+          })
+        ).map((x) => [x.id, x.styleGroupId] as const)
+      : [],
+  );
+  const styleName = new Map(r.styles.rows.map((x) => [x.id, x.name]));
+  const styleRows: ProfitTableRow[] = filtered
+    ? profitGroups(
+        ordersNow,
+        (l) => (l.pid && styleOfPid.get(l.pid)) || "none",
+        lineOk,
+      ).map((g) =>
+        toTableRow({
+          key: g.key,
+          name: styleName.get(g.key) ?? t(d, "reportsV5.channel.noStyle"),
+          g,
+          href: "/admin/reports/products",
+        }),
+      )
+    : styleRowsAll;
   const keep = keepOf(sp, ["cat", "div"]);
   const catOptions = categories
     .filter((x) => !x.parentId)
@@ -598,16 +650,8 @@ export default async function ProfitReportPage({
             {c("byChannel")}
           </h2>
           <p className="a2-cs">{c("byChannelSub")}</p>
-          {chSorted.length ? (
-            <BarList
-              testId="rp-channels-table"
-              items={chSorted.map((x) => ({
-                key: x.key,
-                label: `${channelName(x.key)} · ${f.pctOf(channelMarginPct(x))}`,
-                value: chValue(x),
-                shown: f.amount(chValue(x)),
-              }))}
-            />
+          {chItems.length ? (
+            <BarList testId="rp-channels-table" items={chItems} />
           ) : (
             <p className="a2-sm a2-mute a2-mt6">{cc("none")}</p>
           )}

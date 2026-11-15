@@ -23,13 +23,21 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { libraryScreen } from "@/lib/report-library-api";
 import { makeFmt } from "@/lib/reports-v5/fmt";
 import { ReportBar } from "@/components/admin/reports/ReportBar";
+import {
+  ReportFilters,
+  keepOf,
+} from "@/components/admin/reports/ReportFilters";
 import "@/components/admin/reports/report-bar.css";
 import { fileUrl } from "@/lib/report-file-links";
 import {
+  libFilterOn,
   libraryGroups,
   loadLibraryInput,
   type CardVal,
+  type LibFilter,
 } from "@/lib/reports-v5/library";
+import { categoryTree } from "@/lib/reports-v5/areas";
+import { DIVISIONS } from "@/lib/reports-v5/geo";
 import { loadBase, loadViews } from "@/lib/reports-v5/load";
 import { withReportsV5 } from "@/lib/reports-v5/words";
 import { t, type Dict } from "@/lib/i18n";
@@ -132,44 +140,74 @@ export default async function ReportsLibraryPage({
     if (v.k === "products") return L("val.products", { n: f.num(v.n) });
     return id === "checkoutj" ? L("val.open", { n: f.num(v.n) }) : f.num(v.n);
   };
-  const groups = libraryGroups(await loadLibraryInput(access, base)).map(
-    (g) => ({
-      id: g.id,
-      title: g.id === "sales" ? L("groups.sales") : L(`groups.${g.id}`),
-      cards: g.cards.map((c) => {
-        const pct =
-          !cmp || c.change === null ? null : Math.round(c.change * 100);
-        const vars = Object.fromEntries(
-          Object.entries(c.sub?.vars ?? {}).map(([k, x]) =>
-            k.startsWith("$")
-              ? [k.slice(1), f.amount(Number(x))]
-              : [k, typeof x === "number" ? f.num(x) : x],
-          ),
-        );
-        return {
-          id: c.id,
-          q: L(`cards.${c.q}`),
-          v: show(c.id, c.val),
-          d:
-            pct === null || pct === 0
-              ? null
-              : {
-                  text:
-                    pct > 0
-                      ? L("changeUp", { pct })
-                      : L("changeDown", { pct: Math.abs(pct) }),
-                  tone:
-                    pct > 0 !== !!c.lowerBetter
-                      ? ("good" as const)
-                      : ("bad" as const),
-                },
-          s: c.sub ? L(`line.${c.sub.key}`, vars) : "",
-          href: c.href,
-          small: !!c.small,
-        };
-      }),
+  // PR 863: the prototype's channel, category and area filters (the cards that come from orders follow them)
+  const SOURCES = [
+    "WEBSITE",
+    "LANDING_PAGE",
+    "MESSENGER",
+    "WHATSAPP",
+    "LIVE_CHAT",
+    "PHONE",
+    "TELEGRAM",
+    "ADMIN",
+    "SHOWROOM",
+    "IMPORT",
+  ]; // hardcode-ok: the order sources the Orders report lists too
+  const pick = (k: string) =>
+    typeof sp[k] === "string" ? (sp[k] as string) : "all";
+  const catRaw = pick("cat");
+  const filter: LibFilter = {
+    ch: SOURCES.includes(pick("ch")) ? pick("ch") : "all",
+    cat: /^[0-9a-f-]{36}$/i.test(catRaw) ? catRaw : "all",
+    div: DIVISIONS.includes(pick("div")) ? pick("div") : "all",
+  };
+  const [categories, catIds] = await Promise.all([
+    access.deps.db.category.findMany({
+      where: { storeId: MOTHER_STORE_ID, archivedAt: null, parentId: null },
+      select: { id: true, nameEn: true, nameBn: true },
+      orderBy: { nameEn: "asc" },
     }),
-  );
+    filter.cat === "all"
+      ? Promise.resolve(null)
+      : categoryTree(access.deps.db, filter.cat),
+  ]);
+  const groups = libraryGroups(
+    await loadLibraryInput(access, base, filter, catIds),
+  ).map((g) => ({
+    id: g.id,
+    title: g.id === "sales" ? L("groups.sales") : L(`groups.${g.id}`),
+    cards: g.cards.map((c) => {
+      const pct = !cmp || c.change === null ? null : Math.round(c.change * 100);
+      const vars = Object.fromEntries(
+        Object.entries(c.sub?.vars ?? {}).map(([k, x]) =>
+          k.startsWith("$")
+            ? [k.slice(1), f.amount(Number(x))]
+            : [k, typeof x === "number" ? f.num(x) : x],
+        ),
+      );
+      return {
+        id: c.id,
+        q: L(`cards.${c.q}`),
+        v: show(c.id, c.val),
+        d:
+          pct === null || pct === 0
+            ? null
+            : {
+                text:
+                  pct > 0
+                    ? L("changeUp", { pct })
+                    : L("changeDown", { pct: Math.abs(pct) }),
+                tone:
+                  pct > 0 !== !!c.lowerBetter
+                    ? ("good" as const)
+                    : ("bad" as const),
+              },
+        s: c.sub ? L(`line.${c.sub.key}`, vars) : "",
+        href: c.href,
+        small: !!c.small,
+      };
+    }),
+  }));
   // the callout on top: last month's review, with its net profit and delivered sales (the prototype's "October 2026 review is ready")
   const rv = screen.review;
   const month = new Intl.DateTimeFormat(view.locale, {
@@ -222,6 +260,50 @@ export default async function ReportsLibraryPage({
         notes={notes}
         limitDays={base.limits.maxDays}
       />
+      <ReportFilters
+        action={HERE}
+        keep={keepOf(sp, ["ch", "cat", "div"])}
+        testId="rp-filters"
+        applyLabel={t(view.dict, "reportsV5.common.apply")}
+        clearLabel={t(view.dict, "reportsV5.common.clear")}
+        fields={[
+          {
+            name: "ch",
+            label: L("fChannel"),
+            all: L("fAllChannels"),
+            options: SOURCES.map((x) => ({
+              value: x,
+              label: t(view.dict, `reportsV5.orders.src.${x}`),
+            })),
+            value: filter.ch,
+          },
+          {
+            name: "cat",
+            label: L("fCategory"),
+            all: L("fAllCategories"),
+            options: categories.map((x) => ({
+              value: x.id,
+              label: lang === "bn" && x.nameBn ? x.nameBn : x.nameEn,
+            })),
+            value: filter.cat,
+          },
+          {
+            name: "div",
+            label: L("fArea"),
+            all: L("fAllAreas"),
+            options: DIVISIONS.map((x) => ({
+              value: x,
+              label: t(view.dict, "reportsV5.areas.divisionName", { name: x }),
+            })),
+            value: filter.div,
+          },
+        ]}
+      />
+      {libFilterOn(filter) ? (
+        <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">
+          {L("filterNote")}
+        </p>
+      ) : null}
       <LibraryScreen
         dict={view.dict}
         lang={lang}

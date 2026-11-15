@@ -45,6 +45,38 @@ export interface ReportBarProps {
   day?: (ymd: string) => string;
 }
 
+/** The words of the Schedule box (PR 863: the Monthly review page shows the same button beside its month switch). */
+export function scheduleTexts(d: Dict): ScheduleTexts {
+  const c = (k: string, v?: Record<string, string | number>) =>
+    t(d, `reportsV5.common.${k}`, v);
+  const sc = (k: string, v?: Record<string, string | number>) =>
+    t(d, `reportsV5.common.sch.${k}`, v);
+  return {
+    button: c("schedule"),
+    scheduled: c("scheduled"),
+    title: sc("title"),
+    intro: sc("intro", { name: "{name}" }),
+    telegram: sc("telegram"),
+    telegramSub: sc("telegramSub"),
+    email: sc("email"),
+    emailNone: sc("emailNone"),
+    how: sc("how"),
+    time: sc("time"),
+    daily: sc("daily"),
+    weekly: sc("weekly"),
+    monthly: sc("monthly"),
+    save: sc("save"),
+    off: sc("off"),
+    cancel: sc("cancel"),
+    pick: sc("pick"),
+    saved: sc("saved", { name: "{name}", when: "{when}" }),
+    turnedOff: sc("turnedOff"),
+    failed: sc("failed"),
+    close: sc("close"),
+    working: sc("working"),
+  };
+}
+
 export function ReportBar({
   dict: d,
   here,
@@ -90,37 +122,12 @@ export function ReportBar({
     href: hrefOfView(v),
   }));
   const prev = before ?? { from: addDays(from, -1), to: addDays(from, -1) };
-  const sc = (k: string, v?: Record<string, string | number>) =>
-    t(d, `reportsV5.common.sch.${k}`, v);
   const named = t(d, `reportsV5.${reportKey}.metaTitle`);
   const schName =
     reportKey && named !== `reportsV5.${reportKey}.metaTitle`
       ? named
       : c("pageTitle");
-  const schTexts: ScheduleTexts = {
-    button: c("schedule"),
-    scheduled: c("scheduled"),
-    title: sc("title"),
-    intro: sc("intro", { name: "{name}" }),
-    telegram: sc("telegram"),
-    telegramSub: sc("telegramSub"),
-    email: sc("email"),
-    emailNone: sc("emailNone"),
-    how: sc("how"),
-    time: sc("time"),
-    daily: sc("daily"),
-    weekly: sc("weekly"),
-    monthly: sc("monthly"),
-    save: sc("save"),
-    off: sc("off"),
-    cancel: sc("cancel"),
-    pick: sc("pick"),
-    saved: sc("saved", { name: "{name}", when: "{when}" }),
-    turnedOff: sc("turnedOff"),
-    failed: sc("failed"),
-    close: sc("close"),
-    working: sc("working"),
-  };
+  const schTexts = scheduleTexts(d);
   return (
     <section
       className="rpbar a2-card a2-mt12"
