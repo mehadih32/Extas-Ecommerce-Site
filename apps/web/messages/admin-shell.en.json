@@ -915,7 +915,12 @@
       "feedAll": "All orders",
       "codOldBold": "{n} COD payouts are older than 7 days",
       "codOldRest": "({v}). Ask the couriers.",
-      "codOldList": "See list"
+      "codOldList": "See list",
+      "tOver7": "{n} over 7 days",
+      "tFresh": "all fresh",
+      "trBest": "Best day",
+      "paceMet": "At this pace the month ends near {v} (target met).",
+      "paceShort": "At this pace the month ends near {v} ({short} short)."
     }
   },
   "look": {
