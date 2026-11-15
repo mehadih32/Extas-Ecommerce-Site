@@ -21,6 +21,7 @@ import { storeTarget, type TelegramApprovalsSettings } from '@extas/settings';
 import { timingSafeEqual } from 'node:crypto';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { requireOwnerPin } from './owner-pin';
+import { pairFromChat } from './telegram-control';
 
 type Db = PrismaClient;
 
@@ -86,6 +87,7 @@ const WORDS = {
   alarm: 'আজ {n}বার ভুল PIN দেওয়া হয়েছে।',
   locked: 'Telegram অনুমোদন বন্ধ আছে। ERP-তে PIN দিয়ে খুলুন।',
   gone: 'অনুরোধটা আর নেই বা আগেই সিদ্ধান্ত হয়ে গেছে।',
+  paired: 'নতুন ফোন যোগ হয়েছে: {who}',
 } as const;
 
 /* ---------- requests ---------- */
@@ -261,7 +263,7 @@ export async function connectWebhook(deps: AdminDeps, actor: Actor, ctx: Request
 
 interface Update {
   callback_query?: { id?: string; data?: string; message?: { chat?: { id?: number | string } } };
-  message?: { message_id?: number; text?: string; chat?: { id?: number | string } };
+  message?: { message_id?: number; text?: string; chat?: { id?: number | string }; from?: { first_name?: string; username?: string } };
 }
 
 /**
@@ -316,6 +318,14 @@ async function handleUpdate(deps: AdminDeps, api: TelegramSender, u: Update, sto
     return;
   }
   const msg = u.message;
+  // PR 817: a chat that is not allowed yet sends the six-digit pairing code the owner made on Settings > Telegram control
+  if (msg?.text && msg.chat?.id !== undefined && !sameChat(msg.chat.id, api) && /^\d{6}$/.test(msg.text.trim())) {
+    const who = msg.from?.first_name || msg.from?.username || String(msg.chat.id);
+    const added = await pairFromChat(deps, { id: String(msg.chat.id), who }, msg.text.trim(), now);
+    if (msg.message_id !== undefined && added) await api.deleteMessage?.(msg.message_id);
+    if (added) await say(WORDS.paired.replace('{who}', who));
+    return;
+  }
   if (!msg?.text || !sameChat(msg.chat?.id, api)) return;
   const text = msg.text.trim();
   if (!PIN_TEXT.test(text)) return;

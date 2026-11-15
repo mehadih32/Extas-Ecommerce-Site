@@ -2,14 +2,14 @@
   "telegramApprovals": {
     "metaTitle": "Telegram control",
     "title": "Telegram control",
-    "sub": "Money decisions from your phone, with your PIN.",
+    "sub": "Get reports and alerts on Telegram, and run the shop from your phone with simple commands.",
     "owner": "Only the owner can use this page.",
     "mode": {
       "LIVE": "The bot is connected.",
       "MOCK": "The bot is not connected yet (Keys & connections). Nothing is sent to Telegram."
     },
     "card": {
-      "title": "Settings",
+      "title": "Urgent approvals on Telegram",
       "on": "Send urgent approvals to my Telegram",
       "help": "Tap Approve or Reject, then type your PIN in the chat. The PIN message is deleted at once.",
       "refund": "Refund of a prepaid order that was cancelled",
@@ -17,14 +17,15 @@
       "cash": "Cash in and out waiting for an approver",
       "cod": "Big COD orders",
       "codOver": "Big COD means over (Tk)",
-      "wait": "Buttons stay live for (minutes)",
-      "wait2": "After that it waits here; nothing happens by itself.",
+      "wait": "If no answer in (minutes)",
+      "wait2": "It waits in AI Center › Approvals; nothing happens by itself.",
       "pin": "Owner PIN",
       "save": "Save settings",
       "saved": "Settings saved.",
       "connect": "Connect the buttons",
       "connected": "The bot now sends its button taps to the ERP.",
-      "note": "Only the owner’s Telegram can approve. 5 wrong PINs in a day raise an alarm; 20 stop Telegram approvals until you unlock them here."
+      "note": "Only the owner’s Telegram can approve. 5 wrong PINs in a day raise an alarm; 20 stop Telegram approvals until you unlock them here.",
+      "subtitle": "Money decisions from your phone, with your PIN"
     },
     "example": {
       "button": "See an example",

@@ -1,0 +1,98 @@
+{
+  "telegramControl": {
+    "test": "Send test message",
+    "testLine": "Test message from Settings › Telegram control",
+    "testSent": "Test message sent to your Telegram",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "working": "Working…",
+    "pairMade": "Pairing code ready",
+    "removed": "Removed. It can no longer use the bot.",
+    "report": {
+      "h": "Daily business report",
+      "every": "Every day at {time}",
+      "what": "Sales, profit, orders stuck, returns, ad money, cash with couriers",
+      "time": "Time",
+      "email": "Also by email",
+      "weekly": "Weekly deeper audit on Sunday",
+      "preview": "Preview tonight’s report",
+      "previewTitle": "Tonight’s report"
+    },
+    "pv": {
+      "orders": "Orders",
+      "sales": "Sales",
+      "ordered": "Ordered value",
+      "waiting": "Orders waiting"
+    },
+    "alerts": {
+      "h": "Alerts",
+      "over": "Big order means over",
+      "overHelp": "Whole money in your shop’s currency. 0 means no big-order alert."
+    },
+    "alert": {
+      "down": "Shop down or very slow",
+      "backup": "Backup failed",
+      "bigOrder": "Big order (over {amount})",
+      "erp": "ERP link problem",
+      "login": "Strange sign-in attempts"
+    },
+    "accounts": {
+      "h": "Allowed Telegram accounts",
+      "you": "You",
+      "owner": "Owner",
+      "remove": "Remove",
+      "none": "No phone added yet.",
+      "pair": "Add a phone (pairing code)",
+      "code": "Pairing code: {code} · send it to the bot within {minutes} minutes",
+      "codeWaiting": "A pairing code is waiting. Send it to the bot before it runs out.",
+      "hint": "Only these accounts can talk to the bot. Staff get only what their role allows. Money actions on Telegram ask for your PIN."
+    },
+    "commands": {
+      "h": "Commands you can send",
+      "report": {
+        "cmd": "/report",
+        "what": "Today’s report now"
+      },
+      "orders": {
+        "cmd": "/orders",
+        "what": "Orders waiting, by step"
+      },
+      "stock": {
+        "cmd": "/stock polo",
+        "what": "Stock of a product"
+      },
+      "pause": {
+        "cmd": "/pause ads",
+        "what": "Pause all ads (PIN)"
+      },
+      "ai": {
+        "cmd": "/ai off",
+        "what": "Turn AI off"
+      },
+      "ask": {
+        "cmd": "/ask …",
+        "what": "Ask Gyani anything"
+      }
+    },
+    "pin": {
+      "label": "Owner PIN",
+      "pairTitle": "Add a phone?",
+      "pairText": "A one-time code is made. Send it to the bot from the new phone within {minutes} minutes.",
+      "pairOk": "Make code",
+      "removeTitle": "Remove this Telegram account?",
+      "removeText": "{who} will no longer be able to use the bot."
+    },
+    "errors": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "INVALID_INPUT": "Check the numbers.",
+      "NOT_FOUND": "That account is not on the list any more.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "FORBIDDEN": "You may not do that.",
+      "network": "No connection. Try again.",
+      "server-error": "Something went wrong. Try again."
+    }
+  }
+}

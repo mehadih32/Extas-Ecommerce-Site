@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { moneyOf } from '@/components/admin/products/model';
+import { TelegramControlScreen, TelegramTestButton } from '@/components/admin/telegram/TelegramControlScreen';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { TelegramApprovalsScreen } from '@/components/admin/telegram/TelegramApprovalsScreen';
@@ -15,8 +16,11 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { t, type Dict } from '@/lib/i18n';
 import { approvalsView } from '@/lib/telegram-approvals';
+import { controlView, PAIR_MINUTES } from '@/lib/telegram-control';
 import bn from '../../../../../messages/admin-telegram-approvals.bn.json';
 import en from '../../../../../messages/admin-telegram-approvals.en.json';
+import bnC from '../../../../../messages/admin-telegram-control.bn.json';
+import enC from '../../../../../messages/admin-telegram-control.en.json';
 import '../../s28.css';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +28,7 @@ const HERE = '/admin/settings/telegram-approvals';
 const KEY = 'telegramApprovals';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, telegramApprovals: ((view.lang === 'bn' ? bn : en).telegramApprovals as unknown) as Dict } };
+  return { ...view, dict: { ...view.dict, telegramApprovals: ((view.lang === 'bn' ? bn : en).telegramApprovals as unknown) as Dict, telegramControl: ((view.lang === 'bn' ? bnC : enC).telegramControl as unknown) as Dict } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -45,12 +49,14 @@ export default async function TelegramApprovalsPage() {
       </div>
     );
   const d = access.deps;
-  const [v, currency] = await Promise.all([approvalsView(d, access.guard.actor, MOTHER_STORE_ID), d.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const [v, cv, currency] = await Promise.all([approvalsView(d, access.guard.actor, MOTHER_STORE_ID), controlView(d, access.guard.actor, MOTHER_STORE_ID), d.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
+  const money = moneyOf(currency, view.locale);
   return (
     <div className="a2-z" data-testid="telegram-approvals-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'telegramApprovals.title')} sub={t(view.dict, 'telegramApprovals.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'telegramApprovals.title')} sub={t(view.dict, 'telegramApprovals.sub')} right={cv.isOwner ? <TelegramTestButton dict={view.dict} /> : undefined} />
       <SectionTabs view={view} current={KEY} />
-      <TelegramApprovalsScreen dict={view.dict} money={moneyOf(currency, view.locale)} view={v} />
+      <TelegramControlScreen dict={view.dict} view={cv} money={money} pairMinutes={PAIR_MINUTES} />
+      <TelegramApprovalsScreen dict={view.dict} money={money} view={v} />
     </div>
   );
 }
