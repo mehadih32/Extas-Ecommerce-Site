@@ -36,7 +36,7 @@
       "sample": "{n} rules are on with the shop's own starting numbers: check them",
       "allOwn": "Every rule that is on uses your own numbers",
       "last": "Last change: {rule}, {when}",
-      "showingSample": "Showing the rules that still use the starting numbers.",
+      "showingSample": "Showing rules with sample values",
       "showAll": "Show all"
     },
     "rows": {
