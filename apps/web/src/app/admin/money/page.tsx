@@ -22,7 +22,12 @@ import type { CountFormat } from '@/lib/admin-lumen/model';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { moneyOverview, type ReceivedDay } from '@/lib/money-overview';
+import { ProfitSnapshot, DecideToday, type DecideCard, type SnapCol } from '@/components/admin/lane-f/MoneyParts';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { deltaPct } from '@/components/admin/lane-f/Parts';
+import { previousPeriod, resolvePeriod, type PeriodKey } from '@/lib/lane-f/period';
+import { dayIn, moneyOverview, type ReceivedDay } from '@/lib/money-overview';
+import { profitReport } from '@/lib/profit-report';
 import bn from '../../../../messages/admin-money.bn.json';
 import en from '../../../../messages/admin-money.en.json';
 import './money.css';
@@ -45,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function MoneyOverviewPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('payments.view', deps, MOTHER_STORE_ID)]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -57,17 +62,49 @@ export default async function MoneyOverviewPage() {
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `moneyOverview.${k}`, vars);
   const [o, currency, vat] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('vat.system', { storeId: MOTHER_STORE_ID })]);
+  const f = (k: string, vars?: Record<string, string | number>) => t(d, `lf.fn.${k}`, vars);
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const fmt: CountFormat = { kind: 'money', locale: view.locale, currency, digits: money.digits };
   const tiles: SummaryTile[] = o.received.windows.map((w) => ({ key: w.key, label: c(`received.${w.key}`), value: w.minor, shown: amount(w.minor), format: fmt, vs: c('received.count', { n: w.count }), icon: 'wallet' }));
+  // prototype v5: the profit snapshot (today, 7 days, this month, each against the period before) and Decide today
+  const today = dayIn(new Date(), view.timeZone);
+  const snapKeys: { key: PeriodKey; id: 'today' | '7d' | 'month' }[] = [{ key: 'today', id: 'today' }, { key: '7d', id: '7d' }, { key: 'month', id: 'month' }];
+  const snapRows = await Promise.all(
+    snapKeys.map(async ({ key, id }) => {
+      const cur = resolvePeriod(key, today);
+      const prev = previousPeriod(cur.from, cur.to);
+      const [a, b] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, cur.from, cur.to), profitReport(access.deps, MOTHER_STORE_ID, prev.from, prev.to)]);
+      const net = a.netProfitMinor; // null while a cost is not known: shown as a dash, never as 0
+      const cost = net === null ? 0 : Math.max(0, a.salesMinor - net);
+      const costPct = net === null ? 0 : a.salesMinor > 0 ? Math.min(100, Math.max(0, (cost / a.salesMinor) * 100)) : net < 0 ? 100 : 0; // hardcode-ok: percent
+      const col: SnapCol = {
+        key: id,
+        label: f(`sn.${id}`),
+        vs: f(`sn.vs${id === '7d' ? '7d' : id === 'today' ? 'Today' : 'Month'}`),
+        href: `/admin/money/profit?from=${cur.from}&to=${cur.to}`,
+        netShown: net === null ? '—' : `${net < 0 ? '−' : ''}${amount(Math.abs(net))}`,
+        negative: net !== null && net < 0,
+        delta: deltaPct(net, b.netProfitMinor),
+        salesShown: amount(a.salesMinor),
+        costShown: amount(cost),
+        costPct,
+      };
+      return col;
+    }),
+  );
+  const decide: DecideCard[] = [];
+  const topCod = [...o.cod.byCourier].sort((x, y) => y.minor - x.minor)[0];
+  if (topCod && topCod.minor > 0) decide.push({ key: 'cod', tone: (o.cod.oldestDays ?? 0) >= 3 ? 'warn' : 'ok', head: f('dec.codHead', { courier: topCod.courier ?? c('cod.noCourier'), amt: amount(topCod.minor) }), text: f('dec.codText', { n: topCod.parcels, days: o.cod.oldestDays ?? 0 }), action: { label: f('dec.codBtn'), href: '/admin/delivery/couriers' } });
+  if (o.refunds.waiting) decide.push({ key: 'refunds', tone: 'warn', head: f('dec.refHead', { n: o.refunds.waiting }), text: f('dec.refText', { amt: amount(o.refunds.waitingMinor) }), action: { label: f('dec.refBtn'), href: '/admin/money/refunds' } });
+  if (o.claims?.late) decide.push({ key: 'claims', tone: 'bad', head: f('dec.claimHead', { n: o.claims.late }), text: f('dec.claimText', { amt: amount(o.claims.minor) }), action: { label: f('dec.claimBtn'), href: '/admin/delivery/claims' } });
+  if (!vat.enabled) decide.push({ key: 'vat', tone: 'ok', head: f('dec.vatHead'), text: f('dec.vatText'), action: { label: f('dec.vatBtn'), href: '/admin/money/vat' } });
   const ranges = heroRanges(o.received.daily ?? [], view.locale, amount, 10 ** money.digits, c);
 
   return (
     <div className="a2-z" data-testid="money-overview" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.fn.title')} sub={t(d, 'lf.fn.asOf', { at: dateTime(o.at, view.locale, view.timeZone) })} />
       <SectionTabs view={view} current={KEY} />
-      <p className="a2-xs a2-mute a2-mt12">{c('asOf', { at: dateTime(o.at, view.locale, view.timeZone) })}</p>
       {vat.enabled ? null : (
         <p className="a2-xs a2-mute" data-testid="mo-vat-off">
           {c('vatOff')}{' '}
@@ -77,6 +114,10 @@ export default async function MoneyOverviewPage() {
         </p>
       )}
 
+      <ProfitSnapshot
+        cols={snapRows}
+        texts={{ title: t(d, 'lf.fn.sn.title'), sub: t(d, 'lf.fn.sn.sub'), open: t(d, 'lf.fn.sn.open'), bar: t(d, 'lf.fn.sn.bar'), sales: t(d, 'lf.fn.sn.sales'), costs: t(d, 'lf.fn.sn.costs'), note: t(d, 'lf.fn.sn.note'), more: t(d, 'lf.fn.sn.more'), moreHref: '/admin/money/profit' }}
+      />
       {ranges.length ? (
         <div className="a2-mt12 mo-hero">
           <HeroChart title={c('hero.title')} ranges={ranges} format={fmt} seriesName={c('hero.series')} prevName={c('hero.prev')} testId="mo-hero" />
@@ -195,6 +236,7 @@ export default async function MoneyOverviewPage() {
           {c('refunds.open')}
         </Link>
       </section>
+      <DecideToday cards={decide} texts={{ title: t(d, 'lf.fn.dec.title'), sub: t(d, 'lf.fn.dec.sub'), none: t(d, 'lf.fn.dec.none') }} />
     </div>
   );
 }

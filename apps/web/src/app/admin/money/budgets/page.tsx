@@ -11,6 +11,7 @@ import { BudgetsScreen } from '@/components/admin/money/BudgetsScreen';
 import { moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -48,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BudgetsPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('books.read', deps, MOTHER_STORE_ID)]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -67,7 +68,7 @@ export default async function BudgetsPage() {
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   return (
     <div className="a2-z" data-testid="budgets-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyBudgets.title')} sub={t(view.dict, 'moneyBudgets.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.budgets.title')} sub={t(view.dict, 'lf.fh.budgets.sub')} />
       <SectionTabs view={view} current={KEY} />
       <BudgetsScreen dict={view.dict} lang={view.lang} money={moneyOf(currency, view.locale)} budgets={screen.budgets} snapshot={screen.snapshot} roles={screen.approvers.roles} canEdit={canEdit} />
     </div>
