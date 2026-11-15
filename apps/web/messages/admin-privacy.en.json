@@ -2,7 +2,7 @@
   "prv": {
     "metaTitle": "Privacy & data",
     "title": "Data & privacy",
-    "sub": "How long orders keep the internet address, device and shared location, the clean-up that removes them, and customers' requests to erase their details.",
+    "sub": "Your data in and out, customers’ privacy requests, and how long things are kept.",
     "confirmWord": "ERASE",
     "kpi": {
       "days": "Kept for",
@@ -142,6 +142,75 @@
       "stickerHelp": "Off as shipped. On: the sticker prints \"Location 23.781, 90.412\" small under the address, for the rider.",
       "mapLink": "Map address",
       "mapLinkHelp": "Starts with https:// and has {lat} and {lng} in it; the point fills them in."
+    },
+    "board": {
+      "waiting": "{n} customer request(s) waiting.",
+      "export": {
+        "h": "Export your data",
+        "orders": "Orders",
+        "customers": "Customers (needs PIN)",
+        "products": "Products & stock",
+        "all": "Everything (one ZIP)",
+        "button": "Export",
+        "allSoon": "Use Backups & restore for a full copy",
+        "done": "File downloaded",
+        "pinTitle": "Export customer data?",
+        "pinText": "This file has phone numbers and addresses. Keep it safe. The export is recorded in the activity log.",
+        "pinOk": "Export"
+      },
+      "keep": {
+        "h": "How long things are kept",
+        "media": "Old product photos and videos",
+        "chat": "Chat messages",
+        "y1": "1 year",
+        "y2": "2 years",
+        "y5": "5 years",
+        "m6": "6 months",
+        "hint": "Orders and money records are always kept for accounts — they are never removed.",
+        "save": "Save",
+        "saved": "Saved"
+      },
+      "import": {
+        "h": "Import old customers",
+        "text": "Bring customers from the old WordPress shop or a spreadsheet (name, phone, district). Duplicates by phone are merged, not doubled.",
+        "choose": "Choose file",
+        "sample": "Sample sheet",
+        "sampleFile": "customers-sample.csv",
+        "sampleBody": "name,phone,district"
+      },
+      "own": {
+        "h": "“My own data” — never copied to a new shop",
+        "hint": "If this system is ever set up for another shop, these stay yours. Every setting also has “Back to default”.",
+        "chips": [
+          "Shop name & logo",
+          "Keys",
+          "Phone & address",
+          "Bank & bKash numbers",
+          "Social links",
+          "Customers & orders",
+          "Delivery area list"
+        ]
+      },
+      "fresh": {
+        "h": "Start fresh (one time only)",
+        "text": "Clears all test and sample business data so the live shop starts from zero. Use it once, on go-live day.",
+        "open": "Start fresh…"
+      },
+      "more": "More options",
+      "moreSub": "How long orders keep the internet address, device and shared location, customers' own requests, shared location, what is kept for good and consent.",
+      "err": {
+        "OWNER_ONLY": "Only the owner can do this.",
+        "SWITCHED_OFF": "The customer export is switched off. Turn it on in Customers first.",
+        "EXPORT_TOO_LARGE": "There are more people than one file holds. Export from the Customers page with a narrower list.",
+        "FORBIDDEN": "You may not do that.",
+        "PIN_REQUIRED": "Type the owner's PIN.",
+        "PIN_NOT_SET": "The owner has not set a PIN yet.",
+        "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+        "WRONG_PIN": "That PIN is not right.",
+        "INVALID_INPUT": "Check what you chose.",
+        "network": "No connection. Try again.",
+        "other": "Something went wrong. Try again."
+      }
     }
   }
 }

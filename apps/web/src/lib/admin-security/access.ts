@@ -19,8 +19,23 @@ export async function adminAllowlist(resolver: Pick<AppResolver, 'value'>, env: 
   }
 }
 
-/** True when the list is on and this address is not on it. */
+/**
+ * PR 815: the addresses the owner blocked (Settings › Security › Blocked addresses). The server's break-glass switch opens the admin
+ * again for these too; a setting that cannot be read blocks nobody.
+ */
+export async function addressBlocked(resolver: Pick<AppResolver, 'value'>, ip: string | null | undefined, env: Record<string, string | undefined> = process.env): Promise<boolean> {
+  if (!ip || env[ALLOWLIST_BREAK_GLASS_ENV] === '1') return false;
+  try {
+    const { list } = await resolver.value('security.blockedAddresses');
+    return list.length > 0 && addressOnList(ip, list.map((b) => b.ip));
+  } catch {
+    return false;
+  }
+}
+
+/** True when the owner blocked this address, or the list is on and this address is not on it. */
 export async function addressRefused(resolver: Pick<AppResolver, 'value'>, ip: string | null | undefined, env?: Record<string, string | undefined>): Promise<boolean> {
+  if (await addressBlocked(resolver, ip, env)) return true;
   const list = await adminAllowlist(resolver, env);
   return list.enabled && !addressOnList(ip, list.entries);
 }

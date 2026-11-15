@@ -148,5 +148,76 @@
     "unauthorized": "Your sign-in has ended — please sign in again.",
     "network": "No connection. Please try again.",
     "other": "That did not save. Please try again."
+  },
+  "board": {
+    "twoFa": "2-step login required",
+    "twoFaSub": "Everyone types a code from their phone after the password.",
+    "failed": "Failed sign-ins (24 h)",
+    "failedSub": "from {n} address(es)",
+    "sessions": "Open sessions",
+    "history": {
+      "h": "Sign-in history",
+      "who": "Who",
+      "where": "Where",
+      "when": "When",
+      "ok": "OK",
+      "wrong": "Wrong password",
+      "unknown": "Unknown",
+      "block": "Block",
+      "none": "No sign-ins yet",
+      "blockedTag": "Blocked"
+    },
+    "now": {
+      "h": "Signed in now",
+      "thisDevice": "This device",
+      "since": "since",
+      "signOut": "Sign out",
+      "signedOut": "{who} signed out on {device}"
+    },
+    "blocked": {
+      "h": "Blocked addresses",
+      "none": "No blocked addresses",
+      "unblock": "Unblock",
+      "waiting": "Waiting until {time}",
+      "hint": "An address is blocked by itself after {n} wrong passwords in {m} minutes. Staff accounts are never locked — only that address waits."
+    },
+    "dlg": {
+      "twoOffTitle": "Turn off 2-step login?",
+      "twoOffText": "Staff could sign in with a password only. Not recommended.",
+      "twoOff": "Turn off",
+      "unblockTitle": "Unblock this address?",
+      "unblockOk": "Unblock",
+      "blockTitle": "Block this address?",
+      "blockText": "{ip} will not be able to open the admin sign-in page.",
+      "blockOk": "Block",
+      "pin": "Owner PIN",
+      "cancel": "Cancel",
+      "working": "Working…",
+      "close": "Close"
+    },
+    "toast": {
+      "saved": "Saved",
+      "twoOn": "On for everyone",
+      "twoOff": "2-step login is now optional",
+      "blocked": "Address blocked",
+      "unblocked": "Unblocked"
+    },
+    "boardErr": {
+      "OWNER_ONLY": "Only the owner can do this.",
+      "THIS_DEVICE": "That is the device you are using now.",
+      "NOT_FOUND": "It is not there any more.",
+      "YOUR_ADDRESS": "That is the address you are using now.",
+      "INVALID_ADDRESS": "That is not an internet address.",
+      "LIST_FULL": "The list is full.",
+      "INVALID_INPUT": "Check what you typed.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "network": "No connection. Try again.",
+      "other": "Something went wrong. Try again."
+    },
+    "moreOptions": "More options",
+    "moreOptionsSub": "Session lengths, the address list, page protection, request limits and the latest security events."
   }
 }
