@@ -34,6 +34,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { Act } from '@/components/admin/fulfil/Act';
 import { BookOne, PackButton, PhotoUpload, ReportIssue, ScanBox, StartAll, SwapPick, TickLine } from '@/components/admin/fulfil/Pack';
 import { PdfButton } from '@/components/admin/fulfil/Print';
+import { PeakCard, type PeakTexts, type PeakValue } from '@/components/admin/fulfil/PeakCard';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PackSelect, type PackSelectRow } from '@/components/admin/fulfil/PackSelect';
 import { invoiceHref } from '@/lib/admin-orders/model';
@@ -170,6 +171,24 @@ export default async function PackPage({ searchParams }: Props) {
     }
   }
   const fd: Dict = { ful: d.ful as Dict };
+  // S28 · PR 731: Peak / Eid mode: orders in today (shop day), parcels ready to print, and the card's words
+  const peakCard = cards['orders.peak'] as unknown as { value: PeakValue; version: string };
+  const peakKeys = ['title', 'on', 'off', 'hint', 'cap', 'capNone', 'today', 'full', 'left', 'fullEn', 'fullBn', 'fullHelp', 'parts', 'partsNone', 'partsOf', 'partsUnit', 'part', 'roster', 'rosterNone', 'name', 'task', 'from', 'to', 'add', 'remove', 'save', 'saved', 'readOnly'] as const;
+  const peakTexts = Object.fromEntries(peakKeys.map((k) => [k, t(d, `ful.pack.peakCard.${k}`)])) as unknown as PeakTexts;
+  peakTexts.err = Object.fromEntries(['STALE', 'INVALID_INPUT', 'forbidden', 'network', 'other'].map((c) => [c, t(d, `ful.pack.peakCard.err.${c}`)]));
+  let peakToday = 0;
+  let peakReady = 0;
+  if (peakCard.value.enabled) {
+    const tz = (await sd.settings.value('store.timeZone', at)) as string;
+    peakToday = await sd.db.order.count({ where: { storeId: MOTHER_STORE_ID, isPractice: false, createdAt: { gte: sh.dayStart(new Date(), tz, 0) } } });
+    if (peakCard.value.partSize && can('fulfilment.print')) {
+      try {
+        peakReady = (await sh.printRun(sd, who)).rows.length;
+      } catch (e) {
+        if (!sh.isShippingError(e)) throw e;
+      }
+    }
+  }
   // S28 · PR 666: the switches' card, on the page where they are used (CN-018)
   const ps = (k: string) => t(d, `ful.printRun.set.${k}`);
   const canSettings = can('fulfilment.printSettings');
@@ -207,9 +226,9 @@ export default async function PackPage({ searchParams }: Props) {
         sub={t(d, 'ful.pack.sub')}
         right={
           <>
-            <button type="button" className="a2-btn is-off" disabled title={t(d, 'ful.pack.peakOff')} data-testid="pack-peak-off">
+            <a className="a2-btn" href="#peak" data-testid="pack-peak">
               {t(d, 'ful.pack.peak')}
-            </button>
+            </a>
             <Link className="a2-btn" href="/admin/orders/packing/print" data-testid="pack-print-all">
               <ShellIcon name="print" size={15} />
               {t(d, 'ful.pack.printAll')}
@@ -223,6 +242,7 @@ export default async function PackPage({ searchParams }: Props) {
         }
       />
       <SectionTabs view={view} current="packingPack" />
+      <PeakCard screen={peakCard} texts={peakTexts} canEdit={canSettings} today={peakToday} ready={peakReady} printHref="/admin/orders/packing/print" />
       <p className="a2-xs a2-mt12" data-testid="pack-summary">
         <b>{t(d, 'ful.pack.summary')}</b> {t(d, 'ful.picking.sheet.counts', { orders: n(picking.summary.orders), pieces: n(picking.summary.pieces), lines: n(picking.summary.lineItems) })} ·{' '}
         {t(d, 'ful.picking.sheet.categories', { list: picking.summary.categories.map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—' })}

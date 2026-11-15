@@ -40,7 +40,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { printedAt } from '@/lib/admin-fulfil/handover';
-import { filterPrintRows, printFilterChoices, printFilterOf } from '@/lib/admin-fulfil/print-filter';
+import { filterPrintRows, partOf, partRows, printFilterChoices, printFilterOf } from '@/lib/admin-fulfil/print-filter';
 import { adminDeps } from '@/lib/admin-auth';
 import { withFulfil } from '@/lib/admin-fulfil/i18n';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -103,8 +103,13 @@ export default async function PrintRunPage({ searchParams }: { searchParams: Sea
   // follow-up 439: the run's filter (courier, category); everything below acts on the parcels shown
   const choices = printFilterChoices(run.rows);
   const filter = printFilterOf(sp, run.rows);
-  const filtered = Boolean(filter.courier || filter.category);
-  const rows = filterPrintRows(run.rows, filter);
+  // S28 · PR 731 ("Print all in parts"): while Peak / Eid mode is on and a part size is set, ?part=n shows that part of the run only
+  const peak = cards['orders.peak'].value as { enabled: boolean; partSize: number | null };
+  const partSize = peak.enabled ? peak.partSize : null;
+  const part = partSize ? partOf(sp) : null;
+  const wholeRun = filterPrintRows(run.rows, filter);
+  const filtered = Boolean(filter.courier || filter.category || part);
+  const rows = partRows(wholeRun, part, partSize);
   const fresh = rows.filter((r) => !r.problem && (what === 'invoice' || r.printCount === 0));
   const perPress = withInvoice ? Math.min(run.maxPerPdf, invoicePrint.maxPerPdf) : run.maxPerPdf;
   const batch = fresh.slice(0, perPress);
