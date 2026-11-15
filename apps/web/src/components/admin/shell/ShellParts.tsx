@@ -14,7 +14,7 @@ import { deniedMemo, shellSession } from '@/lib/admin-shell/session';
 import { guideOf, locateKey, sectionHome, visiblePages, visibleTabs, type ShellPlace, type ShellSection, type ShellViewer } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { EmptyState } from '@/components/admin/lumen/EmptyState';
-import { GuideButton, MoreTabs, SearchButton } from './ShellButtons';
+import { GuideButton, MoreTabs, SearchButton, TabsRow } from './ShellButtons';
 import { ShellIcon } from './ShellIcon';
 
 const NOBODY: ShellViewer = { perms: new Set(), owner: false };
@@ -69,7 +69,7 @@ export async function SectionTabs({ view, current }: { view: AdminView; current:
     <>
       {tabs.length > 1 ? (
         <nav className="a2-z a2-tabs" aria-label={t(view.dict, 'shell.tabs.aria', { section: secName(view, place.section.id) })} data-testid="a2-tabs">
-          <div className="a2-tabs-s">
+          <TabsRow>
             {main.map((x) => {
               const on = x.id === place.tab!.id;
               return (
@@ -78,7 +78,7 @@ export async function SectionTabs({ view, current }: { view: AdminView; current:
                 </Link>
               );
             })}
-          </div>
+          </TabsRow>
           {more.length ? <MoreTabs label={t(view.dict, 'shell.tabs.more')} links={more.map((x) => ({ href: visiblePages(x, v)[0]!.href, label: label(x.id), on: x.id === place.tab!.id }))} /> : null}
         </nav>
       ) : null}

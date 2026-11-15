@@ -2,7 +2,7 @@
 // PR 12 — the few buttons a page drawn on the server needs from the shell: open this section's guide, open search,
 // and "More ▾" of the section tabs (a small menu; Esc or a click outside closes it).
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { openGuide, openPalette } from './events';
 import { ShellIcon } from './ShellIcon';
 
@@ -24,6 +24,26 @@ export function SearchButton({ label }: { label: string }) {
       <ShellIcon name="search" size={15} />
       {label}
     </button>
+  );
+}
+
+/**
+ * PR 727: the row of main tabs. On a phone the row scrolls sideways, so the open tab could sit out of sight and no tab
+ * looked marked; it is brought to the middle of the row when the page opens (the row only, never the page).
+ */
+export function TabsRow({ children }: { children: ReactNode }) {
+  const row = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = row.current;
+    const on = el?.querySelector<HTMLElement>('.on');
+    if (!el || !on) return;
+    const left = on.offsetLeft - (el.clientWidth - on.offsetWidth) / 2;
+    if (left > 0) el.scrollLeft = left;
+  }, []);
+  return (
+    <div className="a2-tabs-s" ref={row}>
+      {children}
+    </div>
   );
 }
 

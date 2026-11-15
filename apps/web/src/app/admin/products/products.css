@@ -7,8 +7,8 @@
 .ad a.ad-btn-primary { color: var(--ad-brand-ink); }
 /* the demo's fields on these pages are 40 px high */
 .pa-search .ad-input, .pa-fld .ad-input, .pa-same .ad-input, .pa-newcol .ad-input { padding-top: 9px; padding-bottom: 9px; }
-/* the catalogue tabs: on a phone the page chips above already list these pages */
-@media (max-width: 1023px) { .pa-gtabs { display: none; } }
+/* PR 727: the section's tab bar (`.pa-gtabs` wraps it on the older pages) shows at every width. It was hidden below 1024 px
+   ("the page chips already list these pages"), so on a phone those pages lost the section's tabs. */
 
 .pa-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
