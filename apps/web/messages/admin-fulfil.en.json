@@ -713,7 +713,43 @@
         }
       },
       "peak": "Peak / Eid mode",
-      "peakOff": "Peak and Eid mode is not switched on yet. Today the packing queue works the same on every day."
+      "peakCard": {
+        "title": "Peak / Eid mode",
+        "on": "On",
+        "off": "Off",
+        "hint": "Turn on before Eid or a big sale: a daily cap on orders, the words the shop says when the day is full, who works on the busy days, and printing in parts.",
+        "cap": "Most orders we can send a day",
+        "capNone": "No cap",
+        "today": "{n} of {cap} orders today",
+        "full": "The day is full. The shop stops promising a delivery day.",
+        "left": "{today} of {cap} today · {n} more, then the shop stops promising a delivery day",
+        "fullEn": "Words when the day is full (English)",
+        "fullBn": "Words when the day is full (Bengali)",
+        "fullHelp": "Empty: the shop uses its own words.",
+        "parts": "Print all in parts of",
+        "partsNone": "One part",
+        "partsOf": "Size of one part",
+        "partsUnit": "parcels",
+        "part": "Part {n} · {from}–{to}",
+        "roster": "Who works on the busy days",
+        "rosterNone": "Nobody added yet.",
+        "name": "Name",
+        "task": "Task",
+        "from": "First day",
+        "to": "Last day",
+        "add": "Add a person",
+        "remove": "Remove",
+        "save": "Save",
+        "saved": "Peak / Eid mode saved",
+        "readOnly": "You can see this but not change it.",
+        "err": {
+          "STALE": "Someone changed this meanwhile. The latest values are shown. Try again.",
+          "INVALID_INPUT": "Check these: {fields}.",
+          "forbidden": "You do not have the right to change this.",
+          "network": "No connection. Try again.",
+          "other": "Something went wrong. Try again."
+        }
+      }
     },
     "printRun": {
       "press": {
