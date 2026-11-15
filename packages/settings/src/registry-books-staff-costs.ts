@@ -35,6 +35,20 @@ export const staffCostAdjustSchema = z
   .strict();
 export type StaffCostAdjust = z.output<typeof staffCostAdjustSchema>;
 
+/**
+ * parity F5 · PR 859 (prototype Salaries "Pay salary"): a month's salary was paid, from which cashbook account, on which day and for how
+ * much. Written only by the pay route (Accounts / owner, with the PIN) after the cashbook took the entry; once a month is
+ * paid its advance, bonus and deduction are locked. Nothing is overwritten: a wrong payment is reversed in the cashbook.
+ */
+export const staffCostPaidSchema = z
+  .object({
+    at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    minor: z.number().int().min(1).max(1_000_000_000_000),
+    account: z.string().min(1).max(40),
+  })
+  .strict();
+export type StaffCostPaid = z.output<typeof staffCostPaidSchema>;
+
 export const staffCostPersonSchema = z
   .object({
     id: z.string().min(1).max(40),
@@ -49,6 +63,8 @@ export const staffCostPersonSchema = z
     stoppedFrom: monthSchema.nullable(),
     /** PR 849: the advance, bonus and deduction of a month (key `YYYY-MM`); a month with none is not listed. */
     adj: z.record(monthSchema, staffCostAdjustSchema).optional(),
+    /** PR 859: the months whose salary was paid (key `YYYY-MM`); a month not listed is not paid. */
+    paid: z.record(monthSchema, staffCostPaidSchema).optional(),
   })
   .strict();
 export type StaffCostPerson = z.output<typeof staffCostPersonSchema>;
@@ -76,6 +92,14 @@ export function staffNetAt(p: Pick<StaffCostPerson, 'amounts' | 'stoppedFrom' | 
   const bonus = base ? (a?.bonus ?? 0) : 0;
   const ded = base ? (a?.ded ?? 0) : 0;
   return { base, adv, bonus, ded, net: Math.max(0, base + bonus - ded - adv) };
+}
+
+/** Who is to be paid in a month and how much: salary heads with something to pay that are not paid yet (`ids` narrows it). */
+export function salaryPlan(people: readonly StaffCostPerson[], month: string, ids?: readonly string[]): { id: string; name: string; minor: number }[] {
+  return people
+    .filter((p) => p.kind === 'salary' && !p.paid?.[month] && (!ids || ids.includes(p.id)))
+    .map((p) => ({ id: p.id, name: p.name, minor: staffNetAt(p, month).net }))
+    .filter((x) => x.minor > 0);
 }
 
 /** A month's totals per kind (what the month's fixed costs would be). */
