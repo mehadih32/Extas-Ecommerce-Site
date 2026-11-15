@@ -19,7 +19,7 @@ import { LookThumb } from '../thumbs';
 import { Bar, BarsChart, Card, Delta, Empty, LineChart, Lnk, Pill, Soon, Spark, Tile } from '../kit';
 import type { Fmt } from '../fmt';
 import { can, DashHead, prevText, rangeText, type DashProps } from './common';
-import { ProtoCards } from './ProtoCards';
+import { ChartDoNow, ProtoLower, ProtoTop } from './ProtoCards';
 
 export function Photo({ image, name, lang, cls = 'sm' }: { image: TopRow['image']; name: string; lang: 'bn' | 'en'; cls?: 'xs' | 'sm' }) {
   return (
@@ -198,10 +198,11 @@ function Overview(p: DashProps) {
       </Tile>,
     );
   }
+  // PR 729 (prototype v5 Home): the chart (and its three tiles under it) with "Do now" beside it, not under everything
   const top = hero || tiles.length ? (
-    <div className={`a3-dg1${hero ? '' : ' solo'}`}>
+    <div className="a3-stk" data-testid="dash-lead">
       {hero}
-      {tiles.length ? <div className="a3-tiles">{tiles}</div> : null}
+      {tiles.length ? <div className="a3-tiles a3-tiles-row">{tiles}</div> : null}
     </div>
   ) : null;
 
@@ -258,8 +259,9 @@ function Overview(p: DashProps) {
         <TopProducts f={f} rows={data.top} />
       </Card>,
     );
+  let courCard: ReactNode = null;
   if (dl)
-    cards.push(
+    courCard = (
       <Card key="cour" title={f.t('dsh.cour.title')} sub={f.t('dsh.cour.sub', { n: f.n(dl.days) })} right={can(viewer, 'delivery.read') ? <Lnk href="/admin/delivery">{f.t('shell.sec.delivery')}</Lnk> : null} testId="dash-couriers">
         {dl.couriers.filter((c) => c.finished > 0).length ? (
           dl.couriers
@@ -287,7 +289,7 @@ function Overview(p: DashProps) {
             <span>{f.t('dsh.cour.best', { band: f.lang === 'bn' && dl.bestBand.nameBn ? dl.bestBand.nameBn : dl.bestBand.nameEn, courier: dl.bestBand.courier, pct: f.pct(dl.bestBand.rate, 0) })}</span>
           </div>
         ) : null}
-      </Card>,
+      </Card>
     );
   if (data.lowStock)
     cards.push(
@@ -320,14 +322,15 @@ function Overview(p: DashProps) {
   }
   return (
     <>
-      {top}
+      <ProtoTop {...p} />
+      {top ? <ChartDoNow p={p} lead={top} /> : null}
       {pipe}
+      <ProtoLower {...p} mid={courCard} />
       {cards.length ? (
         <div className="a3-dg3" style={{ ['--n' as string]: cards.length }}>
           {cards}
         </div>
       ) : null}
-      <ProtoCards {...p} />
     </>
   );
 }
@@ -428,7 +431,7 @@ export const dashboardA: LookDesign<DashProps, DashPart> = {
     en: 'One big delivered-sales story with a comparison line, where every order is right now, and four short cards. A money & marketing view sits one click away.',
     bn: 'একটা বড় ডেলিভারি বিক্রির গ্রাফ আর তুলনা, অর্ডার এখন কোথায়, আর চারটা ছোট কার্ড। টাকা ও মার্কেটিং এক ক্লিকে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads'],
   Render: DashboardA,
   // The demo's sketch of this design (its key there is B).
   Thumb: () => <LookThumb page="dashboard" id="B" />,
