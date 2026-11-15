@@ -74,7 +74,15 @@
       "new": "New fixed combo",
       "empty": "No fixed combos yet.",
       "autoTitle": "Auto-apply:",
-      "autoText": "when the bag has every item of an active combo, the set price is applied by itself — even if the customer added the items one by one."
+      "autoText": "when the bag has every item of an active combo, the set price is applied by itself — even if the customer added the items one by one.",
+      "search": "Search combos",
+      "filter": "Show combos",
+      "chip": {
+        "active": "Active",
+        "sched": "Scheduled or ended",
+        "off": "Off"
+      },
+      "none": "No combo here."
     },
     "editor": {
       "newTitle": "New fixed combo",
@@ -433,6 +441,22 @@
         "OWN_PRICE": "Flexible — each at its own price"
       },
       "toast": "{name}: saved"
+    },
+    "sum": {
+      "k": {
+        "onShop": "On the shop",
+        "sold": "Combos sold ({days} days)",
+        "sales": "Combo sales ({days} days)",
+        "saving": "Average saving"
+      },
+      "waiting": "{n} waiting for the start day",
+      "best": "sets sold in the last {days} days: the best seller ({n}).",
+      "waitingNote": "{n} combos wait for their start day.",
+      "none": "No combo has been sold in this time yet."
+    },
+    "head": {
+      "auto": "Auto-generate",
+      "build": "Build a combo"
     }
   }
 }

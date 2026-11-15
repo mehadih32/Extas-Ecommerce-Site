@@ -45,6 +45,11 @@ export function FixedTab(props: FixedTabProps) {
   const { dict: d, combos } = p;
   const tt = (k: string, vars?: Record<string, string | number>) => t(d, `combos.${k}`, vars);
   const active = combos.filter((c) => c.state === 'live').length;
+  // PR 829 (prototype v5): the chips (Active, Scheduled or ended, Off) with their counts, and the search box
+  const [chip, setChip] = useState<'active' | 'sched' | 'off'>('active');
+  const [q, setQ] = useState('');
+  const chipOf = (c: ComboView): 'active' | 'sched' | 'off' => (c.state === 'live' ? 'active' : c.state === 'soon' || c.state === 'ended' ? 'sched' : 'off');
+  const shown = combos.filter((c) => chipOf(c) === chip && (!q.trim() || `${c.nameEn} ${c.nameBn ?? ''}`.toLowerCase().includes(q.trim().toLowerCase())));
   return (
     <div className="cb-fixed">
       <div className="cb-sec-hd">
@@ -63,11 +68,26 @@ export function FixedTab(props: FixedTabProps) {
         ) : null}
       </div>
       {combos.length ? (
+        <div className="cb-chipbar" data-testid="cb-fixed-filter">
+          <input className="ad-input cb-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={tt('fixed.search')} aria-label={tt('fixed.search')} data-testid="cb-fixed-search" />
+          <div className="cb-chips" role="group" aria-label={tt('fixed.filter')}>
+            {(['active', 'sched', 'off'] as const).map((k) => (
+              <button key={k} type="button" className="ad-chip" aria-pressed={chip === k} onClick={() => setChip(k)} data-testid={`cb-fixed-chip-${k}`}>
+                {tt(`fixed.chip.${k}`)}
+                <span className="cb-chip-n">{combos.filter((c) => chipOf(c) === k).length}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {shown.length ? (
         <div className="cb-grid">
-          {combos.map((c) => (
+          {shown.map((c) => (
             <ComboCard key={c.id} {...p} combo={c} />
           ))}
         </div>
+      ) : combos.length ? (
+        <div className="cb-empty">{tt('fixed.none')}</div>
       ) : (
         <div className="cb-empty">{tt('fixed.empty')}</div>
       )}
