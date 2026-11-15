@@ -16,3 +16,4 @@
 .adm2 .st-kv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin-top: 10px; }
 .adm2 .st-kv dd { text-align: right; font-weight: 700; overflow-wrap: anywhere; }
 .adm2 .st-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 9px; border: 1px solid var(--ln); background: var(--sf); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; }
+.adm2 .st-opts > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }

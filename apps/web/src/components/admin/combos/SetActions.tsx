@@ -1,10 +1,10 @@
 'use client';
 // PR 773 (prototype v5 parity, m-products.js renderSets) — the foot of a set card: the on/off switch ("On the shop" / "Off"), Edit and
 // Archive (or "Bring back" for an archived set). The switch and Archive call the same route Combos & sets uses
-// (POST /api/admin/combos/:id/active {on}, `combos.publish`; the API checks again). Off and Archive are the same state in the
-// combo service (an off set moves to the Archive, its page keeps opening in the ended state), so Archive asks first.
+// (POST /api/admin/combos/:id/active {on}, `combos.publish`; the API checks again). PR 786: Off (paused, the switch stays) and Archive (ended, "Bring back" returns it to Off) are two states; Archive asks first.
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { SetEditorButton } from './SetEditor';
 
 export interface SetActionsTexts {
   on: string;
@@ -20,16 +20,20 @@ export interface SetActionsTexts {
   notReady: string;
 }
 
-export function SetActions({ id, on, archived, editHref, canPublish, canEdit, texts }: { id: string; on: boolean; archived: boolean; editHref: string; canPublish: boolean; canEdit: boolean; texts: SetActionsTexts }) {
+export function SetActions({ id, on, archived, canPublish, canEdit, texts }: { id: string; on: boolean; archived: boolean; canPublish: boolean; canEdit: boolean; texts: SetActionsTexts }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [asking, setAsking] = useState(false);
   const [msg, setMsg] = useState('');
-  const call = async (next: boolean) => {
+  const call = async (next: boolean, archive = false) => {
     setBusy(true);
     setMsg('');
     try {
-      const res = await fetch(`/api/admin/combos/${id}/active`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ on: next }) });
+      const res = await fetch(`/api/admin/combos/${id}/active`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(archive ? { on: false, archive: true } : { on: next }),
+      });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { code?: string };
         setMsg(body.code === 'NOT_READY' ? texts.notReady : texts.failed);
@@ -49,7 +53,7 @@ export function SetActions({ id, on, archived, editHref, canPublish, canEdit, te
         <>
           <span className="a2-pill line">{texts.archived}</span>
           {canPublish ? (
-            <button type="button" className="a2-btn sm" disabled={busy} onClick={() => call(true)}>
+            <button type="button" className="a2-btn sm" disabled={busy} onClick={() => call(false)}>
               {texts.bringBack}
             </button>
           ) : null}
@@ -61,11 +65,7 @@ export function SetActions({ id, on, archived, editHref, canPublish, canEdit, te
             <span>{on ? texts.on : texts.off}</span>
           </label>
           <span className="st-btns">
-            {canEdit ? (
-              <a className="a2-btn sm" href={editHref}>
-                {texts.edit}
-              </a>
-            ) : null}
+            {canEdit ? <SetEditorButton id={id} label={texts.edit} /> : null}
             {canPublish ? (
               <button type="button" className="a2-btn sm ghost" disabled={busy} onClick={() => setAsking(true)}>
                 {texts.archive}
@@ -82,7 +82,7 @@ export function SetActions({ id, on, archived, editHref, canPublish, canEdit, te
             <button type="button" className="a2-btn sm" onClick={() => setAsking(false)}>
               {texts.cancel}
             </button>
-            <button type="button" className="a2-btn sm primary" disabled={busy} onClick={() => call(false)}>
+            <button type="button" className="a2-btn sm primary" disabled={busy} onClick={() => call(false, true)}>
               {texts.archive}
             </button>
           </span>
