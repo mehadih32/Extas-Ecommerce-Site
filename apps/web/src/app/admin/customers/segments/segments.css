@@ -15,3 +15,8 @@
   .adm2 .seg-cond > .a2-icb{grid-row:1;grid-column:2}
   .adm2 .seg-cond + .seg-cond{border-top:1px solid var(--ln2);padding-top:10px}
 }
+/* PR 801: the group cards of the prototype */
+.adm2 .seg-card{display:flex;flex-direction:column;gap:10px;min-width:0}
+.adm2 .seg-card .seg-big{font-size:28px;font-weight:700;line-height:1.1}
+.adm2 .seg-acts{flex-wrap:wrap;margin-top:auto}
+.adm2 .seg-acts .a2-btn{min-height:44px;display:inline-flex;align-items:center}
