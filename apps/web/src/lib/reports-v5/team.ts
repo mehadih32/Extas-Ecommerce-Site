@@ -126,6 +126,17 @@ export interface Conv {
   firstReplyAt: number;
 }
 
+/** PR 864: the replies without those in a practice customer's chat (a chat with no customer stays). */
+export function withoutPracticeChats<
+  T extends { conversation: { customerId: string | null } },
+>(msgs: readonly T[], practiceCustomers: ReadonlySet<string>): T[] {
+  return msgs.filter(
+    (m) =>
+      !m.conversation.customerId ||
+      !practiceCustomers.has(m.conversation.customerId),
+  );
+}
+
 /** Chats that turned into an order: per person, chats answered and those whose customer ordered within 48 hours of the first reply. */
 export function chatConversion(
   convs: readonly Conv[],
@@ -211,7 +222,7 @@ async function loadActs(
     orderNumber: e.order.number,
     placedAt: e.order.placedAt.getTime(),
   }));
-  const msgs = await db.message.findMany({
+  const allMsgs = await db.message.findMany({
     where: {
       storeId: S,
       isInternalNote: false,
@@ -234,6 +245,20 @@ async function loadActs(
     orderBy: { sentAt: "asc" },
     take: 50000,
   });
+  // PR 864: with practice mode off, the chats of practice customers are left out too (their orders already are)
+  const practiceIds =
+    scope.isPractice === false
+      ? new Set(
+          (
+            await db.customer.findMany({
+              where: { storeId: S, isPractice: true },
+              select: { id: true },
+              take: 50000, // hardcode-ok: a guard on the list length
+            })
+          ).map((x) => x.id),
+        )
+      : new Set<string>();
+  const msgs = withoutPracticeChats(allMsgs, practiceIds);
   const cids = [...new Set(msgs.map((m) => m.conversationId))];
   const around = cids.length
     ? await db.message.findMany({
