@@ -7,6 +7,7 @@ import { requirePermission } from "@extas/auth";
 import { MOTHER_STORE_ID } from "@extas/db/client";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { BehaviourScreen } from "@/components/admin/analytics/BehaviourScreen";
+import { AnalyticsSub } from "@/components/admin/analytics/AnalyticsSub";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
 import { locateKey } from "@/lib/admin-shell/sections";
 import { adminDeps } from "@/lib/admin-auth";
@@ -98,6 +99,7 @@ export default async function WebsiteBehaviourPage({
         sub={t(view.dict, "webAnalytics.behaviour.sub")}
       />
       <SectionTabs view={view} current={KEY} />
+      <AnalyticsSub dict={view.dict} current="behaviour" />
       <BehaviourScreen
         dict={view.dict}
         view={v}

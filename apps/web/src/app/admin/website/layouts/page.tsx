@@ -92,10 +92,13 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
 
   return (
     <div className="a2-z lyb-page" data-testid="ly-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} right={<a className="lm-btn" href={shopHref} target="_blank" rel="noopener noreferrer" data-testid="ly-view-shop">{g('viewOnShop')}</a>} />
       <SectionTabs view={view} current={KEY} />
       <p className="lm-hint lyb-note" role="note">
         {g('note')}
+      </p>
+      <p className="lm-hint lyb-note" role="note" data-testid="ly-tip">
+        {g('tip')}
       </p>
       <nav className="lm-chips lyb-pick" aria-label={g('pages')} data-testid="ly-pick">
         {LAYOUT_PAGES.map((x) => (
