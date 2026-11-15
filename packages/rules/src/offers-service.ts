@@ -408,6 +408,8 @@ export interface OfferListRow {
   results: OfferResults | null;
   /** Where the rest of this one is set (a built-in engine's own page). */
   href: string | null;
+  /** PR 823: the offer is for a customer's first order only (the "First order / returning" chip). */
+  firstOrderOnly?: boolean;
 }
 
 export interface OffersScreen {
@@ -415,7 +417,7 @@ export interface OffersScreen {
   /** The latest ends first; what is waiting for the owner. */
   awaiting: number;
   /** Money given by every code in the last 30 days and orders with a code. */
-  discount30: { discountMinor: number; orders: number };
+  discount30: { discountMinor: number; orders: number; /** PR 823: what those orders came to (their totals). */ salesMinor: number; /** Share of the goods' price left after discount and the ERP buying cost, in percent, and that profit; null while any order has no cost yet. */ marginPct: number | null; profitMinor: number | null };
 }
 
 async function resultsByCode(deps: RulesDeps, storeId: number, codes: string[]): Promise<Map<string, OfferResults>> {
@@ -435,6 +437,27 @@ async function resultsByCode(deps: RulesDeps, storeId: number, codes: string[]):
     out.set(o.couponCode!, r);
   }
   return out;
+}
+
+/** Pure: the share of the goods' price (after the discount) left after the ERP buying cost, from orders that used a code. Null while there is nothing to count or an order has a line with no cost yet (never a guess). */
+export function marginOf(orders: readonly { subtotalMinor: number; discountMinor: number; items: readonly { quantity: number; unitCostMinor: number | null }[] }[]): { pct: number; profitMinor: number } | null {
+  let net = 0;
+  let cost = 0;
+  for (const o of orders) {
+    if (o.items.some((i) => i.unitCostMinor === null)) return null;
+    net += o.subtotalMinor - o.discountMinor;
+    cost += o.items.reduce((n, i) => n + i.quantity * (i.unitCostMinor ?? 0), 0);
+  }
+  return net > 0 ? { pct: Math.round(((net - cost) / net) * 100), profitMinor: net - cost } : null; // hardcode-ok: percent
+}
+
+async function marginAfterDiscount(deps: RulesDeps, storeId: number, since: Date): Promise<{ pct: number; profitMinor: number } | null> {
+  const orders = await deps.db.order.findMany({
+    where: { storeId, couponCode: { not: null }, placedAt: { gte: since }, status: { notIn: ['DRAFT', 'CANCELLED'] } },
+    select: { subtotalMinor: true, discountMinor: true, items: { where: { status: 'ACTIVE' }, select: { quantity: true, unitCostMinor: true } } },
+    take: 5000, // hardcode-ok: a guard on the 30 days' orders with a code
+  });
+  return marginOf(orders);
 }
 
 /** Offers, coupons, built-in price rules, the online-payment reward, points and wallet in one list (`rules.read`). */
@@ -466,6 +489,7 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
       endsAt: v.endsAt,
       results: o.code ? (results.get(o.code) ?? EMPTY_TALLY) : null,
       href: null,
+      firstOrderOnly: v.who.firstOrderOnly,
     });
   }
   for (const c of coupons) {
@@ -555,8 +579,9 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
   const since = new Date(now.getTime() - 30 * 86_400_000);
   const agg = await deps.db.order.aggregate({
     where: { storeId: who.storeId, couponCode: { not: null }, placedAt: { gte: since }, status: { notIn: ['DRAFT', 'CANCELLED'] } },
-    _sum: { discountMinor: true },
+    _sum: { discountMinor: true, totalMinor: true },
     _count: { _all: true },
   });
-  return { rows, awaiting: offers.filter((o) => o.state === 'AWAITING_OK').length, discount30: { discountMinor: agg._sum.discountMinor ?? 0, orders: agg._count._all } };
+  const marginPct = await marginAfterDiscount(deps, who.storeId, since);
+  return { rows, awaiting: offers.filter((o) => o.state === 'AWAITING_OK').length, discount30: { discountMinor: agg._sum.discountMinor ?? 0, orders: agg._count._all, salesMinor: agg._sum.totalMinor ?? 0, marginPct: marginPct?.pct ?? null, profitMinor: marginPct?.profitMinor ?? null } };
 }

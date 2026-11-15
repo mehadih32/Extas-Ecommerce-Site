@@ -34,7 +34,11 @@ export default async function OffersPage() {
   if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const a = rulesAccess(access);
-  const [screen, env, scopes] = await Promise.all([rl.offersScreen({ ...a.deps, settings: deps!.resolver }, a.who), rulesEnv(a), ruleScopes(a)]);
+  const [screen, env, scopes, clashes] = await Promise.all([rl.offersScreen({ ...a.deps, settings: deps!.resolver }, a.who), rulesEnv(a), ruleScopes(a), rl.listConflicts({ ...a.deps, settings: deps!.resolver }, a.who).catch(() => [])]);
+  const nameOf = (r: { nameEn: string; nameBn: string | null } | null) => (r ? (view.lang === 'bn' && r.nameBn ? r.nameBn : r.nameEn) : '');
+  const heads = clashes
+    .filter((c) => c.ruleA && c.ruleB)
+    .map((c) => ({ id: c.id, text: t(view.dict, 'lf.of.hd.pair', { a: nameOf(c.ruleA), b: nameOf(c.ruleB), slot: c.slot }), href: `/admin/rules/smart?rule=${c.ruleA!.id}` }));
 
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
@@ -45,6 +49,7 @@ export default async function OffersPage() {
         screen={screen}
         scopes={scopes}
         perms={{ write: a.perms.write, approve: a.perms.approve }}
+        heads={heads}
       />
     </AdminFrame>
   );
