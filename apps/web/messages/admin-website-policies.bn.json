@@ -299,7 +299,8 @@
     "legal": {
       "licence": "ট্রেড লাইসেন্স",
       "updated": "শেষ আপডেট",
-      "history": "হিস্ট্রি"
+      "history": "হিস্ট্রি",
+      "ubid": "UBID"
     }
   }
 }
