@@ -108,6 +108,20 @@ export interface AcceptedRow {
   at: Date;
 }
 
+/** PR 858 (parity F5): a line that did not match and was settled by a note ("Mark resolved"), for the "Claimed or resolved" view. */
+export interface ResolvedStatementLine {
+  lineId: string;
+  consignmentId: string | null;
+  orderNumber: string | null;
+  reasonCode: string | null;
+  note: string | null;
+  at: Date;
+  codMinor: number;
+  expectedMinor: number | null;
+}
+/** How many resolved lines the statement page lists (a short list, newest first). */
+export const MONTH_STATEMENT_RESOLVED = 50;
+
 export interface MonthStatement {
   courier: { id: string; name: string };
   ym: string;
@@ -118,6 +132,10 @@ export interface MonthStatement {
   totals: CourierMoney['month'];
   open: (OpenStatementLine & { extraChargeMinor: number | null })[];
   openCount: number;
+  /** PR 858: the parcels among the open lines that already have a claim (open or sent) raised against this courier. */
+  claimedShipmentIds: string[];
+  /** PR 858: lines settled with a note, newest first. */
+  resolved: ResolvedStatementLine[];
   accepted: AcceptedRow[];
   acceptedMinor: number;
   /** Claims still to receive from this courier (open and sent). */
@@ -136,7 +154,8 @@ export async function courierMonthStatement(deps: PaymentsDeps, who: Who, courie
   const from = new Date(`${ym}-01T00:00:00.000Z`);
   const to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1));
   const now = nowOf(deps);
-  const [account, rows, audits, claims, late, lineFigures] = await Promise.all([
+  const openShipments = base.open.map((o) => o.shipmentId).filter((x): x is string => !!x);
+  const [account, rows, audits, claims, late, lineFigures, claimed, resolvedRows] = await Promise.all([
     deps.db.courierAccount.findFirstOrThrow({ where: { id: courierAccountId, storeId }, select: { id: true, name: true } }),
     deps.db.courierSettlement.findMany({
       where: { storeId, courierAccountId, receivedAt: { gte: from, lt: to } },
@@ -158,7 +177,17 @@ export async function courierMonthStatement(deps: PaymentsDeps, who: Who, courie
           select: { id: true, matchState: true, reasonCode: true, resolvedAt: true, chargeMinor: true, expectedChargeMinor: true },
         })
       : Promise.resolve([]),
+    openShipments.length ? deps.db.courierClaim.findMany({ where: { storeId, courierAccountId, shipmentId: { in: openShipments }, status: { in: ['OPEN', 'SENT'] } }, select: { shipmentId: true } }) : Promise.resolve([]),
+    deps.db.courierSettlementLine.findMany({
+      where: { storeId, matchState: { in: ['MISMATCH', 'LATE'] }, resolvedAt: { not: null }, settlement: { courierAccountId } },
+      orderBy: [{ resolvedAt: 'desc' }, { id: 'desc' }],
+      take: MONTH_STATEMENT_RESOLVED,
+      select: { id: true, consignmentId: true, orderId: true, reasonCode: true, resolutionNote: true, resolvedAt: true, codMinor: true, expectedMinor: true },
+    }),
   ]);
+  const resolvedOrders = resolvedRows.length
+    ? new Map((await deps.db.order.findMany({ where: { id: { in: resolvedRows.map((l) => l.orderId).filter((x): x is string => !!x) } }, select: { id: true, number: true } })).map((o) => [o.id, o.number]))
+    : new Map<string, string>();
   const extraOf = new Map(lineFigures.map((x) => [x.id, extraChargeOf(x)]));
   const accepted: AcceptedRow[] = audits.map((a) => ({
     lineId: a.id,
@@ -187,6 +216,8 @@ export async function courierMonthStatement(deps: PaymentsDeps, who: Who, courie
     totals: base.month,
     open: base.open.map((o) => ({ ...o, extraChargeMinor: extraOf.get(o.lineId) ?? null })),
     openCount: base.openCount,
+    claimedShipmentIds: [...new Set(claimed.map((c) => c.shipmentId).filter((x): x is string => !!x))],
+    resolved: resolvedRows.map((l) => ({ lineId: l.id, consignmentId: l.consignmentId, orderNumber: l.orderId ? (resolvedOrders.get(l.orderId) ?? null) : null, reasonCode: l.reasonCode, note: l.resolutionNote, at: l.resolvedAt!, codMinor: l.codMinor, expectedMinor: l.expectedMinor })),
     accepted,
     acceptedMinor: accepted.reduce((s, a) => s + a.extraMinor, 0),
     claims: { count: claims._count, minor: claims._sum.claimedMinor ?? 0, late },

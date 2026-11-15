@@ -13,11 +13,14 @@
 import { z } from 'zod';
 
 /** The conditions, in the order the builder lists them; each label is in the messages files (`au.rule.<kind>`). */
-export const AUDIENCE_RULES = ['incomplete', 'ordered', 'delivered', 'bagNoBuy', 'vip', 'grade', 'size', 'refused', 'noOffers'] as const;
+export const AUDIENCE_RULES = ['incomplete', 'ordered', 'delivered', 'bagNoBuy', 'vip', 'grade', 'size', 'refused', 'noOffers', 'area', 'category'] as const;
+/** Parity round 3 (PR 857): where a person's parcels go, as the prototype's Area list: inside Dhaka City, the rest of Dhaka, anywhere else. */
+export const AUDIENCE_ZONES = ['inside', 'sub', 'outside'] as const;
+export type AudienceZone = (typeof AUDIENCE_ZONES)[number];
 export type AudienceRuleKind = (typeof AUDIENCE_RULES)[number];
 
 /** What each condition asks for: days (needed, optional = "any time", or none) and a picked row (a size or a grade). */
-export const RULE_NEEDS: Readonly<Record<AudienceRuleKind, { days: 'need' | 'optional' | 'none'; ref: 'size' | 'grade' | null }>> = {
+export const RULE_NEEDS: Readonly<Record<AudienceRuleKind, { days: 'need' | 'optional' | 'none'; ref: 'size' | 'grade' | 'area' | 'category' | null }>> = {
   incomplete: { days: 'need', ref: null },
   ordered: { days: 'need', ref: null },
   delivered: { days: 'need', ref: null },
@@ -27,6 +30,8 @@ export const RULE_NEEDS: Readonly<Record<AudienceRuleKind, { days: 'need' | 'opt
   size: { days: 'optional', ref: 'size' },
   refused: { days: 'optional', ref: null },
   noOffers: { days: 'none', ref: null },
+  area: { days: 'none', ref: 'area' },
+  category: { days: 'optional', ref: 'category' },
 };
 
 /** The stored kind of a builder audience (PR 263 adds lookalikes, PR 264 the refused-parcel exclusion list). */
@@ -59,8 +64,7 @@ const days = z
   .nullish()
   .transform((v) => v ?? null);
 const ref = z
-  .string()
-  .uuid()
+  .union([z.string().uuid(), z.enum(AUDIENCE_ZONES)])
   .nullish()
   .transform((v) => v ?? null);
 

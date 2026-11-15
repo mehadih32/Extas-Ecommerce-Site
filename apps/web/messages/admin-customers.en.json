@@ -1162,7 +1162,17 @@
         "smsCostIs": "Estimated cost: {cost}",
         "smsLong": "Long message — shorten it to save money.",
         "sampleName": "Rahim",
-        "bestTime": "Best time: 11 AM–1 PM or 8–10 PM"
+        "bestTime": "Best time: 11 AM–1 PM or 8–10 PM",
+        "ownToggle": "Write the message yourself",
+        "ownText": "Write the message",
+        "insert": "Insert:",
+        "insName": "Customer name",
+        "insCoupon": "Coupon",
+        "ownNote": "Saved as your own message for this channel. It is only sent when you send the campaign.",
+        "ownNoteWa": "WhatsApp only sends words Meta has approved. Your own message stays \"not approved\" until you send it for approval in Messages › Templates.",
+        "ownSave": "Save and use this message",
+        "ownSaved": "Message saved and picked",
+        "ownTag": "Mine"
       },
       "noCostWhy": "The cost shows once a message on this channel was costed in the last 30 days (the practice sender costs nothing)."
     },

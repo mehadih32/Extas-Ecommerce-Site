@@ -459,7 +459,15 @@
         "other": "That did not work. Try again.",
         "network": "No connection. Try again.",
         "FORBIDDEN": "You do not have permission for this."
-      }
+      },
+      "chip": {
+        "check": "To check",
+        "done": "Claimed or resolved",
+        "all": "All"
+      },
+      "claimRaised": "Claim raised",
+      "resolvedTag": "Resolved",
+      "doneNone": "Nothing here yet."
     }
   }
 }

@@ -137,12 +137,13 @@ export default async function AudiencePage(props: Props) {
     );
   }
   const grades = choices.grades.map((g) => ({ id: g.id, name: (view.lang === 'bn' && g.nameBn) || g.nameEn }));
+  const categories = choices.categories.map((g) => ({ id: g.id, name: (view.lang === 'bn' && g.nameBn) || g.nameEn }));
 
   return (
     <div className="a2-z" data-testid="audience-editor" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} crumb={crumb} title={a ? a.name : s(kind === 'LOOKALIKE' ? 'lal.newTitle' : 'newTitle')} sub={a ? `${s(`kind.${kind}`)} · ${s(`state.${a.state}`)}` : undefined} />
       <SectionTabs view={view} current={KEY} />
-      <AudienceBuilder words={words} audience={start} sizes={choices.sizes} grades={grades} canWrite={canWrite} listHref={LIST} />
+      <AudienceBuilder words={words} audience={start} sizes={choices.sizes} grades={grades} categories={categories} canWrite={canWrite} listHref={LIST} />
       {a ? <AudiencePush words={words} audienceId={a.id} version={a.version} on={card.value.push} canWrite={canWrite} archived={a.state === 'ARCHIVED'} lookalike={kind === 'LOOKALIKE'} syncs={syncLines} settingsHref={`${LIST}#au-settings`} /> : null}
     </div>
   );

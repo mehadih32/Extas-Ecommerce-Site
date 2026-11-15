@@ -24,3 +24,20 @@ describe('smsParts', () => {
     expect(smsParts(`${'a'.repeat(100)}ক`).parts).toBe(2);
   });
 });
+
+// PR 857 — the Insert chips of the campaign's own-writing box.
+import { INSERTS, OWN_KEY, insertToken } from './CampaignForm';
+
+describe('insertToken (own message, Insert chips)', () => {
+  it('puts the token at the caret and moves the caret after it', () => {
+    expect(insertToken('Hi , come', '{customerName}', 3, 3)).toEqual({ text: 'Hi {customerName}, come', caret: 17 });
+  });
+  it('replaces a selection and stays inside the text', () => {
+    expect(insertToken('Hi XX', '{offerCode}', 3, 5)).toEqual({ text: 'Hi {offerCode}', caret: 14 });
+    expect(insertToken('Hi', '{offerCode}', 99, 120).text).toBe('Hi{offerCode}');
+  });
+  it('offers the customer name and the coupon, both words the template check knows', () => {
+    expect(INSERTS.map((i) => i.token)).toEqual(['{customerName}', '{offerCode}']);
+    expect(OWN_KEY).toMatch(/^[a-z][a-zA-Z0-9]*$/);
+  });
+});
