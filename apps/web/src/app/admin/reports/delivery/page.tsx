@@ -24,6 +24,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { adminDeps } from '@/lib/admin-auth';
 import { figureTiles, type ReportFigure } from '@/lib/admin-lumen/figures';
 import { withCourierReport } from '@/lib/admin-courier-report';
+import { practiceScope } from '@/lib/reports-v5/practice';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { orderHref } from '@/lib/admin-orders/model';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -70,7 +71,7 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
   const lang = view.lang === 'bn' ? 'bn' : 'en';
   const at = { storeId: MOTHER_STORE_ID };
   const [proto, perf, book, bookSwitch, currency, mis, misSwitch] = await Promise.all([
-    loadDelivery(access.deps.db, view.timeZone, ymdIn(from, view.timeZone), ymdIn(to, view.timeZone), to),
+    loadDelivery(access.deps.db, view.timeZone, ymdIn(from, view.timeZone), ymdIn(to, view.timeZone), to, await practiceScope(access.deps)),
     sh.courierPerformance(sd, who, { from, to, lang, lateRows: LATE_SHOWN }),
     sh.rtoReport(sd, who, { from, to, lang }),
     access.deps.resolver.value('delivery.courier.rtoBook', at),

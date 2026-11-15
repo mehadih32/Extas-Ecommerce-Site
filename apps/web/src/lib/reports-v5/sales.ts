@@ -32,10 +32,10 @@ export const isDelivered = (o: { status: string }) => DELIVERED.includes(o.statu
 export const isLive = (o: { status: string }) => o.status !== 'CANCELLED';
 
 /** The orders placed in the span (drafts left out), with the hour and weekday in the shop's time zone and their pieces. */
-export async function loadSaleOrders(db: PrismaClient, tz: string, from: string, to: string, source?: string | null): Promise<SaleOrder[]> {
+export async function loadSaleOrders(db: PrismaClient, tz: string, from: string, to: string, source?: string | null, scope: { isPractice?: false } = {}): Promise<SaleOrder[]> {
   const per = daysPeriod(from, to, tz);
   const rows = await db.order.findMany({
-    where: { storeId: S, archivedAt: null, status: { not: 'DRAFT' }, placedAt: { gte: per.from, lt: per.to }, ...(isSaleSource(source) ? { source } : {}) },
+    where: { storeId: S, archivedAt: null, status: { not: 'DRAFT' }, placedAt: { gte: per.from, lt: per.to }, ...(isSaleSource(source) ? { source } : {}), ...scope },
     select: { id: true, number: true, placedAt: true, status: true, source: true, paymentMethod: true, discountMinor: true, couponCode: true, totalMinor: true },
     orderBy: { placedAt: 'asc' },
     take: 20000,

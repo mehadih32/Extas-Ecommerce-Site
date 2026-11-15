@@ -103,10 +103,10 @@ export function deliveryFromRows(rows: readonly ParcelRow[]): Pick<DeliveryFacts
 }
 
 /** The parcels placed in the span that a courier took, with their courier, zone and district. */
-export async function loadParcels(db: PrismaClient, tz: string, from: string, to: string): Promise<ParcelRow[]> {
+export async function loadParcels(db: PrismaClient, tz: string, from: string, to: string, scope: { isPractice?: false } = {}): Promise<ParcelRow[]> {
   const per = daysPeriod(from, to, tz);
   const rows = await db.order.findMany({
-    where: { storeId: S, archivedAt: null, courierAccountId: { not: null }, status: { in: ['HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'] }, placedAt: { gte: per.from, lt: per.to } },
+    where: { storeId: S, archivedAt: null, courierAccountId: { not: null }, status: { in: ['HANDED_OVER', 'IN_TRANSIT', 'DELIVERED', 'PARTIALLY_DELIVERED', 'RETURNED'] }, placedAt: { gte: per.from, lt: per.to }, ...scope },
     select: {
       id: true,
       number: true,
@@ -144,8 +144,8 @@ export async function loadParcels(db: PrismaClient, tz: string, from: string, to
 }
 
 /** Everything the prototype's Delivery & returns report draws, for the span. */
-export async function loadDelivery(db: PrismaClient, tz: string, from: string, to: string, now: Date): Promise<{ facts: DeliveryFacts; rows: ParcelRow[] }> {
-  const rows = await loadParcels(db, tz, from, to);
+export async function loadDelivery(db: PrismaClient, tz: string, from: string, to: string, now: Date, scope: { isPractice?: false } = {}): Promise<{ facts: DeliveryFacts; rows: ParcelRow[] }> {
+  const rows = await loadParcels(db, tz, from, to, scope);
   const base = deliveryFromRows(rows);
   const finishedIds = rows.filter(finished).map((p) => p.id);
   const retIds = rows.filter((p) => p.status === 'RETURNED').map((p) => p.id);
