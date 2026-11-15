@@ -15,6 +15,7 @@ import { groupProfitView } from '../group-profit-view';
 import { reportOverview, type ReportOverview } from '../marketing/report';
 import { profitReport, type ProfitReport } from '../profit-report';
 import { previousSpan } from './model';
+import { withProtoPeriod } from './period';
 import type { Who } from '@extas/inventory';
 
 const S = MOTHER_STORE_ID;
@@ -34,7 +35,7 @@ export async function loadBase(deps: AdminDeps, sp: Sp): Promise<Base> {
   const at = { storeId: S };
   const [currency, timeZone, limits] = await Promise.all([deps.resolver.value('store.currency', at), deps.resolver.value('store.timeZone', at), deps.resolver.value('costs.report', at)]);
   const today = ymdIn(new Date(), timeZone);
-  const period = parseReportQuery(sp, today, limits);
+  const period = parseReportQuery(withProtoPeriod(sp, today), today, limits);
   return { currency, timeZone, limits, today, period, before: previousSpan(period.q.from, period.q.to) };
 }
 
@@ -181,10 +182,11 @@ export async function loadCouponUse(deps: AdminDeps, from: string, to: string): 
 /** Reports › Marketing & ads: Marketing › Report's own figure for the period and the span before, plus ad spend by day. */
 export async function loadMarketing(deps: AdminDeps, sp: Sp): Promise<MarketingData> {
   const rd = { db: deps.db, resolver: deps.resolver, now: deps.now };
-  const now = await reportOverview(rd, sp);
+  const tz = (await deps.resolver.value('store.timeZone', { storeId: S })) as string;
+  const now = await reportOverview(rd, withProtoPeriod(sp, ymdIn(deps.now?.() ?? new Date(), tz)), { always: true });
   const { from, to } = now.period.q;
   const prev = previousSpan(from, to);
-  const [was, days, sales, coupons] = await Promise.all([reportOverview(rd, { from: prev.from, to: prev.to }), now.report ? adSpendByDay(deps.db, now.currency, from, to) : Promise.resolve([]), profitReport(deps, S, from, to), loadCouponUse(deps, from, to)]);
+  const [was, days, sales, coupons] = await Promise.all([reportOverview(rd, { from: prev.from, to: prev.to }, { always: true }), now.report ? adSpendByDay(deps.db, now.currency, from, to) : Promise.resolve([]), profitReport(deps, S, from, to), loadCouponUse(deps, from, to)]);
   return { now, was, days, sales, coupons };
 }
 
@@ -211,4 +213,21 @@ export async function loadReview(a: Access, b: Base): Promise<ReviewData> {
     loadRestock(a),
   ]);
   return { now, was: wasP, channels: channels.report, channelsWas: channelsWas.report, categories: categories.report, restock };
+}
+
+export interface SavedView {
+  id: string;
+  name: string;
+  preset: string;
+  compare: boolean;
+  filters: Record<string, string>;
+}
+
+/** The person's saved views of one report (the Report library's own `ReportView` rows; `reports.read`); none without that key. */
+export async function loadViews(a: Access, reportKey: string): Promise<SavedView[] | null> {
+  if (!a.guard.permissions?.has('reports.read')) return null;
+  const who = { actor: a.guard.actor, storeId: S, ctx: a.guard.ctx } as unknown as Who;
+  const cdep = { db: a.deps.db, settings: a.deps.resolver, now: a.deps.now } as unknown as cat.CatalogueDeps;
+  const rows = await cat.listViews(cdep, who, reportKey);
+  return rows.map((r) => ({ id: r.id, name: r.name, preset: r.params.preset, compare: r.params.compare, filters: r.params.filters }));
 }

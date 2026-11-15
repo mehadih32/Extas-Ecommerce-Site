@@ -25,6 +25,6 @@
 .adm2 .rpb-t i.bad { background: var(--lm-bad); }
 .adm2 .rpl { width: 100%; height: auto; display: block; margin-top: 8px; }
 .adm2 .rpl-leg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--lm-faint); margin-top: 6px; }
-.adm2 .rp-grid2 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 1200px) { .adm2 .rp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .adm2 .rp-grid3 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
 .adm2 .rp-grid3 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.adm2 .rp-grid2 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .adm2 .rp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .adm2 .rp-grid3 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
