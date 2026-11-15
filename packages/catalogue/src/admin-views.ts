@@ -8,12 +8,13 @@ import { allow, parse, setting, type CatalogueDeps, type Db, type Who } from './
 import { categoryTree, flatten } from './categories';
 import { readStoredHealth, type PublishCheckKey } from './health';
 
-export const ADMIN_STATUS_FILTERS = ['live', 'ready', 'draft', 'off', 'archived'] as const;
+// PR 784 (admin prototype v5 parity): `scheduled` (ready to go live at a later time) joins the filters; `draft` also holds the
+// ready-to-publish ones that are not scheduled (the prototype's Draft chip), `ready` stays for old links.
+export const ADMIN_STATUS_FILTERS = ['live', 'ready', 'draft', 'off', 'archived', 'scheduled'] as const;
 export type AdminStatusFilter = (typeof ADMIN_STATUS_FILTERS)[number];
-const STATUS_OF: Record<Exclude<AdminStatusFilter, 'archived'>, Prisma.ProductWhereInput['status']> = {
+const STATUS_OF: Record<Exclude<AdminStatusFilter, 'archived' | 'draft' | 'scheduled'>, Prisma.ProductWhereInput['status']> = {
   live: 'PUBLISHED',
   ready: 'READY_TO_PUBLISH',
-  draft: 'DRAFT',
   off: 'UNPUBLISHED',
 };
 
@@ -24,7 +25,7 @@ export const adminListQuery = z
     categoryId: z.uuid().optional(),
     page: z.int().min(1).optional(),
     /** PR 722 (prototype "Sort: best selling"): `best` = pieces sold in the last 30 days, most first; else newest first. */
-    sort: z.enum(['new', 'best']).optional(),
+    sort: z.enum(['new', 'best', 'margin', 'stock']).optional(),
   })
   .strict();
 export type AdminListQuery = z.input<typeof adminListQuery>;
@@ -81,13 +82,16 @@ export async function adminProductList(deps: CatalogueDeps, who: Who, query: Adm
   const db = deps.db;
   const storeId = who.storeId;
   const q = d.q;
+  const nowAt = (deps.now ?? (() => new Date()))();
   // PR 725: with practice mode off, practice products are in no list and no counter (they are kept, not deleted)
   const hidePractice = practice.on ? {} : { isPractice: false };
   const where: Prisma.ProductWhereInput = {
     storeId,
     ...hidePractice,
     ...(d.status === 'archived' ? { archivedAt: { not: null } } : { archivedAt: null }),
-    ...(d.status && d.status !== 'archived' ? { status: STATUS_OF[d.status] } : {}),
+    ...(d.status && d.status !== 'archived' && d.status !== 'draft' && d.status !== 'scheduled' ? { status: STATUS_OF[d.status] } : {}),
+    ...(d.status === 'scheduled' ? { status: 'READY_TO_PUBLISH' as const, publishedAt: { gt: nowAt } } : {}),
+    ...(d.status === 'draft' ? { status: { in: ['DRAFT', 'READY_TO_PUBLISH'] as ('DRAFT' | 'READY_TO_PUBLISH')[] }, AND: [{ OR: [{ publishedAt: null }, { publishedAt: { lte: nowAt } }] }] } : {}),
     ...(d.categoryId ? { categoryId: d.categoryId } : {}),
     ...(q
       ? {
@@ -106,16 +110,30 @@ export async function adminProductList(deps: CatalogueDeps, who: Who, query: Adm
   const page = d.page ?? 1;
   // PR 722: best selling — order every matching product by its pieces sold in 30 days, then take this page's ids.
   let bestIds: string[] | null = null;
-  if (d.sort === 'best') {
-    const since = new Date(((deps.now ?? (() => new Date()))()).getTime() - 30 * 86_400_000);
-    const [all, sold] = await Promise.all([
-      db.product.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } }),
-      db.orderItem.groupBy({ by: ['productId'], where: { storeId, productId: { not: null }, status: 'ACTIVE', order: { status: { in: [...SOLD_STATUS] }, placedAt: { gte: since } } }, _sum: { quantity: true } }),
-    ]);
-    const soldBy = new Map(sold.map((r) => [r.productId as string, r._sum.quantity ?? 0]));
+  if (d.sort === 'best' || d.sort === 'margin' || d.sort === 'stock') {
+    const since = new Date(nowAt.getTime() - 30 * 86_400_000);
+    const all = await db.product.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } });
+    let score = new Map<string, number>();
+    let dir = -1;
+    if (d.sort === 'best') {
+      const sold = await db.orderItem.groupBy({ by: ['productId'], where: { storeId, productId: { not: null }, status: 'ACTIVE', order: { status: { in: [...SOLD_STATUS] }, placedAt: { gte: since } } }, _sum: { quantity: true } });
+      score = new Map(sold.map((r) => [r.productId as string, r._sum.quantity ?? 0]));
+    } else if (d.sort === 'stock') {
+      // PR 784 (prototype "Sort: stock (low first)"): the pieces on hand, fewest first
+      const vs = await db.productVariant.findMany({ where: { storeId, archivedAt: null, productId: { in: all.map((r) => r.id) } }, select: { id: true, productId: true } });
+      const st = await stockByVariant(db, storeId, vs.map((v) => v.id));
+      for (const v of vs) score.set(v.productId, (score.get(v.productId) ?? 0) + (st.get(v.id) ?? 0));
+      dir = 1;
+    } else {
+      // PR 784 (prototype "Sort: margin"): the average margin of its sizes (price against the ERP buying price), highest first
+      const vs = await db.productVariant.findMany({ where: { storeId, archivedAt: null, productId: { in: all.map((r) => r.id) }, priceMinor: { gt: 0 }, shopPriceMinor: { gt: 0 } }, select: { productId: true, priceMinor: true, shopPriceMinor: true } });
+      const acc = new Map<string, number[]>();
+      for (const v of vs) acc.set(v.productId, [...(acc.get(v.productId) ?? []), ((v.priceMinor! - v.shopPriceMinor!) / v.priceMinor!) * 100]);
+      for (const [id, xs] of acc) score.set(id, xs.reduce((x, y) => x + y, 0) / xs.length);
+    }
     bestIds = all
-      .map((r, i) => ({ id: r.id, n: soldBy.get(r.id) ?? 0, i }))
-      .sort((a, b) => b.n - a.n || a.i - b.i)
+      .map((r, i) => ({ id: r.id, n: score.get(r.id) ?? (dir === 1 ? Number.MAX_SAFE_INTEGER : -1), i }))
+      .sort((x, y) => (x.n === y.n ? x.i - y.i : dir === -1 ? y.n - x.n : x.n - y.n))
       .slice((page - 1) * pageSize, page * pageSize)
       .map((r) => r.id);
   }

@@ -60,7 +60,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const categoryId = categoryRaw && /^[0-9a-f-]{36}$/i.test(categoryRaw) ? categoryRaw : undefined;
   const page = pageParam(sp.page);
   const sortRaw = one(sp.sort);
-  const query: ProductQuery = { q, status, categoryId, page, ...(sortRaw === 'best' ? { sort: 'best' as const } : {}) };
+  const query: ProductQuery = { q, status, categoryId, page, sort: sortRaw === 'new' || sortRaw === 'margin' || sortRaw === 'stock' ? sortRaw : ('best' as const) };
 
   const pageDesign = lookPage('products')!;
   const keys = pageDesign.designs.map((x) => x.key);

@@ -5,7 +5,6 @@
 // look/products/{B,C}.tsx) read the loader and build their own chrome around the same list, tiles and bulk bar; CN-044:
 // read-only, nothing here writes beyond what this page already wrote.
 import Link from 'next/link';
-import { ADMIN_STATUS_FILTERS, type AdminStatusFilter } from '@extas/catalogue';
 import { Icon } from '@/components/admin/Icon';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ProductList } from '@/components/admin/products/ProductList';
@@ -15,6 +14,7 @@ import type { CountFormat } from '@/lib/admin-lumen/model';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { productsHref, PRODUCTS_HOME, type CatalogueAccess, type ProductListData, type ProductQuery } from '@/lib/admin-products';
 import type { AdminView } from '@/lib/admin-page';
+import { ageText } from '@/lib/admin-orders/list';
 import { t } from '@/lib/i18n';
 import { PageHead } from '../shell/ShellHead';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -30,7 +30,7 @@ export interface ProductListPageProps {
 
 /** PR 657: the title row and "+ Add product" / "···" menu — shared so B and C can put their own hero or flow strip
  *  between this and the tiles below without touching it. */
-export function ProductsHeader({ view, canWrite, menu, canExport, canImport, count }: { view: AdminView; canWrite: boolean; /** PR 772 (prototype v5 parity): the product count for the sub line ("120 products · stock and buying prices come from the ERP"). */ count?: number; menu?: LookMenuProps | null; /** PR 722: Export (`catalogue.export`) and Quick import (`catalogue.import`), as in the prototype. */ canExport?: boolean; canImport?: boolean }) {
+export function ProductsHeader({ view, canWrite, menu, canExport, canImport, count, synced }: { view: AdminView; canWrite: boolean; /** PR 772 (prototype v5 parity): the product count for the sub line ("120 products · stock and buying prices come from the ERP"). */ count?: number; /** PR 784: when the ERP last synced (the title line says "synced 5 min ago"). */ synced?: string | null; menu?: LookMenuProps | null; /** PR 722: Export (`catalogue.export`) and Quick import (`catalogue.import`), as in the prototype. */ canExport?: boolean; canImport?: boolean }) {
   const d = view.dict;
   return (
     <>
@@ -38,7 +38,7 @@ export function ProductsHeader({ view, canWrite, menu, canExport, canImport, cou
         view={view}
         place={locateKey('products')}
         title={t(d, 'products.title')}
-        sub={count === undefined ? t(d, 'products.intro') : t(d, 'products.introCount', { n: formatNumber(count, view.locale) })}
+        sub={count === undefined ? t(d, 'products.intro') : synced ? t(d, 'products.introSynced', { n: formatNumber(count, view.locale), ago: synced }) : t(d, 'products.introCount', { n: formatNumber(count, view.locale) })}
         right={
           <div className="pa-hd-actions">
             {canExport ? (
@@ -121,9 +121,11 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
         {query.categoryId ? <input type="hidden" name="category" value={query.categoryId} /> : null}
         <label className="pa-sort">
           <span className="pa-vh">{t(d, 'products.sort.label')}</span>
-          <select className="ad-input" name="sort" defaultValue={query.sort ?? 'new'} aria-label={t(d, 'products.sort.label')}>
-            <option value="new">{t(d, 'products.sort.new')}</option>
+          <select className="ad-input" name="sort" defaultValue={query.sort ?? 'best'} aria-label={t(d, 'products.sort.label')}>
             <option value="best">{t(d, 'products.sort.best')}</option>
+            <option value="new">{t(d, 'products.sort.new')}</option>
+            <option value="margin">{t(d, 'products.sort.margin')}</option>
+            <option value="stock">{t(d, 'products.sort.stock')}</option>
           </select>
         </label>
         <button type="submit" className="ad-btn ad-btn-ghost ad-btn-sm">
@@ -136,12 +138,23 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
           {t(d, 'products.filters.all')}
           <span className="pa-chip-n">{num(data.strip.statusCounts.all)}</span>
         </Link>
-        {(ADMIN_STATUS_FILTERS as readonly AdminStatusFilter[]).map((s) => (
+        {/* PR 784 (prototype v5 parity, m-products.js stChips): All, On the shop, Draft, Scheduled, Archived, Demo */}
+        {(['live', 'draft', 'scheduled', 'archived'] as const).map((s) => (
           <Link key={s} className="ad-chip" href={href({ status: s, page: 1 })} aria-current={query.status === s ? 'page' : undefined}>
             {t(d, `products.filters.${s}`)}
-            <span className="pa-chip-n">{num(data.strip.statusCounts[s === 'live' ? 'live' : s === 'ready' ? 'ready' : s === 'draft' ? 'draft' : s === 'off' ? 'off' : 'archived'])}</span>
+            <span className="pa-chip-n">{num(data.strip.statusCounts[s])}</span>
           </Link>
         ))}
+        {query.status === 'ready' || query.status === 'off' ? (
+          <Link className="ad-chip" href={href({ status: query.status, page: 1 })} aria-current="page">
+            {t(d, `products.filters.${query.status}`)}
+            <span className="pa-chip-n">{num(data.strip.statusCounts[query.status])}</span>
+          </Link>
+        ) : null}
+        <Link className="ad-chip" href="/admin/products/demo" data-testid="products-demo-chip">
+          {t(d, 'products.filters.demo')}
+          <span className="pa-chip-n">{num(data.strip.statusCounts.demo)}</span>
+        </Link>
       </nav>
       {list.categories.length ? (
         <nav className="ad-tabs" aria-label={t(d, 'products.cats.label')}>
@@ -197,7 +210,7 @@ export function ProductListPage({ view, c, query, data, menu }: ProductListPageP
   const canPublish = c.can('catalogue.publish');
   return (
     <div className="a2-z" data-testid="products-list" data-lm-ready="">
-      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} count={data.list.counts.products} />
+      <ProductsHeader view={view} canWrite={canWrite} menu={menu} canExport={c.can('catalogue.export')} canImport={c.can('catalogue.import')} count={data.list.counts.products} synced={data.strip.syncedAt ? ageText(view, data.strip.syncedAt, new Date()) : null} />
       <ProductListBody view={view} query={query} data={data} canWrite={canWrite} canPublish={canPublish} />
     </div>
   );
