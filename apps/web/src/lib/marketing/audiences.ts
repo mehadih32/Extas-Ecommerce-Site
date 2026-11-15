@@ -28,6 +28,7 @@ import { refusedExclusionPhones } from '@extas/orders';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import {
   AUDIENCE_ACTIONS,
+  AUDIENCE_ZONES,
   AUDIENCE_KIND_BUILDER,
   AUDIENCE_KIND_EXCLUSION,
   AUDIENCE_KIND_LOOKALIKE,
@@ -169,6 +170,20 @@ function ruleSql(r: AudienceRule, c: Ctx): Prisma.Sql | null {
           AND NOT EXISTS (SELECT 1 FROM "ReturnRecord" f WHERE f."storeId" = ${S} AND f."orderId" = o."id" AND f."ourFault")
           ${since ? Prisma.sql`AND COALESCE(o."returnedAt", o."placedAt") >= ${since}` : Prisma.empty}`;
     }
+    case 'area': {
+      // where the parcels go (PR 857, the prototype's Area): inside Dhaka City (a city corporation), the rest of Dhaka district, or anywhere else
+      const dhaka = Prisma.sql`ga."code" LIKE 'bd.dhaka.dhaka%'`;
+      const zone = r.ref === 'inside' ? Prisma.sql`ga."cityCorporation" IS NOT NULL` : r.ref === 'sub' ? Prisma.sql`ga."cityCorporation" IS NULL AND ${dhaka}` : r.ref === 'outside' ? Prisma.sql`ga."cityCorporation" IS NULL AND NOT COALESCE(${dhaka}, false)` : null;
+      if (!zone) return null;
+      return Prisma.sql`SELECT ${orderPhone} AS phone FROM ${orderFrom} JOIN "GeoArea" ga ON ga."id" = o."areaId" WHERE ${ownOrder(S)} AND ${zone}`;
+    }
+    case 'category':
+      // bought a style of the category (PR 857, the prototype's Bought), counted from delivered parcels, optionally within the owner's days
+      return Prisma.sql`
+        SELECT ${orderPhone} AS phone FROM "OrderItem" i JOIN ${orderFrom} ON o."id" = i."orderId" JOIN "Product" pr ON pr."id" = i."productId"
+        WHERE i."storeId" = ${S} AND NOT (i."status"::text IN ('REMOVED', 'CANCELLED')) AND ${ownOrder(S)} AND ${statusRule('sales')}
+          AND (pr."categoryId" = ${r.ref}::uuid OR EXISTS (SELECT 1 FROM "CategoryProduct" cp WHERE cp."productId" = pr."id" AND cp."categoryId" = ${r.ref}::uuid))
+          ${since ? Prisma.sql`AND o."deliveredAt" >= ${since}` : Prisma.empty}`;
     case 'noOffers':
       return Prisma.sql`SELECT n."phone" FROM "Customer" n WHERE n."storeId" = ${S} AND n."erasedAt" IS NULL AND n."mergedIntoId" IS NULL AND NOT (COALESCE(n."smsMarketingConsent", false) OR COALESCE(n."whatsappMarketingConsent", false))`;
   }
@@ -328,22 +343,30 @@ export async function audienceOne(db: Db, id: string, storeId: number = S): Prom
 
 /** What the builder offers: the store's sizes and grades (not archived), and whether VIP has the owner's figure. */
 export async function audienceChoices(db: Db, resolver: Resolver, storeId: number = S) {
-  const [sizes, grades, list] = await Promise.all([
+  const [sizes, grades, list, categories] = await Promise.all([
     db.size.findMany({ where: { storeId, archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }], select: { id: true, label: true } }),
     db.customerGrade.findMany({ where: { storeId, archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { nameEn: 'asc' }], select: { id: true, nameEn: true, nameBn: true } }),
     resolver.value('customers.list', { storeId }),
+    db.category.findMany({ where: { storeId, archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { nameEn: 'asc' }], select: { id: true, nameEn: true, nameBn: true } }),
   ]);
-  return { sizes, grades, vipSet: list.vipMinSalesMinor != null };
+  return { sizes, grades, categories, vipSet: list.vipMinSalesMinor != null };
 }
 
 const issueFields = (issues: { path: PropertyKey[] }[]) => [...new Set(issues.map((i) => i.path.filter((x) => typeof x === 'string').join('.') || 'value'))];
 
 /** A size or grade picked in a condition must be this store's own. */
 async function checkRefs(db: Db, def: AudienceDefinition, storeId: number) {
-  const want = (k: 'size' | 'grade') => [...new Set(def.rules.filter((r) => r.kind === k && r.ref).map((r) => r.ref!))];
-  const [sizes, grades] = [want('size'), want('grade')];
-  const [ns, ng] = await Promise.all([sizes.length ? db.size.count({ where: { storeId, id: { in: sizes } } }) : 0, grades.length ? db.customerGrade.count({ where: { storeId, id: { in: grades } } }) : 0]);
-  if (ns !== sizes.length || ng !== grades.length) throw new AudienceError('INVALID_INPUT', 400, ['rules.ref']);
+  const want = (k: 'size' | 'grade' | 'category') => [...new Set(def.rules.filter((r) => r.kind === k && r.ref).map((r) => r.ref!))];
+  const [sizes, grades, cats] = [want('size'), want('grade'), want('category')];
+  const [ns, ng, nc] = await Promise.all([
+    sizes.length ? db.size.count({ where: { storeId, id: { in: sizes } } }) : 0,
+    grades.length ? db.customerGrade.count({ where: { storeId, id: { in: grades } } }) : 0,
+    cats.length ? db.category.count({ where: { storeId, id: { in: cats } } }) : 0,
+  ]);
+  if (ns !== sizes.length || ng !== grades.length || nc !== cats.length) throw new AudienceError('INVALID_INPUT', 400, ['rules.ref']);
+  // an Area condition takes one of the three zones only (not an id)
+  if (def.rules.some((r) => r.kind === 'area' && !(AUDIENCE_ZONES as readonly string[]).includes(r.ref ?? ''))) throw new AudienceError('INVALID_INPUT', 400, ['rules.ref']);
+  if (def.rules.some((r) => r.kind !== 'area' && r.ref && (AUDIENCE_ZONES as readonly string[]).includes(r.ref))) throw new AudienceError('INVALID_INPUT', 400, ['rules.ref']);
 }
 
 /** Create (id null) or save an audience at the version it was read at; the count is taken and kept with it. */
