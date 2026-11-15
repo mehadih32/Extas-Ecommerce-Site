@@ -56,7 +56,39 @@ export type PeakSettings = z.output<typeof peakSchema>;
 // hardcode-ok: off as shipped, every number empty until the owner sets it (CN-018)
 export const PEAK_DEFAULT: PeakSettings = { enabled: false, dailyCap: null, fullTextEn: '', fullTextBn: '', partSize: null, roster: [] };
 
+/**
+ * parity F5 · PR 858 (prototype Rules › More options › "Start on a later date"): a change the owner typed but wants to start on a later
+ * day. One entry per rule row (`rowId`): the new value of each field being changed (`values`, by path), the day it starts, who and when.
+ * The rules clock writes it on that day (it was approved when it was scheduled: a money row needed the owner's PIN then); cancelling
+ * removes the entry. Empty as shipped.
+ */
+export const hubScheduleEntrySchema = z
+  .object({
+    rowId: z.string().min(1).max(60),
+    from: day,
+    values: z.record(z.string().max(80), z.unknown()),
+    by: z.string().max(80).nullable(),
+    at: z.string().max(40),
+  })
+  .strict();
+export type HubScheduleEntry = z.output<typeof hubScheduleEntrySchema>;
+export const hubScheduleSchema = z.object({ entries: z.array(hubScheduleEntrySchema).max(100) }).strict();
+export type HubScheduleSetting = z.output<typeof hubScheduleSchema>;
+
 export const rulesHubSettings = {
+  'rules.hub.schedule': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'rules',
+    version: 858,
+    schema: hubScheduleSchema,
+    default: { entries: [] },
+    valueType: 'JSON',
+    labelKey: 'rules.hub.schedule.label',
+    helpKey: 'rules.hub.schedule.help',
+    sortOrder: 982,
+  }),
   'rules.hub.popups': setting({
     scope: 'store',
     // hardcode-ok: the shipped value is empty, so no owner data ships; the words typed in live in the owner's own store only
