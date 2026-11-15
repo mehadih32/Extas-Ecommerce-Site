@@ -28,3 +28,4 @@
 .adm2 .cl-row td a { min-height: 44px; }
 .adm2 .cl-link.pri { background: var(--g); border-color: var(--g); color: var(--lm-on-ac, var(--sf)); }
 .adm2 .cl-filter { margin-top: 0; }
+.adm2 .cl-opts > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
