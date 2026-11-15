@@ -35,6 +35,8 @@ interface DriveRow {
 }
 
 const API = "/api/admin/backups";
+/** PR 852: the event the per-row "Restore" sends to the Restore card (see RestoreScreen.tsx). */
+export const PICK_BACKUP = "extas:bk-pick";
 
 const local = (
   d: Dict,
@@ -656,6 +658,9 @@ export function DriveCard({
                     <th>{local(d, "list.files")}</th>
                     <th>{local(d, "list.size")}</th>
                     <th>{local(d, "list.state")}</th>
+                    <th>
+                      <span className="a2-sr">{local(d, "list.restoreCol")}</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -675,6 +680,29 @@ export function DriveCard({
                             r.checked ? "list.checked" : "list.unchecked",
                           )}
                         </span>
+                      </td>
+                      <td>
+                        {/* PR 852: the prototype's Restore on each row. It only picks this backup in the Restore card below (check copy first); nothing is restored from here. */}
+                        <button
+                          type="button"
+                          className="a2-btn sm"
+                          onClick={() =>
+                            window.dispatchEvent(
+                              new CustomEvent(PICK_BACKUP, {
+                                detail: {
+                                  name: r.name,
+                                  rows: list.rows.map((x) => ({
+                                    name: x.name,
+                                    checked: x.checked,
+                                  })),
+                                },
+                              }),
+                            )
+                          }
+                          data-testid="bk-list-restore"
+                        >
+                          {local(d, "list.restore")}
+                        </button>
                       </td>
                     </tr>
                   ))}

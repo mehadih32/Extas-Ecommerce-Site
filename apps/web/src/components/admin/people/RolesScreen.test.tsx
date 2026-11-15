@@ -39,6 +39,14 @@ describe('RolesScreen (PR 841)', () => {
     expect(html).not.toContain('rl-new-chip');
     expect(html).toContain('কোন রোল কী খুলতে পারে');
   });
+  it('has Back to default beside Undo and Save for a role that can be changed, not for the owner role or a viewer', () => {
+    const open = { ...view, roles: [view.roles[1], view.roles[0]] };
+    const some = renderToStaticMarkup(<RolesScreen dict={en as unknown as Dict} lang="en" view={open as never} canManage />);
+    expect(some).toContain('data-testid="rl-def"');
+    expect(some).toContain('Back to default');
+    expect(renderToStaticMarkup(<RolesScreen dict={en as unknown as Dict} lang="en" view={view as never} canManage />)).not.toContain('rl-def');
+    expect(renderToStaticMarkup(<RolesScreen dict={en as unknown as Dict} lang="en" view={open as never} canManage={false} />)).not.toContain('rl-def');
+  });
   it('has the same words in both languages', () => {
     const keys = (o: unknown, p = ''): string[] => Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (v && typeof v === 'object' ? keys(v, `${p}${k}.`) : [`${p}${k}`]));
     expect(keys(bn).sort()).toEqual(keys(en).sort());

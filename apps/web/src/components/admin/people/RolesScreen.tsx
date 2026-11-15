@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { t, type Dict } from '@/lib/i18n';
-import { diffKeys, toggleGroup, triOf, type RolesView } from '@/lib/people';
+import { defaultAccessFor, diffKeys, toggleGroup, triOf, type RolesView } from '@/lib/people';
 import { call } from '../api';
 import { ConfirmDialog } from '../settings/ConfirmDialog';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -75,6 +75,8 @@ export interface RolesScreenProps {
   lang: 'en' | 'bn';
   view: RolesView;
   canManage: boolean;
+  /** PR 852: the owner's default access per role key (setting `roles.defaultAccess`); none: view-only. */
+  defaults?: Record<string, string[]> | null;
 }
 
 function Box({ state, label, disabled, onChange }: { state: 'all' | 'some' | 'none'; label: string; disabled: boolean; onChange: (on: boolean) => void }) {
@@ -102,12 +104,17 @@ export function RolesScreen(p: RolesScreenProps) {
   const [said, setSaid] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [askPin, setAskPin] = useState(false);
+  const [askDefault, setAskDefault] = useState(false);
   const from = live.find((r) => !r.isOwner && !r.archived)?.id ?? '';
   const locked = !p.canManage || !role || role.isOwner || role.archived;
   const base = new Set(role?.permissions ?? []);
   const d = diffKeys(base, held);
   const changes = d.added.length + d.removed.length;
   const pick = (rid: string) => {
+    if (rid !== id && changes > 0) {
+      showToast({ text: c('saveFirst'), tone: 'bad' });
+      return;
+    }
     setId(rid);
     setHeld(new Set(live.find((r) => r.id === rid)?.permissions ?? []));
     setSaid(null);
@@ -182,6 +189,9 @@ export function RolesScreen(p: RolesScreenProps) {
                 <div className="s28-row">
                   {!role.archived ? (
                     <>
+                      <button type="button" className="a2-btn" disabled={busy} onClick={() => setAskDefault(true)} data-testid="rl-def">
+                        <ShellIcon name="undo" size={14} /> {c('default')}
+                      </button>
                       <button type="button" className="a2-btn" disabled={busy || !changes} onClick={() => setHeld(new Set(role.permissions))} data-testid="rl-undo">{c('undo')}</button>
                       <button type="button" className="a2-btn pri" disabled={busy || !changes} onClick={() => setAskPin(true)} data-testid="rl-save">{c('save')}</button>
                       <span className="a2-xs a2-mute">{changes ? c('changes', { a: d.added.length, r: d.removed.length }) : c('noChanges')}</span>
@@ -205,6 +215,20 @@ export function RolesScreen(p: RolesScreenProps) {
           onCreate={(nEn, nBn, src) => {
             setShowNew(false);
             void go(() => call('POST', '/api/admin/roles', { nameEn: nEn, nameBn: nBn, permissions: live.find((r) => r.id === src)?.permissions ?? [] }), c('created'));
+          }}
+        />
+      ) : null}
+      {askDefault && role ? (
+        <ConfirmDialog
+          testId="rl-def-confirm"
+          tone="pri"
+          texts={{ title: c('defaultTitle'), effects: [c('defaultEffect', { name: nameOf(role) })], reason: null, cancel: c('new.cancel'), ok: c('defaultOk'), working: c('pin.working'), close: c('new.close') }}
+          onClose={() => setAskDefault(false)}
+          onConfirm={async () => {
+            setHeld(defaultAccessFor(role.key, p.defaults, p.view.tree.flatMap((b) => b.keys.map((k) => k.key))));
+            setAskDefault(false);
+            showToast({ text: c('defaultLoaded'), tone: 'ok' });
+            return null;
           }}
         />
       ) : null}

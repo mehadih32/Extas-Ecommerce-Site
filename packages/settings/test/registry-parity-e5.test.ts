@@ -10,6 +10,11 @@ describe('PR 846, 851 · parity E5 settings', () => {
     expect(registry['erp.matching'].default).toBeNull();
     expect(Object.values(ERP_MATCHING_DEFAULT).every((v) => v === '')).toBe(true);
   });
+  it('ships the role defaults empty (a role without an entry reads as view-only)', () => {
+    expect(registry['roles.defaultAccess'].default).toBeNull();
+    expect(registry['roles.defaultAccess'].schema.safeParse({ support: ['orders.read'] }).success).toBe(true);
+    expect(registry['roles.defaultAccess'].schema.safeParse({ support: 'orders.read' }).success).toBe(false);
+  });
   it('keep the days to answer between one day and the bound, and the account names short', () => {
     const days = registry['privacy.answerDays'].schema;
     expect(days.safeParse(1).success).toBe(true);

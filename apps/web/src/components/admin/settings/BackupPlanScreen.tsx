@@ -118,6 +118,19 @@ export function RequestsCard({
       (r) =>
         r.kind === kind && (r.status === "QUEUED" || r.status === "RUNNING"),
     );
+  // PR 852: the prototype's "Restore guide (PDF)": the steps to bring the shop back, in Bengali and English, on the shop's letterhead.
+  const guideLink = (
+    <a
+      className="a2-btn"
+      href={`${API}/restore-guide`}
+      target="_blank"
+      rel="noopener"
+      data-testid="bk-guide"
+    >
+      <ShellIcon name="dl" size={14} />
+      {local(d, "guide.button")}
+    </a>
+  );
   const ask = async (kind: RequestRow["kind"]) => {
     setBusy(kind);
     setNote(null);
@@ -165,9 +178,13 @@ export function RequestsCard({
               {local(d, busy === k ? "requests.asking" : `requests.${k}`)}
             </button>
           ))}
+          {guideLink}
         </div>
       ) : (
-        <p className="a2-xs a2-mute">{local(d, "requests.readOnly")}</p>
+        <>
+          <p className="a2-xs a2-mute">{local(d, "requests.readOnly")}</p>
+          <div className="a2-gap8 a2-mt6">{guideLink}</div>
+        </>
       )}
       {note ? (
         <div

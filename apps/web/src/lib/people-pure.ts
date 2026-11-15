@@ -51,6 +51,18 @@ export function diffKeys(before: ReadonlySet<string>, after: ReadonlySet<string>
   return { added: [...after].filter((k) => !before.has(k)).sort(), removed: [...before].filter((k) => !after.has(k)).sort() };
 }
 
+/**
+ * PR 852 — "Back to default" on Settings › Team & roles: the keys a role gets. The owner's setting (`roles.defaultAccess`, role key ->
+ * keys) wins; a role with no entry gets view-only access (every ".read" key of the catalogue). Only keys the catalogue knows count,
+ * so an old or mistyped key never reaches the save. The screen only loads these as pending changes; the save still asks the PIN.
+ */
+export function defaultAccessFor(roleKey: string, defaults: Readonly<Record<string, readonly string[]>> | null | undefined, catalogueKeys: readonly string[]): Set<string> {
+  const known = new Set(catalogueKeys);
+  const own = defaults?.[roleKey];
+  if (own) return new Set(own.filter((k) => known.has(k)));
+  return new Set(catalogueKeys.filter((k) => k.endsWith('.read')));
+}
+
 /** What the screen may show of one activity-log row's change: the names of the fields, never their old or new values. */
 export function changedKeys(before: unknown, after: unknown): string[] {
   const keys = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v as Record<string, unknown>) : []);

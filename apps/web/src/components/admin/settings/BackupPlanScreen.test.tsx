@@ -36,6 +36,14 @@ describe('Backups & restore (PR 842)', () => {
     expect(html).toContain('Run drill now');
     expect(renderToStaticMarkup(<RequestsCard d={dict(bn)} locale="bn" timeZone="UTC" initial={[]} canRun />)).toContain('এখনই মহড়া');
   });
+  it('has the Restore guide (PDF) button for everyone who can see the card, pointing at the guide route (PR 852)', () => {
+    for (const canRun of [true, false]) {
+      const html = renderToStaticMarkup(<RequestsCard d={dict(en)} locale="en" timeZone="UTC" initial={[]} canRun={canRun} />);
+      expect(html).toContain('Restore guide (PDF)');
+      expect(html).toContain('href="/api/admin/backups/restore-guide"');
+    }
+    expect(renderToStaticMarkup(<RequestsCard d={dict(bn)} locale="bn" timeZone="UTC" initial={[]} canRun />)).toContain('রিস্টোর গাইড (PDF)');
+  });
   it('has the same words in both languages', () => {
     const keys = (o: unknown, p = ''): string[] => Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (v && typeof v === 'object' ? keys(v, `${p}${k}.`) : [`${p}${k}`]));
     expect(keys(bn).sort()).toEqual(keys(en).sort());
