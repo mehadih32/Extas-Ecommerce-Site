@@ -88,6 +88,11 @@
       "codLimit": "{name}: cash on delivery limit"
     },
     "openRules": "Open Rules",
-    "publishHead": "Publish"
+    "publishHead": "Publish",
+    "sec": {
+      "title": "Sections",
+      "edit": "Edit",
+      "details": "Details"
+    }
   }
 }
