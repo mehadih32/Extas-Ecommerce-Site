@@ -10,6 +10,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { adsVerdict } from '@/components/admin/look/dashboard/ProtoCards';
+import type { DashDesignSettings } from '@/lib/admin-look/dashboard-data';
 import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
@@ -56,7 +58,7 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
   const c = (k: string, v?: Record<string, string | number>) => t(d, `reportsV5.marketing.${k}`, v);
   const cc = (k: string, v?: Record<string, string | number>) => t(d, `reportsV5.common.${k}`, v);
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
-  const m = await loadMarketing(access.deps, sp);
+  const [m, lim] = await Promise.all([loadMarketing(access.deps, sp), access.deps.resolver.value('admin.dashboardDesigns', { storeId: MOTHER_STORE_ID }) as Promise<DashDesignSettings>]);
   const f = makeFmt(view.locale, m.now.currency);
   const { q, notes } = m.now.period;
   const before = previousSpan(q.from, q.to);
@@ -118,6 +120,10 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
   if (worstCamp && worstCamp.id !== bestCamp?.id && (worstCamp.roasPercent ?? 100) < 100)
     lines.push({ text: c('ans.worst', { name: m.now.campaigns[worstCamp.id]?.name ?? worstCamp.id, roas: perTk(worstCamp.roasPercent), spend: f.amount(worstCamp.spendMinor ?? 0) }), tone: 'bad', act: { label: c('ans.pause'), href: `/admin/marketing/campaigns/${worstCamp.id}` } });
 
+  const paidOrders = r.channels.filter((x) => x.kind === 'ads').reduce((n, x) => n + x.orders, 0);
+  const allOrders = r.channels.reduce((n, x) => n + x.orders, 0);
+  const paidPct = allOrders ? Math.round((paidOrders / allOrders) * 100) : 0;
+  const freeOrders = allOrders - paidOrders;
   const days = daysBetween(q.from, q.to, maxRows);
   const hero = heroRange({
     key: 'p',
@@ -143,6 +149,34 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
         <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} testId="rp-hero" />
       </div>
 
+      <section className="a2-card a2-mt12" aria-labelledby="rp-pf" data-testid="rp-paidfree">
+        <h2 className="a2-h3" id="rp-pf">
+          {c('paidFree')}
+        </h2>
+        <p className="a2-cs">{c('paidFreeSub')}</p>
+        {allOrders ? (
+          <div className="rp-donut-row">
+            <svg viewBox="0 0 42 42" width="132" height="132" role="img" aria-label={c('paidFreeAria', { paid: paidPct, free: 100 - paidPct })}>
+              <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c3, var(--ok))" strokeWidth="7" />
+              <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c1, var(--acc))" strokeWidth="7" strokeDasharray={`${paidPct} ${100 - paidPct}`} strokeDashoffset="25" />
+              <text x="21" y="22.5" textAnchor="middle" fontSize="6.5" fontWeight="700" fill="currentColor">
+                {paidPct}%
+              </text>
+            </svg>
+            <ul className="a2-stack" style={{ listStyle: 'none', padding: 0, margin: 0, gap: 8 }}>
+              <li>
+                <i className="rp-dot" style={{ background: 'var(--lm-c1, var(--acc))' }} /> {c('fromAds')}: <b>{f.num(paidOrders)}</b>
+              </li>
+              <li>
+                <i className="rp-dot" style={{ background: 'var(--lm-c3, var(--ok))' }} /> {c('withoutAds')}: <b>{f.num(freeOrders)}</b>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <p className="a2-sm a2-mute">{c('noChannels')}</p>
+        )}
+      </section>
+
       <section className="a2-card a2-mt12" aria-labelledby="rp-ch" data-testid="rp-channels">
         <h2 className="a2-h3" id="rp-ch">
           {c('channels')}
@@ -166,7 +200,7 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
           testId="rp-campaigns-table"
           rowId="rp-campaign-row"
           empty={c('noCampaigns')}
-          cols={[{ h: c('colName') }, { h: c('colSpend'), right: true }, { h: c('colOrders'), right: true }, { h: c('colSales'), right: true }, { h: c('colPerTk'), right: true }]}
+          cols={[{ h: c('colName') }, { h: c('colSpend'), right: true }, { h: c('colOrders'), right: true }, { h: c('colSales'), right: true }, { h: c('colPerTk'), right: true }, { h: c('colDo') }]}
           rows={r.campaigns.map((x) => [
             <Link key="n" className="a2-lnk cr-link" href={`/admin/marketing/campaigns/${x.id}`}>
               {m.now.campaigns[x.id]?.name ?? x.id}
@@ -175,6 +209,20 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
             f.num(x.orders),
             f.amount(x.salesMinor),
             perTk(x.roasPercent),
+            (() => {
+              const per = x.roasPercent === null || !x.spendMinor ? null : x.roasPercent / 100;
+              const v = adsVerdict(per, lim);
+              return v ? (
+                <span key="v">
+                  <span className={`a2-pill ${v === 'scale' ? 'ok' : v === 'stop' ? 'bad' : v === 'fix' ? 'warn' : ''}`}>{c(`v.${v}`)}</span>
+                  <span className="a2-xs a2-mute" style={{ display: 'block', whiteSpace: 'normal', maxWidth: 300, marginTop: 3 }}>
+                    {c(`why.${v}`, { per: (per ?? 0).toFixed(1) })}
+                  </span>
+                </span>
+              ) : (
+                '—'
+              );
+            })(),
           ])}
         />
         {r.untiedSpendMinor ? <p className="a2-xs a2-mute a2-mt6">{c('untied', { amount: f.amount(r.untiedSpendMinor) })}</p> : null}
@@ -189,6 +237,28 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
         <p className="a2-xs a2-mute a2-mt6">
           {c('toOverview')} · {c('toReport')}
         </p>
+      </section>
+
+      <section className="a2-card a2-mt12" aria-labelledby="rp-cp" data-testid="rp-coupons">
+        <h2 className="a2-h3" id="rp-cp">
+          {c('coupons')}
+        </h2>
+        <p className="a2-cs">{c('couponsSub')}</p>
+        <ReportTable
+          testId="rp-coupons-table"
+          rowId="rp-coupon-row"
+          empty={c('noCoupons')}
+          cols={[{ h: c('colCode') }, { h: c('colUses'), right: true }, { h: c('colDiscount'), right: true }, { h: c('colOrderValue'), right: true }, { h: c('colCostPct'), right: true }]}
+          rows={m.coupons.map((x) => [
+            <span key="c">
+              <b>{x.code}</b> <span className={`a2-pill ${x.enabled ? 'ok' : ''}`}>{x.enabled ? c('on') : c('off')}</span>
+            </span>,
+            f.num(x.uses),
+            f.amount(x.discountMinor),
+            f.amount(x.orderMinor),
+            x.orderMinor ? f.pctOf((x.discountMinor / x.orderMinor) * 100) : '—',
+          ])}
+        />
       </section>
 
       <HowFigures
