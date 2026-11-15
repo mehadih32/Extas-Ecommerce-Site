@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import {
   originalKey,
+  isRenditionKey,
   photoRules,
   renderAsset,
   type MediaDeps,
@@ -20,6 +21,31 @@ export type DrawKind =
 export type DrawView = "front" | "back" | "detail" | "model";
 
 export const PRACTICE_MEDIA_FOLDER = "practice";
+
+type PhotoStorage = Awaited<ReturnType<MediaDeps["storage"]>>;
+
+/**
+ * A picture is only used on a product once its files are really in storage: the original and every size the shop asks for
+ * (the sizes recorded in the library, each looked up by the same key the /media route serves). A missing file is a 404 on a
+ * live page, so nothing is linked, and an already linked picture is repaired (below), never left pointing at nothing.
+ */
+export async function assetFilesExist(
+  db: MediaDeps["db"],
+  storage: PhotoStorage,
+  asset: { id: string; storageKey: string },
+): Promise<boolean> {
+  if (!(await storage.head(asset.storageKey))) return false;
+  const sizes = await db.mediaRendition.findMany({ where: { assetId: asset.id }, select: { storageKey: true } });
+  if (!sizes.length) return false;
+  // a size under a name the /media route refuses (capital letters in the name) is as good as missing
+  for (const r of sizes) if (!isRenditionKey(r.storageKey) || !(await storage.head(r.storageKey))) return false;
+  return true;
+}
+
+/** Without a shared disk (or Blob) a picture lives in one server process's memory: the other servers would answer 404. */
+export function storageIsPerProcess(storage: PhotoStorage): boolean {
+  return storage.volatile === true && process.env.NODE_ENV === "production";
+}
 
 /** Category code → the demo's garment drawing (denim and joggers are trousers, jackets a hoodie, katua a short panjabi). */
 const KIND_OF: Record<string, DrawKind> = {
@@ -251,6 +277,8 @@ export interface PhotoProgress {
   done: number;
   /** True when every practice product has its whole set (nothing left to make). */
   complete: boolean;
+  /** Set when no picture was made because the files would not last (storage lives in one process's memory only). */
+  blocked?: "per-process-storage";
 }
 
 /** "x of y products done" without drawing anything. */
@@ -279,6 +307,9 @@ export async function addPracticePhotos(
   const pending = plan.filter((p) => p.missing.length);
   const batch = opts.limit && opts.limit > 0 ? pending.slice(0, opts.limit) : pending;
   const storage = await deps.storage(storeId);
+  if (pending.length && storageIsPerProcess(storage)) {
+    return { photos: 0, total: plan.length, done: plan.length - pending.length, complete: false, blocked: "per-process-storage" };
+  }
   const now = deps.now ? deps.now() : new Date();
   const max = opts.maxPhotos ?? Number.POSITIVE_INFINITY;
   let added = 0;
@@ -300,7 +331,7 @@ export async function addPracticePhotos(
         },
       });
       if (!asset) {
-        const slug = `practice-${p.kind}-${w.hex.slice(1)}-${VIEW_OF[w.role]}`;
+        const slug = `practice-${p.kind}-${w.hex.slice(1).toLowerCase()}-${VIEW_OF[w.role]}`;
         const key = originalKey({
           storeId,
           checksum,
@@ -330,6 +361,14 @@ export async function addPracticePhotos(
         });
         await renderAsset(deps, asset.id);
       }
+      if (!(await assetFilesExist(deps.db, storage, asset))) {
+        // an older run left this picture without its files (or the sizes are not all there): put them back before using it
+        await storage.put(asset.storageKey, body, "image/png");
+        await renderAsset(deps, asset.id, { force: true });
+        if (!(await assetFilesExist(deps.db, storage, asset))) {
+          throw new Error(`practice picture ${asset.id}: its files are not in storage, so it is not placed on a product`);
+        }
+      }
       await deps.db.productMedia.create({
         data: {
           storeId,
@@ -348,4 +387,45 @@ export async function addPracticePhotos(
   }
   const done = plan.length - pending.length + finishedNow;
   return { photos: added, total: plan.length, done, complete: done >= plan.length };
+}
+
+
+/** "practice-polo-1F2A44-front" → what to draw again (the file name every practice picture is saved under). */
+export function drawingOfName(fileName: string | null): { kind: DrawKind; hex: string; view: DrawView } | null {
+  const m = /^practice-(polo|tee|shirt|panjabi|trouser|hoodie)-([0-9A-Fa-f]{6})-(front|back|detail|model)\.png$/.exec(fileName ?? "");
+  return m ? { kind: m[1] as DrawKind, hex: `#${m[2]}`, view: m[3] as DrawView } : null;
+}
+
+/**
+ * Repairs practice pictures whose files are gone from storage (a server that lost its disk, or files made when the
+ * storage was not shared): draws the same picture again (same bytes, same checksum), puts it back under its own key and
+ * makes the sizes again. Looks at `batch` pictures per call, after `after` (the id to continue from); returns where it
+ * stopped (null at the end), how many it looked at and how many it repaired.
+ */
+export async function repairPracticePhotos(
+  deps: MediaDeps,
+  storeId: number,
+  opts: { after?: string | null; batch?: number } = {},
+): Promise<{ checked: number; repaired: number; next: string | null }> {
+  const storage = await deps.storage(storeId);
+  if (storageIsPerProcess(storage)) return { checked: 0, repaired: 0, next: null };
+  const batch = opts.batch ?? 25; // hardcode-ok: a technical step size
+  const rows = await deps.db.mediaAsset.findMany({
+    where: { storeId, folder: PRACTICE_MEDIA_FOLDER, isOriginal: true, kind: "IMAGE", archivedAt: null, ...(opts.after ? { id: { gt: opts.after } } : {}) },
+    orderBy: { id: "asc" },
+    take: batch,
+    select: { id: true, storageKey: true, originalFileName: true, checksumSha256: true },
+  });
+  let repaired = 0;
+  for (const a of rows) {
+    if (await assetFilesExist(deps.db, storage, a)) continue;
+    const d = drawingOfName(a.originalFileName);
+    if (!d) continue;
+    const body = await drawingPng(d.kind, d.hex, d.view);
+    if (createHash("sha256").update(body).digest("hex") !== a.checksumSha256) continue;
+    await storage.put(a.storageKey, body, "image/png");
+    await renderAsset(deps, a.id, { force: true });
+    repaired++;
+  }
+  return { checked: rows.length, repaired, next: rows.length === batch ? rows[rows.length - 1]!.id : null };
 }

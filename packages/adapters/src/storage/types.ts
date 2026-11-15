@@ -12,6 +12,8 @@ export interface StoredObject {
 
 export interface Storage {
   provider: StorageProvider;
+  /** True when the files live only in this process's memory (the mock): other replicas and a restart never see them. */
+  volatile?: boolean;
   /** Writes (or replaces) the object. */
   put(key: string, body: Uint8Array, contentType: string): Promise<StoredObject>;
   /** The object, or null when there is none. */

@@ -1,16 +1,16 @@
-// PR 625 (CN-036) — the admin theme layer's setting (v234): Lumen is the only look that can be chosen, the accent is a
+// PR 625 (CN-036) — the admin theme layer's setting (v728): Lumen is the only look that can be chosen, the accent is a
 // #RRGGBB colour (coral as shipped), motion is not reduced as shipped; private, never owner data, labels in both languages.
 import { describe, expect, it } from 'vitest';
 import { registry, registryVersion } from '../src/index';
 import { messages } from '../src/messages';
 import { ADMIN_ACCENT_PRESETS, ADMIN_THEME_LOOKS, BUILT_ADMIN_LOOKS, accentSchema, adminThemeSchema, adminThemeSettings } from '../src/registry-admin-theme';
 
-describe('admin theme setting (v234)', () => {
-  it('is in the registry at version 234, private, never owner data, with labels in both languages', () => {
+describe('admin theme setting (v728)', () => {
+  it('is in the registry at version 728, private, never owner data, with labels in both languages', () => {
     expect(registryVersion(registry)).toBeGreaterThanOrEqual(234);
     const spec = adminThemeSettings['admin.theme'];
     expect(registry['admin.theme']).toBe(spec);
-    expect(spec.version).toBe(234);
+    expect(spec.version).toBe(728);
     expect(spec.isOwnerData).toBe(false);
     expect(spec.isPublic).toBe(false);
     for (const lang of ['en', 'bn'] as const) {

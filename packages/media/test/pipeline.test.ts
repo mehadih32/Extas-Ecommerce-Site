@@ -235,6 +235,12 @@ describe('responsive delivery (PR 24)', () => {
     expect(() => pictureSources(source(), 'nowhere')).toThrow(/no image slot/);
   });
 
+  it('PR 728: a slug with capital letters (a colour code) still gives sizes the /media route serves', () => {
+    expect(slugOfKey('media/s1/o/2026/11/0123456789abcdef-practice-trouser-556B2F-front.png')).toBe('practice-trouser-556b2f-front');
+    const key = renditionKey({ storeId: 1, assetId: '01a1dd64-3430-7433-99ca-6b17712f0de4', slug: slugOfKey('media/s1/o/2026/11/0123456789abcdef-Practice_Trouser-556B2F-front.png'), preset: 'card', format: 'avif', hash: 'e43501f1eeac' });
+    expect(isRenditionKey(key)).toBe(true);
+  });
+
   it('addresses: this site /media by default, the CDN base when set', () => {
     expect(mediaUrl('media/s1/r/a/b.jpg', null)).toBe('/media/media/s1/r/a/b.jpg');
     expect(mediaUrl('media/s1/r/a/b.jpg', 'https://cdn.example.com/')).toBe('https://cdn.example.com/media/s1/r/a/b.jpg');

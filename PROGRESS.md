@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 728 filed: practice pictures load (branch `claude/fix-media-path`, from `origin/main` 6da62662, local, NOT pushed)
+
+The deploy of 6da62662 was rolled back by its smoke test: every sample picture answered 404 (74 problems, all `/media/media/s1/r/…`). The doubled `media/media` is the normal address of every upload (the storage key itself starts with `media/`); the real cause is that practice file names carried the colour code in capitals and `isRenditionKey` serves lower case only. Fixed in `slugOfKey` and the practice slug; `assetFilesExist` is checked before a picture is placed; `repairPracticePhotos` redraws lost or wrongly named pictures; no picture is made while the storage is in-process memory in production (`Storage.volatile`). The deploy log held no other failure; its one warning (admin.theme changed without a version bump, PR 724) is fixed by raising the version to 728. Register row 728, S28 70/70, 728 PRs / 718 active / 695 built.
+
 ## 15 Nov 2026 — PR 727 filed: every admin menu page draws its section's tab bar (branch `claude/round1`, local, NOT pushed)
 
 From the nav-fix branch: 24 pages drew no tab bar, three gave it the wrong key, two courier pages jumped into Delivery's menu; now all draw it, with `tools/nav-audit.mjs`, the `nav-audit` workflow and `nav-pages.test.ts`. Register row 727, S28 69/69, totals 727 PRs / 717 active / 694 built. The same session fixed CI findings of the combined PR: Admin map line and words-list entry for Brand & menus, the demo makes 4 combos (the fifth names styles the 72 do not hold), the rich test's ad-row threshold, and 44 px tap targets on Brand & menus and Settings › Roles.
