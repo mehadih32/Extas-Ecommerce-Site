@@ -173,6 +173,8 @@
       "withdrawHelp": "Off: a parcel that came back goes as its own “returned” event everywhere. On: where the platform can take a purchase back (Google Analytics’ refund, the same order number), a returned parcel withdraws the purchase it already counted; Meta and TikTok cannot, so there it stays the returned event. Only what the ad platforms are told changes; no money moves.",
       "share": "Share the event ids with a browser pixel",
       "shareHelp": "Off: nothing is added to the thank-you page. On: the thank-you page carries one hidden data block (id “extas-event-ids”, no code) listing, for each ticked platform, every event the shop's server will send for that order with its name and id. A pixel you add through a tag manager can fire its event under the same id, so the platform counts the two once. Only the order number and event names; never a name, phone, e-mail or amount."
-    }
+    },
+    "issues": "{n} platform(s) cannot be sure to see every sale: practice copy, no connection test yet, or the last test failed. Ads learn from purchases, so fixing this usually lowers the cost per order.",
+    "allSee": "Every ticked platform is connected and passed its last test."
   }
 }
