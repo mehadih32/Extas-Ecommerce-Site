@@ -24,7 +24,32 @@
         "swapped": "From was after To, so the two days were turned round.",
         "tooLong": "One report covers at most {days} days, so the period starts later."
       },
-      "answers": "This report answers"
+      "answers": "This report answers",
+      "pageTitle": "Reports",
+      "p": {
+        "today": "Today",
+        "d7": "7 days",
+        "d30": "30 days",
+        "month": "This month",
+        "lastMonth": "Last month",
+        "m6": "6 months",
+        "custom": "Custom dates"
+      },
+      "periodsLabel": "Period",
+      "compare": "Compare with previous period",
+      "excel": "Excel",
+      "pdf": "PDF",
+      "print": "Print",
+      "packs": "Report packs",
+      "schedule": "Schedule",
+      "savedViews": "Saved views",
+      "savedViewsN": "Saved views ({n})",
+      "saveView": "Save view",
+      "viewName": "Name this view",
+      "viewSaved": "View saved",
+      "viewFailed": "Could not save the view",
+      "answersNone": "Nothing to report for this period yet.",
+      "comparedWith": "compared with {from} – {to}"
     },
     "channel": {
       "ads:META": "Meta ads (Facebook, Instagram)",
@@ -47,7 +72,7 @@
     "profit": {
       "metaTitle": "Profit report",
       "title": "Profit analysis",
-      "sub": "Which channels, categories and styles make the money",
+      "sub": "Which channels, categories, styles and areas make the money",
       "kNet": "Net profit (after all costs)",
       "kBefore": "Profit before ads",
       "kMargin": "Net margin",
@@ -104,11 +129,11 @@
       "sub": "What sells, what sits, and what to reorder",
       "kSales": "Delivered sales",
       "kPieces": "Pieces sold",
-      "kStyles": "Styles sold",
+      "kStyles": "Products that sold",
       "kLosing": "Styles losing money",
       "kRestock": "Restock now",
       "kUnsold": "Sitting unsold",
-      "kRestockSub": "selling sizes running out",
+      "kRestockSub": "selling, stock running out",
       "kUnsoldSub": "in stock, nothing sold",
       "heroTitle": "Delivered sales, day by day",
       "heroSeries": "Delivered sales",
@@ -175,7 +200,11 @@
       "catsSub": "Delivered sales and margin by category",
       "colCategory": "Category",
       "colVs": "vs before",
-      "catNone": "No category"
+      "catNone": "No category",
+      "kBulk": "Buy in bulk",
+      "kBulkSub": "fast sellers with good margin",
+      "kStop": "Stop buying",
+      "kStopSub": "slow or low margin"
     },
     "marketing": {
       "metaTitle": "Marketing & ads report",
@@ -184,7 +213,7 @@
       "offTitle": "The marketing report is switched off",
       "offBody": "Switch it on in Marketing › Report, under \"More options\".",
       "offAsk": "Ask the owner to switch it on in Marketing › Report.",
-      "kSpend": "Marketing spend",
+      "kSpend": "Ad spend",
       "kOrdered": "Ordered value",
       "kSales": "Delivered sales",
       "kPerTk": "Sales per ৳1",
@@ -253,12 +282,26 @@
       "colOrderValue": "Order value",
       "colCostPct": "Cost %",
       "on": "On",
-      "off": "Off"
+      "off": "Off",
+      "kAdSales": "Sales from ads",
+      "kAdSalesSub": "delivered",
+      "kRoas": "Ad ROAS",
+      "kCpo": "Cost per delivered order",
+      "chipPaid": "Paid share of orders",
+      "chipPaidSub": "{n} orders",
+      "chipCoupon": "Coupon discount cost",
+      "chipCouponSub": "{n} uses",
+      "spendVs": "Spend vs sales from ads",
+      "spendVsSub": "Ad spend, day by day",
+      "campTitle": "Campaigns: what to do next",
+      "colCampaign": "Campaign",
+      "colRoas": "ROAS",
+      "colCpo": "Cost / order"
     },
     "review": {
       "metaTitle": "Monthly review",
       "title": "Monthly review · {month}",
-      "sub": "The month on one page: what went well, what went badly, what to do next",
+      "sub": "Last month on one page: what went well, what went badly, what to do next",
       "last": "Last month",
       "this": "This month so far",
       "switch": "Month",
@@ -277,11 +320,11 @@
       "nothingGood": "Nothing stands out yet.",
       "nothingNext": "Nothing to do now.",
       "numbers": "The month in numbers",
-      "numbersSub": "The same figures as Money › Profit & loss for these days.",
+      "numbersSub": "Same figures as Finance › Profit & loss for these dates.",
       "colLine": "Line",
       "colThis": "This month",
       "colBefore": "Before",
-      "open": "Open Profit & loss",
+      "open": "Open Finance",
       "toPacks": "Monthly business pack as PDF or Excel",
       "toPacksBtn": "Open report packs",
       "line": {
@@ -328,7 +371,12 @@
       "tgSent": "Sent to your Telegram.",
       "tgSkipped": "Not sent: Telegram is switched off for digests, or this month's digest already went.",
       "tgFailed": "Could not send. Check the Telegram connection in Keys & connections.",
-      "tgNoKey": "You need the right to run analytics digests (reports.analytics.write) to send this."
+      "tgNoKey": "You need the right to run analytics digests (reports.analytics.write) to send this.",
+      "thisSoFar": "{month} so far",
+      "comparedWith": "Compared per day with {month}",
+      "pdfShort": "PDF",
+      "everyMonth": "Every month",
+      "allReports": "All reports"
     }
   }
 }

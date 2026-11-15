@@ -12,9 +12,9 @@ export interface AnswerLine {
   act?: { label: string; href: string };
 }
 
-export function ReportAnswers({ kicker, question, lines, testId = 'rp-answers' }: { kicker: string; question: string; lines: readonly AnswerLine[]; testId?: string }) {
+export function ReportAnswers({ kicker, question, lines, testId = 'rp-answers', empty }: { kicker: string; question: string; lines: readonly AnswerLine[]; testId?: string; empty?: string }) {
   const shown = lines.slice(0, 3);
-  if (!shown.length) return null;
+  if (!shown.length && !empty) return null;
   return (
     <section className="rpa a2-mt12" aria-label={question} data-testid={testId}>
       <div className="rpa-ico" aria-hidden="true">
@@ -24,6 +24,12 @@ export function ReportAnswers({ kicker, question, lines, testId = 'rp-answers' }
         <div className="rpa-k">{kicker}</div>
         <h2 className="rpa-q">{question}</h2>
         <ul>
+          {!shown.length && empty ? (
+            <li data-testid="rp-answer-line">
+              <i aria-hidden="true" />
+              <span>{empty}</span>
+            </li>
+          ) : null}
           {shown.map((l, i) => (
             <li key={i} data-testid="rp-answer-line">
               <i className={l.tone ?? ''} aria-hidden="true" />

@@ -75,7 +75,7 @@ const versionOf = (v: unknown): string => createHash('sha256').update(JSON.strin
 const settingsOf = async (deps: ReportDeps) => (await deps.resolver.value('marketing.report', { storeId: S })) as MarketingReportSettings;
 
 /** The page's report for its query (`period`, or `from` and `to`), made safe by the money reports' own rules. */
-export async function reportOverview(deps: ReportDeps, sp: Record<string, string | string[] | undefined> = {}): Promise<ReportOverview> {
+export async function reportOverview(deps: ReportDeps, sp: Record<string, string | string[] | undefined> = {}, opts: { always?: boolean } = {}): Promise<ReportOverview> {
   const at = { storeId: S };
   const [settings, timeZone, currency, rules] = await Promise.all([
     settingsOf(deps),
@@ -86,7 +86,8 @@ export async function reportOverview(deps: ReportDeps, sp: Record<string, string
   const today = ymdIn(deps.now?.() ?? new Date(), timeZone);
   const period = parseReportQuery(sp, today, { maxDays: settings.maxDays, maxDayRows: settings.maxDays });
   const base = { settings, card: { key: 'report' as const, value: settings, version: versionOf(settings) }, currency, timeZone, today, period };
-  if (!settings.enabled) return { ...base, report: null, campaigns: {}, sendsPage: 1, sendsPages: 1 };
+  // Reports › Marketing & ads is read-only and always draws the whole report (prototype v5): `always` skips the Marketing › Report switch.
+  if (!settings.enabled && !opts.always) return { ...base, report: null, campaigns: {}, sendsPage: 1, sendsPages: 1 };
   const asked = sendsPageOf(sp.sends);
   const at0 = (page: number) => marketingReport(deps.db, S, { from: period.q.from, to: period.q.to }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax: REPORT_SENDS_MAX, sendsOffset: (page - 1) * REPORT_SENDS_MAX });
   let report = await at0(asked);

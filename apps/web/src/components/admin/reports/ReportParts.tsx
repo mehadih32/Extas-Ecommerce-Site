@@ -3,21 +3,22 @@
 // what it counts and where the full figure lives).
 import type { ReactNode } from 'react';
 import { t, type Dict } from '@/lib/i18n';
+import './report-bar.css';
 
 export interface Col {
   h: string;
   right?: boolean;
 }
 
-export function ReportTable({ cols, rows, testId, rowId, empty }: { cols: readonly Col[]; rows: readonly (readonly ReactNode[])[]; testId: string; rowId: string; empty: string }) {
+export function ReportTable({ cols, rows, testId, rowId, empty, rowCls }: { cols: readonly Col[]; rows: readonly (readonly ReactNode[])[]; testId: string; rowId: string; empty: string; rowCls?: (i: number) => string | undefined }) {
   if (!rows.length) return <p className="a2-sm a2-mute" data-testid={`${testId}-empty`}>{empty}</p>;
   return (
-    <div style={{ overflowX: 'auto' }} data-testid={testId}>
-      <table className="a2-table">
+    <div className="rp-frame" data-testid={testId}>
+      <table className="rp-tbl">
         <thead>
           <tr>
             {cols.map((c) => (
-              <th key={c.h} style={c.right ? { textAlign: 'right' } : undefined}>
+              <th key={c.h} className={c.right ? 'r' : undefined}>
                 {c.h}
               </th>
             ))}
@@ -25,9 +26,9 @@ export function ReportTable({ cols, rows, testId, rowId, empty }: { cols: readon
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} data-testid={rowId}>
+            <tr key={i} data-testid={rowId} className={rowCls?.(i)}>
               {r.map((v, n) => (
-                <td key={n} style={cols[n]?.right ? { textAlign: 'right', whiteSpace: 'nowrap' } : undefined}>
+                <td key={n} className={cols[n]?.right ? 'r' : undefined} style={cols[n]?.right ? { whiteSpace: 'nowrap' } : undefined}>
                   {v}
                 </td>
               ))}
