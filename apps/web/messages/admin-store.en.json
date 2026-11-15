@@ -2,7 +2,7 @@
   "stp": {
     "metaTitle": "Store details",
     "title": "Store details",
-    "sub": "The shop's legal numbers. The shop prints each one only when it is filled in; nothing made up ever shows.",
+    "sub": "Who you are, how customers reach you, and what prints on invoices and stickers.",
     "kpi": {
       "filled": "Legal numbers filled in",
       "of": "{n} of {total}",
@@ -71,6 +71,123 @@
         "t": "Tax & VAT",
         "d": "VAT figures and the VAT BIN on invoices."
       }
-    }
+    },
+    "c": {
+      "legal": {
+        "h": "Business & legal",
+        "shopName": "Shop name",
+        "registeredName": "Legal name",
+        "ownerName": "Owner name",
+        "tradeLicence": "Trade licence no.",
+        "tlExpiry": "Licence expiry (reminder)",
+        "dbid": "UBID / DBID",
+        "tin": "TIN",
+        "ecab": "e-CAB no. (optional)",
+        "complaintOfficer": "Complaint officer",
+        "dpo": "Data-protection officer"
+      },
+      "addresses": {
+        "h": "Addresses",
+        "officeAddr_en": "Office (on invoices), English",
+        "officeAddr_bn": "Office (on invoices), বাংলা",
+        "warehouseAddr": "Warehouse — courier pickup",
+        "returnsAddr": "Returns address"
+      },
+      "contact": {
+        "h": "Contact",
+        "phone": "Hotline",
+        "whatsapp": "WhatsApp",
+        "supportEmail": "Support email",
+        "ordersEmail": "Orders email",
+        "accountsEmail": "Accounts email",
+        "email": "Public email",
+        "supportOpens": "Support opens",
+        "supportCloses": "Support closes",
+        "closedDay": "Weekly closed day"
+      },
+      "brand": {
+        "h": "Logo set & brand colours",
+        "colorMain": "Main colour",
+        "colorSecond": "Second colour"
+      },
+      "social": {
+        "h": "Social links",
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "youtube": "YouTube"
+      },
+      "print": {
+        "h": "Invoice & sticker",
+        "invHead": "Invoice header",
+        "invFoot": "Invoice footer",
+        "stHead": "Sticker header",
+        "stFoot": "Sticker footer",
+        "stSize": "Sticker size"
+      },
+      "numbers": {
+        "h": "Numbers, money & language",
+        "orderPrefix": "Order number starts with",
+        "moneyFmt": "Money format",
+        "custLang": "Shop language for customers"
+      },
+      "tax": {
+        "h": "Tax & VAT",
+        "d": "Off by default",
+        "showVat": "Show VAT",
+        "bin": "BIN (13 digits)"
+      },
+      "targets": {
+        "h": "Targets",
+        "d": "Home, Finance and the daily Telegram report compare against these.",
+        "targetSales": "Sales this month",
+        "targetProfit": "Profit this month",
+        "targetAdPct": "Max ad spend (% of sales)"
+      },
+      "help": {
+        "dbid": "Shown on policy pages",
+        "complaintOfficer": "Shown on policy pages",
+        "dpo": "Shown on Privacy policy",
+        "registeredName": "As on the trade licence.",
+        "orderPrefix": "Capital letters, digits and \"-\", at most 8",
+        "showVat": "Off — most small online shops start without VAT. Turn on when you have a BIN.",
+        "facebook": "A full link starting with https://",
+        "bin": "Printed on every invoice when VAT is on."
+      },
+      "opt": {
+        "closedDay": {
+          "none": "Open every day",
+          "friday": "Friday",
+          "saturday": "Saturday"
+        },
+        "stSize": {
+          "4x3": "4 × 3 in",
+          "4x6": "4 × 6 in",
+          "a6": "A6",
+          "75x50": "75 × 50 mm"
+        },
+        "moneyFmt": {
+          "bd": "৳1,23,450",
+          "intl": "৳123,450"
+        },
+        "custLang": {
+          "both": "English + বাংলা (customer picks)",
+          "bn": "বাংলা first",
+          "en": "English first"
+        }
+      },
+      "logos": {
+        "logo": "Logo",
+        "logoPhone": "Phone logo",
+        "favicon": "Tab icon",
+        "ogImage": "Link picture",
+        "replace": "Replace",
+        "isSet": "Set",
+        "notSet": "Not set",
+        "note": "Logos are uploaded in Website › Brand & menus."
+      }
+    },
+    "licence": "Trade licence expires in {n} days ({day}). Renew it at the city corporation.",
+    "licenceGone": "Trade licence expired on {day}. Renew it at the city corporation."
   }
 }

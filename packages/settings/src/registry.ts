@@ -150,6 +150,7 @@ import { studioSettings } from './registry-studio';
 import { practiceSettings } from './registry-practice';
 import { pageSettingsSettings } from './registry-page-settings';
 import { customiseSettings } from './registry-customise';
+import { storeDetailsSettings } from './registry-store-details';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
 import { reportsDigestSettings } from './registry-reports-digest';
@@ -1698,6 +1699,8 @@ export const registry = {
   ...pageSettingsSettings,
   // ---- PR 745–749 · customisation: link preview picture, tag badges, collection order (registry-customise.ts, version 745). ----
   ...customiseSettings,
+  // ---- PR 789 · Settings > Store details, the rest of the page (registry-store-details.ts, version 789). ----
+  ...storeDetailsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

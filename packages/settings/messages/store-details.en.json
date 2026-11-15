@@ -1,0 +1,8 @@
+{
+  "store": {
+    "details": {
+      "label": "Store details (the rest of the page)",
+      "help": "Owner's name, licence expiry, TIN, e-CAB, officers, other addresses and e-mails, support hours, brand colours, invoice and sticker lines, money format, customer language, VAT switch and monthly targets. Empty or off as shipped."
+    }
+  }
+}
