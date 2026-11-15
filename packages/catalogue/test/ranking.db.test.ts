@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createRole, SYSTEM, syncAuth, type Actor } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { registry, type Key, type Value } from '@extas/settings';
-import { rankingView, saveRankingOrder, setRankPin, updateRankScores, type CatalogueDeps, type SettingsReader, type Who } from '../src';
+import { productSales30, rankingView, wrongSizeExchanges30, saveRankingOrder, setRankPin, updateRankScores, type CatalogueDeps, type SettingsReader, type Who } from '../src';
 
 const code = async (p: Promise<unknown>) => {
   try {
@@ -122,5 +122,19 @@ describe.skipIf(!HAS_TEST_DB)('shop ranking on PostgreSQL (PR 686)', () => {
     expect(await code(setRankPin(deps(), { actor: reader, storeId: A }, ids['Best polo']!, 'TOP'))).not.toBe('ok');
     expect(await code(setRankPin(deps(), sys(), ids['Other store']!, 'TOP'))).toBe('NOT_FOUND');
     expect(await code(setRankPin(deps(), sys(), ids['Best polo']!, 'SIDE' as never))).toBe('INVALID_INPUT');
+  });
+  it('the product page sales card counts the last 30 days of this product only, and another store is not found (PR 831)', async () => {
+    const r = await productSales30(deps(), { actor: reader, storeId: A }, ids['Best polo']!);
+    expect(r).toMatchObject({ days: 30, sold: 20, revenueMinor: 20, views: 40, rating: null, reviews: 0 });
+    expect(await code(productSales30(deps(), { actor: reader, storeId: A }, ids['Other store']!))).toBe('NOT_FOUND');
+  });
+  it('counts only the "size" exchanges of the last 30 days in this store (PR 831)', async () => {
+    const ord = await t.prisma.order.findFirstOrThrow({ where: { storeId: A } });
+    const mk = (reason: string, daysAgo: number, k: string) =>
+      t.prisma.exchange.create({ data: { storeId: A, orderId: ord.id, number: `EX-${k}`, reason, tier: 1, createdAt: new Date(clock.getTime() - daysAgo * 86_400_000) } });
+    await mk('size', 3, 'a');
+    await mk('size', 40, 'b');
+    await mk('color', 3, 'c');
+    expect(await wrongSizeExchanges30(deps(), { actor: reader, storeId: A })).toBe(1);
   });
 });

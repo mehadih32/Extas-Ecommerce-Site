@@ -152,3 +152,12 @@
 .sc-acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .sc-acts .ad-btn, .sc-cats .sc-listhd .ad-btn, .sc-edw > .ad-btn { min-height: 44px; }
 .sc-mb8 { margin-bottom: 8px; }
+/* PR 831: "What customers see" preview in the chart editor */
+.sc-seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.sc-seg .ad-btn { min-height: 44px; }
+.sc-seg .ad-btn[aria-pressed="true"] { border-color: var(--ad-brand); font-weight: 600; }
+.sc-pv-sizes { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.sc-pv-sz { min-height: 44px; min-width: 44px; padding: 0 12px; border: 1px solid var(--ad-line); border-radius: 8px; background: var(--ad-surface); color: inherit; cursor: pointer; }
+.sc-pv-sz.on { border-color: var(--ad-brand); font-weight: 700; }
+.sc-cust .sc-tbl th.on, .sc-cust .sc-tbl td.on { font-weight: 700; }
+.sc-pv-find { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--ad-line); display: flex; flex-direction: column; gap: 6px; max-width: 320px; }

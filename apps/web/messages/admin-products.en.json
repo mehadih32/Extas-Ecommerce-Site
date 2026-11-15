@@ -701,7 +701,22 @@
       "stock": "Sort: stock (low first)"
     },
     "introCount": "{n} products · stock and buying prices come from the ERP",
-    "introSynced": "{n} products · stock and buying prices come from the ERP (synced {ago} ago)"
+    "introSynced": "{n} products · stock and buying prices come from the ERP (synced {ago} ago)",
+    "v5": {
+      "fromErp": "from ERP",
+      "byHand": "made by hand",
+      "all": "All products",
+      "steps": "Edit step by step",
+      "view": "View on shop",
+      "sales": {
+        "h": "Sales · 30 days",
+        "sold": "Sold",
+        "revenue": "Revenue",
+        "views": "Page views",
+        "rating": "Rating",
+        "reviews": "{n} reviews"
+      }
+    }
   },
   "checks": {
     "sep": ", ",
