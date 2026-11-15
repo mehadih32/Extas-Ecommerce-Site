@@ -39,13 +39,15 @@ function Kv({ rows }: { rows: Row2[] }) {
 function Card({ title, right, children, testId, sub }: { title: ReactNode; right?: ReactNode; children: ReactNode; testId?: string; sub?: string }) {
   return (
     <section className="a2-card" data-testid={testId}>
-      <div className="a2-ch">
-        <div>
-          <h2 className="a2-h3">{title}</h2>
-          {sub ? <div className="a2-cs">{sub}</div> : null}
+      {title || right ? (
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3">{title}</h2>
+            {sub ? <div className="a2-cs">{sub}</div> : null}
+          </div>
+          {right}
         </div>
-        {right}
-      </div>
+      ) : null}
       {children}
     </section>
   );
@@ -81,8 +83,15 @@ function InvoicePrint({ view, at }: { view: AdminView; at: { orderId: string; nu
 export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminView; o: OrderDetailView; open: string | null; notice?: ReactNode; extra?: ReactNode }) {
   const d = view.dict;
   const more = t(d, 'orders.detail.more');
+  // PR 783 (prototype v5 parity, m-orders.js renderOrder): the head holds the number, the date line and "← All orders"; the
+  // buttons (next step, invoice, "More actions") sit in the steps card under the customer card, as the prototype draws them.
   const right = (
-    <>
+    <Link href="/admin/orders" className="a2-btn" data-testid="order-back">
+      ← {t(d, 'orders.page.all')}
+    </Link>
+  );
+  const actions = (
+    <div className="a2-cmds a2-ordacts" data-testid="order-actions">
       <Buttons specs={o.primary} open={open} />
       {o.invoice ? (
         <a className="a2-btn" href={o.invoice} target="_blank" rel="noopener" data-testid="order-invoice">
@@ -92,7 +101,7 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
       ) : null}
       {o.invoicePrint ? <InvoicePrint view={view} at={o.invoicePrint} /> : null}
       <MoreMenu label={more} specs={o.more} open={open} />
-    </>
+    </div>
   );
   const sub = (
     <span className="a2-osub">
@@ -106,13 +115,85 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
       ) : null}
     </span>
   );
-  const crumb = (
-    <Link href="/admin/orders" className="a2-lnk lm-back">
-      <ShellIcon name="cl" size={14} />
-      {t(d, 'orders.page.all')}
-    </Link>
+  const title = o.number;
+  const copy = { label: t(d, 'orders.detail.copy'), done: t(d, 'orders.detail.copied') };
+  // PR 783: the customer card on top (name, phone with Call and Copy, address with Map and Copy, email with Copy, "Customer 360")
+  const customerCard = (
+    <Card key="customer" testId="order-customer" title={o.name || t(d, 'orders.list.none')} right={o.contact.customerHref ? <Link className="a2-btn" href={o.contact.customerHref} data-testid="order-360">{t(d, 'orders.detail.customer360')}</Link> : undefined}>
+      <div className="a2-ocl" data-testid="order-contact">
+        <ShellIcon name="phone" size={15} />
+        <b className="a2-mono">{o.contact.phone ?? t(d, 'orders.list.none')}</b>
+        {o.contact.callHref ? (
+          <a className="a2-btn sm" href={o.contact.callHref}>
+            {t(d, 'orders.detail.call')}
+          </a>
+        ) : null}
+        {o.contact.phone ? <CopyText text={o.contact.phone} label={copy.label} done={copy.done} /> : null}
+      </div>
+      <div className="a2-ocl">
+        <ShellIcon name="home" size={15} />
+        <span className="a2-ocl-t">{o.contact.address ?? t(d, 'orders.list.none')}</span>
+        {o.contact.mapHref ? (
+          <a className="a2-btn sm" href={o.contact.mapHref} target="_blank" rel="noopener noreferrer">
+            {t(d, 'orders.detail.map')}
+          </a>
+        ) : null}
+        {o.contact.address ? <CopyText text={o.contact.address} label={copy.label} done={copy.done} /> : null}
+      </div>
+      <div className="a2-ocl">
+        <ShellIcon name="msg" size={15} />
+        <span className="a2-ocl-t">{o.contact.email ?? t(d, 'orders.detail.noEmail')}</span>
+        {o.contact.email ? <CopyText text={o.contact.email} label={copy.label} done={copy.done} /> : null}
+      </div>
+      {o.contact.extra.length ? <Kv rows={o.contact.extra} /> : null}
+      {o.location ? (
+        // follow-up 324: the point the customer shared for the rider, opened on the owner's map (a new tab)
+        <div className="a2-ovoice" data-testid="order-location">
+          <div className="a2-xs a2-mute a2-b">{t(d, 'orders.cust.locationTitle')}</div>
+          <a className="a2-btn a2-oloc" href={o.location.href} target="_blank" rel="noopener noreferrer" data-testid="order-location-map">
+            <ShellIcon name="ext" size={15} />
+            <span>{t(d, 'orders.cust.location', { point: o.location.text })}</span>
+          </a>
+        </div>
+      ) : null}
+      {o.voice ? (
+        <div className="a2-ovoice" data-testid="order-voice">
+          <div className="a2-xs a2-mute a2-b">
+            {t(d, 'orders.voice.title')} · <span className={`a2-pill ${o.voice.low ? 'warn' : 'info'}`}>{t(d, o.voice.low ? 'orders.flag.voiceCall' : 'orders.flag.voice')}</span>
+          </div>
+          <p className="a2-sm">{o.voice.words}</p>
+          <div className="a2-xs a2-mute">{o.voice.sure}</div>
+          {o.voice.audio ? (
+            <audio controls preload="none" src={o.voice.audio} className="a2-ovoice-play" data-testid="order-voice-play">
+              {t(d, 'orders.voice.play')}
+            </audio>
+          ) : (
+            <div className="a2-xs a2-mute">{t(d, 'orders.voice.notKept')}</div>
+          )}
+        </div>
+      ) : null}
+    </Card>
   );
-  const title = `${o.number} · ${o.name ? `${o.name} · ` : ''}${o.total}`;
+  // PR 783: the eight steps (New … Paid) with the buttons under them, as the prototype's steps card
+  const stepsCard = (
+    <Card key="steps" testId="order-steps" title="">
+      {o.step >= 0 ? (
+        <ol className="a2-ostep" aria-label={t(d, 'orders.detail.stepsAria')}>
+          {ORDER_STEPS.map((s, i) => (
+            <li key={s} className={i < o.step ? 'done' : i === o.step ? 'on' : ''} aria-current={i === o.step ? 'step' : undefined}>
+              {t(d, `orders.view.${s}`)}
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {actions}
+    </Card>
+  );
+  const courierCard = (
+    <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
+      <Kv rows={o.courier.rows} />
+    </Card>
+  );
 
   const main = [
     <Card key="items" testId="order-items" title={`${t(d, 'orders.items.title')} · ${o.units}`} right={o.addLine ? <CommandButton spec={o.addLine} size="sm" open={open === o.addLine.id} /> : undefined}>
@@ -140,50 +221,6 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
         ))}
       </div>
     </Card>,
-    <Card key="customer" testId="order-customer" title={t(d, 'orders.cust.title')}>
-      <Kv rows={o.customer} />
-      {o.location ? (
-        // follow-up 324: the point the customer shared for the rider, opened on the owner's map (a new tab)
-        <div className="a2-ovoice" data-testid="order-location">
-          <div className="a2-xs a2-mute a2-b">{t(d, 'orders.cust.locationTitle')}</div>
-          <a className="a2-btn a2-oloc" href={o.location.href} target="_blank" rel="noopener noreferrer" data-testid="order-location-map">
-            <ShellIcon name="ext" size={15} />
-            <span>{t(d, 'orders.cust.location', { point: o.location.text })}</span>
-          </a>
-        </div>
-      ) : null}
-      {o.voice ? (
-        <div className="a2-ovoice" data-testid="order-voice">
-          <div className="a2-xs a2-mute a2-b">
-            {t(d, 'orders.voice.title')} · <span className={`a2-pill ${o.voice.low ? 'warn' : 'info'}`}>{t(d, o.voice.low ? 'orders.flag.voiceCall' : 'orders.flag.voice')}</span>
-          </div>
-          <p className="a2-sm">{o.voice.words}</p>
-          <div className="a2-xs a2-mute">{o.voice.sure}</div>
-          {o.voice.audio ? (
-            <audio controls preload="none" src={o.voice.audio} className="a2-ovoice-play" data-testid="order-voice-play">
-              {t(d, 'orders.voice.play')}
-            </audio>
-          ) : (
-            <div className="a2-xs a2-mute">{t(d, 'orders.voice.notKept')}</div>
-          )}
-        </div>
-      ) : null}
-      {o.history.recent.length ? (
-        <div className="a2-ohist" data-testid="order-history">
-          <div className="a2-xs a2-mute a2-b">{t(d, 'orders.hist.recent')}</div>
-          {o.history.recent.map((h) => (
-            <Link key={h.href} className="a2-prow" href={h.href}>
-              <div className="a2-prt">
-                <b>{h.number}</b>
-                <span>{h.placed}</span>
-              </div>
-              <span className={`a2-pill ${h.tone}`}>{h.status}</span>
-              <span className="a2-prs">{h.total}</span>
-            </Link>
-          ))}
-        </div>
-      ) : null}
-    </Card>,
     // PR 605 follow-up 214: a gift order's own card after the customer (the receiver)
     ...(o.gift
       ? [
@@ -192,15 +229,10 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
           </Card>,
         ]
       : []),
-    <Card key="courier" testId="order-courier" title={t(d, 'orders.courier.title')} right={<Chips chips={[o.courier.chip]} />}>
-      <Kv rows={o.courier.rows} />
-    </Card>,
     // PR 610, 611 (ERP contract v6): the ERP part after the courier; it draws nothing in v5
     <ErpOrderPanel key="erp" orderId={o.id} currency={o.currency} view={view} />,
     // S06 · PR 160: the risk card (demo V12.3: after the courier, before the money)
     <RiskPanel key="risk" order={{ id: o.id, number: o.number, currency: o.currency }} view={view} />,
-    // S28 · PR 662: the courier score out of 10 (staff only; nothing while the switch is off)
-    <CourierScoreCard key="courier-score" order={{ id: o.id }} view={view} />,
     <SupportExplain key="explain" orderId={o.id} view={view} />,
     ...o.reviews.map((r) => (
       <Card key={r.id} testId="order-review" title={r.title} sub={`${r.severity ? `${r.severity} · ` : ''}${r.at}`} right={<span className={`a2-pill ${r.open ? 'warn' : 'ok'}`}>{t(d, r.open ? 'orders.review.open' : 'orders.review.decided')}</span>}>
@@ -266,8 +298,8 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
     </Card>,
   ];
 
-  const side = (
-    <Card testId="order-timeline" title={t(d, 'orders.tl.title')} sub={t(d, 'orders.tl.sub')}>
+  const timeline = (
+    <Card key="timeline" testId="order-timeline" title={t(d, 'orders.tl.title')} sub={t(d, 'orders.tl.sub')}>
       {o.canNote ? <NoteForm url={o.noteUrl} maxLength={o.noteMax} labels={{ label: t(d, 'orders.notes.label'), placeholder: t(d, 'orders.notes.placeholder'), add: t(d, 'orders.notes.add'), done: t(d, 'orders.notes.done') }} /> : null}
       {o.notes.length ? (
         <div className="a2-onotes" data-testid="order-notes">
@@ -296,9 +328,42 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
     </Card>
   );
 
+  // PR 783 (prototype v5 parity): the right column is the prototype's: the courier score, "Lifetime" and "Previous orders"
+  const side = (
+    <>
+      <CourierScoreCard key="courier-score" order={{ id: o.id }} view={view} />
+      <Card key="lifetime" testId="order-lifetime" title={t(d, 'orders.life.title')}>
+        <div className="a2-olife">
+          {o.lifetime.map((r) => (
+            <div key={r.label}>
+              <span>{r.label}</span>
+              <b>{r.value}</b>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card key="previous" testId="order-history" title={t(d, 'orders.hist.previous', { n: String(o.history.recent.length) })}>
+        {o.history.recent.length ? (
+          o.history.recent.map((h) => (
+            <Link key={h.href} className="a2-prow" href={h.href}>
+              <div className="a2-prt">
+                <b>{h.number}</b>
+                <span>{h.placed}</span>
+              </div>
+              <span className={`a2-pill ${h.tone}`}>{h.status}</span>
+              <span className="a2-prs">{h.total}</span>
+            </Link>
+          ))
+        ) : (
+          <div className="a2-sm a2-mute">{t(d, 'orders.hist.first')}</div>
+        )}
+      </Card>
+    </>
+  );
+
   return (
     <div className="a2-z" data-testid="order-detail" data-order={o.number} data-lm-ready="">
-      <PageHead view={view} place={locateKey('order')} title={title} sub={sub} right={right} crumb={crumb} />
+      <PageHead view={view} place={locateKey('order')} title={title} sub={sub} right={right} />
       {notice}
       {o.bands.map((b) => (
         <div key={b.id} className={`a2-band ${b.kind}`} data-testid={`band-${b.id}`}>
@@ -323,7 +388,12 @@ export function OrderDetailPage({ view, o, open, notice, extra }: { view: AdminV
           <Chips chips={o.flags} />
         </div>
       ) : null}
-      <DetailGrid labels={{ aria: t(d, 'orders.detail.tabs'), main: t(d, 'orders.detail.details'), side: t(d, 'orders.detail.timeline') }} main={extra ? [...main, extra] : main} side={side} />
+      <div className="a2-stack a2-otop">
+        {customerCard}
+        {stepsCard}
+        {o.courier.rows.length ? courierCard : null}
+      </div>
+      <DetailGrid labels={{ aria: t(d, 'orders.detail.tabs'), main: t(d, 'orders.detail.details'), side: t(d, 'orders.detail.timeline') }} main={extra ? [...main, extra, timeline] : [...main, timeline]} side={side} />
     </div>
   );
 }

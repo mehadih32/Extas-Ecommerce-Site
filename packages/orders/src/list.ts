@@ -21,7 +21,9 @@ import { TWO_SIZE_FLAGS } from './two-size';
 import { DUPLICATE_SECTION, reviewKindOf, type StoredRuleHit } from './duplicates';
 import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './service';
 
-export const ORDER_VIEWS = ['all', 'open', 'new', 'processing', 'cancelled', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished'] as const;
+export const ORDER_VIEWS = ['all', 'open', 'new', 'processing', 'cancelled', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished',
+  // PR 783 (admin prototype v5 parity, m-orders.js CHIPS): the prototype's status chips as views
+  'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
 /** PR 541: every payment method but cash on delivery (paid before the parcel leaves). */
@@ -77,6 +79,22 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
       return { flags: { has: TWO_SIZE_FLAGS.check }, status: { in: OPEN_STATES.filter((s) => s !== 'HANDED_OVER' && s !== 'IN_TRANSIT') } };
     case 'finished':
       return { status: { in: [...FINAL_STATES] } };
+    // PR 783 (prototype v5 chips): Confirmed = confirmed and not yet with a booking; Booked = a courier booking exists but the
+    // parcel is not packed; Packed; Handed over (with the courier or on its way); Delivered (cash still to come); Paid (delivered, nothing left to pay).
+    case 'confirmed':
+      return { status: { in: ['CONFIRMED', 'PROCESSING'] }, shipments: { none: { status: { notIn: [...NOT_BOOKED_SHIPMENT] } } } };
+    case 'booked':
+      return { status: { in: ['CONFIRMED', 'PROCESSING'] }, shipments: { some: { status: { notIn: [...NOT_BOOKED_SHIPMENT] } } } };
+    case 'packed':
+      return { status: 'PACKED' };
+    case 'handedOver':
+      return { status: { in: ['HANDED_OVER', 'IN_TRANSIT'] } };
+    case 'delivered':
+      return { status: { in: ['DELIVERED', 'PARTIALLY_DELIVERED'] }, OR: [{ paymentMethod: 'COD' }, { paymentMethod: null }], paidMinor: { lt: 1 } };
+    case 'paid':
+      return { status: { in: ['DELIVERED', 'PARTIALLY_DELIVERED'] }, NOT: { AND: [{ OR: [{ paymentMethod: 'COD' }, { paymentMethod: null }] }, { paidMinor: { lt: 1 } }] } };
+    case 'returned':
+      return { status: 'RETURNED' };
     default:
       return {};
   }

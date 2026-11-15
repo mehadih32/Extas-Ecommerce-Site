@@ -73,22 +73,35 @@ export async function Kpis({ view, a, counts, now }: { view: AdminView; a: ListA
  * The saved views: only the order service's own, each with its count. PR 274: All orders ends with "Incomplete" (typed
  * at checkout, not placed), its own page, with the open count.
  */
-export function ViewChips({ view, page, query, counts, incomplete }: { view: AdminView; page: ListPageId; query: ListQuery; counts: Record<string, number>; incomplete?: number | null }) {
+export function ViewChips({ view, page, query, counts }: { view: AdminView; page: ListPageId; query: ListQuery; counts: Record<string, number>; incomplete?: number | null }) {
+  // PR 783 (prototype v5 parity, m-orders.js CHIPS + CHIPS2): All orders draws the prototype's chips (All, New, Processing,
+  // Confirmed, Booked, Packed, Handed over, Delivered, Paid | Returned, Cancelled, Bulk / corporate); a view that is not one of
+  // them (opened from a tile or an old link) shows as one more chip, so the page always says what it is showing.
+  const proto = 'chips' in LIST_PAGES[page] ? (LIST_PAGES[page] as unknown as { chips: readonly string[]; chips2: readonly string[] }) : null;
+  const first: readonly string[] = proto ? proto.chips : LIST_PAGES[page].views;
+  const second: readonly string[] = proto ? proto.chips2 : [];
+  const extra = proto && ![...first, ...second].includes(query.view) ? [query.view] : [];
+  const chip = (v: string) => {
+    const on = v === query.view;
+    return (
+      <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={listHref(page, { view: query.view }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
+        {t(view.dict, `orders.view.${v}`)}
+        <span className="a2-cnt">{formatNumber(counts[v] ?? 0, view.locale)}</span>
+      </Link>
+    );
+  };
   return (
     <nav className="a2-views" aria-label={t(view.dict, 'orders.list.viewsAria')} data-testid="orders-views">
-      {LIST_PAGES[page].views.map((v) => {
-        const on = v === query.view;
-        return (
-          <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={listHref(page, { view: query.view }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
-            {t(view.dict, `orders.view.${v}`)}
-            <span className="a2-cnt">{formatNumber(counts[v] ?? 0, view.locale)}</span>
-          </Link>
-        );
-      })}
-      {incomplete !== undefined && incomplete !== null ? (
-        <Link className="a2-view" href="/admin/orders/incomplete" data-view="incomplete">
-          {t(view.dict, 'orders.view.incomplete')}
-          <span className="a2-cnt">{formatNumber(incomplete, view.locale)}</span>
+      {[...first, ...extra].map(chip)}
+      {second.length ? (
+        <span className="a2-vsep" aria-hidden="true">
+          |
+        </span>
+      ) : null}
+      {second.map(chip)}
+      {proto ? (
+        <Link className="a2-view" href="/admin/orders/bulk" data-view="bulk">
+          {t(view.dict, 'orders.view.bulk')}
         </Link>
       ) : null}
     </nav>
