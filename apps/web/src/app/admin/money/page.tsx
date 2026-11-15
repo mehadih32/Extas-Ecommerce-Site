@@ -104,6 +104,15 @@ export default async function MoneyOverviewPage() {
   if (topCod && topCod.minor > 0) decide.push({ key: 'cod', tone: (o.cod.oldestDays ?? 0) >= 3 ? 'warn' : 'ok', head: f('dec.codHead', { courier: topCod.courier ?? c('cod.noCourier'), amt: amount(topCod.minor) }), text: f('dec.codText', { n: topCod.parcels, days: o.cod.oldestDays ?? 0 }), action: { label: f('dec.codBtn'), href: '/admin/delivery/couriers' } });
   if (o.refunds.waiting) decide.push({ key: 'refunds', tone: 'warn', head: f('dec.refHead', { n: o.refunds.waiting }), text: f('dec.refText', { amt: amount(o.refunds.waitingMinor) }), action: { label: f('dec.refBtn'), href: '/admin/money/refunds' } });
   if (o.claims?.late) decide.push({ key: 'claims', tone: 'bad', head: f('dec.claimHead', { n: o.claims.late }), text: f('dec.claimText', { amt: amount(o.claims.minor) }), action: { label: f('dec.claimBtn'), href: '/admin/delivery/claims' } });
+  // parity F4 · PR 849 (prototype Finance home): "N courier lines do not match", with the cash we are short in them
+  const openLines = await access.deps.db.courierSettlementLine.findMany({
+    where: { storeId: MOTHER_STORE_ID, matchState: { in: ['MISMATCH', 'LATE'] }, resolvedAt: null },
+    select: { expectedMinor: true, codMinor: true },
+    take: 5000, // hardcode-ok: a safety cap on one read; the count shown is the real one below
+  });
+  const openLineCount = await access.deps.db.courierSettlementLine.count({ where: { storeId: MOTHER_STORE_ID, matchState: { in: ['MISMATCH', 'LATE'] }, resolvedAt: null } });
+  const shortMinor = openLines.reduce((a, l) => a + (l.expectedMinor !== null && l.expectedMinor > l.codMinor ? l.expectedMinor - l.codMinor : 0), 0); // hardcode-ok: zero fallback, not a business number
+  if (openLineCount > 0) decide.push({ key: 'courierLines', tone: 'warn', head: f('dec.lineHead', { n: openLineCount }), text: f('dec.lineText', { amt: amount(shortMinor) }), action: { label: f('dec.lineBtn'), href: '/admin/delivery/couriers' } });
   if (!vat.enabled) decide.push({ key: 'vat', tone: 'ok', head: f('dec.vatHead'), text: f('dec.vatText'), action: { label: f('dec.vatBtn'), href: '/admin/money/vat' } });
   // prototype v5 (PR 821): where the money is now, courier money, the cash forecast and the ERP match, from the real records
   const perms = access.guard.permissions;

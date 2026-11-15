@@ -175,7 +175,19 @@
         "network": "No connection. Try again.",
         "other": "The list was not saved. Try again."
       },
-      "history": "History"
+      "history": "History",
+      "advance": "Advance",
+      "advanceTaken": "Advance taken",
+      "bonus": "Bonus",
+      "deduction": "Deduction",
+      "netToPay": "Net to pay",
+      "adjust": "Advance, bonus, deduction",
+      "adjustNote": "Note",
+      "adjustHelp": "For the month picked above only. Net to pay = the amount + bonus - deduction - advance. The month's cost counts the bonus and the deduction; an advance only moves the day the money goes. Nothing is paid from here.",
+      "slip": "Pay slip",
+      "slipTitle": "Pay slip",
+      "slipBlocked": "The browser blocked the pay slip window. Allow pop-ups for this page and try again.",
+      "colAmountShort": "Salary"
     }
   }
 }

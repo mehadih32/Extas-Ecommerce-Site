@@ -263,7 +263,10 @@
         "claimBtn": "Check",
         "vatHead": "VAT is off",
         "vatText": "While it is off, no VAT line shows anywhere in Finance.",
-        "vatBtn": "VAT setting"
+        "vatBtn": "VAT setting",
+        "lineHead": "{n} courier lines do not match",
+        "lineText": "{amt} less than our books. Claim it before the next statement.",
+        "lineBtn": "Check"
       }
     },
     "fp": {

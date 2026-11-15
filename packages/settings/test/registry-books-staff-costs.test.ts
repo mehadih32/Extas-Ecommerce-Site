@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { lookup, messages } from '../src/messages';
 import { registry } from '../src/registry';
-import { staffAmountAt, staffCostsSchema, staffCostsSettings, staffNextChange, staffTotalsFor, type StaffCostPerson } from '../src/registry-books-staff-costs';
+import { staffAmountAt, staffCostsSchema, staffCostsSettings, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostPerson } from '../src/registry-books-staff-costs';
 
 const person = (over: Partial<StaffCostPerson> = {}): StaffCostPerson => ({
   id: 'p1',
@@ -54,6 +54,24 @@ describe('salaries and monthly costs (v837)', () => {
     const people = [person(), person({ id: 'p2', name: 'Office', kind: 'rent', amounts: [{ from: '2026-01', minor: 3_000_000 }] }), person({ id: 'p3', name: 'Net', kind: 'utilities', amounts: [{ from: '2026-11', minor: 150_000 }] })];
     expect(staffTotalsFor(people, '2026-10')).toEqual({ salary: 1_500_000, rent: 3_000_000, utilities: 0, other: 0 });
     expect(staffTotalsFor(people, '2026-11')).toEqual({ salary: 1_500_000, rent: 3_000_000, utilities: 150_000, other: 0 });
+  });
+
+  it('PR 849: a month adjust is bonus up, deduction and advance down; the cost is amount + bonus - deduction (an advance only moves the day)', () => {
+    const p = person({ adj: { '2026-11': { adv: 200_000, bonus: 100_000, ded: 50_000, note: 'Best confirm rate' } } });
+    expect(staffNetAt(p, '2026-11')).toEqual({ base: 1_500_000, adv: 200_000, bonus: 100_000, ded: 50_000, net: 1_350_000 });
+    expect(staffNetAt(p, '2026-10')).toEqual({ base: 1_500_000, adv: 0, bonus: 0, ded: 0, net: 1_500_000 });
+    expect(staffTotalsFor([p], '2026-11').salary).toBe(1_550_000);
+    expect(staffNetAt(person({ adj: { '2026-11': { adv: 9_000_000, bonus: 0, ded: 0, note: '' } } }), '2026-11').net).toBe(0);
+    expect(staffNetAt(person({ stoppedFrom: '2026-11', adj: { '2026-11': { adv: 1, bonus: 5, ded: 0, note: '' } } }), '2026-11')).toMatchObject({ base: 0, net: 0 });
+  });
+
+  it('PR 849: an adjust is checked like the rest: a month key, whole non-negative amounts, no unknown field', () => {
+    const adj = (a: unknown) => staffCostsSchema.safeParse({ people: [{ ...person(), adj: a }] }).success;
+    expect(adj({ '2026-11': { adv: 0, bonus: 1, ded: 2, note: '' } })).toBe(true);
+    expect(adj({ '2026-13': { adv: 0, bonus: 1, ded: 2, note: '' } })).toBe(false);
+    expect(adj({ '2026-11': { adv: -1, bonus: 0, ded: 0, note: '' } })).toBe(false);
+    expect(adj({ '2026-11': { adv: 0.5, bonus: 0, ded: 0, note: '' } })).toBe(false);
+    expect(adj({ '2026-11': { adv: 0, bonus: 0, ded: 0, note: '', pay: 1 } })).toBe(false);
   });
 
   it('refuses a bad month, a repeated id, a repeated month, a negative or fractional amount and an unknown field', () => {
