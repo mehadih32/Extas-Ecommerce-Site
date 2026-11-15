@@ -8,7 +8,7 @@
 // method (the layout passes the marks, shell-model payMarks over the checkout's live `paySettings`).
 import type { ShopContext } from '@/lib/shop/context';
 import { safeExternal, telHref, waHref } from '@/lib/shop/links';
-import { footerColumns, footerDeskColumns, footerPromises, joinShown, type FooterColumn, type PayMarkId } from '@/lib/shop/shell-model';
+import { footerBlocks, footerColumns, footerDeskColumns, footerPromises, joinShown, type FooterBlocks, type FooterColumn, type PayMarkId } from '@/lib/shop/shell-model';
 import { GarmentIcon, Icon, PayMark, SocialMark, WaGlyph } from './Icon';
 import { JoinForm, type JoinWords } from './JoinForm';
 import { LangSwitch } from './LangSwitch';
@@ -124,10 +124,36 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
     </a>
   ));
   const ids = F.legal.ids;
+  // PR 745: the owner's order and hidden boxes; with none set, B.ordered is false and nothing below changes
+  const B = footerBlocks(F);
+  const st = (b: Parameters<FooterBlocks['order']>[0]): React.CSSProperties | undefined => (B.ordered ? { order: B.order(b) } : undefined);
+  const reach = (
+    <div className="ftr-reach">
+      {wa ? (
+        <a className="btn btn-block ftr-wa" href={wa} target="_blank" rel="noopener">
+          <WaGlyph size={22} />
+          <span>{t('footer.whatsapp')}</span>
+        </a>
+      ) : null}
+      {tel ? (
+        <a className="btn btn-block ftr-hot" href={tel}>
+          <Icon name="phone" size={19} />
+          <span>
+            {t('footer.hotline')} {hot}
+          </span>
+        </a>
+      ) : null}
+      {K.hours ? (
+        <div className="xs center ftr-hours">
+          <HoursLine c={c} />
+        </div>
+      ) : null}
+    </div>
+  );
   return (
-    <footer className={`ftr${F.desktop ? ' ftr-hasd' : ''}${ref ? ' ftr-hasref' : ''}`}>
-      {promises.length ? (
-        <div className="ftr-s ftr-s1">
+    <footer className={`ftr${F.desktop ? ' ftr-hasd' : ''}${ref ? ' ftr-hasref' : ''}`} data-blocks={B.ordered ? '' : undefined}>
+      {promises.length && B.shows('promise') ? (
+        <div className="ftr-s ftr-s1" style={st('promise')}>
           <div className="container" style={{ padding: 0 }}>
             <div
               className="ftr-promise"
@@ -151,7 +177,8 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
           </div>
         </div>
       ) : null}
-      <div className="ftr-s ftr-s2">
+      {B.shows('brand') ? (
+      <div className="ftr-s ftr-s2" style={st('brand')}>
         <div className="container">
           <div className="ftr-brand">
             <div className="ftr-brand-top">
@@ -164,8 +191,9 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
           </div>
         </div>
       </div>
-      {cols.length ? (
-        <div className="ftr-s ftr-s3">
+      ) : null}
+      {cols.length && B.shows('columns') ? (
+        <div className="ftr-s ftr-s3" style={st('columns')}>
           <div className="container">
             <div className="ftr-cols" data-n={cols.length !== 3 ? cols.length : undefined}>
               {cols.map((col) => (
@@ -178,38 +206,50 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
           </div>
         </div>
       ) : null}
-      <div className="ftr-s ftr-s4">
-        <div className="container">
-          <div className="ftr-contact">
-            <div className="ftr-reach">
-              {wa ? (
-                <a className="btn btn-block ftr-wa" href={wa} target="_blank" rel="noopener">
-                  <WaGlyph size={22} />
-                  <span>{t('footer.whatsapp')}</span>
-                </a>
-              ) : null}
-              {tel ? (
-                <a className="btn btn-block ftr-hot" href={tel}>
-                  <Icon name="phone" size={19} />
-                  <span>
-                    {t('footer.hotline')} {hot}
-                  </span>
-                </a>
-              ) : null}
-              {K.hours ? (
-                <div className="xs center ftr-hours">
-                  <HoursLine c={c} />
-                </div>
-              ) : null}
+      {B.ordered ? (
+        <>
+          {B.shows('contact') ? (
+            <div className="ftr-s ftr-s4" style={st('contact')}>
+              <div className="container">
+                <div className="ftr-contact">{reach}</div>
+              </div>
             </div>
-            <SocRow c={c} wa={wa} />
-            <Pay c={c} ids={pay} />
+          ) : null}
+          {B.shows('social') ? (
+            <div className="ftr-s ftr-s4" style={st('social')}>
+              <div className="container">
+                <div className="ftr-contact">
+                  <SocRow c={c} wa={wa} />
+                </div>
+              </div>
+            </div>
+          ) : null}
+          {B.shows('pay') && pay.length ? (
+            <div className="ftr-s ftr-s4" style={st('pay')}>
+              <div className="container">
+                <div className="ftr-contact">
+                  <Pay c={c} ids={pay} />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div className="ftr-s ftr-s4">
+          <div className="container">
+            <div className="ftr-contact">
+              {reach}
+              <SocRow c={c} wa={wa} />
+              <Pay c={c} ids={pay} />
+            </div>
           </div>
         </div>
-      </div>
-      {ref ? <DeskRef c={c} join={join} wa={wa} tel={tel} hot={hot} pay={pay} /> : null}      {F.desktop && !ref ? (
-        <div className="ftr-s ftr-d hide-m" data-testid="ftr-desk">
+      )}
+      {ref && (!B.ordered || B.deskOrder !== null) ? <DeskRef c={c} join={join} wa={wa} tel={tel} hot={hot} pay={pay} B={B} /> : null}
+      {F.desktop && !ref && (!B.ordered || B.deskOrder !== null) ? (
+        <div className="ftr-s ftr-d hide-m" data-testid="ftr-desk" style={B.ordered ? { order: B.deskOrder ?? 0 } : undefined}>
           <div className="container">
+            {B.shows('brand') ? (
             <div className="ftr-d-top">
               <div className="ftr-d-brand">
                 <div className="logo">
@@ -218,14 +258,15 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
                 <div className="xs ftr-brand-sub">{slogan}</div>
               </div>
             </div>
+            ) : null}
             <div className="ftr-d-cols" data-n={nD !== 4 ? nD : undefined} data-join={nD !== 4 && joinShown(F, c.flags) ? '1' : undefined}>
-              {dcols.map((col) => (
+              {(B.shows('columns') ? dcols : []).map((col) => (
                 <div key={col.id} className="ftr-d-col">
                   <span className="ftr-h">{col.title}</span>
                   <Links col={col} />
                 </div>
               ))}
-              {joinShown(F, c.flags) ? (
+              {joinShown(F, c.flags) && B.shows('brand') ? (
                 <div className="ftr-d-col ftr-d-join">
                   <span className="ftr-h">{t('footer.join.title')}</span>
                   <JoinForm id="join-d" variant="desk" words={join} />
@@ -234,17 +275,17 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
             </div>
             <div className="ftr-d-contact">
               <div className="ftr-d-cl">
-                {socLinks.length ? <div className="ftr-d-soc">{socLinks}</div> : null}
-                <Pay c={c} ids={pay} suffix="-d" />
+                {socLinks.length && B.shows('social') ? <div className="ftr-d-soc">{socLinks}</div> : null}
+                {B.shows('pay') ? <Pay c={c} ids={pay} suffix="-d" /> : null}
               </div>
               <div className="ftr-d-reach">
-                {wa ? (
+                {wa && B.shows('contact') ? (
                   <a className="btn ftr-wa ftr-d-wa" href={wa} target="_blank" rel="noopener">
                     <WaGlyph size={20} />
                     <span>{t('footer.whatsapp')}</span>
                   </a>
                 ) : null}
-                {tel ? (
+                {tel && B.shows('contact') ? (
                   <a className="btn ftr-hot ftr-d-hot" href={tel}>
                     <Icon name="phone" size={18} />
                     <span>
@@ -252,7 +293,7 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
                     </span>
                   </a>
                 ) : null}
-                {K.hours ? (
+                {K.hours && B.shows('contact') ? (
                   <div className="xs ftr-d-hours">
                     <HoursLine c={c} />
                   </div>
@@ -262,7 +303,7 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
           </div>
         </div>
       ) : null}
-      <div className="ftr-s ftr-s5">
+      <div className="ftr-s ftr-s5" style={st('legal')}>
         <div className="container ftr-legalbar">
           <div className="row between">
             <span className="ftr-legal">
@@ -290,27 +331,30 @@ export function StoreFooter({ c, pay }: { c: ShopContext; pay: readonly PayMarkI
 
 /** H13 (CN-008) · the desktop footer in the owner's reference layout (demo ftrDeskRef): brand + Join on the left, the
  * link columns between dividers, WhatsApp, hours, hotline, social and payment badges on the right. */
-function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWords; wa: string | null; tel: string | null; hot: string; pay: readonly PayMarkId[] }) {
+function DeskRef({ c, join, wa, tel, hot, pay: payAll, B }: { c: ShopContext; join: JoinWords; wa: string | null; tel: string | null; hot: string; pay: readonly PayMarkId[]; B: FooterBlocks }) {
   const t = c.t;
   const F = c.s['shell.footer'];
   const K = F.contact;
-  const cols = footerDeskColumns(F, c.cats, t, c.vars, { combos: c.s['shell.desktopNav'].combos });
+  const cols = B.shows('columns') ? footerDeskColumns(F, c.cats, t, c.vars, { combos: c.s['shell.desktopNav'].combos }) : [];
+  const pay = B.shows('pay') ? payAll : [];
   const slogan = c.s['brand.slogan'] ? c.s['brand.slogan'][c.lang] || c.s['brand.slogan'].en : '';
-  const soc = networks(c, wa);
+  const soc = B.shows('social') ? networks(c, wa) : [];
   // V12.2 (Note 58 C, demo ftrCols2): the social row and the payment row share one column count, so they line up
   const nCols = Math.max(soc.length, pay.length, 1);
   return (
-    <div className="ftr-s ftr-d ftr-dref hide-m" data-testid="ftr-desk">
+    <div className="ftr-s ftr-d ftr-dref hide-m" data-testid="ftr-desk" style={B.ordered ? { order: B.deskOrder ?? 0 } : undefined}>
       <div className="container">
         <div className="fdr-grid" style={{ '--fdr-n': cols.length } as React.CSSProperties}>
           <div className="fdr-left">
+            {B.shows('brand') ? (
             <div className="fdr-brand">
               <span className="logo">
                 <ShopLogo c={c} where="footer" fallback={<LogoText text={c.storeName} styleNo={c.s['brand.logoStyle']} />} />
               </span>
               <span className="fdr-slog">{slogan}</span>
             </div>
-            {joinShown(F, c.flags) ? <JoinForm id="join-d" variant="ref" words={join} /> : null}
+            ) : null}
+            {joinShown(F, c.flags) && B.shows('brand') ? <JoinForm id="join-d" variant="ref" words={join} /> : null}
           </div>
           {cols.map((col) => (
             <nav key={col.id} className="fdr-col" aria-label={col.title}>
@@ -332,7 +376,7 @@ function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWor
             </nav>
           ))}
           <div className="fdr-right">
-            {wa ? (
+            {wa && B.shows('contact') ? (
               <a className="fdr-wa" href={wa} target="_blank" rel="noopener">
                 <WaGlyph size={18} />
                 <span>{t('footer.whatsappDesk')}</span>
@@ -340,7 +384,7 @@ function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWor
             ) : null}
             {/* V12.2 (Note 58 B): the Hotline is its own box, like the WhatsApp box, right under it; the hours follow.
                 ~~hours, then a plain hotline line~~ */}
-            {tel ? (
+            {tel && B.shows('contact') ? (
               <a className="fdr-hot" href={tel}>
                 <Icon name="phone" size={17} />
                 <span>
@@ -348,7 +392,7 @@ function DeskRef({ c, join, wa, tel, hot, pay }: { c: ShopContext; join: JoinWor
                 </span>
               </a>
             ) : null}
-            {K.hours ? (
+            {K.hours && B.shows('contact') ? (
               <div className="fdr-hours">
                 <HoursLine c={c} />
               </div>

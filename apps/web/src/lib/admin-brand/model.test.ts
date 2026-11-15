@@ -1,9 +1,10 @@
 // PR 726 — the Brand & menus editor's pure parts: moving rows (drag, touch and arrow keys all end in these), the rows built
 // from the settings' own defaults, and a label that is left alone staying a dictionary key.
 import { describe, expect, it } from 'vitest';
-import { registry } from '@extas/settings';
+import { FOOTER_BLOCKS, registry } from '@extas/settings';
 import { shopT } from '../shop/dict';
-import { collapseLabel, dropInto, footerCard, labelPair, menuCard, moveBy, moveLink, newId, ALL_PAY, ALL_SOCIAL, type FooterColumnRow, type Words } from './model';
+import { phoneOf } from './service';
+import { blockOrderOf, blocksOf, collapseLabel, dropInto, FOOTER_BLOCK_IDS, footerCard, labelPair, menuCard, moveBy, moveLink, newId, ALL_PAY, ALL_SOCIAL, type FooterColumnRow, type Words } from './model';
 
 const en = shopT('en', null);
 const bn = shopT('bn', null);
@@ -88,5 +89,38 @@ describe('rows from the shop\'s own defaults', () => {
     const polos = c.columns[0]!.links.find((l) => l.id === 'polos')!;
     expect(polos.label).toBeNull();
     expect(polos.editHref).toBe(false);
+  });
+});
+
+describe('PR 745 · the footer boxes as rows (the editor keeps its own copy of the box list; it must equal the settings\')', () => {
+  it('the editor and the settings name the same boxes in the same approved order', () => {
+    expect([...FOOTER_BLOCK_IDS]).toEqual([...FOOTER_BLOCKS]);
+  });
+
+  it('not set: every box on in the approved order; set: the listed ones first, the rest hidden behind them', () => {
+    expect(blocksOf(undefined).every((b) => b.on)).toBe(true);
+    expect(blocksOf(['pay', 'legal']).map((b) => `${b.id}:${b.on}`)).toEqual(['pay:true', 'legal:true', 'promise:false', 'brand:false', 'columns:false', 'contact:false', 'social:false']);
+  });
+
+  it('rows back to the setting: the approved order with all on is "not set"; the last line is always kept', () => {
+    expect(blockOrderOf(blocksOf(undefined))).toBeUndefined();
+    const rows = blocksOf(undefined).map((b) => (b.id === 'social' || b.id === 'legal' ? { ...b, on: false } : b));
+    expect(blockOrderOf(rows)).toEqual(['promise', 'brand', 'columns', 'contact', 'pay', 'legal']);
+  });
+});
+
+describe('PR 745 · a phone number as the shop keeps it', () => {
+  it('a Bangladesh mobile typed the usual way, with spaces or dashes, with the country code or with +, becomes +880…', () => {
+    expect(phoneOf('01712-345678')).toBe('+8801712345678');
+    expect(phoneOf(' 01712 345678 ')).toBe('+8801712345678');
+    expect(phoneOf('8801712345678')).toBe('+8801712345678');
+    expect(phoneOf('+88 01712-345678')).toBe('+8801712345678');
+  });
+  it('another country starts with + and is kept; empty is none; nonsense is refused', () => {
+    expect(phoneOf('+44 20 7946 0958')).toBe('+442079460958');
+    expect(phoneOf('')).toBeNull();
+    expect(phoneOf(null)).toBeNull();
+    expect(phoneOf('12345')).toBeUndefined();
+    expect(phoneOf(5)).toBeUndefined();
   });
 });

@@ -149,6 +149,7 @@ import { productsFinanceV5Settings } from './registry-products-finance-v5';
 import { studioSettings } from './registry-studio';
 import { practiceSettings } from './registry-practice';
 import { pageSettingsSettings } from './registry-page-settings';
+import { customiseSettings } from './registry-customise';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
 import { reportsDigestSettings } from './registry-reports-digest';
@@ -1693,6 +1694,8 @@ export const registry = {
   ...practiceSettings,
   // ---- S28 · PR 740–744 · the e-mail look, the cookie banner and the home-screen app, all off (registry-page-settings.ts, version 740). ----
   ...pageSettingsSettings,
+  // ---- PR 745–749 · customisation: link preview picture, tag badges, collection order (registry-customise.ts, version 745). ----
+  ...customiseSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

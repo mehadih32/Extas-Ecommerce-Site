@@ -1,5 +1,5 @@
 'use client';
-// PR 726 — Website › Brand & menus: the three cards (Brand, Header & menu, Footer) with a live preview each. Every list
+// PR 726 — Website › Brand & menus: the cards (Brand, Header & menu, Footer; PR 745 adds Contact & sharing) with a live preview each. Every list
 // is rearranged by grabbing its handle (mouse, touch) or with the arrow keys and the Move up / Move down buttons
 // (components/admin/website/Sortable); a box shows or hides a row (nothing is deleted: only the owner's own new rows
 // can be taken off the list, and Discard brings them back until the card is saved); words are an English + Bengali
@@ -18,9 +18,11 @@ import {
   type BrandCardValue,
   type CardKey,
   type CardValue,
+  type ContactCardValue,
   type FooterCardValue,
   type FooterColumnRow,
   type FooterLinkRow,
+  type LinkScreen,
   type MenuCardValue,
   type Pair,
 } from '@/lib/admin-brand/model';
@@ -38,9 +40,13 @@ export interface BrandPreviews {
   logo: string | null;
   logoPhone: string | null;
   favicon: string | null;
+  ogImage: string | null;
 }
 export interface BrandEditorProps {
   brand: BrandScreen<'brand'>;
+  contact: BrandScreen<'contact'>;
+  /** The little pictures a footer link may wear (the shop's own list). */
+  icons: string[];
   menu: BrandScreen<'menu'>;
   footer: BrandScreen<'footer'>;
   previews: BrandPreviews;
@@ -409,6 +415,56 @@ function BrandCard(props: BrandEditorProps & { previews: BrandPreviews; onSaved:
   );
 }
 
+// ---- Contact & sharing (PR 745) ----
+
+function ContactCard(props: BrandEditorProps & { previews: BrandPreviews; onSaved: (p: BrandPreviews) => void; x: (k: string) => string }) {
+  const { x, lang } = props;
+  const id = useId();
+  const card = useCard(props.contact, x, props.canEdit, props.onSaved);
+  const v = card.draft;
+  const set = (change: Partial<ContactCardValue>) => card.edit({ ...v, ...change });
+  const field = (k: 'phone' | 'whatsapp' | 'email', type: string, mode: 'tel' | 'email') => (
+    <div className="a2-fld">
+      <label className="a2-lbl" htmlFor={`${id}-${k}`}>
+        {x(`contact.${k}`)}
+      </label>
+      <input id={`${id}-${k}`} className="a2-inp" type={type} inputMode={mode} maxLength={254} value={v[k]} disabled={card.off} onChange={(e) => set({ [k]: e.target.value } as Partial<ContactCardValue>)} data-testid={`bm-contact-${k}`} />
+      <span className="a2-xs a2-mute">{x(`contact.${k}Help`)}</span>
+    </div>
+  );
+  return (
+    <Frame id={id} title={x('contact.h')} sub={x('contact.d')} testId="bm-contact" canEdit={props.canEdit} readOnly={x('readOnly')} card={card} x={x}>
+      <div className="bm-split">
+        <div className="a2-fg">
+          {field('phone', 'tel', 'tel')}
+          {field('whatsapp', 'tel', 'tel')}
+          {field('email', 'email', 'email')}
+          <PairInputs label={x('contact.address')} value={v.address} max={500} disabled={card.off} onChange={(address) => set({ address })} testId="bm-contact-address" help={x('contact.addressHelp')} x={x} />
+          <PairInputs label={x('contact.hours')} value={v.hours} max={120} disabled={card.off} onChange={(hours) => set({ hours })} testId="bm-contact-hours" help={x('contact.hoursHelp')} x={x} />
+          <LogoPicker id={id} label={x('contact.og')} help={x('contact.ogHelp')} value={v.ogImage} savedId={card.base.value.ogImage} serverUrl={props.previews.ogImage} disabled={card.off} x={x} onChange={(ogImage) => set({ ogImage })} testId="bm-contact-og" />
+        </div>
+        <div className="bm-prev" data-testid="bm-contact-preview" aria-label={x('preview.label')}>
+          <span className="a2-xs a2-mute">{x('contact.shareLook')}</span>
+          <div className="bm-share">
+            {props.previews.ogImage && v.ogImage === card.base.value.ogImage ? (
+              // eslint-disable-next-line @next/next/no-img-element -- an admin preview of the owner's own picture
+              <img src={props.previews.ogImage} alt="" className="bm-share-img" />
+            ) : (
+              <span className="a2-xs a2-mute bm-share-none">{v.ogImage ? x('logo.processing') : x('contact.shareNone')}</span>
+            )}
+            <span className="bm-share-t">{props.brand.value.name.trim() || x('preview.shopName')}</span>
+          </div>
+          <div className="a2-xs" data-testid="bm-contact-lines">
+            {[v.phone, v.whatsapp, v.email, pick(v.address, lang), pick(v.hours, lang)].filter(Boolean).map((t, i) => (
+              <div key={i}>{t}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
 // ---- Header & menu ----
 
 function MenuCard(props: BrandEditorProps & { x: (k: string) => string; onSaved: (p: BrandPreviews) => void }) {
@@ -579,14 +635,16 @@ function FooterCard(props: BrandEditorProps & { x: (k: string) => string; onSave
   const drag = useDragging({
     disabled: card.off,
     onDrop: (f, t) => {
-      if (f.kind === 'promise') set({ promise: place(v.promise, f.id, t.before) });
+      if (f.kind === 'blocks') set({ blocks: place(v.blocks, f.id, t.before) });
+      else if (f.kind === 'promise') set({ promise: place(v.promise, f.id, t.before) });
       else if (f.kind === 'columns') set({ columns: place(v.columns, f.id, t.before) });
       else if (f.kind === 'links') set({ columns: moveLink(v.columns, f, t) });
       else if (f.kind === 'social') set({ social: place(v.social, f.id, t.before) });
       else if (f.kind === 'pay') set({ pay: place(v.pay, f.id, t.before) });
     },
     onNudge: (f, d) => {
-      if (f.kind === 'promise') set({ promise: nudgeIn(v.promise, f.id, d) });
+      if (f.kind === 'blocks') set({ blocks: nudgeIn(v.blocks, f.id, d) });
+      else if (f.kind === 'promise') set({ promise: nudgeIn(v.promise, f.id, d) });
       else if (f.kind === 'columns') set({ columns: nudgeIn(v.columns, f.id, d) });
       else if (f.kind === 'links') set({ columns: v.columns.map((c) => (c.id === f.list ? { ...c, links: nudgeIn(c.links, f.id, d) } : c)) });
       else if (f.kind === 'social') set({ social: nudgeIn(v.social, f.id, d) });
@@ -615,7 +673,18 @@ function FooterCard(props: BrandEditorProps & { x: (k: string) => string; onSave
     <Frame id={id} title={x('footer.h')} sub={x('footer.d')} testId="bm-footer" canEdit={props.canEdit} readOnly={x('readOnly')} card={card} x={x}>
       <div className="bm-split">
         <div className="bm-stack">
-          <h3 className="a2-h4">{x('footer.promise')}</h3>
+          <h3 className="a2-h4">{x('footer.blocks')}</h3>
+          <p className="a2-xs a2-mute">{x('footer.blocksHelp')}</p>
+          <List kind="blocks" list="blocks" drag={drag} empty="" label={x('footer.blocks')} isEmpty={false} testId="bm-footer-blocks">
+            {v.blocks.map((b, i) => (
+              <Row key={b.id} kind="blocks" list="blocks" id={b.id} index={i} count={v.blocks.length} drag={drag} nudge={(d) => set({ blocks: nudgeIn(v.blocks, b.id, d) })} disabled={card.off} x={x} name={x(`footer.block.${b.id}`)} testId={`bm-footer-block-${b.id}`}>
+                <span className="bm-name">{x(`footer.block.${b.id}`)}</span>
+                {b.id === 'legal' ? <span className="a2-xs a2-mute">{x('footer.blockLegal')}</span> : <Show on={b.on} label={x('show')} disabled={card.off} onChange={(on) => set({ blocks: patch(v.blocks, b.id, { on }) })} testId={`bm-footer-block-${b.id}-on`} />}
+              </Row>
+            ))}
+          </List>
+
+          <h3 className="a2-h4 a2-mt12">{x('footer.promise')}</h3>
           <Show on={v.promiseOn} label={x('footer.promiseOn')} disabled={card.off} onChange={(promiseOn) => set({ promiseOn })} testId="bm-footer-promise-on" />
           <List kind="promise" list="promise" drag={drag} empty={x('footer.promiseEmpty')} label={x('footer.promise')} isEmpty={!v.promise.length} testId="bm-footer-promise">
             {v.promise.map((p, i) => (
@@ -695,6 +764,31 @@ function FooterCard(props: BrandEditorProps & { x: (k: string) => string; onSave
                           <input id={`${id}-l-${l.id}`} className="a2-inp" placeholder="/help/faq" maxLength={300} value={l.href} disabled={card.off} onChange={(e) => setLink(c.id, l.id, { href: e.target.value })} data-testid={`bm-footer-link-${l.id}-href`} />
                         </div>
                       ) : null}
+                      <div className="bm-opts">
+                        <div className="a2-fld">
+                          <label className="a2-lbl" htmlFor={`${id}-i-${l.id}`}>
+                            {x('footer.linkIcon')}
+                          </label>
+                          <select id={`${id}-i-${l.id}`} className="a2-sel" value={l.icon ?? ''} disabled={card.off} onChange={(e) => setLink(c.id, l.id, { icon: e.target.value })} data-testid={`bm-footer-link-${l.id}-icon`}>
+                            <option value="">{x('footer.iconDefault')}</option>
+                            {props.icons.map((n) => (
+                              <option key={n} value={n}>
+                                {n}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="a2-fld">
+                          <label className="a2-lbl" htmlFor={`${id}-d-${l.id}`}>
+                            {x('footer.linkScreens')}
+                          </label>
+                          <select id={`${id}-d-${l.id}`} className="a2-sel" value={l.dev ?? 'both'} disabled={card.off} onChange={(e) => setLink(c.id, l.id, { dev: e.target.value as LinkScreen })} data-testid={`bm-footer-link-${l.id}-dev`}>
+                            <option value="both">{x('footer.screens.both')}</option>
+                            <option value="desk">{x('footer.screens.desk')}</option>
+                            <option value="phone">{x('footer.screens.phone')}</option>
+                          </select>
+                        </div>
+                      </div>
                       <Show on={l.on} label={x('show')} disabled={card.off} onChange={(on) => setLink(c.id, l.id, { on })} testId={`bm-footer-link-${l.id}-on`} />
                     </Row>
                   ))}
@@ -784,6 +878,7 @@ export function BrandMenusEditor(props: BrandEditorProps) {
   return (
     <div className="bm" data-testid="bm-editor">
       <BrandCard {...props} previews={previews} onSaved={setPreviews} x={x} />
+      <ContactCard {...props} previews={previews} onSaved={setPreviews} x={x} />
       <MenuCard {...props} x={x} onSaved={setPreviews} />
       <FooterCard {...props} x={x} onSaved={setPreviews} />
     </div>

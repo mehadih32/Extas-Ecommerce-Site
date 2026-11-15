@@ -146,6 +146,8 @@ import closedStagesEn from '../messages/closed-stages.en.json';
 import studioBn from '../messages/studio.bn.json';
 import studioEn from '../messages/studio.en.json';
 // S28 · PR 706 (CN-049, registry v380): practice mode and the Reset sample data button.
+import customiseBn from '../messages/customise.bn.json';
+import customiseEn from '../messages/customise.en.json';
 import practiceBn from '../messages/practice.bn.json';
 import practiceEn from '../messages/practice.en.json';
 // S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app.
@@ -610,3 +612,7 @@ export function pair(msgs: SettingsMessages, key: string): LabelPair {
 // S28 · PR 680-685 (registry v321): the product screens' settings in messages/products-v5.<lang>.json.
 messages.en = mergeMessages(messages.en, productsV5En);
 messages.bn = mergeMessages(messages.bn, productsV5Bn);
+
+// PR 745–749 (registry v729): link preview picture, tag badges and the collection order (registry-customise.ts).
+messages.en = mergeMessages(messages.en, customiseEn);
+messages.bn = mergeMessages(messages.bn, customiseBn);

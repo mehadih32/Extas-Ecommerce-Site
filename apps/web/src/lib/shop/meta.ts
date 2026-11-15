@@ -20,6 +20,7 @@ import { pageTexts, templateOf, type PageTexts } from '../seo/templates';
 import { siteAddress } from '../seo/site';
 import { readPageSettings, shopStoreId, type ShopContext } from './context';
 import { hrefIn } from './lang';
+import { ogImageUrl } from './og-image';
 
 /** Whether the Bengali twin of a page may be indexed. */
 export function bengaliReady(pageKey: string, ready: readonly string[]): boolean {
@@ -53,7 +54,7 @@ export interface PageSeo {
 }
 
 export async function shopMetadata(c: ShopContext, pageKey: string, title: string | null, opts: PageSeo = {}): Promise<Metadata> {
-  const [set, site] = await Promise.all([seoSettingsFor(c.storeId), siteAddress(c.storeId)]);
+  const [set, site, og] = await Promise.all([seoSettingsFor(c.storeId), siteAddress(c.storeId), ogImageUrl(c.storeId)]);
   const policy = set['seo.indexing'];
   const path = opts.path ?? c.path;
   const bnOn = c.s['language.bengali.enabled'];
@@ -88,6 +89,8 @@ export async function shopMetadata(c: ShopContext, pageKey: string, title: strin
       ...(description ? { description } : {}),
       url: canonical,
       ...(c.storeName ? { siteName: c.storeName } : {}),
+      // PR 745: the owner's link preview picture (Website › Brand & menus); none set, none added
+      ...(og ? { images: [{ url: og }] } : {}),
       ...(opts.article
         ? {
             type: 'article' as const,

@@ -1093,3 +1093,7 @@ html .shop .hm-look .hm-look-save { display: inline-flex; align-items: center; f
 .shop .ms-box .ms-btn { width: 100%; }
 .shop .ms-hint { margin: 6px 0 0; text-align: center; }
 .shop .ms-glyph { flex-shrink: 0; }
+/* PR 745 — the footer's boxes in the owner's own order (`shell.footer.blockOrder`). Only a footer whose owner set an order
+   carries data-blocks, so the approved footer is untouched; each box takes its place by an inline CSS order. */
+.shop .ftr[data-blocks] { display: flex; flex-direction: column; }
+.shop .ftr[data-blocks] .ftr-s4 .ftr-contact { display: block; }

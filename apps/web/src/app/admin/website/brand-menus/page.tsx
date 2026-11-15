@@ -7,7 +7,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { LOGO_STYLE_COUNT } from '@extas/settings';
+import { LOGO_STYLE_COUNT, SHOP_ICONS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { BrandMenusEditor } from '@/components/admin/website/BrandMenusEditor';
@@ -78,6 +78,8 @@ export default async function BrandMenusPage() {
         brand={v.cards.brand}
         menu={v.cards.menu}
         footer={v.cards.footer}
+        contact={v.cards.contact}
+        icons={[...SHOP_ICONS]}
         previews={v.previews}
         texts={texts}
         lang={view.lang === 'bn' ? 'bn' : 'en'}

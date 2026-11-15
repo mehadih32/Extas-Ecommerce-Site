@@ -23,7 +23,8 @@ const menu = storefrontSettings['shell.menu'].default;
 describe('storefront settings (v16)', () => {
   // ~~every key at version 16~~ PR 41 follow-up: home.hero moved to 17 when its Shop now link's default changed;
   // PR 44 added the flash sale (home.flashSale, home.flashRows) at 45
-  const LATER: Record<string, number> = { 'home.hero': 17, 'home.flashSale': 45, 'home.flashRows': 45 };
+  // PR 745: shell.footer moved to 745 when its schema gained the optional `blockOrder` (the footer's boxes in the owner's order)
+  const LATER: Record<string, number> = { 'home.hero': 17, 'home.flashSale': 45, 'home.flashRows': 45, 'shell.footer': 745 };
   it('every storefront key is in the registry at version 16, apart from the ones changed since', () => {
     for (const [key, spec] of Object.entries(storefrontSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);

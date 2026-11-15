@@ -1,8 +1,8 @@
 // PR 40 (H3, H4, H13 of CN-008) — the desktop row's arrangements and the reference desktop footer, as data.
 import { describe, expect, it } from 'vitest';
-import { storefrontSettings, type DesktopNav } from '@extas/settings';
+import { FOOTER_BLOCKS, footerSchema, storefrontSettings, type DesktopNav } from '@extas/settings';
 import { shopT } from './dict';
-import { SIGNUP_LIST_LIVE, deskNavItems, footerColumns, footerDeskColumns, joinShown, payMarks, phoneMenuRows, type Flags, type ShopCategory } from './shell-model';
+import { SIGNUP_LIST_LIVE, deskNavItems, footerBlocks, footerColumns, footerDeskColumns, joinShown, payMarks, phoneMenuRows, type Flags, type ShopCategory } from './shell-model';
 
 const menu = storefrontSettings['shell.menu'].default;
 const nav = storefrontSettings['shell.desktopNav'].default as DesktopNav;
@@ -163,5 +163,38 @@ describe('PR 40 follow-up (6 Nov) · the footer`s payment marks are what the che
   it('the offer cannot be read: Cash on Delivery by the owner`s switch only, no prepaid mark on a guess', () => {
     expect(payMarks(footer, flags(true), null)).toEqual(['cod']);
     expect(payMarks(footer, flags(false), null)).toEqual([]);
+  });
+});
+
+describe('PR 745 · the footer boxes in the owner`s order', () => {
+  it('as shipped nothing is ordered: every box shows and the footer is drawn as approved', () => {
+    expect(footer.blockOrder).toBeUndefined();
+    const b = footerBlocks(footer);
+    expect(b.ordered).toBe(false);
+    expect(FOOTER_BLOCKS.every((x) => b.shows(x))).toBe(true);
+    expect(b.deskOrder).toBeNull();
+  });
+
+  it('an order shows the listed boxes in that order and hides the others; the last line is never hidden', () => {
+    const b = footerBlocks({ blockOrder: ['pay', 'columns', 'promise', 'legal'] });
+    expect(b.ordered).toBe(true);
+    expect(b.shows('pay')).toBe(true);
+    expect(b.shows('social')).toBe(false);
+    expect(b.shows('contact')).toBe(false);
+    expect(b.order('pay')).toBeLessThan(b.order('columns'));
+    expect(b.order('columns')).toBeLessThan(b.order('promise'));
+    expect(b.order('promise')).toBeLessThan(b.order('legal'));
+    // the desktop grid sits where the first of its boxes stands
+    expect(b.deskOrder).toBe(b.order('pay'));
+    expect(footerBlocks({ blockOrder: ['legal', 'promise'] }).shows('legal')).toBe(true);
+    expect(footerBlocks({ blockOrder: ['legal', 'promise'] }).deskOrder).toBeNull();
+  });
+
+  it('the setting refuses a list that repeats a box or drops the last line', () => {
+    const base = { ...footer };
+    expect(footerSchema.safeParse({ ...base, blockOrder: ['promise', 'legal'] }).success).toBe(true);
+    expect(footerSchema.safeParse({ ...base, blockOrder: ['promise', 'promise', 'legal'] }).success).toBe(false);
+    expect(footerSchema.safeParse({ ...base, blockOrder: ['promise', 'pay'] }).success).toBe(false);
+    expect(footerSchema.safeParse({ ...base, blockOrder: ['nothing', 'legal'] }).success).toBe(false);
   });
 });
