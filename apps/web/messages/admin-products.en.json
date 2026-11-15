@@ -599,7 +599,7 @@
       "steps": "Add-product steps",
       "of": "Step {n} of {total}",
       "back": "Back",
-      "next": "Save and continue",
+      "next": "Next",
       "full": "Open the full product screen",
       "saveNote": "Use Save on the product screen to keep what you typed, then Save and continue. The product stays a draft until you publish it in step 8.",
       "preview": "How it looks on a phone",
@@ -612,45 +612,64 @@
       "demoNote": "Sample products in this category can be turned off in",
       "s": {
         "start": {
-          "name": "Start",
-          "title": "Name and where it comes from",
-          "why": "A clear name and the right category let customers find it. If the style is made in the ERP, add its style code here and the ERP's details come along. For a set of products, use Combos instead."
+          "name": "Pick from ERP",
+          "title": "Pick from ERP",
+          "why": "All stock comes from the ERP, so you start here. Styles that are in the ERP but not on the shop are listed first."
         },
         "basics": {
-          "name": "Basics",
-          "title": "Describe the product",
-          "why": "The fabric and the description are what a customer reads before buying. Write what you would tell a customer in the shop."
+          "name": "Name & category",
+          "title": "Name & category",
+          "why": "Customers and Google see the name first. The category decides which details you fill in."
         },
         "colours": {
-          "name": "Colours and sizes",
-          "title": "Pick colours and sizes",
-          "why": "Every colour and size you pick becomes one item you can sell and count. Pick only what you really have."
+          "name": "Colours & sizes",
+          "title": "Colours & sizes",
+          "why": "Pick which ERP colours and sizes show on the shop. Stock is read only and updates by itself."
         },
         "photos": {
-          "name": "Photos and video",
-          "title": "Add photos and a video",
-          "why": "Photos sell the product. Add a front photo for every colour, then a back and a close-up. A short video is optional."
+          "name": "Photos & video",
+          "title": "Photos & video",
+          "why": "Each colour has its own photos. Add many at once; every photo is made light and checked for you. Video is optional."
         },
         "prices": {
-          "name": "Prices and stock",
-          "title": "Set prices for every item",
-          "why": "Every item needs a selling price. Stock comes from the ERP and is shown here only to read. Items bought as B-grade keep their own price and stock."
+          "name": "Price",
+          "title": "Price",
+          "why": "Buying price comes from the ERP; the selling price is yours. Profit shows at once so nothing goes live at a wrong price."
         },
         "size": {
-          "name": "Size chart",
-          "title": "Add a size chart",
-          "why": "A size chart means fewer returns. If the ERP has one for this style, take it with one button; your own edits are never overwritten."
+          "name": "Description & size chart",
+          "title": "Description & size chart",
+          "why": "Good text and the right size chart mean fewer questions and fewer exchanges."
         },
         "search": {
-          "name": "Search and Google",
-          "title": "Check the link and the Google name",
-          "why": "This is how the product shows in Google. The name and link are made for you; change them only if they look wrong."
+          "name": "Google & link",
+          "title": "Google & link",
+          "why": "The right name, link and text help you come up in Google. See exactly how it will look."
         },
         "publish": {
-          "name": "Publish",
-          "title": "Check and publish",
-          "why": "The checklist shows what is still missing. When it is all green, publish. Nothing goes on the shop before that."
+          "name": "Check & publish",
+          "title": "Check & publish",
+          "why": "See what is done and what is left. Even with gaps the draft stays saved."
         }
+      },
+      "head": {
+        "title": "Add product",
+        "sub": "8 short steps. Every step saves by itself — leave any time and come back to the same place. The phone on the right shows what customers will see.",
+        "quick": "Quick import",
+        "again": "Start again"
+      },
+      "prog": "{n} of 8 steps done",
+      "left": "Left",
+      "saved": "Saves by itself",
+      "cart": "Add to cart",
+      "ck": {
+        "erp": "From ERP: {variants} SKUs",
+        "basics": "Name and category",
+        "colours": "{colours} colours · {sizes} sizes on the shop",
+        "photos": "Photos: {photos} added",
+        "photosNone": "No photo yet",
+        "price": "{n} of {total} items have a price",
+        "need": "Publish needs a front photo for every colour and a confirmed price. Other gaps only warn."
       }
     },
     "cols": {

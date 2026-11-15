@@ -115,6 +115,7 @@ export default async function ProductEditPage({
           productId={id}
           done={wizard.done}
           furthest={wizard.state?.furthest ?? wizardStep}
+          facts={wizard.facts}
           canWrite={c.can('catalogue.write')}
           preview={{
             name: nameIn(view.lang, product),
