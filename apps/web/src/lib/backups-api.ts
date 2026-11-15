@@ -43,6 +43,10 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from './a
 import { t, type Dict } from './i18n';
 import { backupGateChecks, OFF_SITE } from './backup-gate';
 import { runtimeState, type RuntimeState } from './status';
+import { RESTORE_GUIDE_FILE, restoreGuidePdf } from './restore-guide';
+
+/** The print resolution of the guide's paper page. */
+const GUIDE_DPI = 150; // hardcode-ok: print resolution of the letterhead PDF (as the report packs)
 
 const PIN_MAX_DIGITS = 12;
 
@@ -136,7 +140,7 @@ export async function backupGateNow(deps: Pick<AdminDeps, 'db' | 'resolver' | 'n
 export async function backupsRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
   const m = request.method.toUpperCase();
   const where = path.join('/');
-  const reads = ['', 'drive/list'];
+  const reads = ['', 'drive/list', 'restore-guide'];
   const writes = ['drive/client', 'drive/connect', 'drive/poll', 'drive/disconnect', 'request', 'restore/staging', 'restore/production'];
   const puts = ['settings'];
   if (![...reads, ...writes, ...puts].includes(where)) return fail(404, 'not-found');
@@ -160,6 +164,14 @@ export async function backupsRoute(request: Request, deps: AdminDeps | null, pat
   const log = (action: string, after: Record<string, unknown>) =>
     audit(deps!.db, g.actor, { action, entityType: 'Integration', entityId: 'googleDrive', before: null, after, storeId: null }, g.ctx);
   try {
+    if (where === 'restore-guide') {
+      // PR 852: the prototype's "Restore guide (PDF)": the restore steps in Bengali and English on the shop's letterhead.
+      const v = <K extends Parameters<AdminDeps['resolver']['value']>[0]>(k: K) => deps!.resolver.value(k, { storeId: MOTHER_STORE_ID });
+      const [name, address, phone, zone] = await Promise.all([v('store.name'), v('contact.address'), v('contact.phone'), v('store.timeZone')]);
+      const today = new Intl.DateTimeFormat('en-GB', { timeZone: zone, day: '2-digit', month: 'short', year: 'numeric' }).format(deps!.now ? deps!.now() : new Date());
+      const bytes = await restoreGuidePdf({ name, address: address ? address.en || address.bn || null : null, phone: phone ?? null }, today, GUIDE_DPI);
+      return new Response(new Uint8Array(bytes), { status: 200, headers: { 'content-type': 'application/pdf', 'content-disposition': `inline; filename="${RESTORE_GUIDE_FILE}"`, 'cache-control': 'no-store' } });
+    }
     if (where === '') {
       const [drive, state, settings, requests, restores] = await Promise.all([
         deps!.vault ? driveView(d) : null,

@@ -78,7 +78,9 @@
     "state": "State",
     "checked": "Checked",
     "unchecked": "Not checked yet",
-    "practice": "Practice Drive — nothing went to Google"
+    "practice": "Practice Drive — nothing went to Google",
+    "restore": "Restore",
+    "restoreCol": "Restore"
   },
   "blob": {
     "title": "Azure Blob",
@@ -289,7 +291,8 @@
       "refused": "Refused"
     },
     "confirmTitle": "Restore this backup?",
-    "confirmText": "The shop goes back to {backup}. A safety copy of now is taken first, so nothing is lost. The shop pauses for about 5 minutes."
+    "confirmText": "The shop goes back to {backup}. A safety copy of now is taken first, so nothing is lost. The shop pauses for about 5 minutes.",
+    "picked": "Picked {name}. Press “Restore to the check copy” to try it first; the live shop is not touched."
   },
   "hero": {
     "safe": "Your data is safe",
@@ -297,5 +300,27 @@
     "line": "Last backup {when} · copied to Google Drive",
     "lineServer": "Last backup {when} · server only",
     "never": "No backup has been made yet"
+  },
+  "guide": {
+    "button": "Restore guide (PDF)",
+    "file": "Restore guide (Bengali + English)",
+    "title": "Restore guide",
+    "summary1": "How to bring the shop back from a backup. Keep a copy where you can open it even if the server is down.",
+    "summary2": "Nothing here deletes data: the old data of the live shop is kept on the server.",
+    "colStep": "Step",
+    "colEn": "English",
+    "colBn": "বাংলা",
+    "page": "{n}/{of}",
+    "foot": "Restore guide · printed {on}",
+    "steps": {
+      "s1": "Open Settings › System › Backups & restore and sign in as the owner (or someone who has the restore right).",
+      "s2": "In the Restore card choose where the copy comes from: Azure Blob, the server’s disk or Google Drive. Start with the newest.",
+      "s3": "Press “Restore to the check copy”. This is a spare copy of the shop; the live shop is not touched.",
+      "s4": "Wait until the check copy says it passed. If it did not pass, stop here: that backup is not good, try an older one.",
+      "s5": "Press “Put this on the live shop…”, type RESTORE and then the owner’s PIN.",
+      "s6": "A safety copy of the shop as it is now is taken first. The shop pauses for a short while. The old data stays on the server, never deleted.",
+      "s7": "When it is done a message comes on Telegram. Open the shop, a few orders and a few products to see that they are there.",
+      "s8": "If the whole server is lost: set up a new server by the server guide, bring the copy from Google Drive or Azure Blob, then follow the steps above."
+    }
   }
 }

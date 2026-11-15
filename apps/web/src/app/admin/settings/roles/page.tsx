@@ -52,12 +52,12 @@ export default async function RolesPage() {
       return false;
     }
   };
-  const [v, canManage] = await Promise.all([rolesView(d.db, access.guard.actor), can()]);
+  const [v, canManage, defaults] = await Promise.all([rolesView(d.db, access.guard.actor), can(), d.resolver.value('roles.defaultAccess')]);
   return (
     <div className="a2-z" data-testid="roles-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.roles.title')} sub={t(view.dict, 'people.roles.sub')} />
       <SectionTabs view={view} current={KEY} />
-      <RolesScreen dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} view={v} canManage={canManage} />
+      <RolesScreen dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} view={v} canManage={canManage} defaults={defaults} />
     </div>
   );
 }

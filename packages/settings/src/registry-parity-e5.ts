@@ -19,7 +19,23 @@ export const erpMatchingSchema = z.object({ cod: text(80), bkash: text(80), erpP
 export type ErpMatchingSettings = z.output<typeof erpMatchingSchema>;
 export const ERP_MATCHING_DEFAULT: ErpMatchingSettings = { cod: '', bkash: '', erpPay: '' }; // hardcode-ok: shipped empty; the owner names the ERP accounts
 
+export const roleDefaultAccessSchema = z.record(z.string().min(1).max(80), z.array(z.string().min(1).max(120)).max(2000)); // hardcode-ok: technical bounds
+export type RoleDefaultAccess = z.output<typeof roleDefaultAccessSchema>;
+
 export const parityE5Settings = {
+  // PR 852: the access "Back to default" loads for a role on Settings › Team & roles (role key -> permission keys). Shipped empty; a role
+  // with no entry reads as view-only (its ".read" keys). It only fills the screen's pending changes: saving still asks the owner's PIN.
+  'roles.defaultAccess': setting({
+    ...base,
+    group: 'security',
+    isOwnerData: true,
+    schema: roleDefaultAccessSchema.nullable(),
+    default: null,
+    labelKey: 'roles.defaultAccess.label',
+    helpKey: 'roles.defaultAccess.help',
+    sortOrder: 852,
+    version: 852,
+  }),
   'privacy.answerDays': setting({
     ...base,
     valueType: 'INT',
