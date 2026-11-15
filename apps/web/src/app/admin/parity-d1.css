@@ -1,0 +1,24 @@
+/* PR 783-788 (lane D1, owner order: the real admin matches docs/demo/admin-proto-v5 100%). Loaded after parity-b.css. Only the theme's own tokens. */
+
+/* ---- Orders: the "|" between the two chip groups, and the small lines under a status ---- */
+.adm2 .a2-vsep{align-self:center;color:var(--faint);font-size:12px}
+.adm2 .a2-sub-row{display:flex;flex-direction:column;gap:1px;margin-top:3px}
+.adm2 .a2-ord-sub{font-size:11.5px;color:var(--mute);line-height:1.3;overflow-wrap:anywhere}
+
+/* ---- Order page: customer card lines, the eight steps, the right column, no tabs (the prototype stacks both columns) ---- */
+.adm2 .a2-ocl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;font-size:13.5px}
+.adm2 .a2-ocl svg{color:var(--mute);flex:none}
+.adm2 .a2-ocl-t{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.adm2 .a2-otop{margin-bottom:16px}
+.adm2 .a2-ostep{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 12px;padding:0;list-style:none}
+.adm2 .a2-ostep li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mute)}
+.adm2 .a2-ostep li::before{content:counter(s);counter-increment:s;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--sf2);border:1px solid var(--ln);font-size:11px;font-weight:600}
+.adm2 .a2-ostep{counter-reset:s}
+.adm2 .a2-ostep li.on{color:var(--ink);font-weight:600}
+.adm2 .a2-ostep li.on::before{background:var(--g);color:#fff;border-color:var(--g)}
+.adm2 .a2-ostep li.done::before{content:"\2713";background:var(--ok);color:#fff;border-color:var(--ok)}
+.adm2 .a2-ordacts{display:flex;flex-wrap:wrap;gap:8px}
+.adm2 .a2-olife{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.adm2 .a2-olife>div{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--mute)}
+.adm2 .a2-olife b{font-size:15px;color:var(--ink)}
+@media (max-width:1199px){.adm2 .a2-dtabs{display:none}.adm2 .a2-dgrid[data-dt]>.a2-dside,.adm2 .a2-dgrid[data-dt]>.a2-dmain{display:flex!important}}

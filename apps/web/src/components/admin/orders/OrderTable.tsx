@@ -129,6 +129,13 @@ export function OrderTable({ dict: d, rows, bulk }: { dict: Dict; rows: OrderRow
                 </td>
                 <td className="a2-tdw" data-l={col('status')} data-testid="order-status" title={[r.chips.slice(1).map((c) => c.label).join(' · '), r.courier ? `${r.courier.name}${r.courier.tracking ? ` ${r.courier.tracking}` : ''}` : '', r.docs.map((c) => c.label).join(' · ')].filter(Boolean).join(' | ') || undefined}>
                   <Chips chips={[...r.chips.slice(0, 1), ...[r.risk.band, r.risk.section].filter((c): c is Chip => c !== null), ...r.flags]} />
+                  {/* PR 783 (prototype v5 parity): the courier and its tracking, and the printed papers, are in the row (small, under the status), not only in the hover text */}
+                  {r.courier || r.docs.length ? (
+                    <span className="a2-sub-row" data-testid="order-courier-docs">
+                      {r.courier ? <span className="a2-ord-sub">{`${r.courier.name}${r.courier.tracking ? ` · ${r.courier.tracking}` : ''}`}</span> : null}
+                      {r.docs.length ? <span className="a2-ord-sub">{r.docs.map((c) => c.label).join(' · ')}</span> : null}
+                    </span>
+                  ) : null}
                 </td>
               </tr>
             );

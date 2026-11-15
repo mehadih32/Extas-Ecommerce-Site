@@ -174,7 +174,15 @@
       "readyToBook": "Ready to book",
       "incomplete": "Incomplete",
       "processing": "Processing",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "confirmed": "Confirmed",
+      "booked": "Booked",
+      "packed": "Packed",
+      "handedOver": "Handed over",
+      "delivered": "Delivered",
+      "paid": "Paid",
+      "returned": "Returned",
+      "bulk": "Bulk / corporate"
     },
     "st": {
       "DRAFT": "Draft",
@@ -358,7 +366,14 @@
       "timeline": "Timeline",
       "invoice": "Get invoice",
       "printInvoice": "Print invoice",
-      "invoiceOff": "Invoices are switched off. Switch them on in Orders › Packing & print › Invoices."
+      "invoiceOff": "Invoices are switched off. Switch them on in Orders › Packing & print › Invoices.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "call": "Call",
+      "map": "Map",
+      "noEmail": "No email",
+      "customer360": "Customer 360",
+      "stepsAria": "Where the order is"
     },
     "dlg": {
       "cancel": "Cancel",
@@ -784,7 +799,9 @@
     "hist": {
       "new": "New customer — no other orders",
       "line": "{n} other orders · {open} open · {delivered} delivered · {returned} returned · {cancelled} cancelled",
-      "recent": "Other orders"
+      "recent": "Other orders",
+      "previous": "Previous orders ({n})",
+      "first": "First order from this customer."
     },
     "cust": {
       "title": "Customer & address",
@@ -2171,6 +2188,14 @@
         "CHECKOUT": "The shop's checkout refused this order. Check the details and the price again.",
         "forbidden": "You do not have the right to take orders."
       }
+    },
+    "life": {
+      "title": "Lifetime",
+      "orders": "Other orders",
+      "delivered": "Delivered",
+      "open": "Open",
+      "returned": "Returns",
+      "cancelled": "Cancelled"
     }
   }
 }

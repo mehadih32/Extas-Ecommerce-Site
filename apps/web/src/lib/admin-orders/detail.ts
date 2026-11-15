@@ -15,7 +15,7 @@ import type { AdminView } from '../admin-page';
 import { t } from '../i18n';
 import { KNOWN_ERRORS, commandUrl, reviewUrl, type CommandId } from './commands';
 import { ageText, flagChips, phoneText, statusChips, type Chip } from './list';
-import { ORDER_TONE, invoiceHref, orderHref, type Tone } from './model';
+import { ORDER_TONE, invoiceHref, orderHref, orderStep, UNBOOKED_SHIPMENT, type Tone } from './model';
 import type { CommandSpec, CommandTexts, FieldOption, FieldSpec } from './spec';
 import type { AdminDeps } from '../admin-auth';
 import { fraudReviewOption, type FraudReviewFacts } from '../admin-ai/fraud-review-dispatch';
@@ -137,6 +137,11 @@ export interface OrderDetailView {
   reorderOf: { id: string; number: string } | null;
   chips: Chip[];
   flags: Chip[];
+  /** PR 783 (prototype v5 parity): where the order is on the eight steps (ORDER_STEPS), -1 when it left the road. */
+  step: number;
+  /** PR 783: the customer's contact block (call, copy, map) and the lifetime figures, as the prototype's customer card and "Lifetime" card. */
+  contact: { phone: string | null; callHref: string | null; address: string | null; mapHref: string | null; email: string | null; customerHref: string | null; extra: Row2[] };
+  lifetime: { label: string; value: string }[];
   /** PR 127 follow-up 215: `remove` on a line added after the order was placed (the line stays on the record). */
   items: { id: string; name: string; sub: string; qty: string; total: string; removed: boolean; remove?: CommandSpec }[];
   /** PR 127 follow-up 215: "Add a line" (orders.lines, a COD order not yet booked); null when not offered. */
@@ -1188,6 +1193,27 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     reorderOf: reorderOfId ? (matchedRows.find((r) => r.id === reorderOfId) ?? null) : null,
     chips,
     flags,
+    step: orderStep(o.status, {
+      booked: detail.shipments.some((s) => !UNBOOKED_SHIPMENT.has(s.status)),
+      needsPerson: o.inReview || o.cancelRequested,
+      settled: o.paymentMethod !== 'COD' || detail.money.dueMinor <= 0,
+    }),
+    contact: {
+      phone: phoneText(o.phone) || null,
+      callHref: o.phone ? `tel:${o.phone}` : null,
+      address: o.shippingAddressText,
+      mapHref: o.shippingAddressText ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.shippingAddressText)}` : null,
+      email: o.email,
+      customerHref: o.customerId ? `/admin/customers/${o.customerId}` : null,
+      extra: [...(o.addressUnclear ? [{ label: t(d, 'orders.cust.check'), value: t(d, 'orders.cust.unclear') }] : []), ...(o.note ? [{ label: t(d, 'orders.cust.note'), value: o.note }] : [])],
+    },
+    lifetime: [
+      { label: t(d, 'orders.life.orders'), value: n(c.orders) },
+      { label: t(d, 'orders.life.delivered'), value: n(c.delivered) },
+      { label: t(d, 'orders.life.open'), value: n(c.open) },
+      { label: t(d, 'orders.life.returned'), value: n(c.returned) },
+      { label: t(d, 'orders.life.cancelled'), value: n(c.cancelled) },
+    ],
     items: detail.items.map((i) => ({
       id: i.id,
       name: i.productName,
