@@ -971,13 +971,18 @@
         "stuckCount": "{n} stuck for {hours} hours or more",
         "cancelledCount": "{n} cancelled but still booked",
         "cod": "To collect",
-        "courier": "Courier"
+        "courier": "Courier",
+        "title": "Parcels with courier ({n})",
+        "days": "Days"
       },
       "dayend": {
         "h": "Day-end check",
         "line": "Packed today {packed} · entered at a courier {entered}",
         "ok": "Every order packed today is entered at a courier.",
-        "missing": "Not entered at a courier: {list}"
+        "missing": "Not entered at a courier: {list}",
+        "sub": "Handed over starts only when the courier’s pickup report says it took the parcel.",
+        "notPicked": "Packed today {packed}, handed over {handed}. The courier’s pickup report does not have these parcels:",
+        "cancelledBooked": "Cancelled order {order} is still booked at the courier ({id}). Ask them to send it back."
       },
       "drawer": {
         "h": "Tracking history",
@@ -998,6 +1003,18 @@
         "backup": "Backup courier",
         "backupHelp": "Where parcels move when the first courier is down (needs the owner's PIN).",
         "noBackup": "None chosen"
+      },
+      "title": "With courier",
+      "sub": "{n} parcels handed over · {cash} cash to collect",
+      "recordPickup": "Record courier pickup",
+      "ask": {
+        "courier": "Ask courier",
+        "sendBack": "Ask to send back",
+        "done": "Noted on the order. Tell {courier} about consignment {id}."
+      },
+      "pickup": {
+        "h": "Hand over to the courier",
+        "d": "When the rider comes: print the sheet, let the rider tick and sign it, then press “Handed over”. This is the courier’s pickup record."
       }
     },
     "move": {

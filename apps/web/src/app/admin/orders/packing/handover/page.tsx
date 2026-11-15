@@ -21,6 +21,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { LIST_DPIS, LIST_PAPERS } from '@extas/settings';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { AskCourier } from '@/components/admin/fulfil/AskCourier';
 import { CourierMove } from '@/components/admin/fulfil/CourierMove';
 import { HandoverDone } from '@/components/admin/fulfil/Handover';
 import { PdfButton } from '@/components/admin/fulfil/Print';
@@ -72,10 +73,13 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
   // S28 · PR 667: what the couriers hold now (`?status=` narrows it) and one parcel's history in the drawer (`?track=`)
   const heldStatus = (sh.COURIER_HELD as readonly string[]).includes(one(sp.status)) ? (one(sp.status) as sh.HeldStatus) : undefined;
   const trackId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(one(sp.track)) ? one(sp.track) : '';
-  const [held, drawer] = await Promise.all([
-    sh.withCourier(sd, who, heldStatus ? { status: heldStatus } : {}),
+  const [heldAll, drawer, dayFig] = await Promise.all([
+    sh.withCourier(sd, who, {}),
     trackId ? sh.parcelHistory(sd, who, trackId).catch(() => null) : Promise.resolve(null),
+    sh.dayEndFigures(sd, who),
   ]);
+  // PR 827 (prototype v5): the status chips narrow the list; the page's totals and the asks look at every parcel
+  const held = { ...heldAll, rows: heldStatus ? heldAll.rows.filter((r) => r.status === heldStatus) : heldAll.rows };
   const [couriers, handed, currency, cards] = await Promise.all([
     sh.handoverList(sd, who),
     sh.handoverHistory(sd, who),
@@ -142,34 +146,85 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
   const backup = held.watch.backupCourierId ? courierAccounts.find((c) => c.id === held.watch.backupCourierId) : undefined;
   const hrefHeld = (status?: string, track?: string) => `${HERE}${status || track ? '?' : ''}${[status ? `status=${status}` : '', track ? `track=${track}` : ''].filter(Boolean).join('&')}`;
   const orderList = (lines: { orderNumber: string }[]) => lines.map((l) => l.orderNumber).join(', ');
+  // PR 827 (prototype v5): totals for the header, parcels the courier's pickup check does not list, cancelled parcels still booked
+  const holding = heldAll.rows.filter((r) => (sh.COURIER_HELD as readonly string[]).includes(r.status));
+  const cashToCollect = holding.reduce((sum, r) => sum + r.codMinor, 0);
+  const notInReport = [...new Map(handed.flatMap((c) => c.batches.flatMap((b) => b.check?.notPicked ?? [])).map((l) => [l.orderId, l])).values()];
+  const cancelledStill = heldAll.rows.filter((r) => r.cancelledButBooked);
+  const canAsk = access.guard.permissions?.has('fulfilment.handover') ?? false;
 
   return (
     <div className="a2-z" data-testid="handover-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey('packingHandover')} title={t(d, 'ful.handover.title')} sub={t(d, 'ful.handover.sub')} />
+      <PageHead
+        view={view}
+        place={locateKey('packingHandover')}
+        title={wc('title')}
+        sub={wc('sub', { n: n(holding.length), cash: m(cashToCollect, currency) })}
+        right={
+          <a className="a2-btn pri" href="#pickup" data-testid="record-pickup">
+            <ShellIcon name="sync" size={15} />
+            {wc('recordPickup')}
+          </a>
+        }
+      />
       <SectionTabs view={view} current="packingHandover" />
-      <div className="a2-kpis a2-mt12" data-testid="handover-counts">
-        {(
-          [
-            ['couriers', couriers.length],
-            ['waiting', waiting],
-            ['ready', ready],
-            ['notReady', waiting - ready],
-          ] as [string, number][]
-        ).map(([k, v]) => (
-          <div key={k} className="a2-card a2-kpi">
-            <div className="a2-kl">{t(d, `ful.handover.counts.${k}`)}</div>
-            <div className="a2-kv">{n(v)}</div>
-          </div>
-        ))}
-      </div>
       {/* S28 · PR 667: the day-end check, then what the couriers hold now (live status, filter, stuck and cancelled-but-booked marks) */}
       <section className="a2-card a2-mt12" aria-label={wc('dayend.h')} data-testid="dayend">
         <h2 className="a2-h4">{wc('dayend.h')}</h2>
-        <p className="a2-xs a2-mt6">{wc('dayend.line', { packed: n(held.dayEnd.packedToday), entered: n(held.dayEnd.enteredToday) })}</p>
+        <p className="a2-xs a2-mute">{wc('dayend.sub')}</p>
+        <div className="d4-kpis3 a2-mt12">
+          {(
+            [
+              ['packedToday', dayFig.packedToday, 'box'],
+              ['handed', dayFig.handedToday, 'truck'],
+              ['notHanded', dayFig.notHanded, 'alert'],
+            ] as const
+          ).map(([id, value, icon]) => (
+            <div key={id} className="a2-card a2-kpi" data-testid={`dayend-${id}`}>
+              <div className="a2-kl">
+                <ShellIcon name={icon} size={14} /> {t(d, `ful.pack.dayEnd.${id}`)}
+              </div>
+              <div className="a2-kv">{n(value)}</div>
+            </div>
+          ))}
+        </div>
+        <p className="a2-xs a2-mt12">{wc('dayend.line', { packed: n(held.dayEnd.packedToday), entered: n(held.dayEnd.enteredToday) })}</p>
         <p className="a2-xs a2-mute">{held.dayEnd.missing.length ? wc('dayend.missing', { list: held.dayEnd.missing.join(', ') }) : wc('dayend.ok')}</p>
+        {notInReport.length ? (
+          <div className="a2-stack a2-mt12" style={{ gap: 6 }} data-testid="dayend-notpicked">
+            <div className="a2-note bad" style={{ marginTop: 0 }} role="alert">
+              <ShellIcon name="alert" size={15} />
+              <span>{wc('dayend.notPicked', { packed: n(dayFig.packedToday), handed: n(dayFig.handedToday) })}</span>
+            </div>
+            {notInReport.map((l) => (
+              <div key={l.orderId} className="a2-between d4-li" data-testid="dayend-notpicked-row">
+                <span>
+                  <b className="a2-mono">
+                    <Link className="a2-lnk" href={`/admin/orders/${l.orderId}`}>
+                      {l.orderNumber}
+                    </Link>
+                  </b>
+                </span>
+                {canAsk ? <AskCourier dict={fd} url={`${API}/ask`} orderId={l.orderId} kind="missing" testId="ask-courier-missing" /> : null}
+              </div>
+            ))}
+          </div>
+        ) : dayFig.notHanded ? (
+          <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.pack.dayEnd.waiting', { n: n(dayFig.notHanded) })}</p>
+        ) : (
+          <p className="a2-xs a2-mt6" style={{ color: 'var(--ok)' }}>
+            {t(d, 'ful.pack.dayEnd.allHanded')}
+          </p>
+        )}
+        {cancelledStill.map((r) => (
+          <div key={r.shipmentId} className="a2-note a2-between" style={{ marginTop: 10 }} data-testid="dayend-cancelled-row">
+            <span>{wc('dayend.cancelledBooked', { order: r.orderNumber, id: r.consignmentId ?? '-' })}</span>
+            {canAsk ? <AskCourier dict={fd} url={`${API}/ask`} orderId={r.orderId} kind="sendBack" testId="ask-courier-sendback" /> : null}
+          </div>
+        ))}
       </section>
       <section className="a2-card a2-mt12" aria-label={wc('held.h')} data-testid="held">
-        <h2 className="a2-h4">{wc('held.h')}</h2>
+        <h2 className="a2-h4">{wc('held.title', { n: n(held.rows.length) })}</h2>
         <p className="a2-xs a2-mute a2-mt6">{wc('held.d')}</p>
         {held.stuck ? <p className="a2-xs a2-mt6" data-testid="held-stuck">{wc('held.stuckCount', { n: n(held.stuck), hours: n(held.watch.stuckHours) })}</p> : null}
         {held.cancelledButBooked ? <p className="a2-xs a2-mt6" style={{ color: 'var(--bad)' }} data-testid="held-cancelled">{wc('held.cancelledCount', { n: n(held.cancelledButBooked) })}</p> : null}
@@ -193,6 +248,7 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
                   <th>{wc('held.courier')}</th>
                   <th>{wc('held.status')}</th>
                   <th>{wc('held.moved')}</th>
+                  <th className="r">{wc('held.days')}</th>
                   <th className="r">{wc('held.cod')}</th>
                   <th>{wc('held.track')}</th>
                 </tr>
@@ -219,6 +275,9 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
                       ) : null}
                     </td>
                     <td data-l={wc('held.moved')}>{r.movedAt ? printedAt(r.movedAt, view.timeZone) : wc('held.none')}</td>
+                    <td className="r" data-l={wc('held.days')}>
+                      <span className="a2-num">{r.movedAt ? n(Math.max(0, Math.floor((Date.now() - new Date(r.movedAt).getTime()) / 86_400_000))) : '—'}</span>
+                    </td>
                     <td className="r" data-l={wc('held.cod')}>
                       <span className="a2-num">{r.codMinor ? m(r.codMinor, currency) : t(d, 'ful.handover.paid')}</span>
                     </td>
@@ -226,6 +285,12 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
                       <Link className="a2-lnk" href={hrefHeld(heldStatus, r.shipmentId)} scroll={false} data-testid="held-track">
                         {wc('held.track')}
                       </Link>
+                      {r.stuck && canAsk ? (
+                        <>
+                          {' '}
+                          <AskCourier dict={fd} url={`${API}/ask`} orderId={r.orderId} kind="stuck" testId="ask-courier-stuck" />
+                        </>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -267,6 +332,25 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
           )}
         </aside>
       ) : null}
+      <h2 className="a2-h3 a2-mt12" id="pickup" data-testid="pickup-h">
+        {wc('pickup.h')}
+      </h2>
+      <p className="a2-xs a2-mute">{wc('pickup.d')}</p>
+      <div className="a2-kpis a2-mt12" data-testid="handover-counts">
+        {(
+          [
+            ['couriers', couriers.length],
+            ['waiting', waiting],
+            ['ready', ready],
+            ['notReady', waiting - ready],
+          ] as [string, number][]
+        ).map(([k, v]) => (
+          <div key={k} className="a2-card a2-kpi">
+            <div className="a2-kl">{t(d, `ful.handover.counts.${k}`)}</div>
+            <div className="a2-kv">{n(v)}</div>
+          </div>
+        ))}
+      </div>
       {couriers.length ? (
         couriers.map((c) => (
           <section key={c.courierAccountId} className="a2-card a2-mt12" aria-label={c.courierName} data-testid="handover-courier">
