@@ -262,7 +262,7 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
     guide: 'ads',
     tabs: [
       // S13 · PR 256: campaigns — audience, offer, creative, window and the planned budget (`/admin/marketing/campaigns/<id>`).
-      { id: 'campaigns', pages: [{ href: '/admin/marketing/campaigns', perm: 'marketing.campaigns.read', keys: ['marketingCampaigns', 'marketingCampaign'] }] },
+      { id: 'campaigns', pages: [{ href: '/admin/marketing/campaigns', perm: 'marketing.campaigns.read', keys: ['marketingCampaigns', 'marketingCampaign', 'marketingAdCampaignOne'] }] },
       // PR 659: the Smart Rules moved to their own section (Rules); Messages joined here as Message campaigns.
       {
         id: 'messages',

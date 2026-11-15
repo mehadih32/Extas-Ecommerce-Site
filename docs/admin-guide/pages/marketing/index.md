@@ -14,6 +14,7 @@
 - [উৎসবের পেজ · প্রতি বছর](seasonal-yearly.md) — উৎসব এলে পেজ নিজে ফেরে, শেষে বিশ্রাম; টিক, উৎসবের তারিখ, মূল সুইচ (`/admin/marketing/landing/seasonal/yearly`)
 - [ক্যাম্পেইন](campaigns.md) — প্রতিটা প্রচার, তার সময়, পরিকল্পিত বাজেট আর পেজ থেকে অর্ডার (`/admin/marketing/campaigns`)
 - [একটা ক্যাম্পেইন](campaign.md) — অডিয়েন্স, অফার, বিজ্ঞাপনের লেখা, সময়, বাজেট আর ধাপ (`/admin/marketing/campaigns/<id>`)
+- [একটা বিজ্ঞাপন ক্যাম্পেইন](ad-campaign.md) — খরচ, ডেলিভারি হওয়া বিক্রি, ফেরত, বিজ্ঞাপনের পরে লাভ, ভেতরের বিজ্ঞাপন আর কোথায় বিক্রি (`/admin/marketing/campaigns/ad/<id>`)
 - [অডিয়েন্স](audiences.md) — আসল অর্ডার থেকে বানানো দল, কতজন আর কোন ক্যাম্পেইনে (`/admin/marketing/audiences`)
 - [একটা অডিয়েন্স](audience.md) — শর্ত, এখন কতজন মেলে, আবার গোনা আর আর্কাইভ (`/admin/marketing/audiences/<id>`)
 - [বিজ্ঞাপনের প্ল্যাটফর্ম](ad-platforms.md) — ফেসবুক-ইনস্টাগ্রাম, TikTok আর Google-এর বিজ্ঞাপন অ্যাকাউন্ট, তার ক্যাম্পেইন আর অ্যাড সেট, শুধু পড়া (`/admin/marketing/ad-platforms`)
