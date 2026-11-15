@@ -1,8 +1,8 @@
 {
   "ck": {
-    "metaTitle": "Checkout",
-    "title": "Checkout",
-    "sub": "How the shop takes your customer's payment and details: change them here and the checkout shows them straight away.",
+    "metaTitle": "Payments",
+    "title": "Payments",
+    "sub": "How customers pay online, and which of your accounts the money lands in.",
     "note": "Grab the handle on the left of a row and drag it to move it (on a phone, press and drag). Or use the arrow buttons. Nothing here moves money or changes a price.",
     "readOnly": "You can look but not change. Changing these needs the settings editing permission.",
     "saved": "Saved. The checkout shows it now.",

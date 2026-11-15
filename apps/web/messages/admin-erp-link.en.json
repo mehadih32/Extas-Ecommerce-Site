@@ -1,8 +1,8 @@
 {
   "erpLink": {
-    "metaTitle": "ERP link",
+    "metaTitle": "ERP connection",
     "title": "ERP connection",
-    "sub": "This store's own link to its ERP company: its keys, what was synced, what is waiting, the balance and the switch to the new ERP contract.",
+    "sub": "Your shop and the Extas ERP work as one: the ERP owns stock and buying price, the shop owns customers and orders.",
     "storePick": "Store",
     "model": {
       "v5": "Old ERP contract (v5)",
