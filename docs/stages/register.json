@@ -47582,12 +47582,12 @@
   {
    "number": 759,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: money and stock lens (S29; parked; CN-054; Size M; depends on 756) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: money and stock lens** (S29; **parked**; CN-054; Size M; depends on 756) — per area: delivery charge collected against the delivery cost and the margin of the order (so the owner sees where delivery eats the profit), ad spend against delivered sales (by the district an ad's orders reached, from PR 355 and 569), and stock-by-area: which styles sell in which area and which to keep near (what sells, never moves stock by itself). Money figures need `books.read`. Free-delivery or delivery-charge ideas are only shown as numbers beside the area; no charge, threshold or price is changed here (hard rule 6). Off as shipped (`reports.geoMap.lenses.money`). Guide in the same PR. No migration.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–761 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750761-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47601,10 +47601,13 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    355,
+    569
+   ],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপ: ডেলিভারি চার্জ বনাম মার্জিন, বিজ্ঞাপনের খরচ বনাম বিক্রি, কোন এলাকায় কোন পণ্যের স্টক কাছে রাখবেন। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-759"
   },
