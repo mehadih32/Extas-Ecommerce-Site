@@ -60,7 +60,7 @@ describe.skipIf(!HAS_TEST_DB)('Products › Categories & tags on PostgreSQL (PR 
     const storeId = MOTHER_STORE_ID;
     for (const [i, slug] of ['polos', 'shirts', 'pants'].entries()) await t.prisma.category.create({ data: { storeId, slug, nameEn: slug.toUpperCase(), sortOrder: i * 10, isVisible: true } });
     for (const slug of ['eid', 'winter', 'basics']) await t.prisma.collection.create({ data: { storeId, slug, nameEn: slug.toUpperCase(), kind: 'MANUAL' } });
-    for (const [slug, name] of [['new', 'New'], ['bestseller', 'Bestseller'], ['limited', 'Limited']]) await t.prisma.tag.create({ data: { storeId, slug, name } });
+    for (const [slug, name] of [['new', 'New'], ['bestseller', 'Bestseller'], ['limited', 'Limited']] as const) await t.prisma.tag.create({ data: { storeId, slug, name } });
   });
   afterAll(async () => {
     vi.restoreAllMocks();
