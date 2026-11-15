@@ -13,18 +13,18 @@ import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/Summary
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { BarList, MarginLine } from '@/components/admin/reports/ReportCharts';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
-import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
+import { ReportTable } from '@/components/admin/reports/ReportParts';
+import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { channelMarginPct } from '@/lib/channel-profit-view';
-import { QUICK_PERIODS, quickPeriod } from '@/lib/cost-report';
 import { marginPct } from '@/lib/group-profit-view';
 import { t } from '@/lib/i18n';
 import { makeFmt } from '@/lib/reports-v5/fmt';
-import { loadBase, loadProfit } from '@/lib/reports-v5/load';
+import { loadBase, loadProfit, loadViews } from '@/lib/reports-v5/load';
 import { change, leaves } from '@/lib/reports-v5/model';
 import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
@@ -61,10 +61,8 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
   const f = makeFmt(view.locale, b.currency);
   const { q, notes } = b.period;
   const { now, was } = r;
-  const current = QUICK_PERIODS.find((p) => p === sp.period) ?? QUICK_PERIODS.find((p) => {
-    const x = quickPeriod(p, b.today);
-    return x.from === q.from && x.to === q.to;
-  });
+  const cmp = sp.cmp !== '0';
+  const views = await loadViews(access, 'profit');
   const rows = b.limits.maxDayRows;
   const channelName = (k: string) => {
     const w = t(d, `reportsV5.channel.${k}`);
@@ -153,14 +151,21 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
 
   return (
     <div className="a2-z lm-rp" data-testid="rp-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={cc('pageTitle')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={b.today} current={current} csv={csv} notes={notes} limitDays={b.limits.maxDays} />
-      <p className="a2-xs a2-mute a2-mt12">
-        {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) })}
-      </p>
-      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
-      <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
+      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={b.today} p={typeof sp.p === 'string' ? sp.p : undefined} cmp={cmp} before={b.before} reportKey="profit" views={views} day={f.dayShort} csv={csv} notes={notes} limitDays={b.limits.maxDays} />
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} empty={cc('answersNone')} />
+      <SummaryTiles className="a2-mt12" tiles={tiles.slice(0, 4).map((x) => (cmp ? x : { ...x, delta: undefined }))} label={cc('tilesLabel')} testId="rp-tiles" />
+      {tiles.length > 4 ? (
+        <div className="rp-kchips" data-testid="rp-chips">
+          {tiles.slice(4).map((x) => (
+            <div key={x.key}>
+              <span>{x.label}</span>
+              <b>{x.shown}</b>
+            </div>
+          ))}
+        </div>
+      ) : null}
       {now.netProfitMinor === null ? <p className="a2-xs bk-warn a2-mt12" data-testid="rp-ads-unknown">{c('adsUnknown')}</p> : null}
       {now.uncosted.orders ? <p className="a2-xs bk-warn a2-mt6" data-testid="rp-uncosted">{c('uncosted', { n: now.uncosted.orders })}</p> : null}
 
@@ -215,19 +220,6 @@ export default async function ProfitReportPage({ searchParams }: { searchParams:
       </section>
       </div>
 
-      <HowFigures
-        dict={d}
-        testId="rp-how"
-        items={[
-          { label: c('kNet'), how: c('how.net'), href: `/admin/money/profit?from=${q.from}&to=${q.to}`, linkText: c('open') },
-          { label: c('kBefore'), how: c('how.before'), href: `/admin/money/profit?from=${q.from}&to=${q.to}`, linkText: c('open') },
-          { label: c('kMargin'), how: c('how.margin') },
-          { label: c('kPerOrder'), how: c('how.perOrder') },
-          { label: c('kAds'), how: c('how.ads') },
-          { label: c('kReturns'), how: c('how.returns') },
-          { label: c('kLosing'), how: c('how.losing'), href: `/admin/money/profit/groups?by=style&from=${q.from}&to=${q.to}`, linkText: c('byStyle') },
-        ]}
-      />
     </div>
   );
 }
