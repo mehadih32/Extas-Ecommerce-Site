@@ -1,7 +1,7 @@
 {
   "rev": {
     "title": "Reviews",
-    "sub": "What buyers wrote, checked before anyone sees it. Publish, hide or refuse; mark a real buyer verified. The stars on the shop are the average of the published ones.",
+    "sub": "Answer questions, publish reviews and turn good answers into FAQs.",
     "readOnly": "You can read reviews here; publishing or hiding needs the \"Check reviews\" permission.",
     "kpi": {
       "pending": "To check",

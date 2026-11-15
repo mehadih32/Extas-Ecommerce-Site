@@ -16,7 +16,7 @@ import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/
 import { deliveryDeps } from '@/lib/delivery-api';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { PolicyHeadButtons } from '@/components/admin/website/PolicyHeadButtons';
-import { PoliciesTab } from '@/components/admin/website/PoliciesTab';
+import { PoliciesTab, type StarterSec } from '@/components/admin/website/PoliciesTab';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -70,7 +70,18 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
     );
   const v = await policyTabView({ db: access.deps.db, resolver: access.deps.resolver, paymentMode: paymentModeOf }, { actor: access.guard.actor, ctx: access.guard.ctx });
   const canEdit = access.guard.permissions?.has('settings.write') ?? false;
-  const words = flat((view.lang === 'bn' ? bn : en).pw as unknown as Record<string, unknown>);
+  const { starter: _starter, ...pwWords } = (view.lang === 'bn' ? bn : en).pw as unknown as Record<string, unknown>;
+  void _starter;
+  const words = flat(pwWords);
+  const starter = { en: (en.pw as unknown as { starter: Record<string, StarterSec[]> }).starter, bn: (bn.pw as unknown as { starter: Record<string, StarterSec[]> }).starter };
+  const [licence, dbid, address] = await Promise.all(['legal.tradeLicence', 'legal.dbid', 'contact.address'].map(async (k) => {
+    try {
+      const v = await access.deps.resolver.value(k as never, { storeId: MOTHER_STORE_ID });
+      return typeof v === 'string' && v.trim() ? v : null;
+    } catch {
+      return null;
+    }
+  }));
   const names = Object.fromEntries(POLICY_SLUGS.map((s) => [s, words[`names.${s}`]!]));
   // "At a glance": the numbers the shop's own Rules already hold, read live so a page never disagrees with checkout.
   const glance: Record<string, { label: string; value: string; sub?: string }[]> = {};
@@ -114,19 +125,12 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
   } catch {
     /* the strip stays as it was */
   }
-  const published = v.rows.filter((r) => r.state !== 'draft').length;
 
   return (
     <div className="a2-z" data-testid="pol-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'pw.title')} sub={t(d, 'pw.sub')} right={<PolicyHeadButtons rulesLabel={t(d, 'pw.openRules')} publishLabel={t(d, 'pw.publishHead')} canEdit={canEdit} />} />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-note a2-mt12" role="note">
-        <span>{t(d, 'pw.note')}</span>
-      </div>
-      <p className="a2-xs a2-mute polb-mt6" data-testid="pol-summary">
-        {published} / {v.rows.length}
-      </p>
-      <PoliciesTab glance={glance} rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} />
+      <PoliciesTab glance={glance} rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} starter={starter} legal={{ licence, dbid, address }} />
     </div>
   );
 }

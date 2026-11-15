@@ -9,11 +9,32 @@ import { useEffect, useMemo, useState } from 'react';
 import { textBlocks } from '@/lib/shop/help-pages';
 import type { PolicyRow, PolicyVersion } from '@/lib/website-policies/service';
 import type { PolicySlug, PolicyWords } from '@/lib/website-policies/model';
+import { ShellIcon } from '../shell/ShellIcon';
+import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { showToast } from '../lumen/Toast';
 
 const API = '/api/admin/website/policies';
 type Texts = Record<string, string>;
 type Lang = 'en' | 'bn';
+/** PR 776 (prototype v5 parity): one section card of a policy page; `starter` ones come from the starter text until the owner edits the page. */
+interface Sec {
+  icon: ShellIconName;
+  title: string;
+  points: string[];
+  details: string[];
+}
+export interface StarterSec {
+  icon: string;
+  title: string;
+  points: string[];
+  details?: string[];
+}
+const ICONS = new Set(['truck', 'box', 'phone', 'uturn', 'wallet', 'check', 'x', 'users', 'flag', 'shield', 'file', 'lock', 'globe', 'zap']);
+const iconOf = (n: string): ShellIconName => (ICONS.has(n) ? (n as ShellIconName) : 'file');
+const GLANCE_ICON: Record<string, ShellIconName> = { delivery: 'truck', exchange: 'uturn', payment: 'wallet', wallet: 'wallet', cancellation: 'x', terms: 'file', privacy: 'lock', reviews: 'flag', cookies: 'shield' };
+/** The page's words from section cards: "## heading", "- point", a blank line and a paragraph for details (what textBlocks reads back). */
+const bodyOf = (secs: Sec[]) => secs.map((x) => [x.title ? `## ${x.title}` : '', x.points.map((q) => `- ${q}`).join('\n'), x.details.join('\n\n')].filter(Boolean).join('\n\n')).join('\n\n');
+
 interface Draft {
   title: { en: string; bn: string };
   lede: { en: string; bn: string };
@@ -42,7 +63,7 @@ async function send(payload: Record<string, unknown>): Promise<{ ok: boolean; ro
   }
 }
 
-export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, locale, timeZone, shopLang }: { glance: Record<string, { label: string; value: string; sub?: string }[]>; rows: PolicyRow[]; w: Texts; names: Record<string, string>; initial: PolicySlug; canEdit: boolean; locale: string; timeZone: string; shopLang: Lang }) {
+export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, locale, timeZone, shopLang, starter, legal }: { starter: Record<Lang, Record<string, StarterSec[]>>; legal: { licence: string | null; dbid: string | null; address: string | null }; glance: Record<string, { label: string; value: string; sub?: string }[]>; rows: PolicyRow[]; w: Texts; names: Record<string, string>; initial: PolicySlug; canEdit: boolean; locale: string; timeZone: string; shopLang: Lang }) {
   const [rows, setRows] = useState(first);
   const [slug, setSlug] = useState<PolicySlug>(initial);
   const row = rows.find((r) => r.slug === slug)!;
@@ -88,8 +109,8 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
     setBase(JSON.stringify(startOf(r)));
   }
 
-  async function save(): Promise<PolicyRow[] | null> {
-    const a = await send({ page: slug, words: toWords(draft), version: row.latest });
+  async function save(d: Draft = draft): Promise<PolicyRow[] | null> {
+    const a = await send({ page: slug, words: toWords(d), version: row.latest });
     if (!a.ok) {
       setErr(problem(a.error, a.details));
       return null;
@@ -112,8 +133,13 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
     setErr(null);
     let list = rows;
     let latest = row.latest;
-    if (dirty) {
-      const next = await save();
+    // a page still showing the starter text: Publish makes that text the page's own words (both languages), then publishes
+    const fromStarter = !draft.body.en.trim() && !draft.body.bn.trim() && !row.draft && !row.live;
+    const start: Draft = fromStarter
+      ? { ...draft, body: { en: bodyOf((starter.en?.[slug] ?? []).map((x) => ({ icon: iconOf(x.icon), title: x.title, points: x.points, details: x.details ?? [] }))), bn: bodyOf((starter.bn?.[slug] ?? []).map((x) => ({ icon: iconOf(x.icon), title: x.title, points: x.points, details: x.details ?? [] }))) } }
+      : draft;
+    if (dirty || fromStarter) {
+      const next = await save(start);
       if (!next) return setBusy(false);
       list = next;
       latest = next.find((x) => x.slug === slug)!.latest;
@@ -143,26 +169,36 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
   const blocks = useMemo(() => textBlocks(draft.body[lang] || draft.body.en), [draft.body, lang]);
   // PR 733 (prototype v5, Policies): the page as section cards: each heading with its points, an "Edit" that takes you to that part
   // of the words, and "Details" (the longer paragraphs) folded under it. Read from the words being typed; nothing else is stored.
+  const custom = !!draft.body[lang].trim();
   const sections = useMemo(() => {
-    const out: { title: string; points: string[]; details: string[] }[] = [];
+    if (!custom) return (starter[lang]?.[slug] ?? []).map((x): Sec => ({ icon: iconOf(x.icon), title: x.title, points: x.points, details: x.details ?? [] }));
+    const out: Sec[] = [];
     for (const b of blocks) {
-      if (b.kind === 'h') out.push({ title: b.text, points: [], details: [] });
+      if (b.kind === 'h') out.push({ icon: 'file', title: b.text, points: [], details: [] });
       else {
-        if (!out.length) out.push({ title: '', points: [], details: [] });
+        if (!out.length) out.push({ icon: 'file', title: '', points: [], details: [] });
         const cur = out[out.length - 1]!;
         if (b.kind === 'ul') cur.points.push(...b.items);
         else cur.details.push(b.text);
       }
     }
     return out;
-  }, [blocks]);
-  function editSection(heading: string) {
-    const el = document.getElementById(`pol-body-${lang}`) as HTMLTextAreaElement | null;
-    if (!el) return;
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    el.focus({ preventScroll: true });
-    const at = heading ? el.value.indexOf(heading) : 0;
-    if (at >= 0) el.setSelectionRange(at, at + heading.length);
+  }, [blocks, custom, starter, lang, slug]);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
+  const [openAll, setOpenAll] = useState(false);
+  function editSection(i: number) {
+    setEditing(i);
+    setEditText(sections[i]!.points.join('\n'));
+  }
+  function saveSection(i: number, back = false) {
+    const pts = editText.split('\n').map((z) => z.trim()).filter(Boolean);
+    if (!back && !pts.length) return setErr(w['sec.needOne']!);
+    const starterOf = starter[lang]?.[slug]?.[i];
+    const next = sections.map((x, j) => (j === i ? { ...x, points: back && starterOf ? starterOf.points : pts } : x));
+    setErr(null);
+    setDraft({ ...draft, body: { ...draft.body, [lang]: bodyOf(next) } });
+    setEditing(null);
   }
   const title = draft.title[lang] || draft.title.en || names[slug]!;
   const lede = draft.lede[lang] || draft.lede.en;
@@ -207,60 +243,122 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
         ))}
       </div>
 
+      <div className="polb-ttl a2-mt12">
+        <h2 className="a2-h3" data-testid="pol-title">
+          {names[slug]}
+        </h2>
+        <div className="a2-seg" role="group" aria-label={w['previewLang']} data-testid="pol-lang">
+          {(['en', 'bn'] as const).map((l) => (
+            <button key={l} type="button" className={lang === l ? 'on' : undefined} aria-pressed={lang === l} onClick={() => setLang(l)} data-testid={`pol-lang-${l}`}>
+              {l === 'en' ? 'English' : 'বাংলা'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {glance[slug]?.length ? (
         <section className="a2-mt12" aria-label={w['glance.title']} data-testid="pol-glance">
-          <p className="a2-xs a2-mute">{w['glance.title']}</p>
-          <div className="polb-glance a2-mt6">
+          <div className="polb-glance">
             {glance[slug]!.map((g) => (
-              <div key={g.label} className="a2-card a2-kpi polb-g">
-                <div className="a2-kl">{g.label}</div>
-                <div className="a2-kv">{g.value}</div>
-                {g.sub ? (
-                  <div className="a2-kf">
-                    <span className="a2-kn">{g.sub}</span>
-                  </div>
-                ) : null}
+              <div key={g.label} className="polb-g2">
+                <i aria-hidden="true">
+                  <ShellIcon name={GLANCE_ICON[slug] ?? 'file'} size={16} />
+                </i>
+                <span>{g.label}</span>
+                <b>{g.value}</b>
+                {g.sub ? <span>{g.sub}</span> : null}
               </div>
             ))}
           </div>
-          <p className="a2-xs a2-mute a2-mt6">{w['glance.note']}</p>
         </section>
       ) : null}
 
       {sections.length ? (
         <section className="a2-mt12" aria-label={w['sec.title']} data-testid="pol-sections">
-          <p className="a2-xs a2-mute">{w['sec.title']}</p>
-          <div className="polb-secs a2-mt6">
-            {sections.map((s, i) => (
+          <div className="polb-secs">
+            {sections.map((x, i) => (
               <div key={i} className="a2-card polb-sec" data-testid="pol-section">
                 <div className="polb-sech">
-                  <b>{s.title || names[slug]}</b>
-                  <button type="button" className="a2-btn sm ghost" onClick={() => editSection(s.title)} data-testid="pol-section-edit">
-                    {w['sec.edit']}
-                  </button>
+                  <span className="polb-sic" aria-hidden="true">
+                    <ShellIcon name={x.icon} size={20} />
+                  </span>
+                  <b>{x.title || names[slug]}</b>
+                  {canEdit && editing !== i ? (
+                    <button type="button" className="a2-btn sm ghost" onClick={() => editSection(i)} data-testid="pol-section-edit">
+                      <ShellIcon name="edit" size={14} /> {w['sec.edit']}
+                    </button>
+                  ) : null}
                 </div>
-                {s.points.length ? (
-                  <ul>
-                    {s.points.map((x, j) => (
-                      <li key={j}>{x}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {s.details.length ? (
-                  <details className="polb-det">
-                    <summary>{w['sec.details']}</summary>
-                    {s.details.map((x, j) => (
-                      <p key={j}>{x}</p>
-                    ))}
-                  </details>
-                ) : null}
+                {editing === i ? (
+                  <div className="polb-se" data-testid="pol-section-form">
+                    <label className="a2-lbl" htmlFor={`pol-se-${i}`}>
+                      {w['sec.points']}
+                    </label>
+                    <textarea id={`pol-se-${i}`} className="a2-inp polb-body" rows={6} value={editText} onChange={(e) => setEditText(e.target.value)} />
+                    <p className="a2-xs a2-mute">{w['sec.help']}</p>
+                    <div className="polb-bar">
+                      <button type="button" className="a2-btn" onClick={() => saveSection(i, true)}>
+                        {w['sec.back']}
+                      </button>
+                      <button type="button" className="a2-btn" onClick={() => setEditing(null)}>
+                        {w['sec.cancel']}
+                      </button>
+                      <button type="button" className="a2-btn pri" onClick={() => saveSection(i)} data-testid="pol-section-save">
+                        {w['sec.save']}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {x.points.length ? (
+                      <ul>
+                        {x.points.map((q, j) => (
+                          <li key={j}>{q}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {x.details.length ? (
+                      <details className="polb-det">
+                        <summary>{w['sec.details']}</summary>
+                        {x.details.map((q, j) => (
+                          <p key={j}>{q}</p>
+                        ))}
+                      </details>
+                    ) : null}
+                  </>
+                )}
               </div>
             ))}
           </div>
         </section>
       ) : null}
 
-      <section className="a2-sc a2-mt12" aria-labelledby="pol-h" data-testid="pol-card">
+      <div className="polb-legal a2-mt12" data-testid="pol-legal">
+        {legal.licence ? (
+          <span>
+            {w['legal.licence']}: <b>{legal.licence}</b>
+          </span>
+        ) : null}
+        {legal.dbid ? <span><b>{legal.dbid}</b></span> : null}
+        {legal.address ? <span>{legal.address}</span> : null}
+        <span>
+          {w['legal.updated']}: <b>{row.lastEditedAt ? when(row.lastEditedAt) : '—'}</b>
+        </span>
+        <button type="button" className="a2-btn sm ghost" onClick={() => document.getElementById('pol-hist')?.scrollIntoView({ block: 'center', behavior: 'smooth' })} data-testid="pol-history-link">
+          {w['legal.history']} ({row.versions.length})
+        </button>
+      </div>
+      <div className="a2-note a2-mt12" role="note" data-testid="pol-guide">
+        {w['guide']}
+      </div>
+
+      <div className="a2-mt12">
+        <button type="button" className="a2-btn" aria-expanded={openAll || dirty || !!row.draft} onClick={() => setOpenAll(!openAll)} data-testid="pol-all-toggle">
+          {w['allWords']}
+        </button>
+      </div>
+
+      <section className="a2-sc a2-mt12" aria-labelledby="pol-h" data-testid="pol-card" hidden={!(openAll || dirty || !!row.draft)}>
         <div className="polb-head">
           <h2 className="a2-h3" id="pol-h">
             {names[slug]}
@@ -324,7 +422,7 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
             <button type="button" className="a2-btn" disabled={busy || !dirty} onClick={onSave} data-testid="pol-save">
               {busy ? w['saving'] : w['saveDraft']}
             </button>
-            <button type="button" className="a2-btn pri" disabled={busy || (!dirty && !row.draft)} onClick={onPublish} data-testid="pol-publish">
+            <button type="button" className="a2-btn pri" disabled={busy || (!dirty && !row.draft && custom)} onClick={onPublish} data-testid="pol-publish">
               {w['publish']}
             </button>
             {dirty ? <span className="a2-xs a2-mute">{w['unsavedShort']}</span> : null}
