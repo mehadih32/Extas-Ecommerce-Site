@@ -35,7 +35,9 @@
         "won": "Won",
         "lost": "Lost"
       },
-      "more": "More filters"
+      "more": "More filters",
+      "search": "Search",
+      "searchHint": "Search claim or order"
     },
     "ledger": {
       "title": "Claims ledger",
