@@ -213,26 +213,40 @@ export function MonthTarget({ p }: { p: DashProps }) {
   );
 }
 
-/** Prototype "Profit snapshot": the chosen period's sales against what it cost, and the part you keep, with the period before beside it. */
+/** Prototype "Profit snapshot": three periods side by side (today, the last 7 days, this month), each with sales against costs and the part you keep. Always drawn; empty figures show a dash. */
 export function ProfitSnap({ p }: { p: DashProps }) {
   const { f, data, viewer } = p;
   const pf = data.profit;
-  if (!pf || pf.cur.netMinor === null) return null;
-  const sales = pf.cur.salesMinor;
-  const net = pf.cur.netMinor;
-  const keep = sales > 0 ? Math.max(0, Math.min(1, net / sales)) : 0;
-  const prevNet = pf.prev.netMinor;
+  const snaps = pf?.snap?.length
+    ? pf.snap
+    : [{ key: 'today' as const, cur: pf?.cur, prev: pf?.prev }].filter((x) => x.cur && x.prev).map((x) => ({ key: x.key, cur: x.cur!, prev: x.prev! }));
   return (
     <Card title={f.t('dsh.proto.snapTitle')} sub={f.t('dsh.proto.snapSub')} right={can(viewer, 'books.read') ? <Lnk href="/admin/money">{f.t('dsh.proto.snapLink')}</Lnk> : null} testId="dash-profitsnap">
-      <div className="a3-snap">
-        <b className="a3-num">{f.money(net)}</b>
-        <Delta f={f} x={prevNet !== null && prevNet !== 0 ? (net - prevNet) / Math.abs(prevNet) : null} />
+      <div className="a3-snap3">
+        {(snaps.length ? snaps : [null, null, null]).map((x, i) => {
+          const net = x ? x.cur.netMinor : null;
+          const sales = x ? x.cur.salesMinor : 0;
+          const keep = net !== null && sales > 0 ? Math.max(0, Math.min(1, net / sales)) : 0;
+          const prevNet = x ? x.prev.netMinor : null;
+          const key = x?.key ?? (['today', '7d', 'month'] as const)[i]!;
+          return (
+            <div className="a3-snapc" key={key} data-testid={`dash-snap-${key}`}>
+              <div className="a3-snaph">
+                <span className="a3-cap">{f.t(`dsh.proto.snap_${key}`)}</span>
+                <Delta f={f} x={net !== null && prevNet !== null && prevNet !== 0 ? (net - prevNet) / Math.abs(prevNet) : null} />
+              </div>
+              <b className="a3-num a3-snapv">{net === null ? '—' : f.money(net)}</b>
+              <Bar p={keep} />
+              <div className="a3-snap-r">
+                <span>{f.t('dsh.proto.snapSales', { v: f.money(sales) })}</span>
+                <span>{f.t('dsh.proto.snapCosts', { v: net === null ? '—' : f.money(Math.max(0, sales - net)) })}</span>
+              </div>
+              <span className="a3-cap c">{f.t(`dsh.proto.snapVs_${key}`)}</span>
+            </div>
+          );
+        })}
       </div>
-      <Bar p={keep} />
-      <div className="a3-snap-r">
-        <span>{f.t('dsh.proto.snapSales', { v: f.money(sales) })}</span>
-        <span>{f.t('dsh.proto.snapCosts', { v: f.money(Math.max(0, sales - net)) })}</span>
-      </div>
+      <p className="a3-cap c">{f.t('dsh.proto.snapNote')}</p>
     </Card>
   );
 }
