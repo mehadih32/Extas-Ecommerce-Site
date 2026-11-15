@@ -188,3 +188,20 @@
 .pt-tick {
   flex: none;
 }
+
+/* PR 731: Orders › To pack › Peak / Eid mode (components/admin/fulfil/PeakCard.tsx) */
+.adm2 .pk-card{margin-top:12px}
+.adm2 .pk-card.on{border-color:var(--lm-ln)}
+.adm2 .pk-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.adm2 .pk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:12px}
+.adm2 .pk-cell{display:flex;flex-direction:column;gap:6px;min-width:0}
+.adm2 .pk-card :is(.a2-inp,.a2-sel,.a2-btn){min-height:44px}
+.adm2 .pk-bar{height:8px;border-radius:var(--lm-r-pill);background:var(--lm-chip);overflow:hidden}
+.adm2 .pk-bar i{display:block;height:100%;background:var(--lm-warn);border-radius:var(--lm-r-pill)}
+.adm2 .pk-bar i.full{background:var(--lm-bad)}
+.adm2 .pk-r{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px;background:var(--lm-sf2);border-radius:var(--lm-r-ctl)}
+.adm2 .pk-add{align-self:flex-start}
+.adm2 .pk-parts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.adm2 .pk-partbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.adm2 .pk-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+@media (max-width:1023px){.adm2 .pk-grid{grid-template-columns:minmax(0,1fr)}}

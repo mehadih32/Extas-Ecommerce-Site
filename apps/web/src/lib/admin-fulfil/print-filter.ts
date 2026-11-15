@@ -60,3 +60,16 @@ export function filterPrintRows<R extends PrintFilterRow>(rows: readonly R[], f:
 export function ordersOf(rows: readonly { orderId: string }[]): string[] {
   return [...new Set(rows.map((r) => r.orderId))];
 }
+
+/** S28 · PR 731 ("Print all in parts"): the part (1, 2, 3 …) the address asks for (`?part=`), or null. */
+export function partOf(search: Record<string, string | string[] | undefined>): number | null {
+  const v = one(search.part);
+  const n = v && /^\d{1,4}$/.test(v) ? Number(v) : 0;
+  return n >= 1 ? n : null;
+}
+
+/** One part of the rows, in their order: `size` parcels from `(part - 1) * size`. No part or no size shows every row. */
+export function partRows<R>(rows: readonly R[], part: number | null, size: number | null): R[] {
+  if (!part || !size || size < 1) return rows.slice();
+  return rows.slice((part - 1) * size, part * size);
+}
