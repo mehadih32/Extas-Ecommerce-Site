@@ -57,7 +57,7 @@ export default async function AgentsTeamPage() {
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `aiAgents.${k}`, vars);
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
 
-  const aiOn = await access.deps.resolver.value('ai.enabled');
+  const [aiOn, offText] = await Promise.all([access.deps.resolver.value('ai.enabled'), access.deps.resolver.value('ai.offText', { storeId: MOTHER_STORE_ID })]);
   const [agents, tgEnabled, tgSecret] = await Promise.all([
     agentProfileList({ db: access.deps.db }),
     isTelegramCommandsEnabled(access.deps),
@@ -69,7 +69,7 @@ export default async function AgentsTeamPage() {
     <div className="a2-z agents-page" data-testid="agents-team" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} />
+      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
 
       {!tgEnabled ? (
         <section className="a2-card tight ag-tg-off" data-testid="agents-telegram-off">

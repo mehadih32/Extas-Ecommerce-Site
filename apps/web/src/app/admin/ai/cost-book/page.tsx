@@ -111,7 +111,10 @@ export default async function AiCostBookPage() {
   const c = (k: string, vars?: Record<string, string | number>) =>
     t(d, `aiCostBook.${k}`, vars);
   const canControl = access.guard.permissions?.has("ai.control") ?? false;
-  const aiOn = await access.deps.resolver.value("ai.enabled");
+  const [aiOn, offText] = await Promise.all([
+    access.deps.resolver.value("ai.enabled"),
+    access.deps.resolver.value("ai.offText", { storeId: MOTHER_STORE_ID }),
+  ]);
 
   const o = await costBookView(
     { db: access.deps.db, resolver: access.deps.resolver },
@@ -220,7 +223,7 @@ export default async function AiCostBookPage() {
         sub={c("sub")}
       />
       <SectionTabs view={view} current={KEY} />
-      <AiStrip dict={view.dict} on={Boolean(aiOn)} canControl={canControl} />
+      <AiStrip dict={view.dict} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
       {limits ? (
         <CostsLimits
           dict={d}

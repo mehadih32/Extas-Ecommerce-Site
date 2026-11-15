@@ -8,6 +8,10 @@
       "label": "AI daily digest",
       "help": "One daily summary of what waits for the owner, what the agents did and what the AI cost. Off as shipped."
     },
+    "offText": {
+      "label": "Text shown while AI is off",
+      "help": "The line staff and the shop see while AI is off, in English and Bengali. Empty means the built-in words."
+    },
     "trainingOff": {
       "label": "Corrections and documents switched off",
       "help": "Ids of the training corrections and documents the owner stopped using. Nothing is deleted."

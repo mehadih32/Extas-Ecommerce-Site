@@ -9,7 +9,13 @@
     "switchLabel": "AI master switch: on or off",
     "toastOn": "AI turned on",
     "toastOff": "AI turned off",
-    "toastFailed": "Could not change AI. Try again."
+    "toastFailed": "Could not change AI. Try again.",
+    "edit": "Edit",
+    "editH": "Text shown when AI is off",
+    "editHelp": "Shown on the chat box, the helper and staff screens. Leave a box empty to use the built-in words.",
+    "editSave": "Save",
+    "editCancel": "Cancel",
+    "editSaved": "Saved."
   },
   "aiNever": {
     "h": "What the AI may never do alone",
@@ -31,5 +37,36 @@
     "today": "Decided today",
     "rate": "Approval rate",
     "rateSub": "agents learn from every “no”"
+  },
+  "aiFilter": {
+    "view": "Show",
+    "open": "Waiting",
+    "done": "Decided",
+    "all": "All",
+    "label": "Filter by kind of idea",
+    "emptyOpen": "Nothing waiting — the agents will add ideas here.",
+    "emptyDone": "No decisions yet"
+  },
+  "aiDigest": {
+    "h": "Daily digest",
+    "off": "The daily digest is off.",
+    "on": "Send me one summary a day",
+    "onHelp": "What waits, what was done by itself, money at stake",
+    "time": "Time",
+    "sendTo": "Send to",
+    "telegram": "Telegram",
+    "email": "Email",
+    "save": "Save",
+    "saved": "Digest settings saved.",
+    "failed": "That did not save. Please try again.",
+    "invalid": "Type a time like 08:00.",
+    "preview": "Preview digest",
+    "previewH": "Tomorrow's digest",
+    "previewTitle": "EXTAS · AI digest · {time}",
+    "previewWaiting": "Waiting for you: {n}",
+    "previewNone": "Nothing is waiting.",
+    "previewPin": "(PIN)",
+    "previewSpend": "AI spend this month: {amount}",
+    "previewNote": "A preview only: nothing is sent. The settings are saved now; sending the digest comes in a later step."
   }
 }

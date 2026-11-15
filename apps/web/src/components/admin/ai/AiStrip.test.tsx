@@ -1,11 +1,13 @@
 // PR 792 — the AI switch strip on every AI Center tab: on / off words, the off-text line, and the switch only for someone who
 // may control AI; both languages have every word.
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import bn from '../../../../messages/admin-ai-strip.bn.json';
 import en from '../../../../messages/admin-ai-strip.en.json';
 import type { Dict } from '@/lib/i18n';
 import { AiStrip } from './AiStrip';
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => undefined }) }));
 
 const dict = (x: unknown) => x as Dict;
 
@@ -22,6 +24,16 @@ describe('AiStrip (PR 792)', () => {
     expect(html).toContain('AI বন্ধ');
     expect(html).toContain('data-on="no"');
     expect(html).not.toContain('role="switch"');
+  });
+  it('shows the owner\'s own AI-off words in the language being read, with Edit only for someone who controls AI (PR 819)', () => {
+    const own = { en: 'Back soon.', bn: 'একটু পরে আসছি।' };
+    const html = renderToStaticMarkup(<AiStrip dict={dict(en)} on={false} canControl offText={own} lang="bn" />);
+    expect(html).toContain('একটু পরে আসছি।');
+    expect(html).not.toContain('AI is resting');
+    expect(html).toContain('data-testid="ai-off-edit-btn"');
+    const plain = renderToStaticMarkup(<AiStrip dict={dict(en)} on={false} canControl={false} offText={{ en: '', bn: '' }} lang="en" />);
+    expect(plain).toContain('AI is resting');
+    expect(plain).not.toContain('ai-off-edit-btn');
   });
   it('has the same words in both languages', () => {
     const keys = (o: unknown, p = ''): string[] => Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => (v && typeof v === 'object' ? keys(v, `${p}${k}.`) : [`${p}${k}`]));
