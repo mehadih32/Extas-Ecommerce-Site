@@ -93,6 +93,7 @@ docs file (CN-011).
 |---|---|
 | [`demo/admin-proto-v5/`](demo/admin-proto-v5/README.md) | The owner-approved admin prototype v5 (13 Nov 2026): the UI truth for the whole admin, with its decision log |
 | [`demo/admin-proto-v5/GAP-MAP.md`](demo/admin-proto-v5/GAP-MAP.md) | Phase A gap map (13 Nov 2026, CN-048): what is built, what changes, and the 49 new S28 PRs in 5 build waves; the three evidence files are in [`gap/`](demo/admin-proto-v5/gap/) |
+| [`reports/2026-11-15-geo-map-plan.md`](reports/2026-11-15-geo-map-plan.md) | Plan (Bengali) for Reports › Geography map: what exists, what is missing, screens, queries, settings, risks, PR split 750–755 (parked, S29), recommendation |
 | [`owner/PARKED.md`](owner/PARKED.md) | Everything closed, parked or switched off (CN-051, 14 Nov 2026), one plain line each with what it would take to start |
 | [`owner/PR-726-register-rows.md`](owner/PR-726-register-rows.md) | The two register rows of PR 726 (Website › Brand & menus), to paste with the counters when it merges |
 | [`owner/ROUND15.md`](owner/ROUND15.md) | Every owner note from review round 15 on (Note 52 is the newest on `main`) — the record of his decisions |
