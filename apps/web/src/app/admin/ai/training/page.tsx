@@ -112,6 +112,14 @@ export default async function AiTrainingPage() {
   ]);
   const { state, versions, card } = screen;
   const at = (x: Date) => dateTime(x.toISOString(), view.locale, view.timeZone);
+  // "3 d ago" next to each version's date (prototype v5 Version history).
+  const agoText = (x: Date) => {
+    const min = Math.max(0, Math.floor((Date.now() - x.getTime()) / 60_000));
+    if (min < 1) return c("ver.agoNow");
+    if (min < 60) return c("ver.agoMin", { n: min });
+    if (min < 48 * 60) return c("ver.agoH", { n: Math.floor(min / 60) });
+    return c("ver.agoD", { n: Math.floor(min / 1440) });
+  };
   const agentName = (key: string) => {
     if (key === TRAINING_ALL) return c("scope.all");
     if (!isAiAgentKey(key)) return key;
@@ -531,7 +539,7 @@ export default async function AiTrainingPage() {
                       <span className="a2-pill ok">{c("ver.inUse")}</span>
                     ) : null}
                     <span className="a2-xs a2-mute a2-blk">
-                      {at(v.at)}
+                      {at(v.at)} · {agoText(v.at)}
                       {v.by ? ` · ${c("ver.by", { name: v.by })}` : ""}
                     </span>
                   </span>
