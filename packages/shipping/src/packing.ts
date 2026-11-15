@@ -250,6 +250,47 @@ export async function shipChips(deps: ShippingDeps, who: Who, query: unknown = {
   return { confirmed, booked: pick + pack - confirmed, packed };
 }
 
+/**
+ * PR 813 (prototype v5, To ship › Booked): the four figures over the orders that have a courier booked and no sticker
+ * through yet: stickers still to print and their pieces (orders with an open packing card or on hold are "problem
+ * orders" and kept apart), and how many orders a short piece holds up (an open shortage card) with the first one's number.
+ * The same orders and filters as `shipChips`; read only (`fulfilment.read`).
+ */
+export interface BookedFigures {
+  stickers: number;
+  pieces: number;
+  problems: number;
+  short: number;
+  firstShort: string | null;
+}
+export async function bookedFigures(deps: ShippingDeps, who: Who, query: unknown = {}): Promise<BookedFigures> {
+  await allow(deps, who, 'fulfilment.read');
+  const q = parse(chipsQuery, query, 'booked figures');
+  const [base, timeZone] = await Promise.all([queueWhere(deps, who.storeId), setting(deps, who.storeId, 'store.timeZone')]);
+  const narrow = filterWhere(who.storeId, { from: q.from ?? null, to: q.to ?? null, docs: q.docs }, timeZone);
+  const rows = await deps.db.order.findMany({
+    where: { AND: [base, { OR: [STEP_WHERE.pick, STEP_WHERE.pack] }, { shipments: { some: LIVE_SHIPMENT } }, ...narrow] },
+    select: { id: true, number: true, status: true, items: { where: { status: 'ACTIVE' }, select: { quantity: true } } },
+    orderBy: [{ placedAt: 'asc' }, { id: 'asc' }],
+    take: BOOKED_FIGURES_MAX,
+  });
+  const ids = rows.map((r) => r.id);
+  const issues = ids.length ? await deps.db.packingIssue.findMany({ where: { storeId: who.storeId, orderId: { in: ids }, resolvedAt: null }, select: { orderId: true, kind: true } }) : [];
+  const withIssue = new Set(issues.map((i) => i.orderId));
+  const shortIds = new Set(issues.filter((i) => i.kind === 'SHORTAGE').map((i) => i.orderId));
+  const isProblem = (r: (typeof rows)[number]) => r.status === 'ON_HOLD' || withIssue.has(r.id);
+  const ok = rows.filter((r) => !isProblem(r));
+  return {
+    stickers: ok.length,
+    pieces: ok.reduce((n, r) => n + r.items.reduce((m, i) => m + i.quantity, 0), 0),
+    problems: rows.length - ok.length,
+    short: shortIds.size,
+    firstShort: rows.find((r) => shortIds.has(r.id))?.number ?? null,
+  };
+}
+/** How many booked orders the figures look at (the newest beyond it are left out; a shop's booked-not-printed list is short). */
+const BOOKED_FIGURES_MAX = 2000;
+
 // ---------------------------------------------------------------------------------------------------------------------
 // One order at the packing table
 // ---------------------------------------------------------------------------------------------------------------------

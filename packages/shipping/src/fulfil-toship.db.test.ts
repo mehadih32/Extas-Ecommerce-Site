@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { mockCourierWorld, STEADFAST_PROVIDER } from "@extas/adapters";
 import { HAS_TEST_DB } from "@extas/auth/testing";
 import { confirmOrder } from "@extas/orders";
-import { bookOrders, printStickers } from "./index";
+import { bookOrders, bookedFigures, printStickers } from "./index";
 import { setUpShipping, type ShippingFixture } from "./testing";
 
 async function refusal(p: Promise<unknown>): Promise<string> {
@@ -124,5 +124,22 @@ describe.skipIf(!HAS_TEST_DB)("PR 666 · To ship switches (PostgreSQL)", () => {
     } finally {
       f.overrides.delete("fulfilment.toShip");
     }
+  });
+
+  // PR 813 (prototype v5): the Booked chip's four figures
+  it("booked figures: stickers and pieces of the booked orders; an open shortage card keeps an order apart as a problem", async () => {
+    const before = await bookedFigures(f.shippingDeps(), f.shipper);
+    const a = await booked("bf-a");
+    const b = await booked("bf-b");
+    const after = await bookedFigures(f.shippingDeps(), f.shipper);
+    expect(after.stickers).toBe(before.stickers + 2);
+    expect(after.pieces).toBeGreaterThan(before.pieces);
+    const item = await db().orderItem.findFirstOrThrow({ where: { orderId: b.orderId } });
+    await db().packingIssue.create({ data: { storeId: f.S, orderId: b.orderId, orderItemId: item.id, kind: "SHORTAGE" } });
+    const held = await bookedFigures(f.shippingDeps(), f.shipper);
+    expect(held.stickers).toBe(before.stickers + 1);
+    expect(held.problems).toBe(before.problems + 1);
+    expect(held.short).toBe(before.short + 1);
+    expect(a.orderId).not.toBe(b.orderId);
   });
 });
