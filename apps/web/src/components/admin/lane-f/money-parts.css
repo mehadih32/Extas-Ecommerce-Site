@@ -1,0 +1,21 @@
+.lf-snap { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 700px) { .lf-snap { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.lf-sn { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--lm-ln); border-radius: 12px; padding: 12px 14px; text-decoration: none; color: inherit; background: var(--lm-sf); min-width: 0; min-height: 44px; }
+.lf-sn:hover { border-color: var(--lm-ac); }
+.lf-snl { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 600; color: var(--lm-ink2); }
+.lf-snv { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lf-snv.neg { color: var(--lm-bad); }
+.lf-sc { display: flex; height: 8px; border-radius: 6px; overflow: hidden; background: var(--lm-ln); }
+.lf-sc i { display: block; height: 100%; }
+.lf-sc i.cost { background: var(--lm-warn); }
+.lf-sc i.keep { background: var(--lm-ok); }
+.lf-snd { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--lm-ink2); font-variant-numeric: tabular-nums; }
+.lf-dec { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); }
+.lf-dc { border: 1px solid var(--lm-ln); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--lm-sf); min-width: 0; }
+.lf-dc p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--lm-ink2); overflow-wrap: anywhere; }
+.lf-dc .a2-btn { align-self: flex-start; }
+.lf-dh { display: flex; gap: 8px; align-items: center; font-weight: 700; font-size: 13.5px; }
+.lf-dh i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.lf-dh i.ok { background: var(--lm-ok); }
+.lf-dh i.warn { background: var(--lm-warn); }
+.lf-dh i.bad { background: var(--lm-bad); }

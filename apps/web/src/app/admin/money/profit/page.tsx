@@ -15,6 +15,7 @@ import { MoneyReportCard } from '@/components/admin/money/MoneyReportCard';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -48,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ProfitPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('books.read', deps, MOTHER_STORE_ID), searchParams]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -106,9 +107,24 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
     { key: 'net', sign: '=', minor: r.netProfitMinor, how: r.netProfitMinor === null ? c('lines.netUnknown') : undefined },
   ];
 
+  // prototype v5: "One average order" — each line per delivered order (the same figures as the lines above, shared out)
+  const per = (x: number | null) => (r.orders > 0 && x !== null ? Math.round(x / r.orders) : 0);
+  const ue: { key: string; minor: number }[] = [
+    { key: 'avg', minor: per(r.parts.sales) },
+    { key: 'cost', minor: -per(r.parts.productCost) },
+    { key: 'courier', minor: -per(r.parts.courier) },
+    { key: 'cod', minor: -per(r.parts.codFee) },
+    { key: 'pack', minor: -per(r.parts.paymentFees + r.parts.packaging) },
+    { key: 'returns', minor: -per(r.parts.returns + r.parts.returnLoss) },
+    { key: 'ads', minor: -per(r.adsMinor) },
+    { key: 'fixed', minor: -per((r.fixedMinor ?? 0) + (r.otherCostsMinor ?? 0)) },
+  ];
+  const ueNet = ue.reduce((sum, x) => sum + x.minor, 0);
+  const sm = (x: number) => (x < 0 ? `− ${m(-x)}` : m(x));
+
   return (
     <div className="a2-z" data-testid="money-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={t(d, 'lf.fp.sub')} />
       <SectionTabs view={view} current={KEY} />
 
       <nav className="ct-actions a2-mt12" aria-label={cr('quick.label')} data-testid="pl-quick">
@@ -215,6 +231,30 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
           </p>
         ))}
       </section>
+
+      {r.orders > 0 ? (
+        <section className="a2-card a2-mt12" aria-labelledby="pl-ue" data-testid="pl-ue">
+          <h2 className="a2-h3" id="pl-ue">
+            {t(d, 'lf.fp.ue.title')}
+          </h2>
+          {ue.map((x) => (
+            <div key={x.key} className="a2-rule">
+              <span>{t(d, `lf.fp.ue.${x.key}`)}</span>
+              <span />
+              <b>{sm(x.minor)}</b>
+            </div>
+          ))}
+          <div className="a2-rule" data-testid="pl-ue-profit">
+            <span>
+              <b>{t(d, 'lf.fp.ue.profit')}</b>
+            </span>
+            <span />
+            <b>{sm(ueNet)}</b>
+          </div>
+          <p className="a2-xs a2-mute a2-mt12">{t(d, 'lf.fp.ue.note', { n: r.orders })}</p>
+          <p className="a2-xs a2-mute">{t(d, 'lf.fp.note', { n: r.orders })}</p>
+        </section>
+      ) : null}
 
       <section className="a2-card a2-mt12" aria-labelledby="pl-days" data-testid="pl-days">
         <h2 className="a2-h3" id="pl-days">

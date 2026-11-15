@@ -16,6 +16,7 @@ import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/compon
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -48,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RefundsPage({ searchParams }: { searchParams: Search }) {
   const deps = adminDeps();
   const [sp, plain, access] = await Promise.all([searchParams, adminView(deps), pageAccess('payments.view', deps, MOTHER_STORE_ID)]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -108,7 +109,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
 
   return (
     <div className="a2-z" data-testid="refunds-page" data-lm-ready="" data-view={v.view}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.refunds.title')} sub={t(view.dict, 'lf.fh.refunds.sub')} />
       <SectionTabs view={view} current={KEY} />
 
       <div className="a2-kpis a2-mt12" data-testid="rf-kpis">

@@ -226,6 +226,73 @@
       "waiting": "Waiting for a reply",
       "waitingSub": "Oldest first",
       "nobody": "Nobody is waiting. Well done!"
+    },
+    "fn": {
+      "title": "Finance",
+      "asOf": "Where your money is, as of {at}",
+      "sn": {
+        "title": "Profit snapshot",
+        "sub": "Green = what you keep, orange = what it cost",
+        "open": "Open Profit & loss for this period",
+        "bar": "Sales vs costs",
+        "sales": "Sales",
+        "costs": "Costs",
+        "today": "Today",
+        "7d": "Last 7 days",
+        "month": "This month",
+        "vsToday": "vs yesterday",
+        "vs7d": "vs the 7 days before",
+        "vsMonth": "vs the same number of days before",
+        "note": "Net profit after every cost. Monthly fixed costs (rent, salaries) are spread per day, so \"Today\" is fair. Tap a number to open Profit & loss for that period.",
+        "more": "Profit & loss"
+      },
+      "dec": {
+        "title": "Decide today",
+        "sub": "Each card has one action. Done cards disappear.",
+        "none": "Nothing waits for you today.",
+        "codHead": "{courier} holds {amt}",
+        "codText": "{n} delivered parcels, oldest {days} day(s).",
+        "codBtn": "Open Courier 360",
+        "refHead": "{n} refunds wait for your OK",
+        "refText": "{amt} in total.",
+        "refBtn": "See refunds",
+        "claimHead": "{n} courier claims are late",
+        "claimText": "{amt} still to receive. Chase them before the next statement.",
+        "claimBtn": "Check",
+        "vatHead": "VAT is off",
+        "vatText": "While it is off, no VAT line shows anywhere in Finance.",
+        "vatBtn": "VAT setting"
+      }
+    },
+    "fp": {
+      "sub": "Line by line. A sale counts on the day it is delivered.",
+      "ue": {
+        "title": "One average order",
+        "avg": "Average sale",
+        "cost": "Product cost",
+        "courier": "Courier",
+        "cod": "COD fee",
+        "pack": "Packaging & gateway",
+        "returns": "Returns (share)",
+        "ads": "Ads (share)",
+        "fixed": "Fixed & other (share)",
+        "profit": "Profit per order",
+        "note": "Per delivered order ({n})."
+      },
+      "note": "{n} delivered. Fixed costs spread per day. Same maths as Home and Reports."
+    },
+    "fh": {
+      "refunds": {
+        "title": "Wallet & refunds",
+        "sub": "Money we owe customers: wallet balance and refunds of prepaid orders."
+      },
+      "vat": {
+        "sub": "VAT included in your sales, month by month."
+      },
+      "budgets": {
+        "title": "Costs & budgets",
+        "sub": "Fixed costs record themselves; you add the rest with a receipt."
+      }
     }
   }
 }
