@@ -1,0 +1,24 @@
+/* PR 791 — Settings › Site health and Updates & versions: the prototype's lights, hero and two-column cards (m-settings.js
+   .set-light, .set-hero, .set-dot, grid g2). Lumen tokens only; links are 44 px tall; no sideways scroll at 390 px. */
+.sy-sum { margin: 0 0 12px; }
+.sy-lights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sy-light { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 12px; background: var(--lm-sf2); min-width: 0; }
+.sy-light b { display: block; overflow-wrap: anywhere; }
+.sy-t { display: block; overflow-wrap: anywhere; }
+.sy-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex: none; background: var(--lm-ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lm-ok) 18%, transparent); }
+.sy-dot.warn { background: var(--lm-warn); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lm-warn) 18%, transparent); }
+.sy-dot.bad { background: var(--lm-bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lm-bad) 18%, transparent); }
+.sy-dot.off { background: var(--lm-ink2); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lm-ink2) 14%, transparent); }
+.sy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; align-items: start; }
+.sy-grid > .a2-sc { margin-top: 0; min-width: 0; }
+.sy-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.sy-links .a2-btn { min-height: 44px; display: inline-flex; align-items: center; }
+.sy-list { margin: 8px 0 0; padding-left: 18px; overflow-wrap: anywhere; }
+.sy-hero { display: flex; gap: 16px; align-items: center; }
+.sy-hero .sy-dot { width: 16px; height: 16px; margin: 0; }
+.sy-big { font-size: 22px; font-weight: 700; overflow-wrap: anywhere; }
+.sy-dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 8px 0 0; }
+.sy-dl dt { color: var(--lm-ink2); }
+.sy-dl dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 960px) { .sy-lights { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sy-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .sy-lights { grid-template-columns: minmax(0, 1fr); } }

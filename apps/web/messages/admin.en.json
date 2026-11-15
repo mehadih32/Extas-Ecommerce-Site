@@ -94,6 +94,8 @@
     "edge": "Cloudflare protection",
     "health": "Site health",
     "golive": "Go-live",
+    "siteHealth": "Site health",
+    "updates": "Updates & versions",
     "healthProblems": "Customer problems",
     "reportsDelivery": "Delivery & RTO",
     "reportsCustomers": "Customers report",

@@ -3,7 +3,7 @@
 // Business and System (owner only), each item its own page. The pages and their addresses are unchanged; this table says which
 // built page (by its navigation key in sections.ts, so the address and the permission come from the one menu table) each
 // list item opens, in the prototype's order and words. Real pages the prototype has no item for keep an item at the end of
-// their group (nothing is dropped). A prototype item whose page is not built (Site health, Updates & versions) has no entry.
+// their group (nothing is dropped). PR 791 built the last two (Site health, Updates & versions).
 // Words: messages/admin-shell.<lang>.json `shell.setlist.*` (group names, item names, search words). Pure: no React, no database.
 import type { ShellIconName } from './icons';
 import { locateKey, type ShellViewer } from './sections';
@@ -39,7 +39,9 @@ export const SETTINGS_ITEMS: readonly SettingsItemDef[] = [
   { id: 'backups', group: 's', nav: 'backups', icon: 'refresh' },
   { id: 'cache', group: 's', nav: 'cache', icon: 'chart' },
   { id: 'golive', group: 's', nav: 'golive', icon: 'check' },
+  { id: 'health', group: 's', nav: 'siteHealth', icon: 'chart' },
   { id: 'ai', group: 's', nav: 'aiControl', icon: 'spark' },
+  { id: 'updates', group: 's', nav: 'updates', icon: 'refresh' },
   { id: 'security', group: 's', nav: 'security', icon: 'alert' },
   { id: 'edge', group: 's', nav: 'edge', icon: 'globe' },
   { id: 'activity', group: 's', nav: 'activity', icon: 'menu' },

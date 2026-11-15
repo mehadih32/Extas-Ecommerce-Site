@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readAdmin, smallSizes, styleLiterals, unmarkedDenied, unreadyRoots } from '@/lib/admin-lumen/section-check';
 
-const PAGES = ['settings/store', 'settings/policies', 'settings/privacy', 'settings/security', 'settings/security/edge', 'settings/erp-link', 'settings/system/backups', 'settings/system/cache', 'settings/system/go-live'].map((p) => `${p}/page.tsx`);
+const PAGES = ['settings/store', 'settings/policies', 'settings/privacy', 'settings/security', 'settings/security/edge', 'settings/erp-link', 'settings/system/backups', 'settings/system/cache', 'settings/system/health', 'settings/system/updates', 'settings/system/go-live'].map((p) => `${p}/page.tsx`);
 const comp = (rel: string) => readFileSync(join(__dirname, '..', '..', 'components', 'admin', rel), 'utf8');
 
 describe('Settings section in the Lumen look (PR 647)', () => {

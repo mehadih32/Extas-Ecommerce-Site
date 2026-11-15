@@ -620,6 +620,14 @@
         "help": {
           "n": "Help & manual",
           "k": "manual guide help blueprint register project files"
+        },
+        "health": {
+          "n": "Site health",
+          "k": "uptime speed error disk memory domain ssl optimise optimize diagnose health audit"
+        },
+        "updates": {
+          "n": "Updates & versions",
+          "k": "version update roll back changelog staging"
         }
       }
     }

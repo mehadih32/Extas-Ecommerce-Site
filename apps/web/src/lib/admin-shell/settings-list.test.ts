@@ -32,7 +32,7 @@ describe('Settings list (PR 779)', () => {
     const src = readFileSync(join(ROOT, 'docs/demo/admin-proto-v5/js/m-settings.js'), 'utf8');
     const proto = [...src.matchAll(/\{ id: '(\w+)', g: '([bs])', ic: '\w+', en: '([^']+)', bn: '([^']+)'/g)].map((m) => ({ id: m[1]!, g: m[2]!, en: m[3]!, bn: m[4]! }));
     expect(proto.length).toBe(17);
-    const idMap: Record<string, string> = { telegram: 'telegram', ai: 'ai', manual: 'help', health: '', updates: '' };
+    const idMap: Record<string, string> = { telegram: 'telegram', ai: 'ai', manual: 'help', health: 'health', updates: 'updates' };
     const mine = new Map(SETTINGS_ITEMS.map((x) => [x.id, x]));
     let last = -1;
     const missing: string[] = [];
@@ -55,8 +55,8 @@ describe('Settings list (PR 779)', () => {
         expect(nameBn, p.id).toBe(p.bn);
       }
     }
-    // the two prototype items with no built page yet (listed, never faked)
-    expect(missing.sort()).toEqual(['health', 'updates']);
+    // every prototype item has a built page (PR 791 built Site health and Updates & versions)
+    expect(missing).toEqual([]);
     expect(en.shell.setlist.groups).toEqual({ b: 'Business', s: 'System' });
   });
 
