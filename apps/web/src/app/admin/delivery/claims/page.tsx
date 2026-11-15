@@ -14,6 +14,7 @@ import { daysPeriod } from '@extas/metrics';
 import * as pay from '@extas/payments';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { StepButton } from '@/components/admin/courier-report/Parts';
+import { AskPayout } from '@/components/admin/couriers/PayoutPanel';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -112,6 +113,22 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
   const canMove = (held?.has('delivery.claims') ?? false) && claimsSwitch.enabled;
   const canEdit = held?.has('settings.write') ?? false;
   const f = o.figures;
+  // PR 733: "Request payout" here asks the courier for real (the owner's PIN, `payments.settle`), for a courier that can be asked now
+  const canAsk = held?.has('payments.settle') ?? false;
+  const askable = new Map<string, pay.PayoutView>();
+  if (canAsk && o.money) {
+    await Promise.all(
+      o.money.couriers.map(async (c) => {
+        try {
+          const v = await pay.payoutView(pd, who, c.courierAccountId);
+          if (v.enabled && v.supported === 'request') askable.set(c.courierAccountId, v);
+        } catch {
+          /* a courier whose payout view cannot be read keeps the link to its own page */
+        }
+      }),
+    );
+  }
+  const cd: Dict = { cr: d.cr as Dict };
   const openMinor = f.open.claimedMinor + f.sent.claimedMinor;
   const openCount = f.open.count + f.sent.count;
   const inProgress = o.money ? o.money.totals.requestedMinor : null;
@@ -359,8 +376,26 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                       <dt className="a2-sm"><b>{co('money.owed')}</b></dt>
                       <dd>{m(c.owedMinor)}</dd>
                     </dl>
+                    {askable.get(c.courierAccountId) ? (
+                      <div className="a2-mt6" data-testid="claims-ready">
+                        <p className="a2-sm">
+                          <b>{co('money.ready')}</b> {m(askable.get(c.courierAccountId)!.holds.netMinor)} <span className="a2-xs a2-mute">{co('money.holdsN', { n: n(askable.get(c.courierAccountId)!.holds.parcels) })}</span>
+                        </p>
+                        {askable.get(c.courierAccountId)!.blockedBy.length ? (
+                          <ul className="a2-xs a2-mute" style={{ paddingLeft: 18 }}>
+                            {askable.get(c.courierAccountId)!.blockedBy.map((b) => (
+                              <li key={b}>{cr(`y.blocked.${b}`)}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <AskPayout dict={cd} courierId={c.courierAccountId} label={co('money.request')} />
+                        )}
+                      </div>
+                    ) : null}
                     <div className="a2-gap8 a2-mt6">
-                      <Link href={c360(c.courierAccountId, 'payouts')} className="cl-link pri" data-testid="claims-request-payout">{co('money.request')}</Link>
+                      {askable.has(c.courierAccountId) ? null : (
+                        <Link href={c360(c.courierAccountId, 'payouts')} className="cl-link pri" data-testid="claims-request-payout">{co('money.request')}</Link>
+                      )}
                       <Link href={c360(c.courierAccountId, 'payouts')} className="cl-link">{co('money.open360')}</Link>
                     </div>
                   </div>

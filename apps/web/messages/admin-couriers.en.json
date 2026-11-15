@@ -299,8 +299,8 @@
         "less": "less than"
       },
       "unconfirmed": "The courier did not confirm this request. Check its panel before asking again.",
-      "check": "Check now",
-      "checked": "Checked",
+      "check": "Refresh status",
+      "checked": "Status refreshed",
       "settle": "Mark orders settled",
       "close": "Close this request",
       "closeNote": "Why (what you saw in the courier's panel)",
@@ -321,7 +321,8 @@
         "PAYOUT_REFUSED": "The courier refused the request.",
         "FORBIDDEN": "You may not do this.",
         "other": "Something went wrong. Nothing was asked twice; look at the list and try again."
-      }
+      },
+      "ready": "Ready to request"
     },
     "k": {
       "off": "Courier claims are switched off.",

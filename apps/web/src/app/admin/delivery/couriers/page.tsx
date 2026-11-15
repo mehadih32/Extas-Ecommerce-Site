@@ -11,6 +11,8 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import * as pay from '@extas/payments';
+import { PayoutRowActions } from '@/components/admin/couriers/PayoutPanel';
 import { Act, AddCourier, CourierRename, ReadNow } from '@/components/admin/fulfil/Act';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -21,6 +23,9 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
+import { moneyOf, formatMoney } from '@/components/admin/products/model';
+import { withCouriers } from '@/lib/admin-couriers';
+import { paymentsDeps } from '@/lib/payments-api';
 import { shippingDeps } from '@/lib/shipping-api';
 
 export const dynamic = 'force-dynamic';
@@ -38,7 +43,7 @@ export default async function CouriersPage({ searchParams }: { searchParams: Sea
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('delivery.read', deps, MOTHER_STORE_ID), searchParams]);
   const showArchived = sp.archived === '1';
-  const view = withFulfil(plain);
+  const view = withCouriers(withFulfil(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(showArchived ? `${HERE}?archived=1` : HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="couriers" text={t(d, 'page.noDb')} />;
@@ -56,6 +61,26 @@ export default async function CouriersPage({ searchParams }: { searchParams: Sea
   const byId = new Map(zones.map((z) => [z.courierAccountId, z]));
   const can = access.guard.permissions?.has('delivery.couriers') ?? false;
   const fd: Dict = { ful: d.ful as Dict };
+  const cd: Dict = { cr: d.cr as Dict };
+  // PR 733 (prototype v5, Couriers): what each courier holds that can be asked for now ("Ready to request ৳X"), and a courier's open
+  // request with "Refresh status". Read for `payments.view`; asking itself stays on the courier's own page (PIN) and on Claims.
+  const payoutOf = new Map<string, pay.PayoutView>();
+  if (access.guard.permissions?.has('payments.view')) {
+    const pd = await paymentsDeps(access.deps);
+    await Promise.all(
+      list.couriers.map(async (c) => {
+        try {
+          const v = await pay.payoutView(pd, who, c.id);
+          if (v.enabled && v.supported === 'request') payoutOf.set(c.id, v);
+        } catch {
+          /* a courier whose payout view cannot be read shows nothing extra */
+        }
+      }),
+    );
+  }
+  const askNow = access.guard.permissions?.has('payments.settle') ?? false;
+  const cur = (await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })) as string;
+  const mny = (x: number) => formatMoney(x, moneyOf(cur, view.locale));
   const n = (x: number) => formatNumber(x, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', timeStyle: 'short' });
   const provider = (p: string) => t(d, `courier.providers.${p}`);
@@ -145,6 +170,20 @@ export default async function CouriersPage({ searchParams }: { searchParams: Sea
                     {can ? <Act dict={fd} url={`/api/admin/delivery/couriers/${c.id}`} body={{ archived: true }} label={t(d, 'ful.couriers.archive')} ask={t(d, 'ful.couriers.archiveAsk', { name: c.name })} tone="ghost" method="PATCH" testId="courier-archive" doneText={t(d, 'ful.couriers.archivedDone')} /> : null}
                   </div>
                 </div>
+                {payoutOf.get(c.id) ? (
+                  <div className="a2-gap8 a2-mt12" data-testid="courier-payout">
+                    {payoutOf.get(c.id)!.open ? (
+                      <>
+                        <span className="a2-pill warn">{t(cd, 'cr.y.open')} {mny(payoutOf.get(c.id)!.open!.amountMinor)}</span>
+                        {askNow && payoutOf.get(c.id)!.open!.providerRef !== null ? <PayoutRowActions dict={cd} payoutId={payoutOf.get(c.id)!.open!.id} canCheck canSettle={false} canClose={false} /> : null}
+                      </>
+                    ) : !payoutOf.get(c.id)!.blockedBy.length ? (
+                      <Link className="a2-pill ok" href={`${HERE}/${c.id}?s=payouts`} data-testid="courier-ready">
+                        {t(cd, 'cr.y.ready')} {mny(payoutOf.get(c.id)!.holds.netMinor)}
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="a2-sm a2-mt12">
                   {!z?.hasList ? (
                     <span className="a2-mute">{t(d, 'ful.couriers.noList')}</span>
