@@ -1,7 +1,7 @@
 {
-  "metaTitle": "Sign-in & security",
-  "title": "Sign-in & security",
-  "sub": "Two-step sign-in, how long a login lasts, the wrong-password pause, new-device alerts, the admin address list and the shop's quiet protections.",
+  "metaTitle": "Security",
+  "title": "Security",
+  "sub": "Keep the admin safe: 2-step login, who signed in, open sessions and blocked addresses.",
   "kpi": {
     "twoFactor": "Staff using two-step sign-in",
     "twoFactorOf": "{n} of {total}",
