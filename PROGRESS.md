@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — Batch 2026-11-15-1 (branch `batch-2026-11-15-1`, from `origin/main` 99f69f0a): five pull requests in one, linear history
+
+Cherry-picked in order: #240 (PR 729–735), #242 (PR 740–744 + Status), #243 (PR 745–749 + the CI db job timeout of 60 minutes), #244 (PR 762–763 + report), #241 (CN-054 and the parked S29, PR 750–761). One commit per register PR, no merge commits. Conflicts were only in README, the register, the stage pages, `bn.json`, PROGRESS, `docs/qa/smoke.json`, `packages/settings` (both registries kept) and `admin-words.ts` (both word files kept); every row of every PR is kept. Counters of the final state: 760 PRs, 30 stages, 738 active, 715 built (S28 90/90), 21 parked. `build-register.test.ts` now expects 31 stages (S0A plus S00–S29). The new pages (Page settings, Categories & tags, Checkout) draw no bar of their own: the shell draws it (PR 762), `SectionTabs` draws nothing.
+
 ## 15 Nov 2026 — PR 764 filed: legacy practice pictures still load (branch `claude/fix-media-legacy`, from `origin/main` b83801e3)
 
 The deploy of 932528a4 (PR 728) was rolled back again: 15 pages saw 404 for practice sizes already in the library whose file names hold a capital colour code (`practice-polo-F5F5F5-front-card.<hash>.avif`). Cause: `isRenditionKey` served lower case only, so those rows 404ed the moment the new version went live, before the keeper's repair could reach them. Fix: the route accepts either letter case in the name part (only a size the library lists is served), `renditionFile` also tries the lower-case key (old addresses of re-made sizes keep working), and `healPracticeRendition` draws a missing practice picture again on the spot. Tests in `packages/media/test/pipeline.test.ts` and `practice.db.test.ts`. No migration, no setting.
