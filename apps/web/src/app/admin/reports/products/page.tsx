@@ -14,6 +14,7 @@ import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/Repor
 import { ReportBar } from '@/components/admin/reports/ReportBar';
 import { StyleTree, type TreeRow, type TreeTexts } from '@/components/admin/reports/StyleTree';
 import { ReportTable } from '@/components/admin/reports/ReportParts';
+import { SortTable, type STRow } from '@/components/admin/reports/SortTable';
 import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -108,15 +109,21 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
   const ranked = [...r.styles.rows].sort((a, z) => z.profitMinor - a.profitMinor);
   const moreStyles = ranked.length > rows;
   const listCols = [{ h: c('colProduct') }, { h: c('colSizes'), right: true }, { h: c('colDays'), right: true }, { h: c('colSold30'), right: true }];
-  const listRows = (xs: typeof restock) =>
-    xs.map((x) => [
-      <Link key="n" className="a2-lnk cr-link" href={`/admin/products/${x.productId}`}>
-        {x.name}
-      </Link>,
-      c('sizesOf', { n: x.sizesInStock, total: x.sizesTotal }),
-      x.stockDays === null ? '—' : f.num(x.stockDays),
-      f.num(x.sold30),
-    ]);
+  const tx = { more: cc('showAll', { n: '{n}' }), less: cc('showLess'), close: cc('close'), empty: cc('none') };
+  const listRows = (xs: typeof restock): STRow[] =>
+    xs.map((x) => ({
+      key: x.productId,
+      cells: [
+        <Link key="n" className="a2-lnk cr-link" href={`/admin/products/${x.productId}`}>
+          {x.name}
+        </Link>,
+        c('sizesOf', { n: x.sizesInStock, total: x.sizesTotal }),
+        x.stockDays === null ? '—' : f.num(x.stockDays),
+        f.num(x.sold30),
+      ],
+      sort: [x.name, x.sizesInStock, x.stockDays ?? Number.MAX_SAFE_INTEGER, x.sold30],
+      href: `/admin/products/${x.productId}`,
+    }));
 
   return (
     <div className="a2-z lm-rp" data-testid="rp-products" data-lm-ready="" data-from={q.from} data-to={q.to}>
@@ -237,15 +244,22 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
           {c('cats')}
         </h2>
         <p className="a2-cs">{c('catsSub')}</p>
-        <ReportTable
+        <SortTable
           testId="rp-cats-table"
           rowId="rp-cat-row"
-          empty={cc('none')}
-          cols={[{ h: c('colCategory') }, { h: c('colPieces'), right: true }, { h: c('colSales'), right: true }, { h: c('colVs'), right: true }, { h: c('colMargin'), right: true }]}
-          rows={catRows.slice(0, rows).map((x) => {
+          texts={tx}
+          sortCol={2}
+          limit={rows}
+          cols={[{ h: c('colCategory') }, { h: c('colPieces'), right: true, hide: true }, { h: c('colSales'), right: true }, { h: c('colVs'), right: true, hide: true }, { h: c('colMargin'), right: true }]}
+          rows={catRows.map((x): STRow => {
             const was = catWas.get(x.id);
             const ch = was ? change(x.salesMinor, was.salesMinor) : null;
-            return [<b key="n">{x.name ?? c('catNone')}</b>, f.num(x.pieces), f.amount(x.salesMinor), ch === null ? '—' : f.pct(ch), f.pctOf(marginPct(x))];
+            return {
+              key: x.id ?? 'none',
+              cells: [<b key="n">{x.name ?? c('catNone')}</b>, f.num(x.pieces), f.amount(x.salesMinor), ch === null ? '—' : f.pct(ch), f.pctOf(marginPct(x))],
+              sort: [x.name ?? '', x.pieces, x.salesMinor, ch ?? 0, marginPct(x) ?? 0],
+              href: x.id ? `/admin/reports/profit?cat=${x.id}&from=${q.from}&to=${q.to}` : undefined,
+            };
           })}
         />
       </section>
@@ -257,7 +271,7 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
               {c('restock')}
             </h2>
             <p className="a2-cs">{c('restockSub')}</p>
-            <ReportTable testId="rp-restock-table" rowId="rp-restock-row" empty={c('noneRestock')} cols={listCols} rows={listRows(restock)} />
+            <SortTable testId="rp-restock-table" rowId="rp-restock-row" texts={{ ...tx, empty: c('noneRestock') }} sortCol={2} sortDir="asc" limit={6} cols={listCols} rows={listRows(restock)} />
             <div className="ct-actions a2-mt12">
               <Link className="a2-btn cr-tap" href="/admin/stock">
                 {c('toStock')}
@@ -269,7 +283,7 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
               {c('unsold')}
             </h2>
             <p className="a2-cs">{c('unsoldSub')}</p>
-            <ReportTable testId="rp-unsold-table" rowId="rp-unsold-row" empty={c('noneUnsold')} cols={listCols} rows={listRows(unsold)} />
+            <SortTable testId="rp-unsold-table" rowId="rp-unsold-row" texts={{ ...tx, empty: c('noneUnsold') }} sortCol={3} sortDir="asc" limit={6} cols={listCols} rows={listRows(unsold)} />
             <div className="ct-actions a2-mt12">
               <Link className="a2-btn cr-tap" href="/admin/combos">
                 {c('toCombos')}

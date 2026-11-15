@@ -133,6 +133,8 @@ export interface CouponGroup {
   off: number;
   aov: number;
   pcs: number;
+  /** PR 840: the orders behind the row (the row's drawer). */
+  list: SaleOrder[];
 }
 
 /** Orders that had a discount, by coupon code (a discount with no code is grouped by size of order: three or more pieces, or two). */
@@ -142,5 +144,5 @@ export function discountGroups(live: readonly SaleOrder[]): CouponGroup[] {
     const key = o.coupon || (o.pieces >= 3 ? 'BUY3' : 'BUY2');
     by.set(key, [...(by.get(key) ?? []), o]);
   }
-  return [...by].map(([key, os]) => ({ key, orders: os.length, off: sum(os, (o) => o.discountMinor), aov: Math.round(sum(os, (o) => o.totalMinor) / os.length), pcs: sum(os, (o) => o.pieces) / os.length })).sort((a, b) => b.off - a.off);
+  return [...by].map(([key, os]) => ({ key, orders: os.length, off: sum(os, (o) => o.discountMinor), aov: Math.round(sum(os, (o) => o.totalMinor) / os.length), pcs: sum(os, (o) => o.pieces) / os.length, list: os })).sort((a, b) => b.off - a.off);
 }
