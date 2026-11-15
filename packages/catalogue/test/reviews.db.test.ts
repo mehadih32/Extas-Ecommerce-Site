@@ -352,6 +352,9 @@ describe.skipIf(!HAS_TEST_DB)('product reviews on PostgreSQL (PR 65)', () => {
     // the published average, to one decimal, of approved reviews only
     const published = await t.prisma.review.aggregate({ where: { storeId: A, status: 'APPROVED', archivedAt: null }, _avg: { rating: true }, _count: { _all: true } });
     expect(after.published).toBe(published._count._all);
+    // PR 806: published 1-2 star reviews with no shop reply (a reply or a blank one counts as answered / none)
+    const low = await t.prisma.review.findMany({ where: { storeId: A, status: 'APPROVED', archivedAt: null, rating: { lte: 2 } }, select: { reply: true } });
+    expect(after.unreplied).toBe(low.filter((x) => !x.reply).length);
     expect(after.average).toBe(published._avg.rating === null ? null : Math.round(published._avg.rating * 10) / 10);
   });
 

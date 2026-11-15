@@ -131,5 +131,14 @@
     "missingOne": "{names} has no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
     "missingMany": "{names} have no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
     "allSet": "Every category has a default size chart."
-  }
+  },
+  "catCount": "· {n}",
+  "badgeDefault": "Default",
+  "edit": "Edit",
+  "duplicate": "Copy",
+  "archiveCard": "Archive",
+  "noChartForCat": "No chart yet for this category",
+  "bringBack": "Bring back",
+  "leaveConfirm": "Leave without saving? Your changes to this chart will be lost.",
+  "allCharts": "All size charts"
 }

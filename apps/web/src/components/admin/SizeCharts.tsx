@@ -70,6 +70,8 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
   const [cm, setCm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
+  // PR 806 (prototype v5): the page opens on the category cards; Edit opens one chart, with a way back
+  const [view, setView] = useState<'list' | 'edit'>('list');
   const editorRef = useRef<HTMLDivElement>(null);
 
   // PR 635 (CN-036): the size chart screen speaks through the admin's one toast (showToast, read out by screen readers).
@@ -106,6 +108,7 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
 
   const pick = (id: string) => {
     setSel(id);
+    setView('edit');
     if (!details[id]) void loadDetail(id);
     if (!window.matchMedia(DESKTOP).matches)
       requestAnimationFrame(() =>
@@ -189,6 +192,25 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
     await reloadList();
     say(tt(on ? 'toast.archived' : 'toast.restored'));
   };
+  const archiveChart = async (c: SizeChartView, on: boolean) => {
+    if (on && !window.confirm(tt('archiveConfirm', { name: c.name }))) return;
+    const a = await call('PATCH', `${API}/${c.id}`, { archived: on });
+    if (a.status !== 200) return sayError(a);
+    setDetails(({ [c.id]: _old, ...rest }) => rest);
+    await reloadList();
+    say(tt(on ? 'toast.archived' : 'toast.restored'));
+  };
+  const makeDefault = async (c: SizeChartView, categoryId: string, name: string) => {
+    const a = await call('POST', `${API}/assign`, { sizeChartId: c.id, categoryId });
+    if (a.status !== 200) return sayError(a);
+    setDetails(({ [c.id]: _old, ...rest }) => rest);
+    await reloadList();
+    say(tt('toast.defaultSet', { name }));
+  };
+  const back = () => {
+    if (sel && isDirty(sel) && !window.confirm(tt('leaveConfirm'))) return;
+    setView('list');
+  };
   const refresh = async (id: string) => {
     await Promise.all([loadDetail(id), reloadList()]);
   };
@@ -229,6 +251,7 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
     await reloadList();
     setModal(null);
     setSel(item.id);
+    setView('edit');
     say(message);
   };
 
@@ -604,58 +627,104 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
         ))}
       </div>
 
-      <div className="sc-grid">
-        <div className="sc-listw">
-          <div className="sc-bar sc-listhd">
-            <div className="ad-label sc-m0">
-              {tt('charts')} <span className="sc-dim">{tt('count', { n: charts.length })}</span>
-            </div>
-            {canWrite ? (
-              <button type="button" className="sc-link" onClick={() => setModal({ kind: 'new' })}>
-                <Icon name="plus" size={14} />
-                {tt('newChart')}
-              </button>
-            ) : null}
-          </div>
-          {charts.length ? (
-            <div className="sc-list">
-              {[...charts]
-                .sort((a, b) => Number(a.archived) - Number(b.archived))
-                .map((c) => (
-                  <button type="button" key={c.id} className={`sc-item${c.id === sel ? ' on' : ''}`} aria-pressed={c.id === sel} onClick={() => pick(c.id)}>
-                    <span className="sc-between">
-                      <span className="sc-bold sc-small">{c.name}</span>
-                      {isDirty(c.id) ? (
-                        <span className="sc-tag gold">{tt('unsaved')}</span>
-                      ) : c.archived ? (
-                        <span className="sc-tag plain">{tt('archived')}</span>
-                      ) : null}
-                    </span>
-                    <span className="sc-xs sc-dim sc-block sc-mt2">{fieldsLine(c)}</span>
-                    <span className="sc-chips sc-mt8">
-                      {c.defaultFor.map((d) => (
-                        <span className="sc-tag" key={d.id}>
-                          {tt('defaultFor', { name: catName(d) })}
+      {view === 'list' ? (
+        <div className="sc-cats" data-testid="sizecharts-categories">
+          {categories
+            .filter((c) => c.garmentTypeId)
+            .map((c) => {
+              const list = charts.filter((x) => !x.archived && (x.defaultFor.some((d) => d.id === c.id) || x.garmentType.id === c.garmentTypeId));
+              return (
+                <section key={c.id} className="sc-grp" data-testid="sizechart-category">
+                  <div className="sc-bar sc-listhd">
+                    <h3 className="sc-h3">
+                      {c.name} <span className="sc-dim">{tt('catCount', { n: list.length })}</span>
+                    </h3>
+                    {canWrite ? (
+                      <button type="button" className="ad-btn ad-btn-sm" onClick={() => setModal({ kind: 'new' })}>
+                        <Icon name="plus" size={14} />
+                        {tt('newChart')}
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="sc-cards">
+                    {list.length ? (
+                      list.map((x) => {
+                        const isDef = x.defaultFor.some((d) => d.id === c.id);
+                        return (
+                          <div className="ad-card sc-card" key={x.id} data-testid="sizechart-card">
+                            <b className="sc-bold">{x.name}</b>
+                            <span className="sc-xs sc-dim sc-block">{fieldsLine(x)}</span>
+                            <span className="sc-chips sc-mt8">
+                              {isDef ? <span className="sc-tag">{tt('badgeDefault')}</span> : null}
+                              <span className="sc-tag plain">{tt(x.usedBy === 1 ? 'usedByOne' : 'usedByMany', { n: x.usedBy })}</span>
+                              {x.fit ? <span className="sc-tag plain">{loc(x.fit)}</span> : null}
+                              {isDirty(x.id) ? <span className="sc-tag gold">{tt('unsaved')}</span> : null}
+                            </span>
+                            <span className="sc-acts sc-mt8">
+                              <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={() => pick(x.id)}>
+                                {tt('edit')}
+                              </button>
+                              {canWrite ? (
+                                <button type="button" className="ad-btn ad-btn-sm" onClick={() => setModal({ kind: 'copy', fromId: x.id })}>
+                                  {tt('duplicate')}
+                                </button>
+                              ) : null}
+                              {canWrite && !isDef ? (
+                                <button type="button" className="ad-btn ad-btn-sm" onClick={() => void makeDefault(x, c.id, c.name)}>
+                                  {tt('setDefault')}
+                                </button>
+                              ) : null}
+                              {canWrite ? (
+                                <button type="button" className="ad-btn ad-btn-sm" onClick={() => void archiveChart(x, true)}>
+                                  {tt('archiveCard')}
+                                </button>
+                              ) : null}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="ad-card sc-card sc-dim sc-small">{tt('noChartForCat')}</div>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          {charts.some((x) => x.archived) ? (
+            <section className="sc-grp">
+              <div className="sc-bar sc-listhd">
+                <h3 className="sc-h3">{tt('archived')}</h3>
+              </div>
+              <div className="sc-cards">
+                {charts
+                  .filter((x) => x.archived)
+                  .map((x) => (
+                    <div className="ad-card sc-card" key={x.id}>
+                      <b className="sc-bold">{x.name}</b>
+                      {canWrite ? (
+                        <span className="sc-acts sc-mt8">
+                          <button type="button" className="ad-btn ad-btn-sm" onClick={() => void archiveChart(x, false)}>
+                            {tt('bringBack')}
+                          </button>
                         </span>
-                      ))}
-                      <span className="sc-xs sc-text2">
-                        {tt(c.usedBy === 1 ? 'usedByOne' : 'usedByMany', {
-                          n: c.usedBy,
-                        })}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-            </div>
-          ) : (
-            <div className="ad-note">
-              <Icon name="info" size={16} />
-              <div>{tt('noCharts')}</div>
-            </div>
-          )}
+                      ) : null}
+                    </div>
+                  ))}
+              </div>
+            </section>
+          ) : null}
         </div>
-        <div className="sc-edw">{sel ? editor() : null}</div>
-        <div className="sc-addw">
+      ) : null}
+      <div className={view === 'list' ? 'sc-grid sc-one' : 'sc-grid sc-editing'}>
+        {view === 'edit' ? (
+          <div className="sc-edw">
+            <button type="button" className="ad-btn ad-btn-sm sc-mb8" onClick={back} data-testid="sizechart-back">
+              ← {tt('allCharts')}
+            </button>
+            {sel ? editor() : null}
+          </div>
+        ) : null}
+        <div className="sc-addw" hidden={view === 'edit'}>
           <div className="ad-card">
             <div className="sc-h3">{tt('addTitle')}</div>
             <div className="sc-xs sc-text2 sc-mt2">{tt('addSub')}</div>

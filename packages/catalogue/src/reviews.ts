@@ -419,6 +419,8 @@ export interface ReviewDesk {
   /** The average stars of the published reviews (null: none yet), and how many. */
   average: number | null;
   published: number;
+  /** PR 806: published reviews of one or two stars that the shop has not answered (the prototype's "1–2 star without reply"). */
+  unreplied: number;
   requests: {
     /** How many days back the requests are counted (`reviews.requests.resultDays`). */
     days: number;
@@ -430,16 +432,20 @@ export interface ReviewDesk {
   };
 }
 
+/** PR 806: the star count that is "low" for the "1–2 star without reply" figure (the prototype's own words). */
+export const LOW_STARS = 2;
+
 /** PR 295 — the published average and the review requests of the last `resultDays` days (`reviews.read`). */
 export async function reviewDesk(deps: CatalogueDeps, who: Who): Promise<ReviewDesk> {
   await allow(deps, who, 'reviews.read');
   const S = who.storeId;
   const { resultDays } = await setting(deps, who, 'reviews.requests');
   const since = new Date((deps.now?.() ?? new Date()).getTime() - resultDays * DAY_MS);
-  const [avg, groups, answeredIds] = await Promise.all([
+  const [avg, groups, answeredIds, unreplied] = await Promise.all([
     deps.db.review.aggregate({ where: { storeId: S, status: 'APPROVED', archivedAt: null }, _avg: { rating: true }, _count: { _all: true } }),
     deps.db.reviewRequest.groupBy({ by: ['channel'], where: { storeId: S, sentAt: { gte: since } }, _count: { _all: true, reviewId: true }, orderBy: { channel: 'asc' } }),
     deps.db.reviewRequest.findMany({ where: { storeId: S, sentAt: { gte: since }, reviewId: { not: null } }, select: { reviewId: true } }),
+    deps.db.review.count({ where: { storeId: S, status: 'APPROVED', archivedAt: null, rating: { lte: LOW_STARS }, OR: [{ reply: null }, { reply: '' }] } }),
   ]);
   const ids = answeredIds.map((r) => r.reviewId).filter((x): x is string => x !== null);
   const withPhoto = ids.length ? await deps.db.review.count({ where: { storeId: S, id: { in: ids }, media: { some: {} } } }) : 0;
@@ -447,6 +453,7 @@ export async function reviewDesk(deps: CatalogueDeps, who: Who): Promise<ReviewD
   return {
     average: avg._avg.rating === null ? null : Math.round(avg._avg.rating * 10) / 10,
     published: avg._count._all,
+    unreplied,
     requests: { days: resultDays, asked: byChannel.reduce((a, c) => a + c.asked, 0), answered: byChannel.reduce((a, c) => a + c.answered, 0), withPhoto, byChannel },
   };
 }

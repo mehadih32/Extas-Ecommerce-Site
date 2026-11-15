@@ -11,6 +11,8 @@
       "average": "Average stars",
       "averageNone": "none yet",
       "averageNote": "of the published reviews",
+      "unreplied": "1–2 star without reply",
+      "unrepliedNote": "published, not answered",
       "asked": "Asked after delivery",
       "askedNote": "{answered} answered ({pct}%) · last {days} days"
     },
