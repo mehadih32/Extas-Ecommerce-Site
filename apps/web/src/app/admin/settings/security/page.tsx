@@ -1,6 +1,6 @@
 // S18 · PR 380 — SET-04d Settings › Sign-in & security at /admin/settings/security (docs/BACKEND-ARCHITECTURE.md §5.13;
 // Blueprint B6.1, B6.5): how many staff use two-step sign-in and the switch that makes it required; how long a login
-// lasts and the wrong-password pause; new-device sign-in notes; the admin address list (off by default) with the
+// lasts and the wrong-password pause; (PR 815: the prototype's top, history, sessions and blocked addresses come first, all of this below under More options); new-device sign-in notes; the admin address list (off by default) with the
 // address the page is opened from; the shop's quiet protections (page protection PR 378, request limits PR 378, the
 // bot check PR 379), their numbers under "More options"; your own logins with "Log out everywhere else"; the latest
 // security events. Seeing needs `security.read`; saving a card `security.write` (the API checks again).
@@ -12,13 +12,13 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { AllowlistCard, DevicesCard, type AllowlistScreen } from '@/components/admin/settings/SecurityScreen';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
-import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { dateTime } from '@/components/admin/stock/text';
-import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { boardView } from '@/lib/admin-security/board';
 import { securityView, type SecurityCard, type SecurityCardId } from '@/lib/admin-security/service';
+import { SecurityBoard } from '@/components/admin/settings/SecurityBoard';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-security.bn.json';
@@ -72,9 +72,9 @@ export default async function SecurityPage() {
       </div>
     );
   const v = await securityView({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx });
+  const board = await boardView({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx, sessionId: access.guard.auth.session.id });
   const canEdit = access.guard.permissions?.has('security.write') ?? false;
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `secp.${k}`, vars);
-  const num = (n: number) => formatNumber(n, view.locale);
   const texts = (card: string): FieldsCardTexts => ({
     h: s(`${card}.h`),
     d: s(`${card}.d`),
@@ -116,9 +116,6 @@ export default async function SecurityPage() {
     n('adminSignInSeconds', 'security.bot.minFillSeconds', 'adminSignIn', s('bot.adminSignInSeconds')),
     n('noteScore', 'security.bot.noteScore', undefined, s('bot.noteScore')),
   ];
-  const sv = v.cards.signIn.value as { twoFactor: boolean };
-  const pv = v.cards.protection.value as { csp: string; rate: string };
-  const list = v.cards.allowlist.value as { enabled: boolean };
   const words = flat((view.lang === 'bn' ? bn : en) as unknown as Record<string, unknown>);
   // An event's kind ("staff.login.newDevice") is looked up as "staff_login_newDevice" (the words' keys have no dots).
   const kindOf = (k: string) => {
@@ -141,35 +138,11 @@ export default async function SecurityPage() {
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="a2-kpis">
-        <div className="a2-card a2-kpi" data-testid="security-kpi-2fa" data-required={sv.twoFactor ? 'yes' : 'no'}>
-          <div className="a2-kl">{s('kpi.twoFactor')}</div>
-          <div className="a2-kv">{s('kpi.twoFactorOf', { n: num(v.staff.twoFactor), total: num(v.staff.active) })}</div>
-          <div className="a2-kf">
-            <span className="a2-kn">{s(sv.twoFactor ? 'kpi.required' : 'kpi.optional')}</span>
-          </div>
-        </div>
-        <div className="a2-card a2-kpi" data-testid="security-kpi-list">
-          <div className="a2-kl">{s('kpi.list')}</div>
-          <div className="a2-kv a2-sm a2-kvw">{v.breakGlass ? s('kpi.breakGlass') : s(list.enabled ? 'kpi.listOn' : 'kpi.listOff')}</div>
-        </div>
-        <div className="a2-card a2-kpi">
-          <div className="a2-kl">{s('kpi.protection')}</div>
-          <div className="a2-kv a2-sm a2-kvw">{s(`mode.${pv.csp}`)}</div>
-        </div>
-        <div className="a2-card a2-kpi">
-          <div className="a2-kl">{s('kpi.limits')}</div>
-          <div className="a2-kv a2-sm a2-kvw">{s(`mode.${pv.rate}`)}</div>
-        </div>
-      </div>
+      <SecurityBoard view={board} w={words} locale={view.locale} timeZone={view.timeZone} />
 
-      {!sv.twoFactor ? (
-        <div className="a2-note a2-mt12" data-testid="security-advice-2fa">
-          <ShellIcon name="shield" size={16} />
-          <div>{s('advice2fa')}</div>
-        </div>
-      ) : null}
-
+      <details className="a2-card a2-mt12" data-testid="security-all-options">
+        <summary className="a2-h4">{s('board.moreOptions')}</summary>
+        <p className="a2-xs a2-mute a2-mt6">{s('board.moreOptionsSub')}</p>
       <FieldsCard url={API} screen={screen('signIn')} fields={signIn} texts={texts('signIn')} canEdit={canEdit} testId="security-signin" />
       <AllowlistCard screen={screen('allowlist') as unknown as AllowlistScreen} ip={v.address.ip} breakGlass={v.breakGlass} canEdit={canEdit} w={words} />
       <FieldsCard url={API} screen={screen('protection')} fields={protection} texts={texts('protection')} canEdit={canEdit} testId="security-protection" />
@@ -221,6 +194,7 @@ export default async function SecurityPage() {
         <p className="a2-xs a2-mute a2-mt6">{s('moreSub')}</p>
         <FieldsCard url={API} screen={screen('limits')} fields={limits} texts={texts('limits')} canEdit={canEdit} testId="security-limits" />
         <FieldsCard url={API} screen={screen('bot')} fields={bot} texts={texts('bot')} canEdit={canEdit} testId="security-bot" />
+      </details>
       </details>
     </div>
   );
