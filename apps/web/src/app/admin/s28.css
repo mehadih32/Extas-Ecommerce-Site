@@ -21,3 +21,5 @@
 .s28-bad{color:var(--lm-bad)}
 .s28-good{color:var(--lm-ok)}
 @media (max-width:640px){.s28-tbl{font-size:13px}}
+/* Settings › Roles: each permission group's summary is one tap target, 44 px tall (device gate). */
+.adm2 .s28-sum { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
