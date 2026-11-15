@@ -53,6 +53,9 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { chatOrderDeps, supportDeps } from '@/lib/support-api';
 import { withW5a } from '@/lib/admin-v5-w5a';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { InboxRows } from '@/components/admin/lane-f/InboxRows';
+import '@/components/admin/lane-f/lane-f.css';
 import '../../support.css';
 
 export const dynamic = 'force-dynamic';
@@ -86,6 +89,9 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     );
   const who: sp.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const sd = supportDeps(access.deps);
+  const dl = withLaneF(view).dict;
+  // prototype v5: the list stays on the left while a chat is open (the open chats, the longest wait first)
+  const left = await sp.supportInbox(sd, who, { view: 'open' }).catch(() => ({ rows: [] as sp.InboxRow[] }));
   let th: sp.Thread;
   try {
     th = await sp.supportThread(sd, who, id);
@@ -319,7 +325,12 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <span>{t(d, 'sup.block.note', { at: printedAt(th.blocked.at.toISOString(), view.timeZone), reason: th.blocked.reason ?? '' })}</span>
         </p>
       ) : th.you.reply ? (
+        <>
+        <p className="a2-xs a2-mute" data-testid="support-goes-out">
+          {t(dl, 'lf.ib.goesOut', { channel: kindName(d, th.channel.kind) })}
+        </p>
         <Composer url={`${API}/c/${th.id}/messages`} filesUrl={`${API}/files`} version={th.version} maxChars={inbox.replyMaxChars} files={{ enabled: files.enabled && accept !== '', max: files.maxPerMessage, accept }} products={products} draft={draft} replies={quick?.enabled && quick.active.length ? { list: quick.active.map((r) => ({ id: r.id, shortcut: r.shortcut, body: sp.replyBody(r, view.lang === 'bn' ? 'bn' : 'en') })), url: `${API}/replies`, label: t(d, 'w5a.replies.picker'), placeholder: t(d, 'w5a.replies.pickerPh') } : null} texts={composer} />
+        </>
       ) : (
         <p className="a2-note">
           <ShellIcon name="lock" size={15} />
@@ -474,8 +485,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         right={<span className={`a2-pill ${statusTone(th.status)}`}>{t(d, `sup.status.${th.status}`)}</span>}
       />
       <SectionTabs view={view} current="supportConversation" />
-      <div className="a2-mt12">
-        <DetailGrid labels={{ aria: t(d, 'sup.th.aria'), main: t(d, 'sup.th.main'), side: t(d, 'sup.th.side') }} main={main} side={sideBox} />
+      <div className="lf-ibx a2-mt12" data-testid="support-panes">
+        <aside className="lf-ibx-list" aria-label={t(dl, 'lf.ib.title')} data-testid="support-left">
+          <InboxRows rows={left.rows} d={dl} locale={view.locale} me={who.actor.staffUserId} now={new Date()} activeId={id} />
+        </aside>
+        <div className="lf-ibx-conv">
+          <DetailGrid labels={{ aria: t(d, 'sup.th.aria'), main: t(d, 'sup.th.main'), side: t(d, 'sup.th.side') }} main={main} side={sideBox} />
+        </div>
       </div>
     </div>
   );
