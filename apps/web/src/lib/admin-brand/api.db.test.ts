@@ -11,7 +11,7 @@ import { createVault } from '@extas/vault';
 import { loginHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { brandHandler } from './api';
-import type { BrandCardValue, FooterCardValue, MenuCardValue } from './model';
+import type { BrandCardValue, ContactCardValue, FooterCardValue, MenuCardValue } from './model';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -36,7 +36,12 @@ interface Answer {
   error?: string;
   details?: string[];
   version?: string;
-  cards: { brand: { value: BrandCardValue; version: string }; menu: { value: MenuCardValue; version: string }; footer: { value: FooterCardValue; version: string } };
+  cards: {
+    brand: { value: BrandCardValue; version: string };
+    menu: { value: MenuCardValue; version: string };
+    footer: { value: FooterCardValue; version: string };
+    contact: { value: ContactCardValue; version: string };
+  };
 }
 
 describe.skipIf(!HAS_TEST_DB)('Website › Brand & menus on PostgreSQL (PR 726)', () => {
@@ -162,10 +167,93 @@ describe.skipIf(!HAS_TEST_DB)('Website › Brand & menus on PostgreSQL (PR 726)'
     expect(await deps.resolver.value('social.instagram', at)).toBeNull();
   });
 
+  it('PR 745 · the contact card: numbers, email, address, hours reach their settings; a Bangladesh mobile typed the usual way is kept in + form', async () => {
+    const g = await send('GET');
+    expect(g.a.cards.contact.value).toEqual({ phone: '', whatsapp: '', email: '', address: null, hours: null, ogImage: null });
+    const v = clone(g.a.cards.contact.value);
+    v.phone = '01712-345678';
+    v.whatsapp = '+8801812345678';
+    v.email = 'hello@example.test';
+    v.address = { en: '12 Sample Road, Dhaka', bn: 'নমুনা রোড, ঢাকা' };
+    v.hours = { en: 'Every day, 10am to 8pm', bn: 'প্রতিদিন সকাল 10টা থেকে রাত 8টা' };
+    const ok = await send('PUT', { key: 'contact', value: v, version: g.a.cards.contact.version });
+    expect(ok.status).toBe(200);
+    expect(await deps.resolver.value('contact.phone', at)).toBe('+8801712345678');
+    expect(await deps.resolver.value('contact.whatsapp', at)).toBe('+8801812345678');
+    expect(await deps.resolver.value('contact.email', at)).toBe('hello@example.test');
+    expect(await deps.resolver.value('contact.address', at)).toEqual(v.address);
+    expect(await deps.resolver.value('contact.hours', at)).toEqual(v.hours);
+    expect(ok.a.cards.contact.value.phone).toBe('+8801712345678');
+    // emptied = not set again
+    const cleared = { ...clone(ok.a.cards.contact.value), whatsapp: '', email: '', address: { en: '', bn: '' } };
+    const back = await send('PUT', { key: 'contact', value: cleared, version: ok.a.cards.contact.version });
+    expect(back.status).toBe(200);
+    expect(await deps.resolver.value('contact.whatsapp', at)).toBeNull();
+    expect(await deps.resolver.value('contact.email', at)).toBeNull();
+    expect(await deps.resolver.value('contact.address', at)).toBeNull();
+    expect(await deps.resolver.value('contact.phone', at)).toBe('+8801712345678');
+  });
+
+  it('PR 745 · the contact card refuses a bad number, a bad email, a half-written address and a picture that is not in the library', async () => {
+    const g = await send('GET');
+    const v = clone(g.a.cards.contact.value);
+    expect((await send('PUT', { key: 'contact', value: { ...v, phone: '12345' } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['phone'] });
+    expect((await send('PUT', { key: 'contact', value: { ...v, email: 'not an email' } })).a.details).toEqual(['email']);
+    expect((await send('PUT', { key: 'contact', value: { ...v, address: { en: 'Only English', bn: '' } } })).a.details).toEqual(['address']);
+    const missing = await send('PUT', { key: 'contact', value: { ...v, ogImage: '3f2b8c1e-5d4a-4e8b-9c7d-1a2b3c4d5e6f' } });
+    expect(missing).toMatchObject({ status: 400, a: { error: 'MEDIA_NOT_FOUND', details: ['ogImage'] } });
+    expect(await deps.resolver.value('brand.ogImage', at)).toBeNull();
+    expect((await send('PUT', { key: 'contact', value: v, version: 'old-version' })).status).toBe(409);
+  });
+
+  it('PR 745 · the footer boxes: an order and a hidden box reach `blockOrder`; the approved order is "not set"; the last line stays', async () => {
+    const g = await send('GET');
+    expect(g.a.cards.footer.value.blocks.map((b) => `${b.id}:${b.on}`)).toEqual(['promise:true', 'brand:true', 'columns:true', 'contact:true', 'social:true', 'pay:true', 'legal:true']);
+    expect((await deps.resolver.value('shell.footer', at)).blockOrder).toBeUndefined();
+    const v = clone(g.a.cards.footer.value);
+    const pay = v.blocks.find((b) => b.id === 'pay')!;
+    v.blocks = [pay, ...v.blocks.filter((b) => b.id !== 'pay')];
+    v.blocks.find((b) => b.id === 'social')!.on = false;
+    v.blocks.find((b) => b.id === 'legal')!.on = false; // the last line cannot be hidden
+    const ok = await send('PUT', { key: 'footer', value: v, version: g.a.cards.footer.version });
+    expect(ok.status).toBe(200);
+    expect((await deps.resolver.value('shell.footer', at)).blockOrder).toEqual(['pay', 'promise', 'brand', 'columns', 'contact', 'legal']);
+    expect(ok.a.cards.footer.value.blocks.map((b) => `${b.id}:${b.on}`)).toEqual(['pay:true', 'promise:true', 'brand:true', 'columns:true', 'contact:true', 'legal:true', 'social:false']);
+    // back to the approved order, all on: the setting is not set again
+    const again = clone(ok.a.cards.footer.value);
+    again.blocks = ['promise', 'brand', 'columns', 'contact', 'social', 'pay', 'legal'].map((id) => ({ id, on: true }));
+    const back = await send('PUT', { key: 'footer', value: again, version: ok.a.cards.footer.version });
+    expect(back.status).toBe(200);
+    expect((await deps.resolver.value('shell.footer', at)).blockOrder).toBeUndefined();
+    expect((await send('PUT', { key: 'footer', value: { ...again, blocks: [{ id: 'nothing', on: true }] } })).status).toBe(400);
+  });
+
+  it("PR 745 · a footer link's little picture and the screens it shows on are saved, and \"both\" and \"the shop's own\" take them off again", async () => {
+    const g = await send('GET');
+    const v = clone(g.a.cards.footer.value);
+    const link = v.columns[1]!.links[0]!;
+    link.icon = 'phone';
+    link.dev = 'phone';
+    const ok = await send('PUT', { key: 'footer', value: v, version: g.a.cards.footer.version });
+    expect(ok.status).toBe(200);
+    const saved = (await deps.resolver.value('shell.footer', at)).columns[1]!.links[0]!;
+    expect(saved).toMatchObject({ id: link.id, icon: 'phone', dev: 'phone' });
+    const off = clone(ok.a.cards.footer.value);
+    off.columns[1]!.links[0]!.icon = '';
+    off.columns[1]!.links[0]!.dev = 'both';
+    expect((await send('PUT', { key: 'footer', value: off })).status).toBe(200);
+    const plain = (await deps.resolver.value('shell.footer', at)).columns[1]!.links[0]!;
+    expect(plain.icon).toBeUndefined();
+    expect(plain.dev).toBeUndefined();
+    const wrong = clone(off);
+    wrong.columns[1]!.links[0]!.icon = 'not-an-icon';
+    expect((await send('PUT', { key: 'footer', value: wrong })).status).toBe(400);
+  });
+
   it('audits every save by card, and a no-change save writes nothing', async () => {
     const rows = await t.prisma.auditLog.findMany({ where: { action: { startsWith: 'website.' } } });
     const actions = new Set(rows.map((r) => r.action));
-    expect(actions).toEqual(new Set(['website.brand.save', 'website.menu.save', 'website.footer.save']));
+    expect(actions).toEqual(new Set(['website.brand.save', 'website.menu.save', 'website.footer.save', 'website.contact.save']));
     const g = await send('GET');
     const before = await t.prisma.auditLog.count({ where: { action: { startsWith: 'website.' } } });
     await send('PUT', { key: 'menu', value: g.a.cards.menu.value, version: g.a.cards.menu.version });

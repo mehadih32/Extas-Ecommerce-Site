@@ -299,3 +299,5 @@ export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, typ
 export * from './registry-products-v5';
 // S28 · PR 706 (CN-049) — practice mode switches (registry-practice.ts, version 380).
 export * from './registry-practice';
+// PR 745–749 — link preview picture, tag badges, collection order (registry-customise.ts, version 745).
+export * from './registry-customise';

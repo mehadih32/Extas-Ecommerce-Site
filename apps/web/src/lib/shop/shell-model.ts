@@ -2,7 +2,7 @@
 // footer show, in what order, with what words and addresses. Plain functions over the settings (`shell.*`) and the
 // catalogue's categories, so the rules are unit-tested and the components only draw. The order and the rules are the
 // approved demo's (docs/demo/src/03-layout.js deskNavItems, phoneMenuHTML, storeFooter, bottomNav).
-import type { DesktopNav, PAY_MARKS, ShellAnnounce, ShellFooter, ShellMenu, ShopIcon, ShopLabel } from '@extas/settings';
+import type { DesktopNav, FooterBlock, PAY_MARKS, ShellAnnounce, ShellFooter, ShellMenu, ShopIcon, ShopLabel } from '@extas/settings';
 import type { ShopT, Vars } from './dict';
 import type { PayOffer } from './help-pages';
 import { hrefIn, type ShopLang } from './lang';
@@ -295,7 +295,7 @@ export function footerColumns(f: ShellFooter, cats: readonly ShopCategory[], t: 
         if (l.cat) {
           const cat = cats.find((k) => k.slug === l.cat);
           if (!cat) return []; // a category that is gone or hidden just drops out
-          return [{ id: l.id, href: H(categoryHref(cat.slug)), label: l.label ? t.label(l.label) : categoryName(cat, t.lang), garment: cat.garment }];
+          return [{ id: l.id, href: H(categoryHref(cat.slug)), label: l.label ? t.label(l.label) : categoryName(cat, t.lang), ...(l.icon ? { icon: l.icon } : { garment: cat.garment }) }];
         }
         if (!l.href) return [];
         return [{ id: l.id, href: H(l.href), label: t.label(l.label, vars), icon: l.icon ?? 'right', ...(l.act ? { act: l.act } : {}) }];
@@ -326,7 +326,7 @@ export function footerDeskColumns(f: ShellFooter, cats: readonly ShopCategory[],
           if (l.cat) {
             const cat = cats.find((k) => k.slug === l.cat);
             if (!cat) return [];
-            return [{ id: l.id, href: H(categoryHref(cat.slug)), label: words ? t.label(words, vars) : categoryName(cat, t.lang), garment: cat.garment, ...hl }];
+            return [{ id: l.id, href: H(categoryHref(cat.slug)), label: words ? t.label(words, vars) : categoryName(cat, t.lang), ...(l.icon ? { icon: l.icon } : { garment: cat.garment }), ...hl }];
           }
           if (!l.href) return [];
           return [{ id: l.id, href: H(l.href), label: t.label(words, vars), icon: l.icon ?? 'right', ...(l.act ? { act: l.act } : {}), ...hl }];
@@ -374,6 +374,34 @@ const MARK_OFFERED: Record<PayMarkId, (p: PayOffer) => boolean> = {
 export function payMarks(f: ShellFooter, flags: Flags, offer: PayOffer | null): PayMarkId[] {
   const offered = (id: PayMarkId) => (offer ? MARK_OFFERED[id](offer) : id === 'cod' && flags.cod);
   return f.pay.filter((x) => x.on && requirementsMet(x.requires, flags) && offered(x.id)).map((x) => x.id);
+}
+
+/**
+ * PR 745 — the footer's boxes in the owner's order (`shell.footer.blockOrder`). Not set (as shipped): `ordered` is false,
+ * every box shows, and the footer is drawn exactly as the approved demo draws it. Set: the boxes listed show, in that
+ * order (`order` is a CSS order value, 10 apart); one left out is hidden. The last line (`legal`) is always kept.
+ */
+export interface FooterBlocks {
+  ordered: boolean;
+  shows: (b: FooterBlock) => boolean;
+  order: (b: FooterBlock) => number;
+  /** The desktop footer's main grid holds the brand, columns, contact, social and payment boxes: it sits where the first of them stands. */
+  deskOrder: number | null;
+}
+
+const DESK_BLOCKS: readonly FooterBlock[] = ['brand', 'columns', 'contact', 'social', 'pay'];
+
+export function footerBlocks(f: Pick<ShellFooter, 'blockOrder'>): FooterBlocks {
+  const list = f.blockOrder;
+  if (!list) return { ordered: false, shows: () => true, order: () => 0, deskOrder: null };
+  const at = (b: FooterBlock) => list.indexOf(b);
+  const first = DESK_BLOCKS.map(at).filter((i) => i >= 0);
+  return {
+    ordered: true,
+    shows: (b) => b === 'legal' || at(b) >= 0,
+    order: (b) => (at(b) < 0 ? 900 : (at(b) + 1) * 10),
+    deskOrder: first.length ? (Math.min(...first) + 1) * 10 : null,
+  };
 }
 
 /** "Get new drops first" shows only when it is on and the list behind it keeps the number (CN-017, SIGNUP_LIST_LIVE). */

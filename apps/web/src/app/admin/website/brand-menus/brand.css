@@ -52,3 +52,9 @@ label.bm-btn:focus-within { outline: 2px solid var(--lm-ac); outline-offset: 2px
 .bm-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
 .bm-dev-phone .bm-cols { grid-template-columns: minmax(0, 1fr); }
 .bm-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+/* PR 745 / 746 — Contact & sharing preview, footer boxes and link options. */
+.bm-share { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--lm-ln); border-radius: 12px; background: var(--lm-sf); overflow: hidden; min-width: 0; }
+.bm-share-img { width: 100%; height: auto; max-height: 180px; object-fit: cover; display: block; }
+.bm-share-none { padding: 24px 12px; text-align: center; background: var(--lm-sf2); }
+.bm-share-t { padding: 0 12px 10px; font-weight: 600; overflow-wrap: anywhere; }
+.bm-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px; }

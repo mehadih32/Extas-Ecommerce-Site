@@ -3,7 +3,7 @@
 // ships with) can be hidden or reworded but never taken out, a custom row the owner added can be taken out of the
 // list (the audit row keeps what it was), and everything the card does not show is kept as it was stored.
 import { announceSchema, footerSchema, headerSchema, menuSchema, shopPathSchema, type ShellAnnounce, type ShellFooter, type ShellHeader, type ShellMenu } from '@extas/settings';
-import { collapseLabel, type Pair, type Words } from './model';
+import { blockOrderOf, collapseLabel, type Pair, type Words } from './model';
 
 export type Merge<T> = { ok: true; value: T } | { ok: false; details: string[] };
 const bad = (...details: string[]): { ok: false; details: string[] } => ({ ok: false, details });
@@ -27,6 +27,22 @@ function pathOrNone(v: unknown): string | null | undefined {
   if (typeof v !== 'string') return undefined;
   const s = v.trim();
   return shopPathSchema.safeParse(s).success ? s : undefined;
+}
+
+type FooterLink = ShellFooter['columns'][number]['links'][number];
+
+/** PR 745: a link's little picture and the screens it shows on, from the wire ('' and 'both' mean "as the shop has it"); undefined = malformed. */
+function linkOptions(link: FooterLink, raw: Obj): boolean {
+  const { icon, dev } = raw;
+  if (icon !== undefined && icon !== null && typeof icon !== 'string') return false;
+  if (dev !== undefined && dev !== 'both' && dev !== 'desk' && dev !== 'phone') return false;
+  if (typeof icon === 'string') {
+    if (icon) link.icon = icon as FooterLink['icon'];
+    else delete link.icon;
+  }
+  if (dev === 'desk' || dev === 'phone') link.dev = dev;
+  else if (dev === 'both') delete link.dev;
+  return true;
 }
 
 export interface MenuStored {
@@ -199,7 +215,8 @@ export function mergeFooter(cur: ShellFooter, defaults: ShellFooter, sent: unkno
         continue;
       }
       if (base) {
-        const link = { ...base, on: rawLink.on } as ShellFooter['columns'][number]['links'][number];
+        const link = { ...base, on: rawLink.on } as FooterLink;
+        if (!linkOptions(link, rawLink)) details.push(`columns.${rawCol.id}.${rawLink.id}.icon`);
         if (label && base.label) link.label = collapseLabel(label, base.label, words);
         if (!base.cat && !base.act) {
           const href = pathOrNone(rawLink.href);
@@ -214,7 +231,9 @@ export function mergeFooter(cur: ShellFooter, defaults: ShellFooter, sent: unkno
           details.push(`columns.${rawCol.id}.${rawLink.id}`);
           continue;
         }
-        outLinks.push({ id: rawLink.id, href, label: { en: label.en.trim(), bn: label.bn.trim() }, on: rawLink.on });
+        const fresh: FooterLink = { id: rawLink.id, href, label: { en: label.en.trim(), bn: label.bn.trim() }, on: rawLink.on };
+        if (!linkOptions(fresh, rawLink)) details.push(`columns.${rawCol.id}.${rawLink.id}.icon`);
+        outLinks.push(fresh);
       }
     }
     outCols.push({ ...(baseCol ?? {}), id: rawCol.id, title: collapseLabel(title, baseCol?.title, words) ?? { en: '', bn: '' }, on: rawCol.on, links: outLinks } as ShellFooter['columns'][number]);
@@ -249,8 +268,18 @@ export function mergeFooter(cur: ShellFooter, defaults: ShellFooter, sent: unkno
   }
   if (details.length) return bad(...details);
 
+  // PR 745: the boxes' order (a card without it keeps the order as it is stored)
+  let blockOrder: ShellFooter['blockOrder'] = cur.blockOrder;
+  if (sent.blocks !== undefined) {
+    const rows = arr(sent.blocks);
+    if (!rows || rows.some((r) => !isObj(r) || typeof r.id !== 'string' || typeof r.on !== 'boolean')) return bad('blocks');
+    blockOrder = blockOrderOf(rows as { id: string; on: boolean }[]);
+  }
+  const { blockOrder: _old, ...curRest } = cur;
+  void _old;
   const footer = footerSchema.safeParse({
-    ...cur,
+    ...curRest,
+    ...(blockOrder ? { blockOrder } : {}),
     promise: { on: sent.promiseOn, items: outPromise },
     join: { ...cur.join, on: sent.joinOn },
     columns: outCols,
