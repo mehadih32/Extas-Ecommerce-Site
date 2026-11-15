@@ -1,16 +1,20 @@
-// PR 727 — the section's tab bar is the same on every page of the section. The bar is drawn by each page (`SectionTabs`,
-// ShellParts.tsx, or `SystemTabs` in AdminFrame.tsx), so the owner met pages that drew none: Settings › People, Roles …,
-// Marketing › Overview, Support › Saved replies, … — clicking one made the section's other tabs vanish. This pure test
-// (menu table + page sources, no database, no browser) fails when
-//   1. a page of the menu draws no tab bar (itself or in a component/helper it imports; the three Courier 360 shortcuts
-//      only redirect, see REDIRECT_ONLY);
-//   2. a page hands the head of its page no place (`<PageHead place={null}>`: no guide button, no crumb);
-//   3. the key a page gives its tab bar leads to another tab than its own address does: the page's bar and the sidebar
-//      would mark different tabs, or another section's bar would show (`locateKey(key)` against `locate(path)`).
-// tools/nav-audit.mjs checks the same on the running app (every page at 1366 and 390 px, and by clicking).
+// PR 727, PR 762 — the section's tab bar is the same on every page of the section, and it sits in the same place.
+// PR 727: each page drew its own bar (`SectionTabs`, `SystemTabs`), so some pages drew none. PR 762: the SHELL draws the
+// bar once (components/admin/shell/ShellTabBar.tsx, at the top of <main> in AdminShell.tsx, above the page), from the
+// address alone; `SectionTabs` / `SystemTabs` draw nothing any more (the ~245 calls stay, harmless). This pure test (menu
+// table + sources + messages, no database, no browser) fails when
+//   1. the shell does not draw the bar above the page, or a page helper draws one again (the bar's place would then follow
+//      the page's own heading above it);
+//   2. a page of the menu has no place for the shell to draw its bar from (`locate(address)` is not its own section and
+//      tab), or a tab or page of the menu has no label in the shell's words (the bar would show a key);
+//   3. a page hands the head of its page no place (`<PageHead place={null}>`: no guide button);
+//   4. the key a page gives its tab bar leads to another tab than its own address does;
+// tools/nav-audit.mjs checks the same on the running app (every page at 1366 and 390 px, by clicking, and that the bar's
+// Y is the same on every page of a section).
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { adminDicts } from '../admin-i18n';
 import { locate, locateKey, SHELL_SECTIONS } from './sections';
 
 const SRC = resolve(__dirname, '../..');
@@ -33,20 +37,6 @@ function resolveImport(from: string, spec: string): string | null {
   return null;
 }
 
-/** Whether a source file (or what it imports from the admin's own code, two levels down) draws the section's tab bar. */
-function drawsTabs(path: string, depth = 1, seen = new Set<string>()): boolean {
-  if (seen.has(path) || /(AdminFrame|ShellParts)\.tsx$/.test(path)) return false;
-  seen.add(path);
-  const src = file(path);
-  if (/<(SectionTabs|SystemTabs)\b/.test(src)) return true;
-  if (depth === 0) return false;
-  for (const m of src.matchAll(/from ['"]([^'"]+)['"]/g)) {
-    const r = resolveImport(path, m[1]!);
-    if (r && /\/(components\/admin|lib\/admin|app\/admin)[^/]*\//.test(r) && drawsTabs(r, depth - 1, seen)) return true;
-  }
-  return false;
-}
-
 function pagesUnder(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
     const p = join(dir, n);
@@ -67,10 +57,48 @@ function tabKeys(src: string): string[] {
   return [...out];
 }
 
-describe('the section tab bar is on every page of the menu (PR 727)', () => {
-  it('every page of the menu draws it', () => {
-    const missing = registry.filter((r) => !REDIRECT_ONLY.includes(r.href) && !drawsTabs(join(APP, r.href.replace(/^\//, ''), 'page.tsx'))).map((r) => `${r.section} › ${r.tab}: ${r.href}`);
-    expect(missing, 'add <SectionTabs view={view} current={KEY} /> under the page head (see settings/people/page.tsx)').toEqual([]);
+const get = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((a, k) => (a && typeof a === 'object' ? (a as Record<string, unknown>)[k] : undefined), o);
+
+describe('the section tab bar is drawn once by the shell, in the same place on every page (PR 727, PR 762)', () => {
+  it('the shell draws it at the top of <main>, above the page', () => {
+    const shell = file(join(SRC, 'components/admin/shell/AdminShell.tsx'));
+    const main = /<main [^>]*id="main"[^>]*>([\s\S]*?)<\/main>/.exec(shell)?.[1] ?? '';
+    expect(main, 'the shell must mount <ShellTabBar …/> inside <main>').toContain('<ShellTabBar');
+    expect(main.indexOf('<ShellTabBar'), 'the bar comes before {children}').toBeLessThan(main.indexOf('{children}'));
+    expect(file(join(SRC, 'app/admin/layout.tsx')), "the shell's dictionary carries the page names (nav.*)").toContain('nav: view.dict.nav');
+  });
+
+  it('no page helper draws a bar of its own any more (SectionTabs and SystemTabs draw nothing)', () => {
+    expect(file(join(SRC, 'components/admin/shell/ShellParts.tsx'))).toMatch(/export function SectionTabs\([^)]*\) \{\s*return null;\s*\}/);
+    expect(file(join(SRC, 'components/admin/AdminFrame.tsx'))).toContain('return <SectionTabs view={view} current={current} />');
+    const own = pagesUnder(join(APP, 'admin')).filter((p) => /className="a2-tabs"|data-testid="a2-tabs"/.test(file(p)));
+    expect(own.map((p) => p.slice(APP.length))).toEqual([]);
+  });
+
+  it("every page of the menu has its own section and tab as its place (the shell's bar is made from it)", () => {
+    const bad = registry
+      .filter((r) => !REDIRECT_ONLY.includes(r.href))
+      .filter((r) => {
+        const p = locate(r.href);
+        return !p || p.section.id !== r.section || p.tab?.id !== r.tab || p.page?.href !== r.href;
+      })
+      .map((r) => `${r.section} › ${r.tab}: ${r.href}`);
+    expect(bad).toEqual([]);
+  });
+
+  it("every tab and page of the menu has its words in both languages (the bar would show a key)", () => {
+    const bad: string[] = [];
+    for (const lang of ['en', 'bn'] as const) {
+      const d = adminDicts[lang];
+      for (const s of SHELL_SECTIONS.filter((x) => !x.folded)) {
+        for (const tab of s.tabs) {
+          if (typeof get(d, `shell.tab.${s.id}.${tab.id}`) !== 'string') bad.push(`${lang}: shell.tab.${s.id}.${tab.id}`);
+          // the chips (a tab with more than one page) are named by `nav.<first key>`
+          if (tab.pages.length > 1) for (const p of tab.pages) if (typeof get(d, `nav.${p.keys[0]}`) !== 'string') bad.push(`${lang}: nav.${p.keys[0]}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
   });
 
   it('the redirect-only pages are what the list says (and nothing else hides there)', () => {
