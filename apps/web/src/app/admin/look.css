@@ -644,9 +644,18 @@
 .adm2 .a3-latest{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;min-height:44px;padding:8px 0;border-top:1px solid var(--lm-ln);color:inherit;text-decoration:none}
 .adm2 .a3-latest:first-child{border-top:0}
 .adm2 .a3-latest:hover .a3-lt-n b{color:var(--lm-ac)}
-.adm2 .a3-lt-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .a3-lt-n{min-width:0;overflow-wrap:anywhere}
+.adm2 .a3-latest-w,.adm2 .a3-latest{min-width:0;max-width:100%}
 .adm2 .a3-lt-ago{min-width:70px;text-align:right}
 .adm2 .a3-latest-w{margin-top:20px}
 @media (max-width:760px){.adm2 .a3-latest{grid-template-columns:minmax(0,1fr) auto}.adm2 .a3-latest .a2-pill,.adm2 .a3-lt-ago{display:none}}
 .adm2 .a3-codstrip{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--warnbg);color:inherit;font-size:13px;margin-top:20px}
 .adm2 .a3-codstrip span{flex:1 1 220px;min-width:0}
+
+/* gate: a short chip and a link that sits alone in a line are a tap tall */
+.adm2 [data-testid^="camp-chips-"] { min-width: var(--lm-tap); }
+.adm2 a.cr-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
+
+/* gate (batch 2026-11-16-1): the default Home never makes the page wider than a 320-360 px phone (the no-wrap captions wrap there; anything left over is clipped, not scrolled) */
+.adm2 .a3-dash{max-width:100%;overflow-x:clip}
+@media (max-width:599px){.adm2 .a3-dash .a3-cap{white-space:normal}.adm2 .a3-dash .a3-card{min-width:0;max-width:100%}}

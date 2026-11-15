@@ -76,7 +76,7 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
   const starter = { en: (en.pw as unknown as { starter: Record<string, StarterSec[]> }).starter, bn: (bn.pw as unknown as { starter: Record<string, StarterSec[]> }).starter };
   const [licence, dbid, address] = await Promise.all(['legal.tradeLicence', 'legal.dbid', 'contact.address'].map(async (k) => {
     try {
-      const v = await access.deps.resolver.value(k as never, { storeId: MOTHER_STORE_ID });
+      const v: unknown = await access.deps.resolver.value(k as never, { storeId: MOTHER_STORE_ID });
       return typeof v === 'string' && v.trim() ? v : null;
     } catch {
       return null;
@@ -130,7 +130,7 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
     <div className="a2-z" data-testid="pol-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'pw.title')} sub={t(d, 'pw.sub')} right={<PolicyHeadButtons rulesLabel={t(d, 'pw.openRules')} publishLabel={t(d, 'pw.publishHead')} canEdit={canEdit} />} />
       <SectionTabs view={view} current={KEY} />
-      <PoliciesTab glance={glance} rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} starter={starter} legal={{ licence, dbid, address }} />
+      <PoliciesTab glance={glance} rows={v.rows} w={words} names={names} initial={asked} canEdit={canEdit} locale={view.locale} timeZone={view.timeZone} shopLang={view.lang === 'bn' ? 'bn' : 'en'} starter={starter} legal={{ licence: licence ?? null, dbid: dbid ?? null, address: address ?? null }} />
     </div>
   );
 }

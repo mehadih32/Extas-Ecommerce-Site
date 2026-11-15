@@ -29,7 +29,7 @@ export interface SetPart {
 }
 
 /** PR 773: one colour of a set; `ok` false = a piece of this colour is sold out (the prototype's struck-through chip). */
-export interface SetColour {
+export interface SetsListColour {
   id: string;
   key: string;
   nameEn: string;
@@ -61,7 +61,7 @@ export interface SetRow {
   blocking: string[];
   updatedAt: string;
   /** PR 773 (prototype v5 parity): the colours the set sells in, the set's sales in the last 30 days, and the buying cost of one set. */
-  colours: SetColour[];
+  colours: SetsListColour[];
   sold30: number;
   sales30Minor: number;
   costMinor: number | null;
@@ -103,7 +103,7 @@ export function sizesOf(item: Pick<ComboItemView, 'fixedVariantId' | 'colourIds'
  * PR 773: the colours a set sells in. With "same colour" the colours every piece has; otherwise the first piece's colours (the customer picks the
  * others). A colour is `ok` while every piece it needs has a size left in it.
  */
-export function coloursOf(items: readonly Pick<ComboItemView, 'productId' | 'colourIds'>[], sameColour: boolean, facts: Map<string, ProductFact>): SetColour[] {
+export function coloursOf(items: readonly Pick<ComboItemView, 'productId' | 'colourIds'>[], sameColour: boolean, facts: Map<string, ProductFact>): SetsListColour[] {
   const pieces = items.map((i) => (i.productId ? facts.get(i.productId) : undefined)).filter((p): p is ProductFact => !!p);
   if (!pieces.length) return [];
   const first = pieces[0]!;

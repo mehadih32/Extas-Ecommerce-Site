@@ -122,7 +122,7 @@ export default async function AiTrainingPage() {
   const at = (x: Date) => dateTime(x.toISOString(), view.locale, view.timeZone);
   // "3 d ago" next to each version's date (prototype v5 Version history).
   const agoText = (x: Date) => {
-    const min = Math.max(0, Math.floor((Date.now() - x.getTime()) / 60_000));
+    const min = Math.max(0, Math.floor((new Date().getTime() - x.getTime()) / 60_000));
     if (min < 1) return c("ver.agoNow");
     if (min < 60) return c("ver.agoMin", { n: min });
     if (min < 48 * 60) return c("ver.agoH", { n: Math.floor(min / 60) });

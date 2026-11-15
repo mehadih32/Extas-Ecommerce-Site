@@ -41,12 +41,12 @@ export function SettlementCard({ value, canEdit, texts: x }: { value: SettleValu
     const a = await call('PUT', '/api/admin/settings/settlement', body);
     setBusy(false);
     if (a.data.ok) {
-      showToast({ text: x.saved, tone: 'ok' });
+      showToast({ text: x.saved ?? '', tone: 'ok' });
       router.refresh();
       return;
     }
     const code = typeof a.data.error === 'string' ? a.data.error : '';
-    showToast({ text: x[code] ?? x.failed, tone: 'bad' });
+    showToast({ text: x[code] ?? x.failed ?? '', tone: 'bad' });
   };
 
   return (

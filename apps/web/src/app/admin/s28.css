@@ -23,3 +23,7 @@
 @media (max-width:640px){.s28-tbl{font-size:13px}}
 /* Settings › Roles: each permission group's summary is one tap target, 44 px tall (device gate). */
 .adm2 .s28-sum { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+
+/* gate: the activity table scrolls inside its own box instead of widening the page */
+[data-testid="al-rows"]{overflow-x:auto;max-width:100%;position:relative}
+[data-testid="activity-page"]{max-width:100%;overflow-x:clip}

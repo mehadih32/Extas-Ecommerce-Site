@@ -276,7 +276,7 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
                     </td>
                     <td data-l={wc('held.moved')}>{r.movedAt ? printedAt(r.movedAt, view.timeZone) : wc('held.none')}</td>
                     <td className="r" data-l={wc('held.days')}>
-                      <span className="a2-num">{r.movedAt ? n(Math.max(0, Math.floor((Date.now() - new Date(r.movedAt).getTime()) / 86_400_000))) : '—'}</span>
+                      <span className="a2-num">{r.movedAt ? n(Math.max(0, Math.floor((new Date().getTime() - new Date(r.movedAt).getTime()) / 86_400_000))) : '—'}</span>
                     </td>
                     <td className="r" data-l={wc('held.cod')}>
                       <span className="a2-num">{r.codMinor ? m(r.codMinor, currency) : t(d, 'ful.handover.paid')}</span>

@@ -38,6 +38,10 @@ export const ALLOWED: Record<string, string> = {
   'apps/web/src/components/admin/orders/OrderListPage.tsx': "the list header's 'N orders · ৳value' (the prototype's ordered value of the orders that count), never shown as a sales figure",
   'apps/web/src/lib/marketing/audiences.ts': "a lookalike seed's per-person weight for the ad platforms from that person's own delivered orders (PR 263), never shown as a sales figure",
   'packages/rules/src/offers-service.ts': "an offer's own results tally (orders, sales and discount for the orders that used that offer's code; PR 677), a per-code view of one offer, not the shop's sales figure",
+  'apps/web/src/app/admin/reports/orders/page.tsx': "the Orders report's day, channel and weekday rows add up the shown orders' own value for the prototype's table (PR 796 and 798), a per-row view of the period's orders",
+  'apps/web/src/lib/reports-v5/marketing.ts': "the Marketing report's ad-sales line by day (PR 855) sums the delivered orders that carry an ad channel per day, a per-campaign view",
+  'packages/catalogue/src/product-sales.ts': "the product page's 'Sales 30 days' card (PR 831) sums that one product's own order lines, not the shop's sales figure",
+  'packages/combos/src/sets-list.ts': "a set's own sold value on the Sets page (PR 773) from that set's order lines, not the shop's sales figure",
   'packages/shipping/src/couriers-v5.ts': "the COD amount still on the road with each courier (the courier scorecard, PR 670), money owed to the shop, not a sales figure",
 };
 

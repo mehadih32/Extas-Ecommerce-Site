@@ -446,6 +446,7 @@ export function DocAddDialog({
   const uid = useId();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mounted flag so the portal draws only in the browser
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!open) return;

@@ -94,7 +94,7 @@ export default async function StorePage() {
 
   // the trade licence's last day: a reminder when it is under 60 days away (or gone)
   const expiry = String(v.cards.legal.value.tlExpiry ?? '');
-  const left = expiry ? Math.round((new Date(`${expiry}T00:00:00Z`).getTime() - Date.now()) / 864e5) : null;
+  const left = expiry ? Math.round((new Date(`${expiry}T00:00:00Z`).getTime() - new Date().getTime()) / 864e5) : null;
   const dayText = expiry ? new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${expiry}T00:00:00Z`)) : '';
 
   // the logo slots: what is set, and where it is replaced (the upload lives in Website › Brand & menus)
