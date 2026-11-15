@@ -166,7 +166,7 @@
       "fAllCategories": "All categories",
       "fArea": "Area",
       "fAllAreas": "All areas",
-      "filterNote": "Filter on: the figures at the top and the tables By category, By area and By product use only the orders you picked, with ads and office costs shared by sales. The week chart, the channels and By style stay for the whole shop."
+      "filterNote": "Filter on: the figures at the top, the week chart and the tables By category, By area, By channel, By style and By product use only the orders you picked, with ads and office costs shared by sales."
     },
     "products": {
       "metaTitle": "Product report",

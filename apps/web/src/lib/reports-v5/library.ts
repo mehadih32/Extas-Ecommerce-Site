@@ -4,13 +4,26 @@
 import type { PermissionKey } from "@extas/auth";
 import type { AdminDeps } from "../admin-auth";
 import { incompleteOpenCount } from "../admin-orders/incomplete";
-import { areaStats, loadGeoOrders, topProducts } from "./areas";
+import {
+  areaStats,
+  isDel,
+  isRet,
+  loadGeoOrders,
+  topProducts,
+  type GeoOrder,
+} from "./areas";
 import { customerFacts, loadCustomers, whoOrdered } from "./customers";
 import { loadDelivery } from "./delivery";
 import { nameAt } from "./geo";
 import { loadMarketing, loadProfit, loadRestock, type Base } from "./load";
 import { change } from "./model";
 import { practiceScope } from "./practice";
+import {
+  filteredFigures,
+  filterOrders,
+  salesShare,
+  type WholeFigures,
+} from "./profit";
 import { loadSaleOrders, saleFacts } from "./sales";
 import { avg, loadTeam } from "./team";
 
@@ -370,8 +383,129 @@ const spanOf = (
   };
 };
 
+// PR 863 (prototype v5 Reports › Report library): the channel, category and area filters (the prototype's `fo` and `lineOk`). The cards
+// that come from orders follow them (sales, profit, average order, the top product, the best and worst area, returns); the cards that
+// come from other places (stock, customers, ads, the team, couriers, open checkouts) stay for the whole shop and the page says so.
+export interface LibFilter {
+  /** An order source ('all' for none). */
+  ch: string;
+  /** A category id ('all' for none). */
+  cat: string;
+  /** A division name ('all' for none). */
+  div: string;
+}
+export const LIB_FILTER_OFF: LibFilter = { ch: "all", cat: "all", div: "all" };
+export const libFilterOn = (f: LibFilter) =>
+  f.ch !== "all" || f.cat !== "all" || f.div !== "all";
+
+/** The orders a filter keeps, their lines cut to the category when one is picked (an order keeps only the lines it asks for). */
+export function libOrders(
+  orders: readonly GeoOrder[],
+  f: LibFilter,
+  catIds: ReadonlySet<string> | null,
+): GeoOrder[] {
+  return filterOrders(
+    orders.filter((o) => f.ch === "all" || o.source === f.ch),
+    { cat: f.cat, div: f.div },
+    catIds,
+  ).map((o) =>
+    f.cat === "all" || !catIds
+      ? o
+      : {
+          ...o,
+          lines: o.lines.filter((l) => !!l.catId && catIds.has(l.catId)),
+        },
+  );
+}
+
+const sumBy = <T>(a: readonly T[], g: (x: T) => number) =>
+  a.reduce((n, x) => n + g(x), 0);
+const pcOf = (x: number, y: number) => (y ? (x / y) * 100 : 0); // hardcode-ok: a share in percent
+
+/** One span's order figures from the kept orders (live orders; a category filter counts only its lines). */
+export function spanFromOrders(
+  kept: readonly GeoOrder[],
+  all: readonly GeoOrder[],
+  whole: WholeFigures,
+  cutLines: boolean,
+): Span {
+  const live = kept.filter((o) => o.status !== "CANCELLED");
+  const orderValue = sumBy(live, (o) =>
+    cutLines ? sumBy(o.lines, (l) => l.valueMinor) : o.totalMinor,
+  );
+  const pieces = sumBy(live, (o) => sumBy(o.lines, (l) => l.qty));
+  const fig = filteredFigures(kept, all, whole);
+  const share = salesShare(kept, all);
+  const sales = whole.sales * share;
+  return {
+    orders: live.length,
+    pieces,
+    orderValue,
+    aov: live.length ? Math.round(orderValue / live.length) : 0,
+    netProfit: fig.net,
+    margin:
+      fig.net !== null && sales > 0
+        ? Math.round((fig.net / sales) * 1000) / 10 // hardcode-ok: a share in percent, one decimal
+        : null,
+  };
+}
+
+/** The library's inputs with the order-based cards following the filter; everything else is left as it was. */
+export function filterLibInput(
+  base: LibInput,
+  geo: readonly GeoOrder[],
+  geoWas: readonly GeoOrder[],
+  f: LibFilter,
+  catIds: ReadonlySet<string> | null,
+  whole: { cur: WholeFigures; prev: WholeFigures },
+): LibInput {
+  if (!libFilterOn(f)) return base;
+  const cut = f.cat !== "all" && !!catIds;
+  const now = libOrders(geo, f, catIds);
+  const was = libOrders(geoWas, f, catIds);
+  const top = topProducts(now, 1)[0];
+  const topWas = top
+    ? (topProducts(was, 5000).find((x) => x.pid === top.pid)?.qty ?? 0)
+    : 0;
+  const districts = areaStats(now, (o) => nameAt(o.place, "district"));
+  const liveTotal = sumBy(districts, (x) => x.v);
+  const topD = [...districts].sort((x, y) => y.v - x.v)[0];
+  const badD = districts
+    .filter((x) => x.d + x.rt >= AREA_FLOOR)
+    .sort((x, y) => y.rr - x.rr)[0];
+  const rate = (os: readonly GeoOrder[]) => {
+    const d = os.filter(isDel).length;
+    const r = os.filter(isRet).length;
+    return { n: r, fin: d + r, rate: pcOf(r, d + r) };
+  };
+  const rn = rate(now);
+  const rw = rate(was);
+  return {
+    ...base,
+    cur: spanFromOrders(now, geo, whole.cur, cut),
+    prev: spanFromOrders(was, geoWas, whole.prev, cut),
+    top: top
+      ? { name: top.name, qty: top.qty, valueMinor: top.value, was: topWas }
+      : null,
+    returns: { rate: rn.rate, was: rw.fin ? rw.rate : null, n: rn.n },
+    topArea:
+      topD && topD.v > 0
+        ? { name: topD.key, valueMinor: topD.v, share: pcOf(topD.v, liveTotal) }
+        : null,
+    badArea:
+      badD && badD.rt > 0
+        ? { name: badD.key, rate: badD.rr, n: badD.d + badD.rt }
+        : null,
+  };
+}
+
 /** Every figure the cards need, for the page's period and the span before it. */
-export async function loadLibraryInput(a: Access, b: Base): Promise<LibInput> {
+export async function loadLibraryInput(
+  a: Access,
+  b: Base,
+  filter: LibFilter = LIB_FILTER_OFF,
+  catIds: ReadonlySet<string> | null = null,
+): Promise<LibInput> {
   const d = a.deps;
   const scope = await practiceScope(d);
   const { from, to } = b.period.q;
@@ -451,7 +585,7 @@ export async function loadLibraryInput(a: Access, b: Base): Promise<LibInput> {
   } catch {
     incomplete = null;
   }
-  return {
+  const base: LibInput = {
     cur: spanOf(rows, profit.now.netProfitMinor, profit.now.salesMinor),
     prev: spanOf(rowsWas, profit.was.netProfitMinor, profit.was.salesMinor),
     bestChannel: bestCh
@@ -501,4 +635,15 @@ export async function loadLibraryInput(a: Access, b: Base): Promise<LibInput> {
       : null,
     incomplete,
   };
+  const wholeOf = (x: typeof profit.now) => ({
+    sales: x.parts.sales,
+    contribution: x.contributionMinor,
+    net: x.netProfitMinor,
+    ads: x.adsMinor,
+    returnLoss: x.parts.returnLoss,
+  });
+  return filterLibInput(base, geo, geoWas, filter, catIds, {
+    cur: wholeOf(profit.now),
+    prev: wholeOf(profit.was),
+  });
 }

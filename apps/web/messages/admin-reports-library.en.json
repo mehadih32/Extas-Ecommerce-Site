@@ -219,6 +219,13 @@
     "reviewLine": "net profit {profit} on {sales} delivered sales. What went well, what went badly and 3 things to do.",
     "reviewLineUnknown": "net profit not known yet (the ad spend is missing), on {sales} delivered sales. What went well, what went badly and 3 things to do.",
     "reviewRead": "Read the review",
-    "footerOpen": "Open Finance"
+    "footerOpen": "Open Finance",
+    "fChannel": "Channel",
+    "fAllChannels": "All channels",
+    "fCategory": "Category",
+    "fAllCategories": "All categories",
+    "fArea": "Area",
+    "fAllAreas": "All areas",
+    "filterNote": "Filter on: sales, profit, average order, top product, best and worst area and returns use only the orders you picked, with ads and office costs shared by sales. Stock, customers, ads, the team, couriers and open checkouts stay for the whole shop."
   }
 }
