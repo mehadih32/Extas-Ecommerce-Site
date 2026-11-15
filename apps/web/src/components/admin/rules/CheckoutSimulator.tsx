@@ -39,6 +39,7 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
   useEffect(() => {
     const cartMinor = moneyFromInput(cart, env.ctx.currency);
     const n = Number(pieces);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears the answer when the form is not complete
     if (!band || cartMinor === null || Number.isNaN(cartMinor) || cartMinor < 1 || !Number.isInteger(n) || n < 1) return setOut(null);
     const mine = ++seq.current;
     const h = setTimeout(() => {

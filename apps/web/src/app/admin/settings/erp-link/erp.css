@@ -9,3 +9,10 @@
 .erp-plain a { min-height: 44px; display: inline-flex; align-items: center; }
 @media (max-width: 960px) { .erp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .erp-g3 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) { .erp-kpis { grid-template-columns: minmax(0, 1fr); } }
+
+/* gate: inline links in this page are at least a tap tall (PR 851) */
+[data-testid="erp-link-page"] a.a2-xs { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
+
+/* gate: the safety card never pushes the page wider on a tablet */
+[data-testid="erp-link-page"]{max-width:100%;overflow-x:clip}
+[data-testid="erp-link-page"] .erp-g3 > *{min-width:0;max-width:100%}

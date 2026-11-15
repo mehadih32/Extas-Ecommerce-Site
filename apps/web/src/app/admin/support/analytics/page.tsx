@@ -138,7 +138,7 @@ export default async function SupportAnalyticsPage({ searchParams }: { searchPar
       <KpiGrid cols={5}>
         <Kpi label={t(d, 'lf.st.kFirst')} value={mins(tot.firstAverage)} testId="st-first" />
         <Kpi label={t(d, 'lf.st.kFast')} value={hourly.fastPct === null ? '—' : pct(hourly.fastPct / 100, view.locale)} testId="st-fast" />
-        <Kpi label={t(d, 'lf.st.kOpen')} value={n(openBox?.counts.open ?? 0)} sub={<Link href="/admin/support">{t(d, 'lf.st.kOpenGo')} →</Link>} testId="st-open" />
+        <Kpi label={t(d, 'lf.st.kOpen')} value={n(openBox?.counts.open ?? 0)} sub={<Link href="/admin/support" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 44 }}>{t(d, 'lf.st.kOpenGo')} →</Link>} testId="st-open" />
         <Kpi label={t(d, 'lf.st.kLongest')} value={mins(longestMin)} testId="st-longest" />
         <Kpi label={t(d, 'lf.st.kDone')} value={n(hourly.doneToday)} testId="st-done" />
       </KpiGrid>

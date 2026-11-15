@@ -87,7 +87,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const [notes, setNotes] = useState<ShellNote[] | null>(null);
   const [seen, setSeen] = useState<string | null>(model.notesSeenAt ?? null);
   const [pal, setPal] = useState(false);
-  const [menu, setMenu] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [todoAt, setTodoAt] = useState<number | null>(null);
   const [later, setLater] = useState<Record<string, number>>({});
   const [guide, setGuide] = useState<GuideRequest | null>(null);
@@ -608,19 +608,19 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             </Link>
           );
         })}
-        <button type="button" className="lm-bar-menu" aria-haspopup="dialog" aria-expanded={menu} data-testid="lm-bar-menu" onClick={() => setMenu(true)}>
+        <button type="button" className="lm-bar-menu" aria-haspopup="dialog" aria-expanded={moreOpen} data-testid="lm-bar-menu" onClick={() => setMoreOpen(true)}>
           <ShellIcon name="menu" size={20} />
           <span>{tt('nav.more')}</span>
         </button>
       </nav>
-      {menu ? (
-        <Drawer title={tt('nav.more')} closeLabel={tt("nav.close")} onClose={() => setMenu(false)} testId="lm-bar-sheet">
+      {moreOpen ? (
+        <Drawer title={tt('nav.more')} closeLabel={tt("nav.close")} onClose={() => setMoreOpen(false)} testId="lm-bar-sheet">
           <ul className="lm-bar-list">
             {all.map((s) => {
               const n = badge(s);
               return (
                 <li key={s.id}>
-                  <Link href={sectionHome(s, viewer)} className={active === s.id ? 'on' : ''} onClick={() => setMenu(false)}>
+                  <Link href={sectionHome(s, viewer)} className={active === s.id ? 'on' : ''} onClick={() => setMoreOpen(false)}>
                     <ShellIcon name={s.icon} size={18} />
                     <span>{label(s)}</span>
                     {n ? <i className="lm-bd">{n > 99 ? '99+' : n}</i> : null}

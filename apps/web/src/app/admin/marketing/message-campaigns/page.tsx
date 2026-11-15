@@ -68,7 +68,7 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
     : [];
   const [journeys, atRisk] = await Promise.all([
     cu.journeysScreen(customersDeps(access.deps), who).catch(() => null),
-    access.deps.db.customer.count({ where: { storeId: MOTHER_STORE_ID, deliveredCount: { gte: 1 }, lastOrderAt: { lt: new Date(Date.now() - RISK_DAYS * 86_400_000) } } }), // hardcode-ok: ms in a day
+    access.deps.db.customer.count({ where: { storeId: MOTHER_STORE_ID, deliveredCount: { gte: 1 }, lastOrderAt: { lt: new Date(new Date().getTime() - RISK_DAYS * 86_400_000) } } }), // hardcode-ok: ms in a day
   ]);
   const f = (k: string, v?: Record<string, string | number>) => t(d, `lf.mc.${k}`, v);
   const cur = symbolOf(o.currency);

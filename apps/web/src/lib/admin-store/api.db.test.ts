@@ -96,9 +96,9 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Store details on PostgreSQL (PR 383)
 
   it('PR 789 · the other cards save: details and settings of their own, a bad value is refused, a stale card is told', async () => {
     const g = await send('GET');
-    const ok = await send('PUT', { key: 'contact', value: { phone: '01711-000000', supportEmail: 'help@example.test', supportOpens: '10:00', supportCloses: '22:00', closedDay: 'friday' }, version: g.a.cards.contact.version });
+    const ok = await send('PUT', { key: 'contact', value: { phone: '+8801711000000', supportEmail: 'help@example.test', supportOpens: '10:00', supportCloses: '22:00', closedDay: 'friday' }, version: (g.a.cards as Record<string, { version: string }>).contact!.version });
     expect(ok.status).toBe(200);
-    expect(await deps.resolver.value('contact.phone', { storeId: MOTHER_STORE_ID })).toBe('01711-000000');
+    expect(await deps.resolver.value('contact.phone', { storeId: MOTHER_STORE_ID })).toBe('+8801711000000');
     const details = (await deps.resolver.value('store.details', { storeId: MOTHER_STORE_ID })) as { supportEmail: string; closedDay: string };
     expect(details).toMatchObject({ supportEmail: 'help@example.test', closedDay: 'friday' });
     expect((await send('PUT', { key: 'brand', value: { colorMain: 'red' } })).a.error).toBe('INVALID_INPUT');
@@ -106,6 +106,6 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Store details on PostgreSQL (PR 383)
     expect((await send('PUT', { key: 'targets', value: { targetAdPct: 101 } })).status).toBe(400);
     expect((await send('PUT', { key: 'targets', value: { targetSales: 1800000, targetAdPct: 12 } })).status).toBe(200);
     expect((await send('PUT', { key: 'nope', value: {} })).status).toBe(400);
-    expect((await send('PUT', { key: 'contact', value: { closedDay: 'none' }, version: g.a.cards.contact.version })).status).toBe(409);
+    expect((await send('PUT', { key: 'contact', value: { closedDay: 'none' }, version: (g.a.cards as Record<string, { version: string }>).contact!.version })).status).toBe(409);
   });
 });

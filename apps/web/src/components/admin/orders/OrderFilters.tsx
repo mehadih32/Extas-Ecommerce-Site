@@ -76,7 +76,7 @@ export function OrderFilters({ action, view, defaultView, q, search, go, aria, s
         <input className="a2-inp" type="search" name="q" defaultValue={q} placeholder={search} autoComplete="off" enterKeyHint="search" maxLength={80} data-testid="orders-q" />
       </label>
       {selects.filter((s) => !proto || proto.primary.includes(s.name)).map(renderSel)}
-      <button type="submit" className={proto ? 'a2-btn a2-sr' : 'a2-btn'}>
+      <button type="submit" className="a2-btn" hidden={!!proto}>
         {go}
       </button>
       {proto ? (

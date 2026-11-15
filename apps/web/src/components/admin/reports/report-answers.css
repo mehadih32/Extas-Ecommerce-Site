@@ -221,9 +221,10 @@
 .adm2 .rpc-c span {
   font-size: 11px;
   color: var(--lm-faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.1;
   max-width: 100%;
 }
 .adm2 .rp-grid3e {
