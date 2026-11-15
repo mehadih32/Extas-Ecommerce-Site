@@ -299,3 +299,5 @@ export { registry, localeSchema, timeZoneSchema, currencySchema, hostSchema, typ
 export * from './registry-products-v5';
 // S28 · PR 706 (CN-049) — practice mode switches (registry-practice.ts, version 380).
 export * from './registry-practice';
+// S28 · PR 740–744 — the e-mail look, the cookie banner and the home-screen app (registry-page-settings.ts, version 740).
+export * from './registry-page-settings';

@@ -148,6 +148,7 @@ import { statementCostsSettings } from './registry-books-statement-costs';
 import { productsFinanceV5Settings } from './registry-products-finance-v5';
 import { studioSettings } from './registry-studio';
 import { practiceSettings } from './registry-practice';
+import { pageSettingsSettings } from './registry-page-settings';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
 import { reportsDigestSettings } from './registry-reports-digest';
@@ -1690,6 +1691,8 @@ export const registry = {
   ...incompleteV5Settings,
   // ---- S28 · PR 706 (CN-049) · practice data: the practice-mode switch (off) and the Reset button's switch (on while practice is on) (registry-practice.ts, version 380). ----
   ...practiceSettings,
+  // ---- S28 · PR 740–744 · the e-mail look, the cookie banner and the home-screen app, all off (registry-page-settings.ts, version 740). ----
+  ...pageSettingsSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
