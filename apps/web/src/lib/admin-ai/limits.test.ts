@@ -14,6 +14,13 @@ describe('PR 818 · AI limits', () => {
     expect(() => parseLimits({ aiCapMinor: 1.5 })).toThrow();
     expect(() => parseLimits({ aiCapMinor: '5' })).toThrow();
   });
+  it('takes the digest and the AI-off text only in the shape the settings allow (PR 819)', () => {
+    expect(parseLimits({ digest: { on: true, time: '08:30', telegram: true, email: false } })).toEqual({ digest: { on: true, time: '08:30', telegram: true, email: false } });
+    expect(() => parseLimits({ digest: { on: true, time: '8:30', telegram: true, email: false } })).toThrow();
+    expect(() => parseLimits({ digest: { on: true, time: '08:30' } })).toThrow();
+    expect(parseLimits({ offText: { en: 'Back soon', bn: '' } })).toEqual({ offText: { en: 'Back soon', bn: '' } });
+    expect(() => parseLimits({ offText: { en: 'x'.repeat(301), bn: '' } })).toThrow();
+  });
   it('the saver line is 80% in whole numbers and a missing ceiling never reaches it', () => {
     expect(atSaverLine(79, 100)).toBe(false);
     expect(atSaverLine(80, 100)).toBe(true);

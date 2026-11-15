@@ -5,7 +5,7 @@
 // the value is what it already was. Nothing here runs an agent, moves money or sends anything; the per-agent caps stay in
 // `./spend-cap.ts`. Words: messages/admin-ai-limits.*.json.
 import type { Actor, RequestContext } from '@extas/auth';
-import { INSTALLATION } from '@extas/settings';
+import { aiDigestSchema, aiOffTextSchema, INSTALLATION, type AiDigestSettings, type AiOffTextSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { AiError } from './errors';
 import { parseCapInput } from './spend-cap';
@@ -32,7 +32,7 @@ export function monthEndAtThisPace(spentMinor: number, dayOfMonth: number, daysI
   return Math.round((spentMinor / day) * daysInMonth);
 }
 
-export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean };
+export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean } | { digest: AiDigestSettings } | { offText: AiOffTextSettings };
 
 /** Reads the one change out of a request body, or throws `INVALID_INPUT` / `INVALID_CAP`. */
 export function parseLimits(input: unknown): LimitsInput {
@@ -41,7 +41,17 @@ export function parseLimits(input: unknown): LimitsInput {
   if ('aiCapMinor' in b) return { aiCapMinor: parseCapInput(b.aiCapMinor) };
   if (typeof b.costSaver === 'boolean') return { costSaver: b.costSaver };
   if (typeof b.costSaverAuto === 'boolean') return { costSaverAuto: b.costSaverAuto };
-  throw new AiError(400, 'INVALID_INPUT', ['aiCapMinor|costSaver|costSaverAuto']);
+  if ('digest' in b) {
+    const r = aiDigestSchema.safeParse(b.digest);
+    if (!r.success) throw new AiError(400, 'INVALID_INPUT', ['digest']);
+    return { digest: r.data };
+  }
+  if ('offText' in b) {
+    const r = aiOffTextSchema.safeParse(b.offText);
+    if (!r.success) throw new AiError(400, 'INVALID_INPUT', ['offText']);
+    return { offText: r.data };
+  }
+  throw new AiError(400, 'INVALID_INPUT', ['aiCapMinor|costSaver|costSaverAuto|digest|offText']);
 }
 
 /**
@@ -63,6 +73,14 @@ export async function setAiLimits(deps: LimitsDeps, who: LimitsWho, input: unkno
     const now = await deps.resolver.value('ai.monthlyCapMinor', { storeId });
     if (now === change.aiCapMinor) return;
     await deps.resolver.set('ai.monthlyCapMinor', change.aiCapMinor, INSTALLATION, { ...opts, reason: 'AI › Costs & limits: monthly AI ceiling' });
+    return;
+  }
+  if ('digest' in change) {
+    await deps.resolver.set('ai.digest', change.digest, INSTALLATION, { ...opts, reason: 'AI › Approvals: daily digest' });
+    return;
+  }
+  if ('offText' in change) {
+    await deps.resolver.set('ai.offText', change.offText, INSTALLATION, { ...opts, reason: 'AI Center: text shown while AI is off' });
     return;
   }
   if ('costSaver' in change) {

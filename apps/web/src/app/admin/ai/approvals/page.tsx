@@ -28,6 +28,10 @@ import en from '../../../../../messages/admin-ai.en.json';
 import stripBn from '../../../../../messages/admin-ai-strip.bn.json';
 import stripEn from '../../../../../messages/admin-ai-strip.en.json';
 import { AiStrip } from '@/components/admin/ai/AiStrip';
+import { DigestForm } from '@/components/admin/ai/AiSettingsForms';
+import Link from 'next/link';
+import { controlRoomView } from '@/lib/admin-ai/control-room';
+import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import '@/components/admin/ai/ai-strip.css';
 import '../ai.css';
 import './approvals.css';
@@ -47,9 +51,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'aiApprovals.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function AiApprovalsPage() {
+export default async function AiApprovalsPage({ searchParams }: { searchParams: Promise<{ view?: string; kind?: string }> }) {
   const deps = adminDeps();
-  const [plain, access] = await Promise.all([adminView(deps), pageAccess('ai.read', deps, MOTHER_STORE_ID)]);
+  const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('ai.read', deps, MOTHER_STORE_ID), searchParams]);
   const view = withScreen(plain);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
@@ -64,7 +68,22 @@ export default async function AiApprovalsPage() {
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
   const canApproveFixes = access.guard.permissions?.has('health.fixes.approve') ?? false;
 
-  const [o, aiOn] = await Promise.all([approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID), access.deps.resolver.value('ai.enabled')]);
+  const [o, aiOn, offText, digest, room] = await Promise.all([
+    approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID),
+    access.deps.resolver.value('ai.enabled'),
+    access.deps.resolver.value('ai.offText', { storeId: MOTHER_STORE_ID }),
+    access.deps.resolver.value('ai.digest', { storeId: MOTHER_STORE_ID }),
+    controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID),
+  ]);
+  // PR 819 (prototype v5 m-ai.js renderApprovals): "Waiting / Decided" and one chip per kind of idea, with its count
+  const viewNow: 'open' | 'done' = sp.view === 'done' ? 'done' : 'open';
+  const inView = viewNow === 'open' ? o.pending : o.decided;
+  const kinds = Array.from(new Set(inView.map((r) => r.kind)));
+  const kindNow = sp.kind && kinds.includes(sp.kind) ? sp.kind : 'all';
+  const shownPending = viewNow === 'open' ? o.pending.filter((r) => kindNow === 'all' || r.kind === kindNow) : [];
+  const shownDecided = viewNow === 'done' ? o.decided.filter((r) => kindNow === 'all' || r.kind === kindNow) : [];
+  const hrefOf = (v: string, k: string) => `${HERE}?view=${v}${k === 'all' ? '' : `&kind=${encodeURIComponent(k)}`}`;
+  const digestMoney = moneyOf(room.view.currency, view.locale);
   // prototype v5 (m-ai.js renderApprovals): four numbers above the queue
   const MONEY_KINDS = ['money', 'refund', 'cod', 'price', 'discount', 'adBudget'];
   const moneyN = o.pending.filter((r) => MONEY_KINDS.includes(r.kind)).length;
@@ -87,7 +106,7 @@ export default async function AiApprovalsPage() {
     <div className="a2-z ai-page ai-ap" data-testid="approvals-page">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} />
+      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
 
       <div className="a2-kpis a2-mt12" data-testid="ai-ap-kpis">
         <div className="a2-card a2-kpi">
@@ -117,13 +136,33 @@ export default async function AiApprovalsPage() {
         </div>
       </div>
 
+      <nav className="a2-card a2-mt12 ai-ap-filter" aria-label={t(d, 'aiFilter.label')} data-testid="ai-ap-filter">
+        <div className="ai-ap-seg" role="group" aria-label={t(d, 'aiFilter.view')}>
+          <Link className={`a2-btn sm${viewNow === 'open' ? ' pri' : ''}`} href={hrefOf('open', 'all')} aria-current={viewNow === 'open' ? 'true' : undefined} data-testid="ai-ap-view-open">
+            {t(d, 'aiFilter.open')} ({o.pending.length})
+          </Link>
+          <Link className={`a2-btn sm${viewNow === 'done' ? ' pri' : ''}`} href={hrefOf('done', 'all')} aria-current={viewNow === 'done' ? 'true' : undefined} data-testid="ai-ap-view-done">
+            {t(d, 'aiFilter.done')}
+          </Link>
+        </div>
+        <div className="ai-ap-chips" role="group" aria-label={t(d, 'aiFilter.label')}>
+          {['all', ...kinds].map((k) => (
+            <Link key={k} className={`ai-ap-chip${kindNow === k ? ' on' : ''}`} href={hrefOf(viewNow, k)} aria-current={kindNow === k ? 'true' : undefined} data-testid={`ai-ap-chip-${k}`}>
+              {k === 'all' ? t(d, 'aiFilter.all') : kindLabelOf(k, view.lang)}
+              <span className="ai-ap-chip-n">{k === 'all' ? inView.length : inView.filter((r) => r.kind === k).length}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {viewNow === 'open' ? (
       <section className="ai-ap-sec a2-mt12" aria-labelledby="ai-ap-pending-h" data-testid="ai-ap-pending">
         <h2 className="a2-h3" id="ai-ap-pending-h">
           {c('pending.label')} ({o.pending.length})
         </h2>
-        {o.pending.length ? (
+        {shownPending.length ? (
           <ul className="ai-ap-list">
-            {o.pending.map((r) => (
+            {shownPending.map((r) => (
               <li key={r.id} className="a2-card ai-ap-card" data-testid="ai-ap-row" data-kind={r.kind}>
                 <div className="ai-ap-pills">
                   <span className="a2-pill info">{kindLabelOf(r.kind, view.lang)}</span>
@@ -159,14 +198,17 @@ export default async function AiApprovalsPage() {
         )}
       </section>
 
+      ) : null}
+
+      {viewNow === 'done' ? (
       <section className="ai-ap-sec a2-mt12" aria-labelledby="ai-ap-decided-h" data-testid="ai-ap-decided">
         <h2 className="a2-h3" id="ai-ap-decided-h">
           {c('decided.label')}
         </h2>
         <p className="a2-xs a2-mute">{c('decided.sub', { n: o.decided.length })}</p>
-        {o.decided.length ? (
+        {shownDecided.length ? (
           <ul className="ai-ap-list">
-            {o.decided.map((r) => (
+            {shownDecided.map((r) => (
               <li key={r.id} className="a2-card ai-ap-card" data-testid="ai-ap-decided-row" data-status={r.status}>
                 <div className="ai-ap-pills">
                   <span className="a2-pill info">{kindLabelOf(r.kind, view.lang)}</span>
@@ -185,6 +227,51 @@ export default async function AiApprovalsPage() {
             <span>{c('decided.empty')}</span>
           </div>
         )}
+      </section>
+
+      ) : null}
+
+      <section className="a2-card a2-mt12" aria-labelledby="ai-digest-h" data-testid="ai-digest">
+        <div className="a2-gap8" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <h2 className="a2-h3" id="ai-digest-h">
+            {t(d, 'aiDigest.h')}
+          </h2>
+        </div>
+        {canControl ? (
+          <DigestForm
+            value={digest}
+            texts={{
+              on: t(d, 'aiDigest.on'),
+              onHelp: t(d, 'aiDigest.onHelp'),
+              time: t(d, 'aiDigest.time'),
+              sendTo: t(d, 'aiDigest.sendTo'),
+              telegram: t(d, 'aiDigest.telegram'),
+              email: t(d, 'aiDigest.email'),
+              save: t(d, 'aiDigest.save'),
+              saved: t(d, 'aiDigest.saved'),
+              failed: t(d, 'aiDigest.failed'),
+              invalid: t(d, 'aiDigest.invalid'),
+            }}
+          />
+        ) : (
+          <p className="a2-sm a2-mute">
+            {digest.on ? t(d, 'aiDigest.onHelp') : t(d, 'aiDigest.off')}
+          </p>
+        )}
+        <details className="ai-dg-prev a2-mt12" data-testid="ai-digest-preview">
+          <summary className="a2-btn sm">{t(d, 'aiDigest.preview')}</summary>
+          <pre className="ai-dg-pre">
+            {[
+              t(d, 'aiDigest.previewTitle', { time: digest.time }),
+              '',
+              o.pending.length ? t(d, 'aiDigest.previewWaiting', { n: o.pending.length }) : t(d, 'aiDigest.previewNone'),
+              ...o.pending.slice(0, 6).map((r) => `• ${r.title}${MONEY_KINDS.includes(r.kind) ? ` ${t(d, 'aiDigest.previewPin')}` : ''}`),
+              '',
+              t(d, 'aiDigest.previewSpend', { amount: formatMoney(room.view.monthMinor, digestMoney) }),
+            ].join('\n')}
+          </pre>
+          <p className="a2-xs a2-mute">{t(d, 'aiDigest.previewNote')}</p>
+        </details>
       </section>
 
       <section className="a2-card a2-mt12" aria-labelledby="ai-never-h" data-testid="ai-never">
