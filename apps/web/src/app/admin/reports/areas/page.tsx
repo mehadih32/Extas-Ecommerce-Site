@@ -11,7 +11,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AREA_LEVELS, type AreaFigures } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
-import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { formatNumber, moneyOf } from '@/components/admin/products/model';
 import { AreaMap } from '@/components/admin/reports/AreaMap';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -20,7 +20,16 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { areaReport, findAreaProducts, ratePct } from '@/lib/area-sales';
-import { QUICK_PERIODS, quickPeriod } from '@/lib/cost-report';
+import { ReportAreasProto } from '@/components/admin/reports/ReportAreasProto';
+import { ReportBar } from '@/components/admin/reports/ReportBar';
+import { withReportsV5 } from '@/lib/reports-v5/words';
+import { makeFmt } from '@/lib/reports-v5/fmt';
+import { loadBase, loadViews } from '@/lib/reports-v5/load';
+import { withProtoPeriod } from '@/lib/reports-v5/period';
+import { AREA_METRICS, loadGeoOrders } from '@/lib/reports-v5/areas';
+import { PLACE_LEVELS } from '@/lib/reports-v5/geo';
+import { SALE_SOURCES, isSaleSource } from '@/lib/reports-v5/sales';
+import '@/components/admin/reports/report-bar.css';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-areas.bn.json';
 import en from '../../../../../messages/admin-areas.en.json';
@@ -49,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AreasPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('books.read', deps, MOTHER_STORE_ID), searchParams]);
-  const view = withScreen(plain);
+  const view = withScreen(withReportsV5(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -60,28 +69,61 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
     );
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `reportsAreas.${k}`, vars);
+  const pc = (k: string, v?: Record<string, string | number>) => t(d, `reportsV5.areas.${k}`, v);
   const cr = (k: string) => t(d, `moneyCostReport.${k}`);
-  const at = { storeId: MOTHER_STORE_ID };
   const db = access.deps.db;
-  const [currency, timeZone, limits] = await Promise.all([access.deps.resolver.value('store.currency', at), access.deps.resolver.value('store.timeZone', at), access.deps.resolver.value('costs.report', at)]);
+  const base = await loadBase(access.deps, sp);
+  const { currency, timeZone, limits } = base;
   const findText = typeof sp.find === 'string' ? sp.find : '';
-  const [r, categories, found] = await Promise.all([
-    areaReport(access.deps, MOTHER_STORE_ID, sp, limits, timeZone),
+  const cmp = sp.cmp !== '0';
+  const ch = isSaleSource(sp.ch) ? sp.ch : 'all';
+  const catId = typeof sp.cat === 'string' && /^[0-9a-f-]{36}$/i.test(sp.cat) ? sp.cat : null;
+  const path = (typeof sp.path === 'string' ? sp.path : '').split('/').map((x) => x.trim()).filter(Boolean).slice(0, PLACE_LEVELS.length - 1);
+  const pathText = path.join('/');
+  const metric = AREA_METRICS.find((m0) => m0 === sp.m) ?? 'v';
+  const viewMode = sp.view === 'bars' ? 'bars' : 'map';
+  const [r, categories, found, geo, geoWas, views] = await Promise.all([
+    areaReport(access.deps, MOTHER_STORE_ID, withProtoPeriod(sp, base.today), limits, timeZone),
     db.category.findMany({ where: { storeId: MOTHER_STORE_ID, archivedAt: null }, select: { id: true, nameEn: true, nameBn: true, parentId: true }, orderBy: { nameEn: 'asc' } }),
     findAreaProducts(db, MOTHER_STORE_ID, findText, FOUND),
+    loadGeoOrders(access.deps, timeZone, base.period.q.from, base.period.q.to, { source: ch === 'all' ? null : ch, catId }),
+    loadGeoOrders(access.deps, timeZone, base.before.from, base.before.to, { source: ch === 'all' ? null : ch, catId }),
+    loadViews(access, 'areas'),
   ]);
   const { q, notes } = r.period;
   const bnLang = view.lang === 'bn';
   const nameOf = (x: { nameEn: string; nameBn: string | null }) => (bnLang && x.nameBn ? x.nameBn : x.nameEn);
   const catName = new Map(categories.map((x) => [x.id, nameOf(x)]));
+  const kids = new Map<string, string[]>();
+  for (const x of categories) if (x.parentId) kids.set(x.parentId, [...(kids.get(x.parentId) ?? []), x.id]);
+  const catTrees = new Map<string, Set<string>>();
+  for (const x of categories) {
+    const set = new Set<string>([x.id]);
+    const walk = (id: string) => kids.get(id)?.forEach((k) => !set.has(k) && (set.add(k), walk(k)));
+    walk(x.id);
+    catTrees.set(x.id, set);
+  }
+  const fmt = makeFmt(view.locale, currency);
   const money = moneyOf(currency, view.locale);
-  const m = (minor: number) => formatMoney(minor, money);
+  const m = (minor: number) => fmt.amount(minor);
   const dayText = (day: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T00:00:00Z`));
   const today = r.today;
-  const current = QUICK_PERIODS.find((p) => p === sp.period) ?? QUICK_PERIODS.find((p) => {
-    const x = quickPeriod(p, today);
-    return x.from === q.from && x.to === q.to;
-  });
+  const protoHref = (o: { path?: readonly string[]; m?: string; view?: string; pick?: string }) => {
+    const u = new URLSearchParams();
+    u.set('p', typeof sp.p === 'string' ? sp.p : 'custom');
+    u.set('from', q.from);
+    u.set('to', q.to);
+    if (!cmp) u.set('cmp', '0');
+    if (ch !== 'all') u.set('ch', ch);
+    if (catId) u.set('cat', catId);
+    const pth = (o.path ?? path).join('/');
+    if (pth) u.set('path', pth);
+    u.set('m', o.m ?? metric);
+    u.set('view', o.view ?? viewMode);
+    const pk = o.pick ?? (typeof sp.pick === 'string' ? sp.pick : '');
+    if (pk) u.set('pick', pk);
+    return `${HERE}?${u.toString()}`;
+  };
   // keep the level, category and product when the period changes, and the other way round
   const keep = (extra: Record<string, string | null>) => {
     const u = new URLSearchParams();
@@ -92,6 +134,7 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
   const s = r.sales;
   const rateText = (f: AreaFigures) => (f.returnRate === null ? c('table.noRate') : c('table.rate', { pct: ratePct(f.returnRate)! }));
   const num = (x: number) => formatNumber(x, view.locale);
+
   const kpis: ReportFigure[] = [
     { id: 'sales', label: c('kpi.sales'), value: m(s.total.salesMinor), n: s.total.salesMinor, kind: 'money', foot: c('kpi.orders', { n: num(s.total.delivered) }) },
     { id: 'pieces', label: c('kpi.pieces'), value: num(s.total.pieces), n: s.total.pieces },
@@ -108,31 +151,73 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="a2-z lm-rp" data-lm-ready="" data-testid="areas-page" data-from={q.from} data-to={q.to} data-level={r.area.level}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'reportsV5.common.pageTitle')} sub={pc('sub')} />
       <SectionTabs view={view} current={KEY} />
 
-      <nav className="ct-actions a2-mt12" aria-label={cr('quick.label')} data-testid="ar-quick">
-        {QUICK_PERIODS.map((p) => (
-          <Link key={p} className={`a2-btn${current === p ? ' pri' : ''}`} href={keep({ period: p })} aria-current={current === p ? 'true' : undefined} data-testid={`ar-quick-${p}`}>
-            {cr(`quick.${p}`)}
+      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={today} p={typeof sp.p === 'string' ? sp.p : undefined} cmp={cmp} before={base.before} reportKey="areas" views={views} day={fmt.dayShort} csv={`/api/admin/reports/export/areas?from=${q.from}&to=${q.to}${pathText ? `&path=${encodeURIComponent(pathText)}` : ''}${ch === 'all' ? '' : `&ch=${ch}`}`} notes={notes} limitDays={limits.maxDays} />
+      <form className="rpf" action={HERE} method="get" data-testid="rp-filters">
+        {Object.entries({ p: typeof sp.p === 'string' ? sp.p : 'custom', from: q.from, to: q.to, path: pathText, m: metric, view: viewMode, pick: typeof sp.pick === 'string' ? sp.pick : '' })
+          .filter(([, v]) => v)
+          .map(([k, v]) => (
+            <input key={k} type="hidden" name={k} value={v} />
+          ))}
+        {cmp ? null : <input type="hidden" name="cmp" value="0" />}
+        <label className="a2-xs a2-mute" htmlFor="rp-f-ch">
+          {pc('fChannel')}
+        </label>
+        <select id="rp-f-ch" name="ch" className="a2-inp" defaultValue={ch} data-testid="rp-f-ch">
+          <option value="all">{pc('fAll')}</option>
+          {SALE_SOURCES.map((x) => (
+            <option key={x} value={x}>
+              {t(d, `reportsV5.orders.src.${x}`)}
+            </option>
+          ))}
+        </select>
+        <label className="a2-xs a2-mute" htmlFor="rp-f-cat">
+          {pc('fCategory')}
+        </label>
+        <select id="rp-f-cat" name="cat" className="a2-inp" defaultValue={catId ?? ''} data-testid="rp-f-cat">
+          <option value="">{pc('fAll')}</option>
+          {categories.map((x) => (
+            <option key={x.id} value={x.id}>
+              {x.parentId && catName.has(x.parentId) ? `${nameOf(x)} (${catName.get(x.parentId)})` : nameOf(x)}
+            </option>
+          ))}
+        </select>
+        <button type="submit" className="a2-btn sm cr-tap" data-testid="rp-f-apply">
+          {pc('apply')}
+        </button>
+        {ch === 'all' && !catId ? null : (
+          <Link className="a2-btn sm ghost cr-tap" href={`${HERE}?p=${typeof sp.p === 'string' ? sp.p : 'custom'}&from=${q.from}&to=${q.to}${cmp ? '' : '&cmp=0'}`} data-testid="rp-f-clear">
+            {pc('fClear')}
           </Link>
-        ))}
-      </nav>
+        )}
+      </form>
+      <ReportAreasProto
+        orders={geo}
+        prev={geoWas}
+        path={path}
+        metric={metric}
+        view={viewMode}
+        pick={typeof sp.pick === 'string' ? sp.pick : ''}
+        cmp={cmp}
+        c={pc}
+        f={fmt}
+        locale={view.locale}
+        href={protoHref}
+        cats={categories.map((x) => ({ id: x.id, name: nameOf(x) }))}
+        catIds={(id) => [...(catTrees.get(id) ?? [id])]}
+        keep={{ p: typeof sp.p === 'string' ? sp.p : 'custom', from: q.from, to: q.to, ...(cmp ? {} : { cmp: '0' }), ...(ch === 'all' ? {} : { ch }), ...(catId ? { cat: catId } : {}) }}
+        action={HERE}
+      />
 
+      <details className="a2-mt12" data-testid="ar-older">
+        <summary className="a2-h4 a2-more-opts">{pc('older')}</summary>
+        <p className="a2-xs a2-mute">{pc('olderSub')}</p>
       <form className="a2-card a2-mt12" action={HERE} method="get" aria-label={cr('form.label')} data-testid="ar-form">
         <div className="ct-grid">
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="ar-from">
-              {cr('form.from')}
-            </label>
-            <input id="ar-from" name="from" type="date" className="a2-inp" max={today} defaultValue={q.from} />
-          </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="ar-to">
-              {cr('form.to')}
-            </label>
-            <input id="ar-to" name="to" type="date" className="a2-inp" max={today} defaultValue={q.to} />
-          </div>
+          <input type="hidden" name="from" value={q.from} />
+          <input type="hidden" name="to" value={q.to} />
           <div className="a2-fld">
             <label className="a2-lbl" htmlFor="ar-level">
               {c('level.label')}
@@ -281,6 +366,7 @@ export default async function AreasPage({ searchParams }: { searchParams: Promis
         ) : null}
         <p className="a2-xs a2-mute a2-mt12">{c('how')}</p>
       </section>
+      </details>
     </div>
   );
 }

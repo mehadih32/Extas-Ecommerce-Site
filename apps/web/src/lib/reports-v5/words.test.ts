@@ -17,7 +17,7 @@ const DICT = { en: { reportsV5: en.reportsV5 } as unknown as Dict, bn: { reports
 /** What the screen would write: a word that is not found comes back as its own key. */
 const says = (lang: 'en' | 'bn', key: string) => t(DICT[lang], `reportsV5.${key}`) !== `reportsV5.${key}`;
 const ROOT = join(__dirname, '..', '..');
-const PAGES = { profit: 'app/admin/reports/profit/page.tsx', products: 'app/admin/reports/products/page.tsx', marketing: 'app/admin/reports/marketing/page.tsx', review: 'app/admin/reports/review/page.tsx', orders: 'app/admin/reports/orders/page.tsx' } as const;
+const PAGES = { profit: 'app/admin/reports/profit/page.tsx', products: 'app/admin/reports/products/page.tsx', marketing: 'app/admin/reports/marketing/page.tsx', review: 'app/admin/reports/review/page.tsx', orders: 'app/admin/reports/orders/page.tsx', customers: 'app/admin/reports/customers/page.tsx', areas: 'app/admin/reports/areas/page.tsx', team: 'app/admin/reports/team/page.tsx' } as const;
 
 /** The report pages that are in the app (they are added one register PR at a time: 714, 715, 716, 717). */
 const BUILT = (Object.keys(PAGES) as (keyof typeof PAGES)[]).filter((k) => existsSync(join(ROOT, PAGES[k])));
@@ -39,7 +39,9 @@ describe('words of the v5 reports', () => {
   it('every word a page asks for exists', () => {
     for (const page of BUILT) {
       const src = readFileSync(join(ROOT, PAGES[page]), 'utf8');
-      for (const m of src.matchAll(/\bc\('([A-Za-z0-9_.]+)'/g)) for (const l of ['en', 'bn'] as const) expect(says(l, `${page}.${m[1]}`), `${l} ${page}: c('${m[1]}')`).toBe(true);
+      // customers, areas and team keep their older screens' words under `c`; their new words are asked for with `pc`
+      const own = ['customers', 'areas', 'team'].includes(page) ? 'pc' : 'c';
+      for (const m of src.matchAll(new RegExp(`\\b${own}\\('([A-Za-z0-9_.]+)'`, 'g'))) for (const l of ['en', 'bn'] as const) expect(says(l, `${page}.${m[1]}`), `${l} ${page}: c('${m[1]}')`).toBe(true);
       for (const m of src.matchAll(/\bcc\('([A-Za-z0-9_.]+)'/g)) for (const l of ['en', 'bn'] as const) expect(says(l, `common.${m[1]}`), `${l} ${page}: cc('${m[1]}')`).toBe(true);
     }
     const parts = readFileSync(join(ROOT, 'components/admin/reports/ReportBar.tsx'), 'utf8') + readFileSync(join(ROOT, 'components/admin/reports/ReportParts.tsx'), 'utf8');
@@ -53,7 +55,7 @@ describe('words of the v5 reports', () => {
 describe('the four pages in the menu, the guides, the smoke list and the export', () => {
   const reports = SHELL_SECTIONS.find((s) => s.id === 'reports')!;
   const tab = (id: string) => reports.tabs.find((x) => x.id === id)!;
-  const ROUTES = { profit: ['profitReport', '/admin/reports/profit'], products: ['productsReport', '/admin/reports/products'], marketing: ['marketingReport', '/admin/reports/marketing'], review: ['monthlyReview', '/admin/reports/review'], orders: ['orders', '/admin/reports/orders'] } as const;
+  const ROUTES = { profit: ['profitReport', '/admin/reports/profit'], products: ['productsReport', '/admin/reports/products'], marketing: ['marketingReport', '/admin/reports/marketing'], review: ['monthlyReview', '/admin/reports/review'], orders: ['orders', '/admin/reports/orders'], customers: ['customers', '/admin/reports/customers'], areas: ['areas', '/admin/reports/areas'], team: ['team', '/admin/reports/team'] } as const;
   it('at least one page is built, so the checks below are not empty', () => {
     expect(BUILT.length).toBeGreaterThan(0);
     expect(EXPORT_KINDS.length).toBe(Object.keys(PAGES).length);
