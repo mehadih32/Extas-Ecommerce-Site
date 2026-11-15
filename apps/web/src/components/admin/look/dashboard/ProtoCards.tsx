@@ -10,13 +10,15 @@ import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { nameIn } from '@/components/admin/products/model';
 import { salesPerUnit } from '@/lib/admin-look/dashboard-data';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
-import { Bar, Card, Delta, Empty, Lnk, Spark } from '../kit';
-import { can, type DashProps } from './common';
+import type { ReactNode } from 'react';
+import { change, trailingAverage } from '@/lib/admin-look/chart';
+import { Bar, Card, Delta, Empty, LineChart, Lnk, Pill, Spark } from '../kit';
+import { can, rangeText, type DashProps } from './common';
 
 /** Slow stock and set-up lists are "This week"; bad-tone lists are "Urgent"; the rest is "Today" (the same split as design B). */
 const WEEK_LISTS: ReadonlySet<string> = new Set(['lowStock', 'countsReview', 'launch', 'agentFixes', 'erpKeptAtSwitch', 'ordersTwoSizes']);
 
-function DoNow({ p }: { p: DashProps }) {
+export function DoNow({ p }: { p: DashProps }) {
   const { f, data } = p;
   const q = data.queues ?? [];
   const groups = (['urgent', 'today', 'week'] as const)
@@ -50,7 +52,7 @@ function DoNow({ p }: { p: DashProps }) {
   );
 }
 
-function ProductsToDo({ p }: { p: DashProps }) {
+export function ProductsToDo({ p }: { p: DashProps }) {
   const { f, data, s, viewer } = p;
   const top = data.top ?? [];
   const low = data.lowStock ?? [];
@@ -78,13 +80,61 @@ function ProductsToDo({ p }: { p: DashProps }) {
   );
 }
 
-function AdsPaying({ p }: { p: DashProps }) {
-  const { f, data, viewer } = p;
+/** The verdict of one channel from its sales per 1 spent, against the owner's three limits (`admin.dashboardDesigns`). */
+export function adsVerdict(per: number | null, s: { adsScaleAt: number; adsKeepAt: number; adsFixAt: number }): 'scale' | 'keep' | 'fix' | 'stop' | null {
+  if (per === null) return null;
+  return per >= s.adsScaleAt ? 'scale' : per >= s.adsKeepAt ? 'keep' : per >= s.adsFixAt ? 'fix' : 'stop';
+}
+const VERDICT_TONE = { scale: 'ok', keep: 'line', fix: 'gold', stop: 'bad' } as const;
+
+export function AdsPaying({ p }: { p: DashProps }) {
+  const { f, data, viewer, s } = p;
   const pf = data.profit;
+  const rows = data.ads?.rows ?? [];
+  if (!pf && !rows.length) return null;
+  const link = can(viewer, 'marketing.campaigns.read') ? <Lnk href="/admin/marketing/campaigns">{f.t('dsh.proto.adsCampaigns')}</Lnk> : null;
+  if (rows.length) {
+    // the prototype's table: one row per ad channel with what it cost, what it brought, sales for each 1 and a verdict
+    return (
+      <Card title={f.t('dsh.lm.roasTitle')} sub={f.t('dsh.proto.adsSub')} right={link} testId="dash-adspay">
+        <div className="a3-tblw">
+          <table className="a3-tbl" data-testid="dash-ads-table">
+            <thead>
+              <tr>
+                <th>{f.t('dsh.proto.adsChannel')}</th>
+                <th className="r">{f.t('dsh.lm.roasSpend')}</th>
+                <th className="r">{f.t('dsh.lm.roasSales')}</th>
+                <th className="r">{f.t('dsh.proto.adsRoas')}</th>
+                <th>{f.t('dsh.proto.adsVerdict')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const v = adsVerdict(r.per, s);
+                return (
+                  <tr key={r.key} data-testid={`dash-ads-${r.key}`}>
+                    <td>
+                      <b>{f.t(`dsh.proto.ch.${r.key.replace('ads:', '')}`)}</b>
+                    </td>
+                    <td className="r a3-num">{r.spendMinor === null ? '—' : f.money(r.spendMinor)}</td>
+                    <td className="r a3-num">{f.money(r.salesMinor)}</td>
+                    <td className="r a3-num">
+                      <b>{r.per === null ? '—' : `${r.per.toFixed(1)}x`}</b>
+                    </td>
+                    <td>{v ? <Pill tone={VERDICT_TONE[v]}>{f.t(`dsh.proto.v.${v}`)}</Pill> : <span className="a3-dl0">—</span>}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    );
+  }
   if (!pf) return null;
   const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
   return (
-    <Card title={f.t('dsh.lm.roasTitle')} sub={f.t('dsh.lm.roasSub')} right={can(viewer, 'marketing.campaigns.read') ? <Lnk href="/admin/marketing">{f.t('dsh.lm.roasMore')}</Lnk> : null} testId="dash-adspay">
+    <Card title={f.t('dsh.lm.roasTitle')} sub={f.t('dsh.lm.roasSub')} right={link} testId="dash-adspay">
       <div className="a3-tt" role="table" aria-label={f.t('dsh.lm.roasTitle')}>
         <div className="a3-prob" role="row">
           <span>
@@ -110,7 +160,7 @@ function AdsPaying({ p }: { p: DashProps }) {
   );
 }
 
-function InShort({ p }: { p: DashProps }) {
+export function InShort({ p }: { p: DashProps }) {
   const { f, data } = p;
   const lines: string[] = [];
   const m = data.money;
@@ -119,7 +169,10 @@ function InShort({ p }: { p: DashProps }) {
     lines.push(f.t(ch >= 0 ? 'dsh.proto.shortUp' : 'dsh.proto.shortDown', { pct: f.pct(Math.abs(ch), 0), n: f.n(data.range.days) }));
   }
   const pf = data.profit;
-  if (pf && pf.cur.netMinor !== null && pf.cur.salesMinor > 0) lines.push(f.t('dsh.proto.shortKeep', { pct: f.pct(pf.cur.netMinor / pf.cur.salesMinor, 0) }));
+  if (pf && pf.cur.netMinor !== null && pf.cur.salesMinor > 0) {
+    const was = pf.prev.netMinor !== null && pf.prev.salesMinor > 0 ? pf.prev.netMinor / pf.prev.salesMinor : null;
+    lines.push(f.t(was === null ? 'dsh.proto.shortKeep' : 'dsh.proto.shortKeepWas', { keep: f.per100(pf.cur.netMinor / pf.cur.salesMinor), hundred: f.hundred, was: was === null ? '' : f.per100(was) }));
+  }
   const best = data.top?.[0];
   if (best) lines.push(f.t('dsh.proto.shortBest', { name: nameIn(f.lang, { nameEn: best.nameEn, nameBn: best.nameBn }), v: f.money(best.valueMinor) }));
   return (
@@ -138,7 +191,7 @@ function InShort({ p }: { p: DashProps }) {
   );
 }
 
-function MonthTarget({ p }: { p: DashProps }) {
+export function MonthTarget({ p }: { p: DashProps }) {
   const { f, data } = p;
   const g = data.goal;
   if (!g) {
@@ -161,7 +214,7 @@ function MonthTarget({ p }: { p: DashProps }) {
 }
 
 /** Prototype "Profit snapshot": the chosen period's sales against what it cost, and the part you keep, with the period before beside it. */
-function ProfitSnap({ p }: { p: DashProps }) {
+export function ProfitSnap({ p }: { p: DashProps }) {
   const { f, data, viewer } = p;
   const pf = data.profit;
   if (!pf || pf.cur.netMinor === null) return null;
@@ -185,7 +238,7 @@ function ProfitSnap({ p }: { p: DashProps }) {
 }
 
 /** Prototype's six figures with a small line each: orders, delivered sales, net profit, money with couriers, return rate, ad spend. */
-function SixTiles({ p }: { p: DashProps }) {
+export function SixTiles({ p }: { p: DashProps }) {
   const { f, data } = p;
   const m = data.money;
   const pf = data.profit;
@@ -195,7 +248,7 @@ function SixTiles({ p }: { p: DashProps }) {
     tiles.push({ key: 'orders', label: f.t('dsh.proto.tOrders'), value: f.n(m.cur.ordered.orders), sub: f.money(m.cur.ordered.valueMinor), line: m.chart.orders, color: 'var(--a3-c1)' });
     tiles.push({ key: 'sales', label: f.t('dsh.proto.tSales'), value: f.money(m.cur.sales.itemsMinor), sub: f.t('dsh.proto.tDelivered', { n: f.n(m.cur.sales.orders) }), line: m.chart.sales, color: 'var(--a3-c2, var(--a3-c1))' });
   }
-  if (pf && pf.cur.netMinor !== null) tiles.push({ key: 'net', label: f.t('dsh.proto.tNet'), value: f.money(pf.cur.netMinor), sub: pf.cur.salesMinor > 0 ? f.t('dsh.proto.shortKeep', { pct: f.pct(pf.cur.netMinor / pf.cur.salesMinor, 0) }) : undefined, color: 'var(--a3-c1)' });
+  if (pf && pf.cur.netMinor !== null) tiles.push({ key: 'net', label: f.t('dsh.proto.tNet'), value: f.money(pf.cur.netMinor), sub: pf.cur.salesMinor > 0 ? f.t('dsh.proto.shortKeep', { keep: f.per100(pf.cur.netMinor / pf.cur.salesMinor), hundred: f.hundred }) : undefined, color: 'var(--a3-c1)' });
   if (data.cod) tiles.push({ key: 'cod', label: f.t('dsh.proto.tCod'), value: f.money(data.cod.minor), sub: f.t('dsh.proto.tParcels', { n: f.n(data.cod.parcels) }), color: 'var(--a3-c1)' });
   if (data.delivery) tiles.push({ key: 'ret', label: f.t('dsh.proto.tReturn'), value: f.pct(data.delivery.returnRate), sub: f.t('dsh.proto.tOfFinished', { n: f.n(data.delivery.finished) }), color: 'var(--a3-c1)' });
   if (pf) {
@@ -217,25 +270,92 @@ function SixTiles({ p }: { p: DashProps }) {
   );
 }
 
-/** The prototype's lower Home cards. Left out entirely when none of them has anything the person may read. */
-export function ProtoCards(p: DashProps) {
-  const { data, viewer } = p;
+/** The sales trend card the prototype draws beside "Do now": delivered sales against the period before, with ordered value. */
+export function TrendCard({ p, id }: { p: DashProps; id: string }) {
+  const { f, data, s } = p;
+  const m = data.money;
+  if (!m) return null;
+  return (
+    <Card title={f.t('dsh.proto.trendTitle')} sub={f.t('dsh.proto.trendSub')} testId="dash-trend">
+      <div className="a3-trsum">
+        <div>
+          <span>{f.t('dsh.ordered')}</span>
+          <b className="a3-num">{f.money(m.cur.ordered.valueMinor)}</b> <Delta f={f} x={change(m.cur.ordered.valueMinor, m.prev.ordered.valueMinor)} />
+        </div>
+        <div>
+          <span>{f.t('dsh.sales')}</span>
+          <b className="a3-num">{f.money(m.cur.sales.itemsMinor)}</b> <Delta f={f} x={change(m.cur.sales.itemsMinor, m.prev.sales.itemsMinor)} />
+        </div>
+      </div>
+      <LineChart
+        id={id}
+        labels={m.chart.days.map((d) => f.day(d, true))}
+        xl={m.chart.days.map((d) => f.day(d))}
+        series={[
+          { v: trailingAverage(m.chart.ordered, s.smoothDays), color: 'var(--a3-c1)', name: f.t('dsh.ordered'), shown: m.chart.ordered.map((v) => f.money(v)) },
+          { v: trailingAverage(m.chart.sales, s.smoothDays), color: 'var(--a3-s2)', name: f.t('dsh.sales'), shown: m.chart.sales.map((v) => f.money(v)) },
+          { v: trailingAverage(m.chart.prevSales, s.smoothDays), color: 'var(--a3-cprev)', name: f.t('dsh.prevPeriod'), dash: true, w: 1.6, shown: m.chart.prevSales.map((v) => f.money(v)) },
+        ]}
+        h={220}
+        label={f.t('dsh.chartLabel', { range: rangeText(f, data) })}
+        yfmt={(v) => f.short(v)}
+        foot={m.chart.days.map((_, i) => f.t('dsh.foot', { amount: f.money(m.chart.sales[i] ?? 0), n: f.n(m.chart.orders[i] ?? 0) }))}
+      />
+      {s.smoothDays > 1 ? <p className="a3-chn2">{f.t('dsh.smoothNote', { n: f.n(s.smoothDays) })}</p> : null}
+    </Card>
+  );
+}
+
+/** The prototype's first row: the sales chart (left, two thirds) with "Do now" beside it (right); the chart alone when nothing is waiting-list readable. */
+export function ChartDoNow({ p, lead }: { p: DashProps; lead: ReactNode }) {
+  const has = !!p.data.queues;
+  return (
+    <div className={`a3-chdo${has ? '' : ' solo'}`} data-testid="dash-chdo">
+      <div className="a3-chdo-l">{lead}</div>
+      {has ? (
+        <div className="a3-chdo-r">
+          <DoNow p={p} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** The prototype's second row: "Products: what to do", "Ads: are they paying?" (with `mid` under it), then "In short" with "Month target". */
+export function ProtoLower(p: DashProps & { mid?: ReactNode }) {
+  const { data, viewer, mid } = p;
   const canMoney = can(viewer, 'metrics.read');
-  const cards = [
-    data.queues ? <DoNow key="do" p={p} /> : null,
-    data.top ? <ProductsToDo key="prod" p={p} /> : null,
-    data.profit ? <AdsPaying key="ads" p={p} /> : null,
-    canMoney ? <InShort key="short" p={p} /> : null,
-    canMoney ? <MonthTarget key="goal" p={p} /> : null,
-  ].filter(Boolean);
-  if (!cards.length && !canMoney) return null;
+  const cols: ReactNode[] = [];
+  if (data.top) cols.push(<div className="a3-stk" key="l"><ProductsToDo p={p} /></div>);
+  if (data.profit || data.ads?.rows.length || mid)
+    cols.push(
+      <div className="a3-stk" key="m">
+        <AdsPaying p={p} />
+        {mid}
+      </div>,
+    );
+  if (canMoney)
+    cols.push(
+      <div className="a3-stk" key="r">
+        <InShort p={p} />
+        <MonthTarget p={p} />
+      </div>,
+    );
+  if (!cols.length) return null;
+  return (
+    <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: cols.length }} data-testid="dash-proto">
+      {cols}
+    </div>
+  );
+}
+
+/** The prototype's profit snapshot and six figures (design A; D draws its own six tiles). */
+export function ProtoTop(p: DashProps) {
+  if (!can(p.viewer, 'metrics.read')) return null;
   return (
     <>
-      {canMoney ? <ProfitSnap p={p} /> : null}
-      {canMoney ? <SixTiles p={p} /> : null}
-      <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: Math.min(3, cards.length) }} data-testid="dash-proto">
-        {cards}
-      </div>
+      <ProfitSnap p={p} />
+      <SixTiles p={p} />
     </>
   );
 }

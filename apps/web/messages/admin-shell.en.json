@@ -843,7 +843,7 @@
       "shortTitle": "In short",
       "shortUp": "Delivered sales are up {pct} on the previous {n} days.",
       "shortDown": "Delivered sales are down {pct} on the previous {n} days.",
-      "shortKeep": "In this period you keep {pct} of every sale, after all costs.",
+      "shortKeep": "In this period you keep {keep} of every {hundred} sold, after all costs.",
       "shortBest": "{name} brings the most money: {v}.",
       "shortNone": "Nothing to sum up yet.",
       "targetLine": "Target {goal} · {pct} done",
@@ -861,7 +861,27 @@
       "tParcels": "{n} parcels",
       "tReturn": "Return rate",
       "tOfFinished": "of {n} finished parcels",
-      "tAds": "Ad spend"
+      "tAds": "Ad spend",
+      "trendTitle": "Sales trend",
+      "trendSub": "Delivered sales against the period before; hover or tap the chart to see each day",
+      "adsSub": "Delivered sales from each ad channel ÷ ad spend",
+      "adsCampaigns": "Campaigns",
+      "adsChannel": "Channel",
+      "adsRoas": "ROAS",
+      "adsVerdict": "Verdict",
+      "ch": {
+        "META": "Meta (Facebook, Instagram)",
+        "GOOGLE": "Google",
+        "TIKTOK": "TikTok",
+        "YOUTUBE": "YouTube"
+      },
+      "v": {
+        "scale": "Scale up",
+        "keep": "Keep",
+        "fix": "Fix",
+        "stop": "Stop"
+      },
+      "shortKeepWas": "In this period you keep {keep} of every {hundred} sold, after all costs (the period before: {was})."
     }
   },
   "look": {

@@ -22,6 +22,7 @@ import { Bar, Card, Delta, Empty, Funnel, Heat, Lnk, Spark, Tile } from '../kit'
 import type { Fmt } from '../fmt';
 import { can, DashHead, rangeText, type DashProps } from './common';
 import { TopProducts, problemsOf } from './A';
+import { ChartDoNow, ProtoLower, TrendCard } from './ProtoCards';
 
 const S1 = 'var(--a3-s1)';
 const S2 = 'var(--a3-s2)';
@@ -238,6 +239,8 @@ function DashboardD(p: DashProps) {
       <DashHead p={p} title={f.t('dsh.cmd.title')} />
       {kt.length ? <div className="a3-kt">{kt}</div> : null}
       <PinsCard {...p} />
+      {data.money ? <ChartDoNow p={p} lead={<TrendCard p={p} id="dsh-d-sales" />} /> : null}
+      <ProtoLower {...p} />
       {g2.length ? (
         <div className="a3-dg3" style={{ ['--n' as string]: g2.length }}>
           {g2}
@@ -259,7 +262,7 @@ export const dashboardD: LookDesign<DashProps, DashPart> = {
     en: 'Dense and data-rich: six live KPI tiles (orders, sales, net profit, money with couriers, return rate, ad spend), your pinned reports, the order funnel, when customers order, couriers side by side and best sellers.',
     bn: 'ঘন আর তথ্যে ভরা: ছয়টা KPI, অর্ডারের ধাপ, কখন অর্ডার আসে, কুরিয়ার পাশাপাশি আর সেরা বিক্রি।',
   },
-  parts: ['money', 'delivery', 'top', 'lowStock', 'queues', 'funnel', 'hours', 'profit', 'cod', 'pins'],
+  parts: ['money', 'delivery', 'top', 'lowStock', 'queues', 'funnel', 'hours', 'profit', 'cod', 'pins', 'goal', 'ads'],
   Render: DashboardD,
   // The demo's own key for this design is C (97z-adm2-rd2-dash.js a3Design('dashboard', 'C', …)).
   Thumb: () => <LookThumb page="dashboard" id="C" />,
