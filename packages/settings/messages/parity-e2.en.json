@@ -1,0 +1,28 @@
+{
+  "ai": {
+    "costSaverAuto": {
+      "label": "Cost-saver turns on by itself",
+      "help": "Turns the cost-saver mode on when this month's AI spend reaches 80% of the AI ceiling. Off as shipped."
+    },
+    "digest": {
+      "label": "AI daily digest",
+      "help": "One daily summary of what waits for the owner, what the agents did and what the AI cost. Off as shipped."
+    },
+    "trainingOff": {
+      "label": "Corrections and documents switched off",
+      "help": "Ids of the training corrections and documents the owner stopped using. Nothing is deleted."
+    }
+  },
+  "telegram": {
+    "control": {
+      "label": "Telegram control",
+      "help": "Daily report time, weekly audit, alert switches, the big-order line and the allowed Telegram accounts. All off or empty as shipped."
+    }
+  },
+  "payments": {
+    "settlement": {
+      "label": "Where the money lands",
+      "help": "The account each way of paying settles into, and how many working days it takes. Empty as shipped."
+    }
+  }
+}

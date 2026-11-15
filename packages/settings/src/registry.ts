@@ -151,6 +151,7 @@ import { practiceSettings } from './registry-practice';
 import { pageSettingsSettings } from './registry-page-settings';
 import { customiseSettings } from './registry-customise';
 import { storeDetailsSettings } from './registry-store-details';
+import { parityE2Settings } from './registry-parity-e2';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
 import { reportsDigestSettings } from './registry-reports-digest';
@@ -1701,6 +1702,8 @@ export const registry = {
   ...customiseSettings,
   // ---- PR 789 · Settings > Store details, the rest of the page (registry-store-details.ts, version 789). ----
   ...storeDetailsSettings,
+  // ---- PR 815-820 · the small settings of Settings and AI Center, lane E2 (registry-parity-e2.ts). ----
+  ...parityE2Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
