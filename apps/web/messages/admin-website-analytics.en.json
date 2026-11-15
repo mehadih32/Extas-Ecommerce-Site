@@ -1,7 +1,7 @@
 {
   "webAnalytics": {
     "metaTitle": "Website analytics",
-    "title": "Website analytics",
+    "title": "Analytics",
     "sub": "Who visits, how they find you, where they get stuck and how fast the shop is. From the shop’s own data.",
     "tabs": {
       "overview": "Overview",
@@ -136,6 +136,13 @@
         "save": "Save settings",
         "saved": "Settings saved."
       }
+    },
+    "subNav": {
+      "aria": "Analytics pages",
+      "overview": "Overview",
+      "search": "Search",
+      "behaviour": "Behaviour",
+      "speed": "Speed"
     }
   }
 }

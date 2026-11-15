@@ -222,6 +222,8 @@
       "desktop": "Space on a computer (px)",
       "tone": "Colour"
     },
-    "formTitle": "Edit section: {type}"
+    "formTitle": "Edit section: {type}",
+    "viewOnShop": "View on shop",
+    "tip": "Tip: on phones most visitors never scroll past the 4th block. Keep Best sellers in the top 4."
   }
 }
