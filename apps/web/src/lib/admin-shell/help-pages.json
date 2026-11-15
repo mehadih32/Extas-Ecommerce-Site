@@ -31,6 +31,7 @@
     { "id": "products/edit", "route": "/admin/products/[id]" },
     { "id": "products/queue", "route": "/admin/products/queue" },
     { "id": "products/ranking", "route": "/admin/products/ranking" },
+    { "id": "products/structure", "route": "/admin/products/structure" },
     { "id": "products/combos", "route": "/admin/combos" },
     { "id": "products/sets", "route": "/admin/products/sets" },
     { "id": "products/bag-box", "route": "/admin/combos/bag-box" },
