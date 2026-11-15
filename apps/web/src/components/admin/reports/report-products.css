@@ -1,0 +1,77 @@
+/* PR 863 — Reports › Products: size heat maps, the reorder window and the span-2 cell of the three-column row. */
+.adm2 .rp-span2 {
+  grid-column: span 2;
+  min-width: 0;
+}
+.adm2 .rp-span2 > .a2-card {
+  height: 100%;
+}
+@media (max-width: 1023px) {
+  .adm2 .rp-span2 {
+    grid-column: auto;
+  }
+}
+.adm2 .rp-heat-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.adm2 .rp-heat {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-size: 13px;
+}
+.adm2 .rp-heat th {
+  font-weight: 600;
+  color: var(--lm-ink2);
+  text-align: center;
+  padding: 6px 4px;
+}
+.adm2 .rp-heat tbody th {
+  text-align: left;
+  white-space: nowrap;
+}
+.adm2 .rp-heat td {
+  text-align: center;
+  padding: 10px 4px;
+  min-width: 44px;
+  border-radius: 6px;
+  background: var(--lm-sf2);
+  font-variant-numeric: tabular-nums;
+}
+.adm2 .rp-heat td.rp-heat-tot {
+  background: none;
+  font-weight: 700;
+}
+.adm2 .rp-rb {
+  margin-left: 6px;
+}
+.adm2 .rp-dlg {
+  border: 1px solid var(--lm-ln);
+  border-radius: 16px;
+  padding: 20px;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--lm-sf);
+  color: var(--lm-ink);
+}
+.adm2 .rp-dlg::backdrop {
+  background: color-mix(in srgb, var(--lm-hero-solid) 45%, transparent);
+}
+.adm2 .rp-dlg h3 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+.adm2 .rp-dlg-err {
+  color: var(--bad);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.adm2 .rp-dlg-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.adm2 .rp-dlg-foot .a2-btn {
+  min-height: 44px;
+}
