@@ -749,6 +749,15 @@
           "network": "No connection. Try again.",
           "other": "Something went wrong. Try again."
         }
+      },
+      "kpi": {
+        "stickers": "Stickers to print",
+        "stickersNote": "booked, waiting for a sticker",
+        "pieces": "Pieces",
+        "short": "Short in stock",
+        "shortNone": "All pieces are there",
+        "problems": "Problem orders",
+        "problemsNote": "kept apart"
       }
     },
     "printRun": {
