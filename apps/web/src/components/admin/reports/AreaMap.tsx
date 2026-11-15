@@ -2,7 +2,7 @@
 // placed by its latitude and longitude — the bigger, the more Sales; the redder, the higher its return rate (the reddest
 // is the highest on the map). No map tiles and no outside service: the frame is fitted to the points themselves. Areas
 // without a point stay in the table only.
-import type { AreaRow } from '@extas/metrics';
+import type { AreaRow } from "@extas/metrics";
 
 /** The drawing's width in its own units (it scales to the card). */
 const W = 640;
@@ -12,8 +12,22 @@ const R_MIN = 5;
 /** Room around the outermost points, as a share of the span. */
 const PAD = 0.12;
 
-export function AreaMap({ rows, none, label }: { rows: AreaRow[]; none: string; label: (row: AreaRow) => string }) {
-  const pts = rows.filter((r) => r.lat !== null && r.lng !== null && Number.isFinite(r.lat) && Number.isFinite(r.lng));
+export function AreaMap({
+  rows,
+  none,
+  label,
+}: {
+  rows: AreaRow[];
+  none: string;
+  label: (row: AreaRow) => string;
+}) {
+  const pts = rows.filter(
+    (r) =>
+      r.lat !== null &&
+      r.lng !== null &&
+      Number.isFinite(r.lat) &&
+      Number.isFinite(r.lng),
+  );
   if (!pts.length)
     return (
       <p className="a2-xs a2-mute" data-testid="ar-map-none">
@@ -30,7 +44,9 @@ export function AreaMap({ rows, none, label }: { rows: AreaRow[]; none: string; 
   const x0 = Math.min(...lngs) * kx - spanX * PAD;
   const y1 = Math.max(...lats) + spanY * PAD;
   const sx = W / (spanX * (1 + 2 * PAD));
-  const H = Math.round(Math.min(W * 1.4, Math.max(W * 0.5, spanY * (1 + 2 * PAD) * sx)));
+  const H = Math.round(
+    Math.min(W * 1.4, Math.max(W * 0.5, spanY * (1 + 2 * PAD) * sx)),
+  );
   const sy = H / (spanY * (1 + 2 * PAD));
   const top = Math.max(...pts.map((p) => p.salesMinor), 1);
   // the reddest circle is the area with the highest return rate on this map
@@ -38,10 +54,20 @@ export function AreaMap({ rows, none, label }: { rows: AreaRow[]; none: string; 
   // smaller circles drawn last, so a big one never hides a small one
   const order = [...pts].sort((a, b) => b.salesMinor - a.salesMinor);
   return (
-    <svg className="ar-map" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={order.map(label).join('; ')} data-testid="ar-map-svg">
+    <svg
+      className="ar-map"
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label={order.map(label).join("; ")}
+      data-testid="ar-map-svg"
+    >
       {order.map((p) => {
-        const r = R_MIN + (R_MAX - R_MIN) * Math.sqrt(Math.max(0, p.salesMinor) / top);
-        const red = p.returnRate === null || worst === 0 ? 0 : Math.round((100 * p.returnRate) / worst);
+        const r =
+          R_MIN + (R_MAX - R_MIN) * Math.sqrt(Math.max(0, p.salesMinor) / top);
+        const red =
+          p.returnRate === null || worst === 0
+            ? 0
+            : Math.round((100 * p.returnRate) / worst);
         return (
           <circle
             key={p.areaId}
@@ -49,7 +75,9 @@ export function AreaMap({ rows, none, label }: { rows: AreaRow[]; none: string; 
             cy={(y1 - p.lat!) * sy}
             r={r}
             className="ar-dot"
-            style={{ fill: `color-mix(in srgb, var(--bad) ${red}%, var(--ok))` }}
+            style={{
+              fill: `color-mix(in srgb, var(--bad) ${red}%, var(--ok))`,
+            }}
             data-testid="ar-dot"
           >
             <title>{label(p)}</title>
