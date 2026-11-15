@@ -149,3 +149,10 @@
 /* PR 538: the desk's hours on the inbox */
 .adm2 .sp-desk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--ln);background:var(--sf)}
 .adm2 .sp-desk.closed{background:var(--warnbg);color:var(--warn);border-color:transparent}
+/* parity F4 · PR 850 — the customer panel: "Phone found in chat" and the advice line (tokens of the shell only) */
+.adm2 .sp-found{display:grid;gap:4px;padding:10px 12px;margin-bottom:10px;border:1px solid var(--ln);border-radius:10px;background:var(--bg2);min-width:0;overflow-wrap:anywhere}
+.adm2 .sp-found .a2-lnk{display:inline-flex;align-items:center;min-height:44px}
+.adm2 .sp-advice{display:grid;gap:2px;margin-top:12px;padding:10px 12px;border:1px solid var(--ln);border-radius:10px;background:var(--bg2)}
+.adm2 .sp-advice[data-tone=ok]{border-color:var(--good)}
+.adm2 .sp-advice[data-tone=warn]{border-color:var(--warn)}
+.adm2 .sp-advice[data-tone=bad]{border-color:var(--bad)}

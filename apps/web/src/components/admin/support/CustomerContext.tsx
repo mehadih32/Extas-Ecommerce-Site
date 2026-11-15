@@ -13,7 +13,15 @@ import { t, type Dict } from '@/lib/i18n';
 
 const orderTone = (s: string) => (s === 'DELIVERED' || s === 'PARTIALLY_DELIVERED' ? 'ok' : s === 'RETURNED' || s === 'CANCELLED' ? 'bad' : s === 'HANDED_OVER' || s === 'IN_TRANSIT' ? 'info' : 'warn');
 
-export function CustomerContext({ ctx, d, lang, locale, money, timeZone }: { ctx: ChatContext; d: Dict; lang: 'en' | 'bn'; locale: string; money: Money; timeZone: string }) {
+/** Refused parcels from which the panel says "ask for the delivery charge first" (the prototype's own two; a hint line only). */
+const REFUSED_NOTE_AT = 2; // hardcode-ok: the prototype's hint point; it changes a sentence, never an order
+
+/** parity F4 · PR 850: what to do before the order goes out, from the risk band (green / yellow / red) of the person's latest scored order. */
+export function adviceKey(tone: 'ok' | 'warn' | 'bad' | undefined): 'auto' | 'call' | 'charge' | null {
+  return tone === 'ok' ? 'auto' : tone === 'warn' ? 'call' : tone === 'bad' ? 'charge' : null;
+}
+
+export function CustomerContext({ ctx, d, lang, locale, money, timeZone, chatPhone = null }: { ctx: ChatContext; d: Dict; lang: 'en' | 'bn'; locale: string; money: Money; timeZone: string; chatPhone?: string | null }) {
   const c = (k: string, v?: Record<string, string>) => t(d, `sup.ctx.${k}`, v);
   const n = (x: number) => formatNumber(x, locale);
   const share = (x: number, pct: number | null) => (pct === null ? n(x) : c('share', { n: n(x), p: n(pct) }));
@@ -53,6 +61,19 @@ export function CustomerContext({ ctx, d, lang, locale, money, timeZone }: { ctx
       <p className="a2-xs a2-mute" style={{ margin: '4px 0 12px' }} data-testid="support-context-by">
         {ctx.matchedBy === 'customer' ? c('byCustomer') : ctx.matchedBy === 'phone' ? c('byPhone') : c('unknown')}
       </p>
+      {ctx.matchedBy === 'phone' && chatPhone ? (
+        <div className="sp-found" data-testid="support-phone-found">
+          <b>{c('phoneFound')}</b> <span className="a2-mono">{chatPhone}</span>
+          <div className="a2-xs">
+            {ctx.customer
+              ? c('phoneMatches', { name: ctx.customer.name ?? c('unknown'), orders: n(ctx.orders), refused: ctx.history ? n(ctx.history.refused) : '—' })
+              : c('phoneNew')}
+          </div>
+          <a className="a2-lnk a2-xs" href="#sp-person">
+            {c(ctx.customer ? 'phoneLink' : 'phoneSave')}
+          </a>
+        </div>
+      ) : null}
       {ctx.matchedBy && !ctx.orders ? <p className="a2-sm a2-mute">{c('none')}</p> : null}
       {ctx.orders ? (
         <div className="sp-kv" data-testid="support-context-counts">
@@ -129,6 +150,18 @@ export function CustomerContext({ ctx, d, lang, locale, money, timeZone }: { ctx
             ))}
           </ul>
         </>
+      ) : null}
+      {ctx.risk && adviceKey(ctx.risk.band?.tone) ? (
+        <div className="sp-advice" data-testid="support-advice" data-tone={ctx.risk.band?.tone}>
+          <span className="a2-xs a2-mute">{c('riskBand')}</span>
+          <b>{ctx.risk.band ? ctx.risk.band[lang] : c('noBand')}</b>
+          <span className="a2-xs">{c(`advice.${adviceKey(ctx.risk.band?.tone)}`)}</span>
+        </div>
+      ) : null}
+      {h && h.refused >= REFUSED_NOTE_AT ? (
+        <p className="a2-note warn a2-mt12" data-testid="support-refused-note">
+          {c('refusedNote')}
+        </p>
       ) : null}
       {ctx.customer && ctx.you.customer ? (
         <p className="a2-mt12">

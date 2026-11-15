@@ -406,7 +406,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       </section>
       {th.ticket ? <TicketCard ticket={th.ticket} dict={d} locale={view.locale} timeZone={view.timeZone} now={new Date()} me={th.you.id} /> : null}
       {bag ? <ChatBag key={th.id} url={`${API}/c/${th.id}/cart`} bag={bag} lang={view.lang} money={moneyOf(currency, view.locale)} texts={cartTexts} /> : null}
-      {th.context ? <CustomerContext ctx={th.context} d={d} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} timeZone={view.timeZone} /> : null}
+      {th.context ? <CustomerContext ctx={th.context} chatPhone={th.contact.phone} d={d} lang={view.lang} locale={view.locale} money={moneyOf(currency, view.locale)} timeZone={view.timeZone} /> : null}
       <section className="a2-card" aria-labelledby="sp-person" data-testid="support-person">
         <h2 className="a2-h4" id="sp-person">
           {p('h')}

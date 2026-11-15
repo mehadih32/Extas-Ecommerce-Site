@@ -664,7 +664,19 @@
       "open": "Open Customer 360",
       "exchanges": "Exchanges asked for",
       "notes": "Team notes",
-      "pinned": "Pinned"
+      "pinned": "Pinned",
+      "phoneFound": "Phone found in chat",
+      "phoneMatches": "Matches {name} · {orders} orders · {refused} refused",
+      "phoneNew": "New number · no order with us yet",
+      "phoneLink": "Link chat to this customer",
+      "phoneSave": "Save as new customer",
+      "riskBand": "Risk level",
+      "refusedNote": "Refused parcels before. Ask for the delivery charge in advance.",
+      "advice": {
+        "auto": "Confirms by itself",
+        "call": "Call before sending",
+        "charge": "Ask delivery charge first"
+      }
     },
     "prod": {
       "button": "Send order link",
