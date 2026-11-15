@@ -18,6 +18,7 @@ import { AskPayout } from '@/components/admin/couriers/PayoutPanel';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCouriers } from '@/lib/admin-couriers';
 import { withCourierReport } from '@/lib/admin-courier-report';
@@ -172,11 +173,9 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         title={co('title')}
         sub={co('sub')}
         right={
-          canMove ? (
-            <a className="a2-btn pri" href="#claimable" data-testid="claims-new">
-              {co('new')}
-            </a>
-          ) : null
+          <a className="a2-btn pri" href={canMove ? '#claimable' : '/admin/delivery/settings'} data-testid="claims-new">
+            <ShellIcon name="plus" size={16} /> {co('new')}
+          </a>
         }
       />
       <SectionTabs view={view} current={KEY} />
@@ -204,6 +203,9 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                 ))}
               </select>
             </div>
+            <details className="a2-fmore cl-more" open={!!(kind || from || to)}>
+              <summary className="a2-btn ghost">{co('f.more')}</summary>
+              <div className="a2-fmore-b">
             <div className="a2-fld">
               <label className="a2-lbl" htmlFor="cl-k">{co('f.kind')}</label>
               <select id="cl-k" name="k" className="a2-sel" defaultValue={kind}>
@@ -221,9 +223,12 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
               <label className="a2-lbl" htmlFor="cl-to">{co('f.to')}</label>
               <input id="cl-to" name="to" type="date" className="a2-inp" defaultValue={to} />
             </div>
+              </div>
+            </details>
             <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
               {status !== 'all' ? <input type="hidden" name="s" value={status} /> : null}
               <button type="submit" className="cl-go" data-testid="claims-show">{co('f.show')}</button>
+              {courier ? <input type="hidden" name="c" value={courier} /> : null}
               {courier || kind || from || to || status !== 'all' ? <Link href={HERE} className="cl-link" data-testid="claims-clear">{co('f.clear')}</Link> : null}
             </div>
           </div>
@@ -357,7 +362,15 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
               <div className="cl-money a2-mt6">
                 {o.money.couriers.map((c) => (
                   <div key={c.courierAccountId} className="a2-card tight" data-testid="claims-courier-money">
-                    <b>{c.courier || '—'}</b>
+                    <div className="cl-mh">
+                      <b>{c.courier || '—'}</b>
+                      <span className={`a2-pill ${c.requestedMinor ? 'info' : askable.has(c.courierAccountId) ? 'info' : 'line'}`} data-testid="claims-courier-state">
+                        {c.requestedMinor ? co('money.stRequested') : askable.has(c.courierAccountId) ? co('money.stReady') : co('money.stIdle')}
+                      </span>
+                    </div>
+                    <p className="a2-sm a2-mute">{c.requestedMinor ? co('money.lineRequested', { amount: m(c.requestedMinor) }) : co('money.lineReady', { amount: m(askable.get(c.courierAccountId)?.holds.netMinor ?? c.holdsMinor) })}</p>
+                    <details className="cl-det">
+                      <summary className="a2-xs a2-mute">{co('money.details')}</summary>
                     <dl className="cl-kv">
                       <dt className="a2-sm a2-mute">{co('money.holds')}</dt>
                       <dd>{m(c.holdsMinor)} <span className="a2-xs a2-mute">{co('money.holdsN', { n: n(c.holdsParcels) })}</span></dd>
@@ -376,6 +389,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                       <dt className="a2-sm"><b>{co('money.owed')}</b></dt>
                       <dd>{m(c.owedMinor)}</dd>
                     </dl>
+                    </details>
                     {askable.get(c.courierAccountId) ? (
                       <div className="a2-mt6" data-testid="claims-ready">
                         <p className="a2-sm">

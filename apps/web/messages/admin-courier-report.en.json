@@ -3,7 +3,12 @@
     "metaTitle": "Delivery & RTO",
     "title": "Delivery & RTO",
     "sub": "How each courier delivers: on time against the promise, refused at the door, by zone and district — and what returned parcels cost. One denominator: parcels with a final outcome.",
-    "period": { "label": "Period", "d7": "7 days", "d30": "30 days", "d90": "90 days" },
+    "period": {
+      "label": "Period",
+      "d7": "7 days",
+      "d30": "30 days",
+      "d90": "90 days"
+    },
     "kpi": {
       "success": "Delivery success",
       "successNote": "{n} of {of} parcels delivered",
@@ -14,7 +19,25 @@
       "late": "Late now",
       "lateNote": "with a courier, past the promise"
     },
-    "col": { "courier": "Courier", "zone": "Courier · zone", "district": "District", "parcels": "Parcels", "delivered": "Delivered", "onTime": "On time", "returned": "Came back", "refused": "Refused", "tries": "Failed tries", "lost": "Lost", "damaged": "Damaged", "order": "Order", "due": "Promised by", "status": "Now", "key": "Name", "cost": "RTO cost", "share": "Share" },
+    "col": {
+      "courier": "Courier",
+      "zone": "Courier · zone",
+      "district": "District",
+      "parcels": "Parcels",
+      "delivered": "Delivered",
+      "onTime": "On time",
+      "returned": "Came back",
+      "refused": "Refused",
+      "tries": "Failed tries",
+      "lost": "Lost",
+      "damaged": "Damaged",
+      "order": "Order",
+      "due": "Promised by",
+      "status": "Now",
+      "key": "Name",
+      "cost": "RTO cost",
+      "share": "Share"
+    },
     "byCourier": "Courier performance",
     "byZone": "Performance by zone",
     "byDistrict": "By district",
@@ -34,7 +57,13 @@
       "offPill": "Off",
       "turnOn": "Switch the book on",
       "turnOff": "Switch it off",
-      "dims": { "district": "District", "campaign": "Campaign", "product": "Product", "courier": "Courier", "reason": "Reason" },
+      "dims": {
+        "district": "District",
+        "campaign": "Campaign",
+        "product": "Product",
+        "courier": "Courier",
+        "reason": "Reason"
+      },
       "total": "Total {cost} on {n} returned parcels",
       "floor": "{n} parcels miss a figure you have not entered yet, so this is the least it cost. Enter them on Money › Costs & fees.",
       "fees": "Costs & fees",
@@ -67,8 +96,30 @@
       "none": "No case in these months.",
       "cards": "A case needs the courier's rate cards for every band (Delivery › Couriers)."
     },
-    "source": { "WEBSITE": "Website", "LANDING_PAGE": "Landing page", "MESSENGER": "Messenger", "WHATSAPP": "WhatsApp", "LIVE_CHAT": "Live chat", "PHONE": "Phone", "TELEGRAM": "Telegram", "ADMIN": "Admin", "SHOWROOM": "Showroom", "IMPORT": "Import" },
-    "status": { "IN_REVIEW": "In review", "PENDING_PICKUP": "Waiting for pickup", "PICKED_UP": "Picked up", "IN_TRANSIT": "On the way", "OUT_FOR_DELIVERY": "Out for delivery", "ATTEMPT_FAILED": "Try failed", "ADDRESS_PROBLEM": "Address problem", "LOST": "Lost", "DAMAGED": "Damaged", "RETURNING": "Coming back" },
+    "source": {
+      "WEBSITE": "Website",
+      "LANDING_PAGE": "Landing page",
+      "MESSENGER": "Messenger",
+      "WHATSAPP": "WhatsApp",
+      "LIVE_CHAT": "Live chat",
+      "PHONE": "Phone",
+      "TELEGRAM": "Telegram",
+      "ADMIN": "Admin",
+      "SHOWROOM": "Showroom",
+      "IMPORT": "Import"
+    },
+    "status": {
+      "IN_REVIEW": "In review",
+      "PENDING_PICKUP": "Waiting for pickup",
+      "PICKED_UP": "Picked up",
+      "IN_TRANSIT": "On the way",
+      "OUT_FOR_DELIVERY": "Out for delivery",
+      "ATTEMPT_FAILED": "Try failed",
+      "ADDRESS_PROBLEM": "Address problem",
+      "LOST": "Lost",
+      "DAMAGED": "Damaged",
+      "RETURNING": "Coming back"
+    },
     "claims": {
       "title": "Claims",
       "sub": "Money you ask this courier for: a lost or damaged parcel (its declared value) or a rider's extra. A record only — the courier pays on its statement.",
@@ -84,13 +135,25 @@
       "declared": "declared {amount}",
       "list": "Claims",
       "empty": "No claims yet.",
-      "kind": { "LOST": "Lost", "DAMAGED": "Damaged", "RIDER_OVERCHARGE": "Rider's extra", "OTHER": "Other", "SHORT_COD": "Short COD", "RETURN_SHORT": "Return came back short" },
-      "state": { "OPEN": "Open", "SENT": "Sent", "SETTLED": "Settled", "REJECTED": "Rejected" },
+      "kind": {
+        "LOST": "Lost",
+        "DAMAGED": "Damaged",
+        "RIDER_OVERCHARGE": "Rider's extra",
+        "OTHER": "Other",
+        "SHORT_COD": "Short COD",
+        "RETURN_SHORT": "Return came back short"
+      },
+      "state": {
+        "OPEN": "Open",
+        "SENT": "Sent",
+        "SETTLED": "Settled",
+        "REJECTED": "Rejected"
+      },
       "send": "Mark sent",
       "ref": "The courier's claim number",
-      "settle": "Settled",
+      "settle": "Won",
       "paid": "What the courier paid (৳)",
-      "reject": "Rejected",
+      "reject": "Lost",
       "why": "Why the courier refused",
       "paidLine": "paid {amount}"
     },
@@ -99,7 +162,12 @@
       "title": "Rider issues",
       "sub": "A customer says the rider took more than the parcel asked. Log it with a photo, then approve or reject. Approving opens a courier claim for the exact extra.",
       "off": "Rider issues are off. Switch them on under More options.",
-      "views": { "LOGGED": "Waiting", "APPROVED": "Approved", "REJECTED": "Rejected", "all": "All" },
+      "views": {
+        "LOGGED": "Waiting",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "all": "All"
+      },
       "log": "Log a complaint",
       "order": "Order number",
       "charged": "What the customer paid the rider (৳)",
@@ -121,7 +189,11 @@
       "claimOpen": "Courier claim opened for {extra}.",
       "decided": "Decision: {note}",
       "empty": "No complaints here.",
-      "state": { "LOGGED": "Waiting", "APPROVED": "Approved", "REJECTED": "Rejected" },
+      "state": {
+        "LOGGED": "Waiting",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
       "settings": "More options",
       "enabled": "Rider issues on",
       "proofRequired": "A photo is required",
