@@ -77,6 +77,22 @@ export const HUB_ROWS: readonly HubRow[] = [
   { type: 'link', id: 'cod', group: 'payment', href: '/admin/delivery/settings' },
   // Checkout & payments: the reward for paying online is an offer now
   { type: 'link', id: 'prepaid', group: 'checkout', href: '/admin/rules/offers', onKey: 'checkout.prepaidReward.enabled' },
+  // PR 833 (prototype "Gift mode"): the gift choice at checkout; its advance rule stays in Checkout settings
+  {
+    type: 'setting',
+    id: 'gift',
+    group: 'checkout',
+    key: 'checkout.gift',
+    fields: [
+      { path: 'enabled', type: 'bool' },
+      { path: 'noteMaxChars', type: 'int', min: 0, max: 1000 },
+      { path: 'deliverAfterMaxDays', type: 'int', min: 0, max: 365 },
+      { path: 'hidePricesDefault', type: 'bool' },
+    ],
+    onPath: 'enabled',
+    money: false,
+    optional: true,
+  },
   // Order flow
   {
     type: 'setting',
@@ -162,6 +178,21 @@ export const HUB_ROWS: readonly HubRow[] = [
   { type: 'link', id: 'offers', group: 'discounts', href: '/admin/rules/offers' },
   // Messages
   { type: 'link', id: 'popups', group: 'messages', href: '/admin/rules/notices' },
+  // PR 833 (prototype "Quiet hours & limits"): messages due in these hours wait until the morning
+  {
+    type: 'setting',
+    id: 'quiet',
+    group: 'messages',
+    key: 'messages.quietHours',
+    fields: [
+      { path: 'on', type: 'bool' },
+      { path: 'fromHour', type: 'int', min: 0, max: 23 },
+      { path: 'toHour', type: 'int', min: 0, max: 23 },
+    ],
+    onPath: 'on',
+    money: false,
+    optional: true,
+  },
 ];
 
 /** Which group a Smart Rule of this kind is listed under. */
