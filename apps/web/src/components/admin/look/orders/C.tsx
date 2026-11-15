@@ -3,7 +3,7 @@
 // already show, `@/lib/admin-orders/model` LIST_PAGES), a denser table (CSS only: tighter rows, same columns, same
 // bulk bar) and the same filters and footer as design A. Nothing here reads a figure design A does not already read.
 import Link from 'next/link';
-import { EmptyList, Kpis, ordersDict, readDeps, filterSelects } from '@/components/admin/orders/OrderListPage';
+import { EmptyList, Kpis, ordersDict, ordersSubtitle, readDeps, filterSelects } from '@/components/admin/orders/OrderListPage';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
 import { CancelledSummary } from '@/components/admin/orders/CancelledSummary';
 import { OrderTable } from '@/components/admin/orders/OrderTable';
@@ -48,9 +48,10 @@ async function OrdersC(p: OrdersDesignProps) {
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
+  const sub = await ordersSubtitle(view, a, query, data.counts.all ?? 0, filtered);
   return (
     <div className="a2-z a3-ordc" data-testid="orders-list" data-design="C" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
       <SectionTabs view={view} current="orders" />
       <Kpis view={view} a={a} counts={data.counts} now={now} />
       <FlowStrip p={p} counts={data.counts} />

@@ -17,6 +17,7 @@ import { Bar, Card, Delta, Empty, LineChart, Lnk, Pill } from '../kit';
 import type { Fmt } from '../fmt';
 import { can, DashHead, rangeText, type DashProps } from './common';
 import { TopProducts } from './A';
+import { ChartDoNow, ProtoLower } from './ProtoCards';
 
 const GOLD = 'var(--gold)';
 const C1 = 'var(--a3-c1)';
@@ -290,8 +291,6 @@ function DashboardC(p: DashProps) {
         <TopProducts f={f} rows={data.top} />
       </Card>,
     );
-  if (data.delivery) cards.push(<CourierCard key="cour" {...p} />);
-  if (data.queues) cards.push(<NeedsNow key="need" {...p} />);
 
   return (
     <div className="a2-z a3-dash" data-testid="dash" data-design="C">
@@ -306,8 +305,9 @@ function DashboardC(p: DashProps) {
         </Link>
       ) : null}
       {kpis.length ? <div className="a3-k4">{kpis}</div> : null}
-      {trend}
+      {trend ? <ChartDoNow p={p} lead={trend} /> : data.queues ? <NeedsNow {...p} /> : null}
       <StagesPipe {...p} />
+      <ProtoLower {...p} mid={data.delivery ? <CourierCard {...p} /> : null} />
       {cards.length ? (
         <div className="a3-dg3" style={{ ['--n' as string]: cards.length }}>
           {cards}
@@ -324,7 +324,7 @@ export const dashboardC: LookDesign<DashProps, DashPart> = {
     en: 'The V12.3 dashboard: headline numbers, the delivered-sales graph and the "Needs you now" list on the page.',
     bn: 'V12.3-এর ড্যাশবোর্ড: বড় সংখ্যা, বিক্রির গ্রাফ আর পাতার ওপর "এখনই করতে হবে" তালিকা।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'queues', 'offSite'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'ads'],
   Render: DashboardC,
   // The demo's own key for this design is A (97z-adm2-rd2-dash.js a3Design('dashboard', 'A', …)).
   Thumb: () => <LookThumb page="dashboard" id="A" />,

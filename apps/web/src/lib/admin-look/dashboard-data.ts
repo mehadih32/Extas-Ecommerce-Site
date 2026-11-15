@@ -14,6 +14,7 @@ import type { AdminToday } from '@extas/settings';
 import type { QueueRow } from '../admin-shell/queues';
 import type { ShellViewer } from '../admin-shell/sections';
 import { OFF_SITE, offSiteMissing } from '../backup-gate';
+import { reportOverview } from '../marketing/report';
 import { moneyOverview } from '../money-overview';
 import { chartWindow, shiftDay, type DashRange } from './range';
 
@@ -24,7 +25,7 @@ import { chartWindow, shiftDay, type DashRange } from './range';
 // `admin.dashboardDesigns.courierDays` days of orders by weekday and 2-hour slot, for the Command center design).
 // S28 · PR 691 (admin prototype v5, Home Command): 'profit' (net profit, delivered sales and ad spend of the period and the one before,
 // from the same report as Finance), 'cod' (the cash the couriers hold) and 'pins' (the library cards pinned to Home).
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours', 'profit', 'cod', 'pins'] as const;
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours', 'profit', 'cod', 'pins', 'ads'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -43,6 +44,7 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   profit: ['books.read'],
   cod: ['payments.view'],
   pins: ['reports.read'],
+  ads: ['marketing.campaigns.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -57,6 +59,10 @@ export interface DashDesignSettings {
   courierDays: number;
   customMaxDays: number;
   sparkWeeks: number;
+  /** PR 729: delivered sales per 1 spent at which a channel is "Scale up" / "Keep" / "Fix" (under: "Stop"). */
+  adsScaleAt: number;
+  adsKeepAt: number;
+  adsFixAt: number;
 }
 
 export interface DashCtx {
@@ -198,6 +204,19 @@ export interface DashProfit {
   prev: DashProfitSpan;
 }
 /** The cash the couriers hold for the shop (COD collected, not yet paid out) and how many parcels it is in. */
+/** PR 729: one ad channel of the period — what was spent, the delivered sales it brought and the sales per 1 spent. */
+export interface DashAdsRow {
+  /** `ads:META`, `ads:GOOGLE`, `ads:TIKTOK`, `ads:YOUTUBE`. */
+  key: string;
+  spendMinor: number | null;
+  salesMinor: number;
+  /** Sales per 1 spent (null: no spend or an unknown one). */
+  per: number | null;
+}
+export interface DashAds {
+  rows: DashAdsRow[];
+}
+
 export interface DashCod {
   minor: number;
   parcels: number;
@@ -251,6 +270,7 @@ export interface DashboardData {
   profit: DashProfit | null;
   cod: DashCod | null;
   pins: DashPin[] | null;
+  ads: DashAds | null;
 }
 
 const OPEN = {
@@ -623,12 +643,21 @@ async function cod(c: DashCtx): Promise<DashCod> {
   return { minor: o.cod.minor, parcels: o.cod.parcels };
 }
 
+/** PR 729: the period's ad spend and delivered sales channel by channel (Marketing › Report's own figures; none when it is switched off). */
+async function ads(c: DashCtx): Promise<DashAds> {
+  const o = await reportOverview({ db: c.db, resolver: c.settings as Parameters<typeof reportOverview>[0]['resolver'], now: () => c.now }, { from: c.range.from, to: c.range.to });
+  const rows = (o.report?.channels ?? [])
+    .filter((x) => x.kind === 'ads')
+    .map((x) => ({ key: x.key, spendMinor: x.spendMinor, salesMinor: x.salesMinor, per: salesPerUnit(x.salesMinor, x.spendMinor) }));
+  return { rows };
+}
+
 export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Promise<DashboardData> {
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
   const needProfit = parts.has('profit') || parts.has('pins');
-  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr, pf, cd, pinRows] = await Promise.all([
+  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr, pf, cd, pinRows, ad] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
@@ -643,6 +672,7 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
     needProfit ? profit(c) : Promise.resolve(null),
     on('cod', () => cod(c)),
     on('pins', () => c.db.reportView.findMany({ where: { storeId: c.storeId, reportKey: 'pin', archivedAt: null }, orderBy: { createdAt: 'asc' }, select: { name: true } })),
+    on('ads', () => ads(c)),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr, profit: parts.has('profit') ? pf : null, cod: cd, pins: pinRows ? pinTiles(pinRows.map((r) => r.name), pf) : null };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr, profit: parts.has('profit') ? pf : null, cod: cd, pins: pinRows ? pinTiles(pinRows.map((r) => r.name), pf) : null, ads: ad };
 }

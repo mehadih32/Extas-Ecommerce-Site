@@ -151,6 +151,27 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
   ];
 }
 
+/**
+ * PR 722 / PR 730 (prototype "861 orders · ৳19,50,785"): on the unfiltered list, the count and the value of the orders that count (not
+ * cancelled, not a draft), the value only for a person who may read money. Any filter or view keeps the page's own sentence. Every
+ * design of the page (A, B and C) writes its title line with this one function, so they always agree.
+ */
+export async function ordersSubtitle(view: AdminView, a: ListAccess, query: ListQuery, all: number, filtered: boolean): Promise<string> {
+  const d = view.dict;
+  if (query.view === 'all' && !filtered && !query.sort && a.perms.has('metrics.read')) {
+    try {
+      const [sum, currency] = await Promise.all([
+        a.deps.db.order.aggregate({ where: { storeId: MOTHER_STORE_ID, archivedAt: null, status: { notIn: ['DRAFT', 'CANCELLED'] } }, _sum: { totalMinor: true } }),
+        a.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+      ]);
+      return t(d, 'orders.list.subTotal', { n: formatNumber(all, view.locale), v: formatMoney(sum._sum.totalMinor ?? 0, moneyOf(currency, view.locale)) });
+    } catch {
+      return t(d, 'orders.list.sub');
+    }
+  }
+  return t(d, 'orders.list.sub');
+}
+
 export async function OrderListPage({ view, a, query, now, menu }: { view: AdminView; a: ListAccess; query: ListQuery; now: Date; /** PR 656 (follow-up 381): the "…" menu that lets a person switch to design B or C; `null` keeps this page exactly as it drew before. */ menu?: LookMenuProps | null }) {
   const d = view.dict;
   const page: ListPageId = 'all';
@@ -160,20 +181,7 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
   // follow-up 222: the ticked orders' files (Export, Print invoices), each with its own key
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
-  // PR 722 (prototype "861 orders · ৳19,50,785"): on the unfiltered list, the count and the value of the orders that count (not cancelled, not a draft);
-  // the value only for a person who may read money. Any filter or view keeps the page's own sentence.
-  let sub: string = t(d, 'orders.list.sub');
-  if (query.view === 'all' && !filtered && !query.sort && a.perms.has('metrics.read')) {
-    try {
-      const [sum, currency] = await Promise.all([
-        a.deps.db.order.aggregate({ where: { storeId: MOTHER_STORE_ID, archivedAt: null, status: { notIn: ['DRAFT', 'CANCELLED'] } }, _sum: { totalMinor: true } }),
-        a.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
-      ]);
-      sub = t(d, 'orders.list.subTotal', { n: formatNumber(data.counts.all ?? 0, view.locale), v: formatMoney(sum._sum.totalMinor ?? 0, moneyOf(currency, view.locale)) });
-    } catch {
-      sub = t(d, 'orders.list.sub');
-    }
-  }
+  const sub = await ordersSubtitle(view, a, query, data.counts.all ?? 0, filtered);
   return (
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
       <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />

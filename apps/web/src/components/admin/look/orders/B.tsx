@@ -5,7 +5,7 @@
 // does not already read and writes nothing (a read-only re-arrangement, CN-044).
 import Link from 'next/link';
 import * as od from '@extas/orders';
-import { EmptyList, Kpis, ordersDict, readDeps, ViewChips, filterSelects } from '@/components/admin/orders/OrderListPage';
+import { EmptyList, Kpis, ordersDict, ordersSubtitle, readDeps, ViewChips, filterSelects } from '@/components/admin/orders/OrderListPage';
 import { OrderFilters } from '@/components/admin/orders/OrderFilters';
 import { CancelledSummary } from '@/components/admin/orders/CancelledSummary';
 import { OrderTable } from '@/components/admin/orders/OrderTable';
@@ -59,12 +59,13 @@ async function OrdersB(p: OrdersDesignProps) {
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);
+  const sub = await ordersSubtitle(view, a, query, data.counts.all ?? 0, filtered);
   const toConfirm = data.counts.toConfirm ?? 0;
   // Same one call Kpis makes for its own "to confirm" age line (`od.viewOldest`) — the hero's count and age always agree.
   const oldest = toConfirm ? await od.viewOldest(readDeps(a.deps), a.who, 'toConfirm') : null;
   return (
     <div className="a2-z a3-ordb" data-testid="orders-list" data-design="B" data-lm-ready="">
-      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={t(d, 'orders.list.sub')} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
+      <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} /><LookMenu {...menu} /></>} />
       <SectionTabs view={view} current="orders" />
       <Hero p={p} toConfirm={toConfirm} oldest={oldest} />
       <Kpis view={view} a={a} counts={data.counts} now={now} />

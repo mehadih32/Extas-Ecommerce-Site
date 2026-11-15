@@ -16,6 +16,10 @@ export interface Fmt {
   t(key: string, vars?: Record<string, string | number>): string;
   n(x: number): string;
   money(minor: number): string;
+  /** PR 729: a share of the sales as money out of every 100 sold (0.23 → "৳23"), written like the prototype's "you keep ৳23 of every ৳100 sold". */
+  per100(share: number): string;
+  /** The sum of 100 in the shop's money, for "of every ৳100". */
+  hundred: string;
   /** Short money for an axis or a tight tile (৳12K style, from Intl). */
   short(minor: number): string;
   pct(x: number | null | undefined, digits?: number): string;
@@ -52,6 +56,8 @@ export function fmtOf(view: AdminView, currency: string, now: Date): Fmt {
     t: tt,
     n: (x) => formatNumber(Math.round(x), view.locale),
     money: (minor) => formatMoney(minor, money),
+    per100: (share) => formatMoney(Math.round(share * 100) * 10 ** money.digits, money),
+    hundred: formatMoney(100 * 10 ** money.digits, money),
     short,
     pct: (x, digits = 1) => (x === null || x === undefined || !Number.isFinite(x) ? '—' : `${(x * 100).toFixed(digits)}%`),
     ago: (iso) => {

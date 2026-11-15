@@ -76,6 +76,12 @@ export const adminDashboardDesignsSchema = z
     customMaxDays: z.int().min(7).max(731),
     /** Weeks in the week-by-week spark lines (delivery success, average order). */
     sparkWeeks: z.int().min(2).max(26),
+    /** PR 729 (Home "Ads: are they paying?"): delivered sales per 1 spent from which a channel's verdict is "Scale up". */
+    adsScaleAt: z.number().min(0).max(100).default(4),
+    /** ...from which it is "Keep" (below "Scale up"). */
+    adsKeepAt: z.number().min(0).max(100).default(2.5),
+    /** ...from which it is "Fix" (below "Keep"); under it the verdict is "Stop". */
+    adsFixAt: z.number().min(0).max(100).default(1.5),
   })
   .strict();
 
@@ -109,7 +115,7 @@ export const adminLookSettings = {
   'admin.dashboardDesigns': setting({
     ...json,
     schema: adminDashboardDesignsSchema,
-    default: { targetHours: 24, chartMinDays: 14, smoothDays: 3, topProducts: 5, lowStockRows: 5, courierDays: 30, customMaxDays: 366, sparkWeeks: 8 },
+    default: { targetHours: 24, chartMinDays: 14, smoothDays: 3, topProducts: 5, lowStockRows: 5, courierDays: 30, customMaxDays: 366, sparkWeeks: 8, adsScaleAt: 4, adsKeepAt: 2.5, adsFixAt: 1.5 },
     labelKey: 'admin.dashboardDesigns.label',
     helpKey: 'admin.dashboardDesigns.help',
     sortOrder: 43,
