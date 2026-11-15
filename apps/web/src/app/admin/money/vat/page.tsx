@@ -13,6 +13,7 @@ import { VatScreen } from '@/components/admin/money/VatScreen';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -45,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function VatPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('books.read', deps, MOTHER_STORE_ID), searchParams]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -80,7 +81,7 @@ export default async function VatPage({ searchParams }: { searchParams: Promise<
   };
   return (
     <div className="a2-z" data-testid="vat-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyVat.title')} sub={t(view.dict, 'moneyVat.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyVat.title')} sub={t(view.dict, 'lf.fh.vat.sub')} />
       <SectionTabs view={view} current={KEY} />
       {/* Keyed by the saved versions, so the fields start again from what was saved after each save. */}
       <VatScreen key={`${v.system.version}-${v.rates.version}`} dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} view={v} canEdit={canEdit} example={example} />
