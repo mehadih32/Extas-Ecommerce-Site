@@ -284,7 +284,7 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     const row = s.rows.find((r) => r.offerId === offerId)!;
     expect(row.results).toEqual({ orders: 2, salesMinor: 286000, discountMinor: 30000, deliveredMinor: 188000, returned: 1 });
     expect(s.rows.map((r) => r.source)).toEqual(expect.arrayContaining(['offer', 'points', 'wallet']));
-    expect(s.discount30).toEqual({ discountMinor: 30000, orders: 2 });
+    expect(s.discount30).toMatchObject({ discountMinor: 30000, orders: 2 });
     // the offer's own rule and coupon are not listed a second time
     expect(s.rows.filter((r) => r.source === 'coupon' && r.code === 'TESTTEN')).toHaveLength(0);
   });

@@ -316,10 +316,48 @@
         "online": "Online-payment reward",
         "onlineD": "A reward for paying by bKash, Nagad or card: free delivery, % or ৳ off, points or wallet credit.",
         "points": "Points & wallet",
-        "pointsD": "Rewards that are given back later, not taken off the price now."
+        "pointsD": "Rewards that are given back later, not taken off the price now.",
+        "abandoned": "Abandoned-cart offers",
+        "abandonedD": "Used in Incomplete orders messages and by the AI follow-up to bring people back.",
+        "first": "First order / returning",
+        "firstD": "Offers only for new customers, or only for people who already bought."
       },
       "none": "No offers here yet.",
-      "costNote": "Cost = discount given. Click a row for the full picture."
+      "costNote": "Cost = discount given. Click a row for the full picture.",
+      "kSales": "Sales from offers",
+      "kBest": "Best: {name}",
+      "kMargin": "Margin after discount",
+      "kMarginSub": "vs ERP buying price",
+      "kMarginNone": "not known until every item has its buying price",
+      "kRoi": "ROI",
+      "kRoiSub": "profit per {cur}1 given",
+      "btnSale": "Sale price",
+      "btnCoupon": "Quick coupon",
+      "aw": {
+        "title": "Awaiting your approval",
+        "sub": "Nothing goes live until you approve with your PIN.",
+        "review": "Review"
+      },
+      "hd": {
+        "title": "Heads up",
+        "sub": "Offers that could apply to the same cart.",
+        "none": "No overlaps. Every cart gets at most one discount.",
+        "open": "Open",
+        "pair": "\"{a}\" and \"{b}\" both change the same thing ({slot}). One of them wins; check which."
+      },
+      "cal": {
+        "title": "Calendar",
+        "sub": "Next 5 weeks. The dark line is today.",
+        "none": "Nothing running or planned."
+      },
+      "wz": {
+        "type": "What does the customer get?",
+        "where": "Where does it apply?",
+        "who": "Who can get it?",
+        "credit": "The customer can use it on the next purchase.",
+        "pointsHint": "Set the value of a point in Customers › Loyalty.",
+        "minHint": "0 or empty = no minimum."
+      }
     },
     "mn": {
       "now": "Where the money is now",
