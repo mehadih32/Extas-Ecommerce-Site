@@ -65,6 +65,23 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Please try again."
       }
+    },
+    "googleLink": "Google ranking →",
+    "how": {
+      "title": "How shop ranking works",
+      "sub": "This is only the order on your own shop: category pages, collections and search. Google is separate.",
+      "s1": {
+        "h": "Every product gets a score",
+        "p": "0 to 100, from five things: sales, how many visitors buy, profit, sizes in stock and how new it is. The sliders below decide how much each counts."
+      },
+      "s2": {
+        "h": "Higher score shows first",
+        "p": "Sold-out sizes lower the score by themselves, so customers do not open products they cannot buy. Scores update every night."
+      },
+      "s3": {
+        "h": "You can always overrule",
+        "p": "“Top” pins a product above everything (good for a launch); “Down” sends it to the end. Changes go live when you press “Save this order”."
+      }
     }
   }
 }
