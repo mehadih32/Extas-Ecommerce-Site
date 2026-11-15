@@ -2,7 +2,7 @@
   "inc": {
     "metaTitle": "Incomplete orders · Orders",
     "title": "Incomplete orders",
-    "sub": "People who started checkout but did not finish",
+    "sub": "People who started an order and stopped. Start from the top, one by one.",
     "note": "Only what the customer typed on the visible form is kept, and only while the switch below is on. Nothing is sent from here: a ready message only opens WhatsApp or SMS for you to press send. Confirm as order places a Cash on Delivery order the same way the website does; no money is asked or moved. A follow-up message goes only while its own switch below is on, and only to customers who said yes to offers.",
     "off": "Keeping unfinished checkouts is off, so nothing new is kept. Switch it on in the card at the bottom of this page.",
     "allLink": "All orders",
@@ -236,6 +236,17 @@
       "deliveryHelp": "Tells the customer you deliver to the area.",
       "offer": "Message: offer",
       "offerHelp": "Only someone who may approve a discount can open it, and types the offer words themselves."
+    },
+    "kpi": {
+      "aria": "Incomplete orders at a glance",
+      "open": "Open now",
+      "openSub": "people who can still be called",
+      "hot": "Hot (address or payment)",
+      "hotSub": "got as far as the address or payment step",
+      "later": "Ordered later",
+      "laterSub": "{n} after our call or message",
+      "noNumber": "Left without a number",
+      "noNumberSub": "nobody to call; only counted"
     }
   }
 }

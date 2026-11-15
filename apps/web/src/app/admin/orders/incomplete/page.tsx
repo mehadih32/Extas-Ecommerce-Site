@@ -15,6 +15,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { IncompleteActions } from '@/components/admin/orders/IncompleteActions';
 import { IncompleteContact } from '@/components/admin/orders/IncompleteContact';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -155,6 +156,17 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     <div className="a2-z" data-testid="inc-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
+      {/* PR 804: the prototype's four figures — Open now, Hot (address or payment), Ordered later, Left without a number */}
+      <SummaryTiles
+        label={g('kpi.aria')}
+        testId="inc-kpis"
+        tiles={[
+          { key: 'open', label: g('kpi.open'), value: o.counts.open, shown: n(o.counts.open), format: { kind: 'number', locale: view.locale }, vs: g('kpi.openSub'), icon: 'bag' },
+          { key: 'hot', label: g('kpi.hot'), value: o.journey.address + o.journey.payment, shown: n(o.journey.address + o.journey.payment), format: { kind: 'number', locale: view.locale }, vs: g('kpi.hotSub'), icon: 'clock' },
+          { key: 'later', label: g('kpi.later'), value: o.counts.later, shown: n(o.counts.later), format: { kind: 'number', locale: view.locale }, vs: g('kpi.laterSub', { n: n(o.journey.recoveredByPhone) }), icon: 'check' },
+          { key: 'nonum', label: g('kpi.noNumber'), value: o.noPhone.bags, shown: n(o.noPhone.bags), format: { kind: 'number', locale: view.locale }, vs: g('kpi.noNumberSub'), icon: 'search' },
+        ]}
+      />
       <div className="a2-note inc-mt8" role="note">
         <span>{g('note')}</span>
       </div>
