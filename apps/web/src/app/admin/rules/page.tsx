@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { RulesHub } from '@/components/admin/rules/RulesHub';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -41,7 +41,7 @@ export default async function RulesHubPage({ searchParams }: { searchParams: Pro
   ]);
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <RulesHub
         dict={view.dict}
         lang={view.lang}
@@ -50,11 +50,6 @@ export default async function RulesHubPage({ searchParams }: { searchParams: Pro
         roles={roles.map((r) => ({ key: r.key, name: (view.lang === 'bn' ? r.nameBn : null) || r.nameEn }))}
         perms={{ write: a.perms.write, approve: a.perms.approve }}
         initialSel={rule && hub.rows.some((r) => r.id === rule && r.type === 'setting') ? rule : null}
-        tabs={
-          <div className="pa-gtabs">
-            <SystemTabs view={view} current={KEY} group="rules" />
-          </div>
-        }
       />
     </AdminFrame>
   );

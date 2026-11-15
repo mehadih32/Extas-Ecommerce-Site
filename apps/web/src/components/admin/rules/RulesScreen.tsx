@@ -9,6 +9,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { ConflictView, PublishResult, RulePreview, RuleView } from '@extas/rules';
 import { RULE_KINDS, type RuleContent, type Target } from '@extas/rules/pure';
 import { call, type Answer } from '../api';
+import { PageHead } from '../shell/ShellHead';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
@@ -35,8 +37,6 @@ export interface RulesScreenProps {
   simDays: number;
   /** S28 · PR 676: the rule the Rules page's row opened (`?rule=`). */
   initialId?: string | null;
-  /** The Rules pages' tabs (desktop), drawn under the head. */
-  tabs?: ReactNode;
 }
 
 type SheetState =
@@ -338,20 +338,14 @@ export function RulesScreen(props: RulesScreenProps) {
 
   return (
     <div className="rl">
-      <div className="ad-hd rl-hd">
-        <div className="rl-hd-text">
-          <h1 className="ad-h1">{tt('title')}</h1>
-          <p className="ad-intro">{tt('intro')}</p>
-        </div>
-        {perms.write ? (
-          <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={() => setSheet({ type: 'new' })}>
-            <Icon name="plus" size={15} />
-            {tt('newRule.title')}
-          </button>
-        ) : null}
-      </div>
-
-      {props.tabs}
+      <PageHead view={{ dict: props.dict }} place={locateKey('rulesSmart')} title={tt('title')} sub={tt('intro')} right={
+        perms.write ? (
+        <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={() => setSheet({ type: 'new' })}>
+          <Icon name="plus" size={15} />
+          {tt('newRule.title')}
+        </button>
+      ) : null
+      } />
 
       {first ? (
         <div className="rl-conflict" role="status">

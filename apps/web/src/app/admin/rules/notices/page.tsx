@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { NoticesScreen } from '@/components/admin/rules/NoticesScreen';
 import { PopupsHub } from '@/components/admin/rules/PopupsHub';
 import { adminDeps } from '@/lib/admin-auth';
@@ -46,7 +46,7 @@ export default async function NoticesPage() {
   const ruleOptions = rules.filter((r) => !r.archived).map((r) => ({ id: r.id, key: r.key, nameEn: r.nameEn, nameBn: r.nameBn ?? null, params: r.params }));
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <NoticesScreen
         dict={view.dict}
         lang={view.lang}
@@ -63,11 +63,6 @@ export default async function NoticesPage() {
             lang={view.lang}
             screen={hubScreen}
             perms={{ write: a.perms.write }}
-            tabs={
-              <div className="pa-gtabs">
-                <SystemTabs view={view} current={KEY} group="rules" />
-              </div>
-            }
           />
         }
       />

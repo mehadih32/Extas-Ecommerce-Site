@@ -44,8 +44,8 @@ export interface CombosScreenProps {
   split?: ComboSplitSettings | null;
   /** PR 104 — the combo report (drawn by the server). */
   report?: ReactNode;
-  /** The Combos pages' tabs (desktop), drawn under the head. */
-  tabs?: ReactNode;
+  /** PR 762: the page's head (the shell's PageHead, drawn by the server: title, lines, guide button); the section's tab bar is the shell's. */
+  head?: ReactNode;
 }
 
 export function CombosScreen(props: CombosScreenProps) {
@@ -133,15 +133,7 @@ export function CombosScreen(props: CombosScreenProps) {
 
   return (
     <div className="cb-page">
-      <div className="cb-hd">
-        <div className="cb-hd-text">
-          <div className="ad-eyebrow">{tt('eyebrow')}</div>
-          <h1 className="ad-h1">{tt('title')}</h1>
-          <p className="cb-bn-sub">{tt('subtitle')}</p>
-          <p className="ad-intro">{tt('intro')}</p>
-        </div>
-      </div>
-      {props.tabs}
+      {props.head}
       <nav className="ad-tabs cb-itabs" aria-label={tt('tabs.label')}>
         {COMBOS_TABS.map((k) => (
           <Link key={k} className="ad-chip" href={hrefOf(k)} aria-current={k === tab ? 'page' : undefined} data-testid={`cb-tab-${k}`}>

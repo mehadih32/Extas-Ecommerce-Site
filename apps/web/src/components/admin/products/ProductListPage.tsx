@@ -16,7 +16,8 @@ import type { ShellIconName } from '@/lib/admin-shell/icons';
 import { productsHref, PRODUCTS_HOME, type CatalogueAccess, type ProductListData, type ProductQuery } from '@/lib/admin-products';
 import type { AdminView } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
-import { SectionTabs } from '../shell/ShellParts';
+import { PageHead } from '../shell/ShellHead';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { LookMenu, type LookMenuProps } from '../look/LookMenu';
 
 export interface ProductListPageProps {
@@ -33,36 +34,35 @@ export function ProductsHeader({ view, canWrite, menu, canExport, canImport }: {
   const d = view.dict;
   return (
     <>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'products.title')}</h1>
-          <p className="ad-intro">{t(d, 'products.intro')}</p>
-        </div>
-        <div className="pa-hd-actions">
-          {canExport ? (
-            <a className="ad-btn ad-btn-ghost pa-hd-btn" href="/api/admin/catalogue/csv/export" download data-testid="products-export">
-              <Icon name="doc" size={18} />
-              {t(d, 'products.actions.export')}
-            </a>
-          ) : null}
-          {canImport ? (
-            <Link className="ad-btn ad-btn-ghost pa-hd-btn" href="/admin/products/erp-import" data-testid="products-quick-import">
-              <Icon name="sync" size={18} />
-              {t(d, 'products.actions.quickImport')}
-            </Link>
-          ) : null}
-          {canWrite ? (
-            <Link className="ad-btn ad-btn-primary pa-hd-btn" href={`${PRODUCTS_HOME}/new`}>
-              <Icon name="plus" size={18} />
-              {t(d, 'products.newProduct')}
-            </Link>
-          ) : null}
-          {menu ? <LookMenu {...menu} /> : null}
-        </div>
-      </div>
-      {/* PR 727: the section's tab bar under the title, as on every other page of the section (All products had none). */}
-      <SectionTabs view={view} current="products" />
+      <PageHead
+        view={view}
+        place={locateKey('products')}
+        title={t(d, 'products.title')}
+        sub={t(d, 'products.intro')}
+        right={
+          <div className="pa-hd-actions">
+            {canExport ? (
+              <a className="ad-btn ad-btn-ghost pa-hd-btn" href="/api/admin/catalogue/csv/export" download data-testid="products-export">
+                <Icon name="doc" size={18} />
+                {t(d, 'products.actions.export')}
+              </a>
+            ) : null}
+            {canImport ? (
+              <Link className="ad-btn ad-btn-ghost pa-hd-btn" href="/admin/products/erp-import" data-testid="products-quick-import">
+                <Icon name="sync" size={18} />
+                {t(d, 'products.actions.quickImport')}
+              </Link>
+            ) : null}
+            {canWrite ? (
+              <Link className="ad-btn ad-btn-primary pa-hd-btn" href={`${PRODUCTS_HOME}/new`}>
+                <Icon name="plus" size={18} />
+                {t(d, 'products.newProduct')}
+              </Link>
+            ) : null}
+            {menu ? <LookMenu {...menu} /> : null}
+          </div>
+        }
+      />
     </>
   );
 }
