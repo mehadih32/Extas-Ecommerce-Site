@@ -13,6 +13,7 @@
 // Tables that are not on `main` yet are skipped (see docs/demo/admin-proto-v5/gap/PRACTICE-TODO.md).
 import { createHash } from 'node:crypto';
 import { completeExtras } from './demo-extras';
+import { pickGrade, practiceLevels } from './grades';
 import { practiceId } from './ids';
 import { PRACTICE_PHONE_PREFIX, type Prisma, type PrismaClient } from '@extas/db/client';
 import {
@@ -721,9 +722,11 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     if (!cust.last || placedAt > cust.last) cust.last = placedAt;
   });
 
+  const levels = await practiceLevels(db, storeId);
   await db.customer.createMany({
     data: custs.map((c) => ({
       id: c.id,
+      gradeId: pickGrade(levels, c.delivered, c.returned),
       storeId,
       phone: c.phone,
       name: c.name,

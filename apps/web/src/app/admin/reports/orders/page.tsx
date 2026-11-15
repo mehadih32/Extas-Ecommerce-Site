@@ -14,7 +14,7 @@ import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/Summary
 import { BarList } from '@/components/admin/reports/ReportCharts';
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
-import { ReportTable } from '@/components/admin/reports/ReportParts';
+import { SortTable, type STRow } from '@/components/admin/reports/SortTable';
 import { Columns, Donut } from '@/components/admin/reports/ReportSalesCharts';
 import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -78,6 +78,8 @@ export default async function SalesReportTab({ searchParams }: { searchParams: P
   const kw = saleFacts(was);
   const dl = (x: number | null) => (cmp ? x : undefined);
   const maxRows = base.limits.maxDays;
+  /** A row's drawer lists at most this many orders (the prototype's own cut). */
+  const ORDER_LIST = 120; // hardcode-ok: the prototype's own cut
   const prevText = c('prevSpan', { from: f.dayShort(base.before.from), to: f.dayShort(base.before.to) });
   const pctText = (x: number | null) => (x === null ? '—' : `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%`);
 
@@ -140,6 +142,51 @@ export default async function SalesReportTab({ searchParams }: { searchParams: P
   const payParts = [...PAY_KEYS, 'none'].filter((m) => byPay.has(m)).map((m) => ({ key: m, label: c(`pay.${m}`), value: byPay.get(m) ?? 0 }));
   const disc = discountGroups(k.live);
   const hrs = Array.from({ length: HOUR_TO - HOUR_FROM + 1 }, (_, i) => HOUR_FROM + i);
+
+  const tx = { more: cc('showAll', { n: '{n}' }), less: cc('showLess'), close: cc('close'), empty: cc('none') };
+  const listOf = (os: typeof rows) => os.slice(0, ORDER_LIST).map((o) => ({ label: o.number, sub: o.day, value: f.amount(o.totalMinor), href: `/admin/orders/${o.id}` }));
+  const discRows: STRow[] = disc.map((x) => {
+    const name = x.key === 'BUY3' ? c('offerBuy3') : x.key === 'BUY2' ? c('offerBuy2') : c('offerCoupon', { code: x.key });
+    return {
+      key: x.key,
+      cells: [
+        <span key="o">
+          <b>{name}</b>
+          <span className="a2-xs a2-mute" style={{ display: 'block' }}>
+            {f.num(x.orders)} {c('orders')} · {x.pcs.toFixed(1)} {c('pcsPer')}
+          </span>
+        </span>,
+        f.amount(x.off),
+        f.amount(x.aov),
+      ],
+      sort: [x.key, x.off, x.aov],
+      drawer: { title: name, sub: c('drawerSub', { n: f.num(x.orders) }), empty: cc('none'), items: listOf(x.list) },
+    };
+  });
+  const dayRows: STRow[] = [...bk.list].reverse().map((b) => {
+    const live = b.rows.filter(isLive);
+    const ret = nRet(b);
+    return {
+      key: b.from,
+      cells: [
+        <b key="p">{bLabel(b)}</b>,
+        f.num(live.length),
+        f.num(live.reduce((n, o) => n + o.pieces, 0)),
+        f.amount(live.reduce((n, o) => n + o.totalMinor, 0)),
+        f.num(nDel(b)),
+        ret ? (
+          <span key="r" style={{ color: 'var(--lm-bad)' }}>
+            {f.num(ret)}
+          </span>
+        ) : (
+          '0'
+        ),
+        f.num(b.rows.length - live.length),
+      ],
+      sort: [b.from, live.length, live.reduce((n, o) => n + o.pieces, 0), live.reduce((n, o) => n + o.totalMinor, 0), nDel(b), ret, b.rows.length - live.length],
+      drawer: { title: bLabel(b), sub: c('drawerSub', { n: f.num(b.rows.length) }), empty: cc('none'), items: listOf(b.rows) },
+    };
+  });
 
   return (
     <div className="a2-z lm-rp" data-testid="orders-report" data-lm-ready="" data-from={q.from} data-to={q.to}>
@@ -220,21 +267,14 @@ export default async function SalesReportTab({ searchParams }: { searchParams: P
           <h2 className="a2-h3" id="rp-s-dis">
             {c('discTitle')}
           </h2>
-          <ReportTable
+          <SortTable
             testId="rp-discounts-table"
             rowId="rp-discount-row"
-            empty={c('discNone')}
+            texts={tx}
+            sortCol={1}
+            limit={6}
             cols={[{ h: c('colOffer') }, { h: c('colCost'), right: true }, { h: c('colAvg'), right: true }]}
-            rows={disc.slice(0, 6).map((x) => [
-              <span key="o">
-                <b>{x.key === 'BUY3' ? c('offerBuy3') : x.key === 'BUY2' ? c('offerBuy2') : c('offerCoupon', { code: x.key })}</b>
-                <span className="a2-xs a2-mute" style={{ display: 'block' }}>
-                  {f.num(x.orders)} {c('orders')} · {x.pcs.toFixed(1)} {c('pcsPer')}
-                </span>
-              </span>,
-              f.amount(x.off),
-              f.amount(x.aov),
-            ])}
+            rows={discRows}
           />
         </section>
       </div>
@@ -260,30 +300,14 @@ export default async function SalesReportTab({ searchParams }: { searchParams: P
         <h2 className="a2-h3" id="rp-s-days">
           {bk.grain === 'week' ? c('weekTitle') : c('dayTitle')}
         </h2>
-        <ReportTable
+        <SortTable
           testId="rp-days-table"
           rowId="rp-day-row"
-          empty={cc('none')}
-          cols={[{ h: c('colPeriod') }, { h: c('sOrders'), right: true }, { h: c('colPieces'), right: true }, { h: c('colValue'), right: true }, { h: c('sDelivered'), right: true }, { h: c('sReturned'), right: true }, { h: c('kCancelled'), right: true }]}
-          rows={[...bk.list].reverse().slice(0, maxRows).map((b) => {
-            const live = b.rows.filter(isLive);
-            const ret = nRet(b);
-            return [
-              <b key="p">{bLabel(b)}</b>,
-              f.num(live.length),
-              f.num(live.reduce((n, o) => n + o.pieces, 0)),
-              f.amount(live.reduce((n, o) => n + o.totalMinor, 0)),
-              f.num(nDel(b)),
-              ret ? (
-                <span key="r" style={{ color: 'var(--lm-bad)' }}>
-                  {f.num(ret)}
-                </span>
-              ) : (
-                '0'
-              ),
-              f.num(b.rows.length - live.length),
-            ];
-          })}
+          texts={tx}
+          sortCol={0}
+          limit={maxRows}
+          cols={[{ h: c('colPeriod') }, { h: c('sOrders'), right: true }, { h: c('colPieces'), right: true, hide: true }, { h: c('colValue'), right: true }, { h: c('sDelivered'), right: true, hide: true }, { h: c('sReturned'), right: true }, { h: c('kCancelled'), right: true, hide: true }]}
+          rows={dayRows}
         />
       </section>
       <p className="a2-xs a2-mute a2-mt12">{c('note')}</p>
