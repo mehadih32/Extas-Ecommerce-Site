@@ -23,12 +23,12 @@
 2. বাঁ পাশের গ্রুপ থেকে ভাগ বাছুন (ডেলিভারি, পেমেন্ট ও COD, অর্ডার ফ্লো …), অথবা উপরের খোঁজার ঘরে লিখুন।
 3. যে সারি বদলাবেন তার **Edit** চাপুন।
 4. ঘরগুলোতে নতুন মান দিন। নিচে **What changes** দেখায় আগে কী ছিল আর এখন কী হবে।
-5. টাকা বা দামের নিয়ম হলে **Owner's PIN** দিয়ে **Save with PIN** চাপুন; অন্যগুলোয় **Save**।
-6. শুরুর মানে ফিরতে **Back to the starting value**।
+5. টাকা বা দামের নিয়ম হলে **Owner's PIN** দিয়ে **Save · PIN** চাপুন; অন্যগুলোয় **Save**।
+6. শুরুর মানে ফিরতে **Back to default**।
 
 ## প্রতিটা বোতাম আর ঘরের মানে
 - **All rules** আর **Delivery · Payment & COD · Checkout & payments · Order flow · Courier · Courier messages · Exchange · Customers · Discounts · Messages** — নিয়মের ভাগ। বাঁ পাশে।
-- **Search rules, e.g. COD, exchange, free delivery** — খোঁজার ঘর।
+- **Search rules — e.g. COD, exchange, free delivery** — খোঁজার ঘর।
 - **Edit** — সারির সম্পাদনার ঘর খোলে। **Open** — যে নিয়ম অন্য পাতায় থাকে (অফার, পপ-আপ, কুরিয়ার) সেই পাতা খোলে।
 - **On · Off · Sample** — অবস্থা। **Sample** মানে নিয়ম চালু আছে কিন্তু দোকানের শুরুর সংখ্যায়; দেখে নিয়ে সেভ করলে সেটা আপনার হয়।
 - **Show all** — নমুনা ছাড়া সব সারি ফিরিয়ে আনে।
@@ -44,7 +44,10 @@
   টিক না দেওয়া ভূমিকা প্রতিবার মালিককে জিজ্ঞেস করে। টাকার নিয়ম, তাই মালিকের OK আর PIN।
 - **Hours before the advance reminder** — অগ্রিমের রিমাইন্ডার কত ঘণ্টা পর (0 = নেই)। **Days to check a returned piece** — ফেরত পিস ERP-তে চেকের দিন।
 - **Allow replacement** — **Hours after delivery it can be opened** আর **Days for the old piece to come back**।
-- **What changes** — সেভের আগে বদলের তালিকা। **Back to the starting value** — শুরুর মানে ফেরা। **Owner's PIN** আর **Save with PIN** — টাকার নিয়মে।
+- **Gift mode** (PR 833) — চেকআউটের গিফট পছন্দ। **Show “This is a gift” at checkout** — চালু বা বন্ধ। **Let the buyer write a short gift note (most letters, 0 = no note)** — গিফট নোটের সর্বোচ্চ অক্ষর। **Deliver later, up to (days)** — গিফট কত দিন পরে পাঠানো যাবে। **Hide prices on the invoice inside the parcel** — পার্সেলের ইনভয়েসে দাম লুকানো। গিফটের অগ্রিম নিয়ম আগের মতোই চেকআউট সেটিংসে।
+- **Quiet hours & limits** (PR 833) — **Hold messages in quiet hours**, **Quiet from (hour, 0–23)** আর **Quiet until (hour, 0–23)**। এই সময়ের মেসেজ সকাল পর্যন্ত অপেক্ষা করে; পেমেন্ট লিংক আর OTP সঙ্গে সঙ্গে যায়।
+- নিয়মের সারির নাম এখন প্রোটোটাইপের মতো: **Eid last order dates**, **Peak / Eid mode**, **Cash on delivery**, **Discount for paying online**, **Price-adjust limits by role**, **Advance request reminder**।
+- **What changes** — সেভের আগে বদলের তালিকা। **Back to default** — শুরুর মানে ফেরা। **Owner's PIN** আর **Save · PIN** — টাকার নিয়মে।
 - **Save** আর **Cancel** — সেভ বা বাতিল। **Close** — ঘর বন্ধ।
 - **ওপরের ট্যাব বার** — সেকশনের সব ট্যাব, সব পাতায় একই জায়গায় (শিরোনামের ওপরে); এক ট্যাব থেকে আরেকটায় গেলে বার লাফায় না। শিরোনামের ডানে **গাইড** বোতাম (বইয়ের ছবি) এই পাতার গাইড খোলে।
 

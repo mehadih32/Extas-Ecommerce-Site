@@ -2,9 +2,9 @@
   "rulesHub": {
     "metaTitle": "Rules",
     "title": "Rules",
-    "intro": "Every rule of your shop as one plain line. Press Edit to change it: the shop follows at once.",
+    "intro": "Every rule of your shop as one plain line. Press Edit to change it — the shop follows at once.",
     "groupsLabel": "Rule groups",
-    "search": "Search rules, e.g. COD, exchange, free delivery",
+    "search": "Search rules — e.g. COD, exchange, free delivery",
     "groups": {
       "all": "All rules",
       "delivery": "Delivery",
@@ -34,7 +34,7 @@
     "pickOne": "Pick a rule to change it here.",
     "strip": {
       "sample": "{n} rules are on with the shop's own starting numbers: check them",
-      "allOwn": "Every rule that is on uses your own numbers",
+      "allOwn": "All rules use your own values",
       "last": "Last change: {rule}, {when}",
       "showingSample": "Showing rules with sample values",
       "showAll": "Show all"
@@ -45,11 +45,11 @@
         "sentence": "Delivery is free from {value}."
       },
       "eid": {
-        "title": "Eid order-by dates",
+        "title": "Eid last order dates",
         "sentence": "The last order days before Eid, and what the shop says after them."
       },
       "peak": {
-        "title": "Peak and Eid mode",
+        "title": "Peak / Eid mode",
         "sentence": "Mode is {enabled}. Orders a day: {dailyCap}. Stickers in one part: {partSize}. People on the roster: {roster}."
       },
       "advance": {
@@ -57,11 +57,11 @@
         "sentence": "When an order must pay a part first, and how many layers of rules decide it."
       },
       "cod": {
-        "title": "Cash on delivery limits",
+        "title": "Cash on delivery",
         "sentence": "The biggest cash on delivery order and where it is allowed."
       },
       "prepaid": {
-        "title": "Reward for paying online",
+        "title": "Discount for paying online",
         "sentence": "The reward is now an offer: free delivery, a percent, a flat amount. Open Offers & discounts."
       },
       "autoconfirm": {
@@ -81,11 +81,11 @@
         "sentence": "Merging two open orders of one customer is {enabled}. Look back {lookBackDays} days. Different addresses: {differentAddress}. Merge by itself: {autoMerge}."
       },
       "adjust": {
-        "title": "Price adjust limits",
+        "title": "Price-adjust limits by role",
         "sentence": "Taking money off an open order is {enabled}. Roles with their own limit: {roleLimits}. Anyone else asks the owner."
       },
       "advwait": {
-        "title": "Advance reminder hours",
+        "title": "Advance request reminder",
         "sentence": "Remind a customer about the advance after {value} hours (0 means no reminder)."
       },
       "courier": {
@@ -115,6 +115,14 @@
       "popups": {
         "title": "Pop-ups & notices",
         "sentence": "The shop's twelve pop-ups and notices: where each shows, who sees it, and your own words."
+      },
+      "gift": {
+        "title": "Gift mode",
+        "sentence": "“This is a gift” at checkout: {enabled}. A gift note of up to {noteMaxChars} letters. Delivery up to {deliverAfterMaxDays} days later. Hide prices on the invoice inside the parcel: {hidePricesDefault}."
+      },
+      "quiet": {
+        "title": "Quiet hours & limits",
+        "sentence": "Quiet hours are {on}, from {fromHour}:00 until {toHour}:00. Messages due in quiet hours wait until the morning. Payment links and OTPs still go at once."
       }
     },
     "fields": {
@@ -159,6 +167,17 @@
         "enabled": "Replace defective or wrong items for free",
         "hours": "Customer tells us within (hours)",
         "oldPieceDays": "Old piece must come back within (days)"
+      },
+      "gift": {
+        "enabled": "Show “This is a gift” at checkout",
+        "noteMaxChars": "Let the buyer write a short gift note (most letters, 0 = no note)",
+        "deliverAfterMaxDays": "Deliver later, up to (days)",
+        "hidePricesDefault": "Hide prices on the invoice inside the parcel"
+      },
+      "quiet": {
+        "on": "Hold messages in quiet hours",
+        "fromHour": "Quiet from (hour, 0–23)",
+        "toHour": "Quiet until (hour, 0–23)"
       }
     },
     "opt": {
@@ -174,21 +193,21 @@
     },
     "saved": "Saved.",
     "savedBack": "Back to the starting value.",
-    "backConfirm": "Go back to the shop's starting value?",
+    "backConfirm": "Back to default?",
     "close": "Close",
-    "sampleNote": "This rule is on with the shop's own starting numbers. Check them, then press Save to make them yours.",
+    "sampleNote": "This rule still uses sample values. Check the numbers and press Save to make them yours.",
     "moneyNote": "This rule changes what customers pay. It needs the owner's OK and PIN.",
     "needsOwner": "Only the owner can change this rule.",
     "whatChanges": "What changes",
     "nothingYet": "Nothing yet. Change a value above.",
     "appliesToNew": "It applies to new orders from the moment you save.",
     "pin": "Owner's PIN",
-    "savePin": "Save with PIN",
+    "savePin": "Save · PIN",
     "save": "Save",
     "cancel": "Cancel",
     "more": {
       "title": "More options",
-      "back": "Back to the starting value",
+      "back": "Back to default",
       "fuller": "Open the fuller page for this rule"
     },
     "emptyMeansOff": "Leave empty to switch it off.",
