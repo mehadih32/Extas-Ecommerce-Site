@@ -12,6 +12,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
+import { TelegramButton } from '@/components/admin/reports/TelegramButton';
 import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -170,6 +172,12 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
         <a className="a2-btn cr-tap" href={`/api/admin/reports/export/review?m=${b.which}`} download data-testid="rp-csv">
           {cc('csv')}
         </a>
+        <PrintButton label={c('pdf')} testId="rp-pdf" />
+        <TelegramButton
+          testId="rp-tg"
+          disabledReason={access.guard.permissions?.has('reports.analytics.write') ? null : c('tgNoKey')}
+          texts={{ label: c('tg'), sending: c('tgSending'), sent: c('tgSent'), skipped: c('tgSkipped'), failed: c('tgFailed') }}
+        />
         <Link className="a2-btn cr-tap" href="/admin/reports/packs" data-testid="rp-to-packs">
           {c('toPacksBtn')}
         </Link>
