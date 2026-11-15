@@ -20,6 +20,7 @@ import { PLACE_LEVELS, nameAt, underPath } from './geo';
 import { loadBase, loadMarketing, loadProducts, loadProfit, loadReview, loadReviewBase } from './load';
 import { isSaleSource, loadSaleOrders, saleBuckets, saleFacts } from './sales';
 import { toCsv } from './model';
+import { practiceScope } from './practice';
 
 export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders', 'customers', 'areas', 'team'] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
@@ -83,7 +84,7 @@ export async function exportRoute(kind: string, request: Request, deps: AdminDep
     } else if (k === 'orders') {
       const b = await loadBase(d, sp);
       const { from, to } = b.period.q;
-      const rows = await loadSaleOrders(d.db, b.timeZone, from, to, isSaleSource(sp.ch) ? sp.ch : null);
+      const rows = await loadSaleOrders(d.db, b.timeZone, from, to, isSaleSource(sp.ch) ? sp.ch : null, await practiceScope(d));
       const bk = saleBuckets(rows, from, to, sp.grain === 'week' ? 'week' : 'day');
       csv = toCsv([
         ['from', 'to', 'orders', 'pieces', 'orderValueMinor', 'delivered', 'deliveredMinor', 'returned', 'cancelled'],

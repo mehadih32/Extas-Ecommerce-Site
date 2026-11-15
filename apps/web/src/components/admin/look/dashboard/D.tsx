@@ -79,8 +79,8 @@ function kpis(f: Fmt, p: DashProps): ReactNode[] {
   return out;
 }
 
-/** S28 · PR 691: the library cards pinned to Home — a figure where Home has it, else a link to the Report library. */
-function PinsCard(p: DashProps) {
+/** S28 · PR 691: the library cards pinned to Home. PR 800: no longer drawn on Home (the prototype's Home has no pinned-reports card); kept, with the pin data, for the Report library. */
+export function PinsCard(p: DashProps) {
   const { f, data } = p;
   const pins = data.pins ?? [];
   if (!pins.length) return null;
@@ -131,7 +131,6 @@ function DashboardD(p: DashProps) {
       <DashHead p={p} />
       <ProtoTop {...p} />
       {kt.length && !can(viewer, 'metrics.read') ? <div className="a3-kt">{kt}</div> : null}
-      <PinsCard {...p} />
       {data.money ? <ChartDoNow p={p} lead={<TrendCard p={p} id="dsh-d-sales" />} /> : null}
       <ProtoLower {...p} mid={data.delivery ? <CourierMid {...p} /> : null} />
     </div>

@@ -429,6 +429,9 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   const orders: Prisma.OrderCreateManyInput[] = [];
   const items: Prisma.OrderItemCreateManyInput[] = [];
   const events: Prisma.OrderEventCreateManyInput[] = [];
+  // PR 800: who did the staff work. The Team report counts work by person, so each staff step goes to one of the active staff users, in turn
+  // (no staff yet means no person is named, as before). Chosen by the order's number, so a re-seed gives the same people.
+  const staffIds = (await db.staffUser.findMany({ where: { archivedAt: null, status: 'ACTIVE' }, select: { id: true }, orderBy: { id: 'asc' }, take: 8 })).map((x) => x.id);
   const payments: Prisma.PaymentCreateManyInput[] = [];
   const shipments: Prisma.ShipmentCreateManyInput[] = [];
   const shipmentEvents: Prisma.ShipmentEventCreateManyInput[] = [];
@@ -583,6 +586,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
         toStatus,
         message: message ?? null,
         actorType: actor,
+        actorId: actor === 'STAFF' && staffIds.length ? staffIds[i % staffIds.length]! : null,
         source: 'practice',
         createdAt: when,
       });
