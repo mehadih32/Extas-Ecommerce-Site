@@ -46,7 +46,7 @@ describe.skipIf(!HAS_TEST_DB)('rich sample data on PostgreSQL (PR 724)', () => {
     expect(await db.courierClaim.count({ where: { storeId: sample, isPractice: true } })).toBe(RICH.claims);
     expect(await db.courierSettlement.count({ where: { storeId: sample, isPractice: true } })).toBeGreaterThan(20);
     expect(await db.adSpendDaily.count({ where: { storeId: sample } })).toBe(r.counts.adSpendRows);
-    expect(r.counts.adSpendRows).toBeGreaterThan(1000);
+    expect(r.counts.adSpendRows).toBeGreaterThan(RICH.adDays * 4); // 5 campaigns over RICH.adDays days (900 rows)
     expect(await db.review.count({ where: { storeId: sample, status: 'APPROVED' } })).toBeGreaterThan(100);
     // every status of the plan is there
     const statuses = await db.order.groupBy({ by: ['status'], where: { storeId: sample, isPractice: true } });
