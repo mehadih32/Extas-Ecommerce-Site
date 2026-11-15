@@ -171,7 +171,15 @@
       "DRY_RUN_STALE": "The ERP's list changed after the dry run. Run it again.",
       "NOT_AVAILABLE": "This cannot be done from here.",
       "ERP_MODEL": "The store does not speak the new ERP contract yet.",
-      "UNAUTHENTICATED": "Please sign in again."
+      "UNAUTHENTICATED": "Please sign in again.",
+      "PIN_REQUIRED": "Type the owner's PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+      "WRONG_PIN": "That PIN is not right.",
+      "NO_CONNECTION": "There is no ERP connection to change yet. Add the ERP key in Keys & connections first.",
+      "FORBIDDEN": "You do not have the right for this.",
+      "INVALID_INPUT": "Check the boxes and try again.",
+      "network": "No connection. Try again."
     },
     "demo": {
       "title": "Acceptance test against the demo ERP",
@@ -215,7 +223,7 @@
       "erpNode": "Extas ERP",
       "erpSub": "stock · buying price · warehouse",
       "shopNode": "The shop",
-      "shopSub": "customers · orders · selling price",
+      "shopSub": "customers · orders · prices",
       "toShop": "ERP → shop",
       "toErp": "Shop → ERP",
       "in": [
@@ -230,12 +238,12 @@
         "Returns to check — parcel back",
         "Payments — when you pay"
       ],
-      "price": "The selling price is yours: when the ERP changes a buying price, the shop price stays the same and only your margin changes. You get a note.",
+      "price": "The selling price is yours: when the ERP changes a buying price, the shop price stays the same and only your margin changes — you get a note.",
       "safeH": "Safety",
       "safe": [
         "Nothing is ever deleted between the two. Mistakes are corrected with a reversing entry.",
-        "If the ERP is down, orders wait and are sent when it is back. None are lost.",
-        "Changing the ERP address or switching to a practice ERP needs your PIN."
+        "If the ERP is down, orders wait and are sent when it is back — none are lost.",
+        "Changing the ERP address or switching to the practice ERP needs your PIN."
       ]
     },
     "board": {
@@ -243,7 +251,7 @@
       "onEvent": "When it happens",
       "ok": "OK",
       "idle": "Waiting",
-      "failed": "{n} failed in 24 hours",
+      "failed": "{n} failed",
       "failedOne": "Failed",
       "status": {
         "title": "Sync status",
@@ -253,45 +261,149 @@
         "what": "What",
         "dir": "Direction",
         "last": "Last run",
-        "next": "Next run",
+        "next": "Next",
         "items": "Items",
-        "state": "State"
+        "state": "Problems (24 h)",
+        "when": "When",
+        "type": "Type",
+        "happened": "What happened"
       },
       "dir": {
         "in": "From the ERP",
         "out": "To the ERP"
       },
       "stream": {
-        "product": "Products",
+        "product": "Products by style code",
         "stock": "Stock",
-        "price": "Prices",
-        "return": "Returns",
-        "order": "Orders",
-        "bill": "Shipments",
-        "payment": "Payments",
-        "health": "Other"
+        "price": "Buying price changes",
+        "return": "Return check results",
+        "order": "Confirmed orders → sales orders",
+        "bill": "Bill at buying price",
+        "payment": "Payments to ERP",
+        "health": "Health check"
       },
       "items": {
         "sizes": "{n} sizes",
-        "sentToday": "{n} sent today",
-        "waiting": "{n} waiting"
+        "sentToday": "{n} in last 24 h",
+        "waiting": "{n} waiting for check"
       },
       "log": {
         "title": "Activity log",
         "filters": "Filter the log",
-        "empty": "Nothing here yet."
+        "empty": "Nothing in this filter"
       },
       "filter": {
         "all": "All",
-        "failed": "Failed",
+        "failed": "Problems",
         "order": "Orders",
         "stock": "Stock",
-        "bill": "Shipments",
+        "bill": "Bills",
         "return": "Returns",
         "product": "Products",
-        "price": "Prices",
+        "price": "Buying price",
         "payment": "Payments"
+      },
+      "dirIn": "ERP →",
+      "dirOut": "→ ERP",
+      "none": "None",
+      "next": {
+        "product": "when you import",
+        "stock": "every hour by itself",
+        "price": "as soon as ERP changes",
+        "return": "after each check",
+        "order": "right after confirm",
+        "bill": "when parcel goes to courier",
+        "payment": "when you pay"
+      },
+      "type": {
+        "stock": "Stock",
+        "order": "Orders",
+        "price": "Buying price",
+        "bill": "Bills",
+        "return": "Returns",
+        "product": "Products",
+        "payment": "Payments",
+        "health": "Health check"
       }
+    },
+    "head": {
+      "sync": "Sync stock now",
+      "syncing": "Syncing…",
+      "import": "Import products",
+      "done": "Stock updated — {n} sizes changed",
+      "nothing": "Stock is already up to date",
+      "skippedNone": "Nothing to sync: this shop is not linked to an ERP",
+      "skippedPractice": "The practice ERP does not change real stock",
+      "failed": "The stock sync did not finish. Look at the Activity log."
+    },
+    "hero": {
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "lastSync": "last sync",
+      "live": "live ERP",
+      "practice": "practice ERP",
+      "safe": "If the ERP is down, nothing is lost — orders wait and go by themselves when it is back.",
+      "never": "no sync yet"
+    },
+    "card": {
+      "company": "Company · warehouse",
+      "stockSynced": "Stock last synced",
+      "poll": "by itself, about every {n} minutes",
+      "owe": "You owe the ERP",
+      "account": "ERP account",
+      "checked": "Checked",
+      "notSet": "Not set"
+    },
+    "plain": {
+      "h": "Problems, in plain words",
+      "todo": "What to do",
+      "manual": "Manual",
+      "stock": {
+        "t": "Stock did not arrive once",
+        "d": "It retried by itself. Nothing to do unless it repeats."
+      },
+      "order": {
+        "t": "An order could not reach the ERP",
+        "d": "It waits and is sent again by itself. If it is still waiting after an hour, test the connection in Keys & connections."
+      },
+      "other": {
+        "t": "The ERP did not answer once",
+        "d": "Retried by itself. If the light stays yellow for an hour, call the ERP admin."
+      }
+    },
+    "match": {
+      "h": "Matching",
+      "wh": "ERP warehouse for shop stock",
+      "cod": "Cash from couriers goes to",
+      "bkash": "bKash payments go to",
+      "pay": "Payments to the ERP from",
+      "save": "Save matching",
+      "saving": "Saving…",
+      "saved": "Matching saved",
+      "hint": "Type the account or warehouse name as the ERP has it. Accounts you named in Settings › Payments are offered."
+    },
+    "safeCard": {
+      "h": "Safety",
+      "change": "Change ERP connection"
+    },
+    "change": {
+      "h": "Change ERP connection",
+      "note": "Use this only when moving to a new ERP address, or to practise on the demo ERP. Orders waiting to be sent are kept.",
+      "which": "Which ERP",
+      "live": "Live ERP",
+      "practice": "Practice ERP",
+      "same": "Already connected to that ERP",
+      "cancel": "Cancel",
+      "go": "Continue",
+      "askLive": "Switch ERP?",
+      "textPractice": "The shop will use practice stock and send orders to the demo ERP. Real orders will wait until you switch back.",
+      "textLive": "The shop goes back to the live ERP. Waiting orders are sent now.",
+      "pin": "Owner PIN",
+      "switch": "Switch",
+      "working": "Switching…",
+      "nowPractice": "Now on the practice ERP",
+      "nowLive": "Back on the live ERP",
+      "address": "The ERP address itself is changed in the keys card below."
     }
   }
 }

@@ -22,6 +22,10 @@
 //   - `demoKey` {key} / `demoKeyRemove` (PR 621; `vault.write` for every store, i.e. installation-wide): the demo ERP's
 //     key for the acceptance run (`ERP_ACCEPTANCE_DEMO_KEY`), kept in the vault for the installation, never per store
 //     and never shown again; removing it revokes it (kept, never deleted) and the run goes back to "waiting for the key".
+//   - `changeConnection` {mode: live | practice, pin} (PR 851; the owner with his PIN): the connection row's mode LIVE or SANDBOX
+//     (erp-link-extra.ts), audited; waiting orders are never touched.
+//   - `saveMatching` {warehouse, cod, bkash, erpPay} (PR 851; `vault.write`): the ERP warehouse (the store's mapping row) and the
+//     ERP accounts shop money lands in (the setting `erp.matching`).
 // Every refusal is a code the page shows in its own words. No key value ever leaves the vault through this API.
 import { audit, AuthError, can, isOwner } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
@@ -33,6 +37,7 @@ import { erpCallsState, type ErpCallsState } from './erp-calls-admin';
 import { listConnections, storeOfRequest, type ConnectionView } from './integrations';
 import { inventoryDeps } from './inventory-api';
 import { ordersDeps } from './orders-api';
+import { changeErpConnection, ErpExtraError, saveMatching } from './erp-link-extra';
 
 export interface ErpLinkStoreChoice {
   id: number;
@@ -138,6 +143,7 @@ async function switchDeps(deps: AdminDeps): Promise<inv.SwitchOverDeps> {
 }
 
 function refusal(e: unknown): Response {
+  if (e instanceof ErpExtraError) return fail(e.status, e.code, e.details.length ? e.details : undefined);
   if (inv.isSwitchError(e)) return fail(e.status, e.code, e.details);
   if (isOrdersError(e)) return fail(e.status, e.code, e.details);
   return errorResponse(e);
@@ -183,6 +189,12 @@ export async function erpLinkHandler(request: Request, deps: AdminDeps | null): 
         break;
       case 'demoKeyRemove':
         result = await setDemoKey(d, who, null);
+        break;
+      case 'changeConnection': // PR 851: live ERP or practice ERP, with the owner's PIN
+        result = await changeErpConnection(d, who, { mode: b.mode, pin: b.pin });
+        break;
+      case 'saveMatching': // PR 851: the ERP warehouse and the ERP accounts shop money lands in
+        result = await saveMatching(d, who, canWrite, b);
         break;
       default:
         return fail(400, 'INVALID_INPUT', ['action']);
