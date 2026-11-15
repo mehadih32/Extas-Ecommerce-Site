@@ -499,6 +499,128 @@
       "FORBIDDEN": "এটা বদলানোর অনুমতি আপনার নেই। মালিককে বলুন আপনার ভূমিকায় অনুমতি দিতে।",
       "NOT_FOUND": "এটা আর নেই। পেজটা আবার লোড করুন।",
       "UNAUTHENTICATED": "আপনি সাইন আউট হয়ে গেছেন। আবার সাইন ইন করে সেভ করুন।"
+    },
+    "setlist": {
+      "title": "সেটিংস",
+      "groups": {
+        "b": "ব্যবসা",
+        "s": "সিস্টেম"
+      },
+      "owner": "মালিক",
+      "search": "সেটিংস খুঁজুন… যেমন BIN, bKash, ব্যাকআপ",
+      "searchLabel": "সেটিংস খুঁজুন",
+      "list": "সেটিংসের তালিকা",
+      "pick": "একটা সেটিং খুলুন",
+      "none": "এখানে নেই। অ্যাডমিন ম্যাপে খুঁজে দেখুন।",
+      "has": "আছে",
+      "looking": "খুঁজছেন",
+      "ownerOnly": "শুধু মালিক। পুরো অ্যাক্সেস থাকলেও স্টাফ সিস্টেম অংশ দেখতে পান না।",
+      "item": {
+        "store": {
+          "n": "দোকানের তথ্য",
+          "k": "name logo legal licence trade ubid dbid tin bin vat address warehouse hotline whatsapp email hours social colour invoice sticker order number"
+        },
+        "erp": {
+          "n": "ERP কানেকশন",
+          "k": "erp stock buying price sync connection test warehouse bill"
+        },
+        "couriers": {
+          "n": "কুরিয়ার",
+          "k": "courier pathao steadfast redx default pickup fee charge parcel booking"
+        },
+        "payments": {
+          "n": "পেমেন্ট",
+          "k": "bkash nagad card gateway sslcommerz settlement bank account payment checkout cod"
+        },
+        "messages": {
+          "n": "কাস্টমার মেসেজ",
+          "k": "sms whatsapp template message text customer"
+        },
+        "team": {
+          "n": "টিম ও রোল",
+          "k": "staff role access permission invite people"
+        },
+        "demo": {
+          "n": "ডেমো প্রোডাক্ট",
+          "k": "demo sample dummy placeholder coming soon empty category"
+        },
+        "roles": {
+          "n": "রোল",
+          "k": "role access permission tree"
+        },
+        "staffControls": {
+          "n": "স্টাফ কন্ট্রোল",
+          "k": "staff control limit shift"
+        },
+        "policies": {
+          "n": "পলিসি ও লেখা",
+          "k": "policy texts help pages returns terms"
+        },
+        "look": {
+          "n": "অ্যাডমিন লুক",
+          "k": "look design theme colour dark light density"
+        },
+        "practice": {
+          "n": "প্র্যাকটিস ডেটা",
+          "k": "practice sample data reset"
+        },
+        "shell": {
+          "n": "শুরু আর খোঁজা",
+          "k": "start page search dashboard role"
+        },
+        "shimmer": {
+          "n": "ঝিলিক",
+          "k": "shimmer loading speed strength"
+        },
+        "keys": {
+          "n": "কি ও কানেকশন",
+          "k": "key password api connection meta google ads tiktok search console drive telegram ai claude openai gemini sms vault"
+        },
+        "backups": {
+          "n": "ব্যাকআপ ও রিস্টোর",
+          "k": "backup restore drive drill schedule"
+        },
+        "cache": {
+          "n": "ক্যাশ ও গতি",
+          "k": "cache speed purge clear fast"
+        },
+        "golive": {
+          "n": "চালুর আগের তালিকা",
+          "k": "go live launch checklist domain ssl"
+        },
+        "ai": {
+          "n": "AI কন্ট্রোল",
+          "k": "ai agent budget model provider proposal training gyani center approvals"
+        },
+        "security": {
+          "n": "নিরাপত্তা",
+          "k": "2-step login session block password sign in"
+        },
+        "edge": {
+          "n": "Cloudflare সুরক্ষা",
+          "k": "cloudflare edge protection firewall bot"
+        },
+        "activity": {
+          "n": "অ্যাক্টিভিটি লগ",
+          "k": "log history who changed viewed customer data audit"
+        },
+        "privacy": {
+          "n": "ডেটা ও প্রাইভেসি",
+          "k": "export erase copy request privacy media import old customers own data"
+        },
+        "telegram": {
+          "n": "Telegram অনুমোদন",
+          "k": "telegram bot daily report pairing alert approve"
+        },
+        "startFresh": {
+          "n": "নতুন করে শুরু",
+          "k": "start fresh reset clear sample data launch"
+        },
+        "help": {
+          "n": "সাহায্য ও ম্যানুয়াল",
+          "k": "manual guide help blueprint register project files"
+        }
+      }
     }
   },
   "dash": {

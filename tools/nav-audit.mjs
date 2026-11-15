@@ -24,8 +24,9 @@ const routes = JSON.parse(readFileSync(join(here, 'nav-audit-routes.json'), 'utf
 const SNAP = () => {
   const txt = (e) => (e?.textContent || '').replace(/\s+/g, ' ').trim();
   const shown = (e) => !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
-  const nav = document.querySelector('[data-testid="a2-tabs"]');
-  const mains = [...(nav?.querySelectorAll('.a2-tabs-s a.a2-tab') || [])].map((a) => ({ t: txt(a), on: a.classList.contains('on'), shown: shown(a) }));
+  // PR 779: Settings has no tab bar; its left list (prototype v5) is its bar (data-testid sf-frame)
+  const nav = document.querySelector('[data-testid="a2-tabs"]') || document.querySelector('[data-testid="sf-frame"]');
+  const mains = [...(nav?.querySelectorAll('.a2-tabs-s a.a2-tab, a.sf-it') || [])].map((a) => ({ t: txt(a), on: a.classList.contains('on'), shown: shown(a) }));
   const more = nav?.querySelector('[data-testid="a2-more"]');
   const sub = document.querySelector('[data-testid="a2-subtabs"]');
   const chips = [...(sub?.querySelectorAll('a') || [])].map((a) => ({ t: txt(a), on: a.classList.contains('on') }));
@@ -134,7 +135,7 @@ const clicks = [];
 {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, storageState: state });
   for (const s of routes) {
-    if (!s.tabs.length || (only && s.id !== only)) continue;
+    if (!s.tabs.length || (only && s.id !== only) || s.id === 'settings') continue; // PR 779: Settings is a left list, not tabs
     const first = s.tabs.find((t) => !t.more) || s.tabs[0];
     const page = await ctx.newPage();
     try {
