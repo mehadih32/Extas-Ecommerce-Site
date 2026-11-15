@@ -39,11 +39,16 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { studioOverview } from '@/lib/marketing/studio';
+import { jobState, postOf, summarise } from '@/lib/marketing/studio-jobs-model';
+import { GoTo } from '@/components/admin/lane-f/GoTo';
+import { withLaneF6 } from '@/lib/admin-lane-f6';
+import Link from 'next/link';
 import bn from '../../../../../messages/admin-marketing-studio.bn.json';
 import en from '../../../../../messages/admin-marketing-studio.en.json';
 import '../../settings-cards.css';
 import '../../messages/email/email.css';
 import '../ad-platforms/ad-platforms.css';
+import '../../../../components/admin/lane-f/lane-f6.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +56,7 @@ const HERE = '/admin/marketing/studio';
 const KEY = 'marketingStudio';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return withLaneF6({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -97,13 +102,110 @@ export default async function StudioPage() {
   const dateFmt = (iso: string) =>
     new Date(iso).toLocaleString(view.lang === 'bn' ? 'bn-BD' : 'en-US', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
+  // PR 866 (prototype v5 Studio): the jobs board on the real render jobs and the posts made of their files
+  const s = (k: string, vars?: Record<string, string | number>) => t(d, `lf6.st.${k}`, vars);
+  const currency = await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID });
+  const productIds = [...new Set(o.renders.flatMap((r) => r.productIds))];
+  const named = productIds.length ? await access.deps.db.product.findMany({ where: { id: { in: productIds }, storeId: MOTHER_STORE_ID }, select: { id: true, nameEn: true } }) : [];
+  const nameOf = new Map(named.map((x) => [x.id, x.nameEn]));
+  const jobs = o.renders.map((r) => {
+    const post = postOf(r, o.posts);
+    return { r, post, state: jobState(r, post) };
+  });
+  const board = jobs.filter((j) => j.state !== 'archived');
+  const month = new Date().toISOString().slice(0, 7);
+  const sum = summarise(jobs.map((j) => ({ state: j.state, updatedAt: j.r.updatedAt, hasFile: j.r.outputAssetId !== null })), month);
+  const nf = (n: number) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' }).format(n);
+  const zero = new Intl.NumberFormat(view.locale, { style: 'currency', currency: String(currency), currencyDisplay: 'narrowSymbol', numberingSystem: 'latn', maximumFractionDigits: 0 }).format(0);
+  const tone = { wait: 'warn', making: 'line', ok: 'ok', redo: 'warn', failed: 'warn' } as const;
+
   return (
     <div className="a2-z" data-testid="studio-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} right={canGenerate ? <GoTo target="st-add-render" label={s('newJob')} className="a2-btn pri" testId="st-new" /> : undefined} />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-note yt-mt8" role="note">
-        <span>{g('note')}</span>
+      <div className="a2-kpis a2-mt12" data-testid="st-kpis">
+        {(
+          [
+            [s('kWait'), nf(sum.wait), ''],
+            [s('kOk'), nf(sum.approvedThisMonth), ''],
+            [s('kSpent'), zero, s('kSpentSub')],
+            [s('kFiles'), nf(sum.files), s('kFilesSub')],
+          ] as const
+        ).map(([label, value, sub]) => (
+          <div key={label} className="a2-card">
+            <div className="a2-xs a2-mute">{label}</div>
+            <div className="a2-h2">{value}</div>
+            {sub ? <div className="a2-xs a2-mute">{sub}</div> : null}
+          </div>
+        ))}
       </div>
+      <div className="lf6-types" data-testid="st-types">
+        {(
+          [
+            ['photo', 'photoD', '/admin/marketing/studio/models'],
+            ['video', 'videoD', '/admin/marketing/studio/videos'],
+            ['post', 'postD', ''],
+          ] as const
+        ).map(([k, dk, href]) => (
+          <section key={k} className="a2-card">
+            <h2 className="a2-h3">{s(k)}</h2>
+            <p className="a2-sm a2-mute">{s(dk)}</p>
+            <div className="lf6-btns a2-mt12" style={{ justifyContent: 'flex-end' }}>
+              {href ? (
+                <Link className="a2-btn sm" href={href}>
+                  {s('start')}
+                </Link>
+              ) : canGenerate ? (
+                <GoTo target="st-add-render" label={s('start')} className="a2-btn sm" />
+              ) : null}
+            </div>
+          </section>
+        ))}
+      </div>
+      <section className="a2-card a2-mt12" aria-labelledby="st-jobs-h" data-testid="st-jobs">
+        <h2 className="a2-h3" id="st-jobs-h">
+          {s('jobs')}
+        </h2>
+        <p className="a2-sm a2-mute">{s('jobsSub')}</p>
+        {board.length ? (
+          <div>
+            {board.map(({ r, post, state }) => {
+              const img = r.outputAssetId ? o.images[r.outputAssetId] : undefined;
+              const names = r.productIds.map((id) => nameOf.get(id)).filter(Boolean).join(', ');
+              return (
+                <div key={r.id} className="lf6-job" data-testid="st-job" data-state={state}>
+                  {img ? (
+                    <span style={{ display: 'inline-block', width: 44 }}>
+                      <ResponsiveImage image={img} slot="thumb" sizes="44px" alt={altFor(img, view.lang, r.caption ?? '')} />
+                    </span>
+                  ) : null}
+                  <div className="grow">
+                    <b>{r.kind ? g(`templateKinds.${r.kind}`) : r.id}</b> · {names}
+                    <div className="a2-sm a2-mute">
+                      {r.caption ?? s('noProduct')}
+                      {r.outputAssetId ? ` · 1 ${s('files')}` : ''} · {dateFmt(r.updatedAt)}
+                    </div>
+                    <div className="a2-mt6">
+                      <span className={`a2-pill ${tone[state as keyof typeof tone]}`}>{s(`state.${state}`)}</span>
+                    </div>
+                  </div>
+                  <div className="lf6-btns">
+                    {state === 'making' && r.status === 'QUEUED' && canGenerate ? <StudioAct texts={texts} body={{ action: 'render.run', id: r.id }} label={s('checkNow')} testId="st-job-run" done={s('ran')} /> : null}
+                    {state === 'wait' && post && post.status === 'PENDING_APPROVAL' && canApprove ? (
+                      <StudioDecide texts={texts} id={post.id} w={{ approve: s('approve'), reject: s('askChanges'), done: g('posts.decide.done') }} />
+                    ) : null}
+                    {state === 'wait' && !post && canGenerate ? <GoTo target="st-add-post" label={s('approve')} className="a2-btn sm pri" testId="st-job-approve" /> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="a2-sm a2-mute a2-mt12">{s('empty')}</p>
+        )}
+      </section>
+      <details className="a2-card a2-mt12" data-testid="st-more">
+        <summary className="a2-h4">{s('more')}</summary>
 
       <section className="a2-sc a2-mt12" aria-labelledby="st-acc-h" data-testid="st-accounts">
         <h2 className="a2-h3" id="st-acc-h">
@@ -437,6 +539,7 @@ export default async function StudioPage() {
           </details>
         ) : null}
       </section>
+      </details>
     </div>
   );
 }
