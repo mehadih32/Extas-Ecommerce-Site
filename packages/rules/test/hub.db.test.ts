@@ -11,16 +11,19 @@ import {
   bustAll,
   createOffer,
   getOffer,
+  hubHistory,
   hubScreen,
   offersScreen,
   popupsScreen,
   resetHubRow,
   saveHubRow,
+  saveHubText,
   savePopup,
   sendBackOffer,
   setOfferState,
   submitOffer,
   updateOffer,
+  undoHubRow,
   type HubDeps,
   type OfferDeps,
   type Who,
@@ -287,5 +290,48 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     expect(s.discount30).toMatchObject({ discountMinor: 30000, orders: 2 });
     // the offer's own rule and coupon are not listed a second time
     expect(s.rows.filter((r) => r.source === 'coupon' && r.code === 'TESTTEN')).toHaveLength(0);
+  });
+
+  // ---- PR 867 · "Edit the customer text" and "History" (undo = a new change, nothing deleted) --------------------------
+
+  it('PR 867: the owner\'s own customer text is saved for one rule, goes back to the automatic words, and a reader cannot write it', async () => {
+    expect(await code(saveHubText(deps(), as(reader), { id: 'dup', text: { bn: 'বাংলা', en: 'English' } }))).toBe('FORBIDDEN');
+    expect(await code(saveHubText(deps(), as(writer), { id: 'dup', text: { bn: 'বাংলা', en: '' } }))).toBe('INVALID_INPUT');
+    expect(await code(saveHubText(deps(), as(writer), { id: 'nope', text: { bn: 'ক', en: 'a' } }))).toBe('NOT_FOUND');
+    const saved = await saveHubText(deps(), as(writer), { id: 'dup', text: { bn: '  আমার লেখা ', en: ' My words ' } });
+    expect(saved.text).toEqual({ bn: 'আমার লেখা', en: 'My words' });
+    const dup = (await hubScreen(deps(), as(reader))).rows.find((r) => r.id === 'dup');
+    expect(dup?.type === 'setting' && dup.text).toEqual({ bn: 'আমার লেখা', en: 'My words' });
+    expect((await hubScreen(deps(), as(reader))).rows.find((r) => r.id === 'peak')).toMatchObject({ text: null });
+    expect((await saveHubText(deps(), as(writer), { id: 'dup', text: null })).text).toBeNull();
+    expect(await t.prisma.auditLog.count({ where: { storeId: A, action: 'rules.hub.text' } })).toBe(2);
+  });
+
+  it('PR 867: History lists the values the last changes replaced; Undo puts one back as a new change and never deletes a step', async () => {
+    const row = (await hubScreen(deps(), as(owner))).rows.find((r) => r.id === 'dup');
+    if (row?.type !== 'setting') throw new Error('no dup row');
+    await t.prisma.settingChange.create({ data: { storeId: A, key: row.key, action: 'SET', oldValue: { enabled: true, lookbackDays: 3, reviewFrom: 'medium' }, newValue: row.value as never, reason: 'Rules', actorId: writer.staffUserId } });
+    await t.prisma.settingChange.create({ data: { storeId: A, key: row.key, action: 'SET', oldValue: row.value as never, newValue: row.value as never, reason: 'no change', actorId: writer.staffUserId } });
+    const h = await hubHistory(deps(), as(reader), { id: 'dup' });
+    expect(h).toHaveLength(1);
+    expect(h[0]).toMatchObject({ value: { lookbackDays: 3 }, by: 'writer@example.com' });
+    expect(await code(undoHubRow(deps(), as(reader), { id: 'dup', changeId: h[0]!.changeId, version: row.version }))).toBe('FORBIDDEN');
+    expect(await code(undoHubRow(deps(), as(writer), { id: 'dup', changeId: h[0]!.changeId, version: 'old' }))).toBe('STALE_DRAFT');
+    expect(await code(undoHubRow(deps(), as(writer), { id: 'dup', changeId: '00000000-0000-7000-8000-000000000000', version: row.version }))).toBe('NOT_FOUND');
+    const done = await undoHubRow(deps(), as(writer), { id: 'dup', changeId: h[0]!.changeId, version: row.version });
+    expect(done.value).toMatchObject({ lookbackDays: 3 });
+    expect(store.get(row.key)).toMatchObject({ lookbackDays: 3 });
+    expect(await t.prisma.auditLog.count({ where: { storeId: A, action: 'rules.hub.undo' } })).toBe(1);
+    expect(await t.prisma.settingChange.count({ where: { key: row.key, storeId: A } })).toBe(2);
+  });
+
+  it('PR 867: undoing a rule that changes what customers pay needs the owner\'s OK', async () => {
+    const free = (await hubScreen(deps(), as(owner))).rows.find((r) => r.id === 'free');
+    if (free?.type !== 'setting') throw new Error('no free row');
+    const c = await t.prisma.settingChange.create({ data: { storeId: A, key: free.key, action: 'SET', oldValue: 90000, newValue: free.value as never, reason: 'Rules', actorId: owner.staffUserId } });
+    expect(await code(undoHubRow(deps(), as(writer), { id: 'free', changeId: c.id, version: free.version }))).toBe('OWNER_OK_REQUIRED');
+    const done = await undoHubRow(deps(), as(owner), { id: 'free', changeId: c.id, version: free.version });
+    expect(done.value).toBe(90000);
+    expect(sets.at(-1)).toEqual({ key: 'delivery.freeOverMinor', ownerApproved: true });
   });
 });

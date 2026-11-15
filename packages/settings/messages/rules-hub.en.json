@@ -8,6 +8,10 @@
       "popups": {
         "label": "Pop-ups and notices: your own words",
         "help": "Your own text and dates for the shop's twelve pop-ups and notices. A placement you have not set keeps the shop's wording and the state of the rule that drives it. Nothing here opens by itself on the first page a visitor sees."
+      },
+      "text": {
+        "label": "The owner's own customer wording for a rule",
+        "help": "The words you wrote yourself for what a customer sees about a rule, in Bengali and English. A rule with no entry here uses the automatic words. Going back to the automatic words removes the entry; every change stays in the history."
       }
     }
   },

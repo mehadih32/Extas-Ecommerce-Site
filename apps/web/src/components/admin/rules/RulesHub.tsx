@@ -24,6 +24,8 @@ export interface HubRole {
 
 export interface RulesHubProps {
   dict: Dict;
+  /** PR 867: the other language's words (the rule sentence "Customer sees" is shown and edited in Bengali and English). */
+  otherDict: Dict;
   lang: Lang;
   env: Pick<RulesEnv, 'ctx'>;
   hub: HubScreen;
@@ -41,7 +43,7 @@ const EMPTY_LIMIT = { amountMinor: 0, percent: 0 }; // hardcode-ok: a role ticke
 type SavedFn = () => void | Promise<void>; // hardcode-ok: a type, not text
 
 export function RulesHub(props: RulesHubProps) {
-  const { dict: d, lang, perms, env } = props;
+  const { dict: d, otherDict, lang, perms, env } = props;
   const tt = (k: string, vars?: Record<string, string | number>) => t(d, `rulesHub.${k}`, vars);
   const [hub, setHub] = useState(props.hub);
   const [group, setGroup] = useState<'all' | HubGroupId>('all');
@@ -222,6 +224,7 @@ export function RulesHub(props: RulesHubProps) {
         row={r}
         tt={tt}
         d={d}
+        otherDict={otherDict}
         lang={lang}
         env={env}
         roles={props.roles}
@@ -244,6 +247,7 @@ interface EditorProps {
   row: HubSettingRowView;
   tt: (k: string, vars?: Record<string, string | number>) => string;
   d: Dict;
+  otherDict: Dict;
   lang: Lang;
   env: Pick<RulesEnv, 'ctx'>;
   roles: HubRole[];
@@ -257,7 +261,7 @@ interface EditorProps {
   onSaved: SavedFn;
 }
 
-function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy, show, titleText, onClose, onSaved }: EditorProps) {
+function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canApprove, busy, setBusy, show, titleText, onClose, onSaved }: EditorProps) {
   const currency = env.ctx.currency;
   const [vals, setVals] = useState<Record<string, unknown>>(() => Object.fromEntries(row.fields.map((f) => [f.path, getPath(row.value, f.path)])));
   const [pin, setPin] = useState('');
@@ -275,13 +279,50 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
     for (const f of row.fields) out[key(f.path)] = show(f, vals[f.path], row.id);
     return out;
   };
-  const seesText = (): string => {
+  const seesIn = (dd: Dict): string => {
     const pick = (k: string) => {
-      const s = tt(k, seesVars());
+      const s = t(dd, `rulesHub.${k}`, seesVars());
       return s === `rulesHub.${k}` ? null : s;
     };
-    return (isOff ? pick(`sees.${row.id}Off`) : null) ?? pick(`sees.${row.id}`) ?? tt('sees.internal');
+    return (isOff ? pick(`sees.${row.id}Off`) : null) ?? pick(`sees.${row.id}`) ?? t(dd, 'rulesHub.sees.internal');
   };
+  const seesText = (): string => seesIn(d);
+  // PR 867: "Edit the customer text" — the automatic words in both languages, the owner's own words when there are some
+  const autoBn = lang === 'bn' ? seesIn(d) : seesIn(otherDict);
+  const autoEn = lang === 'bn' ? seesIn(otherDict) : seesIn(d);
+  const [typedText, setTypedText] = useState<{ bn?: string; en?: string }>({});
+  const textBn = typedText.bn ?? row.text?.bn ?? autoBn;
+  const textEn = typedText.en ?? row.text?.en ?? autoEn;
+  const saveText = async (own: boolean) => {
+    if (own && (!textBn.trim() || !textEn.trim())) return sayBad(tt('text.need'));
+    setBusy(true);
+    const a = await call('PUT', `${API}/${row.id}/text`, { text: own ? { bn: textBn, en: textEn } : null });
+    setBusy(false);
+    if (a.status !== 200) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+    say(tt(own ? 'text.saved' : 'text.autoDone'));
+    setTypedText({});
+    await onSaved();
+  };
+  // PR 867: "History" — the values the last changes replaced, and "Undo to this" (a new change, nothing deleted)
+  const [hist, setHist] = useState<{ changeId: string; value: unknown; at: string; by: string | null }[] | null>(null);
+  const loadHist = async () => {
+    const a = await call('GET', `${API}/${row.id}/history`);
+    if (a.status === 200 && Array.isArray(a.data.history)) setHist(a.data.history as { changeId: string; value: unknown; at: string; by: string | null }[]);
+  };
+  const summary = (v: unknown) => row.fields.map((f) => show(f, getPath(v, f.path), row.id)).join(' · ');
+  const undo = (changeId: string) => {
+    if (!window.confirm(tt('history.confirm'))) return;
+    void (async () => {
+      setBusy(true);
+      const a = await call('POST', `${API}/${row.id}/undo`, { version: row.version, changeId, ...(row.money ? { pin } : {}) });
+      setBusy(false);
+      if (a.status !== 200) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+      say(tt('history.done'));
+      setPin('');
+      await onSaved();
+    })();
+  };
+  const when = (iso: string) => new Date(iso).toLocaleString(lang === 'bn' ? 'bn-BD-u-nu-latn' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
   const tryIt = async () => {
     const values: Record<string, unknown> = {};
     for (const f of row.fields) values[f.path] = vals[f.path];
@@ -525,7 +566,17 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
       <div className="rh-fields">{row.fields.map(control)}</div>
       <div className="rh-sees" data-testid="rh-sees">
         <div className="rh-sub">{tt('sees.title')}</div>
-        <p>{seesText()}</p>
+        {row.text ? (
+          <>
+            <p lang="bn">{row.text.bn}</p>
+            <p lang="en" className="rh-hint">
+              {row.text.en}
+            </p>
+            <p className="rh-warn">{tt('text.own')}</p>
+          </>
+        ) : (
+          <p>{seesText()}</p>
+        )}
       </div>
       <div className="rh-wc">
         <div className="rh-sub">{tt('whatChanges')}</div>
@@ -550,6 +601,9 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
           <input id={`rh-pin-${row.id}`} className="ad-input rh-pin" type="password" inputMode="numeric" autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} disabled={blocked} />
         </div>
       ) : null}
+      <p className="rh-hint" data-testid="rh-footer">
+        {row.money ? `🔒 ${tt('footer.pin')}` : tt('footer.now')}
+      </p>
       <div className="rl-actions">
         <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={save} disabled={busy || !canWrite || blocked || !changed.length || (row.money && pin.trim() === '')}>
           <Icon name="check" size={15} /> {from ? (row.money ? tt('schedule.goPin') : tt('schedule.go')) : row.money ? tt('savePin') : tt('save')}
@@ -558,9 +612,36 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
           {tt('cancel')}
         </button>
       </div>
-      <details className="rh-more">
+      <details
+        className="rh-more"
+        onToggle={(e) => {
+          if (e.currentTarget.open && hist === null) void loadHist();
+        }}
+      >
         <summary>{tt('more.title')}</summary>
         <div className="rh-moreb">
+          <div className="rh-text" data-testid="rh-text">
+            <div className="rh-sub">{tt('text.title')}</div>
+            <label className="ad-label" htmlFor={`rh-tbn-${row.id}`}>
+              {tt('text.bn')}
+            </label>
+            <textarea id={`rh-tbn-${row.id}`} className="ad-input" rows={2} lang="bn" value={textBn} onChange={(e) => setTypedText((x) => ({ ...x, bn: e.target.value }))} disabled={!canWrite} />
+            <label className="ad-label" htmlFor={`rh-ten-${row.id}`}>
+              {tt('text.en')}
+            </label>
+            <textarea id={`rh-ten-${row.id}`} className="ad-input" rows={2} lang="en" value={textEn} onChange={(e) => setTypedText((x) => ({ ...x, en: e.target.value }))} disabled={!canWrite} />
+            <p className="rh-hint">{tt('text.note')}</p>
+            <div className="rl-actions">
+              <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => void saveText(true)} disabled={busy || !canWrite} data-testid="rh-text-use">
+                {tt('text.use')}
+              </button>
+              {row.text ? (
+                <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => void saveText(false)} disabled={busy || !canWrite} data-testid="rh-text-auto">
+                  <Icon name="sync" size={14} /> {tt('text.auto')}
+                </button>
+              ) : null}
+            </div>
+          </div>
           <div className="rh-later" data-testid="rh-later">
             <div className="rh-sub">{tt('schedule.title')}</div>
             <input type="date" className="ad-input rh-date" min={today} value={from} onChange={(e) => setFrom(e.target.value)} aria-label={tt('schedule.title')} disabled={!canWrite || blocked} data-testid="rh-from" />
@@ -588,6 +669,30 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
               ) : null}
             </div>
           ) : null}
+          <div className="rh-hist" data-testid="rh-history">
+            <div className="rh-sub">{tt('history.title')}</div>
+            {hist && hist.length ? (
+              <div className="rh-histlist">
+                {hist.map((h) => (
+                  <div key={h.changeId} data-testid="rh-hist-row">
+                    <span>
+                      <b>{summary(h.value)}</b>
+                      <br />
+                      <span className="rh-hint">
+                        {tt('history.until')} {when(h.at)}
+                        {h.by ? ` · ${h.by}` : ''}
+                      </span>
+                    </span>
+                    <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => undo(h.changeId)} disabled={busy || !canWrite || blocked || (row.money && pin.trim() === '')} data-testid="rh-undo">
+                      <Icon name="sync" size={14} /> {tt('history.undo')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rh-hint">{hist === null ? '' : tt('history.none')}</p>
+            )}
+          </div>
           {row.more ? (
             <Link className="rl-link" href={row.more}>
               {tt('more.fuller')}

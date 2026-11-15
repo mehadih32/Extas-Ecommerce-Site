@@ -79,6 +79,8 @@ export interface HubSettingRowView {
   pill: HubPill;
   /** PR 858: a change waiting for its day ("Start on a later date"), or null. */
   scheduled: { from: string; values: Record<string, unknown> } | null;
+  /** PR 867: the owner's own customer wording for this rule ("Edit the customer text"), or null while the automatic words are used. */
+  text: { bn: string; en: string } | null;
 }
 
 export interface HubLinkRowView {
@@ -133,6 +135,7 @@ export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
   // PR 858: a change whose day has come is put in first, so the screen shows what the shop uses now
   await applyDueHubSchedules(deps, { storeId: who.storeId });
   const waiting = await readSchedule(deps, who.storeId);
+  const texts = await readTexts(deps, who.storeId);
   const rows: HubRowView[] = [];
   for (const row of HUB_ROWS as readonly HubRow[]) {
     if (row.type === 'setting') {
@@ -152,6 +155,7 @@ export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
         isDefault: JSON.stringify(value) === JSON.stringify(def),
         pill: pillOf(row, value, def),
         scheduled: ((e) => (e ? { from: e.from, values: e.values } : null))(waiting.find((x) => x.rowId === row.id)),
+        text: texts[row.id] ?? null,
       });
     } else {
       if (row.needs && !hasKey(row.needs)) continue;
@@ -481,4 +485,100 @@ export async function applyDueHubSchedules(deps: HubDeps, opts: { storeId: numbe
   }
   await st.set(SCHEDULE_KEY, { entries: waiting }, storeTarget(opts.storeId), { actorId: null, reason: 'Rules: scheduled changes started', ownerApproved: true });
   return { applied, dropped };
+}
+
+// ------------------------------------------------------------------------------------------------ "Edit the customer text" and "History" (PR 867)
+
+const TEXT_KEY = 'rules.hub.text';
+export interface HubCustomerText {
+  bn: string;
+  en: string;
+}
+
+async function readTexts(deps: HubDeps, storeId: number): Promise<Record<string, HubCustomerText>> {
+  if (!hasKey(TEXT_KEY)) return {};
+  const v = await anySettings(deps).value(TEXT_KEY, { storeId });
+  return isObj(v) && isObj(v.texts) ? (v.texts as Record<string, HubCustomerText>) : {};
+}
+
+/**
+ * Saves the owner's own customer wording for a rule row (Bengali and English), or, with `text: null`, goes back to the automatic words.
+ * It is wording only: no number or switch of the rule changes, so no PIN. `rules.write`; audited; the entry replaces the old one, and the
+ * setting history keeps every earlier wording.
+ */
+export async function saveHubText(deps: HubDeps, who: Who, input: { id: string; text: { bn: unknown; en: unknown } | null }): Promise<{ id: string; text: HubCustomerText | null }> {
+  await allow(deps, who, 'rules.write');
+  const row = rowFor(input.id);
+  if (!hasKey(TEXT_KEY)) throw new RulesError('NOT_FOUND', 'the customer wording is not available');
+  const all = await readTexts(deps, who.storeId);
+  const before = all[row.id] ?? null;
+  const next = { ...all };
+  if (input.text === null) delete next[row.id];
+  else {
+    const bn = typeof input.text.bn === 'string' ? input.text.bn.trim() : '';
+    const en = typeof input.text.en === 'string' ? input.text.en.trim() : '';
+    if (!bn || !en) throw new RulesError('INVALID_INPUT', 'write the words in Bengali and in English', [!bn ? 'bn' : 'en']);
+    next[row.id] = { bn, en };
+  }
+  if (JSON.stringify(next) === JSON.stringify(all)) return { id: row.id, text: before };
+  try {
+    await anySettings(deps).set(TEXT_KEY, { texts: next }, storeTarget(who.storeId), { actorId: who.actor.staffUserId ?? null, reason: 'Rules: customer wording' });
+  } catch (e) {
+    refuse(e, 'customer wording');
+  }
+  await logChange(deps.db, who, { action: 'rules.hub.text', entityType: 'HubRule', entityId: row.id, before, after: next[row.id] ?? null });
+  return { id: row.id, text: next[row.id] ?? null };
+}
+
+export interface HubHistoryEntry {
+  /** The id to undo to. */
+  changeId: string;
+  /** What the rule held until `at` (the value this change replaced). */
+  value: unknown;
+  at: string;
+  by: string | null;
+}
+
+const HISTORY_SHOWN = 6; // hardcode-ok: the prototype lists the last six changes
+
+/** The last changes of a row's setting, newest first: the value each one replaced, when, and by whom (`rules.read`). Nothing is changed. */
+export async function hubHistory(deps: HubDeps, who: Who, input: { id: string }): Promise<HubHistoryEntry[]> {
+  await allow(deps, who, 'rules.read');
+  const row = rowFor(input.id);
+  const def = specOf(row.key)!.default;
+  const changes = await deps.db.settingChange.findMany({
+    where: { key: row.key, storeId: who.storeId, action: { in: ['SET', 'RESET_TO_DEFAULT'] } },
+    orderBy: { createdAt: 'desc' },
+    take: HISTORY_SHOWN * 3, // hardcode-ok: a few more than shown, so a change that did not move the value can be skipped
+    select: { id: true, oldValue: true, newValue: true, createdAt: true, actorId: true },
+  });
+  const kept = changes.filter((c) => JSON.stringify(c.oldValue ?? def) !== JSON.stringify(c.newValue ?? def)).slice(0, HISTORY_SHOWN);
+  const ids = [...new Set(kept.flatMap((c) => (c.actorId ? [c.actorId] : [])))];
+  const people = ids.length ? await deps.db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } }) : [];
+  const name = new Map(people.map((p) => [p.id, p.displayName]));
+  return kept.map((c) => ({ changeId: c.id, value: c.oldValue ?? def, at: c.createdAt.toISOString(), by: c.actorId ? (name.get(c.actorId) ?? null) : null }));
+}
+
+/**
+ * "Undo to this": the rule goes back to the value a past change replaced. It is a new change on top (the history keeps every step, nothing is
+ * deleted), checked by the setting's own schema like any save; a row that changes what customers pay needs the owner's OK (the route asks for the PIN).
+ */
+export async function undoHubRow(deps: HubDeps, who: Who, input: { id: string; changeId: string; version: string }): Promise<{ id: string; value: unknown; version: string }> {
+  await allow(deps, who, 'rules.write');
+  const row = rowFor(input.id);
+  const st = anySettings(deps);
+  const before = await st.value(row.key, { storeId: who.storeId });
+  if (versionOf(before) !== input.version) throw new RulesError('STALE_DRAFT', 'someone changed this rule since you opened it');
+  const change = await deps.db.settingChange.findFirst({ where: { id: input.changeId, key: row.key, storeId: who.storeId }, select: { oldValue: true } });
+  if (!change) throw new RulesError('NOT_FOUND', 'no such earlier value');
+  const next = change.oldValue ?? specOf(row.key)!.default;
+  if (JSON.stringify(next) === JSON.stringify(before)) return { id: row.id, value: before, version: versionOf(before) };
+  const approved = await ownerOk(deps, who, row);
+  try {
+    await st.set(row.key, next, storeTarget(who.storeId), { actorId: who.actor.staffUserId ?? null, reason: 'Rules: undo to an earlier value', ...(approved ? { ownerApproved: true } : {}) });
+  } catch (e) {
+    refuse(e, row.id);
+  }
+  await logChange(deps.db, who, { action: 'rules.hub.undo', entityType: 'HubRule', entityId: row.id, before, after: next });
+  return { id: row.id, value: next, version: versionOf(next) };
 }

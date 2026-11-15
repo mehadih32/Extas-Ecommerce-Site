@@ -640,6 +640,31 @@
         "MIN_SUBTOTAL": "Rule {rule} waits for a bigger cart.",
         "MIN_QUANTITY": "Rule {rule} needs {n} more piece(s)."
       }
+    },
+    "text": {
+      "title": "Edit the customer text",
+      "bn": "Bengali text",
+      "en": "English text",
+      "use": "Use my text",
+      "auto": "Back to automatic text",
+      "saved": "Your text is saved.",
+      "autoDone": "Back to the automatic text.",
+      "need": "Write the text in both Bengali and English.",
+      "own": "Your own text is used. Numbers above will not change it until you go back to the automatic text.",
+      "note": "Shop pages that print this rule's sentence still use the rule's own wording."
+    },
+    "history": {
+      "title": "History",
+      "until": "until",
+      "undo": "Undo to this",
+      "none": "No changes yet.",
+      "confirm": "Go back to this value? It is saved as a new change; the history keeps every step.",
+      "done": "Went back to the earlier value.",
+      "by": "by"
+    },
+    "footer": {
+      "pin": "Needs owner PIN to save",
+      "now": "Saves at once"
     }
   }
 }
