@@ -26,6 +26,8 @@
 .of-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .of-kpi{padding:10px;border:1px solid var(--lm-ln);border-radius:10px}
 .of-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.of-segs button{min-height:44px}
+.of-search{min-height:44px;width:100%;max-width:320px}
 .of-table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
 .of-table th,.of-table td{padding:8px;text-align:left;border-bottom:1px solid var(--lm-ln)}
 .of-detail,.of-wizard{display:grid;gap:10px;padding:12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf)}
