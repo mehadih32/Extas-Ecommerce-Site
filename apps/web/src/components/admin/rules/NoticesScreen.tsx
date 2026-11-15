@@ -34,8 +34,6 @@ export interface NoticesScreenProps {
   places: PlaceOption[];
   limits: NoticeLimits;
   perms: Perms;
-  /** The Rules pages' tabs (desktop), drawn under the head. */
-  tabs?: ReactNode;
   /** S28 · PR 678: the pop-up hub drawn above (then this is the owner's own notices: a smaller heading, the tabs come from the hub). */
   before?: ReactNode;
 }
@@ -355,7 +353,6 @@ export function NoticesScreen(props: NoticesScreenProps) {
           </button>
         ) : null}
       </div>
-      {props.before ? null : props.tabs}
       <div className="ad-note ad-note-top">
         <Icon name="info" size={16} />
         <div>{tt('standing')}</div>

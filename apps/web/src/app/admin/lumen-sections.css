@@ -119,6 +119,9 @@
    chips, tables, buttons, tags, notes, fields, the bulk bar) gets the Lumen shape, type and colours here, in light and
    dark: cards 22 px with the soft shadow, Bricolage figures, round chips, coral primary buttons, text at least 14 px. */
 [data-lm-look] [data-lm-ready] .a2-ph { margin-bottom: 14px; }
+/* PR 763: a page that is itself a flex column or grid with a gap (the *-page wrappers and the Rules hubs below) already has the gap under its head; the
+   head's own 14 px came on top of it (28 or 30 px between the head and what follows, 14 px on every other page). */
+[data-lm-look] :is(.rh, .po, .of, .bbx-page, .bp-page, .cm-page, .frx-page, .gg-page, .ha-page, .in-page, .ldx-page, .lyb-page, .mf-page, .pex-page, .ph-page, .sc-page, .scx-page, .sd-page, .shx-page, .ssx-page, .sy-page) > .a2-ph { margin-bottom: 0; }
 [data-lm-look] [data-lm-ready] .a2-h1 { font: 800 var(--lm-fs-h1) / 1.15 var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] :is(.a2-subt, .a2-kl, .a2-sm, .a2-xs, .a2-note, .a2-tab, .a2-view, .a2-tbl, .a2-btn, .a2-inp, .a2-sel, .a2-ta, .a2-lbl, .a2-lnk, .a2-chkl) { font-size: var(--lm-fs-card); }
 [data-lm-look] [data-lm-ready] .a2-subt { color: var(--lm-ink2); margin-top: 6px; }

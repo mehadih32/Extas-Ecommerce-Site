@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { QueueButton } from '@/components/admin/products/QueueButton';
 import { checkText, formatNumber, nameIn } from '@/components/admin/products/model';
@@ -51,18 +53,12 @@ export default async function PublishQueuePage({ searchParams }: { searchParams:
   const href = (f: string, page = 1) => `${QUEUE_HOME}?filter=${f}${page > 1 ? `&page=${page}` : ''}`;
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'queue.title')}</h1>
-          <p className="ad-intro">{t(d, 'queue.intro')}</p>
-        </div>
-        <QueueButton dict={d} locale={view.locale} kind="recheck" productIds={queue.items.map((i) => i.productId)} />
-      </div>
-      <div className="pa-gtabs">
-        <SystemTabs view={view} current={KEY} group="catalogue" />
-      </div>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'queue.title')} sub={t(d, 'queue.intro')} right={
+        <>
+      <QueueButton dict={d} locale={view.locale} kind="recheck" productIds={queue.items.map((i) => i.productId)} />
+        </>
+      } />
       <nav className="ad-tabs" aria-label={t(d, 'queue.filters.label')}>
         {cat.QUEUE_FILTERS.map((f) => (
           <Link key={f} className="ad-chip" href={href(f)} aria-current={filter === f ? 'page' : undefined}>

@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { OffersScreen } from '@/components/admin/rules/OffersScreen';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -36,7 +36,7 @@ export default async function OffersPage() {
   const [screen, env, scopes] = await Promise.all([rl.offersScreen({ ...a.deps, settings: deps!.resolver }, a.who), rulesEnv(a), ruleScopes(a)]);
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <OffersScreen
         dict={view.dict}
         lang={view.lang}
@@ -44,11 +44,6 @@ export default async function OffersPage() {
         screen={screen}
         scopes={scopes}
         perms={{ write: a.perms.write, approve: a.perms.approve }}
-        tabs={
-          <div className="pa-gtabs">
-            <SystemTabs view={view} current={KEY} group="rules" />
-          </div>
-        }
       />
     </AdminFrame>
   );

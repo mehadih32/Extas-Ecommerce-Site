@@ -9,6 +9,8 @@ import type { HubGroupId, HubField } from '@extas/rules/pure';
 import { HUB_GROUPS, formatValue } from '@extas/rules/pure';
 import type { HubRowView, HubScreen, HubSettingRowView, HubSmartRowView, HubLinkRowView } from '@extas/rules';
 import { call } from '../api';
+import { PageHead } from '../shell/ShellHead';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
@@ -27,7 +29,6 @@ export interface RulesHubProps {
   roles: HubRole[];
   perms: { write: boolean; approve: boolean };
   initialSel: string | null;
-  tabs?: ReactNode;
 }
 
 type Json = Record<string, unknown>;
@@ -105,13 +106,7 @@ export function RulesHub(props: RulesHubProps) {
 
   return (
     <div className="rh">
-      <div className="ad-hd rl-hd">
-        <div className="rl-hd-text">
-          <h1 className="ad-h1">{tt('title')}</h1>
-          <p className="ad-intro">{tt('intro')}</p>
-        </div>
-      </div>
-      {props.tabs}
+      <PageHead view={{ dict: props.dict }} place={locateKey('rules')} title={tt('title')} sub={tt('intro')} />
       <div className="rh-strip" role="status">
         {hub.sample > 0 ? (
           <button

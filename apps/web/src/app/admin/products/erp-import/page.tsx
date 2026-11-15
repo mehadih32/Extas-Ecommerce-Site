@@ -9,7 +9,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { ErpImport } from '@/components/admin/products/ErpImport';
 import { adminDeps } from '@/lib/admin-auth';
@@ -50,17 +52,8 @@ export default async function ErpImportPage() {
   const state = link.state === 'mock' ? 'practice' : link.state;
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'stock.erpImport.title')}</h1>
-          <p className="ad-intro">{t(d, 'stock.erpImport.intro')}</p>
-        </div>
-      </div>
-      <div className="pa-gtabs">
-        <SystemTabs view={view} current={KEY} group="catalogue" />
-      </div>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'stock.erpImport.title')} sub={t(d, 'stock.erpImport.intro')} />
 
       <div className={`ad-note ad-note-top${state === 'connected' && model === 'v6' ? '' : ' warn'}`} data-erp-state={state} data-erp-model={model}>
         <Icon name="info" size={16} />

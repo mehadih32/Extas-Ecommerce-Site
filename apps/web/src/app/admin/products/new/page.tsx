@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { WizardBar } from '@/components/admin/products/WizardBar';
 import { NewProductForm } from '@/components/admin/products/NewProductForm';
@@ -41,17 +43,12 @@ export default async function NewProductPage() {
   const drafts = await cat.wizardDrafts(c.deps, c.who, 5);
   const d = view.dict;
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <Link className="pa-back" href={PRODUCTS_HOME}>
         <Icon name="back" size={14} />
         {t(d, 'products.back')}
       </Link>
-      <div className="ad-hd">
-        <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-        <h1 className="ad-h1">{t(d, 'products.new.title')}</h1>
-        <p className="ad-intro">{t(d, 'products.new.intro')}</p>
-      </div>
-      <SystemTabs view={view} current={KEY} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.new.title')} sub={t(d, 'products.new.intro')} />
       <WizardBar dict={d} step={1} productId={null} done={[]} furthest={1} canWrite={c.can('catalogue.write')} preview={null} />
       {drafts.length ? (
         <section className="ad-card" aria-label={t(d, 'products.wiz.resume')} data-testid="wizard-resume">

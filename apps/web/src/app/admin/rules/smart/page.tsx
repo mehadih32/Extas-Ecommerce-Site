@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { RulesScreen } from '@/components/admin/rules/RulesScreen';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -50,7 +50,7 @@ export default async function RulesPage({ searchParams }: { searchParams: Promis
   const noticeNames = Object.fromEntries(notices.map((n) => [n.id, (view.lang === 'bn' ? n.nameBn : null) ?? n.nameEn ?? n.key ?? n.id]));
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <RulesScreen
         dict={view.dict}
         lang={view.lang}
@@ -68,11 +68,6 @@ export default async function RulesPage({ searchParams }: { searchParams: Promis
         aiEnabled={aiEnabled === true}
         simDays={simDays}
         initialId={wanted && /^[0-9a-f-]{36}$/.test(wanted) ? wanted : null}
-        tabs={
-          <div className="pa-gtabs">
-            <SystemTabs view={view} current={KEY} group="rules" />
-          </div>
-        }
       />
     </AdminFrame>
   );
