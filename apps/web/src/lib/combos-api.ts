@@ -12,7 +12,7 @@
 //   PUT   /api/admin/combos/:id             {combo, version} change it
 //   POST  /api/admin/combos/:id/price       {setPriceMinor, version?} the card's price box (combos.prices)
 //   POST  /api/admin/combos/:id/flags       {autoApply?, sameColour?}
-//   POST  /api/admin/combos/:id/active      {on} switch on, or off to the archive (combos.publish)
+//   POST  /api/admin/combos/:id/active      {on, archive?} switch on, off, or (archive: true) to the Archive (combos.publish)
 //   POST  /api/admin/combos/:id/photo       PR 575 · make the set photo from the piece photos
 //   POST  /api/admin/combos/:id/split       CN-018 (4) {splitMode, splitPriceRule} Fixed / Flexible and its rule (combos.prices)
 //   GET   /api/admin/combos/split           CN-018 (4) the store's set-split setting (`combos.split`)
@@ -188,7 +188,7 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
     return handle(request, deps, 'combos.publish', async (x) => {
       const bd = await body(request);
       if (typeof bd.on !== 'boolean') return fail(400, 'INVALID_INPUT', ['on']);
-      return { combo: await cb.setComboActive(x.deps, x.who, a, bd.on) };
+      return { combo: await cb.setComboActive(x.deps, x.who, a, bd.on, bd.archive === true ? 'archive' : 'off') };
     });
   if (b === 'split') return m === 'POST' ? handle(request, deps, 'combos.prices', async (x) => ({ combo: await cb.setComboSplit(x.deps, x.who, a, await body(request)) })) : notAllowed();
   if (b === 'photo')
