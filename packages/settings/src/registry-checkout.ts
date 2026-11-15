@@ -68,7 +68,7 @@ export const checkoutSettings = {
   // ---- PR 116 · name, phone and address: the shortest name and address the order takes (letters, not bytes) ----
   'checkout.form.nameMin': setting({
     ...base,
-    schema: z.int().min(1).max(20),
+    schema: z.int().min(0).max(20), // 0: the checkout does not ask for a name
     default: 2,
     valueType: 'INT',
     labelKey: 'checkout.form.nameMin.label',
@@ -131,6 +131,17 @@ export const checkoutSettings = {
     labelKey: 'checkout.pay.online.enabled.label',
     helpKey: 'checkout.pay.online.enabled.help',
     sortOrder: 64,
+  }),
+
+  // PR 748: show the receiving numbers to the customer who still owes a prepaid payment (off: nothing is shown, as before)
+  'checkout.pay.showNumbers': setting({
+    ...base,
+    schema: z.boolean(),
+    default: false,
+    valueType: 'BOOLEAN',
+    labelKey: 'checkout.pay.showNumbers.label',
+    helpKey: 'checkout.pay.showNumbers.help',
+    sortOrder: 66,
   }),
 
   // ---- PR 121 · the quantity at checkout: three or more of one size says sizes can be mixed (demo #41) ----

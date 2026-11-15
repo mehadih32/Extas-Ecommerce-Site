@@ -398,7 +398,17 @@
       "giftTitle": "A gift for {name}",
       "giftFrom": "From {sender}",
       "giftAfter": "Delivered on or after {date}",
-      "giftHidden": "Prices are hidden on the receiver's invoice."
+      "giftHidden": "Prices are hidden on the receiver's invoice.",
+      "sendTitle": "Send the money to",
+      "sendNote": "Write your order number {number} as the reference.",
+      "sendWallet": "{provider} ({kind})",
+      "sendKind_merchant": "merchant",
+      "sendKind_personal": "personal",
+      "sendKind_agent": "agent",
+      "sendBank": "{bank}, account name {account}",
+      "sendBankNo": "Account number {no}",
+      "sendBankBranch": "Branch {branch}",
+      "sendBankRouting": "Routing number {routing}"
     },
     "gift": {
       "title": "Sending a gift",

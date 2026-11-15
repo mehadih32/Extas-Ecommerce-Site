@@ -16,7 +16,10 @@
     "down": "Move down",
     "drag": "Drag to move",
     "dragHelp": "Press and drag, or use the arrow keys",
-    "lang": { "en": "English", "bn": "Bengali" },
+    "lang": {
+      "en": "English",
+      "bn": "Bengali"
+    },
     "err": {
       "STALE": "Someone else changed this just now. It has been read again, so please make your change again.",
       "INVALID_INPUT": "Something here is not right. Check the numbers and words and try again.",
@@ -26,8 +29,50 @@
       "network": "No connection. Nothing was saved.",
       "other": "It was not saved. Please try again."
     },
-    "wallet": { "bkash": "bKash", "nagad": "Nagad", "rocket": "Rocket", "upay": "Upay" },
-    "cardType": { "visa": "Visa", "mastercard": "Mastercard", "amex": "American Express", "bank": "Bank cards" },
+    "wallet": {
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "rocket": "Rocket",
+      "upay": "Upay"
+    },
+    "cardType": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "American Express",
+      "bank": "Bank cards"
+    },
+    "form": {
+      "h": "Delivery details",
+      "d": "The three boxes your customer fills in (name, phone, address), how short they may be, and the small lines around them.",
+      "range": "A number is outside the allowed range. Check the numbers and try again.",
+      "order": "Order of the boxes",
+      "orderHelp": "The customer is asked in this order, and the first unfinished box is the one the form points at. All three boxes are always asked.",
+      "always": "Always asked (the name is skipped when its shortest length is 0)",
+      "field": {
+        "name": "Name",
+        "phone": "Phone",
+        "address": "Address"
+      },
+      "lengths": "Shortest allowed",
+      "nameMin": "Shortest name (letters)",
+      "nameMinHelp": "From {min} to {max}. 0 means the checkout does not ask for a name: the order then carries the phone number in its place. Phone and address are always asked (the courier, the delivery charge and the messages need them).",
+      "addressMin": "Shortest address (letters)",
+      "addressMinHelp": "From {min} to {max}. A longer minimum makes riders' lives easier.",
+      "lines": "Lines and boxes",
+      "help": "Show the help line",
+      "tryOn": "Show the try-on line",
+      "note": "Show the note box",
+      "noteMax": "Longest note (letters)",
+      "noteMaxHelp": "From {min} to {max}.",
+      "many": "Remind about mixing sizes",
+      "manyMin": "Pieces of one size before the reminder",
+      "manyMinHelp": "From {min} to {max}.",
+      "confirmH": "Confirm button",
+      "confirm": "While the form is not finished",
+      "confirmAsk": "The button asks for the missing box",
+      "confirmDisable": "The button waits, switched off",
+      "confirmHelp": "Asking: pressing the button takes the customer to the box that is missing and asks him there. Switched off: the button waits until the form is finished."
+    },
     "payments": {
       "h": "Payments",
       "d": "Which ways to pay the checkout offers, in what order, and the numbers and accounts your customers send money to.",
@@ -53,12 +98,48 @@
       "provider": "Wallet",
       "number": "Number",
       "kind": "Kind of number",
-      "kinds": { "merchant": "Merchant", "personal": "Personal", "agent": "Agent" },
+      "kinds": {
+        "merchant": "Merchant",
+        "personal": "Personal",
+        "agent": "Agent"
+      },
       "banks": "Bank accounts",
       "banksHelp": "The accounts customers can transfer to. Up to 10.",
       "banksEmpty": "No bank account added yet.",
       "bankAdd": "Add a bank account",
-      "bank": { "bankName": "Bank name", "accountName": "Account name", "accountNumber": "Account number", "branch": "Branch (optional)", "routingNumber": "Routing number (optional)" }
+      "bank": {
+        "bankName": "Bank name",
+        "accountName": "Account name",
+        "accountNumber": "Account number",
+        "branch": "Branch (optional)",
+        "routingNumber": "Routing number (optional)"
+      },
+      "show": "Receiving numbers on the thank-you page",
+      "showHelp": "For an order that waits for a prepaid payment, the customer sees the numbers and bank accounts above, to send the money to. Off: nothing of the kind is shown.",
+      "showOn": "Show the receiving numbers to a customer who still has to pay"
+    },
+    "gift": {
+      "h": "Gift orders",
+      "d": "The \"Send as a gift\" link in the bag: the gift note, the delivery day, and whether the receiver's invoice hides prices. Its advance is money, so only an owner changes this card.",
+      "ownerOnly": "Only an owner changes the gift card.",
+      "range": "A number is outside the allowed range. Check the numbers and try again.",
+      "on": "Offer \"Send as a gift\"",
+      "noteMax": "Longest gift note (letters)",
+      "noteMaxHelp": "From 0 to 1000. 0 hides the note box.",
+      "maxDays": "Latest delivery day (days ahead)",
+      "maxDaysHelp": "From 0 to 365. 0 hides the delivery-day box.",
+      "hidePrices": "Hide prices on the receiver's invoice, to start with",
+      "advanceH": "Advance for a gift",
+      "advanceHelp": "Money the customer pays ahead. Until part payment comes, the team gets a call task to collect a part.",
+      "advanceOn": "Ask for an advance",
+      "type": "The advance is",
+      "typeFull": "The whole gift",
+      "typePercent": "A percentage of the gift",
+      "typeFixed": "A fixed amount",
+      "percent": "Percent (1 to 100)",
+      "amount": "Amount",
+      "needAmount": "Write the fixed amount (more than 0).",
+      "needPercent": "Write a percentage from 1 to 100."
     }
   }
 }

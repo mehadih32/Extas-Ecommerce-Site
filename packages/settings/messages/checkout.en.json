@@ -55,6 +55,10 @@
           "label": "Offer \"Pay online\" (one secure payment page)",
           "help": "One option that sends the customer to the payment gateway's own page for cards, mobile banking and net banking."
         }
+      },
+      "showNumbers": {
+        "label": "Show my receiving numbers to a customer who still has to pay",
+        "help": "On the thank-you page of an order that waits for a prepaid payment, the customer also sees the wallet numbers and bank accounts from Settings › Checkout, to send the money to. Off: nothing of the kind is shown."
       }
     },
     "prepaidReward": {

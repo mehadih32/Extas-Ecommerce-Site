@@ -91,6 +91,21 @@ describe.skipIf(!HAS_TEST_DB)('placing the order on PostgreSQL (S04, PR 125)', (
     });
   });
 
+  describe('PR 749 · a name the owner does not ask for (checkout.form.nameMin 0)', () => {
+    it('an order with no name is placed, carries the phone number in the name\'s place, and the phone is still asked', async () => {
+      f.overrides.set('checkout.form.nameMin', 0);
+      try {
+        const a = await shown('noname', { phone: '01800000749' });
+        const placed = await a.place({ form: { ...a.input.form, name: '' } });
+        expect((await orderOf(placed.orderId)).customerName).toBe('+8801800000749');
+        const b = await shown('noname-phone', { phone: '01800000748' });
+        await expect(b.place({ form: { ...b.input.form, name: '', phone: '' } })).rejects.toMatchObject({ code: 'FORM' });
+      } finally {
+        f.overrides.delete('checkout.form.nameMin');
+      }
+    });
+  });
+
   describe('PR 159 · what the order keeps for the risk checks, and until when', () => {
     it('the IP, the device id and the shared point (rounded) with the day they are cleared; each switch keeps its own', async () => {
       const device = randomUUID();
