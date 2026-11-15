@@ -148,7 +148,7 @@ export function CustomerTable({ view, rows, money, when, hrefOf, settings, nowMs
   const dash = t(d, 'cus.list.none');
   const n = (x: number) => formatNumber(x, view.locale);
   const now = nowMs;
-  const s: ListSettings = settings ?? { returningMinOrders: 2, atRiskDays: 45 };
+  const s: ListSettings = settings ?? { returningMinOrders: 2, atRiskDays: 45 }; // hardcode-ok: the fallback when the settings could not be read
   // PR 801: the prototype's columns — Customer, District, Orders, Delivered / refused, Spent, Last order, Group
   return (
     <div className="a2-tblw a2-mt12">

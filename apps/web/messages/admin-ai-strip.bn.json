@@ -62,7 +62,7 @@
     "invalid": "08:00-এর মতো একটা সময় লিখুন।",
     "preview": "ডাইজেস্ট প্রিভিউ",
     "previewH": "আগামীকালের ডাইজেস্ট",
-    "previewTitle": "EXTAS · AI ডাইজেস্ট · {time}",
+    "previewTitle": "AI ডাইজেস্ট · {time}",
     "previewWaiting": "আপনার অপেক্ষায়: {n}",
     "previewNone": "কিছু অপেক্ষায় নেই।",
     "previewPin": "(PIN)",

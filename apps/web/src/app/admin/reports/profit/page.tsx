@@ -448,7 +448,7 @@ export default async function ProfitReportPage({
   );
   const styleRows = r.styles.rows
     .filter((x) => x.depth === 0 || x.id !== null)
-    .filter((x) => x.depth <= 1)
+    .filter((x) => !(x.depth > 1))
     .map((x) => {
       const before = x.profitMinor + x.adsMinor;
       return toTableRow({

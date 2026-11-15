@@ -12,7 +12,7 @@ import type { Dict } from '@/lib/i18n';
 import { COMBOS_API, ComboEditor } from './ComboEditor';
 import { currencySymbol, money, type Lang } from './model';
 
-const Open = createContext<((id: string | null) => Promise<string | null>) | null>(null);
+const Open = createContext<((id: string | null) => Promise<string | null>) | null>(null); // hardcode-ok: a type, not text
 
 export function SetEditorHost({
   dict,

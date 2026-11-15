@@ -627,10 +627,10 @@
 @media (max-width:599px){.adm2 .a3-tiles.a3-tiles-row{grid-template-columns:minmax(0,1fr)}}
 
 .adm2 .a3-snap3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.adm2 .a3-snapc{border:1px solid var(--lm-ln,#e5e7ee);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.adm2 .a3-snapc{border:1px solid var(--lm-ln);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .adm2 .a3-snaph{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .adm2 .a3-snapv{font-size:26px;line-height:1.1}
-.adm2 .a3-cr{display:grid;grid-template-columns:minmax(70px,1fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--lm-ln,#e5e7ee)}
+.adm2 .a3-cr{display:grid;grid-template-columns:minmax(70px,1fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--lm-ln)}
 @media (max-width:760px){.adm2 .a3-snap3{grid-template-columns:1fr}}
 
 /* PR 795 (prototype v5 Home): the dashed "Nightly page check" line under Do now, the six tiles' icons, the ERP link card and the Latest orders list. */

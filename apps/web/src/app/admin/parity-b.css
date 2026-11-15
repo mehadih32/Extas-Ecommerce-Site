@@ -61,7 +61,7 @@
 
 /* ---- Website > Policies (PR 776, prototype m-website.js renderPolicies2): chips, EN/বাংলা row, number cards, section cards, legal strip ---- */
 .adm2 .polb-chips .a2-chipt{display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:20px;border:1px solid var(--ln);background:var(--sf);color:var(--ink2);font-weight:500;cursor:pointer}
-.adm2 .polb-chips .a2-chipt.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.adm2 .polb-chips .a2-chipt.on{background:var(--ink);border-color:var(--ink);color:var(--lm-on-ac);font-weight:600}
 .adm2 .polb-ttl{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .adm2 .polb-ttl .a2-seg button{min-height:44px}
 .adm2 .polb-glance{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
