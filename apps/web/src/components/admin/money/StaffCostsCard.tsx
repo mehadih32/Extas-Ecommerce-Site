@@ -5,7 +5,7 @@
 // month" puts the totals in the fixed-costs form above for the owner to check and Save there: nothing is paid or moved here.
 // The whole list is sent with the version it was read at (a second editor gets "STALE"), to /api/admin/costs/staff.
 import { useId, useMemo, useState } from 'react';
-import { STAFF_COST_KINDS, staffAmountAt, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostKind, type StaffCostPerson } from '@extas/settings/staff-costs';
+import { STAFF_COST_KINDS, salaryPlan, staffAmountAt, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostKind, type StaffCostPerson } from '@extas/settings/staff-costs';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -28,6 +28,8 @@ export function StaffCostsCard({
   data,
   month,
   canEdit,
+  canPay = false,
+  accounts = [],
   onUse,
 }: {
   dict: Dict;
@@ -37,6 +39,10 @@ export function StaffCostsCard({
   /** The month picked on the fixed-costs card above (YYYY-MM). */
   month: string;
   canEdit: boolean;
+  /** PR 859: Accounts and the owner (fixed costs + cashbook rights) may pay the month's salary. */
+  canPay?: boolean;
+  /** The cashbook accounts a salary can be paid from. */
+  accounts?: { key: string; name: string }[];
   /** Puts a month's totals (typed form) in the fixed-costs form above. */
   onUse(totals: Record<StaffCostKind, string>): void;
 }) {
@@ -52,6 +58,8 @@ export function StaffCostsCard({
   // PR 849: the advance, bonus and deduction of the month picked (prototype Salaries)
   const [adjust, setAdjust] = useState<{ id: string; adv: string; bonus: string; ded: string; note: string } | null>(null);
   const [add, setAdd] = useState<{ name: string; post: string; kind: StaffCostKind; amount: string; from: string; payDay: string } | null>(null);
+  // PR 859: Pay salary (prototype Salaries): one person or everybody due, from a cashbook account, with the PIN; nothing is automatic
+  const [pay, setPay] = useState<{ ids: string[]; account: string; pin: string } | null>(null);
   const dirty = JSON.stringify(people) !== JSON.stringify(data.people) || version !== data.version;
   const useMonth = month || new Date().toISOString().slice(0, 7);
   const totals = useMemo(() => staffTotalsFor(people, useMonth), [people, useMonth]);
@@ -120,6 +128,33 @@ export function StaffCostsCard({
     w.focus();
     w.print();
   }
+  const salaryDue = (ids?: string[]) => salaryPlan(people, useMonth, ids);
+  function startPay(ids?: string[]) {
+    const plan = salaryDue(ids);
+    if (!plan.length) return setSaid({ text: c('payNone'), bad: true });
+    setEdit(null);
+    setAdd(null);
+    setAdjust(null);
+    setPay({ ids: plan.map((x) => x.id), account: accounts[0]?.key ?? '', pin: '' });
+  }
+  async function payNow() {
+    if (!pay || !pay.account || !pay.pin) return;
+    setBusy(true);
+    const a = await call('POST', '/api/admin/costs/staff/pay', { month: useMonth, accountKey: pay.account, ids: pay.ids, pin: pay.pin });
+    setBusy(false);
+    if (a.status === 201) {
+      const paid = (a.data.paid as { minor: number }[]) ?? [];
+      setPay(null);
+      setSaid(null);
+      showToast({ text: c('paidDone', { count: paid.length, total: m(paid.reduce((n, x) => n + x.minor, 0)) }), tone: 'ok' });
+      return router.refresh();
+    }
+    const code = a.status === 0 ? 'network' : String(a.data.error ?? 'other');
+    const key = `moneyCosts.staff.err.${code}`;
+    const txt = t(dict, key);
+    setSaid({ text: txt === key ? c('err.other') : txt, bad: true });
+    setPay({ ...pay, pin: '' });
+  }
   function stop(pid: string) {
     setPeople((l) => l.map((p) => (p.id === pid ? { ...p, stoppedFrom: useMonth } : p)));
   }
@@ -148,6 +183,13 @@ export function StaffCostsCard({
         {c('title')}
       </h2>
       <p className="a2-cs">{c('sub')}</p>
+      {canPay && !dirty && salaryDue().length ? (
+        <div className="a2-row a2-mt12">
+          <button type="button" className="a2-btn pri" onClick={() => startPay()} data-testid="staff-pay-all">
+            {c('payAll')} · {c('payTotal', { count: salaryDue().length, total: m(salaryDue().reduce((n, x) => n + x.minor, 0)) })}
+          </button>
+        </div>
+      ) : null}
       {sorted.length ? (
         <div className="a2-tbl-wrap a2-mt12">
           <table className="a2-tbl" data-testid="staff-table">
@@ -202,11 +244,21 @@ export function StaffCostsCard({
                     <td className="r">{nx.adv ? `−${m(nx.adv)}` : dash}</td>
                     <td className="r">{nx.bonus ? `+${m(nx.bonus)}` : dash}</td>
                     <td className="r">{nx.ded ? `−${m(nx.ded)}` : dash}</td>
-                    <td className="r">{nx.base ? <b data-testid="staff-net">{m(nx.net)}</b> : dash}</td>
+                    <td className="r">{nx.base ? <b data-testid="staff-net">{m(nx.net)}</b> : dash}
+                      {p.paid?.[useMonth] ? (
+                        <div className="a2-xs a2-mute" data-testid="staff-paid" title={c('paidLocked')}>
+                          {c('paidTag', { date: p.paid[useMonth]!.at })}
+                        </div>
+                      ) : null}</td>
                     <td className="r">
                       {canEdit ? (
                         <div className="a2-row" style={{ justifyContent: 'flex-end', gap: 6 }}>
-                          {nx.base ? (
+                          {canPay && !dirty && salaryDue([p.id]).length ? (
+                            <button type="button" className="a2-btn sm pri" onClick={() => startPay([p.id])} data-testid="staff-pay">
+                              {c('pay')}
+                            </button>
+                          ) : null}
+                          {nx.base && !p.paid?.[useMonth] ? (
                             <button type="button" className="a2-btn sm" onClick={() => startAdjust(p)} data-testid="staff-adjust-open">
                               {c('adjust')}
                             </button>
@@ -263,6 +315,50 @@ export function StaffCostsCard({
               {c('apply')}
             </button>
             <button type="button" className="a2-btn" onClick={() => setEdit(null)}>
+              {c('cancel')}
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {pay ? (
+        <div className="ct-form a2-mt12" data-testid="staff-pay-form" role="group" aria-label={c('payTitle')}>
+          <p className="a2-sm">
+            <b>{c('payTitle')}</b> · {monthName(useMonth)}
+          </p>
+          <ul className="a2-sm">
+            {salaryDue(pay.ids).map((x) => (
+              <li key={x.id}>
+                {x.name}: <b>{m(x.minor)}</b>
+              </li>
+            ))}
+          </ul>
+          <p className="a2-sm">
+            <b>{c('payTotal', { count: salaryDue(pay.ids).length, total: m(salaryDue(pay.ids).reduce((n, x) => n + x.minor, 0)) })}</b>
+          </p>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${id}-pa`}>
+              {c('payFrom')}
+            </label>
+            <select id={`${id}-pa`} className="a2-sel" value={pay.account} onChange={(e) => setPay({ ...pay, account: e.target.value })}>
+              {accounts.map((a) => (
+                <option key={a.key} value={a.key}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${id}-pp`}>
+              {c('payPin')}
+            </label>
+            <input id={`${id}-pp`} className="a2-inp" type="password" inputMode="numeric" autoComplete="off" value={pay.pin} onChange={(e) => setPay({ ...pay, pin: e.target.value })} data-testid="staff-pay-pin" />
+          </div>
+          <p className="a2-xs a2-mute">{c('payNote')}</p>
+          <div className="a2-row" style={{ gap: 8 }}>
+            <button type="button" className="a2-btn pri" disabled={busy || !pay.pin || !pay.account} onClick={payNow} data-testid="staff-pay-ok">
+              {c('payGo')}
+            </button>
+            <button type="button" className="a2-btn" onClick={() => setPay(null)}>
               {c('cancel')}
             </button>
           </div>

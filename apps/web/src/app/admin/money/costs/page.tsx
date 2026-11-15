@@ -58,6 +58,9 @@ export default async function CostsPage() {
   const at = { storeId: MOTHER_STORE_ID };
   const [screen, currency, resendDays, stCard, staff] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at), statementCostsCard(access.deps, MOTHER_STORE_ID), staffCostsCard(access.deps, MOTHER_STORE_ID)]);
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
+  // PR 859: Pay salary is for the roles that hold both the fixed-costs and the cashbook rights (Accounts, owner); the cashbook asks for the PIN
+  const canPaySalary = canEdit && (access.guard.permissions?.has('cash.record') ?? false);
+  const cashAccounts = canPaySalary ? (await inv.cashbookView(idep, who, { limit: 1 })).accounts.filter((a) => !a.archived).map((a) => ({ key: a.key, name: view.locale === 'bn' && a.nameBn ? a.nameBn : a.nameEn })) : [];
   const canEnterLines = canEdit || (access.guard.permissions?.has('costlines.write') ?? false);
   const today = screen.fixed.today;
   const openFrom = [screen.fixed.startDay ?? today, inv.addDays(today, -resendDays)].sort().at(-1)!;
@@ -83,7 +86,7 @@ export default async function CostsPage() {
     <div className="a2-z" data-testid="costs-page" data-lm-ready="" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyCosts.title')} sub={t(view.dict, 'moneyCosts.sub')} />
       <SectionTabs view={view} current={KEY} />
-      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} staff={{ people: [...staff.value.people], version: staff.version }} />
+      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} canPaySalary={canPaySalary} cashAccounts={cashAccounts} staff={{ people: [...staff.value.people], version: staff.version }} />
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/costs/statements" screen={{ key: stCard.key, value: { ...stCard.value }, version: stCard.version }} fields={stFields} texts={stTexts} canEdit={canEdit} testId="costs-from-statements" />
       </div>
