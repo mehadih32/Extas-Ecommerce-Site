@@ -47,6 +47,8 @@
 - **Gift mode** (PR 833) — চেকআউটের গিফট পছন্দ। **Show “This is a gift” at checkout** — চালু বা বন্ধ। **Let the buyer write a short gift note (most letters, 0 = no note)** — গিফট নোটের সর্বোচ্চ অক্ষর। **Deliver later, up to (days)** — গিফট কত দিন পরে পাঠানো যাবে। **Hide prices on the invoice inside the parcel** — পার্সেলের ইনভয়েসে দাম লুকানো। গিফটের অগ্রিম নিয়ম আগের মতোই চেকআউট সেটিংসে।
 - **Quiet hours & limits** (PR 833) — **Hold messages in quiet hours**, **Quiet from (hour, 0–23)** আর **Quiet until (hour, 0–23)**। এই সময়ের মেসেজ সকাল পর্যন্ত অপেক্ষা করে; পেমেন্ট লিংক আর OTP সঙ্গে সঙ্গে যায়।
 - নিয়মের সারির নাম এখন প্রোটোটাইপের মতো: **Eid last order dates**, **Peak / Eid mode**, **Cash on delivery**, **Discount for paying online**, **Price-adjust limits by role**, **Advance request reminder**।
+- **Customer sees** — প্রতিটা নিয়মের ফর্মে, আপনি এখন যে সংখ্যা লিখছেন তা দিয়ে কাস্টমার ঠিক কী দেখবেন তার কথা; সেভের আগেই বদলায়। পর্দার পেছনের নিয়মে লেখা থাকে কাস্টমার কিছু দেখেন না।
+- **Try the numbers above** — (আরও অপশনে, ফ্রি ডেলিভারি, ডুপ্লিকেট আর মার্জ নিয়মে) গত 30 দিনের অর্ডারে ওপরের সংখ্যা চালিয়ে দেখায় কয়টা ধরা পড়ত। শুধু দেখা, কিছু সেভ বা বদল হয় না।
 - **What changes** — সেভের আগে বদলের তালিকা। **Back to default** — শুরুর মানে ফেরা। **Owner's PIN** আর **Save · PIN** — টাকার নিয়মে।
 - **Save** আর **Cancel** — সেভ বা বাতিল। **Close** — ঘর বন্ধ।
 - **ওপরের ট্যাব বার** — সেকশনের সব ট্যাব, সব পাতায় একই জায়গায় (শিরোনামের ওপরে); এক ট্যাব থেকে আরেকটায় গেলে বার লাফায় না। শিরোনামের ডানে **গাইড** বোতাম (বইয়ের ছবি) এই পাতার গাইড খোলে।

@@ -6,7 +6,7 @@
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { HubGroupId, HubField } from '@extas/rules/pure';
-import { HUB_GROUPS, formatValue } from '@extas/rules/pure';
+import { HUB_GROUPS, formatValue, isTryable, type TryResult } from '@extas/rules/pure';
 import type { HubRowView, HubScreen, HubSettingRowView, HubSmartRowView, HubLinkRowView } from '@extas/rules';
 import { call } from '../api';
 import { PageHead } from '../shell/ShellHead';
@@ -254,6 +254,32 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
   const [vals, setVals] = useState<Record<string, unknown>>(() => Object.fromEntries(row.fields.map((f) => [f.path, getPath(row.value, f.path)])));
   const [pin, setPin] = useState('');
   const [typed, setTyped] = useState<Record<string, string>>({});
+  // PR 848: "Customer sees" (the words, worked out from the numbers typed now) and "Try on last 30 days' orders"
+  const [tried, setTried] = useState<TryResult | null>(null);
+  const [trying, setTrying] = useState(false);
+  const onField = row.fields.find((f) => f.path === 'enabled' || f.path === 'on');
+  const isOff = row.id === 'free' ? vals[''] === null || vals[''] === undefined : onField ? vals[onField.path] !== true : false;
+  const seesVars = (): Record<string, string | number> => {
+    const out: Record<string, string | number> = {};
+    for (const f of row.fields) out[key(f.path)] = show(f, vals[f.path], row.id);
+    return out;
+  };
+  const seesText = (): string => {
+    const pick = (k: string) => {
+      const s = tt(k, seesVars());
+      return s === `rulesHub.${k}` ? null : s;
+    };
+    return (isOff ? pick(`sees.${row.id}Off`) : null) ?? pick(`sees.${row.id}`) ?? tt('sees.internal');
+  };
+  const tryIt = async () => {
+    const values: Record<string, unknown> = {};
+    for (const f of row.fields) values[f.path] = vals[f.path];
+    setTrying(true);
+    const a = await call('POST', `${API}/${row.id}/try`, { values });
+    setTrying(false);
+    if (a.status !== 200 || !a.data.tried) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+    setTried(a.data.tried as TryResult);
+  };
   const changed = row.fields.filter((f) => JSON.stringify(vals[f.path] ?? null) !== JSON.stringify(getPath(row.value, f.path) ?? null));
   const blocked = row.money && !canApprove;
   const set = (path: string, v: unknown) => setVals((x) => ({ ...x, [path]: v }));
@@ -456,6 +482,10 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
       {row.money ? <div className="ad-note">{tt('moneyNote')}</div> : null}
       {blocked ? <div className="ad-note warn">{tt('needsOwner')}</div> : null}
       <div className="rh-fields">{row.fields.map(control)}</div>
+      <div className="rh-sees" data-testid="rh-sees">
+        <div className="rh-sub">{tt('sees.title')}</div>
+        <p>{seesText()}</p>
+      </div>
       <div className="rh-wc">
         <div className="rh-sub">{tt('whatChanges')}</div>
         {changed.length ? (
@@ -493,6 +523,25 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
           <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={back} disabled={busy || !canWrite || blocked || row.isDefault || (row.money && pin.trim() === '')}>
             <Icon name="sync" size={14} /> {tt('more.back')}
           </button>
+          {isTryable(row.id) ? (
+            <div className="rh-try" data-testid="rh-try">
+              <div className="rh-sub">{tt('try.title')}</div>
+              <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => void tryIt()} disabled={trying}>
+                <Icon name="sync" size={14} /> {tt('try.go')}
+              </button>
+              {tried ? (
+                <p className="ad-note" role="status" data-testid="rh-try-out">
+                  {tt(tried.row === 'free' ? 'try.out.free' : 'try.out.repeat', {
+                    days: tried.days,
+                    total: tried.total,
+                    now: tried.now,
+                    tried: tried.tried,
+                    waived: tried.waivedMinor === null ? '' : (formatValue('money', tried.waivedMinor, env.ctx) ?? String(tried.waivedMinor)),
+                  })}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           {row.more ? (
             <Link className="rl-link" href={row.more}>
               {tt('more.fuller')}

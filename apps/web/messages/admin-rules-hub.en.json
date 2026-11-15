@@ -562,6 +562,29 @@
       "paused": "Paused.",
       "resumed": "Live again.",
       "ended": "Ended."
+    },
+    "sees": {
+      "title": "Customer sees",
+      "internal": "Nothing directly. This rule works behind the scenes; customers only feel its result.",
+      "free": "Free delivery on orders of {value} or more.",
+      "freeOff": "No order gets free delivery by itself.",
+      "peak": "{fullTextEn}",
+      "peakOff": "Nothing. Peak mode is off.",
+      "gift": "Choose Gift at checkout: a note of up to {noteMaxChars} letters, delivery up to {deliverAfterMaxDays} days later.",
+      "giftOff": "No gift choice at checkout.",
+      "replace": "Wrong or defective item? The right one is sent again, free. Tell us within {hours} hours; send the old piece back within {oldPieceDays} days.",
+      "replaceOff": "No free replacement is offered.",
+      "erpcheck": "A piece that comes back is checked within {value} days.",
+      "quiet": "Messages are held from {fromHour}:00 to {toHour}:00 and go out after that.",
+      "quietOff": "Messages go out at any hour."
+    },
+    "try": {
+      "title": "Try on last 30 days' orders",
+      "go": "Try the numbers above",
+      "out": {
+        "free": "Last {days} days: {total} orders. {now} got free delivery with the saved number; with the number above {tried} would, and {waived} of delivery charge would not be collected. Nothing is saved.",
+        "repeat": "Last {days} days: {total} orders. {now} came from a number that had ordered before (saved days); with the days above {tried} would. Nothing is saved."
+      }
     }
   }
 }
