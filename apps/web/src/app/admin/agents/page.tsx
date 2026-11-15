@@ -21,6 +21,10 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../messages/admin-agents.bn.json';
 import en from '../../../../messages/admin-agents.en.json';
+import stripBn from '../../../../messages/admin-ai-strip.bn.json';
+import stripEn from '../../../../messages/admin-ai-strip.en.json';
+import { AiStrip } from '@/components/admin/ai/AiStrip';
+import '@/components/admin/ai/ai-strip.css';
 import './agents.css';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +33,7 @@ const KEY = 'aiAgents';
 const HERE = '/admin/agents';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, aiAgents: (view.lang === 'bn' ? bn : en).aiAgents as unknown as Dict } };
+  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? stripBn : stripEn) as unknown as Dict), aiAgents: (view.lang === 'bn' ? bn : en).aiAgents as unknown as Dict } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,6 +57,7 @@ export default async function AgentsTeamPage() {
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `aiAgents.${k}`, vars);
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
 
+  const aiOn = await access.deps.resolver.value('ai.enabled');
   const [agents, tgEnabled, tgSecret] = await Promise.all([
     agentProfileList({ db: access.deps.db }),
     isTelegramCommandsEnabled(access.deps),
@@ -64,6 +69,7 @@ export default async function AgentsTeamPage() {
     <div className="a2-z agents-page" data-testid="agents-team" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
+      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} />
 
       {!tgEnabled ? (
         <section className="a2-card tight ag-tg-off" data-testid="agents-telegram-off">

@@ -51,6 +51,10 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
 import bn from "../../../../../messages/admin-ai.bn.json";
 import en from "../../../../../messages/admin-ai.en.json";
+import stripBn from "../../../../../messages/admin-ai-strip.bn.json";
+import stripEn from "../../../../../messages/admin-ai-strip.en.json";
+import { AiStrip } from "@/components/admin/ai/AiStrip";
+import "@/components/admin/ai/ai-strip.css";
 import "../ai.css";
 import "./cost-book.css";
 
@@ -64,6 +68,7 @@ function withScreen(view: AdminView): AdminView {
     ...view,
     dict: {
       ...view.dict,
+      ...((view.lang === "bn" ? stripBn : stripEn) as unknown as Dict),
       aiCostBook: (view.lang === "bn" ? bn : en).aiCostBook as unknown as Dict,
     },
   };
@@ -100,6 +105,7 @@ export default async function AiCostBookPage() {
   const c = (k: string, vars?: Record<string, string | number>) =>
     t(d, `aiCostBook.${k}`, vars);
   const canControl = access.guard.permissions?.has("ai.control") ?? false;
+  const aiOn = await access.deps.resolver.value("ai.enabled");
 
   const o = await costBookView(
     { db: access.deps.db, resolver: access.deps.resolver },
@@ -178,6 +184,7 @@ export default async function AiCostBookPage() {
         sub={c("sub")}
       />
       <SectionTabs view={view} current={KEY} />
+      <AiStrip dict={view.dict} on={Boolean(aiOn)} canControl={canControl} />
 
       {!o.hasUsdRate ? (
         <div

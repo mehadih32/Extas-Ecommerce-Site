@@ -25,6 +25,10 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-ai.bn.json';
 import en from '../../../../../messages/admin-ai.en.json';
+import stripBn from '../../../../../messages/admin-ai-strip.bn.json';
+import stripEn from '../../../../../messages/admin-ai-strip.en.json';
+import { AiStrip } from '@/components/admin/ai/AiStrip';
+import '@/components/admin/ai/ai-strip.css';
 import '../ai.css';
 import './approvals.css';
 
@@ -35,7 +39,7 @@ const HERE = '/admin/ai/approvals';
 const STATUS_TONE: Record<string, string> = { APPROVED: 'ok', REJECTED: 'bad', EXPIRED: 'line', CANCELLED: 'line' };
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, aiApprovals: (view.lang === 'bn' ? bn : en).aiApprovals as unknown as Dict } };
+  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? stripBn : stripEn) as unknown as Dict), aiApprovals: (view.lang === 'bn' ? bn : en).aiApprovals as unknown as Dict } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -60,7 +64,15 @@ export default async function AiApprovalsPage() {
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
   const canApproveFixes = access.guard.permissions?.has('health.fixes.approve') ?? false;
 
-  const o = await approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID);
+  const [o, aiOn] = await Promise.all([approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID), access.deps.resolver.value('ai.enabled')]);
+  // prototype v5 (m-ai.js renderApprovals): four numbers above the queue
+  const MONEY_KINDS = ['money', 'refund', 'cod', 'price', 'discount', 'adBudget'];
+  const moneyN = o.pending.filter((r) => MONEY_KINDS.includes(r.kind)).length;
+  const oldest = o.pending.reduce<Date | null>((a, r) => (!a || r.createdAt < a ? r.createdAt : a), null);
+  const dayAgo = (access.deps.now?.() ?? new Date()).getTime() - 864e5;
+  const todayN = o.decided.filter((r) => r.decidedAt && r.decidedAt.getTime() >= dayAgo).length;
+  const approvedN = o.decided.filter((r) => r.status === 'APPROVED').length;
+  const rate = o.decided.length ? Math.round((approvedN / o.decided.length) * 100) : 0;
   const at = (iso: Date) => dateTime(iso.toISOString(), view.locale, view.timeZone);
   const isGate = (r: ApprovalRow) => (GATE_KINDS as readonly string[]).includes(r.kind);
   const canDecide = (r: ApprovalRow) => (isGate(r) ? canApproveFixes : canControl);
@@ -75,8 +87,37 @@ export default async function AiApprovalsPage() {
     <div className="a2-z ai-page ai-ap" data-testid="approvals-page">
       <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
+      <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} />
 
-      <section className="ai-ap-sec" aria-labelledby="ai-ap-pending-h" data-testid="ai-ap-pending">
+      <div className="a2-kpis a2-mt12" data-testid="ai-ap-kpis">
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{t(d, 'aiKpi.waiting')}</div>
+          <div className="a2-kv">{o.pending.length}</div>
+          <div className="a2-kf">
+            <span className="a2-kn">{oldest ? t(d, 'aiKpi.oldest', { when: at(oldest) }) : t(d, 'aiKpi.clear')}</span>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{t(d, 'aiKpi.money')}</div>
+          <div className="a2-kv">{moneyN}</div>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'aiKpi.moneySub')}</span>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{t(d, 'aiKpi.today')}</div>
+          <div className="a2-kv">{todayN}</div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{t(d, 'aiKpi.rate')}</div>
+          <div className="a2-kv">{rate}%</div>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'aiKpi.rateSub')}</span>
+          </div>
+        </div>
+      </div>
+
+      <section className="ai-ap-sec a2-mt12" aria-labelledby="ai-ap-pending-h" data-testid="ai-ap-pending">
         <h2 className="a2-h3" id="ai-ap-pending-h">
           {c('pending.label')} ({o.pending.length})
         </h2>
@@ -144,6 +185,20 @@ export default async function AiApprovalsPage() {
             <span>{c('decided.empty')}</span>
           </div>
         )}
+      </section>
+
+      <section className="a2-card a2-mt12" aria-labelledby="ai-never-h" data-testid="ai-never">
+        <h2 className="a2-h3" id="ai-never-h">
+          {t(d, 'aiNever.h')}
+        </h2>
+        <ul className="ai-never">
+          {['money', 'budget', 'message', 'block', 'delete'].map((k) => (
+            <li key={k}>
+              <span>{t(d, `aiNever.items.${k}`)}</span>
+              <span className="a2-pill line">{t(d, 'aiNever.waits')}</span>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

@@ -1,0 +1,35 @@
+{
+  "aiStrip": {
+    "on": "AI is on",
+    "off": "AI is off",
+    "onHint": "Agents suggest and draft. Money, prices, budgets and blocking wait for you.",
+    "offHint": "Only “keep on” agents run.",
+    "fallbackH": "When AI is off, staff and the shop see:",
+    "fallback": "AI is resting. Orders, rules, templates and alerts keep working; drafts and ideas wait until AI is back.",
+    "switchLabel": "AI master switch: on or off",
+    "toastOn": "AI turned on",
+    "toastOff": "AI turned off",
+    "toastFailed": "Could not change AI. Try again."
+  },
+  "aiNever": {
+    "h": "What the AI may never do alone",
+    "waits": "Waits for you",
+    "items": {
+      "money": "Move money, refund or change a price",
+      "budget": "Raise an ad budget",
+      "message": "Send a message to a customer",
+      "block": "Block anyone or decline an order",
+      "delete": "Delete anything"
+    }
+  },
+  "aiKpi": {
+    "waiting": "Waiting for you",
+    "oldest": "oldest {when}",
+    "clear": "all clear",
+    "money": "Need PIN (money)",
+    "moneySub": "budgets, prices, offers",
+    "today": "Decided today",
+    "rate": "Approval rate",
+    "rateSub": "agents learn from every “no”"
+  }
+}
