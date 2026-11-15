@@ -558,7 +558,9 @@ jobs:
   # settings framework's database tests (PR 491–496, 510) and the seed package's (PR 14, 508, 509).
   db:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    # 15 Nov 2026: 60, was 40. The database tests took 37 of the 40 minutes on main (run 43680139996) and the app's own
+    # suite grows with every PR, so a normal PR was cancelled at the limit with every test still passing.
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:17
