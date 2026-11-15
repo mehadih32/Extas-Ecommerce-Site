@@ -366,7 +366,7 @@ export const RICH_REVIEW_BODIES = [
 // ---- PR 725 (15 Nov 2026): the approved demo's catalogue, journal and combos as practice data ------------------------
 // `demo-catalogue.json` is the demo's 72 styles (docs/demo/src/01-data.js + 01zz-demo-more.js, made by
 // tools/demo/export-demo-catalogue.mjs; prices in minor units, struck prices as `compareAtMinor`, stock per colour and
-// size). `demo-extras.json` is its 12 journal posts and 5 combos (made from the same files). Sample data only.
+// size). `demo-extras.json` is its 12 journal posts and 5 combos (made from the same files; one combo names styles the 72 do not hold, so 4 are made). Sample data only.
 
 export interface DemoStyle {
   id: string;

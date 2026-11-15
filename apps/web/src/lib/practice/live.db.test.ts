@@ -80,7 +80,7 @@ describe.skipIf(!HAS_TEST_DB)('the practice shop is live and hides with one swit
     await set('practice.enabled', true);
     const on = await ensurePractice(deps(), S);
     expect(on.shown).toBe(count);
-    expect(await t.prisma.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(5);
+    expect(await t.prisma.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(4);
     expect(await t.prisma.blogPost.count({ where: { storeId: S, status: 'PUBLISHED' } })).toBe(12);
     expect(await t.prisma.category.count({ where: { storeId: S, slug: 'polos', isVisible: true } })).toBe(1);
     expect(await t.prisma.product.count({ where: { storeId: S, isPractice: true, status: 'PUBLISHED' } })).toBe(count);
