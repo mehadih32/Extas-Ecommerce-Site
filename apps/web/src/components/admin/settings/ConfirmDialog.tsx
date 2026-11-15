@@ -16,6 +16,8 @@ export interface ConfirmTexts {
   ok: string;
   working: string;
   close: string;
+  /** PR 817: the label of an owner-PIN field (a password box, digits); absent: no PIN asked. */
+  pin?: string;
 }
 
 const noSubscribe = () => () => {};
@@ -30,12 +32,13 @@ export function ConfirmDialog({
   texts: ConfirmTexts;
   tone?: "pri" | "badf";
   onClose(): void;
-  onConfirm(reason: string): Promise<string | null>;
+  onConfirm(reason: string, pin: string): Promise<string | null>;
   testId: string;
 }) {
   const uid = useId();
   const box = useRef<HTMLDivElement>(null);
   const [reason, setReason] = useState("");
+  const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const mounted = useSyncExternalStore(
@@ -47,7 +50,7 @@ export function ConfirmDialog({
   const go = async () => {
     if (busy) return;
     setBusy(true);
-    const p = await onConfirm(reason.trim());
+    const p = await onConfirm(reason.trim(), pin.trim());
     setBusy(false);
     if (p) setProblem(p);
   };
@@ -102,6 +105,29 @@ export function ConfirmDialog({
                   setProblem(null);
                 }}
                 autoComplete="off"
+              />
+            </div>
+          ) : null}
+          {texts.pin ? (
+            <div className="a2-fld a2-mt12">
+              <label className="a2-lbl" htmlFor={`${uid}-p`}>
+                {texts.pin}
+              </label>
+              <input
+                id={`${uid}-p`}
+                className="a2-inp"
+                type="password"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={12}
+                placeholder="••••"
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  setProblem(null);
+                }}
+                data-testid="pin-input"
+                style={{ maxWidth: 160 }}
               />
             </div>
           ) : null}
