@@ -259,6 +259,7 @@
     },
     "nav": {
       "aria": "Admin sections",
+      "map": "Admin map",
       "quick": "Quick menu",
       "open": "Open the menu",
       "close": "Close the menu",
