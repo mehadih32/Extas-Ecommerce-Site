@@ -168,11 +168,11 @@
   height: 14px;
   border-radius: 50%;
   flex: none;
-  background: var(--lm-good, #1a7f4b);
-  box-shadow: 0 0 0 6px var(--lm-good-soft, rgba(26, 127, 75, 0.15));
+  background: var(--lm-ok);
+  box-shadow: 0 0 0 6px var(--lm-okbg);
 }
 .adm2 .tr-dot.off {
-  background: var(--lm-mute, #8a8f98);
+  background: var(--lm-faint);
   box-shadow: 0 0 0 6px var(--sf2);
 }
 .adm2 .tr-strip-t {

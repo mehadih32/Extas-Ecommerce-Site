@@ -189,7 +189,7 @@ export default async function SetsPage() {
                     <dt>{so('price')}</dt>
                     <dd>
                       <b>{r.setPriceMinor === null ? so('noPrice') : m(r.setPriceMinor)}</b>
-                      {r.sumPartsMinor !== null && r.setPriceMinor !== null && r.sumPartsMinor > r.setPriceMinor ? <s className="st-was">{m(r.sumPartsMinor)}</s> : null}
+                      {r.sumPartsMinor !== null && r.setPriceMinor !== null && r.setPriceMinor < r.sumPartsMinor ? <s className="st-was">{m(r.sumPartsMinor)}</s> : null}
                     </dd>
                   </div>
                   <div>

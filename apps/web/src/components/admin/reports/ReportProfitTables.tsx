@@ -64,7 +64,7 @@ export function ProfitTable({
   c,
   f,
   cmp,
-  limit = 12,
+  limit = 12, // hardcode-ok: rows shown before "Show more"
   texts,
 }: {
   id: string;

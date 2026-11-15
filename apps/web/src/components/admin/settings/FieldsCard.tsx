@@ -184,7 +184,7 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
             {f.label}
           </label>
           <span className="a2-gap8" style={{ display: 'flex', alignItems: 'center' }}>
-            <input id={fid} className="a2-inp" type="color" style={{ width: 56, padding: 2 }} value={cv || '#000000'} disabled={off} onChange={(e) => edit(f.path, e.target.value.toUpperCase())} data-testid={`${testId}-${f.path}`} />
+            <input id={fid} className="a2-inp" type="color" style={{ width: 56, padding: 2 }} value={cv || '#000000' /* hardcode-ok: the colour box needs a value to open on */} disabled={off} onChange={(e) => edit(f.path, e.target.value.toUpperCase())} data-testid={`${testId}-${f.path}`} />
             <input className="a2-inp" aria-label={f.label} value={cv} maxLength={7} placeholder="#RRGGBB" disabled={off} onChange={(e) => edit(f.path, e.target.value)} data-testid={`${testId}-${f.path}-hex`} />
           </span>
           {help}

@@ -32,8 +32,8 @@
   white-space: nowrap;
 }
 .adm2 .rpseg a.on {
-  background: var(--lm-hero-solid, #1f2a5c);
-  color: #fff;
+  background: var(--lm-hero-solid);
+  color: var(--lm-on-hero);
   font-weight: 650;
 }
 .adm2 .rpsw {
@@ -51,7 +51,7 @@
   width: 38px;
   height: 22px;
   border-radius: 22px;
-  background: var(--lm-ln2, #cbd0dc);
+  background: var(--lm-ln);
   flex: none;
   transition: background 0.15s;
 }
@@ -63,7 +63,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--lm-sf);
   transition: transform 0.15s;
 }
 .adm2 .rpsw i.on {

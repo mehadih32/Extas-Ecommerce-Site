@@ -26,8 +26,8 @@
   text-decoration: none;
 }
 .adm2 .ar-crumb a.on {
-  background: var(--lm-hero-solid, #1f2a5c);
-  color: #fff;
+  background: var(--lm-hero-solid);
+  color: var(--lm-on-hero);
 }
 .adm2 .ar-crumb-i {
   display: inline-flex;

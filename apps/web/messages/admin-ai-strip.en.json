@@ -62,7 +62,7 @@
     "invalid": "Type a time like 08:00.",
     "preview": "Preview digest",
     "previewH": "Tomorrow's digest",
-    "previewTitle": "EXTAS · AI digest · {time}",
+    "previewTitle": "AI digest · {time}",
     "previewWaiting": "Waiting for you: {n}",
     "previewNone": "Nothing is waiting.",
     "previewPin": "(PIN)",

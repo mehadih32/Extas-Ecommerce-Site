@@ -311,7 +311,7 @@ export async function loadCouponUse(
       code: r.coupon.code,
       enabled: r.coupon.enabled,
       uses: 0,
-      discountMinor: 0,
+      discountMinor: 0, // hardcode-ok: nothing redeemed yet
       orderMinor: 0,
       list: [],
     }; // hardcode-ok: a running total starts empty

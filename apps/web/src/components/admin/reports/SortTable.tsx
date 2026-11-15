@@ -50,7 +50,7 @@ export function SortTable({
   rows,
   sortCol = 0,
   sortDir = "desc",
-  limit = 12,
+  limit = 12, // hardcode-ok: rows shown before "Show more"
   texts,
   testId,
   rowId,
