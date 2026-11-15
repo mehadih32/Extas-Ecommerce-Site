@@ -34,7 +34,7 @@ function resolveImport(from: string, spec: string): string | null {
 }
 
 /** Whether a source file (or what it imports from the admin's own code, two levels down) draws the section's tab bar. */
-function drawsTabs(path: string, depth = 2, seen = new Set<string>()): boolean {
+function drawsTabs(path: string, depth = 1, seen = new Set<string>()): boolean {
   if (seen.has(path) || /(AdminFrame|ShellParts)\.tsx$/.test(path)) return false;
   seen.add(path);
   const src = file(path);

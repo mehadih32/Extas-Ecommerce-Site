@@ -124,9 +124,9 @@ export default async function CallsPage({ searchParams }: { searchParams: Search
 
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <SectionTabs view={view} current={KEY} />
       <div className="a2-z cl-page" data-testid="calls-page" data-lm-ready="">
         <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={sub} />
+        <SectionTabs view={view} current={KEY} />
         <nav className="a2-views" aria-label={w('statusAria')} data-testid="calls-status">
           {(['open', 'closed'] as const).map((s) => (
             <Link key={s} className={`a2-view${status === s ? ' on' : ''}`} href={hrefOf({ status: s, reason })} aria-current={status === s ? 'page' : undefined} scroll={false}>
