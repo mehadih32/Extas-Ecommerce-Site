@@ -84,3 +84,21 @@
 .wiz[data-step="8"] section[aria-labelledby="sec-variants"],
 .wiz[data-step="8"] #wiz-size,
 .wiz[data-step="8"] section[aria-labelledby="sec-naming"]{display:none}
+/* PR 830 (prototype v5): head, progress line and bar, end check list, phone button */
+.wz-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-start;margin:0 0 10px}
+.wz-headt{flex:1 1 280px;min-width:0}
+.wz-headb{display:flex;flex-wrap:wrap;gap:8px}
+.wz-headb .a2-btn{min-height:44px;display:inline-flex;align-items:center}
+.wz-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 10px}
+.wz-prog{flex:1 1 220px;min-width:0}
+.wz-bar{height:6px;border-radius:99px;background:var(--lm-sf2);overflow:hidden;margin-top:4px}
+.wz-bar i{display:block;height:100%;border-radius:99px;background:var(--lm-accent)}
+.wz-bar i.warn{background:var(--warn)}
+.wz-bar i.good{background:var(--ok)}
+.wz-ck-list{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.wz-ck{display:flex;gap:8px;align-items:flex-start;font-size:13px;overflow-wrap:anywhere}
+.wz-ck-i{flex:none;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;border:1px solid currentColor}
+.wz-ck.ok .wz-ck-i{color:var(--ok)}
+.wz-ck.no .wz-ck-i{color:var(--warn)}
+.wz-cta{display:block;width:100%;margin:6px 0;padding:6px;border:0;border-radius:8px;background:var(--lm-accent);color:var(--lm-on-ac);font-size:12px}
+.wz-step .wz-link{min-height:44px}
