@@ -93,3 +93,8 @@
   .rh input[type=checkbox],.po input[type=checkbox],.of input[type=checkbox]{width:24px;height:24px}
   .rh label:has(>input[type=checkbox]),.po label:has(>input[type=checkbox]),.of label:has(>input[type=checkbox]){display:flex;align-items:center;gap:8px;min-height:44px}
 }
+/* parity F4 · PR 848 — the "Customer sees" box under a rule's fields and "Try on last 30 days' orders" in More options (tokens only) */
+.rh-sees{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf2);min-width:0}
+.rh-sees p{margin:0;overflow-wrap:anywhere}
+.rh-try{display:grid;gap:8px;min-width:0}
+.rh-try .ad-note{margin:0;overflow-wrap:anywhere}
