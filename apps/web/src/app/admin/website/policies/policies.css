@@ -33,3 +33,14 @@
 .adm2 .polb-glance { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 1200px) { .adm2 .polb-glance { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .adm2 .polb-g { min-width: 0; }
+
+/* PR 733: the page as section cards (Edit and Details), prototype v5 Policies */
+.adm2 .polb-secs { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .adm2 .polb-secs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .polb-sec { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.adm2 .polb-sech { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.adm2 .polb-sech b { overflow-wrap: anywhere; min-width: 0; }
+.adm2 .polb-sech .a2-btn { min-height: 44px; }
+.adm2 .polb-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.adm2 .polb-det summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--ink2); font-weight: 600; }
+.adm2 .polb-det p { margin: 0 0 8px; overflow-wrap: anywhere; }

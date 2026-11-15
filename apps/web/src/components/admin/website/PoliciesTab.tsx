@@ -141,6 +141,29 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
   }
 
   const blocks = useMemo(() => textBlocks(draft.body[lang] || draft.body.en), [draft.body, lang]);
+  // PR 733 (prototype v5, Policies): the page as section cards: each heading with its points, an "Edit" that takes you to that part
+  // of the words, and "Details" (the longer paragraphs) folded under it. Read from the words being typed; nothing else is stored.
+  const sections = useMemo(() => {
+    const out: { title: string; points: string[]; details: string[] }[] = [];
+    for (const b of blocks) {
+      if (b.kind === 'h') out.push({ title: b.text, points: [], details: [] });
+      else {
+        if (!out.length) out.push({ title: '', points: [], details: [] });
+        const cur = out[out.length - 1]!;
+        if (b.kind === 'ul') cur.points.push(...b.items);
+        else cur.details.push(b.text);
+      }
+    }
+    return out;
+  }, [blocks]);
+  function editSection(heading: string) {
+    const el = document.getElementById(`pol-body-${lang}`) as HTMLTextAreaElement | null;
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.focus({ preventScroll: true });
+    const at = heading ? el.value.indexOf(heading) : 0;
+    if (at >= 0) el.setSelectionRange(at, at + heading.length);
+  }
   const title = draft.title[lang] || draft.title.en || names[slug]!;
   const lede = draft.lede[lang] || draft.lede.en;
   const pill = (state: PolicyRow['state']) => (
@@ -201,6 +224,39 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
             ))}
           </div>
           <p className="a2-xs a2-mute a2-mt6">{w['glance.note']}</p>
+        </section>
+      ) : null}
+
+      {sections.length ? (
+        <section className="a2-mt12" aria-label={w['sec.title']} data-testid="pol-sections">
+          <p className="a2-xs a2-mute">{w['sec.title']}</p>
+          <div className="polb-secs a2-mt6">
+            {sections.map((s, i) => (
+              <div key={i} className="a2-card polb-sec" data-testid="pol-section">
+                <div className="polb-sech">
+                  <b>{s.title || names[slug]}</b>
+                  <button type="button" className="a2-btn sm ghost" onClick={() => editSection(s.title)} data-testid="pol-section-edit">
+                    {w['sec.edit']}
+                  </button>
+                </div>
+                {s.points.length ? (
+                  <ul>
+                    {s.points.map((x, j) => (
+                      <li key={j}>{x}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {s.details.length ? (
+                  <details className="polb-det">
+                    <summary>{w['sec.details']}</summary>
+                    {s.details.map((x, j) => (
+                      <p key={j}>{x}</p>
+                    ))}
+                  </details>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </section>
       ) : null}
 

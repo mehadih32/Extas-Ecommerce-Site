@@ -1,6 +1,6 @@
 'use client';
 // S28 · PR 671 — the small client parts of Courier 360 › Payouts: "Ask the courier to pay" (the owner's PIN, one request key
-// per press so a double press never asks the courier twice), and on a request "Check now", "Mark orders settled" and
+// per press so a double press never asks the courier twice), and on a request "Refresh status", "Mark orders settled" and
 // "Close this request". Every refusal is shown in words from the page's messages (`cr.y.err.<code>`), never the server's own.
 // The PIN is typed in a password box, sent once and never kept.
 import { useRouter } from 'next/navigation';

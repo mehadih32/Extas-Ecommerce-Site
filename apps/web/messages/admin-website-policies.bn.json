@@ -88,6 +88,11 @@
       "codLimit": "{name}: ক্যাশ অন ডেলিভারির সীমা"
     },
     "openRules": "Rules খুলুন",
-    "publishHead": "পাবলিশ"
+    "publishHead": "পাবলিশ",
+    "sec": {
+      "title": "অংশগুলো",
+      "edit": "এডিট",
+      "details": "বিস্তারিত"
+    }
   }
 }

@@ -71,7 +71,8 @@
       "noPayouts": "No payout requests yet.",
       "covers": "covers {amount}",
       "paidOn": "paid {amount}",
-      "request": "Request payout"
+      "request": "Request payout",
+      "ready": "Ready to request"
     },
     "opt": {
       "h": "More options",
