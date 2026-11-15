@@ -81,7 +81,7 @@ async function shellModel(theme: AdminTheme, notesSeenAt: string | null): Promis
     loginPath: await adminLoginPath(),
     buildId: buildId(),
     lang: view.lang,
-    dict: { shell: view.dict.shell as Dict, dash: { queue: (view.dict.dash as Dict).queue, age: (view.dict.dash as Dict).age } as Dict },
+    dict: { shell: view.dict.shell as Dict, nav: view.dict.nav as Dict, dash: { queue: (view.dict.dash as Dict).queue, age: (view.dict.dash as Dict).age } as Dict },
     storeName: view.storeName,
     me: { name: staff.displayName, initials: initialsOf(staff.displayName), role: role ? (view.lang === 'bn' ? role.nameBn : role.nameEn) : t(view.dict, 'shell.me.staff') },
     viewer: { perms: [...s.perms], owner: s.owner, hidden: [...s.hidden] },

@@ -1,6 +1,6 @@
 // PR 12 — the parts of the new admin a page draws on the server (demo a2Head, a2Tabs, a2State, a2Placeholder):
 //   - PageCrumb: "Section › Tab" above an existing page's own heading, with the section's guide button;
-//   - SectionTabs: the section's built tabs the person may open ("More ▾" for the rest), and a tab's own pages as chips;
+//   - SectionTabs: draws nothing since PR 762 (the shell draws the section's tab bar once, ShellTabBar.tsx);
 //   - PageHead: the header of the shell's own pages (crumb, title, line under it, guide, buttons on the right);
 //   - ShellState: not found, could not load, no access, empty, no database — each with its way back;
 //   - Placeholder: a section with nothing built yet says so, lists what will come and links to what is ready;
@@ -14,10 +14,14 @@ import { deniedMemo, shellSession } from '@/lib/admin-shell/session';
 import { guideOf, locateKey, sectionHome, visiblePages, visibleTabs, type ShellPlace, type ShellSection, type ShellViewer } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { EmptyState } from '@/components/admin/lumen/EmptyState';
-import { GuideButton, MoreTabs, SearchButton, TabsRow } from './ShellButtons';
+import { SearchButton } from './ShellButtons';
+import { PageHead, PlaceGuide } from './ShellHead';
 import { ShellIcon } from './ShellIcon';
 
 const NOBODY: ShellViewer = { perms: new Set(), owner: false };
+
+// PR 762: the page head lives in ShellHead.tsx (no server parts in it, so client screens draw it too)
+export { PageHead, PlaceGuide };
 
 export async function shellViewer(): Promise<ShellViewer> {
   const s = await shellSession();
@@ -26,13 +30,6 @@ export async function shellViewer(): Promise<ShellViewer> {
 
 const secName = (view: AdminView, id: string) => t(view.dict, `shell.sec.${id}`);
 const tabName = (view: AdminView, p: ShellPlace) => (p.tab ? t(view.dict, `shell.tab.${p.section.id}.${p.tab.id}`) : '');
-
-/** The guide button of a place (always Bengali: the guides are, CN-014); `overview`: the section's overview alone. */
-export function PlaceGuide({ view, place, overview }: { view: AdminView; place: ShellPlace; overview?: boolean }) {
-  // A tab with its own guide (Stock, Size charts …) names itself in the panel's title; otherwise the section does.
-  const name = place.tab?.guide ? tabName(view, place) : secName(view, place.section.id);
-  return <GuideButton slug={guideOf(place)} section={name} label={t(view.dict, 'shell.guide.button')} page={overview ? `${place.section.id}/index` : undefined} />;
-}
 
 export async function PageCrumb({ view, current }: { view: AdminView; current: string }) {
   const place = locateKey(current);
@@ -55,63 +52,13 @@ export async function PageCrumb({ view, current }: { view: AdminView; current: s
   );
 }
 
-/** The section's tabs, then the open tab's own pages as chips (both only what the person may open). */
-export async function SectionTabs({ view, current }: { view: AdminView; current: string }) {
-  const place = locateKey(current);
-  if (!place?.tab) return null;
-  const v = await shellViewer();
-  const tabs = visibleTabs(place.section, v);
-  const main = tabs.filter((x) => !x.more);
-  const more = tabs.filter((x) => x.more);
-  const label = (id: string) => t(view.dict, `shell.tab.${place.section.id}.${id}`);
-  const pages = visiblePages(place.tab, v);
-  return (
-    <>
-      {tabs.length > 1 ? (
-        <nav className="a2-z a2-tabs" aria-label={t(view.dict, 'shell.tabs.aria', { section: secName(view, place.section.id) })} data-testid="a2-tabs">
-          <TabsRow>
-            {main.map((x) => {
-              const on = x.id === place.tab!.id;
-              return (
-                <Link key={x.id} className={`a2-tab${on ? ' on' : ''}`} href={visiblePages(x, v)[0]!.href} aria-current={on ? 'page' : undefined}>
-                  {label(x.id)}
-                </Link>
-              );
-            })}
-          </TabsRow>
-          {more.length ? <MoreTabs label={t(view.dict, 'shell.tabs.more')} links={more.map((x) => ({ href: visiblePages(x, v)[0]!.href, label: label(x.id), on: x.id === place.tab!.id }))} /> : null}
-        </nav>
-      ) : null}
-      {pages.length > 1 ? (
-        <nav className="a2-seg a2-subtabs" aria-label={t(view.dict, 'shell.tabs.sub', { tab: label(place.tab.id) })} data-testid="a2-subtabs">
-          {pages.map((p) => {
-            const on = p.keys.includes(current);
-            return (
-              <Link key={p.href} className={on ? 'on' : undefined} href={p.href} aria-current={on ? 'page' : undefined}>
-                {t(view.dict, `nav.${p.keys[0]}`)}
-              </Link>
-            );
-          })}
-        </nav>
-      ) : null}
-    </>
-  );
-}
-
-export function PageHead({ view, place, title, sub, right, crumb }: { view: AdminView; place: ShellPlace | null; title: string; sub?: ReactNode; right?: ReactNode; crumb?: ReactNode }) {
-  return (
-    <div className="a2-ph">
-      <div>
-        {crumb ? <div className="a2-crumb">{crumb}</div> : null}
-        <h1 className="a2-h1">{title}</h1>
-        {sub ? <p className="a2-subt">{sub}</p> : null}
-      </div>
-      <div className="a2-phr">
-        {place ? <PlaceGuide view={view} place={place} /> : null}
-        {right}
-      </div>
-    </div>
-  );
+/**
+ * PR 762: draws nothing any more. The section's tab bar (and the open tab's pages as chips) is drawn once by the shell
+ * (ShellTabBar.tsx, at the top of <main>), so it sits in the same place on every page of the section. Pages still call
+ * this with their key (about 245 places); the key is only checked by the tests (nav-pages.test.ts) now.
+ */
+export function SectionTabs(_props: { view: AdminView; current: string }) {
+  return null;
 }
 
 export type StateKind = 'notfound' | 'error' | 'denied' | 'empty' | 'unavailable';
