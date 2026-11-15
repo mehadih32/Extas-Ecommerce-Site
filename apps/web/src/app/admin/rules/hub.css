@@ -97,4 +97,13 @@
 .rh-sees{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf2);min-width:0}
 .rh-sees p{margin:0;overflow-wrap:anywhere}
 .rh-try{display:grid;gap:8px;min-width:0}
+/* parity F5 · PR 858 — "Start on a later date" in More options */
+.rh-later{display:grid;gap:6px;min-width:0}
+.rh-later .rh-date{max-width:220px;min-height:44px}
+/* parity F5 · PR 858 — Checkout simulator */
+.rh-sim{display:grid;gap:10px;min-width:0}
+.rh-sim select,.rh-sim input:not([type=checkbox]){min-height:44px;max-width:100%}
+.rh-sim-ln{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--ln2)}
+.rh-sim-ln span{min-width:0;overflow-wrap:anywhere}
+.rh-sim-ln.tot{font-weight:700;border-bottom:0}
 .rh-try .ad-note{margin:0;overflow-wrap:anywhere}

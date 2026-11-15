@@ -7,7 +7,10 @@
 //   GET   /api/admin/rules/hub                 the rows, pills and counts (`rules.read`)
 //   PUT   /api/admin/rules/hub/:id             {version, values, pin?} one row's fields (`rules.write`; money rows: the owner's OK and PIN)
 //   POST  /api/admin/rules/hub/:id/try         {values} PR 848: the typed numbers counted on the last 30 days' orders (read only; `rules.read`)
-//   POST  /api/admin/rules/hub/:id/reset      {version, pin?} back to the shipped value
+//   GET   /api/admin/rules/hub/sim             PR 858: the Checkout simulator's pickers · POST {cart} what one made-up cart pays with the live rules (read only)
+//   POST  /api/admin/rules/hub/:id/schedule   PR 858: {version, values, from, pin?} start the typed numbers on a later day
+//   POST  /api/admin/rules/hub/:id/unschedule  PR 858: {pin?} cancel the scheduled change (the rule stays as it is)
+//   POST  /api/admin/rules/hub/:id/reset     {version, pin?} back to the shipped value
 //   GET   /api/admin/rules/popups              the twelve placements
 //   PUT   /api/admin/rules/popups/:key         {entry, version} the owner's words, window and switch (`rules.write`)
 //   GET   /api/admin/rules/offers              the one list: offers, coupons, built-in rules, points, wallet, results
@@ -60,6 +63,13 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
   if (a === 'hub') {
     if (!b) return m === 'GET' ? handle(request, deps, 'rules.read', async (x) => ({ hub: await rl.hubScreen(hubDeps(x), x.who) })) : notAllowed();
     if (path.length > 3) return fail(404, 'not-found');
+    if (b === 'sim') {
+      // PR 858: the Checkout simulator — GET gives the pickers, POST {bandKey, cartMinor, pieces, categoryId?, paymentMethod, couponCode?, newCustomer} prices one made-up cart (read only)
+      if (c) return fail(404, 'not-found');
+      if (m === 'GET') return handle(request, deps, 'rules.read', async (x) => ({ choices: await rl.simChoices(x.deps, x.who) }));
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'rules.read', async (x) => ({ sim: await rl.simulateCheckout(x.deps, x.who, await body(request)) }));
+    }
     if (c === 'try') {
       if (m !== 'POST') return notAllowed();
       return handle(request, deps, 'rules.read', async (x) => {
@@ -74,6 +84,17 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
         const input = await body(request);
         if (moneyRow(b)) await pinCheck(deps!, x.who.actor, x.who.ctx ?? {}, input.pin, 'rules.hub.reset');
         return { saved: await rl.resetHubRow(hubDeps(x), x.who, { id: b, version: String(input.version ?? '') }) };
+      });
+    }
+    if (c === 'schedule' || c === 'unschedule') {
+      // PR 858: "Start on a later date" (money rows need the PIN either way)
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'rules.write', async (x) => {
+        const input = await body(request);
+        if (moneyRow(b)) await pinCheck(deps!, x.who.actor, x.who.ctx ?? {}, input.pin, c === 'schedule' ? 'rules.hub.schedule' : 'rules.hub.schedule.cancel');
+        if (c === 'unschedule') return { cancelled: await rl.cancelHubSchedule(hubDeps(x), x.who, { id: b }) };
+        const values = input.values && typeof input.values === 'object' && !Array.isArray(input.values) ? (input.values as Record<string, unknown>) : {};
+        return { scheduled: await rl.scheduleHubRow(hubDeps(x), x.who, { id: b, version: String(input.version ?? ''), values, from: input.from }) };
       });
     }
     if (c) return fail(404, 'not-found');

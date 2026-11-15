@@ -4,16 +4,18 @@
 // - `rules.endExpired` {storeId?} — a live rule whose window has closed becomes ENDED, as a new version by the system
 //   (the engine already ignores it at its end; this makes the list and the history say so). Ending a festive or
 //   discount campaign at its own end date is what the owner set: no new OK is needed for it.
+// - `rules.applyScheduled` {storeId} — PR 858: the changes the owner scheduled with "Start on a later date" whose day has come are put in.
 // - `rules.checkConflicts` {storeId} — the conflict check (PR 217), also run after every publish.
 import { SYSTEM } from '@extas/auth';
 import { bustStore } from './cache';
 import { logChange, nowOf, TX, type RulesDeps } from './context';
 import { refreshConflicts, type RefreshResult } from './conflicts-service';
 import { asJson, toRule } from './rows';
+import { applyDueHubSchedules } from './hub-service';
 
 export const RULES_QUEUE = 'rules';
 
-export type RulesJob = { name: 'rules.endExpired'; storeId?: number } | { name: 'rules.checkConflicts'; storeId: number };
+export type RulesJob = { name: 'rules.endExpired'; storeId?: number } | { name: 'rules.checkConflicts'; storeId: number } | { name: 'rules.applyScheduled'; storeId: number };
 
 export async function endExpiredRules(deps: RulesDeps, opts: { storeId?: number } = {}): Promise<{ ended: number }> {
   const now = nowOf(deps);
@@ -39,10 +41,12 @@ export async function endExpiredRules(deps: RulesDeps, opts: { storeId?: number 
   return { ended };
 }
 
-export async function runRulesJob(deps: RulesDeps, job: RulesJob): Promise<{ ended: number } | RefreshResult> {
+export async function runRulesJob(deps: RulesDeps, job: RulesJob): Promise<{ ended: number } | RefreshResult | { applied: number; dropped: number }> {
   switch (job.name) {
     case 'rules.endExpired':
       return endExpiredRules(deps, { storeId: job.storeId });
+    case 'rules.applyScheduled':
+      return applyDueHubSchedules(deps as never, { storeId: job.storeId });
     case 'rules.checkConflicts':
       return refreshConflicts(deps, job.storeId);
   }
