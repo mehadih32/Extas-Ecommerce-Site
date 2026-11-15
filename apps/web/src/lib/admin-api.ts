@@ -228,7 +228,7 @@ export async function roleHandler(request: Request, deps: AdminDeps | null, id: 
   try {
     const { archived, pin, ...patch } = await body(request);
     // PR 841: the role screen sends the owner's PIN with a change of access (prototype m-settings.js: Save role access asks it); a wrong one is refused.
-    if (pin !== undefined) await requireOwnerPin(g.deps, g.actor, g.ctx, pin, 'roles.access.change', MOTHER_STORE_ID);
+    if (pin !== undefined && deps) await requireOwnerPin(deps, g.actor, g.ctx, pin, 'roles.access.change', MOTHER_STORE_ID);
     let role = Object.keys(patch).length ? await updateRole(g.deps.db, g.actor, id, patch as RolePatch, g.ctx) : undefined;
     if (typeof archived === 'boolean') role = await setRoleArchived(g.deps.db, g.actor, id, archived, g.ctx);
     if (!role) return fail(400, 'INVALID_INPUT', ['(empty change)']);

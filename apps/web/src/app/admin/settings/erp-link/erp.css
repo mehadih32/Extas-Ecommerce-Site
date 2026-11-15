@@ -1,0 +1,11 @@
+/* PR 851 — Settings › ERP connection: the prototype's hero, four cards and the log beside Matching and Safety (m-settings.js
+   renderErp: .set-hero, grid g4, grid g3 with a span-2 log). Lumen tokens only; no sideways scroll at 390 px. */
+.erp-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.erp-kpis > .a2-card { min-width: 0; }
+.erp-g3 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.erp-plain { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
+.erp-plain + .erp-plain { border-top: 1px solid var(--lm-ln); }
+.erp-plain .sy-dot { margin-top: 6px; }
+.erp-plain a { min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 960px) { .erp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .erp-g3 { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .erp-kpis { grid-template-columns: minmax(0, 1fr); } }
