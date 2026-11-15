@@ -22,7 +22,7 @@ import { Bar, Card, Delta, Empty, Funnel, Heat, Lnk, Spark, Tile } from '../kit'
 import type { Fmt } from '../fmt';
 import { can, DashHead, rangeText, type DashProps } from './common';
 import { TopProducts, problemsOf } from './A';
-import { ChartDoNow, ProtoLower, TrendCard } from './ProtoCards';
+import { ChartDoNow, ProtoLower, ProtoTop, TrendCard } from './ProtoCards';
 
 const S1 = 'var(--a3-s1)';
 const S2 = 'var(--a3-s2)';
@@ -185,7 +185,7 @@ function ScoreCard(p: DashProps) {
       <table className="a3-tbl">
         <thead>
           <tr>
-            <th>{f.t('dash.queue.courier') || f.t('dsh.cour.title')}</th>
+            <th>{f.t('dsh.cour.title')}</th>
             <th className="r">{f.t('dsh.cmd.parcels')}</th>
             <th>{f.t('dsh.success')}</th>
             <th className="r">{f.t('dsh.cmd.returns')}</th>
@@ -219,6 +219,27 @@ function ScoreCard(p: DashProps) {
   );
 }
 
+/** The prototype's "Delivery: by courier" card under "Ads: are they paying?". */
+function CourierMid(p: DashProps) {
+  const { f, data, s } = p;
+  const dl = data.delivery!;
+  return (
+    <Card title={f.t('dsh.proto.courTitle')} sub={f.t('dsh.proto.courSub', { n: f.n(s.courierDays) })} right={can(p.viewer, 'delivery.read') ? <Lnk href="/admin/delivery">{f.t('dsh.proto.courLink')}</Lnk> : null} testId="dash-couriers">
+      {dl.couriers.length ? (
+        dl.couriers.map((c) => (
+          <div key={c.id} className="a3-cr">
+            <b>{c.name}</b>
+            <Bar p={c.rate ?? 0} />
+            <b className="a3-num">{f.pct(c.rate)}</b>
+          </div>
+        ))
+      ) : (
+        <Empty text={f.t('dsh.proto.courNone')} />
+      )}
+    </Card>
+  );
+}
+
 function DashboardD(p: DashProps) {
   const { f, data, viewer } = p;
   const kt = kpis(f, p);
@@ -236,11 +257,12 @@ function DashboardD(p: DashProps) {
     );
   return (
     <div className="a2-z a3-dash" data-testid="dash" data-design="D">
-      <DashHead p={p} title={f.t('dsh.cmd.title')} />
-      {kt.length ? <div className="a3-kt">{kt}</div> : null}
+      <DashHead p={p} />
+      <ProtoTop {...p} />
+      {kt.length && !can(viewer, 'metrics.read') ? <div className="a3-kt">{kt}</div> : null}
       <PinsCard {...p} />
       {data.money ? <ChartDoNow p={p} lead={<TrendCard p={p} id="dsh-d-sales" />} /> : null}
-      <ProtoLower {...p} />
+      <ProtoLower {...p} mid={data.delivery ? <CourierMid {...p} /> : null} />
       {g2.length ? (
         <div className="a3-dg3" style={{ ['--n' as string]: g2.length }}>
           {g2}
