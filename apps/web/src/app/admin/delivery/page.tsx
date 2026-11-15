@@ -280,23 +280,26 @@ export default async function CouriersOverviewPage() {
             </div>
           </section>
 
-          {best && slow ? (
-            <p className="cr-note a2-mt12" data-testid="couriers-insight">
-              {cr('ov.insight', { best: best.name, rate: pct(best.last30.successPct), slow: slow.name, days: n(slow.last30.avgDays ?? 0) })}
-            </p>
-          ) : null}
+          {/* PR 775 (prototype v5 parity): the guide line under the table is always there; with one courier or no finished parcels it says what is needed */}
+          <p className="cr-note a2-mt12" data-testid="couriers-insight">
+            {best && slow && best.id !== slow.id
+              ? cr('ov.insight', { best: best.name, rate: pct(best.last30.successPct), slow: slow.name, days: n(slow.last30.avgDays ?? 0) })
+              : best
+                ? cr('ov.insightOne', { best: best.name, rate: pct(best.last30.successPct) })
+                : cr('ov.insightNone')}
+          </p>
 
+          {ov.savings.enabled ? (
           <section className="a2-card a2-mt12" data-testid="couriers-savings">
             <h2 className="a2-h3">{cr('ov.savings')}</h2>
-            {!ov.savings.enabled ? (
-              <p className="a2-sm a2-mute a2-mt6">{cr('ov.savingsOff')}</p>
-            ) : ov.savings.savedMinor === null ? (
+            {ov.savings.savedMinor === null ? (
               <p className="a2-sm a2-mute a2-mt6">{cr('ov.savingsNone')}</p>
             ) : (
               <p className="a2-sm a2-mt6">{cr('ov.savingsBody', { amount: m(ov.savings.savedMinor), n: n(ov.savings.compared) })}</p>
             )}
-            {ov.savings.enabled && ov.savings.leftOut ? <p className="a2-xs a2-mute">{cr('ov.savingsLeft', { n: n(ov.savings.leftOut) })}</p> : null}
+            {ov.savings.leftOut ? <p className="a2-xs a2-mute">{cr('ov.savingsLeft', { n: n(ov.savings.leftOut) })}</p> : null}
           </section>
+          ) : null}
         </>
       )}
     </div>
