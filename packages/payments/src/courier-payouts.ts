@@ -121,12 +121,19 @@ export async function coveredParcels(deps: Pick<PaymentsDeps, 'db'>, storeId: nu
   return { parcels, cashMinor, chargesMinor, netMinor: cashMinor - chargesMinor };
 }
 
+/** PR 803: the smallest amount to ask this courier for — its own figure from Couriers › Setup when set, else the shop-wide one. */
+async function minimumFor(deps: PaymentsDeps, storeId: number, courierId: string, shopWide: number): Promise<number> {
+  const own = (await setting(deps, storeId, 'delivery.courier.setup')).couriers[courierId]?.minPayoutMinor ?? 0;
+  return own > 0 ? own : shopWide;
+}
+
 /** The courier's payouts: what it holds, its own figure, the open request and the latest ones (`payments.view`). */
 export async function payoutView(deps: PaymentsDeps, who: Who, courierAccountId: string): Promise<PayoutView> {
   await allow(deps, who, 'payments.view');
   const storeId = who.storeId;
   const a = await account(deps, storeId, courierAccountId);
   const cfg = await setting(deps, storeId, 'delivery.courier.payouts');
+  const minAmountMinor = await minimumFor(deps, storeId, a.id, cfg.minAmountMinor);
   const supported = courierCapabilitiesOf(a.providerKey)?.payouts ?? 'none';
   const [cov, rows] = await Promise.all([
     coveredParcels(deps, storeId, a.id),
@@ -146,11 +153,11 @@ export async function payoutView(deps: PaymentsDeps, who: Who, courierAccountId:
   if (supported !== 'request') blockedBy.push('NOT_SUPPORTED');
   if (open) blockedBy.push('OPEN');
   if (cov.netMinor <= 0) blockedBy.push('NOTHING');
-  else if (cov.netMinor < cfg.minAmountMinor) blockedBy.push('BELOW_MINIMUM');
+  else if (cov.netMinor < minAmountMinor) blockedBy.push('BELOW_MINIMUM');
   return {
     supported,
     enabled: cfg.enabled,
-    minAmountMinor: cfg.minAmountMinor,
+    minAmountMinor,
     holds: { parcels: cov.parcels.length, cashMinor: cov.cashMinor, chargesMinor: cov.chargesMinor, netMinor: cov.netMinor },
     courierBalanceMinor,
     open: open ? rowOf(open) : null,
@@ -207,9 +214,10 @@ export async function requestPayout(deps: PaymentsDeps, who: Who, courierAccount
   const open = await deps.db.courierPayout.findFirst({ where: { storeId, courierAccountId: a.id, state: { in: [...OPEN] } }, select: { id: true } });
   if (open) throw new PaymentsError('PAYOUT_OPEN', 'an earlier request to this courier is still open', [], { payoutId: open.id });
   const cov = await coveredParcels(deps, storeId, a.id);
-  if (cov.netMinor <= 0) throw new PaymentsError('PAYOUT_NOTHING', 'this courier holds nothing to ask for', [], { minAmountMinor: cfg.minAmountMinor });
-  if (cov.netMinor < cfg.minAmountMinor)
-    throw new PaymentsError('PAYOUT_NOTHING', 'less than the smallest amount to ask for', ['amount'], { minAmountMinor: cfg.minAmountMinor, netMinor: cov.netMinor });
+  const minAmountMinor = await minimumFor(deps, storeId, a.id, cfg.minAmountMinor);
+  if (cov.netMinor <= 0) throw new PaymentsError('PAYOUT_NOTHING', 'this courier holds nothing to ask for', [], { minAmountMinor });
+  if (cov.netMinor < minAmountMinor)
+    throw new PaymentsError('PAYOUT_NOTHING', 'less than the smallest amount to ask for', ['amount'], { minAmountMinor, netMinor: cov.netMinor });
   // the owner's PIN, checked before anything is asked (WRONG_PIN, PIN_REQUIRED … come from the auth package)
   await verifyOwnerPin(deps.db, who.actor, d.pin, await pinPolicy(deps), { action: 'courier.payout.request', storeId, now: nowOf(deps), ctx: { source: 'admin-api', ...who.ctx } });
   const { api, mode } = await deps.couriers(storeId, a.providerKey);

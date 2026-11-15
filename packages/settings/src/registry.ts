@@ -182,6 +182,7 @@ import { handoverCheckSettings } from './registry-handover-check';
 import { toShipSettings } from './registry-to-ship';
 import { courierWatchSettings } from './registry-courier-watch';
 import { couriersV5Settings } from './registry-couriers-v5';
+import { courierSetupSettings } from './registry-courier-setup';
 import { rulesHubSettings } from './registry-rules-hub';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
@@ -1574,6 +1575,7 @@ export const registry = {
   ...toShipSettings,
   ...courierWatchSettings,
   ...couriersV5Settings,
+  ...courierSetupSettings,
   ...rulesHubSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
