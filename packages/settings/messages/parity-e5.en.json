@@ -5,6 +5,12 @@
       "help": "The days the shop has to answer a customer who asks for a copy of their data or to have it erased. The Data & privacy page counts the days left. Nothing closes a request by itself."
     }
   },
+  "roles": {
+    "defaultAccess": {
+      "label": "Default access of each role",
+      "help": "The access “Back to default” loads for a role on Team & roles. Not set means view-only. Saving still needs your PIN."
+    }
+  },
   "erp": {
     "matching": {
       "label": "ERP accounts for shop money",

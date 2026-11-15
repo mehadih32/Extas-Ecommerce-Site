@@ -7,11 +7,12 @@
 // Step 1 needs `system.backup`, step 2 `system.restore` (the API checks again). Every word is from
 // messages/admin-backups.<lang>.json.
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { call, errorText, type Answer } from "@/components/admin/api";
 import { dateTime } from "@/components/admin/stock/text";
 import { t, type Dict } from "@/lib/i18n";
 import { ShellIcon } from "../shell/ShellIcon";
+import { PICK_BACKUP } from "./BackupsScreen";
 
 export interface RestoreRow {
   id: string;
@@ -98,6 +99,22 @@ export function RestoreCard({
   const ready =
     newestStaging?.status === "SUCCEEDED" && Boolean(newestStaging.backup);
   const when = (iso: string) => dateTime(iso, locale, timeZone);
+  const box = useRef<HTMLElement>(null);
+
+  // PR 852: "Restore" on a row of the Drive list picks that backup here. It never starts a restore: the check copy comes first.
+  useEffect(() => {
+    const on = (ev: Event) => {
+      const x = (ev as CustomEvent<{ name: string; rows: DriveRow[] }>).detail;
+      if (!x?.name || !canStage) return;
+      setSource("drive");
+      setDrive(x.rows.map((b) => ({ name: b.name, checked: b.checked })));
+      setBackup(x.name);
+      setNote({ ok: true, text: local(d, "restore.picked", { name: x.name }) });
+      box.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.addEventListener(PICK_BACKUP, on);
+    return () => window.removeEventListener(PICK_BACKUP, on);
+  }, [canStage, d]);
 
   const loadDrive = async () => {
     setBusy("drive");
@@ -160,6 +177,7 @@ export function RestoreCard({
   const id = (k: string) => `${uid}-${k}`;
   return (
     <section
+      ref={box}
       className="a2-card"
       aria-labelledby="bk-restore"
       data-testid="bk-restore"

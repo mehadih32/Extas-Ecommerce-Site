@@ -2,7 +2,18 @@
 // log row may show of a change (field names only) and of a CSV cell.
 import { describe, expect, it } from 'vitest';
 import { csvOf } from './activity-log';
-import { buildTree, changedKeys, diffKeys, toggleGroup, triOf } from './people-pure';
+import { buildTree, changedKeys, defaultAccessFor, diffKeys, toggleGroup, triOf } from './people-pure';
+
+describe('defaultAccessFor (PR 852)', () => {
+  const keys = ['orders.read', 'orders.write', 'products.read'];
+  it('uses the owner’s default for the role, dropping keys the catalogue does not know', () => {
+    expect([...defaultAccessFor('support', { support: ['orders.write', 'gone.key'] }, keys)]).toEqual(['orders.write']);
+  });
+  it('gives view-only access to a role with no default', () => {
+    expect([...defaultAccessFor('x', null, keys)].sort()).toEqual(['orders.read', 'products.read']);
+    expect([...defaultAccessFor('x', { support: [] }, keys)].sort()).toEqual(['orders.read', 'products.read']);
+  });
+});
 
 const cat = [
   { key: 'orders.read', group: 'orders', label: { en: 'See orders', bn: 'অর্ডার দেখা' }, groupLabel: { en: 'Orders', bn: 'অর্ডার' } },
