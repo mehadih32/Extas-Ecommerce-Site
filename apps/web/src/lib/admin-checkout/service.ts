@@ -10,7 +10,7 @@
 import { createHash } from 'node:crypto';
 import { audit, isOwner, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { bankAccountsSchema, CARD_TYPES, CONFIRM_STYLES, MOBILE_WALLETS, registry, storeTarget, walletNumbersSchema } from '@extas/settings';
+import { bankAccountsSchema, CARD_TYPES, CONFIRM_STYLES, giftSchema, MOBILE_WALLETS, registry, storeTarget, walletNumbersSchema } from '@extas/settings';
 import { phoneOf } from '../admin-brand/service';
 import type { AppResolver } from '../settings';
 
@@ -33,6 +33,8 @@ export interface PaymentsValue {
   mobile: { on: boolean; list: Tick[] };
   card: { on: boolean; list: Tick[] };
   online: boolean;
+  /** Show the receiving numbers to a customer whose prepaid payment is still waiting (thank-you page). */
+  showNumbers: boolean;
   /** `unset`: the owner has not decided yet (the shop does not offer Cash on Delivery). */
   cod: 'unset' | 'on' | 'off';
   wallets: { id: string; provider: string; number: string; kind: WalletKind }[];
@@ -50,9 +52,22 @@ export interface FormValue {
   many: boolean;
   manyMin: number;
 }
+/** Gift orders (`checkout.gift`): the amount is in whole currency units here, minor units in the setting. */
+export interface GiftValue {
+  enabled: boolean;
+  noteMax: number;
+  maxDays: number;
+  hidePrices: boolean;
+  advanceRequired: boolean;
+  advanceType: 'full' | 'fixed' | 'percent';
+  /** Whole currency units (fixed advance); null when not used. */
+  amount: number | null;
+  percent: number | null;
+}
 export interface CheckoutCards {
   payments: { key: 'payments'; value: PaymentsValue; version: string };
   form: { key: 'form'; value: FormValue; version: string };
+  gift: { key: 'gift'; value: GiftValue; version: string };
 }
 
 export class CheckoutPageError extends Error {
@@ -79,7 +94,7 @@ const ticks = (all: readonly string[], on: readonly string[]): Tick[] => [...on.
 
 export async function paymentsRead(d: CheckoutDeps): Promise<PaymentsValue> {
   const r = d.resolver;
-  const [mOn, mList, cOn, cList, online, cod, wallets, banks] = await Promise.all([
+  const [mOn, mList, cOn, cList, online, cod, wallets, banks, showNumbers] = await Promise.all([
     r.value('checkout.pay.mobile.enabled', at),
     r.value('checkout.pay.mobile.list', at),
     r.value('checkout.pay.card.enabled', at),
@@ -88,11 +103,13 @@ export async function paymentsRead(d: CheckoutDeps): Promise<PaymentsValue> {
     r.value('payment.cod.enabled', at),
     r.value('payment.wallet.numbers', at),
     r.value('payment.bank.accounts', at),
+    r.value('checkout.pay.showNumbers', at),
   ]);
   return {
     mobile: { on: mOn, list: ticks(MOBILE_WALLETS, mList) },
     card: { on: cOn, list: ticks(CARD_TYPES, cList) },
     online,
+    showNumbers,
     cod: cod === null || cod === undefined ? 'unset' : cod ? 'on' : 'off',
     wallets: (wallets ?? []).map((w, i) => ({ id: `w${i + 1}`, provider: w.provider, number: w.number, kind: w.kind })),
     banks: (banks ?? []).map((b, i) => ({ id: `b${i + 1}`, bankName: b.bankName, accountName: b.accountName, accountNumber: b.accountNumber, branch: b.branch ?? '', routingNumber: b.routingNumber ?? '' })),
@@ -118,15 +135,36 @@ export async function formRead(d: CheckoutDeps): Promise<FormValue> {
   return { order: ids.map((id) => ({ id })), help, tryOn, nameMin, addressMin, note, noteMax, confirm, many, manyMin };
 }
 
+/** Minor units in one whole unit of the shop's currency (100 for taka), read from the currency, never written in. */
+async function unitOf(d: CheckoutDeps): Promise<number> {
+  const cur = await d.resolver.value('store.currency', at);
+  try {
+    return 10 ** new Intl.NumberFormat('en', { style: 'currency', currency: cur }).resolvedOptions().maximumFractionDigits!;
+  } catch {
+    return 100;
+  }
+}
+
+export async function giftRead(d: CheckoutDeps): Promise<GiftValue> {
+  const [g, unit] = await Promise.all([d.resolver.value('checkout.gift', at), unitOf(d)]);
+  return { enabled: g.enabled, noteMax: g.noteMaxChars, maxDays: g.deliverAfterMaxDays, hidePrices: g.hidePricesDefault, advanceRequired: g.advance.required, advanceType: g.advance.type, amount: g.advance.amountMinor === null ? null : g.advance.amountMinor / unit, percent: g.advance.percent };
+}
+
 export interface CheckoutView {
   cards: CheckoutCards;
-  /** Only an owner changes Cash on Delivery. */
+  /** Only an owner changes Cash on Delivery and the gift card (its advance is money). */
   owner: boolean;
+  /** Minor units in one whole unit of the shop's currency. */
+  unit: number;
 }
 
 export async function checkoutView(d: CheckoutDeps, who: CheckoutWho): Promise<CheckoutView> {
-  const [payments, form, owner] = await Promise.all([paymentsRead(d), formRead(d), who.actor.staffUserId ? isOwner(d.db, who.actor.staffUserId) : Promise.resolve(false)]);
-  return { cards: { payments: { key: 'payments', value: payments, version: versionOf(payments) }, form: { key: 'form', value: form, version: versionOf(form) } }, owner };
+  const [payments, form, gift, owner, unit] = await Promise.all([paymentsRead(d), formRead(d), giftRead(d), who.actor.staffUserId ? isOwner(d.db, who.actor.staffUserId) : Promise.resolve(false), unitOf(d)]);
+  return {
+    cards: { payments: { key: 'payments', value: payments, version: versionOf(payments) }, form: { key: 'form', value: form, version: versionOf(form) }, gift: { key: 'gift', value: gift, version: versionOf(gift) } },
+    owner,
+    unit,
+  };
 }
 
 type Key = keyof typeof registry;
@@ -182,7 +220,9 @@ async function savePayments(d: CheckoutDeps, who: CheckoutWho, before: PaymentsV
   if (mobile.ids.length) out.push(...(await put(d, who, 'checkout.pay.mobile.list', mobile.ids, 'mobile wallets')));
   out.push(...(await put(d, who, 'checkout.pay.card.enabled', card.on, 'card payments')));
   if (card.ids.length) out.push(...(await put(d, who, 'checkout.pay.card.list', card.ids, 'card types')));
+  if (typeof sent.showNumbers !== 'boolean') throw invalid('showNumbers');
   out.push(...(await put(d, who, 'checkout.pay.online.enabled', sent.online, 'online payment')));
+  out.push(...(await put(d, who, 'checkout.pay.showNumbers', sent.showNumbers, 'showing the receiving numbers')));
   if (codChange) out.push(...(await put(d, who, 'payment.cod.enabled', sent.cod === 'on', 'Cash on Delivery', true)));
   out.push(...(await put(d, who, 'payment.wallet.numbers', walletsOk.data.length ? walletsOk.data : null, 'receiving numbers')));
   out.push(...(await put(d, who, 'payment.bank.accounts', banksOk.data.length ? banksOk.data : null, 'bank accounts')));
@@ -190,7 +230,6 @@ async function savePayments(d: CheckoutDeps, who: CheckoutWho, before: PaymentsV
 }
 
 async function saveForm(d: CheckoutDeps, who: CheckoutWho, sent: Record<string, unknown>): Promise<string[]> {
-  const out: string[] = [];
   const order = Array.isArray(sent.order) ? sent.order.filter(isObj).map((r) => str(r.id, 20)) : [];
   if (order.length !== FIELD_IDS.length || !FIELD_IDS.every((f) => order.includes(f))) throw invalid('order');
   const flag = (k: string) => {
@@ -203,28 +242,58 @@ async function saveForm(d: CheckoutDeps, who: CheckoutWho, sent: Record<string, 
   };
   const confirm = (CONFIRM_STYLES as readonly string[]).includes(sent.confirm as string) ? sent.confirm : null;
   if (!confirm) throw invalid('confirm');
-  out.push(...(await put(d, who, 'checkout.fieldOrder', order, 'the order of the fields')));
-  out.push(...(await put(d, who, 'checkout.help.enabled', flag('help'), 'the help line')));
-  out.push(...(await put(d, who, 'checkout.tryOn.enabled', flag('tryOn'), 'the try-on line')));
-  out.push(...(await put(d, who, 'checkout.form.nameMin', num('nameMin'), 'the shortest name')));
-  out.push(...(await put(d, who, 'checkout.form.addressMin', num('addressMin'), 'the shortest address')));
-  out.push(...(await put(d, who, 'checkout.note.enabled', flag('note'), 'the note box')));
-  out.push(...(await put(d, who, 'checkout.note.maxChars', num('noteMax'), 'the note length')));
-  out.push(...(await put(d, who, 'checkout.confirm.style', confirm, 'the Confirm button')));
-  out.push(...(await put(d, who, 'checkout.manyOfOne.enabled', flag('many'), 'the many of one size line')));
-  out.push(...(await put(d, who, 'checkout.manyOfOne.min', num('manyMin'), 'the many of one size count')));
+  const plan: [Key, unknown, string][] = [
+    ['checkout.fieldOrder', order, 'the order of the fields'],
+    ['checkout.help.enabled', flag('help'), 'the help line'],
+    ['checkout.tryOn.enabled', flag('tryOn'), 'the try-on line'],
+    ['checkout.form.nameMin', num('nameMin'), 'the shortest name'],
+    ['checkout.form.addressMin', num('addressMin'), 'the shortest address'],
+    ['checkout.note.enabled', flag('note'), 'the note box'],
+    ['checkout.note.maxChars', num('noteMax'), 'the note length'],
+    ['checkout.confirm.style', confirm, 'the Confirm button'],
+    ['checkout.manyOfOne.enabled', flag('many'), 'the many of one size line'],
+    ['checkout.manyOfOne.min', num('manyMin'), 'the many of one size count'],
+  ];
+  // every value is checked against its own setting before the first one is written, so a refused card writes nothing
+  for (const [key, value] of plan) if (!registry[key].schema.safeParse(value).success) throw invalid(key);
+  const out: string[] = [];
+  for (const [key, value, reason] of plan) out.push(...(await put(d, who, key, value, reason)));
   return out;
+}
+
+/** The gift card: its advance is money, so only an owner changes it (CLAUDE.md rule 6); nothing here charges anyone. */
+async function saveGift(d: CheckoutDeps, who: CheckoutWho, sent: Record<string, unknown>): Promise<string[]> {
+  const flag = (k: string) => {
+    if (typeof sent[k] !== 'boolean') throw invalid(k);
+    return sent[k] as boolean;
+  };
+  const whole = (k: string) => {
+    if (typeof sent[k] !== 'number' || !Number.isInteger(sent[k])) throw invalid(k);
+    return sent[k] as number;
+  };
+  const type = sent.advanceType;
+  if (type !== 'full' && type !== 'fixed' && type !== 'percent') throw invalid('advanceType');
+  const unit = await unitOf(d);
+  const amount = type === 'fixed' ? (typeof sent.amount === 'number' && sent.amount > 0 ? Math.round(sent.amount * unit) : null) : null;
+  const percent = type === 'percent' ? (typeof sent.percent === 'number' && Number.isInteger(sent.percent) ? sent.percent : null) : null;
+  if (type === 'fixed' && amount === null) throw invalid('amount');
+  if (type === 'percent' && percent === null) throw invalid('percent');
+  const next = { enabled: flag('enabled'), advance: { required: flag('advanceRequired'), type, amountMinor: amount, percent }, noteMaxChars: whole('noteMax'), deliverAfterMaxDays: whole('maxDays'), hidePricesDefault: flag('hidePrices') };
+  if (!giftSchema.safeParse(next).success) throw invalid('gift');
+  const cur = await d.resolver.value('checkout.gift', at);
+  if (JSON.stringify(cur) !== JSON.stringify(giftSchema.parse(next)) && (!who.actor.staffUserId || !(await isOwner(d.db, who.actor.staffUserId)))) throw new CheckoutPageError('FORBIDDEN', 403, ['gift']);
+  return put(d, who, 'checkout.gift', next, 'gift orders', true);
 }
 
 export async function saveCheckoutCard(d: CheckoutDeps, who: CheckoutWho, input: unknown): Promise<CheckoutView> {
   await requirePermission(d.db, who.actor, 'settings.write', { storeId: S });
   if (!isObj(input) || !isObj(input.value)) throw invalid('key', 'value');
   const key = input.key;
-  if (key !== 'payments' && key !== 'form') throw invalid('key');
+  if (key !== 'payments' && key !== 'form' && key !== 'gift') throw invalid('key');
   const before = await checkoutView(d, who);
   const was = before.cards[key].version;
   if (input.version !== undefined && input.version !== was) throw new CheckoutPageError('STALE', 409, ['version'], { version: was });
-  const changed = key === 'payments' ? await savePayments(d, who, before.cards.payments.value, input.value) : await saveForm(d, who, input.value);
+  const changed = key === 'payments' ? await savePayments(d, who, before.cards.payments.value, input.value) : key === 'form' ? await saveForm(d, who, input.value) : await saveGift(d, who, input.value);
   if (changed.length) await audit(d.db, who.actor, { storeId: S, action: `settings.checkout.${key}.save`, entityType: 'Setting', entityId: key, before: undefined, after: { changed } }, who.ctx);
   return checkoutView(d, who);
 }

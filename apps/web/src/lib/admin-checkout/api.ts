@@ -14,7 +14,7 @@ export async function checkoutHandler(request: Request, deps: AdminDeps | null):
   const who = { actor: g.actor, ctx: g.ctx };
   try {
     const view = method === 'GET' ? await checkoutView(d, who) : await saveCheckoutCard(d, who, await body(request));
-    return json({ ok: true, cards: view.cards, owner: view.owner });
+    return json({ ok: true, cards: view.cards, owner: view.owner, unit: view.unit });
   } catch (e) {
     if (isCheckoutPageError(e)) return json({ ok: false, error: e.code, details: e.details, ...e.data }, { status: e.status });
     return errorResponse(e);

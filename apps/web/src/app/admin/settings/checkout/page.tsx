@@ -64,7 +64,7 @@ export default async function CheckoutSettingsPage() {
       <div className="a2-note a2-mt12" role="note">
         <span>{g('note')}</span>
       </div>
-      <CheckoutEditor payments={v.cards.payments} wallets={[...MOBILE_WALLETS]} texts={flat((d.ck ?? {}) as Dict)} canEdit={canEdit} owner={v.owner} />
+      <CheckoutEditor payments={v.cards.payments} form={v.cards.form} gift={v.cards.gift} unit={v.unit} wallets={[...MOBILE_WALLETS]} texts={flat((d.ck ?? {}) as Dict)} canEdit={canEdit} owner={v.owner} />
     </div>
   );
 }

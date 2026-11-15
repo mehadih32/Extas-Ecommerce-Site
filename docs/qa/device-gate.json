@@ -703,7 +703,7 @@
       "/admin/integrations": [".ad[data-lm-ready]", "[data-testid=\"integrations-erp-link\"]"],
       "/admin/settings/store": ["[data-testid=\"store-page\"][data-lm-ready]"],
       "/admin/settings/policies": ["[data-testid=\"policies-page\"][data-lm-ready]"],
-      "/admin/settings/checkout": ["[data-testid=\"ck-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"ck-payments\"]"],
+      "/admin/settings/checkout": ["[data-testid=\"ck-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]", "[data-testid=\"ck-payments\"]", "[data-testid=\"ck-form\"]"],
       "/admin/settings/privacy": ["[data-testid=\"privacy-page\"][data-lm-ready]"],
       "/admin/settings/security": ["[data-testid=\"security-page\"][data-lm-ready]"],
       "/admin/settings/security/edge": ["[data-testid=\"edge-page\"][data-lm-ready]"],

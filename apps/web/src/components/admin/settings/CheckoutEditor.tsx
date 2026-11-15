@@ -8,18 +8,22 @@ import { useId } from 'react';
 import { Frame, List, Row, Show, nudgeIn, patch, place } from '../website/BrandMenusEditor';
 import { useDragging } from '../website/Sortable';
 import { useApiCard, type ApiScreen } from '../website/useApiCard';
-import type { PaymentsValue, Tick, WalletKind } from '@/lib/admin-checkout/service';
+import type { FormValue, GiftValue, PaymentsValue, Tick, WalletKind } from '@/lib/admin-checkout/service';
 
 const API = '/api/admin/settings/checkout';
 const KINDS: WalletKind[] = ['merchant', 'personal', 'agent'];
 
 export interface CheckoutProps {
   payments: ApiScreen<PaymentsValue>;
+  form: ApiScreen<FormValue>;
+  gift: ApiScreen<GiftValue>;
+  /** Minor units in one whole unit of the shop's currency (the fixed gift advance is typed in whole units). */
+  unit: number;
   /** The wallet providers and card types the checkout can list, in their shipped order. */
   wallets: readonly string[];
   texts: Record<string, string>;
   canEdit: boolean;
-  /** Only an owner changes Cash on Delivery. */
+  /** Only an owner changes Cash on Delivery and the gift card. */
   owner: boolean;
 }
 
@@ -93,6 +97,10 @@ function PaymentsCard(props: CheckoutProps & { x: X }) {
 
         <h3 className="a2-h4 a2-mt12">{x('payments.online')}</h3>
         <Show on={v.online} label={x('payments.onlineOn')} disabled={card.off} onChange={(online) => set({ online })} testId="ck-online-on" />
+
+        <h3 className="a2-h4 a2-mt12">{x('payments.show')}</h3>
+        <p className="a2-xs a2-mute">{x('payments.showHelp')}</p>
+        <Show on={v.showNumbers} label={x('payments.showOn')} disabled={card.off} onChange={(showNumbers) => set({ showNumbers })} testId="ck-show-numbers" />
 
         <h3 className="a2-h4 a2-mt12">{x('payments.cod')}</h3>
         <p className="a2-xs a2-mute">{x(props.owner ? 'payments.codHelp' : 'payments.codOwnerOnly')}</p>
@@ -193,11 +201,143 @@ function PaymentsCard(props: CheckoutProps & { x: X }) {
   );
 }
 
+const FORM_LIMITS = { nameMin: [0, 20], addressMin: [4, 60], noteMax: [20, 1000], manyMin: [2, 20] } as const;
+type LimitKey = keyof typeof FORM_LIMITS;
+
+function FormCard(props: CheckoutProps & { x: X }) {
+  const { x } = props;
+  const id = useId();
+  const check = (v: FormValue) => ((Object.keys(FORM_LIMITS) as LimitKey[]).some((k) => !Number.isInteger(v[k]) || v[k] < FORM_LIMITS[k][0] || v[k] > FORM_LIMITS[k][1]) ? x('form.range') : null);
+  const card = useApiCard(API, props.form, x, props.canEdit, check);
+  const v = card.draft;
+  const set = (change: Partial<FormValue>) => card.edit({ ...v, ...change });
+  const drag = useDragging({
+    disabled: card.off,
+    onDrop: (f, t) => set({ order: place(v.order, f.id, t.before) }),
+    onNudge: (f, d) => set({ order: nudgeIn(v.order, f.id, d) }),
+  });
+  const num = (k: LimitKey) => (
+    <div className="a2-fld" key={k}>
+      <label className="a2-lbl" htmlFor={`${id}-${k}`}>
+        {x(`form.${k}`)}
+      </label>
+      <input id={`${id}-${k}`} className="a2-inp" type="number" inputMode="numeric" min={FORM_LIMITS[k][0]} max={FORM_LIMITS[k][1]} value={String(v[k])} disabled={card.off} onChange={(e) => set({ [k]: e.target.value === '' ? 0 : Number(e.target.value) })} data-testid={`ck-form-${k}`} />
+      <span className="a2-xs a2-mute">{x(`form.${k}Help`).replace('{min}', String(FORM_LIMITS[k][0])).replace('{max}', String(FORM_LIMITS[k][1]))}</span>
+    </div>
+  );
+  return (
+    <Frame id={`${id}-f`} title={x('form.h')} sub={x('form.d')} testId="ck-form" canEdit={props.canEdit} readOnly={x('readOnly')} card={card} x={x}>
+      <div className="bm-stack a2-mt12">
+        <h3 className="a2-h4">{x('form.order')}</h3>
+        <p className="a2-xs a2-mute">{x('form.orderHelp')}</p>
+        <List kind="fields" list="fields" drag={drag} empty="" label={x('form.order')} isEmpty={false} testId="ck-fields">
+          {v.order.map((f, i) => (
+            <Row key={f.id} kind="fields" list="fields" id={f.id} index={i} count={v.order.length} drag={drag} nudge={(d) => set({ order: nudgeIn(v.order, f.id, d) })} disabled={card.off} x={x} name={x(`form.field.${f.id}`)} testId={`ck-field-${f.id}`}>
+              <span className="bm-name">{x(`form.field.${f.id}`)}</span>
+              <span className="a2-xs a2-mute">{x('form.always')}</span>
+            </Row>
+          ))}
+        </List>
+
+        <h3 className="a2-h4 a2-mt12">{x('form.lengths')}</h3>
+        {num('nameMin')}
+        {num('addressMin')}
+
+        <h3 className="a2-h4 a2-mt12">{x('form.lines')}</h3>
+        <Show on={v.help} label={x('form.help')} disabled={card.off} onChange={(help) => set({ help })} testId="ck-form-help" />
+        <Show on={v.tryOn} label={x('form.tryOn')} disabled={card.off} onChange={(tryOn) => set({ tryOn })} testId="ck-form-tryon" />
+        <Show on={v.note} label={x('form.note')} disabled={card.off} onChange={(note) => set({ note })} testId="ck-form-note" />
+        {num('noteMax')}
+        <Show on={v.many} label={x('form.many')} disabled={card.off} onChange={(many) => set({ many })} testId="ck-form-many" />
+        {num('manyMin')}
+
+        <h3 className="a2-h4 a2-mt12">{x('form.confirmH')}</h3>
+        <div className="a2-fld">
+          <label className="a2-lbl" htmlFor={`${id}-confirm`}>
+            {x('form.confirm')}
+          </label>
+          <select id={`${id}-confirm`} className="a2-sel" value={v.confirm} disabled={card.off} onChange={(e) => set({ confirm: e.target.value as FormValue['confirm'] })} data-testid="ck-form-confirm">
+            <option value="ask">{x('form.confirmAsk')}</option>
+            <option value="disable">{x('form.confirmDisable')}</option>
+          </select>
+          <span className="a2-xs a2-mute">{x('form.confirmHelp')}</span>
+        </div>
+      </div>
+    </Frame>
+  );
+}
+
+function GiftCard(props: CheckoutProps & { x: X }) {
+  const { x } = props;
+  const id = useId();
+  const check = (v: GiftValue) => {
+    if (!Number.isInteger(v.noteMax) || v.noteMax < 0 || v.noteMax > 1000 || !Number.isInteger(v.maxDays) || v.maxDays < 0 || v.maxDays > 365) return x('gift.range');
+    if (v.advanceType === 'fixed' && !(v.amount !== null && v.amount > 0)) return x('gift.needAmount');
+    if (v.advanceType === 'percent' && !(v.percent !== null && Number.isInteger(v.percent) && v.percent >= 1 && v.percent <= 100)) return x('gift.needPercent');
+    return null;
+  };
+  // the advance is money: only an owner changes this card
+  const card = useApiCard(API, props.gift, x, props.canEdit && props.owner, check);
+  const v = card.draft;
+  const set = (change: Partial<GiftValue>) => card.edit({ ...v, ...change });
+  const numIn = (k: 'noteMax' | 'maxDays') => (
+    <div className="a2-fld" key={k}>
+      <label className="a2-lbl" htmlFor={`${id}-${k}`}>
+        {x(`gift.${k}`)}
+      </label>
+      <input id={`${id}-${k}`} className="a2-inp" type="number" inputMode="numeric" min={0} max={k === 'noteMax' ? 1000 : 365} value={String(v[k])} disabled={card.off} onChange={(e) => set({ [k]: e.target.value === '' ? 0 : Number(e.target.value) })} data-testid={`ck-gift-${k}`} />
+      <span className="a2-xs a2-mute">{x(`gift.${k}Help`)}</span>
+    </div>
+  );
+  return (
+    <Frame id={`${id}-g`} title={x('gift.h')} sub={x('gift.d')} testId="ck-gift" canEdit={props.canEdit && props.owner} readOnly={x(props.canEdit ? 'gift.ownerOnly' : 'readOnly')} card={card} x={x}>
+      <div className="bm-stack a2-mt12">
+        <Show on={v.enabled} label={x('gift.on')} disabled={card.off} onChange={(enabled) => set({ enabled })} testId="ck-gift-on" />
+        {numIn('noteMax')}
+        {numIn('maxDays')}
+        <Show on={v.hidePrices} label={x('gift.hidePrices')} disabled={card.off} onChange={(hidePrices) => set({ hidePrices })} testId="ck-gift-hide" />
+
+        <h3 className="a2-h4 a2-mt12">{x('gift.advanceH')}</h3>
+        <p className="a2-xs a2-mute">{x('gift.advanceHelp')}</p>
+        <Show on={v.advanceRequired} label={x('gift.advanceOn')} disabled={card.off} onChange={(advanceRequired) => set({ advanceRequired })} testId="ck-gift-adv" />
+        <div className="a2-fld">
+          <label className="a2-lbl" htmlFor={`${id}-type`}>
+            {x('gift.type')}
+          </label>
+          <select id={`${id}-type`} className="a2-sel" value={v.advanceType} disabled={card.off || !v.advanceRequired} onChange={(e) => set({ advanceType: e.target.value as GiftValue['advanceType'] })} data-testid="ck-gift-type">
+            <option value="full">{x('gift.typeFull')}</option>
+            <option value="percent">{x('gift.typePercent')}</option>
+            <option value="fixed">{x('gift.typeFixed')}</option>
+          </select>
+        </div>
+        {v.advanceType === 'percent' ? (
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${id}-pct`}>
+              {x('gift.percent')}
+            </label>
+            <input id={`${id}-pct`} className="a2-inp" type="number" inputMode="numeric" min={1} max={100} value={v.percent === null ? '' : String(v.percent)} disabled={card.off || !v.advanceRequired} onChange={(e) => set({ percent: e.target.value === '' ? null : Number(e.target.value) })} data-testid="ck-gift-percent" />
+          </div>
+        ) : null}
+        {v.advanceType === 'fixed' ? (
+          <div className="a2-fld">
+            <label className="a2-lbl" htmlFor={`${id}-amt`}>
+              {x('gift.amount')}
+            </label>
+            <input id={`${id}-amt`} className="a2-inp" type="number" inputMode="decimal" min={0} step={1 / props.unit} value={v.amount === null ? '' : String(v.amount)} disabled={card.off || !v.advanceRequired} onChange={(e) => set({ amount: e.target.value === '' ? null : Number(e.target.value) })} data-testid="ck-gift-amount" />
+          </div>
+        ) : null}
+      </div>
+    </Frame>
+  );
+}
+
 export function CheckoutEditor(props: CheckoutProps) {
   const x: X = (k) => props.texts[k] ?? k;
   return (
     <>
       <PaymentsCard {...props} x={x} />
+      <FormCard {...props} x={x} />
+      <GiftCard {...props} x={x} />
     </>
   );
 }
