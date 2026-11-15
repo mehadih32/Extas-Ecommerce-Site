@@ -17,3 +17,17 @@
 /* ---- With courier: a parcel line with its Ask button ---- */
 .adm2 .d4-li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--ln);flex-wrap:wrap}
 .adm2 .d4-li .a2-btn{min-height:44px}
+
+/* ---- Returns: the reminder strip, the date range boxes and the cards of a chip tab ---- */
+.adm2 .d4-rem{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.adm2 .d4-rem-i{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid var(--ln);background:var(--sf);color:var(--ink);text-decoration:none;font-size:13px}
+.adm2 .d4-rem-i.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--sf))}
+.adm2 .d4-rem-i.ok{color:var(--mute)}
+.adm2 .d4-range{flex-wrap:wrap;align-items:flex-end}
+.adm2 .d4-cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+
+/* ---- Call desk: Staff today and Call again now, side by side on a wide screen ---- */
+.adm2 .d4-desk{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.adm2 .d4-desk{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.adm2 .d4-st{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,auto);gap:6px 16px;align-items:center}
+.adm2 .d4-st .r{text-align:right}

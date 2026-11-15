@@ -47,6 +47,20 @@
       "en": "{name} — in English",
       "bn": "{name} — in Bengali",
       "done": "These close the call (the others keep it for the next try)"
+    },
+    "desk": {
+      "h": "Call desk",
+      "sub": "Open the order, press “Record call”, then pick how the call went. Calls and confirmed orders are counted for today.",
+      "staff": "Staff today",
+      "calls": "Calls",
+      "confirmed": "Confirmed",
+      "noAnswer": "No answer",
+      "noStaff": "Nobody has recorded a call or confirmed an order today.",
+      "dueH": "Call again now ({n})",
+      "dueSub": "A call whose next try is due. The longest overdue is first.",
+      "tries": "{n} tries",
+      "call": "Call",
+      "noneDue": "No call is due right now."
     }
   }
 }
