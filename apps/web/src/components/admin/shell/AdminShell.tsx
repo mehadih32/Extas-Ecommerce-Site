@@ -44,6 +44,7 @@ import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
 import { Palette } from './Palette';
 import { ShellIcon } from './ShellIcon';
+import { SettingsFrame } from './SettingsFrame';
 import { ShellTabBar } from './ShellTabBar';
 import { readLater, TodoDrawer } from './TodoDrawer';
 
@@ -542,8 +543,17 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
           </header>
           <main className="a2-ct a3-ct lm-ct" id="main" tabIndex={-1}>
             {/* PR 762: the section's tab bar is drawn here, once, so it stays in the same place on every page */}
-            <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />
-            {children}
+            {/* PR 779 (prototype v5): Settings is one page with a searchable list on the left (two groups) instead of tabs */}
+            {active === 'settings' && here?.tab ? (
+              <SettingsFrame dict={d} pathname={pathname} viewer={viewer}>
+                {children}
+              </SettingsFrame>
+            ) : (
+              <>
+                <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />
+                {children}
+              </>
+            )}
           </main>
           {/* CN-053: which build this browser really runs, readable without clearing anything */}
           <small className="a2-buildid" data-testid="build-id" translate="no" style={{ display: 'block', padding: '4px 16px 12px', opacity: 0.55, fontSize: 11 }}>
