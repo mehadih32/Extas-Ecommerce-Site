@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — CN-054: Geography map planned and parked (branch `claude/geo-map-plan`, docs only)
+
+Plan in Bengali: `docs/reports/2026-11-15-geo-map-plan.md`. PR 750–755 (stage S29) are filed as PARKED in the register; nothing is built, nothing starts until the owner says so (CN-051). Recommendation: park, or build the light version (750–753) first.
+
 ## 15 Nov 2026 — PR 728 filed: practice pictures load (branch `claude/fix-media-path`, from `origin/main` 6da62662, local, NOT pushed)
 
 The deploy of 6da62662 was rolled back by its smoke test: every sample picture answered 404 (74 problems, all `/media/media/s1/r/…`). The doubled `media/media` is the normal address of every upload (the storage key itself starts with `media/`); the real cause is that practice file names carried the colour code in capitals and `isRenditionKey` serves lower case only. Fixed in `slugOfKey` and the practice slug; `assetFilesExist` is checked before a picture is placed; `repairPracticePhotos` redraws lost or wrongly named pictures; no picture is made while the storage is in-process memory in production (`Storage.volatile`). The deploy log held no other failure; its one warning (admin.theme changed without a version bump, PR 724) is fixed by raising the version to 728. Register row 728, S28 70/70, 728 PRs / 718 active / 695 built.

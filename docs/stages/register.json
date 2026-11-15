@@ -1881,6 +1881,25 @@
  ],
  "changeNotes": [
   {
+   "id": "CN-054",
+   "date": "",
+   "title": "owner asked in chat for a Reports › Geography map; plan only, parked",
+   "text": "Six new PR numbers, **750–755**, in a new parked stage **S29**; the total moves from 728 to **755 PRs (718 active, 15 parked, 1 cancelled)**. Nothing is built and nothing starts until the owner says \"build the geography map\" (CN-051). The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework. Findings that shaped the split: the repository holds no boundary file at all, and none of the 1717 gazetteer places has a latitude or longitude, so today's bubble map draws nothing; boundaries must come from a licence-clean open source, stored in the repository and drawn as plain SVG with no map library and no call out at view time (PR 750). One switch `reports.geoMap` (off), no new permission key, no migration. The plan, in Bengali, with wireframes, queries, settings, permissions, performance, risks, split and recommendation (park; or the light version 750–753 first): [`docs/reports/2026-11-15-geo-map-plan.md`](reports/2026-11-15-geo-map-plan.md). Listed in [`docs/owner/PARKED.md`](owner/PARKED.md).",
+   "registerAnchor": "extas--master-register",
+   "prs": [
+    549,
+    550,
+    551,
+    552,
+    568,
+    569,
+    689
+   ],
+   "stages": [
+    "S29"
+   ]
+  },
+  {
    "id": "CN-053",
    "date": "",
    "title": "owner: PR 646 cancelled, PR 587 done",
@@ -16968,6 +16987,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s06-additions--the-delivery-zone-engine-60-18-oct",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation findings SIM-F-003 (the shown delivery charge is not the stored one); SIM-F-030 (a landmark-only village address is not queued) are required acceptance tests of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     }
    ],
    "mentions": [],
@@ -17041,6 +17067,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s06-additions--the-delivery-zone-engine-60-18-oct",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     }
    ],
    "mentions": [],
@@ -17100,6 +17133,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s06-additions--the-delivery-zone-engine-60-18-oct",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     }
    ],
    "mentions": [],
@@ -17154,6 +17194,13 @@
      "source": "Register row",
      "sourceLink": "../MASTER-REGISTER.md#s06-additions--the-delivery-zone-engine-60-18-oct",
      "text": "**Updated 23 Oct 2026 (CN-017):** simulation finding SIM-F-003 (the shown delivery charge is not the stored one) is a required acceptance test of this PR; see `docs/qa/SIMULATION-REPORT.md` §4."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     }
    ],
    "mentions": [],
@@ -26407,6 +26454,13 @@
     {
      "date": "",
      "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
      "source": "Scope added to existing PRs, 13 Nov 2026 (CN-048; new PR 659–707)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
      "text": "**PR 569, 270, 269** — Updated 13 Nov 2026 (CN-048): Plan and ideas assembly. Built in 699 (wave 5). Nothing is deleted; the old screen stays reachable."
@@ -33613,6 +33667,13 @@
      "source": "Scope added to existing PRs (CN-028; new PR 607–621)",
      "sourceLink": "../MASTER-REGISTER.md#how-this-reached-653",
      "text": "**PR 342–355, 504, 536–537, 568 (S16, finance, costs, reports, month close)** — Updated 25 Oct 2026 (CN-028): the month-end expense push to the ERP is replaced by the daily summary (PR 617) and fixed costs (PR 618); `MonthClose` closes through the books match (PR 616) and no longer carries a push to the ERP; every report figure has an \"explain this number\" view."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     },
     {
      "date": "",
@@ -45663,6 +45724,13 @@
      "source": "Build status",
      "sourceLink": "../MASTER-REGISTER.md#build-status",
      "text": "**Updated 13 Nov 2026 (W4B gap close 2):** Courier performance, Sales by area, Customers and Team are single reports too (Excel / PDF / Print, same period bar; a report that is off or not allowed gives a file that says so)"
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
+     "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
+     "text": "The map of Bangladesh coloured by district, thana and area (filters day, month, 6 months, year, custom; orders, sales, delivered, returned, return rate, top product and category per area; drill-down district to thana to area; a click shows the top products; two periods side by side) reuses Reports › Sales by area (PR 568), Marketing › Where to advertise (PR 569), the gazetteer and `GeoArea` (PR 549–552), the report period bar (PR 689) and the settings framework."
     }
    ],
    "mentions": [],
