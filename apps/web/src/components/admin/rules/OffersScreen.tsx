@@ -9,6 +9,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { formatValue, offerIssues, OFFER_KINDS, type OfferInput, type OfferIssue, type OfferKindName, type OfferStateName } from '@extas/rules/pure';
 import type { OfferListRow, OfferView, OffersScreen as OffersData } from '@extas/rules';
 import { call } from '../api';
+import { AwaitingCard, calendarOf, HeadsUp, OfferCalendar, type HeadItem } from '../lane-f/OfferParts';
+import { symbolOf } from '@/lib/lane-f/format';
 import { PageHead } from '../shell/ShellHead';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
@@ -23,6 +25,8 @@ export interface OffersScreenProps {
   screen: OffersData;
   scopes: ScopeOption[];
   perms: { write: boolean; approve: boolean };
+  /** PR 823: the rule clashes the "Heads up" card lists (empty when none are open). */
+  heads?: HeadItem[];
 }
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
@@ -35,7 +39,7 @@ type SaveFn = (send: boolean) => void;
 const API = '/api/admin/rules/offers';
 type Tab = 'all' | 'calendar' | 'awaiting' | 'history';
 // prototype v5: the kind chips above the list (the ones the real offer rows can tell apart)
-const SEGS = ['all', 'coupons', 'auto', 'ship', 'online', 'points'] as const;
+const SEGS = ['all', 'coupons', 'auto', 'ship', 'online', 'points', 'abandoned', 'first'] as const;
 type Seg = (typeof SEGS)[number];
 const inSeg = (r: OfferListRow, seg: Seg): boolean => {
   if (seg === 'coupons') return r.source === 'coupon' || !!r.code;
@@ -43,6 +47,8 @@ const inSeg = (r: OfferListRow, seg: Seg): boolean => {
   if (seg === 'ship') return r.kind === 'FREE_DELIVERY';
   if (seg === 'online') return r.source === 'reward';
   if (seg === 'points') return r.kind === 'POINTS' || r.kind === 'WALLET_CREDIT' || r.source === 'points' || r.source === 'wallet';
+  if (seg === 'abandoned') return false; // no offer is tied to an abandoned cart yet, so the chip counts none
+  if (seg === 'first') return r.firstOrderOnly === true;
   return true;
 };
 type Form = {
@@ -152,6 +158,17 @@ export function OffersScreen(props: OffersScreenProps) {
   const running = screen.rows.filter((r) => r.state === 'LIVE').length;
   const best = [...screen.rows].filter((r) => r.results && r.results.orders > 0).sort((a, b) => (b.results?.salesMinor ?? 0) - (a.results?.salesMinor ?? 0))[0];
 
+  const calendar = useMemo(
+    () =>
+      calendarOf(
+        screen.rows.filter((r) => (r.state === 'LIVE' || r.state === 'SCHEDULED') && (r.startsAt || r.endsAt)).map((r) => ({ id: r.id, name: nameOf(r), startsAt: r.startsAt, endsAt: r.endsAt, scheduled: r.state === 'SCHEDULED' })),
+        new Date(),
+        (x) => x.toLocaleDateString(lang === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' }),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [screen.rows, lang],
+  );
+
   // ------------------------------------------------------------------ the wizard's form <-> an offer
   const toInput = (f: Form): OfferInput => {
     const m = (s: string) => {
@@ -242,6 +259,7 @@ export function OffersScreen(props: OffersScreenProps) {
       setStep={setStep}
       set={(patch) => setWizard((x) => (x ? { ...x, ...patch } : x))}
       tt={tt}
+      lf={lf}
       scopes={props.scopes}
       lang={lang}
       toInput={toInput}
@@ -257,19 +275,36 @@ export function OffersScreen(props: OffersScreenProps) {
     <div className="rh of">
       <PageHead view={{ dict: props.dict }} place={locateKey('rulesOffers')} title={lf('title')} sub={lf('sub')} right={
         perms.write ? (
-        <button
-          type="button"
-          className="ad-btn ad-btn-primary ad-btn-sm"
-          onClick={() => {
-            setWizard({ ...BLANK });
-            setStep(0);
-          }}
-        >
-          <Icon name="plus" size={15} /> {tt('new')}
-        </button>
+        <>
+          <Link className="ad-btn ad-btn-sm" href="/admin/rules/smart" data-testid="of-sale">
+            <Icon name="plus" size={15} /> {lf('btnSale')}
+          </Link>
+          <button
+            type="button"
+            className="ad-btn ad-btn-sm"
+            data-testid="of-quick"
+            onClick={() => {
+              setWizard({ ...BLANK });
+              setStep(1);
+            }}
+          >
+            <Icon name="plus" size={15} /> {lf('btnCoupon')}
+          </button>
+          <button
+            type="button"
+            className="ad-btn ad-btn-primary ad-btn-sm"
+            data-testid="of-new"
+            onClick={() => {
+              setWizard({ ...BLANK });
+              setStep(0);
+            }}
+          >
+            <Icon name="plus" size={15} /> {tt('new')}
+          </button>
+        </>
       ) : null
       } />
-      <div className="of-kpis">
+      <div className="of-kpis" data-testid="of-kpis">
         <div className="of-kpi">
           <span>{lf('kActive')}</span>
           <b>{running}</b>
@@ -285,15 +320,32 @@ export function OffersScreen(props: OffersScreenProps) {
           <b>{money(screen.discount30.discountMinor)}</b>
           <small>{lf('k30')}</small>
         </div>
-        <div className="of-kpi">
-          <span>{tt('kpi.awaiting')}</span>
-          <b>{screen.awaiting}</b>
+        <div className="of-kpi" data-testid="of-k-sales">
+          <span>{lf('kSales')}</span>
+          <b>{money(screen.discount30.salesMinor ?? 0)}</b>
+          <small>{best ? lf('kBest', { name: nameOf(best) }) : lf('k30')}</small>
         </div>
-        <div className="of-kpi">
-          <span>{tt('kpi.best')}</span>
-          <b>{best ? nameOf(best) : '—'}</b>
-          {best?.results ? <small>{money(best.results.salesMinor)}</small> : null}
+        <div className="of-kpi" data-testid="of-k-margin">
+          <span>{lf('kMargin')}</span>
+          <b>{screen.discount30.marginPct == null ? '—' : `${screen.discount30.marginPct}%`}</b>
+          <small>{screen.discount30.marginPct == null ? lf('kMarginNone') : lf('kMarginSub')}</small>
         </div>
+        <div className="of-kpi" data-testid="of-k-roi">
+          <span>{lf('kRoi')}</span>
+          <b>{screen.discount30.profitMinor == null || !screen.discount30.discountMinor ? '—' : `${symbolOf(cur)}${(screen.discount30.profitMinor / screen.discount30.discountMinor).toFixed(1)}`}</b>
+          <small>{lf('kRoiSub', { cur: symbolOf(cur) })}</small>
+        </div>
+      </div>
+      <AwaitingCard
+        title={lf('aw.title')}
+        sub={lf('aw.sub')}
+        review={lf('aw.review')}
+        items={screen.rows.filter((r) => r.state === 'AWAITING_OK' && r.offerId).map((r) => ({ id: r.offerId as string, name: nameOf(r), line: `${valueText(r)}${r.startsAt || r.endsAt ? ` · ${date(r.startsAt) || tt('now')} – ${date(r.endsAt) || tt('noEnd')}` : ''}` }))}
+        onReview={(id) => void openDetail(id)}
+      />
+      <div className="of-top a2-mt12">
+        <HeadsUp title={lf('hd.title')} sub={lf('hd.sub')} none={lf('hd.none')} open={lf('hd.open')} items={props.heads ?? []} />
+        <OfferCalendar title={lf('cal.title')} sub={lf('cal.sub')} none={lf('cal.none')} {...calendar} />
       </div>
       <div className="of-tabs of-segs" data-testid="of-segs">
         {SEGS.map((x) => (
@@ -511,6 +563,7 @@ function Wizard({
   setStep,
   set,
   tt,
+  lf,
   scopes,
   lang,
   toInput,
@@ -525,6 +578,7 @@ function Wizard({
   setStep: StepFn;
   set: SetFn;
   tt: TFn;
+  lf: TFn;
   scopes: ScopeOption[];
   lang: Lang;
   toInput: ToInputFn;
@@ -587,6 +641,7 @@ function Wizard({
       <div className="rh-fields">
         {s === 'type' ? (
           <>
+            <p className="rh-hint">{lf('wz.type')}</p>
             <div className="of-kinds" role="radiogroup" aria-label={tt('step.type')}>
               {OFFER_KINDS.map((k) => (
                 <button
@@ -637,11 +692,13 @@ function Wizard({
               </>
             ) : null}
             {f.kind === 'FLAT' ? field('amount', tt('value.amount'), f.amountMinor, (v) => set({ amountMinor: v })) : null}
-            {f.kind === 'POINTS' ? field('points', tt('value.points'), f.points, (v) => set({ points: v })) : null}
-            {f.kind === 'WALLET_CREDIT' ? field('credit', tt('value.credit'), f.creditMinor, (v) => set({ creditMinor: v })) : null}
+            {f.kind === 'POINTS' ? field('points', tt('value.points'), f.points, (v) => set({ points: v }), lf('wz.pointsHint')) : null}
+            {f.kind === 'WALLET_CREDIT' ? field('credit', tt('value.credit'), f.creditMinor, (v) => set({ creditMinor: v }), lf('wz.credit')) : null}
             {f.kind === 'FREE_DELIVERY' ? <p className="rh-hint">{tt('value.freeDelivery')}</p> : null}
           </>
         ) : null}
+        {s === 'where' ? <p className="rh-hint">{lf('wz.where')}</p> : null}
+        {s === 'who' ? <p className="rh-hint">{lf('wz.who')}</p> : null}
         {s === 'where' ? (
           online ? (
             <p className="rh-hint">{tt('where.onlineAll')}</p>
