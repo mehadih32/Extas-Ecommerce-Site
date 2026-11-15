@@ -718,3 +718,23 @@
 .adm2 .a2-ph .a2-phr{flex-wrap:wrap}
 .adm2 .a2-btn.is-off{opacity:.55;cursor:not-allowed}
 @media (max-width:767px){.adm2 .a2-ph .a2-phr .a2-btn{min-height:44px}}
+
+/* PR 730: Orders › All orders › Phone order (components/admin/orders/PhoneOrder.tsx) */
+.adm2 .po{display:flex;flex-direction:column;gap:14px}
+.adm2 .po-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.adm2 .po-f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.adm2 .po-wide{grid-column:1/-1}
+.adm2 .po .a2-inp,.adm2 .po .a2-btn{min-height:44px}
+.adm2 .po-found{display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto}
+.adm2 .po-prod{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--lm-ln);border-radius:var(--lm-r-ctl)}
+.adm2 .po-vars{display:flex;flex-wrap:wrap;gap:6px}
+.adm2 .po-var{height:auto;white-space:normal;text-align:left}
+.adm2 .po-lines{display:flex;flex-direction:column;gap:8px}
+.adm2 .po-line{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;padding:10px 12px;background:var(--lm-sf2);border-radius:var(--lm-r-ctl)}
+.adm2 .po-ln{display:flex;flex-direction:column;flex:1 1 160px;min-width:0;overflow-wrap:anywhere}
+.adm2 .po-q{display:flex;flex-direction:column;gap:2px;width:86px}
+.adm2 .po-sum{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--lm-ln);border-radius:var(--lm-r-ctl)}
+.adm2 .po-row{display:flex;justify-content:space-between;gap:10px}
+.adm2 .po-tot{font-size:16px;padding-top:6px;border-top:1px solid var(--lm-ln)}
+.adm2 .po-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+@media (max-width:599px){.adm2 .po-grid{grid-template-columns:minmax(0,1fr)}}
