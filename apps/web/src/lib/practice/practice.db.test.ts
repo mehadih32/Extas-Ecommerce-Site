@@ -518,8 +518,9 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     expect(struck).toBeGreaterThan(0);
     expect(await db.collection.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(7);
     expect(await db.collectionProduct.count({ where: { storeId: S } })).toBe(72);
-    expect(await db.combo.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(5);
-    expect(await db.comboItem.count({ where: { storeId: S } })).toBe(2 + 3 + 2 + 2 + 2);
+    // the demo has 5 combos; the hoodie + jogger set names two fleece styles the 72 do not hold, so it is left out (a combo needs every product)
+    expect(await db.combo.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(4);
+    expect(await db.comboItem.count({ where: { storeId: S } })).toBe(2 + 3 + 2 + 2);
     expect(await db.blogPost.count({ where: { storeId: S, slug: { startsWith: 'practice-' } } })).toBe(12);
     // before the switch shows them they are all hidden
     expect(await db.combo.count({ where: { storeId: S, status: 'RUNNING' } })).toBe(0);
