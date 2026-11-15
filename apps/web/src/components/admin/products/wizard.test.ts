@@ -34,4 +34,14 @@ describe('add-product wizard (PR 685)', () => {
     expect(Object.keys(bn).sort()).toEqual(Object.keys(en).sort());
     expect(JSON.stringify(bn)).not.toMatch(/[০-৯]/);
   });
+  it('uses the prototype step names and has the progress, head and check-list words in both languages (PR 830)', () => {
+    expect(en.s.start.name).toBe('Pick from ERP');
+    expect(en.s.publish.name).toBe('Check & publish');
+    for (const k of ['prog', 'left', 'saved', 'cart', 'next', 'back']) {
+      expect(en[k], `en ${k}`).toBeTruthy();
+      expect(bn[k], `bn ${k}`).toBeTruthy();
+    }
+    for (const k of ['quick', 'again', 'sub']) expect(bn.head[k], `bn head.${k}`).toBeTruthy();
+    expect(Object.keys(bn.ck).sort()).toEqual(Object.keys(en.ck).sort());
+  });
 });

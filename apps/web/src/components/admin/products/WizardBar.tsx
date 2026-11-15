@@ -26,6 +26,8 @@ export interface WizardBarProps {
   canWrite: boolean;
   /** The furthest step reached, for the links. */
   furthest: number;
+  /** The plain facts that say what is done (step 8's check list); absent on the start page. */
+  facts?: { variants: number; colours: number; sizes: number; photos: number; pricedVariants: number } | null;
   preview: {
     name: string;
     price: string | null;
@@ -55,8 +57,48 @@ export function WizardBar(p: WizardBarProps) {
     }
   };
 
+  // PR 830 (prototype v5): "n of 8 steps done · Left: …" with a bar, the head's two buttons and the check list at the end
+  const flags = KEYS.map((_, i) => (i === 0 ? !!p.productId : !!p.done[i - 1]));
+  const doneN = flags.filter(Boolean).length;
+  const left = KEYS.map((k, i) => (flags[i] || i === 7 ? null : t(d, `products.wiz.s.${k}.name`))).filter((x): x is string => !!x);
+  const f = p.facts;
+  const ck: [boolean, string][] = f
+    ? [
+        [f.variants > 0, t(d, 'products.wiz.ck.erp', { variants: String(f.variants) })],
+        [!!p.done[0], t(d, 'products.wiz.ck.basics')],
+        [f.colours > 0, t(d, 'products.wiz.ck.colours', { colours: String(f.colours), sizes: String(f.sizes) })],
+        [f.photos > 0, f.photos > 0 ? t(d, 'products.wiz.ck.photos', { photos: String(f.photos) }) : t(d, 'products.wiz.ck.photosNone')],
+        [f.variants > 0 && f.pricedVariants === f.variants, t(d, 'products.wiz.ck.price', { n: String(f.pricedVariants), total: String(f.variants) })],
+      ]
+    : [];
+
   return (
     <div className="wz" data-testid="wizard-bar" data-step={p.step}>
+      <div className="wz-head" data-testid="wizard-head">
+        <div className="wz-headt">
+          <p className="ad-sub">{t(d, 'products.wiz.head.sub')}</p>
+        </div>
+        <div className="wz-headb">
+          <Link className="a2-btn" href="/admin/products/import" data-testid="wizard-quick">
+            {t(d, 'products.wiz.head.quick')}
+          </Link>
+          <Link className="a2-btn" href="/admin/products/new" data-testid="wizard-again">
+            {t(d, 'products.wiz.head.again')}
+          </Link>
+        </div>
+      </div>
+      <div className="wz-top" data-testid="wizard-progress">
+        <div className="wz-prog">
+          <div className="ad-mini">
+            <b>{t(d, 'products.wiz.prog', { n: String(doneN) })}</b>
+            {left.length ? ` · ${t(d, 'products.wiz.left')}: ${left.join(', ')}` : ''}
+          </div>
+          <div className="wz-bar" role="progressbar" aria-valuemin={0} aria-valuemax={8} aria-valuenow={doneN}>
+            <i style={{ width: `${(doneN / 8) * 100}%` }} className={left.length ? 'warn' : 'good'} />
+          </div>
+        </div>
+        <span className="ad-mini">{t(d, 'products.wiz.saved')}</span>
+      </div>
       <ol className="wz-steps" aria-label={t(d, 'products.wiz.steps')}>
         {KEYS.map((k, i) => {
           const n = i + 1;
@@ -111,6 +153,17 @@ export function WizardBar(p: WizardBarProps) {
               </Link>
             </div>
           ) : null}
+          {p.step === 8 && f ? (
+            <div className="wz-ck-list" data-testid="wizard-check">
+              {ck.map(([ok, label]) => (
+                <div key={label} className={`wz-ck ${ok ? 'ok' : 'no'}`}>
+                  <span className="wz-ck-i" aria-hidden="true">{ok ? '✓' : '!'}</span>
+                  <span>{label}</span>
+                </div>
+              ))}
+              <p className="ad-mini">{t(d, 'products.wiz.ck.need')}</p>
+            </div>
+          ) : null}
           <p className="ad-mini">{t(d, 'products.wiz.saveNote')}</p>
         </div>
         {p.preview ? (
@@ -120,6 +173,7 @@ export function WizardBar(p: WizardBarProps) {
 
               <div className="wz-pn">{p.preview.name || t(d, 'products.wiz.noName')}</div>
               <div className="wz-pp">{p.preview.price ?? t(d, 'products.wiz.noPrice')}</div>
+              <button type="button" className="wz-cta" tabIndex={-1} aria-hidden="true">{t(d, 'products.wiz.cart')}</button>
               <div className="ad-mini">
                 {t(d, 'products.wiz.counts', {
                   photos: String(p.preview.photos),
