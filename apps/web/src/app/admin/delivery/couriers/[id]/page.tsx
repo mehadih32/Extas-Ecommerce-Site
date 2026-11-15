@@ -33,6 +33,8 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { paymentsDeps } from '@/lib/payments-api';
 import { shippingDeps } from '@/lib/shipping-api';
+import { deliverySettingCards } from '@/lib/delivery-settings-api';
+import { MakeDefaultButton } from '@/components/admin/delivery/MakeDefaultButton';
 import '@/app/admin/reports/delivery/report.css';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +43,7 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The sections, in the order the page shows them. */
-const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'claims', 'performance', 'messages', 'setup'] as const;
+const COURIER_SECTIONS = ['overview', 'parcels', 'money', 'payouts', 'performance', 'claims', 'messages', 'setup'] as const;
 type Section = (typeof COURIER_SECTIONS)[number];
 /** How many claims and parcels the Claims section lists. */
 const CLAIM_ROWS = 50;
@@ -83,6 +85,8 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
     throw e;
   }
   const c = detail.courier;
+  // PR 787 (prototype v5 parity): "Make default" in the page's head for a courier that is not the default
+  const defCard = !c.isDefault && (access.guard.permissions?.has('delivery.charges') ?? false) ? await deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }).then((x) => x['delivery.couriers']).catch(() => null) : null;
   const currency = await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID });
   const money = moneyOf(currency, view.locale);
   const m = (x: number) => formatMoney(x, money);
@@ -680,6 +684,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
           </Link>
         }
         title={c.name}
+        right={defCard ? <MakeDefaultButton courierId={c.id} version={defCard.version} value={defCard.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} /> : undefined}
         sub={
           <>
             {t(d, `courier.providers.${c.providerKey}`)} · {t(d, `ful.couriers.mode.${c.mode}`)}

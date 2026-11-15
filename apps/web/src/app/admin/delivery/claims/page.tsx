@@ -83,6 +83,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
   const kind = (pay.CLAIM_KINDS as readonly string[]).includes(one(sp.k) ?? '') ? (one(sp.k) as pay.ClaimKind) : '';
   const from = DAY_RE.test(one(sp.from) ?? '') ? one(sp.from)! : '';
   const to = DAY_RE.test(one(sp.to) ?? '') ? one(sp.to)! : '';
+  const search = (one(sp.q) ?? '').trim().slice(0, 100);
   const pageNo = Math.max(1, Number.parseInt(one(sp.page) ?? '1', 10) || 1);
   const range = (() => {
     try {
@@ -96,7 +97,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
   })();
   const href = (over: Record<string, string | number> = {}) => {
     const q = new URLSearchParams();
-    const all: Record<string, string | number> = { c: courier, s: status === 'all' ? '' : status, k: kind, from, to, page: 1, ...over };
+    const all: Record<string, string | number> = { c: courier, s: status === 'all' ? '' : status, k: kind, from, to, q: search, page: 1, ...over };
     for (const [k, v] of Object.entries(all)) if (String(v) !== '' && !(k === 'page' && Number(v) <= 1)) q.set(k, String(v));
     const qs = q.toString();
     return qs ? `${HERE}?${qs}` : HERE;
@@ -105,7 +106,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
   const who: pay.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const pd = await paymentsDeps(access.deps);
   const [o, claimsSwitch, card, toClaim] = await Promise.all([
-    pay.claimsOverview(pd, who, { ...(courier ? { courierAccountId: courier } : {}), status, ...(kind ? { kind } : {}), ...range, page: pageNo }),
+    pay.claimsOverview(pd, who, { ...(courier ? { courierAccountId: courier } : {}), status, ...(kind ? { kind } : {}), ...(search ? { search } : {}), ...range, page: pageNo }),
     access.deps.resolver.value('delivery.courier.claims', { storeId: MOTHER_STORE_ID }),
     claimsPageCard(access.deps, MOTHER_STORE_ID),
     pay.listClaims(pd, who, {}).then((l) => l.claimable).catch(() => []),
@@ -195,6 +196,10 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         <form className="a2-mt12" action={HERE} method="get" aria-label={co('f.label')} data-testid="claims-filter">
           <div className="cl-filter">
             <div className="a2-fld">
+              <label className="a2-lbl" htmlFor="cl-q">{co('f.search')}</label>
+              <input id="cl-q" name="q" type="search" className="a2-inp" defaultValue={search} placeholder={co('f.searchHint')} maxLength={100} data-testid="claims-search" />
+            </div>
+            <div className="a2-fld">
               <label className="a2-lbl" htmlFor="cl-c">{co('f.courier')}</label>
               <select id="cl-c" name="c" className="a2-sel" defaultValue={courier}>
                 <option value="">{co('f.allCouriers')}</option>
@@ -229,7 +234,7 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
               {status !== 'all' ? <input type="hidden" name="s" value={status} /> : null}
               <button type="submit" className="cl-go" data-testid="claims-show">{co('f.show')}</button>
               {courier ? <input type="hidden" name="c" value={courier} /> : null}
-              {courier || kind || from || to || status !== 'all' ? <Link href={HERE} className="cl-link" data-testid="claims-clear">{co('f.clear')}</Link> : null}
+              {courier || kind || from || to || search || status !== 'all' ? <Link href={HERE} className="cl-link" data-testid="claims-clear">{co('f.clear')}</Link> : null}
             </div>
           </div>
           <nav className="cl-chips" aria-label={co('f.status')} data-testid="claims-states">
@@ -466,9 +471,11 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
         )}
       </section>
 
-      <div className="a2-mt12">
+      {/* PR 787: the prototype has no options card; the two display sizes stay reachable, folded away */}
+      <details className="cl-opts a2-mt12" data-testid="claims-options-fold">
+        <summary className="a2-xs a2-mute">{opt('h')}</summary>
         <FieldsCard url="/api/admin/delivery/claims-overview/options" screen={{ key: card.key, value: { ...card.value }, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="claims-options" />
-      </div>
+      </details>
     </div>
   );
 }

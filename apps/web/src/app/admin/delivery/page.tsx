@@ -213,7 +213,8 @@ export default async function CouriersOverviewPage() {
                     <Link className="a2-btn sm pri" href={`/admin/delivery/couriers/${c.id}`} data-testid="courier-open">
                       {cr('ov.open360')}
                     </Link>
-                    {!c.isDefault && canSetDefault && defCard0 && connected(c) ? (
+                    {/* PR 787 (prototype parity): "Make default" is on every courier that is not the default (the setting itself still checks the choice) */}
+                    {!c.isDefault && canSetDefault && defCard0 ? (
                       <MakeDefaultButton courierId={c.id} version={defCard0.version} value={defCard0.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} />
                     ) : null}
                   </div>

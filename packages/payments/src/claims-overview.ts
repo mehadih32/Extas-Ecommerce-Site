@@ -29,6 +29,8 @@ export const claimsOverviewQuery = z
     /** The day a claim was raised: from (included) and to (not included). */
     from: z.date().optional(),
     to: z.date().optional(),
+    /** PR 787 (prototype v5 parity): a search for part of an order number, a courier's reference or the note; the figures stay the whole picture. */
+    search: z.string().trim().max(100).optional(),
     page: z.number().int().min(1).max(10_000).default(1),
   })
   .strict();
@@ -245,7 +247,13 @@ export async function claimsOverview(deps: PaymentsDeps, who: Who, query: unknow
     ...(q.kind ? { kind: q.kind } : {}),
     ...(q.from || q.to ? { createdAt: { ...(q.from ? { gte: q.from } : {}), ...(q.to ? { lt: q.to } : {}) } } : {}),
   };
-  const where: Prisma.CourierClaimWhereInput = { AND: [base, statusWhere(q.status)] };
+  const found = q.search
+    ? await deps.db.order.findMany({ where: { storeId, number: { contains: q.search, mode: 'insensitive' } }, select: { id: true }, take: 500 })
+    : [];
+  const searchWhere: Prisma.CourierClaimWhereInput = q.search
+    ? { OR: [{ orderId: { in: found.map((o) => o.id) } }, { courierRef: { contains: q.search, mode: 'insensitive' } }, { note: { contains: q.search, mode: 'insensitive' } }] }
+    : {};
+  const where: Prisma.CourierClaimWhereInput = { AND: [base, statusWhere(q.status), searchWhere] };
   const [lite, total] = await Promise.all([
     deps.db.courierClaim.findMany({ where: base, select: { courierAccountId: true, status: true, claimedMinor: true, settledMinor: true, deadlineAt: true }, take: OVERVIEW_SCAN, orderBy: { id: 'asc' } }),
     deps.db.courierClaim.count({ where }),
