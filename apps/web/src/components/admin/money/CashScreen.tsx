@@ -24,6 +24,10 @@ export interface CashScreenProps {
 const TYPES = ['CAPITAL', 'OWNER_TAKE', 'OTHER_IN', 'OTHER_OUT', 'TRANSFER'] as const;
 const IN_TYPES: readonly string[] = ['CAPITAL', 'OTHER_IN'];
 
+/** Movements shown at first, and added by each "Show more" (prototype v5 shows 60 and then 100 more). */
+const PAGE = 60; // hardcode-ok: the prototype's page size
+const MORE = 100; // hardcode-ok: as above
+
 const newKey = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `k${Date.now()}${Math.random().toString(16).slice(2)}`);
 
 export function CashScreen(p: CashScreenProps) {
@@ -37,7 +41,9 @@ export function CashScreen(p: CashScreenProps) {
     return v.startsWith('moneyCash.') ? k : v;
   };
   const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<'all' | 'in' | 'out'>('all');
+  const [acc, setAcc] = useState(''); // prototype v5: the account tiles filter the movements ('' = all accounts)
+  const [kindF, setKindF] = useState('');
+  const [shown, setShown] = useState(PAGE);
   const [open, setOpen] = useState<null | 'record' | 'reverse'>(null);
   const [kind, setKind] = useState<(typeof TYPES)[number]>('CAPITAL');
   const [account, setAccount] = useState(p.book.accounts.find((a) => !a.archived)?.key ?? 'cash');
@@ -53,11 +59,13 @@ export function CashScreen(p: CashScreenProps) {
   const live = p.book.accounts.filter((a) => !a.archived);
 
   const rows = p.book.entries.filter((e) => {
-    if (filter === 'in' && !(e.amountMinor > 0)) return false;
-    if (filter === 'out' && !(e.amountMinor < 0)) return false;
+    if (acc && e.accountKey !== acc) return false;
+    if (kindF && e.kind !== kindF) return false;
     const hay = `${kindName(e.kind)} ${accName.get(e.accountKey) ?? e.accountKey} ${e.note ?? ''}`.toLowerCase();
     return !q.trim() || hay.includes(q.trim().toLowerCase());
   });
+
+  const kinds = [...new Set(p.book.entries.map((e) => e.kind))];
 
   function close() {
     setOpen(null);
@@ -122,21 +130,18 @@ export function CashScreen(p: CashScreenProps) {
           {c('off')}
         </p>
       ) : null}
-      <section className="a2-card" aria-labelledby={`${id}-acc`}>
-        <h2 className="a2-h3" id={`${id}-acc`}>
-          {c('accounts.title')}
-        </h2>
-        <div className="w4-kpis a2-mt12">
-          {live.map((a) => (
-            <div key={a.key} className="w4-kpi" data-testid={`cash-acc-${a.key}`}>
-              <span className="a2-xs a2-mute">{accName.get(a.key)}</span>
-              <b>{m(a.balanceMinor)}</b>
-            </div>
-          ))}
-          <div className="w4-kpi" data-testid="cash-total">
+      <section className="a2-card" aria-label={c('accounts.title')}>
+        <div className="w4-kpis" data-testid="cash-accounts">
+          <button type="button" className={`w4-kpi cash-acc${acc === '' ? ' on' : ''}`} aria-pressed={acc === ''} onClick={() => setAcc('')} data-testid="cash-total">
             <span className="a2-xs a2-mute">{c('accounts.total')}</span>
             <b>{m(p.book.totalMinor)}</b>
-          </div>
+          </button>
+          {live.map((a) => (
+            <button key={a.key} type="button" className={`w4-kpi cash-acc${acc === a.key ? ' on' : ''}`} aria-pressed={acc === a.key} onClick={() => setAcc(a.key)} data-testid={`cash-acc-${a.key}`}>
+              <span className="a2-xs a2-mute">{accName.get(a.key)}</span>
+              <b>{m(a.balanceMinor)}</b>
+            </button>
+          ))}
         </div>
         <div className="w4-kpis a2-mt12">
           <div className="w4-kpi">
@@ -152,6 +157,7 @@ export function CashScreen(p: CashScreenProps) {
             </b>
           </div>
         </div>
+        <p className="a2-xs a2-mute a2-mt6">{c('month.note')}</p>
         <div className="a2-mt12 w4-row">
           <button type="button" className="a2-btn pri" disabled={!p.canRecord || !p.book.enabled} onClick={() => setOpen('record')} data-testid="cash-record">
             {c('record')}
@@ -190,11 +196,12 @@ export function CashScreen(p: CashScreenProps) {
         <h2 className="a2-h3" id={`${id}-all`}>
           {c('all.title')}
         </h2>
+        <p className="a2-cs">{c('all.sub')}</p>
         <div className="w4-row a2-mt12">
           <input className="a2-inp" value={q} placeholder={c('all.find')} aria-label={c('all.find')} onChange={(e) => setQ(e.target.value)} data-testid="cash-find" />
-          {(['all', 'in', 'out'] as const).map((f) => (
-            <button key={f} type="button" className={`a2-btn sm${filter === f ? ' pri' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>
-              {c(`all.${f}`)}
+          {['', ...kinds].map((k) => (
+            <button key={k || 'all'} type="button" className={`a2-btn sm${kindF === k ? ' pri' : ''}`} aria-pressed={kindF === k} onClick={() => setKindF(k)} data-testid={`cash-kind-${k || 'all'}`}>
+              {k ? kindName(k) : c('all.all')}
             </button>
           ))}
         </div>
@@ -206,19 +213,21 @@ export function CashScreen(p: CashScreenProps) {
                   <th>{c('col.day')}</th>
                   <th>{c('col.what')}</th>
                   <th>{c('col.account')}</th>
-                  <th className="w4-r">{c('col.amount')}</th>
+                  <th className="w4-r">{c('col.in')}</th>
+                  <th className="w4-r">{c('col.out')}</th>
                   <th className="w4-r">{c('col.balance')}</th>
                   <th>{c('col.note')}</th>
                   <th />
                 </tr>
               </thead>
               <tbody>
-                {rows.map((e) => (
+                {rows.slice(0, shown).map((e) => (
                   <tr key={e.id} className={e.reversed ? 'w4-struck' : ''}>
                     <td>{e.day}</td>
                     <td>{kindName(e.kind)}</td>
                     <td>{accName.get(e.accountKey) ?? e.accountKey}</td>
-                    <td className={`w4-r ${e.amountMinor < 0 ? 'w4-neg' : 'w4-pos'}`}>{m(e.amountMinor)}</td>
+                    <td className="w4-r w4-pos">{e.amountMinor > 0 ? m(e.amountMinor) : ''}</td>
+                    <td className="w4-r w4-neg">{e.amountMinor < 0 ? m(-e.amountMinor) : ''}</td>
                     <td className="w4-r">{m(e.balanceAfterMinor)}</td>
                     <td>{e.reversed ? c('col.reversed') : (e.reason ?? e.note ?? '')}</td>
                     <td>
@@ -243,6 +252,11 @@ export function CashScreen(p: CashScreenProps) {
         ) : (
           <p className="a2-cs a2-mt6">{c('all.empty')}</p>
         )}
+        {rows.length > shown ? (
+          <button type="button" className="a2-btn sm ghost a2-mt6" onClick={() => setShown(shown + MORE)} data-testid="cash-more">
+            {c('all.showMore', { n: rows.length - shown })}
+          </button>
+        ) : null}
         {p.book.more ? <p className="a2-xs a2-mute a2-mt6">{c('all.more')}</p> : null}
       </section>
 

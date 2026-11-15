@@ -381,7 +381,8 @@
       "act": {
         "targets": "Targets",
         "bank": "Bank / loan pack",
-        "dl": "Download / Print"
+        "dl": "Download / Print",
+        "close": "Month-end close sheet"
       }
     }
   }

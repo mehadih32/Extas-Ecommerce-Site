@@ -10,6 +10,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { BudgetsScreen } from '@/components/admin/money/BudgetsScreen';
 import { moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { adminDeps } from '@/lib/admin-auth';
 import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -68,7 +69,7 @@ export default async function BudgetsPage() {
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   return (
     <div className="a2-z" data-testid="budgets-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.budgets.title')} sub={t(view.dict, 'lf.fh.budgets.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.budgets.title')} sub={t(view.dict, 'lf.fh.budgets.sub')} right={<PrintButton label={t(view.dict, 'lf.mn.act.dl')} testId="cs-dl" />} />
       <SectionTabs view={view} current={KEY} />
       <BudgetsScreen dict={view.dict} lang={view.lang} money={moneyOf(currency, view.locale)} budgets={screen.budgets} snapshot={screen.snapshot} roles={screen.approvers.roles} canEdit={canEdit} />
     </div>

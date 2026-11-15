@@ -2,7 +2,7 @@
   "moneyCash": {
     "metaTitle": "Money in & out",
     "title": "Money in & out",
-    "sub": "Every account's balance and every movement: cash, bank, bKash, Nagad. A wrong entry is reversed, never edited.",
+    "sub": "Every taka that came in or went out, by account.",
     "off": "Recording in the cashbook is switched off in the settings. You can still see what is here.",
     "readOnly": "You can see the cashbook. Recording money needs the permission to record cash.",
     "accounts": {
@@ -11,7 +11,8 @@
     },
     "month": {
       "in": "Came in this month",
-      "out": "Went out this month"
+      "out": "Went out this month",
+      "note": "Transfers between your own accounts are not counted."
     },
     "record": "Record money",
     "reverse": "Reverse",
@@ -65,21 +66,25 @@
     },
     "all": {
       "title": "All movements",
-      "find": "Search movements",
+      "find": "Search movements…",
       "all": "All",
       "in": "In",
       "out": "Out",
       "empty": "Nothing recorded yet.",
-      "more": "Older movements are not shown."
+      "more": "Older movements are not shown.",
+      "sub": "Balance = that account after the movement. Newest first.",
+      "showMore": "Show more ({n})"
     },
     "col": {
-      "day": "Day",
+      "day": "Date",
       "what": "What",
       "account": "Account",
       "amount": "Amount",
-      "balance": "Balance after",
+      "balance": "Balance",
       "note": "Note",
-      "reversed": "Reversed"
+      "reversed": "Reversed",
+      "in": "In",
+      "out": "Out"
     },
     "err": {
       "forbidden": "You do not have permission for this.",
