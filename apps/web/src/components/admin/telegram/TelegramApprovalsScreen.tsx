@@ -87,6 +87,7 @@ export function TelegramApprovalsScreen(p: TelegramApprovalsScreenProps) {
 
       <section className="a2-card a2-mt12" aria-labelledby={`${id}-s`} data-testid="telegram-settings">
         <h2 className="a2-h3" id={`${id}-s`}>{c('card.title')}</h2>
+        <p className="a2-xs a2-mute">{c('card.subtitle')}</p>
         <label className="a2-chkl s28-row a2-mt6"><input type="checkbox" checked={on} onChange={(e) => setOn(e.target.checked)} data-testid="telegram-on" /> <b>{c('card.on')}</b></label>
         <p className="a2-xs a2-mute">{c('card.help')}</p>
         <div className="s28-list a2-mt6">
