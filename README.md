@@ -13,7 +13,7 @@ documents to it ([how](#how-it-is-built)).
 |---|---|
 | **The shop** | **extas.com.bd** — the one domain, open to everyone and to search engines. Every merge to `main` deploys here by itself. The owner signs in at **extas.com.bd/access**. ~~Preview: new.extas.com.bd, password-protected and `noindex`~~ (retired 14 Nov, CN-051; the owner deletes the Cloudflare `new` record). |
 | **The old shop** | ~~extas.com.bd (WordPress) stays live and untouched until go-live day.~~ The main domain was switched on 11 Nov 2026 (CN-038). The 45 old WordPress addresses answer 301 to their new twins since 15 Nov 2026 (CN-053; the owner switched the map on; `/shop` and `/contact` were dropped on purpose). ~~On 14 Nov they answered 404 (the redirect switch was off, PR 587 open).~~ |
-| **Specification** | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) (V2.1 final + change notes) · [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) (~~653 PRs, 28 stages~~ 730 PRs, 29 stages) · UI truth: [`docs/demo/EXTAS-demo-V12.2.html`](docs/demo/EXTAS-demo-V12.2.html) (V12.1 and V12 kept as history) |
+| **Specification** | [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) (V2.1 final + change notes) · [`docs/MASTER-REGISTER.md`](docs/MASTER-REGISTER.md) (~~653 PRs, 28 stages~~ ~~728 PRs, 29 stages~~ 755 PRs, 30 stages) · UI truth: [`docs/demo/EXTAS-demo-V12.2.html`](docs/demo/EXTAS-demo-V12.2.html) (V12.1 and V12 kept as history) |
 | **Every session starts with** | [`CLAUDE.md`](CLAUDE.md) → [`docs/START-HERE.md`](docs/START-HERE.md) → [`PROGRESS.md`](PROGRESS.md) and [`BLOCKED.md`](BLOCKED.md) |
 
 **Contents:** [Status](#status-dashboard) · [How it is built](#how-it-is-built) ·
@@ -112,6 +112,7 @@ owner's word (handover pack) · **Closed (owner, 6 Nov)** = closed until the own
 | [S26](docs/stages/S26.md) | [Installation, documentation & distribution](docs/stages/S26.md) | [—](docs/stages/README.md#parked) | [513–518](docs/stages/S26.md) | — / 6 | **Parked** (handover pack) · **Closed (owner, 6 Nov)** |
 | [S27](docs/stages/S27.md) | [No-ERP stock module](docs/stages/S27.md) | [—](docs/stages/README.md#parked) | not numbered yet | — | **Parked** (handover pack) · **Closed (owner, 6 Nov)** |
 | [S28](docs/stages/S28.md) | [Admin v5 (prototype alignment)](docs/stages/S28.md) | [9](docs/stages/README.md#wave-9) | [659–763](docs/stages/S28.md) | 72 / 72 | **Done** (15 Nov 2026; PR 709, 710 filed 14 Nov, CN-051; 719–728 and 762–763 15 Nov) |
+| [S29](docs/stages/S29.md) | [Geography map (Reports)](docs/stages/S29.md) | [—](docs/stages/README.md#parked) | [750–755](docs/stages/S29.md) | — / 6 | **Parked** (Reports › Geography map, CN-054, 15 Nov 2026; built only on the owner's word) |
 | | **Total** | | **730 PRs** | **697 / 720 active** | 9 parked · 1 cancelled (PR 646) · to build 0 · not built: S17 (23 closed) |
 
 > যেকোনো স্টেজ বা PR নম্বরে ক্লিক করলে তার বাংলা সারাংশ আর পুরো বিস্তারিত দেখবেন — [সব স্টেজ আর wave এক পাতায়](docs/stages/README.md)।
@@ -4206,6 +4207,10 @@ Parked — register PRs 513–518, built only when the owner hands the system to
 ### S27 · No-ERP stock module — Parked
 
 Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
+
+### S29 · Geography map (Reports) — Parked
+
+Planned. Parked — register PRs 750–755, built only when the owner says "build the geography map" (light version: 750–753). Plan in Bengali: [`docs/reports/2026-11-15-geo-map-plan.md`](docs/reports/2026-11-15-geo-map-plan.md); [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
 
 ### S28 · Admin v5 (prototype alignment) — Done (75/75)
 
