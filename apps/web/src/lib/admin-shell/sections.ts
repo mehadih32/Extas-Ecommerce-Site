@@ -632,6 +632,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'store', guide: 'settings', pages: [{ href: '/admin/settings/store', perm: 'settings.read', keys: ['store'] }] },
       // S18 · PR 384 — SET-03 Policies & texts: the help pages' switches, rules and the owner's words.
       { id: 'policies', guide: 'settings', pages: [{ href: '/admin/settings/policies', perm: 'settings.read', keys: ['policies'] }] },
+      // PR 748/749 — Checkout: the payment ways, Cash on Delivery (owner only), the numbers customers pay to, and the details form.
+      { id: 'checkout', guide: 'settings', pages: [{ href: '/admin/settings/checkout', perm: 'settings.read', keys: ['settingsCheckout'] }] },
       // S28 · PR 706 (CN-049) — Practice data: the switch, the sample data and the reset (owner only inside the page).
       { id: 'practice', guide: 'settings', pages: [{ href: '/admin/settings/practice', perm: 'settings.write', keys: ['practice'] }] },
       { id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] },

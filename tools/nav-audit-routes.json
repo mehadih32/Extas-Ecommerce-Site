@@ -2022,6 +2022,18 @@
     ]
    },
    {
+    "id": "checkout",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/checkout",
+      "keys": [
+       "settingsCheckout"
+      ]
+     }
+    ]
+   },
+   {
     "id": "practice",
     "more": true,
     "pages": [
