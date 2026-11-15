@@ -18,6 +18,10 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { calendarOverview } from '@/lib/marketing/calendar';
 import { campaignList } from '@/lib/marketing/campaigns';
+import { marketingOverview } from '@/lib/marketing/overview';
+import { AdCampaigns } from '@/components/admin/lane-f/AdCampaigns';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { periodKey } from '@/lib/lane-f/period';
 import calBn from '../../../../../messages/admin-calendar.bn.json';
 import calEn from '../../../../../messages/admin-calendar.en.json';
 import bn from '../../../../../messages/admin-campaigns.bn.json';
@@ -34,7 +38,7 @@ const KEY = 'marketingCampaigns';
 const VIEWS = ['all', 'running', 'planned', 'ended', 'archived'] as const;
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? calBn : calEn) as unknown as Dict), ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? calBn : calEn) as unknown as Dict), ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -42,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'cp.metaTitle'), robots: { index: false, follow: false } };
 }
 
-type Props = { searchParams: Promise<{ v?: string }> };
+type Props = { searchParams: Promise<{ v?: string; period?: string; chip?: string; q?: string; sort?: string }> };
 
 export default async function CampaignsPage(props: Props) {
   const deps = adminDeps();
@@ -58,6 +62,9 @@ export default async function CampaignsPage(props: Props) {
       </div>
     );
   const s = (k: string, vars?: Record<string, string | number>) => t(d, `cp.${k}`, vars);
+  const period = periodKey(sp.period);
+  const chip = ['META', 'GOOGLE', 'YOUTUBE', 'TIKTOK', 'action'].includes(sp.chip ?? '') ? (sp.chip as string) : 'all';
+  const overview = await marketingOverview(access.deps, period);
   const num = (n: number) => formatNumber(n, view.locale);
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
   const v = (VIEWS as readonly string[]).includes(sp.v ?? '') ? (sp.v as (typeof VIEWS)[number]) : 'all';
@@ -81,8 +88,8 @@ export default async function CampaignsPage(props: Props) {
       <PageHead
         view={view}
         place={locateKey(KEY)}
-        title={s('title')}
-        sub={s('sub')}
+        title={t(d, 'lf.ac.title')}
+        sub={t(d, 'lf.ac.sub')}
         right={
           canWrite ? (
             <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="cp-create">
@@ -92,6 +99,10 @@ export default async function CampaignsPage(props: Props) {
         }
       />
       <SectionTabs view={view} current={KEY} />
+      <AdCampaigns d={d} here={HERE} o={overview} period={period} chip={chip} q={(sp.q ?? '').trim().slice(0, 60)} sort={sp.sort === 'per' ? 'per' : 'spend'} />
+      <h2 className="a2-h3 a2-mt12" data-testid="cp-plans-h">
+        {t(d, 'lf.ac.plans')}
+      </h2>
       <div className="a2-note a2-mt12" role="note">
         {s('planNote')}
       </div>

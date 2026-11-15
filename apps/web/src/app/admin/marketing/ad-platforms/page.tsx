@@ -26,6 +26,7 @@ import { AdCampaignControl, AdControlDecide, type ControlTexts } from '@/compone
 import { CampaignExtra, type CampaignExtraTexts } from '@/components/admin/marketing/AdCampaignBuilder';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -59,7 +60,7 @@ const GUARDRAILS_PAGE = '/admin/marketing/ad-platforms/guardrails';
 const KEY = 'marketingAdPlatforms';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -216,7 +217,7 @@ export default async function AdPlatformsPage() {
 
   return (
     <div className="a2-z" data-testid="adp-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.tl.title')} sub={t(d, 'lf.tl.sub')} />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note" role="note">
         <span>{s('readOnlyNote')}</span>
