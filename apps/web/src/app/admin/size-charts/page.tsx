@@ -86,9 +86,31 @@ export default async function SizeChartsPage() {
     })),
   }));
   const dict = view.dict;
+  // PR 788 (prototype v5 parity): the figures and the "no default chart" note above the charts
+  const cats = flatten(tree, lang, sep);
+  const live = charts.filter((c) => !c.archived);
+  const withDefault = new Set(live.flatMap((c) => c.defaultFor.map((x) => x.id)));
+  const missing = cats.filter((c) => !withDefault.has(c.id));
+  const num = new Intl.NumberFormat(view.locale, { numberingSystem: 'latn' });
+  const figs: [string, string][] = [
+    [t(dict, 'sizeCharts.k.saved'), num.format(live.length)],
+    [t(dict, 'sizeCharts.k.defaults'), `${num.format(cats.length - missing.length)}/${num.format(cats.length)}`],
+    [t(dict, 'sizeCharts.k.used'), num.format(live.reduce((n, c) => n + c.usedBy, 0))],
+  ];
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
       <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'sizeCharts.title')} sub={t(dict, 'sizeCharts.intro')} />
+      <div className="a2-kpis a2-mt12" data-testid="sizecharts-kpis">
+        {figs.map(([label, value]) => (
+          <div key={label} className="a2-card a2-kpi">
+            <div className="a2-kl">{label}</div>
+            <div className="a2-kv">{value}</div>
+          </div>
+        ))}
+      </div>
+      <div className={`a2-note a2-mt12${missing.length ? '' : ' ok'}`} role="note" data-testid="sizecharts-note">
+        {missing.length ? t(dict, missing.length > 1 ? 'sizeCharts.k.missingMany' : 'sizeCharts.k.missingOne', { names: missing.slice(0, 4).map((c) => c.name).join(', ') }) : t(dict, 'sizeCharts.k.allSet')}
+      </div>
       <SizeCharts
         dict={dict}
         lang={lang}

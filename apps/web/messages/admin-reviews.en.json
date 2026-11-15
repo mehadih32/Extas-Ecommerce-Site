@@ -1,6 +1,6 @@
 {
   "rev": {
-    "title": "Reviews",
+    "title": "Reviews & questions",
     "sub": "Answer questions, publish reviews and turn good answers into FAQs.",
     "readOnly": "You can read reviews here; publishing or hiding needs the \"Check reviews\" permission.",
     "kpi": {
@@ -137,7 +137,8 @@
         "DUPLICATE": "already imported"
       },
       "cols": "product, rating, name, title, body, written, size, colour"
-    }
+    },
+    "callout": "Bad reviews are never deleted. You can only hide spam or abuse, with a reason. A short, kind reply works better than hiding."
   },
   "revq": {
     "title": "Questions",

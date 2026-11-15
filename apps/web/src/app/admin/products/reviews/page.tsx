@@ -138,7 +138,11 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
           </div>
         ))}
       </div>
-      <section className="a2-card" data-testid="review-requests">
+      {/* PR 788 (prototype v5 parity): the rule the prototype states under the figures */}
+      <div className="a2-note" role="note" data-testid="review-callout">
+        {t(d, 'rev.callout')}
+      </div>
+      <section className="a2-card a2-mt12" data-testid="review-requests">
         <h2 className="a2-h3">{t(d, 'rev.req.title')}</h2>
         <p className="a2-sm">{rq.asked ? t(d, 'rev.req.line', { days: n(rq.days), asked: n(rq.asked), answered: n(rq.answered), pct: pct(rq.answered, rq.asked), photo: n(rq.withPhoto) }) : t(d, 'rev.req.none', { days: n(rq.days) })}</p>
         {rq.byChannel.length ? (

@@ -123,5 +123,13 @@
     "UNKNOWN_KEY": "Something is not in the shop's lists: {fields}",
     "PARENT_ARCHIVED": "Something it needs is archived: {fields}",
     "NOT_FOUND": "This was not found — reload the page."
+  },
+  "k": {
+    "saved": "Saved charts",
+    "defaults": "Categories with a default",
+    "used": "Products using a chart",
+    "missingOne": "{names} has no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
+    "missingMany": "{names} have no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
+    "allSet": "Every category has a default size chart."
   }
 }
