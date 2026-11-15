@@ -25,11 +25,29 @@
       "aov": "How big is an average order?",
       "discount": "How much did we give in discounts?",
       "restock": "What should I restock now?",
-      "unsold": "What is sitting unsold?"
+      "unsold": "What is sitting unsold?",
+      "chprofit": "Which channel earns the most profit?",
+      "best": "What is the best seller?",
+      "repeat": "Do customers come back?",
+      "newc": "How many new customers did we get?",
+      "checkoutj": "Checkout journey (incomplete orders)",
+      "returns": "How many parcels come back?",
+      "why": "Why do parcels come back?",
+      "courierrep": "Courier report",
+      "roas": "Do our ads pay back?",
+      "ads": "How much did ads cost?",
+      "toparea": "Where do most orders come from?",
+      "badarea": "Which area returns the most?",
+      "confirmtime": "How fast do we confirm new orders?"
     },
     "groups": {
       "sales": "Sales & profit",
-      "products": "Products & stock"
+      "products": "Products & stock",
+      "customers": "Customers",
+      "delivery": "Delivery & returns",
+      "marketing": "Marketing",
+      "areas": "Areas",
+      "team": "Team"
     },
     "unitStyles": "{n} styles",
     "unknown": "Not known yet",
@@ -167,6 +185,35 @@
         "forbidden": "You may not change this.",
         "failed": "It was not saved. Try again."
       }
-    }
+    },
+    "line": {
+      "subSales": "{orders} orders · {pieces} pieces",
+      "subProfit": "{margin}% of sales · same as Finance",
+      "subProfitUnknown": "Not known yet: the ad spend is missing",
+      "subChProfit": "{profit} profit before ads",
+      "subAov": "{pieces} pieces per order",
+      "subRestock": "still selling, a size runs out soon",
+      "subBest": "{qty} pieces · {value}",
+      "subDead": "no sale in this period, plenty in stock",
+      "subRepeat": "ordered more than once, all time",
+      "subNewc": "first order in this period",
+      "subCheckoutj": "where visitors stop in checkout, and what to do",
+      "subReturns": "{n} parcels returned",
+      "subWhy": "{n} parcels",
+      "subCourier": "best success: {pct}% of {n} parcels · every courier compared",
+      "subRoas": "delivered sales per ৳1 of marketing",
+      "subAds": "all ad platforms",
+      "subTopArea": "{value} order value · {pct}% of all",
+      "subBadArea": "{pct}% of {n} parcels",
+      "subConfirm": "order placed → call done"
+    },
+    "val": {
+      "products": "{n} products",
+      "hours": "{n} h",
+      "open": "{n} open"
+    },
+    "pinnedN": "Pinned to Home ({n})",
+    "open": "Open the report",
+    "footerNote": "Money and the books (profit & loss statement, expenses, COD with couriers) are in Finance. Visitors and the website funnel are in Website › Analytics."
   }
 }

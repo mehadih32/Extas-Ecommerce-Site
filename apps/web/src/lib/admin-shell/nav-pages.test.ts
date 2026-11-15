@@ -21,7 +21,7 @@ const SRC = resolve(__dirname, '../..');
 const APP = join(SRC, 'app');
 
 /** Pages that only redirect (no screen of their own), so they draw no bar. */
-const REDIRECT_ONLY = ['/admin/delivery/courier-360', '/admin/money/couriers', '/admin/reports/couriers'];
+const REDIRECT_ONLY = ['/admin/delivery/courier-360', '/admin/money/couriers'];
 /** Pages in a section that is opened from another's tab: the bar of the key is the tab the person came from (`?from=`). */
 /** Pages that no menu tab lists (the map of all pages). */
 const NOT_IN_MENU = ['/admin/map'];

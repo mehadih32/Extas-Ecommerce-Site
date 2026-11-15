@@ -27,7 +27,8 @@ export interface STRow {
   /** One sort value per column. */
   sort: (number | string)[];
   href?: string;
-  drawer?: { title: string; sub?: string; items: STDrawerItem[]; empty: string };
+  /** `body` (PR 799) is a figure block above the list; `foot` a link row under it; a drawer with a `body` and no items shows no "empty" line. */
+  drawer?: { title: string; sub?: string; items: STDrawerItem[]; empty: string; body?: ReactNode; foot?: ReactNode };
 }
 
 export interface STTexts {
@@ -101,7 +102,8 @@ export function SortTable({ cols, rows, sortCol = 0, sortDir = 'desc', limit = 1
         </button>
       ) : null}
       {open?.drawer ? (
-        <Drawer title={open.drawer.title} sub={open.drawer.sub} closeLabel={texts.close} onClose={() => setOpen(null)} testId={`${testId}-drawer`}>
+        <Drawer title={open.drawer.title} sub={open.drawer.sub} closeLabel={texts.close} onClose={() => setOpen(null)} foot={open.drawer.foot} testId={`${testId}-drawer`}>
+          {open.drawer.body}
           {open.drawer.items.length ? (
             <ul className="cr-rows">
               {open.drawer.items.map((x, i) => (
@@ -120,7 +122,7 @@ export function SortTable({ cols, rows, sortCol = 0, sortDir = 'desc', limit = 1
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : open.drawer.body ? null : (
             <p className="a2-sm a2-mute">{open.drawer.empty}</p>
           )}
         </Drawer>

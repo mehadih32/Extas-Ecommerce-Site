@@ -5,6 +5,7 @@
 // library.*.json (`reportsLibrary.*`). Read-only reports: nothing here moves money.
 // S28 · PR 689 follow-up: the period bar also has 6 months and your own dates, with Excel / PDF / Print of the report on the screen,
 // and Downloads & report packs (DownloadsPanel) holds every file of Reports in one place.
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import type { LibraryCard, ReviewFacts } from '@/lib/report-library-api';
@@ -13,6 +14,7 @@ import { fileUrl } from '@/lib/report-file-links';
 import { call } from '../api';
 import { DownloadsPanel, printPdf } from './DownloadsPanel';
 import { showToast } from '../lumen/Toast';
+import './library-cards.css';
 import { formatMoney, type Money } from '../products/model';
 
 const PRESETS = ['today', 'last7', 'last30', 'month', 'lastmonth', 'last6m'] as const;
@@ -39,6 +41,8 @@ export interface LibraryScreenProps {
   review: ReviewFacts;
   views: { id: string; name: string; params: { preset: Preset; compare: boolean; filters?: Record<string, string> } }[];
   pins: string[];
+  /** PR 799: the question cards in the prototype's groups, already worded by the page. */
+  groups: { id: string; title: string; cards: { id: string; q: string; v: string; d: { text: string; tone: 'good' | 'bad' } | null; s: string; href: string; small: boolean }[] }[];
   /** The admin's language (the files speak it). */
   lang: string;
 }
@@ -86,25 +90,26 @@ export function LibraryScreen(p: LibraryScreenProps) {
     setSaid(err(a.status, (a.data as { error?: string }).error));
   }
 
-  const value = (k: LibraryCard) => (k.now === null ? c('unknown') : k.kind === 'money' ? m(k.now) : k.id === 'restock' || k.id === 'unsold' ? c('unitStyles', { n: k.now }) : String(k.now));
-  const delta = (k: LibraryCard) => {
-    if (!p.compare || k.change === null) return null;
-    return <span className={`a2-xs ${k.change >= 0 ? 'w4-pos' : 'w4-neg'}`}>{k.change >= 0 ? c('changeUp', { pct: k.change }) : c('changeDown', { pct: Math.abs(k.change) })}</span>;
-  };
-  const cardView = (k: LibraryCard) => {
+  type GCard = LibraryScreenProps['groups'][number]['cards'][number];
+  const cardView = (k: GCard) => {
     const pinned = p.pins.includes(k.id);
     return (
-      <div key={k.id} className="w4-kpi" data-testid={`lib-${k.id}`}>
-        <span className="a2-xs a2-mute">{c(`cards.${k.id}`)}</span>
-        <b>{value(k)}</b>
-        {delta(k)}
+      <div key={k.id} className="lc-card" data-testid={`lib-${k.id}`}>
+        <Link href={k.href} className="lc-link" data-testid={`lib-open-${k.id}`}>
+          <span className="lc-q">{k.q}</span>
+          <span className="lc-v">
+            <b className={k.small ? 'sm' : undefined}>{k.v}</b>
+            {k.d ? <span className={`lc-d ${k.d.tone}`}>{k.d.text}</span> : null}
+          </span>
+          <span className="lc-s">{k.s}</span>
+        </Link>
         <button type="button" className={`a2-btn sm${pinned ? ' pri' : ''}`} aria-pressed={pinned} onClick={() => pin(k.id, !pinned)} data-testid={`lib-pin-${k.id}`}>
           {pinned ? c('unpin') : c('pin')}
         </button>
       </div>
     );
   };
-  const pinnedCards = p.cards.filter((k) => p.pins.includes(k.id));
+  const pinnedCards = p.groups.flatMap((g) => g.cards).filter((k) => p.pins.includes(k.id));
   const peakWeekday = Math.max(1, ...p.time.weekday);
   const peakHour = Math.max(1, ...p.time.hour);
   const r = p.review;
@@ -174,15 +179,15 @@ export function LibraryScreen(p: LibraryScreenProps) {
 
       {pinnedCards.length ? (
         <section className="a2-card" data-testid="lib-pinned">
-          <h2 className="a2-h3">{c('pinned')}</h2>
-          <div className="w4-kpis a2-mt12">{pinnedCards.map(cardView)}</div>
+          <h2 className="a2-h3">{c('pinnedN', { n: pinnedCards.length })}</h2>
+          <div className="lc-grid a2-mt12">{pinnedCards.map(cardView)}</div>
         </section>
       ) : null}
 
-      {(['sales', 'products'] as const).map((g) => (
-        <section key={g} className="a2-card">
-          <h2 className="a2-h3">{c(`groups.${g}`)}</h2>
-          <div className="w4-kpis a2-mt12">{p.cards.filter((k) => k.group === g).map(cardView)}</div>
+      {p.groups.map((g) => (
+        <section key={g.id} className="a2-card" data-testid={`lib-group-${g.id}`}>
+          <h2 className="a2-h3">{g.title}</h2>
+          <div className="lc-grid a2-mt12">{g.cards.map(cardView)}</div>
         </section>
       ))}
 
@@ -279,6 +284,7 @@ export function LibraryScreen(p: LibraryScreenProps) {
           <p className="a2-cs a2-mt6">{c('views.empty')}</p>
         )}
       </section>
+      <p className="a2-xs a2-mute" data-testid="lib-footer">{c('footerNote')}</p>
     </div>
   );
 }

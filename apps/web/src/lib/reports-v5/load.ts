@@ -57,6 +57,8 @@ export interface ProfitData {
   channelsWas: ChannelProfit;
   categories: GroupProfit;
   styles: GroupProfit;
+  /** PR 799: the span before, by category (the delta beside each category's profit). */
+  categoriesWas: GroupProfit;
 }
 
 /** Reports › Profit: the period and the span before in Money › Profit & loss's own figure, by channel, category and style. */
@@ -64,15 +66,16 @@ export async function loadProfit(deps: AdminDeps, b: Base): Promise<ProfitData> 
   const { from, to } = b.period.q;
   const cur = { from, to };
   const was = { from: b.before.from, to: b.before.to };
-  const [now, wasP, channels, channelsWas, categories, styles] = await Promise.all([
+  const [now, wasP, channels, channelsWas, categories, styles, categoriesWas] = await Promise.all([
     profitReport(deps, S, from, to),
     profitReport(deps, S, was.from, was.to),
     channelProfitView(deps, S, cur, b.limits),
     channelProfitView(deps, S, was, b.limits),
     groupProfitView(deps, S, { ...cur, by: 'category' }, b.limits),
     groupProfitView(deps, S, { ...cur, by: 'style' }, b.limits),
+    groupProfitView(deps, S, { ...was, by: 'category' }, b.limits),
   ]);
-  return { now, was: wasP, channels: channels.report, channelsWas: channelsWas.report, categories: categories.report, styles: styles.report };
+  return { now, was: wasP, channels: channels.report, channelsWas: channelsWas.report, categories: categories.report, styles: styles.report, categoriesWas: categoriesWas.report };
 }
 
 export interface RestockLine {
@@ -155,6 +158,8 @@ export interface CouponUse {
   uses: number;
   discountMinor: number;
   orderMinor: number;
+  /** PR 839: the orders it was used on (newest first, at most 120), for the row's drawer. */
+  list: { id: string; number: string; day: string; totalMinor: number }[];
 }
 
 /** Coupons used in the period: uses, discount given and the value of the orders they were on (cancelled orders left out). */
@@ -163,17 +168,19 @@ export async function loadCouponUse(deps: AdminDeps, from: string, to: string): 
   const per = daysPeriod(from, to, tz);
   const rows = await deps.db.couponRedemption.findMany({
     where: { storeId: S, createdAt: { gte: per.from, lt: per.to } },
-    select: { couponId: true, discountMinor: true, coupon: { select: { code: true, enabled: true } }, orderId: true },
+    select: { couponId: true, discountMinor: true, coupon: { select: { code: true, enabled: true } }, orderId: true, createdAt: true },
   });
-  const orders = await deps.db.order.findMany({ where: { id: { in: rows.map((r) => r.orderId) }, status: { not: 'CANCELLED' } }, select: { id: true, totalMinor: true } });
+  const orders = await deps.db.order.findMany({ where: { id: { in: rows.map((r) => r.orderId) }, status: { not: 'CANCELLED' } }, select: { id: true, number: true, totalMinor: true } });
   const total = new Map(orders.map((o) => [o.id, o.totalMinor]));
+  const numberOf = new Map(orders.map((o) => [o.id, o.number]));
   const by = new Map<string, CouponUse>();
   for (const r of rows) {
     if (!total.has(r.orderId)) continue;
-    const x = by.get(r.couponId) ?? { id: r.couponId, code: r.coupon.code, enabled: r.coupon.enabled, uses: 0, discountMinor: 0, orderMinor: 0 }; // hardcode-ok: a running total starts empty
+    const x = by.get(r.couponId) ?? { id: r.couponId, code: r.coupon.code, enabled: r.coupon.enabled, uses: 0, discountMinor: 0, orderMinor: 0, list: [] }; // hardcode-ok: a running total starts empty
     x.uses += 1;
     x.discountMinor += r.discountMinor;
     x.orderMinor += total.get(r.orderId) ?? 0;
+    if (x.list.length < 120) x.list.push({ id: r.orderId, number: numberOf.get(r.orderId) ?? r.orderId, day: ymdIn(r.createdAt, tz), totalMinor: total.get(r.orderId) ?? 0 }); // hardcode-ok: the drawer's list length
     by.set(r.couponId, x);
   }
   return [...by.values()].sort((a, b) => b.uses - a.uses);

@@ -1,0 +1,14 @@
+/* PR 799 (prototype v5 .rep-lib / .rep-lc): the library's question cards, in groups. */
+.adm2 .lc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.adm2 .lc-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--lm-ln); border-radius: var(--lm-r-card); background: var(--lm-sf); min-width: 0; }
+.adm2 .lc-link { display: flex; flex-direction: column; gap: 4px; color: inherit; text-decoration: none; min-height: 44px; min-width: 0; }
+.adm2 .lc-link:hover .lc-q, .adm2 .lc-link:focus-visible .lc-q { color: var(--lm-ink); text-decoration: underline; }
+.adm2 .lc-q { font-size: 13px; color: var(--lm-mute); overflow-wrap: anywhere; }
+.adm2 .lc-v { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; min-width: 0; }
+.adm2 .lc-v b { font-size: 24px; line-height: 1.2; overflow-wrap: anywhere; }
+.adm2 .lc-v b.sm { font-size: 17px; }
+.adm2 .lc-d { font-size: 12px; white-space: nowrap; }
+.adm2 .lc-d.good { color: var(--lm-ok); }
+.adm2 .lc-d.bad { color: var(--lm-bad); }
+.adm2 .lc-s { font-size: 12px; color: var(--lm-mute); overflow-wrap: anywhere; }
+.adm2 .lc-card .a2-btn { align-self: flex-start; min-height: 44px; }
