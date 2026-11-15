@@ -73,3 +73,7 @@
 /* S16 · PR 568 — Reports → Sales by area: the map of the areas (circles sized by Sales, coloured by return rate). */
 .adm2 .ar-map{display:block;width:100%;height:auto;max-height:min(70vh,520px);margin-top:8px;background:var(--bg);border-radius:12px}
 .adm2 .ar-dot{fill-opacity:.72;stroke:var(--ink);stroke-opacity:.35;stroke-width:1}
+/* Parity round 3, lane F2 (PR 822): the account tiles of Money in & out are buttons that filter the movements. */
+.cash-acc{cursor:pointer;text-align:left;background:var(--lm-sf);color:inherit;font:inherit;min-height:44px}
+.cash-acc:hover{border-color:var(--lm-ac)}
+.cash-acc.on{border-color:var(--lm-ac);box-shadow:0 0 0 2px var(--lm-acbg)}
