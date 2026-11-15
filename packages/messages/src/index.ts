@@ -50,6 +50,7 @@ export * from './consent';
 export * from './costs';
 export * from './templates';
 export * from './email-html';
+export * from './email-look';
 export * from './email-track';
 export * from './follow-up';
 export * from './cart-recovery';

@@ -4,6 +4,8 @@
 // links written in the template (with `{link}`, the shop's home) are made clickable and counted: a link inside a
 // customer's name stays plain text, and the click counter only ever sends a person to one of the template's links (never
 // an open redirect). Every word is the owner's: the template and the unsubscribe line are settings.
+// PR 741: with the owner's look on (`email.look`, email-look.ts) the same parts sit inside it; off, nothing changes.
+import { lookLinkStyle, wrapWithLook, type EmailLookView } from './email-look';
 
 /** A link in an e-mail's words. */
 export const EMAIL_URL = /https?:\/\/[^\s<>"'`)\]]+/g;
@@ -41,6 +43,8 @@ export function emailUrls(host: string, logId: string): EmailUrls {
 }
 
 export interface EmailParts {
+  /** PR 741: the owner's e-mail look (`email.look`, only while it is on); without it the e-mail is the plain one. */
+  look?: EmailLookView | null;
   /** The rendered words (the template filled for this person). */
   text: string;
   /** The template's own links (`emailLinks`): only these are made clickable. */
@@ -63,7 +67,8 @@ function paragraphHtml(p: string, parts: EmailParts): string {
   for (const m of urlsIn(p)) {
     const n = parts.links.indexOf(m.url);
     out += escapeHtml(p.slice(at, m.at));
-    out += n < 0 ? escapeHtml(m.url) : `<a href="${escapeHtml(parts.trackClicks ? parts.urls.click(n) : m.url)}">${escapeHtml(m.url)}</a>`;
+    const style = parts.look ? ` style="${lookLinkStyle(parts.look)}"` : '';
+    out += n < 0 ? escapeHtml(m.url) : `<a href="${escapeHtml(parts.trackClicks ? parts.urls.click(n) : m.url)}"${style}>${escapeHtml(m.url)}</a>`;
     at = m.at + m.url.length;
   }
   return out + escapeHtml(p.slice(at)).replace(/\n/g, '<br>');
@@ -76,8 +81,12 @@ export function emailHtml(parts: EmailParts): string {
     .split(/\n\s*\n/)
     .map((p) => `<p>${paragraphHtml(p.trim(), parts)}</p>`)
     .join('');
-  const foot = `<p style="font-size:12px;color:#666"><a href="${escapeHtml(parts.urls.unsubscribePage)}">${escapeHtml(parts.unsubscribeLine)}</a></p>`;
   const pixel = parts.trackOpens ? `<img src="${escapeHtml(parts.urls.open)}" width="1" height="1" alt="">` : '';
+  if (parts.look) {
+    const link = `<a href="${escapeHtml(parts.urls.unsubscribePage)}" style="${lookLinkStyle(parts.look)}">${escapeHtml(parts.unsubscribeLine)}</a>`;
+    return wrapWithLook(parts.look, body, link, pixel);
+  }
+  const foot = `<p style="font-size:12px;color:#666"><a href="${escapeHtml(parts.urls.unsubscribePage)}">${escapeHtml(parts.unsubscribeLine)}</a></p>`;
   return `<!doctype html><html lang="${parts.lang}"><body>${body}${foot}${pixel}</body></html>`;
 }
 
