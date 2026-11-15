@@ -435,7 +435,7 @@ export async function setSplitOptions(deps: CombosDeps, who: Who, patch: unknown
  * its page keeps opening in the ended state). Switching on an ended combo clears an end date that has passed, so it
  * comes back on the same link.
  */
-export async function setComboActive(deps: CombosDeps, who: Who, id: string, on: boolean): Promise<ComboView> {
+export async function setComboActive(deps: CombosDeps, who: Who, id: string, on: boolean, how: 'off' | 'archive' = 'off'): Promise<ComboView> {
   await allow(deps, who, 'combos.publish');
   const view = await getCombo(deps, who, id);
   if (view.autoRuleId) throw new CombosError('INVALID_INPUT', 'a generated pair follows its rule', ['autoRuleId']);
@@ -444,8 +444,9 @@ export async function setComboActive(deps: CombosDeps, who: Who, id: string, on:
   const row = found(await deps.db.combo.findFirst({ where: { id, storeId: who.storeId }, select: { status: true, endsAt: true, endedAt: true } }), 'combo');
   const data: Prisma.ComboUpdateInput = on
     ? { status: 'RUNNING', endedAt: null, ...(row.endsAt && row.endsAt <= now ? { endsAt: null } : {}) }
-    : { status: 'PAUSED', endedAt: now };
-  if ((on && row.status === 'RUNNING' && !(row.endsAt && row.endsAt <= now)) || (!on && row.status === 'PAUSED')) return view;
+    : { status: how === 'archive' ? 'ENDED' : 'PAUSED', endedAt: now };
+  // PR 786 (prototype parity): Off (PAUSED) and Archive (ENDED) are two states; "off" on an archived set brings it back to Off
+  if ((on && row.status === 'RUNNING' && !(row.endsAt && row.endsAt <= now)) || (!on && row.status === (how === 'archive' ? 'ENDED' : 'PAUSED'))) return view;
   await deps.db.$transaction(async (tx) => {
     await tx.combo.update({ where: { id }, data: { ...data, updatedById: actorId(who), version: { increment: 1 } } });
     await logChange(tx, who, { action: on ? 'combo.on' : 'combo.off', entityType: 'Combo', entityId: id, before: row, after: data });

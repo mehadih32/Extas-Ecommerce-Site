@@ -13,7 +13,7 @@ import { COMBO_SET_TYPES } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { SetActions, type SetActionsTexts } from '@/components/admin/combos/SetActions';
-import { ShellIcon } from '@/components/admin/shell/ShellIcon';
+import { SetEditorButton, SetEditorHost } from '@/components/admin/combos/SetEditor';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -25,6 +25,7 @@ import { setsOptionsCard } from '@/lib/combos-sets-api';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-sets.bn.json';
 import en from '../../../../../messages/admin-sets.en.json';
+import '../../combos/combos.css';
 import '../../settings/settings.css';
 import '../../settings-cards.css';
 import './sets.css';
@@ -57,7 +58,7 @@ export default async function SetsPage() {
       </div>
     );
   const a = combosAccess(access);
-  const [list, currency, card] = await Promise.all([cb.listSets(a.deps, a.who, { withCost: a.perms.prices }), storeCurrency(a), setsOptionsCard(access.deps, MOTHER_STORE_ID)]);
+  const [list, currency, card, options] = await Promise.all([cb.listSets(a.deps, a.who, { withCost: a.perms.prices }), storeCurrency(a), setsOptionsCard(access.deps, MOTHER_STORE_ID), a.perms.write ? cb.comboOptions(a.deps, a.who) : Promise.resolve({ products: [] })]);
   const money = moneyOf(currency, view.locale);
   const m = (x: number) => formatMoney(x, money);
   const n = (x: number) => formatNumber(x, view.locale);
@@ -104,6 +105,7 @@ export default async function SetsPage() {
   const pct = (profit: number, price: number) => (price > 0 ? `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 0 }).format(Math.round((profit / price) * 100))}%` : '—');
 
   return (
+    <SetEditorHost dict={d} lang={view.lang === 'bn' ? 'bn' : 'en'} locale={view.locale} currency={currency} products={options.products} canPrice={a.perms.prices} failed={so('act.failed')}>
     <div className="a2-z" data-testid="sets-page" data-lm-ready="">
       <PageHead
         view={view}
@@ -116,9 +118,7 @@ export default async function SetsPage() {
               {so('addListing')}
             </Link>
             {a.perms.write ? (
-              <Link className="a2-btn primary" href="/admin/combos?tab=new" data-testid="sets-new">
-                <ShellIcon name="plus" size={16} /> {so('newSet')}
-              </Link>
+              <SetEditorButton id={null} label={so('newSet')} primary />
             ) : null}
           </>
         }
@@ -136,7 +136,7 @@ export default async function SetsPage() {
       {list.rows.length ? (
         <div className="st-grid" data-testid="sets-grid">
           {list.rows.map((r) => {
-            const archived = r.state === 'ended' || r.state === 'off';
+            const archived = r.state === 'ended';
             const profit = r.costMinor !== null && r.setPriceMinor !== null ? r.setPriceMinor - r.costMinor : null;
             return (
               <section key={r.id} className="a2-card st-card" data-testid="set-card" data-state={r.state}>
@@ -210,7 +210,7 @@ export default async function SetsPage() {
                   </div>
                 </dl>
                 {r.blocking.length ? <p className="a2-xs a2-mt6" style={{ color: 'var(--bad)' }}>{r.blocking.map((b) => so(`blocking.${b}`)).join(' · ')}</p> : null}
-                <SetActions id={r.id} on={r.state === 'live' || r.state === 'soon'} archived={archived} editHref="/admin/combos?tab=fixed" canPublish={a.perms.publish} canEdit={a.perms.write} texts={actionTexts} />
+                <SetActions id={r.id} on={r.state === 'live' || r.state === 'soon'} archived={archived} canPublish={a.perms.publish} canEdit={a.perms.write} texts={actionTexts} />
               </section>
             );
           })}
@@ -225,9 +225,12 @@ export default async function SetsPage() {
         </div>
       )}
 
-      <div className="a2-mt12">
+      {/* PR 786: the prototype has no options card; the two owner settings stay reachable, folded away under a plain line */}
+      <details className="st-opts a2-mt12" data-testid="sets-options-fold">
+        <summary className="a2-xs a2-mute">{opt('h')}</summary>
         <FieldsCard url="/api/admin/combos/sets/options" screen={{ key: card.key, value: { ...card.value }, version: card.version }} fields={fields} texts={texts} canEdit={a.perms.write} testId="sets-options" />
-      </div>
+      </details>
     </div>
+    </SetEditorHost>
   );
 }
