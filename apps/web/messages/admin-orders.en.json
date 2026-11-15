@@ -131,8 +131,7 @@
       "actions": {
         "export": "Export",
         "bulk": "New bulk order",
-        "phone": "Phone order",
-        "phoneOff": "Phone orders are not switched on yet. For now, an order taken by phone is entered by the customer on the shop, or by the bulk order form."
+        "phone": "Phone order"
       },
       "subTotal": "{n} orders · {v}"
     },
@@ -2116,6 +2115,49 @@
         "scoreRed": "weak courier score",
         "noRecord": "no record anywhere",
         "watch": "on watch"
+      }
+    },
+    "phone": {
+      "button": "Phone order",
+      "title": "Phone order",
+      "sub": "Take an order the customer asked for on the phone. The price is the shop's own checkout price.",
+      "close": "Close",
+      "phone": "Phone",
+      "name": "Name",
+      "address": "Address",
+      "known": "{name} · {orders} orders, {refused} refused",
+      "newCaller": "New customer",
+      "find": "Product",
+      "findPh": "Name, SKU or colour",
+      "noProducts": "No product found.",
+      "soldOut": "Out of stock",
+      "pieces": "pieces",
+      "quantity": "Quantity",
+      "remove": "Remove",
+      "noLines": "Pick a colour and size above to add the first piece.",
+      "check": "Check price",
+      "create": "Create order",
+      "back": "Back",
+      "items": "Items",
+      "delivery": "Delivery",
+      "deliveryFree": "Free",
+      "total": "Total",
+      "cod": "Cash on Delivery. The customer pays when the parcel arrives.",
+      "needsPayment": "This order needs money first (an advance is asked, or Cash on Delivery is closed). The customer has to order on the shop.",
+      "created": "Order {number} created. It is in Processing like any new order.",
+      "open": "Open order",
+      "again": "Take another order",
+      "err": {
+        "network": "No connection. Try again.",
+        "other": "Something went wrong. Try again.",
+        "INVALID_INPUT": "Fill the phone, name, address and at least one piece.",
+        "BAD_PHONE": "That is not a Bangladeshi mobile number. Type 11 digits, like 01XXXXXXXXX.",
+        "OUT_OF_STOCK": "That piece is not in stock in that number.",
+        "NOT_FOUND": "That product is no longer on sale.",
+        "NEEDS_PAYMENT": "This order needs money first, so the customer has to order on the shop.",
+        "PRICE_CHANGED": "The price changed. Check the price again.",
+        "CHECKOUT": "The shop's checkout refused this order. Check the details and the price again.",
+        "forbidden": "You do not have the right to take orders."
       }
     }
   }
