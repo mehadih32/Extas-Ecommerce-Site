@@ -150,7 +150,16 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
   ) : null;
   return (
     <div className="a2-z" data-testid="orders-confirm" data-lm-ready="">
-      <PageHead view={view} place={locateKey('ordersConfirm')} title={t(d, 'orders.page.confirm')} sub={sub} right={<Link className="a2-btn" href="/admin/orders/confirm/calls" data-testid="orders-call-desk">{t(d, 'orders.confirm.callDesk')}</Link>} />
+      <PageHead view={view} place={locateKey('ordersConfirm')} title={t(d, 'orders.page.confirm')} sub={sub} right={
+        <span className="a2-gap8">
+          <Link className="a2-btn" href="/admin/rules" data-testid="orders-auto-rules">
+            {t(d, 'orders.confirm.autoRules')}
+          </Link>
+          <Link className="a2-btn" href="/admin/orders/confirm/calls" data-testid="orders-call-desk">
+            {t(d, 'orders.confirm.callDesk')}
+          </Link>
+        </span>
+      } />
       <SectionTabs view={view} current="ordersConfirm" />
       <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
       {list.rows.length ? (

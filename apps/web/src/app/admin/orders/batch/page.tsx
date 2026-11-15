@@ -231,6 +231,10 @@ export default async function BatchPage({
             data-testid="batch-stuck"
           >
             <h2 className="a2-h2">{g("stuckH")}</h2>
+            <p className="a2-xs a2-mute" data-testid="batch-stuck-sub">
+              {g("stuckSub")}{" "}
+              <Link href="/admin/orders/confirm">{g("openProcessing")}</Link>
+            </p>
             {Object.values(b.stuck).some((x) => x > 0) ? (
               <ul className="a2-stats">
                 {od.STUCK_KINDS.filter((k) => b.stuck[k] > 0).map((k) => (
@@ -250,6 +254,7 @@ export default async function BatchPage({
             data-testid="batch-yours"
           >
             <h2 className="a2-h2">{g("yoursH")}</h2>
+            <p className="a2-xs a2-mute">{g("yoursSub")}</p>
             {b.yours.length ? (
               <ul className="a2-list">
                 {b.yours.map((r) => (
@@ -300,6 +305,10 @@ export default async function BatchPage({
             data-testid="batch-moved"
           >
             <h2 className="a2-h2">{g("movedH")}</h2>
+            <p className="a2-xs a2-mute">
+              {g("movedSub")}{" "}
+              <Link href="/admin/rules">{g("changeRules")}</Link>
+            </p>
             {b.moved.length ? (
               <ul className="a2-list">
                 {b.moved.map((x) => (
