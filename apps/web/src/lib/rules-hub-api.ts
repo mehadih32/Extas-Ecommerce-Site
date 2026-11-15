@@ -10,6 +10,9 @@
 //   GET   /api/admin/rules/hub/sim             PR 858: the Checkout simulator's pickers · POST {cart} what one made-up cart pays with the live rules (read only)
 //   POST  /api/admin/rules/hub/:id/schedule   PR 858: {version, values, from, pin?} start the typed numbers on a later day
 //   POST  /api/admin/rules/hub/:id/unschedule  PR 858: {pin?} cancel the scheduled change (the rule stays as it is)
+//   GET   /api/admin/rules/hub/:id/history   PR 867: the last changes of the row (`rules.read`)
+//   POST  /api/admin/rules/hub/:id/undo      PR 867: {version, changeId, pin?} back to the value a past change replaced (a new change; money rows: the PIN)
+//   PUT   /api/admin/rules/hub/:id/text      PR 867: {text: {bn, en} | null} the owner's own customer wording, or back to the automatic words (`rules.write`)
 //   POST  /api/admin/rules/hub/:id/reset     {version, pin?} back to the shipped value
 //   GET   /api/admin/rules/popups              the twelve placements
 //   PUT   /api/admin/rules/popups/:key         {entry, version} the owner's words, window and switch (`rules.write`)
@@ -76,6 +79,26 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
         const input = await body(request);
         const values = input.values && typeof input.values === 'object' && !Array.isArray(input.values) ? (input.values as Record<string, unknown>) : {};
         return { tried: await rl.tryHubRow(hubDeps(x), x.who, { id: b, values }) };
+      });
+    }
+    if (c === 'history') {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'rules.read', async (x) => ({ history: await rl.hubHistory(hubDeps(x), x.who, { id: b }) }));
+    }
+    if (c === 'undo') {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'rules.write', async (x) => {
+        const input = await body(request);
+        if (moneyRow(b)) await pinCheck(deps!, x.who.actor, x.who.ctx ?? {}, input.pin, 'rules.hub.undo');
+        return { saved: await rl.undoHubRow(hubDeps(x), x.who, { id: b, changeId: String(input.changeId ?? ''), version: String(input.version ?? '') }) };
+      });
+    }
+    if (c === 'text') {
+      if (m !== 'PUT') return notAllowed();
+      return handle(request, deps, 'rules.write', async (x) => {
+        const input = await body(request);
+        const t = input.text && typeof input.text === 'object' && !Array.isArray(input.text) ? (input.text as { bn: unknown; en: unknown }) : null;
+        return { text: await rl.saveHubText(hubDeps(x), x.who, { id: b, text: t }) };
       });
     }
     if (c === 'reset') {

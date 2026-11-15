@@ -107,3 +107,11 @@
 .rh-sim-ln span{min-width:0;overflow-wrap:anywhere}
 .rh-sim-ln.tot{font-weight:700;border-bottom:0}
 .rh-try .ad-note{margin:0;overflow-wrap:anywhere}
+
+/* PR 867: Edit the customer text, History */
+.rh-text,.rh-hist{display:grid;gap:6px;min-width:0}
+.rh-text textarea{width:100%;min-height:64px}
+.rh-warn{margin:0;font-size:.85rem;color:var(--lm-warn)}
+.rh-histlist{display:grid;gap:6px;min-width:0}
+.rh-histlist>div{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--lm-ln);border-radius:10px;padding:8px 10px;min-width:0;overflow-wrap:anywhere}
+.rh-histlist .ad-btn{min-height:44px}

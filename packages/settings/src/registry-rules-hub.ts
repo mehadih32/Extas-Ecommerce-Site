@@ -75,7 +75,28 @@ export type HubScheduleEntry = z.output<typeof hubScheduleEntrySchema>;
 export const hubScheduleSchema = z.object({ entries: z.array(hubScheduleEntrySchema).max(100) }).strict();
 export type HubScheduleSetting = z.output<typeof hubScheduleSchema>;
 
+/**
+ * parity F6 · PR 867 (prototype Rules › More options › "Edit the customer text"): the owner's own words for what a customer sees about a
+ * rule, one entry per rule row, in Bengali and English. A row with no entry uses the automatic words. Empty as shipped.
+ */
+export const hubTextEntrySchema = z.object({ bn: z.string().trim().min(1).max(300), en: z.string().trim().min(1).max(300) }).strict();
+export const hubTextSchema = z.object({ texts: z.record(z.string().max(60), hubTextEntrySchema) }).strict();
+export type HubTextSetting = z.output<typeof hubTextSchema>;
+
 export const rulesHubSettings = {
+  'rules.hub.text': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'rules',
+    version: 867,
+    schema: hubTextSchema,
+    default: { texts: {} },
+    valueType: 'JSON',
+    labelKey: 'rules.hub.text.label',
+    helpKey: 'rules.hub.text.help',
+    sortOrder: 983,
+  }),
   'rules.hub.schedule': setting({
     scope: 'store',
     isOwnerData: false,

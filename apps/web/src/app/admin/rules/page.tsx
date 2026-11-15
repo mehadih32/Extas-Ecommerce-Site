@@ -12,7 +12,9 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { rulesAccess, rulesEnv } from '@/lib/admin-rules';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
+import bnWords from '../../../../messages/admin-rules-hub.bn.json';
+import enWords from '../../../../messages/admin-rules-hub.en.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +46,7 @@ export default async function RulesHubPage({ searchParams }: { searchParams: Pro
     <AdminFrame view={view} current={KEY} ready crumb={false}>
       <RulesHub
         dict={view.dict}
+        otherDict={(view.lang === 'bn' ? enWords : bnWords) as unknown as Dict}
         lang={view.lang}
         env={env}
         hub={hub}
