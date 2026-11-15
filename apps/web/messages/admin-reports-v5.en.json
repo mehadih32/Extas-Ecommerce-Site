@@ -55,7 +55,30 @@
       "close": "Close",
       "noOrders": "No orders here in this period",
       "apply": "Apply",
-      "clear": "Clear"
+      "clear": "Clear",
+      "scheduled": "Scheduled",
+      "sch": {
+        "title": "Send this report by itself",
+        "intro": "\"{name}\" goes to you as a short summary. You choose where and how often.",
+        "telegram": "Telegram",
+        "telegramSub": "To your Telegram (set in Settings)",
+        "email": "Email",
+        "emailNone": "Your own address is not typed in Settings yet.",
+        "how": "How often",
+        "time": "Time",
+        "daily": "Every day",
+        "weekly": "Every Monday",
+        "monthly": "1st of every month",
+        "save": "Save schedule",
+        "off": "Turn off",
+        "cancel": "Cancel",
+        "pick": "Pick Telegram, email or both",
+        "saved": "\"{name}\" will be sent: {when}",
+        "turnedOff": "Schedule turned off",
+        "failed": "Could not save the schedule",
+        "close": "Close",
+        "working": "Saving…"
+      }
     },
     "channel": {
       "ads:META": "Meta ads (Facebook, Instagram)",
@@ -143,7 +166,7 @@
       "fAllCategories": "All categories",
       "fArea": "Area",
       "fAllAreas": "All areas",
-      "filterNote": "Filter on: the tables By category, By area and By product use only the orders you picked. The figures above and By style stay for the whole shop."
+      "filterNote": "Filter on: the figures at the top and the tables By category, By area and By product use only the orders you picked, with ads and office costs shared by sales. The week chart, the channels and By style stay for the whole shop."
     },
     "products": {
       "metaTitle": "Product report",
@@ -219,14 +242,17 @@
       "slowItem": "{n} sold in 30 days",
       "inStock": "{n} of {total} sizes in stock",
       "cats": "Categories",
-      "catsSub": "Delivered sales and margin by category",
+      "catsSub": "Click a category to filter the whole report",
       "colCategory": "Category",
       "colVs": "vs before",
       "catNone": "No category",
       "kBulk": "Buy in bulk",
       "kBulkSub": "fast sellers with good margin",
       "kStop": "Stop buying",
-      "kStopSub": "slow or low margin"
+      "kStopSub": "slow or low margin",
+      "fCategory": "Category",
+      "fAllCategories": "All categories",
+      "filterNote": "Category filter on: the figures, the styles and the restock and unsold lists show only that category."
     },
     "marketing": {
       "metaTitle": "Marketing & ads report",
@@ -314,7 +340,7 @@
       "chipCoupon": "Coupon discount cost",
       "chipCouponSub": "{n} uses",
       "spendVs": "Spend vs sales from ads",
-      "spendVsSub": "Ad spend, day by day",
+      "spendVsSub": "Website orders from Facebook ads, Google and TikTok",
       "campTitle": "Campaigns: what to do next",
       "colCampaign": "Campaign",
       "colRoas": "ROAS",
@@ -344,7 +370,8 @@
       "couponOpen": "Open Offers & discounts",
       "byChannelCols": "Spend and sales by ad channel",
       "legSpend": "Top row: spend",
-      "legSales": "bottom row: sales"
+      "legSales": "bottom row: sales",
+      "heroSalesSeries": "Ad sales"
     },
     "review": {
       "metaTitle": "Monthly review",
@@ -755,7 +782,7 @@
       "weekTitle": "Success, week by week",
       "weekSub": "The last 8 weeks, one line per courier.",
       "costTitle": "Delivery charge per parcel",
-      "costSub": "What each courier charged per finished parcel.",
+      "costSub": "Delivery + cash fee + return charges",
       "districtTitle": "Success by district and courier",
       "districtSub": "The 10 districts with the most parcels; the parcels are under each figure.",
       "colDistrict": "District",
@@ -768,7 +795,11 @@
       "colMonthParcels": "Delivered this month",
       "colSave": "Would save",
       "noRates": "No courier has a rate card yet, so there is nothing to compare.",
-      "routeNote": "A guide only: nothing is changed. Set the routing in Delivery."
+      "routeNote": "A guide only: nothing is changed. Set the routing in Delivery.",
+      "costParts": "{name}: delivery {delivery} + cash fee {cod} + return charges {ret}"
+    },
+    "library": {
+      "metaTitle": "Report library"
     }
   }
 }

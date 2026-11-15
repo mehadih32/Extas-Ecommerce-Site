@@ -2,7 +2,7 @@
   "reportsLibrary": {
     "metaTitle": "Report library",
     "title": "Report library",
-    "sub": "Pick a question, see the answer. Pin the numbers you want on Home. Money and the books are in Finance.",
+    "sub": "Pick a question, see the answer. Pin the numbers you want on Home.",
     "period": {
       "label": "Period",
       "today": "Today",
@@ -55,7 +55,7 @@
     "changeUp": "▲ {pct}% vs before",
     "changeDown": "▼ {pct}% vs before",
     "pin": "Pin to Home",
-    "unpin": "Pinned to Home",
+    "unpin": "On Home",
     "pinned": "Pinned to Home",
     "pinnedToast": "Pinned to Home",
     "unpinnedToast": "Removed from Home",
@@ -192,16 +192,16 @@
       "subProfitUnknown": "Not known yet: the ad spend is missing",
       "subChProfit": "{profit} profit before ads",
       "subAov": "{pieces} pieces per order",
-      "subRestock": "still selling, a size runs out soon",
+      "subRestock": "still selling, a size runs out within 14 days",
       "subBest": "{qty} pieces · {value}",
-      "subDead": "no sale in this period, plenty in stock",
+      "subDead": "no sale in this period, 30+ pieces in stock",
       "subRepeat": "ordered more than once, all time",
       "subNewc": "first order in this period",
-      "subCheckoutj": "where visitors stop in checkout, and what to do",
+      "subCheckoutj": "where visitors stop in checkout, and how many we win back",
       "subReturns": "{n} parcels returned",
       "subWhy": "{n} parcels",
       "subCourier": "best success: {pct}% of {n} parcels · every courier compared",
-      "subRoas": "delivered sales per ৳1 of marketing",
+      "subRoas": "delivered sales per ৳1 of ads",
       "subAds": "all ad platforms",
       "subTopArea": "{value} order value · {pct}% of all",
       "subBadArea": "{pct}% of {n} parcels",
@@ -214,6 +214,11 @@
     },
     "pinnedN": "Pinned to Home ({n})",
     "open": "Open the report",
-    "footerNote": "Money and the books (profit & loss statement, expenses, COD with couriers) are in Finance. Visitors and the website funnel are in Website › Analytics."
+    "footerNote": "Money and the books (profit & loss statement, expenses, COD with couriers) are in Finance. Visitors and the website funnel are in Website › Analytics.",
+    "reviewReady": "{month} review is ready",
+    "reviewLine": "net profit {profit} on {sales} delivered sales. What went well, what went badly and 3 things to do.",
+    "reviewLineUnknown": "net profit not known yet (the ad spend is missing), on {sales} delivered sales. What went well, what went badly and 3 things to do.",
+    "reviewRead": "Read the review",
+    "footerOpen": "Open Finance"
   }
 }

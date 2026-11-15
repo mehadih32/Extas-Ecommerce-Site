@@ -278,7 +278,12 @@
       "colDelivered": "Delivered",
       "colReturned": "Returned",
       "colSuccess": "Success",
-      "colDays": "Avg days"
+      "colDays": "Avg days",
+      "gridSub": "Parcels that were delivered or came back. Click to see them.",
+      "gridDrawerSub": "{n} parcels, newest first",
+      "more": "Show all {n}",
+      "less": "Show fewer",
+      "close": "Close"
     }
   }
 }
