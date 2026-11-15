@@ -122,8 +122,8 @@
         "value": "Free delivery from (amount)"
       },
       "peak": {
-        "enabled": "Switch Peak and Eid mode on",
-        "dailyCap": "Orders a day the shop can send",
+        "enabled": "Turn on peak mode",
+        "dailyCap": "Most orders we can pack a day",
         "fullTextEn": "Words when the day is full (English)",
         "fullTextBn": "Words when the day is full (Bengali)",
         "partSize": "Stickers in one part of Print all in parts",
@@ -142,7 +142,7 @@
       "merge": {
         "enabled": "Allow merging orders",
         "lookBackDays": "Look back (days)",
-        "autoMerge": "Merge by itself when the addresses match",
+        "autoMerge": "Merge by itself when phone and address are the same",
         "differentAddress": "When the addresses differ"
       },
       "adjust": {
@@ -150,15 +150,15 @@
         "roleLimits": "Limits by role"
       },
       "advwait": {
-        "value": "Hours before the advance reminder"
+        "value": "Remind the customer after (hours)"
       },
       "erpcheck": {
-        "value": "Days to check a returned piece"
+        "value": "ERP check within (days)"
       },
       "replace": {
-        "enabled": "Allow replacement",
-        "hours": "Hours after delivery it can be opened",
-        "oldPieceDays": "Days for the old piece to come back"
+        "enabled": "Replace defective or wrong items for free",
+        "hours": "Customer tells us within (hours)",
+        "oldPieceDays": "Old piece must come back within (days)"
       }
     },
     "opt": {
