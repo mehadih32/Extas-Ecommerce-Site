@@ -499,6 +499,128 @@
       "FORBIDDEN": "You do not have permission to change this. Ask the owner to give your role the right.",
       "NOT_FOUND": "This is not there any more. Reload the page.",
       "UNAUTHENTICATED": "You have been signed out. Sign in again, then save."
+    },
+    "setlist": {
+      "title": "Settings",
+      "groups": {
+        "b": "Business",
+        "s": "System"
+      },
+      "owner": "Owner",
+      "search": "Search settings… e.g. BIN, bKash, backup",
+      "searchLabel": "Search settings",
+      "list": "Settings list",
+      "pick": "Open a setting",
+      "none": "Nothing here. Try the Admin map search.",
+      "has": "has",
+      "looking": "Looking for",
+      "ownerOnly": "Owner only. Staff never see the System group, even with full access.",
+      "item": {
+        "store": {
+          "n": "Store details",
+          "k": "name logo legal licence trade ubid dbid tin bin vat address warehouse hotline whatsapp email hours social colour invoice sticker order number"
+        },
+        "erp": {
+          "n": "ERP connection",
+          "k": "erp stock buying price sync connection test warehouse bill"
+        },
+        "couriers": {
+          "n": "Couriers",
+          "k": "courier pathao steadfast redx default pickup fee charge parcel booking"
+        },
+        "payments": {
+          "n": "Payments",
+          "k": "bkash nagad card gateway sslcommerz settlement bank account payment checkout cod"
+        },
+        "messages": {
+          "n": "Customer messages",
+          "k": "sms whatsapp template message text customer"
+        },
+        "team": {
+          "n": "Team & roles",
+          "k": "staff role access permission invite people"
+        },
+        "demo": {
+          "n": "Demo products",
+          "k": "demo sample dummy placeholder coming soon empty category"
+        },
+        "roles": {
+          "n": "Roles",
+          "k": "role access permission tree"
+        },
+        "staffControls": {
+          "n": "Staff controls",
+          "k": "staff control limit shift"
+        },
+        "policies": {
+          "n": "Policies & texts",
+          "k": "policy texts help pages returns terms"
+        },
+        "look": {
+          "n": "Admin look",
+          "k": "look design theme colour dark light density"
+        },
+        "practice": {
+          "n": "Practice data",
+          "k": "practice sample data reset"
+        },
+        "shell": {
+          "n": "Start & search",
+          "k": "start page search dashboard role"
+        },
+        "shimmer": {
+          "n": "Shimmer",
+          "k": "shimmer loading speed strength"
+        },
+        "keys": {
+          "n": "Keys & connections",
+          "k": "key password api connection meta google ads tiktok search console drive telegram ai claude openai gemini sms vault"
+        },
+        "backups": {
+          "n": "Backups & restore",
+          "k": "backup restore drive drill schedule"
+        },
+        "cache": {
+          "n": "Cache & speed",
+          "k": "cache speed purge clear fast"
+        },
+        "golive": {
+          "n": "Go-live checklist",
+          "k": "go live launch checklist domain ssl"
+        },
+        "ai": {
+          "n": "AI control",
+          "k": "ai agent budget model provider proposal training gyani center approvals"
+        },
+        "security": {
+          "n": "Security",
+          "k": "2-step login session block password sign in"
+        },
+        "edge": {
+          "n": "Cloudflare protection",
+          "k": "cloudflare edge protection firewall bot"
+        },
+        "activity": {
+          "n": "Activity log",
+          "k": "log history who changed viewed customer data audit"
+        },
+        "privacy": {
+          "n": "Data & privacy",
+          "k": "export erase copy request privacy media import old customers own data"
+        },
+        "telegram": {
+          "n": "Telegram approvals",
+          "k": "telegram bot daily report pairing alert approve"
+        },
+        "startFresh": {
+          "n": "Start fresh",
+          "k": "start fresh reset clear sample data launch"
+        },
+        "help": {
+          "n": "Help & manual",
+          "k": "manual guide help blueprint register project files"
+        }
+      }
     }
   },
   "dash": {
