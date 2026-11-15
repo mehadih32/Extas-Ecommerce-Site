@@ -44,6 +44,10 @@ export interface CombosScreenProps {
   split?: ComboSplitSettings | null;
   /** PR 104 — the combo report (drawn by the server). */
   report?: ReactNode;
+  /** PR 829 (prototype v5): the four figures and the note above the lists (drawn by the server). */
+  summary?: ReactNode;
+  /** PR 829: open "Build a combo" at once (`?make=1`). */
+  openNew?: boolean;
   /** PR 762: the page's head (the shell's PageHead, drawn by the server: title, lines, guide button); the section's tab bar is the shell's. */
   head?: ReactNode;
 }
@@ -65,7 +69,7 @@ export function CombosScreen(props: CombosScreenProps) {
     setRulesFromServer(props.rules);
     setRules(props.rules);
   }
-  const [editing, setEditing] = useState<{ combo: ComboView | null } | null>(null);
+  const [editing, setEditing] = useState<{ combo: ComboView | null } | null>(props.openNew && props.perms.write ? { combo: null } : null);
   const fmt = (minor: number | null) => money(minor, locale, currency);
   const symbol = currencySymbol(locale, currency);
   const hexes = Object.fromEntries(props.products.flatMap((p) => p.colours.map((c) => [c.id, c.hex])));
@@ -142,6 +146,7 @@ export function CombosScreen(props: CombosScreenProps) {
           </Link>
         ))}
       </nav>
+      {tab === 'auto' || tab === 'fixed' || tab === 'archive' ? props.summary : null}
       {body}
       {editing ? (
         <ComboEditor

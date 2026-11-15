@@ -31,3 +31,14 @@
 @media (min-width:900px){.adm2 .d4-desk{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .adm2 .d4-st{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,auto);gap:6px 16px;align-items:center}
 .adm2 .d4-st .r{text-align:right}
+
+/* PR 829: Combos, the four figures, the note and the chip bar */
+.adm2 .cb-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 0 0 10px; }
+.adm2 .cb-kpi { display: flex; flex-direction: column; gap: 2px; padding: 12px; border: 1px solid var(--ln); border-radius: 10px; background: var(--sf); min-width: 0; }
+.adm2 .cb-kpi b { font-size: 1.4rem; overflow-wrap: anywhere; }
+.adm2 .cb-info { padding: 10px 12px; border: 1px solid var(--ln); border-radius: 10px; background: var(--sf); margin: 0 0 12px; overflow-wrap: anywhere; }
+.adm2 .cb-info.warn { border-color: var(--warn); }
+.adm2 .cb-chipbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+.adm2 .cb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.adm2 .cb-chips .ad-chip { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.adm2 .cb-search { min-height: 44px; flex: 1 1 200px; max-width: 100%; }
