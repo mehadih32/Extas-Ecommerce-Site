@@ -1245,6 +1245,18 @@
       ]
      }
     ]
+   },
+   {
+    "id": "pageSettings",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/website/page-settings",
+      "keys": [
+       "websitePageSettings"
+      ]
+     }
+    ]
    }
   ]
  },
