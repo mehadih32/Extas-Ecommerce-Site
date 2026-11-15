@@ -6,7 +6,7 @@
 // function crosses from the server page. Saved whole to the page's own API (`url`: GET answers `{cards}`, PUT takes
 // `{key, value, version}`) with the card's version: a card changed by someone else in between is read again and said
 // so. A person without the page's write permission sees it locked.
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -22,6 +22,9 @@ export type FieldsCardField =
   | { kind: 'text'; path: string; label: string; help?: string; max: number }
   // PR 193: a calendar day (`YYYY-MM-DD`); empty is kept as null (no day set)
   | { kind: 'date'; path: string; label: string; help?: string }
+  // PR 789: a time of day (`HH:MM`, empty = not set) and a colour (`#RRGGBB`, empty = not set)
+  | { kind: 'time'; path: string; label: string; help?: string }
+  | { kind: 'colour'; path: string; label: string; help?: string }
   | { kind: 'checks'; path: string; label: string; options: { value: string; label: string }[] }
   // PR 384: `rows` makes a taller box for a long text (a policy page's words)
   | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number }
@@ -56,7 +59,7 @@ export interface FieldsCardScreen {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: { url: string; screen: FieldsCardScreen; fields: FieldsCardField[]; texts: FieldsCardTexts; canEdit: boolean; testId: string }) {
+export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top, cls }: { top?: ReactNode; cls?: string; url: string; screen: FieldsCardScreen; fields: FieldsCardField[]; texts: FieldsCardTexts; canEdit: boolean; testId: string }) {
   const id = useId();
   const shell = useShellText();
   const [base, setBase] = useState(screen);
@@ -163,6 +166,31 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
           {help}
         </div>
       );
+    if (f.kind === 'time')
+      return (
+        <div className="a2-fld" key={f.path}>
+          <label className="a2-lbl" htmlFor={fid}>
+            {f.label}
+          </label>
+          <input id={fid} className="a2-inp" type="time" value={String(draft[f.path] ?? '')} disabled={off} onChange={(e) => edit(f.path, e.target.value)} data-testid={`${testId}-${f.path}`} />
+          {help}
+        </div>
+      );
+    if (f.kind === 'colour') {
+      const cv = String(draft[f.path] ?? '');
+      return (
+        <div className="a2-fld" key={f.path}>
+          <label className="a2-lbl" htmlFor={fid}>
+            {f.label}
+          </label>
+          <span className="a2-gap8" style={{ display: 'flex', alignItems: 'center' }}>
+            <input id={fid} className="a2-inp" type="color" style={{ width: 56, padding: 2 }} value={cv || '#000000'} disabled={off} onChange={(e) => edit(f.path, e.target.value.toUpperCase())} data-testid={`${testId}-${f.path}`} />
+            <input className="a2-inp" aria-label={f.label} value={cv} maxLength={7} placeholder="#RRGGBB" disabled={off} onChange={(e) => edit(f.path, e.target.value)} data-testid={`${testId}-${f.path}-hex`} />
+          </span>
+          {help}
+        </div>
+      );
+    }
     if (f.kind === 'checks') {
       const v = (draft[f.path] ?? {}) as Record<string, boolean>;
       return (
@@ -286,7 +314,7 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
   };
 
   return (
-    <section className="a2-sc a2-mt12" aria-labelledby={`${id}-h`} data-testid={testId}>
+    <section className={`a2-sc a2-mt12${cls ? ` ${cls}` : ''}`} aria-labelledby={`${id}-h`} data-testid={testId}>
       <div className="a2-sch">
         <div>
           <h2 className="a2-h3" id={`${id}-h`}>
@@ -301,6 +329,7 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId }: {
           <span>{x.readOnly}</span>
         </div>
       ) : null}
+      {top}
       <div className="a2-fg a2-mt12">{fields.map(field)}</div>
       <div className="a2-scbar">
         <span className={`a2-sm${said?.bad ? '' : ' a2-mute'}`} role="status" aria-live="polite" data-testid={`${testId}-status`}>

@@ -303,3 +303,5 @@ export * from './registry-practice';
 export * from './registry-page-settings';
 // PR 745–749 — link preview picture, tag badges, collection order (registry-customise.ts, version 745).
 export * from './registry-customise';
+// PR 789 — Settings > Store details, the rest of the page (registry-store-details.ts, version 789).
+export * from './registry-store-details';

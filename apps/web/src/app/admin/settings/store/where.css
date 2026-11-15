@@ -7,3 +7,13 @@
 .st-wt { font-weight: 600; overflow-wrap: anywhere; }
 .st-wd { font-size: 13px; color: var(--lm-ink2); overflow-wrap: anywhere; }
 .st-wg { margin-top: auto; padding-top: 6px; font-size: 13px; color: var(--lm-ac-ink); }
+/* PR 789 — Store details as the prototype's card grid (m-settings.js renderStore: grid g2, the first card spans both). */
+.st-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; margin-top: 12px; }
+.st-grid > .a2-sc { margin-top: 0; min-width: 0; }
+.st-grid > .st-span2 { grid-column: 1 / -1; }
+.st-logos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.st-slot { border: 1px dashed var(--lm-ln); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 12.5px; min-width: 0; overflow-wrap: anywhere; }
+.st-slotst { color: var(--lm-ink2); font-size: 12px; }
+.st-slotst.on { color: var(--lm-ac-ink); }
+.st-logonote { grid-column: 1 / -1; margin: 0; }
+@media (max-width: 960px) { .st-grid { grid-template-columns: minmax(0, 1fr); } .st-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
