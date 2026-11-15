@@ -33,7 +33,19 @@ const SNAP = () => {
   const subs = [...document.querySelectorAll('.lm-nw.on .lm-subs a')].map((a) => ({ t: txt(a), on: a.classList.contains('on') }));
   const h1 = [...document.querySelectorAll('h1')].map((h) => txt(h));
   const err = document.querySelector('[data-testid="a2-state"], .a2-state');
+  // PR 762: where the section's bar sits (from the top of <main>, page not scrolled) and what follows it; the same on every
+  // page of a section, because the shell draws it once above the page (never the page's own heading above it)
+  const mainEl = document.getElementById('main');
+  const barEl = document.querySelector('[data-testid="a2-bar"]');
+  const r = (e) => (e ? e.getBoundingClientRect() : null);
+  const mr = r(mainEl);
+  const br = r(barEl);
+  const after = barEl?.nextElementSibling ? r(barEl.nextElementSibling) : null;
   return {
+    barY: br && mr ? Math.round(br.top - mr.top + (mainEl.scrollTop || 0)) : null,
+    barH: nav ? Math.round(nav.getBoundingClientRect().height) : null,
+    barGap: br && after ? Math.round(after.top - br.bottom) : null,
+    barX: br && mr ? Math.round(br.left - mr.left) : null,
     hasTabBar: !!nav,
     tabBarShown: shown(nav),
     mains,
@@ -181,6 +193,9 @@ for (const vp of ['desk', 'phone']) {
     const mode = (arr) => { const m = new Map(); for (const x of arr) m.set(x, (m.get(x) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]; };
     const modalHead = mode(rs.filter((r) => !r.failed).map((r) => r.head));
     const modalBar = mode(ok.map((r) => r.barBeforeH1));
+    const modalY = mode(ok.filter((r) => r.barY !== null).map((r) => r.barY));
+    const modalH = mode(ok.filter((r) => r.barH !== null).map((r) => r.barH));
+    const modalGap = mode(ok.filter((r) => r.barGap !== null).map((r) => r.barGap));
     for (const r of rs) {
       const why = [];
       if (r.failed) why.push('page failed to load');
@@ -192,6 +207,12 @@ for (const vp of ['desk', 'phone']) {
         if (r.hasTabBar) {
           const act = r.mains.filter((m) => m.on).length + (r.moreOn ? 1 : 0);
           if (act !== 1) why.push(`${act} tabs marked active`);
+        }
+        // PR 762 (permanent): the bar must not jump between the pages of a section: same Y, same height, same gap below it
+        if (r.hasTabBar && r.barY !== null) {
+          if (modalY !== undefined && Math.abs(r.barY - modalY) > 1) why.push(`tab bar Y ${r.barY}px, the section's ${modalY}px (it jumps)`);
+          if (modalH !== undefined && Math.abs(r.barH - modalH) > 1) why.push(`tab bar height ${r.barH}px, the section's ${modalH}px`);
+          if (modalGap !== undefined && r.barGap !== null && Math.abs(r.barGap - modalGap) > 1) why.push(`gap under the tab bar ${r.barGap}px, the section's ${modalGap}px`);
         }
         if (r.h1.length !== 1) why.push(`${r.h1.length} h1 headings`);
         if (r.head !== modalHead) why.push(`page header pattern "${r.head}" (the section's usual: "${modalHead}")`);

@@ -44,6 +44,7 @@ import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
 import { Palette } from './Palette';
 import { ShellIcon } from './ShellIcon';
+import { ShellTabBar } from './ShellTabBar';
 import { readLater, TodoDrawer } from './TodoDrawer';
 
 type Pop = 'me' | 'me2' | null;
@@ -540,6 +541,8 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             {ntf ? <NotificationsPanel dict={d} items={notes} seen={seen} onMarkAll={markAll} onClose={closeNtf} /> : null}
           </header>
           <main className="a2-ct a3-ct lm-ct" id="main" tabIndex={-1}>
+            {/* PR 762: the section's tab bar is drawn here, once, so it stays in the same place on every page */}
+            <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />
             {children}
           </main>
           {/* CN-053: which build this browser really runs, readable without clearing anything */}
