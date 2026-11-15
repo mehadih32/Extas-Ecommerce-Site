@@ -47439,12 +47439,12 @@
   {
    "number": 755,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: guide, files, links and final checks (S29; parked; CN-054; Size M; depends on 754) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: guide, files, links and final checks** (S29; **parked**; CN-054; Size M; depends on 754) — the Bengali Help Center guide for the page (What, Why, How; every button, tab, option and field in `fields`; picture with numbered marks, taken from the practice data), `docs/admin-guide` page, Excel and PDF of the screen like the other single reports, a card in the Report library, a link from Marketing › Where to advertise and from Reports › Delivery & RTO, the \"?\" hints, the smoke check of the page, the device gate at 390, 768, 1366 and 1920 px, the readiness lines. Nothing is sent to anyone, nothing changes a budget or a target. No migration.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–755 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750755-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47460,8 +47460,8 @@
    "updates": [],
    "mentions": [],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপ: বাংলা গাইড, Excel/PDF, লিংক আর শেষ পরীক্ষা। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-755"
   }
