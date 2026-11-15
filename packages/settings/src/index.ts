@@ -309,3 +309,5 @@ export * from './registry-store-details';
 export * from './registry-parity-e2';
 // PR 815-816 — the small settings of Settings, lane E3 (registry-parity-e3.ts).
 export * from './registry-parity-e3';
+// PR 846, 851 — the small settings of Settings, lane E5 (registry-parity-e5.ts).
+export * from './registry-parity-e5';

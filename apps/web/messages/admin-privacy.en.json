@@ -46,8 +46,8 @@
       "link": "Open Messages › Consent"
     },
     "req": {
-      "h": "Erasure requests",
-      "d": "A customer asked to remove his personal details. Filing a request changes nothing; the owner carries it out. Money and stock records stay; the message log, the consent history, the security log and fraud checks are kept as the record.",
+      "h": "Customer requests",
+      "d": "A customer asks for a copy of their data or to have it erased. Filing a request changes nothing; the owner carries it out. Money and stock records stay; the message log, the consent history, the security log and fraud checks are kept as the record.",
       "off": "Erasure requests are off. Turn them on in the card above to take one.",
       "phone": "Customer's mobile number",
       "reason": "What he asked, and how (phone, shop, message)",
@@ -66,9 +66,9 @@
         "READY": "Copy ready"
       },
       "cancel": "Cancel",
-      "erase": "Erase now",
+      "erase": "Erase",
       "ownerOnly": "Only the owner can erase.",
-      "confirmTitle": "Erase this customer's details?",
+      "confirmTitle": "Erase this customer’s data?",
       "confirmEffects": [
         "His name, numbers, e-mail, birthday, saved addresses and spoken addresses (the words and the recording) are removed from his profile and his orders. This cannot be undone.",
         "His orders, their money and stock stay; the courier records keep the order numbers only.",
@@ -82,12 +82,14 @@
       "done": "Erased.",
       "kind": "What",
       "kinds": {
-        "COPY": "Copy of data",
-        "ERASURE": "Erasure"
+        "COPY": "wants a copy of their data",
+        "ERASURE": "wants their data erased"
       },
       "fromCustomer": "asked from his account",
-      "approve": "Approve copy",
-      "approved": "Approved. He can download his copy from his account."
+      "approve": "Send copy",
+      "approved": "Approved. He can download his copy from his account.",
+      "daysLeft": "{n} days left",
+      "daysOver": "{n} days past the time to answer"
     },
     "err": {
       "STALE": "Someone else changed this card; it shows their values now.",
@@ -144,7 +146,7 @@
       "mapLinkHelp": "Starts with https:// and has {lat} and {lng} in it; the point fills them in."
     },
     "board": {
-      "waiting": "{n} customer request(s) waiting.",
+      "waiting": "{n} customer request(s) waiting. Answer within {days} days.",
       "export": {
         "h": "Export your data",
         "orders": "Orders",
@@ -156,7 +158,8 @@
         "done": "File downloaded",
         "pinTitle": "Export customer data?",
         "pinText": "This file has phone numbers and addresses. Keep it safe. The export is recorded in the activity log.",
-        "pinOk": "Export"
+        "pinOk": "Export",
+        "partial": "ZIP downloaded without the files you may not export"
       },
       "keep": {
         "h": "How long things are kept",
@@ -168,7 +171,8 @@
         "m6": "6 months",
         "hint": "Orders and money records are always kept for accounts — they are never removed.",
         "save": "Save",
-        "saved": "Saved"
+        "saved": "Saved",
+        "answer": "Answer a customer request within (days)"
       },
       "import": {
         "h": "Import old customers",

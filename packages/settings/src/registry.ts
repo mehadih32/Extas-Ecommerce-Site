@@ -152,6 +152,7 @@ import { pageSettingsSettings } from './registry-page-settings';
 import { customiseSettings } from './registry-customise';
 import { storeDetailsSettings } from './registry-store-details';
 import { parityE2Settings } from './registry-parity-e2';
+import { parityE5Settings } from './registry-parity-e5';
 import { parityE3Settings } from './registry-parity-e3';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
@@ -1705,6 +1706,8 @@ export const registry = {
   ...parityE2Settings,
   // ---- PR 815-816 · the small settings of Settings, lane E3 (registry-parity-e3.ts). ----
   ...parityE3Settings,
+  // ---- PR 846, 851 · the small settings of Settings, lane E5 (registry-parity-e5.ts). ----
+  ...parityE5Settings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
