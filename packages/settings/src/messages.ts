@@ -152,6 +152,8 @@ import storeDetailsBn from '../messages/store-details.bn.json';
 import storeDetailsEn from '../messages/store-details.en.json';
 import parityE2Bn from '../messages/parity-e2.bn.json';
 import parityE2En from '../messages/parity-e2.en.json';
+import parityE3Bn from '../messages/parity-e3.bn.json';
+import parityE3En from '../messages/parity-e3.en.json';
 import practiceBn from '../messages/practice.bn.json';
 import practiceEn from '../messages/practice.en.json';
 // S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app.
@@ -627,3 +629,6 @@ messages.bn = mergeMessages(messages.bn, storeDetailsBn);
 // PR 815-820 (registry v817-820): the small settings of Settings and AI Center, lane E2 (registry-parity-e2.ts).
 messages.en = mergeMessages(messages.en, parityE2En);
 messages.bn = mergeMessages(messages.bn, parityE2Bn);
+// PR 815-816 (registry v815-816): the small settings of Settings, lane E3 (registry-parity-e3.ts).
+messages.en = mergeMessages(messages.en, parityE3En);
+messages.bn = mergeMessages(messages.bn, parityE3Bn);

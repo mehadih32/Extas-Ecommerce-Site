@@ -1,0 +1,14 @@
+{
+  "security": {
+    "blockedAddresses": {
+      "label": "Blocked addresses",
+      "help": "Addresses blocked from the admin sign-in page. An unblock only takes the address off this list."
+    }
+  },
+  "privacy": {
+    "keepMonths": {
+      "label": "How long things are kept",
+      "help": "How long old product photos and videos and chat messages are kept. Orders and money records are always kept for accounts."
+    }
+  }
+}

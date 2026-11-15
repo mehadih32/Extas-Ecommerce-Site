@@ -125,12 +125,12 @@ export function TelegramControlScreen({ dict, view, money, pairMinutes }: Telegr
           <ul className="s28-list">
             {view.ownerChat ? (
               <li className="s28-row between" style={{ alignItems: 'center' }}>
-                <div className="s28-grow"><b>{c('accounts.you')}</b> <span className="a2-chip">{c('accounts.owner')}</span><div className="a2-xs a2-mute">{view.ownerChat}</div></div>
+                <div className="s28-grow"><b>{c('accounts.you')}</b> <span className="a2-pill line">{c('accounts.owner')}</span><div className="a2-xs a2-mute">{view.ownerChat}</div></div>
               </li>
             ) : null}
             {view.accounts.map((x) => (
               <li key={x.id} className="s28-row between" style={{ alignItems: 'center' }} data-testid="tg-account">
-                <div className="s28-grow"><b>{x.who}</b> <span className="a2-chip">{x.role}</span><div className="a2-xs a2-mute">{x.id}</div></div>
+                <div className="s28-grow"><b>{x.who}</b> <span className="a2-pill line">{x.role}</span><div className="a2-xs a2-mute">{x.id}</div></div>
                 <button type="button" className="a2-btn sm" onClick={() => setAsk({ kind: 'remove', id: x.id, who: x.who })}>{c('accounts.remove')}</button>
               </li>
             ))}

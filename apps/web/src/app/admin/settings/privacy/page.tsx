@@ -12,9 +12,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
+import { isOwner } from '@extas/auth';
+import { CHAT_KEEP_MONTHS, MEDIA_KEEP_MONTHS, PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { PrivacyBoard } from '@/components/admin/settings/PrivacyBoard';
 import { PrivacyRequests } from '@/components/admin/settings/PrivacyRequests';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -111,6 +113,10 @@ export default async function PrivacyPage() {
     { kind: 'text', path: 'mapLink', label: s('loc.mapLink'), help: s('loc.mapLinkHelp'), max: SHARED_LOCATION_LINK_MAX },
   ];
   const lcard = v.cards.location;
+  const keepMonths = await access.deps.resolver.value('privacy.keepMonths');
+  const owner = access.guard.actor.staffUserId ? await isOwner(access.deps.db, access.guard.actor.staffUserId) : false;
+  const waitingN = (v.requests ?? []).filter((r) => r.status === 'REQUESTED').length;
+  const flatWords = flat(words as unknown as Record<string, unknown>);
   const card = v.cards.keep;
   const ccard = v.cards.customer;
   const on = card.value.erasureRequests === true;
@@ -150,6 +156,42 @@ export default async function PrivacyPage() {
         </div>
       </div>
 
+      {waitingN > 0 ? (
+        <div className="a2-note a2-mt12" role="status" data-testid="privacy-waiting">
+          <ShellIcon name="alert" size={15} />
+          <span>{s('board.waiting', { n: num(waitingN) })}</span>
+        </div>
+      ) : null}
+
+      {v.requests ? (
+        <PrivacyRequests
+          w={flatWords}
+          effects={[...words.req.confirmEffects]}
+          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
+          on={on}
+          canRequest={v.canRequest}
+          canErase={v.canErase}
+          locale={view.locale}
+          timeZone={view.timeZone}
+        />
+      ) : null}
+
+      <PrivacyBoard
+        w={flatWords}
+        chips={[...words.board.own.chips]}
+        keep={{ media: keepMonths.media, chat: keepMonths.chat }}
+        mediaOptions={MEDIA_KEEP_MONTHS}
+        chatOptions={CHAT_KEEP_MONTHS}
+        canEdit={canEdit}
+        isOwner={owner}
+        importHref="/admin/customers/import"
+        freshHref={owner ? '/admin/settings/start-fresh' : null}
+        today={new Date().toISOString().slice(0, 10)}
+      />
+
+      <details className="a2-card a2-mt12" data-testid="privacy-more">
+        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>{s('board.more')}</summary>
+        <div className="a2-cs">{s('board.moreSub')}</div>
       {v.purge.overdue ? (
         <div className="a2-note a2-mt12" role="status" data-testid="privacy-overdue">
           <ShellIcon name="alert" size={15} />
@@ -202,18 +244,7 @@ export default async function PrivacyPage() {
         </Link>
       </section>
 
-      {v.requests ? (
-        <PrivacyRequests
-          w={flat(words as unknown as Record<string, unknown>)}
-          effects={[...words.req.confirmEffects]}
-          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
-          on={on}
-          canRequest={v.canRequest}
-          canErase={v.canErase}
-          locale={view.locale}
-          timeZone={view.timeZone}
-        />
-      ) : null}
+      </details>
     </div>
   );
 }

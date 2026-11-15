@@ -307,3 +307,5 @@ export * from './registry-customise';
 export * from './registry-store-details';
 // PR 815-820 — the small settings of Settings and AI Center (registry-parity-e2.ts).
 export * from './registry-parity-e2';
+// PR 815-816 — the small settings of Settings, lane E3 (registry-parity-e3.ts).
+export * from './registry-parity-e3';
