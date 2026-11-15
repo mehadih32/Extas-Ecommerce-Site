@@ -225,7 +225,35 @@
         "raise": "Raise budget",
         "worst": "\"{name}\" returns only {roas} per ৳1: {spend} spent. Stop or fix it.",
         "pause": "Pause ad"
-      }
+      },
+      "colDo": "Do this",
+      "v": {
+        "scale": "Scale",
+        "keep": "Keep",
+        "fix": "Fix",
+        "stop": "Stop"
+      },
+      "why": {
+        "scale": "Each ৳1 brings ৳{per}. Raise the budget step by step (about 20% a week).",
+        "keep": "Pays back (৳{per} per ৳1). Keep it running and test one new photo.",
+        "fix": "Weak (৳{per} per ৳1). Change the audience or the creative before spending more.",
+        "stop": "Loses money (৳{per} per ৳1). Stop it, or rebuild it before spending again."
+      },
+      "paidFree": "Paid vs free orders",
+      "paidFreeSub": "Orders that came from paid ads, and orders that came without them",
+      "paidFreeAria": "{paid}% of orders from ads, {free}% without ads",
+      "fromAds": "From ads",
+      "withoutAds": "Without ads",
+      "coupons": "Coupons",
+      "couponsSub": "Coupons used on orders in this period",
+      "noCoupons": "No coupon was used in this period.",
+      "colCode": "Code",
+      "colUses": "Uses",
+      "colDiscount": "Discount given",
+      "colOrderValue": "Order value",
+      "colCostPct": "Cost %",
+      "on": "On",
+      "off": "Off"
     },
     "review": {
       "metaTitle": "Monthly review",
@@ -293,7 +321,14 @@
         "orders": "Delivered orders in the month.",
         "returns": "Parcels that came back ÷ (delivered + came back), all channels (Money › Profit by channel).",
         "lines": "The went-well and went-badly lines are written by fixed rules from these figures: no AI is used and nothing is sent."
-      }
+      },
+      "pdf": "Save as PDF",
+      "tg": "Send to Telegram",
+      "tgSending": "Sending…",
+      "tgSent": "Sent to your Telegram.",
+      "tgSkipped": "Not sent: Telegram is switched off for digests, or this month's digest already went.",
+      "tgFailed": "Could not send. Check the Telegram connection in Keys & connections.",
+      "tgNoKey": "You need the right to run analytics digests (reports.analytics.write) to send this."
     }
   }
 }

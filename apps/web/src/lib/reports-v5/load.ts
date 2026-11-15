@@ -6,7 +6,7 @@
 // metric query).
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { ymdIn, type ChannelProfit, type GroupProfit } from '@extas/metrics';
+import { daysPeriod, ymdIn, type ChannelProfit, type GroupProfit } from '@extas/metrics';
 import type { PermissionKey } from '@extas/auth';
 import type { AdminDeps } from '../admin-auth';
 import { channelProfitView } from '../channel-profit-view';
@@ -143,6 +143,39 @@ export interface MarketingData {
   was: ReportOverview;
   days: AdDay[];
   sales: ProfitReport;
+  /** PR 735: every coupon used on an order in the period (CouponRedemption), with the order value it came with. */
+  coupons: CouponUse[];
+}
+
+export interface CouponUse {
+  id: string;
+  code: string;
+  enabled: boolean;
+  uses: number;
+  discountMinor: number;
+  orderMinor: number;
+}
+
+/** Coupons used in the period: uses, discount given and the value of the orders they were on (cancelled orders left out). */
+export async function loadCouponUse(deps: AdminDeps, from: string, to: string): Promise<CouponUse[]> {
+  const tz = (await deps.resolver.value('store.timeZone', { storeId: S })) as string;
+  const per = daysPeriod(from, to, tz);
+  const rows = await deps.db.couponRedemption.findMany({
+    where: { storeId: S, createdAt: { gte: per.from, lt: per.to } },
+    select: { couponId: true, discountMinor: true, coupon: { select: { code: true, enabled: true } }, orderId: true },
+  });
+  const orders = await deps.db.order.findMany({ where: { id: { in: rows.map((r) => r.orderId) }, status: { not: 'CANCELLED' } }, select: { id: true, totalMinor: true } });
+  const total = new Map(orders.map((o) => [o.id, o.totalMinor]));
+  const by = new Map<string, CouponUse>();
+  for (const r of rows) {
+    if (!total.has(r.orderId)) continue;
+    const x = by.get(r.couponId) ?? { id: r.couponId, code: r.coupon.code, enabled: r.coupon.enabled, uses: 0, discountMinor: 0, orderMinor: 0 }; // hardcode-ok: a running total starts empty
+    x.uses += 1;
+    x.discountMinor += r.discountMinor;
+    x.orderMinor += total.get(r.orderId) ?? 0;
+    by.set(r.couponId, x);
+  }
+  return [...by.values()].sort((a, b) => b.uses - a.uses);
 }
 
 /** Reports › Marketing & ads: Marketing › Report's own figure for the period and the span before, plus ad spend by day. */
@@ -151,8 +184,8 @@ export async function loadMarketing(deps: AdminDeps, sp: Sp): Promise<MarketingD
   const now = await reportOverview(rd, sp);
   const { from, to } = now.period.q;
   const prev = previousSpan(from, to);
-  const [was, days, sales] = await Promise.all([reportOverview(rd, { from: prev.from, to: prev.to }), now.report ? adSpendByDay(deps.db, now.currency, from, to) : Promise.resolve([]), profitReport(deps, S, from, to)]);
-  return { now, was, days, sales };
+  const [was, days, sales, coupons] = await Promise.all([reportOverview(rd, { from: prev.from, to: prev.to }), now.report ? adSpendByDay(deps.db, now.currency, from, to) : Promise.resolve([]), profitReport(deps, S, from, to), loadCouponUse(deps, from, to)]);
+  return { now, was, days, sales, coupons };
 }
 
 export interface ReviewData {
