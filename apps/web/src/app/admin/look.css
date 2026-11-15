@@ -568,6 +568,11 @@
 .adm2 .a3-ofstep.on{box-shadow:inset 0 0 0 2px var(--a3-c1)}
 .adm2 .a3-odense .a2-tbl tbody tr{line-height:1.2}
 .adm2 .a3-odense .a2-tbl td,.adm2 .a3-odense .a2-tbl th{padding:6px 10px}
+/* Device gate: the dense look's cell padding belongs to the desktop table. Where a row is a card (phones, and the order list on
+   tablets) each cell is a grid item, and 10 px of padding on both sides pushed the item, status and tick-box cells past the
+   card's edge (Orders design C, Products designs B and C stuck out to the right of a 360-440 px phone). */
+@media (max-width:767px){.adm2 .a3-odense .a2-tbl td{padding:0}}
+@media (min-width:768px) and (max-width:1199px){.adm2 .a3-odense [data-testid=orders-table] td{padding:0}}
 @media (max-width:899px){.adm2 .a3-oflow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:1023px),(hover:none),(pointer:coarse),(any-pointer:coarse){
   .adm2 .a3-ofold>summary{min-height:44px}
