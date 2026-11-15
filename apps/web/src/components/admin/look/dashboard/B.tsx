@@ -32,6 +32,7 @@ import { CsvButton, LookMenu } from '../LookMenu';
 import { RangeSeg } from '../RangeSeg';
 import type { Fmt } from '../fmt';
 import { LowStock, MoneyView, TopProducts } from './A';
+import { PageCheckLine } from './ProtoCards';
 import { aov, can, prevText, rangeText, type DashProps } from './common';
 
 /** Which icon a waiting list wears in "Needs you" (its row in lib/admin-shell/queues.ts says where it opens). */
@@ -164,6 +165,7 @@ function Needs({ p }: { p: DashProps }) {
         ) : (
           <Queue title={f.t('dsh.lm.doNow')} sub={f.t('dsh.lm.needsSub')} rows={[]} empty={{ title: f.t('dsh.lm.caught'), text: f.t('dsh.prob.none') }} refresh={false} testId="dash-do-none" />
         )}
+        <PageCheckLine p={p} />
       </div>
       <p className="lm-note">{f.t('dsh.prob.later', { a: f.t('dsh.stage.S21'), b: f.t('dsh.stage.S22') })}</p>
     </div>
@@ -566,7 +568,7 @@ export const dashboardB: LookDesign<DashProps, DashPart> = {
     en: 'The Lumen look: today’s sales in a big hero chart, what needs you with one button each, where orders are, the newest orders as they come in, an optional monthly goal and the cards that matter. Follows dark mode.',
     bn: 'Lumen চেহারা: বড় গ্রাফে বিক্রি, কী আপনার জন্য অপেক্ষা করছে (প্রতিটায় একটা বোতাম), অর্ডার এখন কোথায়, নতুন অর্ডার আসার সাথে সাথে, চাইলে মাসের লক্ষ্য, আর দরকারি কার্ডগুলো। ডার্ক মোডেও চলে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'profit'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'profit', 'pageCheck'],
   Render: DashboardB,
   Thumb: ThumbB,
 };

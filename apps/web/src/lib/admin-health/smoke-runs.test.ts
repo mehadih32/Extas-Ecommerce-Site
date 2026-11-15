@@ -1,7 +1,10 @@
 // S21 · PR 418 — the Smoke runs page's rows: checked field by field, grouped per page with failed pages first, and an
 // admin page's picture hidden without `health.smoke.shots`.
+import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { pagesOf, rowsOf, SHOT_NAME } from './smoke-runs';
+import { latestNightlyCheck, pagesOf, rowsOf, SHOT_NAME } from './smoke-runs';
 
 const row = (path: string, screen: string, ok = true, screenshot: unknown = `${path.slice(1).replace(/\W+/g, '-') || 'home'}-${screen}.jpg`) => ({ path, screen, status: ok ? 200 : 500, landed: path, ok, problems: ok ? [] : [`${path}: answered 500`], screenshot });
 
@@ -35,5 +38,18 @@ describe('Smoke runs rows (PR 418)', () => {
     expect(all[1]!.screens.map((s) => s.shot)).toEqual(['home-phone.jpg', 'home-desktop.jpg']);
     expect(pagesOf(rows, 'all', true)[0]!.screens[0]!.shot).toBe('admin-orders-phone.jpg');
     expect(pagesOf(rows, 'failed', true).map((p) => p.path)).toEqual(['/admin/orders']);
+  });
+});
+
+describe('Home nightly page check (PR 795)', () => {
+  it('reads the newest nightly run: its time, the pages checked and the pages that failed; none kept means null', async () => {
+    expect(await latestNightlyCheck(null)).toBeNull();
+    const dir = await mkdtemp(join(tmpdir(), 'smoke-'));
+    expect(await latestNightlyCheck(dir)).toBeNull();
+    const slot = join(dir, 'smoke-runs', 'scheduled');
+    await mkdir(slot, { recursive: true });
+    await writeFile(join(slot, 'result.json'), JSON.stringify({ at: '2026-11-12T21:00:00Z', kind: 'scheduled', sha: 'abc', ok: false, pages: 142, failed: 1 }));
+    await writeFile(join(slot, 'rows.json'), JSON.stringify({ rows: [row('/', 'phone'), row('/shop/size-chart', 'phone', false), row('/shop/size-chart', 'desktop')] }));
+    expect(await latestNightlyCheck(dir)).toEqual({ at: '2026-11-12T21:00:00Z', pages: 142, failed: ['/shop/size-chart'] });
   });
 });

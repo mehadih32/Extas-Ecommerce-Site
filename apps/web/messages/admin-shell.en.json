@@ -895,7 +895,27 @@
       "courTitle": "Delivery: by courier",
       "courSub": "Delivery success, last {n} days",
       "courLink": "Delivery report",
-      "courNone": "No parcel has finished yet"
+      "courNone": "No parcel has finished yet",
+      "pcLine": "Nightly page check ({at}): {pages} pages checked · {result}",
+      "pcFailed": "{n} failed — {names}",
+      "pcOk": "all fine",
+      "pcNone": "Nightly page check: no run kept yet",
+      "erpTitle": "ERP link",
+      "erpDetails": "Details",
+      "erpConn": "Connection",
+      "erp_ok": "Working",
+      "erp_needs": "Needs a look",
+      "erp_off": "Not connected",
+      "erpStock": "Stock last pulled",
+      "erpNever": "Not yet",
+      "erpSent": "Orders sent today",
+      "erpOwed": "Shop owes ERP (buying price)",
+      "erpAhead": "Paid ahead to ERP",
+      "feedTitle": "Latest orders",
+      "feedAll": "All orders",
+      "codOldBold": "{n} COD payouts are older than 7 days",
+      "codOldRest": "({v}). Ask the couriers.",
+      "codOldList": "See list"
     }
   },
   "look": {
