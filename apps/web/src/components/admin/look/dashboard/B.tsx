@@ -1,65 +1,26 @@
-// PR 631 (CN-036) — Dashboard design B, "Today" in the Lumen look (docs/demo/admin-look/LUMEN-SPEC.md §4, the prototype
-// ADMIN-LOOKS-V1.html "ঘ · Lumen" Home). It is the Lumen standard; design A (the V12.4 "Calm overview") stays one
-// click away in the "…" menu and in Settings → Admin look (CN-025: nothing deleted). It draws the same figures through
-// the one loader (lib/admin-look/dashboard-data.ts) and the same keys decide who sees what:
-// - the hero: Sales (delivered orders only, the one KPI definition of PR 155, provisional until settlements are
-//   matched) with the period before as a dashed line, Ordered value, orders and the average order beside it;
-// - "Needs you": every waiting list this person may open (confirm, prepaid, review/risky COD, cancels, low stock, …,
-//   each list's own rule and threshold in its own settings) plus the packed parcels not booked with a courier; each
-//   row has one clear button that opens its page (nothing is done from here, so nothing needs an Undo);
-// - tiles: orders, delivery success, returned parcels; the order pipeline (a bar opens All orders on that status);
-//   the live feed of the newest orders (`admin.today.liveRows`); the monthly goal ring (`admin.today.goal`, off as
-//   shipped); top products, couriers and stock running out; the "Money & marketing" view one click away.
-// The page root carries data-lm-ready, so it follows dark mode; everything is drawn with --lm-* tokens.
+// PR 631 (CN-036) — Dashboard design B (Lumen look: docs/demo/admin-look/LUMEN-SPEC.md §4).
+// PR 862 (prototype v5 parity, lane A6): the Overview is the prototype's Home design B "Calm", line by line
+// (docs/demo/admin-proto-v5/js/m-home.js): the yellow COD line and the profit snapshot, then ONE navy card with this month's
+// net profit, the month target ("Change target") and the "In short" sentences; "Do now" beside four figures (orders, delivered
+// sales, money with couriers, return rate); the sales trend; "Products: what to do" beside "Ads: are they paying?".
+// Every figure comes from the same loader (lib/admin-look/dashboard-data.ts) and the same keys decide who sees what.
+// The "Money & marketing" view, the range buttons, the "…" menu and the yellow off-site backup line stay as they were.
+// The Lumen hero chart, the order pipeline, the live feed, the goal ring and the courier and low-stock cards of this
+// design are not on the prototype's Home and are no longer drawn here (the same figures are in Reports).
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { EmptyState } from '@/components/admin/lumen/EmptyState';
-import { HeroChart, type HeroRange } from '@/components/admin/lumen/HeroChart';
-import { Queue, type QueueRow as LmQueueRow } from '@/components/admin/lumen/Queue';
 import { SettingCards, type SettingCardDef } from '@/components/admin/lumen/SettingCards';
-import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { moneyOf } from '@/components/admin/products/model';
 import { PlaceGuide } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
-import { salesPerUnit, type DashPart } from '@/lib/admin-look/dashboard-data';
-import { change } from '@/lib/admin-look/chart';
+import type { DashPart } from '@/lib/admin-look/dashboard-data';
 import { rangeHref } from '@/lib/admin-look/range';
-import type { CountFormat } from '@/lib/admin-lumen/model';
-import type { ShellIconName } from '@/lib/admin-shell/icons';
 import type { LookDesign } from '../types';
-import { Bar, Delta } from '../kit';
 import { CsvButton, LookMenu } from '../LookMenu';
 import { RangeSeg } from '../RangeSeg';
-import type { Fmt } from '../fmt';
-import { LowStock, MoneyView, TopProducts } from './A';
-import { PageCheckLine } from './ProtoCards';
-import { aov, can, prevText, rangeText, type DashProps } from './common';
-
-/** Which icon a waiting list wears in "Needs you" (its row in lib/admin-shell/queues.ts says where it opens). */
-const NEED_ICON: Record<string, ShellIconName> = {
-  ordersConfirm: 'phone',
-  ordersPrepaid: 'wallet',
-  ordersAwaitingAdvance: 'wallet',
-  ordersTwoSizes: 'shirt',
-  ordersReview: 'shield',
-  ordersCancelRequests: 'x',
-  ordersCancelPending: 'uturn',
-  launch: 'shirt',
-  lowStock: 'box',
-  countsReview: 'check',
-  erpFailed: 'sync',
-  erpHold: 'alert',
-  booksDifferences: 'wallet',
-  jobsDead: 'alert',
-  agentFixes: 'shield',
-  handoverWaiting: 'truck',
-  packingCards: 'alert',
-  packingCardsLate: 'clock',
-};
-
-function moneyFormat(f: Fmt): CountFormat {
-  return { kind: 'money', locale: f.locale, currency: f.currency, digits: moneyOf(f.currency, f.locale).digits };
-}
+import { MoneyView } from './A';
+import { AdsPaying, CalmHero, CodStrip, DoNow, ProductsToDo, ProfitSnap, SixTiles, TrendCard } from './ProtoCards';
+import { can, type DashProps } from './common';
 
 function Head({ p, views }: { p: DashProps; views: ReactNode }) {
   const { f, head } = p;
@@ -84,365 +45,6 @@ function Head({ p, views }: { p: DashProps; views: ReactNode }) {
   );
 }
 
-function Hero({ p }: { p: DashProps }) {
-  const { f, data } = p;
-  const m = data.money!;
-  const a = aov(m.cur.sales);
-  const range: HeroRange = {
-    key: 'cur',
-    label: rangeText(f, data),
-    total: m.cur.sales.itemsMinor,
-    shown: f.money(m.cur.sales.itemsMinor),
-    delta: change(m.cur.sales.itemsMinor, m.prev.sales.itemsMinor),
-    vs: f.t('dsh.vsAmount', { vs: prevText(f, data), amount: f.money(m.prev.sales.itemsMinor) }),
-    points: m.chart.days.map((d, i) => ({ label: f.day(d, true), value: m.chart.sales[i] ?? 0, shown: f.money(m.chart.sales[i] ?? 0), prevShown: f.money(m.chart.prevSales[i] ?? 0) })),
-    prev: m.chart.prevSales,
-    mini: [
-      { label: f.t('dsh.ordersPlaced'), shown: f.n(m.cur.ordered.orders) },
-      { label: f.t('dsh.aov'), shown: a === null ? '—' : f.money(a) },
-    ],
-  };
-  return (
-    <div className="lm-today-hero" data-testid="dash-hero">
-      <HeroChart title={`${f.t('dsh.sales')} · ${rangeText(f, data)}`} ranges={[range]} format={moneyFormat(f)} seriesName={f.t('dsh.sales')} prevName={f.t('dsh.prevPeriod')} testId="dash-kpi-sales" numClass="a3-num" />
-      <p className="lm-note lm-ordv" data-testid="dash-kpi-ordered" title={f.t('dash.tile.orderedTitle')}>
-        <b>{f.t('dsh.ordered')}</b> <span className="a3-num">{f.money(m.cur.ordered.valueMinor)}</span> <Delta f={f} x={change(m.cur.ordered.valueMinor, m.prev.ordered.valueMinor)} /> · {f.t('dsh.orderedNote', { n: f.n(m.cur.ordered.orders) })}
-      </p>
-      <p className="lm-note" title={f.t('dsh.provisionalTip')}>
-        {f.t('dsh.salesNote')} · {f.t('dash.status.provisional')}
-      </p>
-    </div>
-  );
-}
-
-function needsRows(p: DashProps): LmQueueRow[] {
-  const { f, data } = p;
-  const rows: LmQueueRow[] = (data.queues ?? []).map((q) => ({
-    id: q.id,
-    title: f.t(`dash.queue.${q.id}`),
-    sub: q.oldest ? f.t('dash.queue.sub', { n: f.n(q.n), age: f.ago(q.oldest) }) : f.t('shell.nav.waiting', { n: f.n(q.n) }),
-    meta: <span className={`lm-need-n ${q.def.tone}`}>{f.n(q.n)}</span>,
-    act: { kind: 'open', label: f.t('dsh.lm.open'), href: q.def.href },
-  }));
-  const st = data.stages;
-  if (st?.toBook && can(p.viewer, 'orders.read'))
-    rows.push({
-      id: 'toBook',
-      title: f.t('dsh.lm.toBook', { n: f.n(st.toBook) }),
-      sub: f.t('dsh.lm.toBookSub'),
-      meta: <span className="lm-need-n info">{f.n(st.toBook)}</span>,
-      act: { kind: 'open', label: f.t('dsh.lm.open'), href: '/admin/orders/packing' },
-    });
-  return rows;
-}
-
-/** The "Do now" groups. Bad-tone lists are Urgent, slow stock and set-up lists are This week, the rest is Today. */
-const WEEK_LISTS: ReadonlySet<string> = new Set(['lowStock', 'countsReview', 'launch', 'agentFixes', 'erpKeptAtSwitch', 'ordersTwoSizes']);
-
-function groupOf(p: DashProps, id: string): 'urgent' | 'today' | 'week' {
-  const q = (p.data.queues ?? []).find((x) => x.id === id);
-  if (q?.def.tone === 'bad') return 'urgent';
-  return WEEK_LISTS.has(id) ? 'week' : 'today';
-}
-
-function Needs({ p }: { p: DashProps }) {
-  const { f } = p;
-  const rows = needsRows(p);
-  const groups = (['urgent', 'today', 'week'] as const)
-    .map((g) => ({ g, rows: rows.filter((r) => groupOf(p, r.id) === g) }))
-    .filter((x) => x.rows.length > 0);
-  return (
-    <div className="lm-today-needs" data-testid="dash-needs">
-      <div data-testid="dash-problems">
-        {groups.length ? (
-          <>
-            <h2 className="lm-do-h">{f.t('dsh.lm.doNow')}</h2>
-            <p className="lm-sub">{f.t('dsh.lm.doSub', { n: f.n(rows.length) })}</p>
-            {groups.map((x) => (
-              <Queue key={x.g} title={f.t(`dsh.lm.grp${x.g === 'urgent' ? 'Urgent' : x.g === 'today' ? 'Today' : 'Week'}`)} rows={x.rows} empty={{ title: f.t('dsh.lm.caught') }} refresh={false} testId={`dash-do-${x.g}`} />
-            ))}
-          </>
-        ) : (
-          <Queue title={f.t('dsh.lm.doNow')} sub={f.t('dsh.lm.needsSub')} rows={[]} empty={{ title: f.t('dsh.lm.caught'), text: f.t('dsh.prob.none') }} refresh={false} testId="dash-do-none" />
-        )}
-        <PageCheckLine p={p} />
-      </div>
-      <p className="lm-note">{f.t('dsh.prob.later', { a: f.t('dsh.stage.S21'), b: f.t('dsh.stage.S22') })}</p>
-    </div>
-  );
-}
-
-function Tiles({ p }: { p: DashProps }) {
-  const { f, data, viewer } = p;
-  const m = data.money;
-  const dl = data.delivery;
-  const tiles: SummaryTile[] = [];
-  const num: CountFormat = { kind: 'number', locale: f.locale };
-  const pct: CountFormat = { kind: 'percent', locale: f.locale, digits: 1 };
-  if (m)
-    tiles.push({
-      key: 'orders',
-      label: f.t('dsh.orders'),
-      value: m.cur.ordered.orders,
-      shown: f.n(m.cur.ordered.orders),
-      format: num,
-      delta: change(m.cur.ordered.orders, m.prev.ordered.orders),
-      vs: f.t('dsh.avgOrdered', { amount: m.cur.ordered.orders ? f.money(Math.round(m.cur.ordered.valueMinor / m.cur.ordered.orders)) : '—' }),
-      href: can(viewer, 'orders.read') ? '/admin/orders' : undefined,
-      icon: 'bag',
-    });
-  if (dl) {
-    tiles.push({
-      key: 'success',
-      label: f.t('dsh.success'),
-      value: dl.rate ?? 0,
-      shown: f.pct(dl.rate),
-      format: pct,
-      delta: dl.rate !== null && dl.prevRate !== null ? dl.rate - dl.prevRate : null,
-      deltaText: dl.rate !== null && dl.prevRate !== null ? f.t('dsh.pts', { n: Math.abs((dl.rate - dl.prevRate) * 100).toFixed(1) }) : undefined,
-      vs: dl.finished ? f.t('dsh.accepted', { kept: f.n(dl.kept), n: f.n(dl.finished) }) : f.t('dsh.noneFinished', { n: f.n(dl.days) }),
-      href: can(viewer, 'delivery.read') ? '/admin/delivery' : undefined,
-      icon: 'truck',
-    });
-    tiles.push({
-      key: 'returns',
-      label: f.t('dsh.returned'),
-      value: dl.returnRate ?? 0,
-      shown: f.pct(dl.returnRate),
-      format: pct,
-      delta: dl.returnRate !== null && dl.prevReturnRate !== null ? dl.returnRate - dl.prevReturnRate : null,
-      deltaText: dl.returnRate !== null && dl.prevReturnRate !== null ? f.t('dsh.pts', { n: Math.abs((dl.returnRate - dl.prevReturnRate) * 100).toFixed(1) }) : undefined,
-      good: 'down',
-      vs: f.t('dsh.cameBack', { n: f.n(dl.returned) }),
-      href: can(viewer, 'delivery.read') ? '/admin/delivery' : undefined,
-      icon: 'uturn',
-    });
-  }
-  return tiles.length ? <SummaryTiles tiles={tiles} label={f.t('dsh.lm.tiles')} testId="dash-tile" /> : null;
-}
-
-function Pipeline({ p }: { p: DashProps }) {
-  const { f, data, s } = p;
-  const st = data.stages!;
-  const steps = [
-    { id: 'new', c: 'c1', label: f.t('dsh.pipe.new'), n: st.placed, sub: st.placed ? f.t('dsh.pipe.oldest', { age: f.ago(st.oldestNew) }) : f.t('dsh.pipe.noneWaiting'), href: '/admin/orders/confirm' },
-    { id: 'confirmed', c: 'c3', label: f.t('dsh.pipe.confirmed'), n: st.confirmed, sub: f.t('dsh.pipe.toPack'), href: '/admin/orders?view=confirmed' },
-    { id: 'packed', c: 'c4', label: f.t('dsh.pipe.packed'), n: st.packed, sub: st.toBook ? f.t('dsh.pipe.toBook', { n: f.n(st.toBook) }) : f.t('dsh.pipe.allBooked'), href: '/admin/orders?view=packed' },
-    { id: 'courier', c: 'c5', label: f.t('dsh.pipe.courier'), n: st.withCourier, sub: st.byCourier.map((c) => `${c.name} ${f.n(c.n)}`).join(' · ') || '—', href: '/admin/orders?view=courier' },
-    { id: 'today', c: 'c2', label: f.t('dsh.pipe.today'), n: st.deliveredToday, sub: f.t('dsh.pipe.yesterday', { n: f.n(st.deliveredYesterdayByNow) }), href: '/admin/orders?view=delivered' },
-  ];
-  const max = Math.max(1, ...steps.map((x) => x.n));
-  return (
-    <section className="lm-card lm-in lm-pipe" data-testid="dash-pipe" aria-labelledby="lm-pipe-h">
-      <div className="lm-card-h">
-        <h2 id="lm-pipe-h">{f.t('dsh.pipe.title')}</h2>
-        <Link className="lm-btn gh sm" href="/admin/orders">
-          {f.t('dsh.pipe.go')}
-        </Link>
-      </div>
-      <p className="lm-sub">{f.t('dsh.pipe.open', { n: f.n(st.open) })}</p>
-      <ul className="lm-bars">
-        {steps.map((x) => (
-          <li key={x.id}>
-            <Link href={x.href} data-testid={`dash-stage-${x.id}`} aria-label={`${x.label}: ${f.n(x.n)} — ${x.sub}`}>
-              <span className="lm-bar-l">{x.label}</span>
-              <span className="lm-bar-t" aria-hidden="true">
-                <i className={x.c} style={{ width: `${Math.max(x.n ? 4 : 0, Math.round((x.n / max) * 100))}%` }} />
-              </span>
-              <b className="lm-bar-n">{f.n(x.n)}</b>
-              <small className="lm-bar-s">{x.sub}</small>
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <p className="lm-sub lm-o2c">
-        {f.t('dsh.pipe.o2c')}: <b>{st.o2cHours !== null ? f.t('dsh.hours', { n: f.n(st.o2cHours) }) : '—'}</b>
-        {st.o2cHours !== null && st.o2cPrevHours !== null && st.o2cPrevHours > 0 ? (
-          <> · {f.t(st.o2cHours <= st.o2cPrevHours ? 'dsh.pipe.faster' : 'dsh.pipe.slower', { n: f.n(Math.abs(st.o2cHours - st.o2cPrevHours)) })}</>
-        ) : null}
-        {s.targetHours ? <> · {f.t('dsh.pipe.target', { n: f.n(s.targetHours) })}</> : st.o2cHours === null ? <> · {f.t('dsh.pipe.noO2c')}</> : null}
-      </p>
-    </section>
-  );
-}
-
-function Feed({ p }: { p: DashProps }) {
-  const { f } = p;
-  const rows = p.data.feed!;
-  return (
-    <section className="lm-card lm-in lm-feed" data-testid="dash-feed" aria-labelledby="lm-feed-h">
-      <div className="lm-card-h">
-        <h2 id="lm-feed-h">{f.t('dsh.lm.feed')}</h2>
-        <span className="lm-tag ok">{f.t('dsh.lm.now')}</span>
-      </div>
-      {rows.length ? (
-        <ul className="lm-feed-l">
-          {rows.map((r) => {
-            const area = f.lang === 'bn' && r.areaBn ? r.areaBn : r.areaEn;
-            return (
-              <li key={r.id}>
-                <Link href={`/admin/orders/${r.id}`} data-testid="dash-feed-row">
-                  <span className={`lm-fdot st-${r.status.toLowerCase()}`} aria-hidden="true" />
-                  <span className="lm-feed-m">
-                    <b>{f.t('dsh.lm.placed', { name: r.name ?? f.t('dsh.lm.someone'), number: r.number })}</b>
-                    <small>{[f.money(r.totalMinor), area, f.ago(r.placedAt), f.t(`orders.st.${r.status}`)].filter(Boolean).join(' · ')}</small>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <EmptyState title={f.t('dsh.lm.noFeed')} tone="calm" icon="bag" testId="dash-feed-empty" />
-      )}
-    </section>
-  );
-}
-
-function Goal({ p }: { p: DashProps }) {
-  const { f } = p;
-  const g = p.data.goal!;
-  const share = g.goalMinor > 0 ? g.salesMinor / g.goalMinor : null;
-  const r = 44;
-  const len = 2 * Math.PI * r;
-  const shown = share === null ? 0 : Math.min(1, share);
-  return (
-    <section className="lm-card lm-in lm-goal" data-testid="dash-goal" aria-labelledby="lm-goal-h">
-      <h2 id="lm-goal-h">{f.t('dsh.lm.goal', { month: new Intl.DateTimeFormat(f.locale, { month: 'long', timeZone: 'UTC' }).format(new Date(`${g.to}T00:00:00Z`)) })}</h2>
-      <div className="lm-goal-b">
-        <svg viewBox="0 0 100 100" className="lm-ring" role="img" aria-label={share === null ? f.t('dsh.lm.goalNone') : f.t('dsh.lm.goalAria', { pct: f.pct(share, 0) })}>
-          <circle cx="50" cy="50" r={r} className="lm-ring-bg" />
-          <circle cx="50" cy="50" r={r} className="lm-ring-fg" strokeDasharray={`${(shown * len).toFixed(1)} ${len.toFixed(1)}`} transform="rotate(-90 50 50)" />
-          <text x="50" y="50" className="lm-ring-t">
-            {share === null ? '—' : f.pct(share, 0)}
-          </text>
-        </svg>
-        <div className="lm-goal-x">
-          <b className="lm-goal-n">{f.money(g.salesMinor)}</b>
-          <span>{share === null ? f.t('dsh.lm.goalNone') : f.t('dsh.lm.goalOf', { goal: f.money(g.goalMinor), n: f.n(g.daysLeft) })}</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/** "Ads: are they paying?" — delivered sales per unit of ad spend, from the same profit report Home D reads. */
-function Roas({ p }: { p: DashProps }) {
-  const { f, viewer } = p;
-  const pf = p.data.profit!;
-  const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
-  const note = pf.cur.adsMinor === null ? f.t('dsh.lm.roasUnknown') : per === null ? f.t('dsh.lm.roasNone') : null;
-  return (
-    <section className="lm-card lm-in a3-B" data-testid="dash-roas" aria-labelledby="lm-roas-h">
-      <div className="lm-card-h">
-        <h2 id="lm-roas-h">{f.t('dsh.lm.roasTitle')}</h2>
-        {can(viewer, 'marketing.campaigns.read') ? (
-          <Link className="lm-btn gh sm" href="/admin/marketing">
-            {f.t('dsh.lm.roasMore')}
-          </Link>
-        ) : null}
-      </div>
-      <p className="lm-sub">{f.t('dsh.lm.roasSub')}</p>
-      <dl className="lm-roas">
-        <div>
-          <dt>{f.t('dsh.lm.roasSpend')}</dt>
-          <dd className="a3-num">{pf.cur.adsMinor === null ? '—' : f.money(pf.cur.adsMinor)}</dd>
-        </div>
-        <div>
-          <dt>{f.t('dsh.lm.roasSales')}</dt>
-          <dd className="a3-num">{f.money(pf.cur.salesMinor)}</dd>
-        </div>
-      </dl>
-      {per !== null ? (
-        <p className="lm-note" data-testid="dash-roas-x">
-          <b className="a3-num">{per.toFixed(1)}x</b> · {f.t('dsh.lm.roasRoas', { cur: f.currency })}
-        </p>
-      ) : (
-        <p className="lm-note">{note}</p>
-      )}
-    </section>
-  );
-}
-
-/** The month target card while the target is off (the ring above draws once it is on). */
-function GoalOff({ p }: { p: DashProps }) {
-  const { f } = p;
-  const mayEdit = can(p.viewer, 'settings.write');
-  return (
-    <section className="lm-card lm-in lm-goal" data-testid="dash-goal-off" aria-labelledby="lm-goaloff-h">
-      <h2 id="lm-goaloff-h">{f.t('dsh.lm.goalOff')}</h2>
-      <EmptyState title={f.t('dsh.lm.goalOffNone')} text={f.t('dsh.lm.goalOffText')} tone="calm" icon="check" />
-      {mayEdit ? (
-        <a className="lm-btn gh sm" href="#dash-settings" data-testid="dash-goal-set">
-          {f.t('dsh.lm.goalOffSet')}
-        </a>
-      ) : (
-        <p className="lm-note">{f.t('dsh.lm.goalOffNoAccess')}</p>
-      )}
-    </section>
-  );
-}
-
-function Couriers({ p }: { p: DashProps }) {
-  const { f, viewer } = p;
-  const dl = p.data.delivery!;
-  const list = dl.couriers.filter((c) => c.finished > 0);
-  return (
-    <section className="lm-card lm-in a3-B" data-testid="dash-couriers" aria-labelledby="lm-cour-h">
-      <div className="lm-card-h">
-        <h2 id="lm-cour-h">{f.t('dsh.cour.title')}</h2>
-        {can(viewer, 'delivery.read') ? (
-          <Link className="lm-btn gh sm" href="/admin/delivery">
-            {f.t('shell.sec.delivery')}
-          </Link>
-        ) : null}
-      </div>
-      <p className="lm-sub">{f.t('dsh.cour.sub', { n: f.n(dl.days) })}</p>
-      {list.length ? (
-        list.map((c) => (
-          <div className="a3-cour" key={c.id}>
-            <div className="a3-ct2">
-              <b>{c.name}</b>
-              <span className="a3-pc a3-num">{f.pct(c.rate)}</span>
-              <Delta f={f} x={c.rate !== null && c.prevRate !== null ? c.rate - c.prevRate : null} pts />
-            </div>
-            <Bar p={c.rate ?? 0} />
-            <div className="a3-meta">
-              {f.t('dsh.cour.returns', { pct: f.pct(c.finished ? c.returned / c.finished : null) })}
-              {c.avgDays !== null ? f.t('dsh.cour.reaches', { n: c.avgDays.toFixed(1) }) : ''}
-            </div>
-          </div>
-        ))
-      ) : (
-        <EmptyState title={f.t(dl.finished ? 'dsh.cour.noCourier' : 'dsh.noneFinished', { n: f.n(dl.days) })} tone="calm" icon="truck" />
-      )}
-      {dl.bestBand ? (
-        <p className="lm-tip">
-          <ShellIcon name="zap" size={16} />
-          <span>{f.t('dsh.cour.best', { band: f.lang === 'bn' && dl.bestBand.nameBn ? dl.bestBand.nameBn : dl.bestBand.nameEn, courier: dl.bestBand.courier, pct: f.pct(dl.bestBand.rate, 0) })}</span>
-        </p>
-      ) : null}
-    </section>
-  );
-}
-
-function ListCard({ id, title, sub, link, children, testId }: { id: string; title: string; sub: string; link: { href: string; label: string } | null; children: ReactNode; testId?: string }) {
-  return (
-    <section className="lm-card lm-in a3-B" data-testid={testId} aria-labelledby={`lm-${id}-h`}>
-      <div className="lm-card-h">
-        <h2 id={`lm-${id}-h`}>{title}</h2>
-        {link ? (
-          <Link className="lm-btn gh sm" href={link.href}>
-            {link.label}
-          </Link>
-        ) : null}
-      </div>
-      <p className="lm-sub">{sub}</p>
-      {children}
-    </section>
-  );
-}
-
 /** The owner's two cards for this page (`admin.today`, `settings.write`): the live feed and the monthly goal. */
 function PageSettings({ p }: { p: DashProps }) {
   const { f } = p;
@@ -450,7 +52,6 @@ function PageSettings({ p }: { p: DashProps }) {
   if (!t || !can(p.viewer, 'settings.write')) return null;
   const unit = 10 ** moneyOf(f.currency, f.locale).digits;
   const cards: SettingCardDef[] = [
-    { key: 'feed', title: f.t('dsh.lm.setFeed'), text: f.t('dsh.lm.setFeedText'), on: t.liveRows > 0, fields: [{ name: 'rows', label: f.t('dsh.lm.setRows'), kind: 'number', value: t.liveRows || 6, min: 1, max: 20, step: 1 }] },
     {
       key: 'goal',
       title: f.t('dsh.lm.setGoal'),
@@ -468,35 +69,32 @@ function PageSettings({ p }: { p: DashProps }) {
 }
 
 function Overview(p: DashProps) {
-  const { f, data, viewer, s } = p;
+  const { data, viewer } = p;
+  const canMoney = can(viewer, 'metrics.read');
+  const hasTop = !!data.top;
+  const hasAds = !!data.profit || !!data.ads?.rows.length;
   return (
-    <>
-      <div className="lm-today-top">
-        {data.money ? <Hero p={p} /> : null}
-        {data.queues ? <Needs p={p} /> : null}
+    <div className="a3-B a3-dash lm-island" data-testid="dash-calm">
+      {canMoney ? (
+        <>
+          <CodStrip p={p} />
+          <ProfitSnap p={p} />
+          <CalmHero p={p} />
+        </>
+      ) : null}
+      <div className={`a3-calm-g2${data.queues ? '' : ' solo'}`} data-testid="dash-calm-mid">
+        {data.queues ? <DoNow p={p} /> : null}
+        {canMoney ? <SixTiles p={p} only={['orders', 'sales', 'cod', 'ret']} /> : null}
       </div>
-      <Tiles p={p} />
-      <div className="lm-today-g3">
-        {data.stages ? <Pipeline p={p} /> : null}
-        {data.feed ? <Feed p={p} /> : null}
-        {data.goal ? <Goal p={p} /> : can(viewer, 'metrics.read') ? <GoalOff p={p} /> : null}
-      </div>
-      <div className="lm-today-g3">
-        {data.top ? (
-          <ListCard id="top" title={f.t('dsh.top.title')} sub={f.t('dsh.top.sub', { n: f.n(s.courierDays) })} link={can(viewer, 'catalogue.read') ? { href: '/admin/products', label: f.t('dsh.all') } : null} testId="dash-top">
-            <TopProducts f={f} rows={data.top} />
-          </ListCard>
-        ) : null}
-        {data.delivery ? <Couriers p={p} /> : null}
-        {data.profit ? <Roas p={p} /> : null}
-        {data.lowStock ? (
-          <ListCard id="low" title={f.t('dsh.low.title')} sub={f.t('dsh.low.sub')} link={{ href: '/admin/stock#st-low', label: f.t('dsh.low.link') }}>
-            <LowStock f={f} rows={data.lowStock} />
-          </ListCard>
-        ) : null}
-      </div>
+      {data.money ? <TrendCard p={p} id="dsh-b-sales" /> : null}
+      {hasTop || hasAds ? (
+        <div className="a3-calm-g2 even" data-testid="dash-calm-low">
+          {hasTop ? <ProductsToDo p={p} /> : null}
+          {hasAds ? <AdsPaying p={p} /> : null}
+        </div>
+      ) : null}
       <PageSettings p={p} />
-    </>
+    </div>
   );
 }
 
@@ -565,10 +163,11 @@ export const dashboardB: LookDesign<DashProps, DashPart> = {
   key: 'B',
   name: { en: 'Today (Lumen)', bn: 'আজ (Lumen)' },
   desc: {
-    en: 'The Lumen look: today’s sales in a big hero chart, what needs you with one button each, where orders are, the newest orders as they come in, an optional monthly goal and the cards that matter. Follows dark mode.',
-    bn: 'Lumen চেহারা: বড় গ্রাফে বিক্রি, কী আপনার জন্য অপেক্ষা করছে (প্রতিটায় একটা বোতাম), অর্ডার এখন কোথায়, নতুন অর্ডার আসার সাথে সাথে, চাইলে মাসের লক্ষ্য, আর দরকারি কার্ডগুলো। ডার্ক মোডেও চলে।',
+    en: 'Calm: profit snapshot, one navy card with this month\'s net profit, the month target and a short summary, "Do now" beside four figures, the sales trend, products and ads. Follows dark mode.',
+    bn: 'শান্ত: প্রফিট স্ন্যাপশট, এক গাঢ় নীল কার্ডে এই মাসের নিট লাভ, মাসের লক্ষ্য আর এক কথায়, চারটা সংখ্যার পাশে "এখন যা করবেন", বিক্রির ধারা, প্রোডাক্ট ও বিজ্ঞাপন। ডার্ক মোডেও চলে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'profit', 'pageCheck'],
+
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads', 'pageCheck'],
   Render: DashboardB,
   Thumb: ThumbB,
 };

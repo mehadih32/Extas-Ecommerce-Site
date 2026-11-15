@@ -7,11 +7,12 @@
 // (`metrics.read`, `books.read`) is left out. No new setting: the goal and its amount stay where Page settings keep them.
 import Link from "next/link";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
-import { nameIn } from "@/components/admin/products/model";
+import { moneyOf, nameIn } from "@/components/admin/products/model";
 import { salesPerUnit } from "@/lib/admin-look/dashboard-data";
 import type { ShellIconName } from "@/lib/admin-shell/icons";
 import type { ReactNode } from "react";
 import { change, trailingAverage } from "@/lib/admin-look/chart";
+import { ChangeTarget } from "./ChangeTarget";
 import { Bar, Card, Delta, Empty, LineChart, Lnk, Pill, Spark } from "../kit";
 import { can, rangeText, type DashProps } from "./common";
 
@@ -212,6 +213,7 @@ export function DoNow({ p }: { p: DashProps }) {
                   </span>
                 </span>
                 <b className="a3-num">{f.n(r.n)}</b>
+                <span className="a3-go" aria-hidden="true" />
               </Link>
             ))}
           </div>
@@ -396,7 +398,8 @@ export function AdsPaying({ p }: { p: DashProps }) {
   );
 }
 
-export function InShort({ p }: { p: DashProps }) {
+/** The three plain sentences of "In short" (also the right side of the Calm design's hero card). */
+export function shortLines(p: DashProps): string[] {
   const { f, data } = p;
   const lines: string[] = [];
   const m = data.money;
@@ -433,6 +436,12 @@ export function InShort({ p }: { p: DashProps }) {
         v: f.money(best.valueMinor),
       }),
     );
+  return lines;
+}
+
+export function InShort({ p }: { p: DashProps }) {
+  const { f } = p;
+  const lines = shortLines(p);
   return (
     <Card title={f.t("dsh.proto.shortTitle")} testId="dash-inshort">
       {lines.length ? (
@@ -449,16 +458,53 @@ export function InShort({ p }: { p: DashProps }) {
   );
 }
 
+export function targetWords(f: DashProps["f"]) {
+  return {
+    button: f.t("dsh.proto.targetChange"),
+    title: f.t("dsh.proto.targetTitle"),
+    field: f.t("dsh.proto.targetField"),
+    save: f.t("dsh.proto.targetSave"),
+    cancel: f.t("dsh.proto.targetCancel"),
+    saved: f.t("dsh.proto.targetSaved"),
+    failed: f.t("dsh.proto.targetFailed"),
+  };
+}
+
+/** The prototype's "Change target" button: for a person who may change settings; the amount is in whole units of the shop's currency. */
+export function ChangeTargetButton({
+  p,
+  amountMinor,
+}: {
+  p: DashProps;
+  amountMinor: number;
+}) {
+  const { f, viewer } = p;
+  if (!can(viewer, "settings.write")) return null;
+  const unit = 10 ** moneyOf(f.currency, f.locale).digits;
+  return (
+    <ChangeTarget
+      amount={Math.round(amountMinor / unit)}
+      currency={f.currency}
+      words={targetWords(f)}
+    />
+  );
+}
+
 export function MonthTarget({ p }: { p: DashProps }) {
   const { f, data } = p;
   const g = data.goal;
   if (!g) {
     return (
-      <Card title={f.t("dsh.lm.goalOff")} testId="dash-monthtarget-off">
+      <Card
+        cls="a3-hero-card"
+        title={f.t("dsh.lm.goalOff")}
+        testId="dash-monthtarget-off"
+      >
         <Empty
           title={f.t("dsh.lm.goalOffNone")}
           text={f.t("dsh.lm.goalOffText")}
         />
+        <ChangeTargetButton p={p} amountMinor={0} />
       </Card>
     );
   }
@@ -471,7 +517,7 @@ export function MonthTarget({ p }: { p: DashProps }) {
       ? Math.round((g.salesMinor / gone) * total)
       : null;
   return (
-    <Card title={f.t("dsh.lm.goalOff")} testId="dash-monthtarget">
+    <Card cls="a3-hero-card" title={f.t("dsh.lm.goalOff")} testId="dash-monthtarget">
       <p className="a3-cap">
         {f.t("dsh.proto.targetLine", {
           goal: f.money(g.goalMinor),
@@ -495,7 +541,84 @@ export function MonthTarget({ p }: { p: DashProps }) {
               })}
         </p>
       )}
+      <ChangeTargetButton p={p} amountMinor={g.goalMinor} />
     </Card>
+  );
+}
+
+/** Prototype Home B "Calm": one navy card with this month's net profit, the month target and the "In short" sentences beside it. */
+export function CalmHero({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  const pf = data.profit;
+  const mon = pf?.snap?.find((x) => x.key === "month");
+  const cur = mon?.cur ?? pf?.cur;
+  const prev = mon?.prev ?? pf?.prev;
+  if (!cur || !prev) return null;
+  const g = data.goal;
+  const done = g && g.goalMinor > 0 ? g.salesMinor / g.goalMinor : 0;
+  const gone = g ? Number(g.to.slice(8, 10)) : 0;
+  const pace =
+    g && gone > 0 && g.salesMinor > 0
+      ? Math.round((g.salesMinor / gone) * (gone + g.daysLeft))
+      : null;
+  const lines = shortLines(p);
+  return (
+    <section className="a3-card a3-hero-card a3-calm" data-testid="dash-calmhero">
+      <div className="a3-calm-l">
+        <span className="a3-cap">{f.t("dsh.proto.calmNet")}</span>
+        <b className="a3-num a3-calm-v">
+          {cur.netMinor === null ? "—" : f.money(cur.netMinor)}
+        </b>
+        <span className="a3-cap">
+          <Delta
+            f={f}
+            x={
+              cur.netMinor !== null && prev.netMinor
+                ? (cur.netMinor - prev.netMinor) / Math.abs(prev.netMinor)
+                : null
+            }
+          />{" "}
+          {f.t("dsh.proto.calmFrom", {
+            v: f.money(cur.salesMinor),
+            margin:
+              cur.netMinor !== null && cur.salesMinor > 0
+                ? f.pct(cur.netMinor / cur.salesMinor)
+                : "—",
+          })}
+        </span>
+        <div className="a3-calm-t" data-testid="dash-calm-target">
+          {g ? (
+            <>
+              <p className="a3-cap">
+                {f.t("dsh.proto.targetLine", {
+                  goal: f.money(g.goalMinor),
+                  pct: f.pct(done, 0),
+                })}
+              </p>
+              <Bar p={done} />
+              {pace === null ? null : (
+                <p className="a3-cap c">
+                  {pace >= g.goalMinor
+                    ? f.t("dsh.proto.paceMet", { v: f.money(pace) })
+                    : f.t("dsh.proto.paceShort", {
+                        v: f.money(pace),
+                        short: f.money(g.goalMinor - pace),
+                      })}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="a3-cap">{f.t("dsh.lm.goalOffNone")}</p>
+          )}
+          <ChangeTargetButton p={p} amountMinor={g?.goalMinor ?? 0} />
+        </div>
+      </div>
+      <div className="a3-calm-r">
+        {lines.map((l) => (
+          <p key={l}>• {l}</p>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -569,7 +692,13 @@ export function ProfitSnap({ p }: { p: DashProps }) {
 }
 
 /** Prototype's six figures with a small line each: orders, delivered sales, net profit, money with couriers, return rate, ad spend. */
-export function SixTiles({ p }: { p: DashProps }) {
+export function SixTiles({
+  p,
+  only,
+}: {
+  p: DashProps;
+  only?: readonly string[];
+}) {
   const { f, data } = p;
   const m = data.money;
   const pf = data.profit;
@@ -694,10 +823,14 @@ export function SixTiles({ p }: { p: DashProps }) {
       color: "var(--a3-c1)",
     });
   }
-  if (!tiles.length) return null;
+  const shown = only ? tiles.filter((t) => only.includes(t.key)) : tiles;
+  if (!shown.length) return null;
   return (
-    <div className="a3-six" data-testid="dash-six">
-      {tiles.map((t) => (
+    <div
+      className={`a3-six${only ? ` a3-six-${shown.length}` : ""}`}
+      data-testid="dash-six"
+    >
+      {shown.map((t) => (
         <Link
           className="a3-card a3-kpi"
           href={t.href}
@@ -902,5 +1035,26 @@ export function ProtoTop(p: DashProps) {
       <ProfitSnap p={p} />
       <SixTiles p={p} />
     </>
+  );
+}
+
+/** The prototype's "Delivery: by courier" card under "Ads: are they paying?". */
+export function CourierMid(p: DashProps) {
+  const { f, data, s } = p;
+  const dl = data.delivery!;
+  return (
+    <Card title={f.t('dsh.proto.courTitle')} sub={f.t('dsh.proto.courSub', { n: f.n(s.courierDays) })} right={can(p.viewer, 'delivery.read') ? <Lnk href="/admin/delivery">{f.t('dsh.proto.courLink')}</Lnk> : null} testId="dash-couriers">
+      {dl.couriers.length ? (
+        dl.couriers.map((c) => (
+          <div key={c.id} className="a3-cr">
+            <b>{c.name}</b>
+            <Bar p={c.rate ?? 0} />
+            <b className="a3-num">{f.pct(c.rate)}</b>
+          </div>
+        ))
+      ) : (
+        <Empty text={f.t('dsh.proto.courNone')} />
+      )}
+    </Card>
   );
 }

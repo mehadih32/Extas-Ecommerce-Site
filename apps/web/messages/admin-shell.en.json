@@ -1052,7 +1052,16 @@
       "tFresh": "all fresh",
       "trBest": "Best day",
       "paceMet": "At this pace the month ends near {v} (target met).",
-      "paceShort": "At this pace the month ends near {v} ({short} short)."
+      "paceShort": "At this pace the month ends near {v} ({short} short).",
+      "targetChange": "Change target",
+      "targetTitle": "Monthly sales target",
+      "targetField": "Target for this month (delivered sales)",
+      "targetSave": "Save",
+      "targetCancel": "Cancel",
+      "targetSaved": "Target saved",
+      "targetFailed": "The target could not be saved. Try again.",
+      "calmNet": "Net profit this month",
+      "calmFrom": "from {v} delivered sales · margin {margin}"
     }
   },
   "look": {

@@ -6,20 +6,18 @@
 // "Money & marketing" (with metrics.read) is one click away; its figures (ad spend, ROAS, COD held by couriers, the cost
 // of returns, the profit steps) have no store yet, so each card names the stage that brings it.
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { ResponsiveImage, altFor } from '@/components/media/ResponsiveImage';
 import { nameIn } from '@/components/admin/products/model';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import type { DashPart, LowRow, TopRow } from '@/lib/admin-look/dashboard-data';
-import { change, trailingAverage } from '@/lib/admin-look/chart';
 import { rangeHref } from '@/lib/admin-look/range';
 import type { ShellIconName } from '@/lib/admin-shell/icons';
 import type { LookDesign } from '../types';
 import { LookThumb } from '../thumbs';
-import { Bar, BarsChart, Card, Delta, Empty, LineChart, Lnk, Pill, Soon, Spark, Tile } from '../kit';
+import { BarsChart, Card, Empty, Pill, Soon } from '../kit';
 import type { Fmt } from '../fmt';
-import { can, DashHead, prevText, rangeText, type DashProps } from './common';
-import { ChartDoNow, ProtoLower, ProtoTop } from './ProtoCards';
+import { can, DashHead, rangeText, type DashProps } from './common';
+import { ChartDoNow, CourierMid, DoNow, ProtoLower, ProtoTop, TrendCard } from './ProtoCards';
 
 export function Photo({ image, name, lang, cls = 'sm' }: { image: TopRow['image']; name: string; lang: 'bn' | 'en'; cls?: 'xs' | 'sm' }) {
   return (
@@ -30,7 +28,6 @@ export function Photo({ image, name, lang, cls = 'sm' }: { image: TopRow['image'
 }
 
 const C1 = 'var(--a3-c1)';
-const CBAD = 'var(--a3-cbad)';
 
 export function TopProducts({ f, rows, testId }: { f: Fmt; rows: readonly TopRow[]; testId?: string }) {
   return rows.length ? (
@@ -101,236 +98,19 @@ export function problemsOf(p: DashProps): { icon: ShellIconName; tone: 'bad' | '
   return out.slice(0, 4);
 }
 
+/**
+ * PR 862 (prototype v5 parity, lane A6): the overview is the prototype's Home design A "Command", line by line — the same page
+ * as design D (profit snapshot, six figures, the sales trend with "Do now" beside it, Products / Ads over Delivery by courier /
+ * In short, Month target, ERP link, Latest orders). The order pipeline, "Needs attention" and the second top-products and
+ * low-stock cards this design drew before are not on the prototype's Home and are no longer drawn here.
+ */
 function Overview(p: DashProps) {
-  const { f, data, s, viewer } = p;
-  const m = data.money;
-  const dl = data.delivery;
-  const cd = data.chart.days;
-  const hero = m ? (
-    <section className="a3-card a3-hero" data-testid="dash-hero">
-      <div className="a3-herot">
-        <div data-testid="dash-kpi-sales">
-          <div className="a3-kl">
-            {f.t('dsh.sales')}
-            <small>{f.t('dsh.salesNote')}</small>
-          </div>
-          <div className="a3-hv a3-num">{f.money(m.cur.sales.itemsMinor)}</div>
-          <div className="a3-hm">
-            <Delta f={f} x={change(m.cur.sales.itemsMinor, m.prev.sales.itemsMinor)} />
-            <span>{f.t('dsh.vsAmount', { vs: prevText(f, data), amount: f.money(m.prev.sales.itemsMinor) })}</span>
-            <Pill tone="gold" title={f.t('dsh.provisionalTip')}>
-              {f.t('dash.status.provisional')}
-            </Pill>
-          </div>
-        </div>
-        <div className="a3-lg">
-          <span>
-            <i />
-            {f.t('dsh.legend.cur', { n: f.n(cd) })}
-          </span>
-          <span>
-            <i className="dash" />
-            {f.t('dsh.legend.prev', { n: f.n(cd) })}
-          </span>
-        </div>
-      </div>
-      <div className="a3-ordv" data-testid="dash-kpi-ordered" title={f.t('dash.tile.orderedTitle')}>
-        <span>{f.t('dsh.ordered')}</span>
-        <b className="a3-num">{f.money(m.cur.ordered.valueMinor)}</b>
-        <span>{f.t('dsh.orderedNote', { n: f.n(m.cur.ordered.orders) })}</span>
-        <Delta f={f} x={change(m.cur.ordered.valueMinor, m.prev.ordered.valueMinor)} />
-      </div>
-      <LineChart
-        id="dsh-b-sales"
-        labels={m.chart.days.map((d) => f.day(d, true))}
-        xl={m.chart.days.map((d) => f.day(d))}
-        series={[
-          { v: trailingAverage(m.chart.prevSales, s.smoothDays), color: 'var(--a3-cprev)', name: f.t('dsh.prevPeriod'), dash: true, w: 1.6, shown: m.chart.prevSales.map((v) => f.money(v)) },
-          { v: trailingAverage(m.chart.sales, s.smoothDays), color: C1, name: f.t('dsh.sales'), area: true, w: 2.2, shown: m.chart.sales.map((v) => f.money(v)) },
-        ]}
-        h={196}
-        label={f.t('dsh.chartLabel', { range: rangeText(f, data) })}
-        yfmt={(v) => f.short(v)}
-        foot={m.chart.days.map((_, i) => f.t('dsh.foot', { amount: f.money(m.chart.sales[i] ?? 0), n: f.n(m.chart.orders[i] ?? 0) }))}
-      />
-      {s.smoothDays > 1 ? <p className="a3-chn2">{f.t('dsh.smoothNote', { n: f.n(s.smoothDays) })}</p> : null}
-    </section>
-  ) : null;
-
-  const tiles: ReactNode[] = [];
-  if (m)
-    tiles.push(
-      <Tile key="o" className="a3-card a3-tile" href={can(viewer, 'orders.read') ? '/admin/orders' : undefined} testId="dash-tile-orders">
-        <div className="a3-tx">
-          <div className="a3-kl">{f.t('dsh.orders')}</div>
-          <div className="a3-tv a3-num">{f.n(m.cur.ordered.orders)}</div>
-          <div className="a3-tn">
-            <Delta f={f} x={change(m.cur.ordered.orders, m.prev.ordered.orders)} />
-            <span>{f.t('dsh.avgOrdered', { amount: m.cur.ordered.orders ? f.money(Math.round(m.cur.ordered.valueMinor / m.cur.ordered.orders)) : '—' })}</span>
-          </div>
-        </div>
-        <Spark id="dsh-b-sp-o" values={m.chart.orders.slice(-p.sparkDays)} w={92} h={40} />
-      </Tile>,
-    );
-  if (dl) {
-    tiles.push(
-      <Tile key="d" className="a3-card a3-tile" href={can(viewer, 'delivery.read') ? '/admin/delivery' : undefined} testId="dash-tile-success">
-        <div className="a3-tx">
-          <div className="a3-kl">{f.t('dsh.success')}</div>
-          <div className="a3-tv a3-num">{f.pct(dl.rate)}</div>
-          <div className="a3-tn">
-            <Delta f={f} x={dl.rate !== null && dl.prevRate !== null ? dl.rate - dl.prevRate : null} pts />
-            <span>{dl.finished ? f.t('dsh.accepted', { kept: f.n(dl.kept), n: f.n(dl.finished) }) : f.t('dsh.noneFinished', { n: f.n(dl.days) })}</span>
-          </div>
-        </div>
-        <Spark id="dsh-b-sp-d" values={dl.weekly} w={92} h={40} />
-      </Tile>,
-      <Tile key="r" className="a3-card a3-tile" href={can(viewer, 'delivery.read') ? '/admin/delivery' : undefined} testId="dash-tile-returns">
-        <div className="a3-tx">
-          <div className="a3-kl">{f.t('dsh.returned')}</div>
-          <div className="a3-tv a3-num">{f.pct(dl.returnRate)}</div>
-          <div className="a3-tn">
-            <Delta f={f} x={dl.returnRate !== null && dl.prevReturnRate !== null ? dl.returnRate - dl.prevReturnRate : null} pts good="down" />
-            <span>{f.t('dsh.cameBack', { n: f.n(dl.returned) })}</span>
-          </div>
-        </div>
-        <Spark id="dsh-b-sp-r" values={dl.weekly.map((w) => (w === null ? null : 1 - w))} color={CBAD} w={92} h={40} />
-      </Tile>,
-    );
-  }
-  // PR 729 (prototype v5 Home): the chart (and its three tiles under it) with "Do now" beside it, not under everything
-  const top = hero || tiles.length ? (
-    <div className="a3-stk" data-testid="dash-lead">
-      {hero}
-      {tiles.length ? <div className="a3-tiles a3-tiles-row">{tiles}</div> : null}
-    </div>
-  ) : null;
-
-  const st = data.stages;
-  const stg = (dot: string, label: string, n: number, sub: string, href: string, id: string) => (
-    <Link className="a3-stg" href={href} key={id} data-testid={`dash-stage-${id}`}>
-      <span className="a3-sl">
-        <i style={{ background: dot }} />
-        {label}
-      </span>
-      <b className="a3-num">{f.n(n)}</b>
-      <span className="a3-ss">{sub}</span>
-    </Link>
-  );
-  const pipe = st ? (
-    <section className="a3-card a3-pipe" data-testid="dash-pipe">
-      <div className="a3-pipeh">
-        <h2>{f.t('dsh.pipe.title')}</h2>
-        <p>{f.t('dsh.pipe.open', { n: f.n(st.open) })}</p>
-        <Lnk href="/admin/orders">{f.t('dsh.pipe.go')}</Lnk>
-      </div>
-      <div className="a3-stages">
-        {stg('var(--a3-s1)', f.t('dsh.pipe.new'), st.placed, st.placed ? f.t('dsh.pipe.oldest', { age: f.ago(st.oldestNew) }) : f.t('dsh.pipe.noneWaiting'), '/admin/orders/confirm', 'new')}
-        {stg('var(--a3-s2)', f.t('dsh.pipe.confirmed'), st.confirmed, f.t('dsh.pipe.toPack'), '/admin/orders?view=confirmed', 'confirmed')}
-        {stg('var(--a3-s3)', f.t('dsh.pipe.packed'), st.packed, st.toBook ? f.t('dsh.pipe.toBook', { n: f.n(st.toBook) }) : f.t('dsh.pipe.allBooked'), '/admin/orders?view=packed', 'packed')}
-        {stg('var(--a3-s4)', f.t('dsh.pipe.courier'), st.withCourier, st.byCourier.map((c) => `${c.name} ${f.n(c.n)}`).join(' · ') || '—', '/admin/orders?view=courier', 'courier')}
-        {stg('var(--a3-s5)', f.t('dsh.pipe.today'), st.deliveredToday, f.t('dsh.pipe.yesterday', { n: f.n(st.deliveredYesterdayByNow) }), '/admin/orders?view=delivered', 'today')}
-      </div>
-      <div className="a3-avgt">
-        <span>{f.t('dsh.pipe.o2c')}</span>
-        <b className="a3-num">{st.o2cHours !== null ? f.t('dsh.hours', { n: f.n(st.o2cHours) }) : '—'}</b>
-        <span>
-          {st.o2cHours !== null && st.o2cPrevHours !== null && st.o2cPrevHours > 0 ? (
-            <>
-              <Delta
-                f={f}
-                x={(st.o2cHours - st.o2cPrevHours) / st.o2cPrevHours}
-                good="down"
-                raw={f.t(st.o2cHours <= st.o2cPrevHours ? 'dsh.pipe.faster' : 'dsh.pipe.slower', { n: f.n(Math.abs(st.o2cHours - st.o2cPrevHours)) })}
-              />
-              {s.targetHours ? ' · ' : ''}
-            </>
-          ) : null}
-          {s.targetHours ? f.t('dsh.pipe.target', { n: f.n(s.targetHours) }) : st.o2cHours === null ? f.t('dsh.pipe.noO2c') : ''}
-        </span>
-      </div>
-    </section>
-  ) : null;
-
-  const cards: ReactNode[] = [];
-  if (data.top)
-    cards.push(
-      <Card key="top" title={f.t('dsh.top.title')} sub={f.t('dsh.top.sub', { n: f.n(s.courierDays) })} right={can(viewer, 'catalogue.read') ? <Lnk href="/admin/products">{f.t('dsh.all')}</Lnk> : null} testId="dash-top">
-        <TopProducts f={f} rows={data.top} />
-      </Card>,
-    );
-  let courCard: ReactNode = null;
-  if (dl)
-    courCard = (
-      <Card key="cour" title={f.t('dsh.cour.title')} sub={f.t('dsh.cour.sub', { n: f.n(dl.days) })} right={can(viewer, 'delivery.read') ? <Lnk href="/admin/delivery">{f.t('shell.sec.delivery')}</Lnk> : null} testId="dash-couriers">
-        {dl.couriers.filter((c) => c.finished > 0).length ? (
-          dl.couriers
-            .filter((c) => c.finished > 0)
-            .map((c) => (
-              <div className="a3-cour" key={c.id}>
-                <div className="a3-ct2">
-                  <b>{c.name}</b>
-                  <span className="a3-pc a3-num">{f.pct(c.rate)}</span>
-                  <Delta f={f} x={c.rate !== null && c.prevRate !== null ? c.rate - c.prevRate : null} pts />
-                </div>
-                <Bar p={c.rate ?? 0} />
-                <div className="a3-meta">
-                  {f.t('dsh.cour.returns', { pct: f.pct(c.finished ? c.returned / c.finished : null) })}
-                  {c.avgDays !== null ? f.t('dsh.cour.reaches', { n: c.avgDays.toFixed(1) }) : ''}
-                </div>
-              </div>
-            ))
-        ) : (
-          <Empty text={f.t(dl.finished ? 'dsh.cour.noCourier' : 'dsh.noneFinished', { n: f.n(dl.days) })} />
-        )}
-        {dl.bestBand ? (
-          <div className="a3-tip2">
-            <ShellIcon name="zap" size={15} />
-            <span>{f.t('dsh.cour.best', { band: f.lang === 'bn' && dl.bestBand.nameBn ? dl.bestBand.nameBn : dl.bestBand.nameEn, courier: dl.bestBand.courier, pct: f.pct(dl.bestBand.rate, 0) })}</span>
-          </div>
-        ) : null}
-      </Card>
-    );
-  if (data.lowStock)
-    cards.push(
-      <Card key="low" title={f.t('dsh.low.title')} sub={f.t('dsh.low.sub')} right={<Lnk href="/admin/stock#st-low">{f.t('dsh.low.link')}</Lnk>}>
-        <LowStock f={f} rows={data.lowStock} />
-      </Card>,
-    );
-  if (data.queues) {
-    const pr = problemsOf(p);
-    cards.push(
-      <Card key="prob" title={f.t('dsh.prob.title')} sub={f.t('dsh.prob.sub')} testId="dash-problems">
-        {pr.length ? (
-          pr.map((x) => (
-            <Link key={x.href} className="a3-prob" href={x.href}>
-              <span className={`a3-pi ${x.tone}`}>
-                <ShellIcon name={x.icon} size={16} />
-              </span>
-              <span>
-                <b>{x.title}</b>
-                <span>{x.sub}</span>
-              </span>
-            </Link>
-          ))
-        ) : (
-          <Empty text={f.t('dsh.prob.none')} />
-        )}
-        <p className="a3-cap c">{f.t('dsh.prob.later', { a: f.t('dsh.stage.S21'), b: f.t('dsh.stage.S22') })}</p>
-      </Card>,
-    );
-  }
+  const { data } = p;
   return (
     <>
       <ProtoTop {...p} />
-      {top ? <ChartDoNow p={p} lead={top} /> : null}
-      {pipe}
-      <ProtoLower {...p} mid={courCard} />
-      {cards.length ? (
-        <div className="a3-dg3" style={{ ['--n' as string]: cards.length }}>
-          {cards}
-        </div>
-      ) : null}
+      {data.money ? <ChartDoNow p={p} lead={<TrendCard p={p} id="dsh-a-sales" />} /> : data.queues ? <DoNow p={p} /> : null}
+      <ProtoLower {...p} mid={data.delivery ? <CourierMid {...p} /> : null} />
     </>
   );
 }
@@ -428,9 +208,10 @@ export const dashboardA: LookDesign<DashProps, DashPart> = {
   key: 'A',
   name: { en: 'Calm overview', bn: 'শান্ত সারসংক্ষেপ' },
   desc: {
-    en: 'One big delivered-sales story with a comparison line, where every order is right now, and four short cards. A money & marketing view sits one click away.',
-    bn: 'একটা বড় ডেলিভারি বিক্রির গ্রাফ আর তুলনা, অর্ডার এখন কোথায়, আর চারটা ছোট কার্ড। টাকা ও মার্কেটিং এক ক্লিকে।',
+    en: 'Profit snapshot, six figures, the sales trend with "Do now" beside it, products and ads, delivery by courier, a short summary, the month target and the newest orders. A money & marketing view sits one click away.',
+    bn: 'প্রফিট স্ন্যাপশট, ছয়টা সংখ্যা, বিক্রির ধারা আর পাশে "এখন যা করবেন", প্রোডাক্ট ও বিজ্ঞাপন, কুরিয়ার অনুযায়ী ডেলিভারি, এক কথায়, মাসের লক্ষ্য আর নতুন অর্ডার। টাকা ও মার্কেটিং এক ক্লিকে।',
   },
+
   parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads', 'feed', 'erp', 'pageCheck'],
   Render: DashboardA,
   // The demo's sketch of this design (its key there is B).
