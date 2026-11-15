@@ -3,17 +3,19 @@
 //   GET /api/admin/reports/export/products?from=&to=          (`books.read`)
 //   GET /api/admin/reports/export/marketing?from=&to=         (`marketing.campaigns.read`; empty while Marketing › Report is off)
 //   GET /api/admin/reports/export/review?m=last|this          (`books.read`)
+//   GET /api/admin/reports/export/orders?from=&to=&ch=        (`books.read`; the Sales report: day or week, channel, payment)
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
 import { errorResponse, fail, guardAdmin, type AdminDeps } from '../admin-auth';
 import { channelMarginPct } from '../channel-profit-view';
 import { marginPct } from '../group-profit-view';
 import { loadBase, loadMarketing, loadProducts, loadProfit, loadReview, loadReviewBase } from './load';
+import { isSaleSource, loadSaleOrders, saleBuckets, saleFacts } from './sales';
 import { toCsv } from './model';
 
-export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review'] as const;
+export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders'] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
-export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read' };
+export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read', orders: 'books.read' };
 
 type Cell = string | number | null;
 type Group = { rows: { name: string | null; depth: number; orders: number; pieces: number; salesMinor: number; costedSalesMinor: number; profitMinor: number }[] };
@@ -70,6 +72,28 @@ export async function exportRoute(kind: string, request: Request, deps: AdminDep
         ...(r ? r.campaigns.map((x): Cell[] => [m.now.campaigns[x.id]?.name ?? x.id, x.spendMinor, x.orders, x.orderedMinor, x.delivered, x.salesMinor, x.roasPercent]) : []),
       ]);
       name = `marketing-${m.now.period.q.from}-${m.now.period.q.to}`;
+    } else if (k === 'orders') {
+      const b = await loadBase(d, sp);
+      const { from, to } = b.period.q;
+      const rows = await loadSaleOrders(d.db, b.timeZone, from, to, isSaleSource(sp.ch) ? sp.ch : null);
+      const bk = saleBuckets(rows, from, to, sp.grain === 'week' ? 'week' : 'day');
+      csv = toCsv([
+        ['from', 'to', 'orders', 'pieces', 'orderValueMinor', 'delivered', 'deliveredMinor', 'returned', 'cancelled'],
+        ...bk.list.map((x): Cell[] => {
+          const f = saleFacts(x.rows);
+          return [x.from, x.to, f.orders, f.pieces, f.orderValue, f.delivered, f.deliveredValue, f.returned, f.cancelled];
+        }),
+        [],
+        ['channel', 'orders', 'orderValueMinor'],
+        ...[...new Set(rows.map((r) => r.source))].map((s): Cell[] => {
+          const f = saleFacts(rows.filter((r) => r.source === s));
+          return [s, f.orders, f.orderValue];
+        }),
+        [],
+        ['paymentMethod', 'orders'],
+        ...[...new Set(rows.map((r) => r.method ?? ''))].map((m): Cell[] => [m, saleFacts(rows.filter((r) => (r.method ?? '') === m)).orders]),
+      ]);
+      name = `sales-${from}-${to}`;
     } else {
       const b = await loadReviewBase(d, sp);
       const r = await loadReview(access, b);

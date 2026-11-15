@@ -17,7 +17,7 @@ const DICT = { en: { reportsV5: en.reportsV5 } as unknown as Dict, bn: { reports
 /** What the screen would write: a word that is not found comes back as its own key. */
 const says = (lang: 'en' | 'bn', key: string) => t(DICT[lang], `reportsV5.${key}`) !== `reportsV5.${key}`;
 const ROOT = join(__dirname, '..', '..');
-const PAGES = { profit: 'app/admin/reports/profit/page.tsx', products: 'app/admin/reports/products/page.tsx', marketing: 'app/admin/reports/marketing/page.tsx', review: 'app/admin/reports/review/page.tsx' } as const;
+const PAGES = { profit: 'app/admin/reports/profit/page.tsx', products: 'app/admin/reports/products/page.tsx', marketing: 'app/admin/reports/marketing/page.tsx', review: 'app/admin/reports/review/page.tsx', orders: 'app/admin/reports/orders/page.tsx' } as const;
 
 /** The report pages that are in the app (they are added one register PR at a time: 714, 715, 716, 717). */
 const BUILT = (Object.keys(PAGES) as (keyof typeof PAGES)[]).filter((k) => existsSync(join(ROOT, PAGES[k])));
@@ -53,7 +53,7 @@ describe('words of the v5 reports', () => {
 describe('the four pages in the menu, the guides, the smoke list and the export', () => {
   const reports = SHELL_SECTIONS.find((s) => s.id === 'reports')!;
   const tab = (id: string) => reports.tabs.find((x) => x.id === id)!;
-  const ROUTES = { profit: ['profitReport', '/admin/reports/profit'], products: ['productsReport', '/admin/reports/products'], marketing: ['marketingReport', '/admin/reports/marketing'], review: ['monthlyReview', '/admin/reports/review'] } as const;
+  const ROUTES = { profit: ['profitReport', '/admin/reports/profit'], products: ['productsReport', '/admin/reports/products'], marketing: ['marketingReport', '/admin/reports/marketing'], review: ['monthlyReview', '/admin/reports/review'], orders: ['orders', '/admin/reports/orders'] } as const;
   it('at least one page is built, so the checks below are not empty', () => {
     expect(BUILT.length).toBeGreaterThan(0);
     expect(EXPORT_KINDS.length).toBe(Object.keys(PAGES).length);
