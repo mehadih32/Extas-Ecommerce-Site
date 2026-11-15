@@ -15,6 +15,9 @@
 // S02 · PR 79: while `language.frontEdit` is on, the switch for editing the page's words (WordsEditLoader; the panel
 // itself loads only on a page opened with ?words=edit).
 // S28 · PR 725: the small "Practice shop" notice while `practice.enabled` is on and `practice.notice` is shown.
+// S28 · PR 743: while `cookie.banner` is on, the cookie banner for a visitor with no remembered choice (a "No" stops the
+// analytics and ad beacons for them while `declineStops` is on); PR 744: while `app.homeScreen` is on, the manifest and the
+// home-screen icon links.
 // S02 · PR 600: while `shop.pageEdit` is on, the signed-in owner's on-page edit bar (PageEditBar; lib/website/page-edit-
 // shop decides, from the admin session, so a customer's page carries nothing for it).
 import type { Metadata } from 'next';
@@ -37,6 +40,11 @@ import { CampaignKeep } from '@/components/shop/CampaignKeep';
 import { WordsEditLoader } from '@/components/shop/WordsEditLoader';
 import { PageEditBar } from '@/components/shop/PageEditBar';
 import { PracticeNotice } from '@/components/shop/PracticeNotice';
+import { CookieBanner } from '@/components/shop/CookieBanner';
+import { MANIFEST_PATH } from '@/lib/shop/manifest';
+import { appleIconUrl } from '@/lib/shop/manifest-icon';
+import { beaconsAllowed, bannerShows, choiceOf, CONSENT_COOKIE } from '@/lib/shop/cookie-banner';
+import { policyPath } from '@/lib/website-policies/model';
 import { pageKindOf } from '@/lib/website/page-edit-model';
 import { pageEditState } from '@/lib/website/page-edit-shop';
 import { BENGALI_FONT_COOKIE, bengaliFontFaces, bengaliFontUrls, shopThemeFontPreloads } from '@/lib/shop/font-preload';
@@ -68,11 +76,17 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
     'analytics.behaviour': analyticsBehaviour,
     'practice.enabled': practiceOn,
     'practice.notice': practiceNotice,
-  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors', 'analytics.behaviour', 'practice.enabled', 'practice.notice'] as const, c.storeId);
+    'cookie.banner': cookieBanner,
+    'app.homeScreen': homeScreen,
+  } = await readPageSettings(['seo.hashLinks', 'health.problems', 'seo.vitals', 'ads.tracking', 'checkout.transitDuplicate', 'language.frontEdit', 'analytics.events', 'analytics.visitors', 'analytics.behaviour', 'practice.enabled', 'practice.notice', 'cookie.banner', 'app.homeScreen'] as const, c.storeId);
+  // PR 743: the visitor's remembered cookie choice (read only while the banner is on)
+  const choice = cookieBanner.on ? choiceOf((await cookies()).get(CONSENT_COOKIE)?.value) : null;
+  const beacons = beaconsAllowed(cookieBanner, choice);
+  const appIcon = homeScreen.on ? await appleIconUrl(c.storeId, homeScreen.icon) : null;
   // PR 600: the owner's on-page edit bar (null for everyone else; nothing is read without an admin session)
   const pageEdit = await pageEditState();
-  const trackView = tracking.on && tracking.events.view;
-  const trackCheckout = tracking.on && tracking.events.checkout;
+  const trackView = beacons && tracking.on && tracking.events.view;
+  const trackCheckout = beacons && tracking.on && tracking.events.checkout;
   // The Bengali shop switched off: its addresses lead to the English twin.
   if (c.lang === 'bn' && !c.s['language.bengali.enabled']) redirect(hrefIn('en', c.path));
   // The first screen's faces start loading with the page, so they are in before the first paint (the demo's type).
@@ -103,12 +117,24 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
         />
       ) : null}
       {trackView || trackCheckout ? <TrackingBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], checkoutPath: ROUTES.checkout, view: trackView, checkout: trackCheckout }} /> : null}
-      {analyticsEvents.on ? <AnalyticsBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], collect: analyticsVisitors.collect }} /> : null}
-      {analyticsBehaviour.collect ? <BehaviourBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'] }} /> : null}
+      {beacons && analyticsEvents.on ? <AnalyticsBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'], collect: analyticsVisitors.collect }} /> : null}
+      {beacons && analyticsBehaviour.collect ? <BehaviourBeacon cfg={{ productPrefix: c.s['naming.productPathPrefix'] }} /> : null}
       {transit.enabled ? <CampaignKeep /> : null}
       {/* PR 725: the small "Practice shop" notice while practice mode is on (the owner's words, hideable) */}
       {practiceOn.on && practiceNotice.show ? <PracticeNotice text={c.lang === 'bn' ? practiceNotice.textBn : practiceNotice.textEn} /> : null}
+      {homeScreen.on ? <link rel="manifest" href={MANIFEST_PATH} /> : null}
+      {appIcon ? <link rel="apple-touch-icon" href={appIcon} /> : null}
       {children}
+      {bannerShows(cookieBanner, choice) ? (
+        <CookieBanner
+          text={cookieBanner.text[c.lang]}
+          accept={cookieBanner.accept[c.lang]}
+          decline={cookieBanner.showDecline ? cookieBanner.decline[c.lang] : null}
+          policy={cookieBanner.policyLink ? { href: hrefIn(c.lang, policyPath('cookies')), label: cookieBanner.policyLabel[c.lang] } : null}
+          position={cookieBanner.position}
+          days={cookieBanner.rememberDays}
+        />
+      ) : null}
       {vitals.collect ? <VitalsReporter share={vitals.share} /> : null}
       {frontEdit.enabled ? <WordsEditLoader /> : null}
       {pageEdit ? <PageEditBar edit={pageEdit.edit} page={pageKindOf(c.path, c.s['naming.productPathPrefix'])} lang={c.lang} /> : null}
