@@ -7,6 +7,7 @@
 //   GET /api/admin/reports/export/customers?from=&to=         (`reports.read`; PR 798: who ordered, new against returning, at-risk buyers)
 //   GET /api/admin/reports/export/team?from=&to=            (`staff.performance`; PR 798: what each person did)
 //   GET /api/admin/reports/export/areas?from=&to=&path=       (`books.read`; PR 798: every place one level under the path)
+//   GET /api/admin/reports/export/couriers?from=&to=          (`reports.read`; PR 799: each courier's parcels, success, charge, cash held, claims)
 // Every heading and word in these files is English, whatever the admin's language (the Excel and PDF rule, tested in words.test.ts).
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import type { PermissionKey } from '@extas/auth';
@@ -15,6 +16,7 @@ import { channelMarginPct } from '../channel-profit-view';
 import { marginPct } from '../group-profit-view';
 import { areaStats, loadGeoOrders } from './areas';
 import { avg, loadTeam, total as teamTotal } from './team';
+import { courierStats, inSpan, loadCouriers } from './couriers';
 import { customerFacts, loadCustomers, whoOrdered } from './customers';
 import { PLACE_LEVELS, nameAt, underPath } from './geo';
 import { loadBase, loadMarketing, loadProducts, loadProfit, loadReview, loadReviewBase } from './load';
@@ -22,9 +24,9 @@ import { isSaleSource, loadSaleOrders, saleBuckets, saleFacts } from './sales';
 import { toCsv } from './model';
 import { practiceScope } from './practice';
 
-export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders', 'customers', 'areas', 'team'] as const;
+export const EXPORT_KINDS = ['profit', 'products', 'marketing', 'review', 'orders', 'customers', 'areas', 'team', 'couriers'] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
-export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read', orders: 'books.read', customers: 'reports.read', areas: 'books.read', team: 'staff.performance' };
+export const EXPORT_PERMISSION: Record<ExportKind, PermissionKey> = { profit: 'books.read', products: 'books.read', marketing: 'marketing.campaigns.read', review: 'books.read', orders: 'books.read', customers: 'reports.read', areas: 'books.read', team: 'staff.performance', couriers: 'reports.read' };
 
 type Cell = string | number | null;
 type Group = { rows: { name: string | null; depth: number; orders: number; pieces: number; salesMinor: number; costedSalesMinor: number; profitMinor: number }[] };
@@ -134,6 +136,16 @@ export async function exportRoute(kind: string, request: Request, deps: AdminDep
         ...areaStats(orders, (o) => nameAt(o.place, level)).map((x): Cell[] => [x.key, x.n, x.pcs, x.mrp, x.d, x.rt, Math.round(x.rr * 10) / 10, x.col, x.pr, x.aov]),
       ]);
       name = `areas-${from}-${to}`;
+    } else if (k === 'couriers') {
+      const b = await loadBase(d, sp);
+      const { from, to } = b.period.q;
+      const data = await loadCouriers(d.db, b.timeZone, from, to, b.today, await practiceScope(d));
+      const stats = courierStats(data.couriers, inSpan(data.rows, from, to, b.timeZone), data.charge, data.held, data.claims);
+      csv = toCsv([
+        ['courier', 'parcels', 'delivered', 'returned', 'successPct', 'returnedPct', 'avgDays', 'chargePerParcelMinor', 'cashHeldMinor', 'openClaims'],
+        ...stats.map((s): Cell[] => [s.name, s.parcels, s.delivered, s.returned, s.success === null ? null : Math.round(s.success * 10) / 10, s.returnPct === null ? null : Math.round(s.returnPct * 10) / 10, s.avgDays === null ? null : Math.round(s.avgDays * 10) / 10, s.perParcel, s.held, s.openClaims]),
+      ]);
+      name = `couriers-${from}-${to}`;
     } else if (k === 'team') {
       const b = await loadBase(d, sp);
       const { from, to } = b.period.q;

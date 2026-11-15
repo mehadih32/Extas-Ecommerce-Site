@@ -169,6 +169,7 @@
     { "id": "reports/library", "route": "/admin/reports" },
     { "id": "reports/packs", "route": "/admin/reports/packs" },
     { "id": "reports/team", "route": "/admin/reports/team" },
+    { "id": "reports/couriers", "route": "/admin/reports/couriers" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
     { "id": "reports/review", "route": "/admin/reports/review" },
     { "id": "reports/marketing", "route": "/admin/reports/marketing" },
@@ -258,7 +259,6 @@
     { "route": "/admin/login", "why": "the sign-in page has no shell (no top bar, no guide icon); docs/admin-guide/login.md explains it" },
     { "route": "/admin/[...rest]", "why": "the placeholder of a section with no built page: the guide shows that section's overview" },
     { "route": "/admin/delivery/courier-360", "why": "opens the default courier's Courier 360 (a redirect, no screen of its own)" },
-    { "route": "/admin/money/couriers", "why": "the Finance tab \"Couriers\": opens the default courier's Courier 360 on its Money section (a redirect)" },
-    { "route": "/admin/reports/couriers", "why": "the Reports tab \"Couriers\": opens the default courier's Courier 360 on its Performance section (a redirect)" }
+    { "route": "/admin/money/couriers", "why": "the Finance tab \"Couriers\": opens the default courier's Courier 360 on its Money section (a redirect)" }
   ]
 }
