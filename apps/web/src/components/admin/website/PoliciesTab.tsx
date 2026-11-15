@@ -334,12 +334,13 @@ export function PoliciesTab({ glance, rows: first, w, names, initial, canEdit, l
       ) : null}
 
       <div className="polb-legal a2-mt12" data-testid="pol-legal">
-        {legal.licence ? (
-          <span>
-            {w['legal.licence']}: <b>{legal.licence}</b>
-          </span>
-        ) : null}
-        {legal.dbid ? <span><b>{legal.dbid}</b></span> : null}
+        {/* PR 788 (prototype v5 parity): the licence and the UBID are always on the line; "—" until the owner fills them in Settings */}
+        <span>
+          {w['legal.licence']}: <b>{legal.licence ?? '—'}</b>
+        </span>
+        <span>
+          {w['legal.ubid']}: <b>{legal.dbid ?? '—'}</b>
+        </span>
         {legal.address ? <span>{legal.address}</span> : null}
         <span>
           {w['legal.updated']}: <b>{row.lastEditedAt ? when(row.lastEditedAt) : '—'}</b>

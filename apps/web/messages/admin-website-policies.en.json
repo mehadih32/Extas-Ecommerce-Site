@@ -299,7 +299,8 @@
     "legal": {
       "licence": "Trade licence",
       "updated": "Last updated",
-      "history": "History"
+      "history": "History",
+      "ubid": "UBID"
     }
   }
 }
