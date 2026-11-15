@@ -2,7 +2,7 @@
 // why it does not match (the owner's words), what we expected against what the courier says, the charge when it is the charge
 // that differs, and "Accept the courier figure" where that is allowed (see StatementActions). Server-rendered; read only apart
 // from that one button.
-import { AcceptFigure } from '@/components/admin/couriers/StatementActions';
+import { AcceptFigure, ResolveLine } from '@/components/admin/couriers/StatementActions';
 import { t, type Dict } from '@/lib/i18n';
 
 export interface OpenLine {
@@ -35,7 +35,12 @@ export function OpenLines({ dict, lines, money, canAccept }: { dict: Dict; lines
               <span className="a2-xs a2-mute a2-blk">{cr('z.charge', { ours: money(l.expectedChargeMinor), theirs: money(l.chargeMinor), extra: money(l.extraChargeMinor) })}</span>
             ) : null}
           </div>
-          {canAccept && l.extraChargeMinor !== null ? <AcceptFigure dict={dict} lineId={l.lineId} amount={money(l.extraChargeMinor)} /> : null}
+          {canAccept ? (
+            <span className="a2-row" style={{ gap: 8, alignItems: 'flex-start' }}>
+              {l.extraChargeMinor !== null ? <AcceptFigure dict={dict} lineId={l.lineId} amount={money(l.extraChargeMinor)} /> : null}
+              <ResolveLine dict={dict} lineId={l.lineId} />
+            </span>
+          ) : null}
         </li>
       ))}
     </ul>

@@ -135,7 +135,7 @@
       "noStatements": "No statement from this courier yet.",
       "open": "Lines that do not match",
       "openSub": "Statement lines that differ from our records and are not resolved.",
-      "openNone": "Every statement line matches.",
+      "openNone": "Nothing to check. Every parcel matches ✓",
       "openMore": "{n} more lines are not shown.",
       "expected": "We expected",
       "got": "Courier says",
@@ -382,8 +382,8 @@
       "noteHelp": "Goes first in the parcel's note, before your saved texts."
     },
     "z": {
-      "title": "Monthly courier statement",
-      "sub": "What this courier paid us in the month, the lines that still do not match and the claims still to receive.",
+      "title": "Match courier account",
+      "sub": "Our parcels vs the courier's statement, parcel by parcel. What this courier paid us in the month, the lines that still do not match and the claims still to receive.",
       "back": "Courier money",
       "months": "Months",
       "prev": "Earlier month",
@@ -425,8 +425,17 @@
           "NO_HOOK": "The books are not connected here. Nothing was changed.",
           "NONE": "There is nothing to book. Nothing was changed.",
           "other": "The books did not take the cost. Nothing was changed."
-        }
-      }
+        },
+        "NOT_PENDING": "This line matches; there is nothing to resolve.",
+        "INVALID_INPUT": "A short note is needed."
+      },
+      "matchedParcels": "Matched parcels",
+      "allMatched": "All matched",
+      "toCheck": "{n} to check",
+      "resolve": "Mark resolved",
+      "resolveAsk": "Write a short note on how this line was settled (at least 3 letters).",
+      "resolveNote": "A short note is needed to mark a line resolved.",
+      "resolved": "Marked resolved."
     },
     "su": {
       "heading": "Courier setup",

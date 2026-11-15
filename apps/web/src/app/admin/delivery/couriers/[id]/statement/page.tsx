@@ -112,6 +112,14 @@ export default async function CourierStatementPage({ params, searchParams }: { p
 
       <dl className="a2-card a2-mt12" data-testid="statement-totals" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
         <div>
+          <dt className="a2-xs a2-mute">{cr('z.matchedParcels')}</dt>
+          <dd>
+            <b data-testid="statement-matched">
+              {n(st.statements.reduce((a, x) => a + x.lines - x.mismatched, 0))} / {n(st.statements.reduce((a, x) => a + x.lines, 0))}
+            </b>
+          </dd>
+        </div>
+        <div>
           <dt className="a2-xs a2-mute">{cr('z.statements')}</dt>
           <dd>
             <b>{n(st.totals.statements)}</b>
@@ -174,7 +182,9 @@ export default async function CourierStatementPage({ params, searchParams }: { p
       </section>
 
       <section className="a2-card a2-mt12" data-testid="statement-open">
-        <h2 className="a2-h3">{cr('m.open')}</h2>
+        <h2 className="a2-h3">
+          {cr('m.open')} <span className={`a2-pill ${st.openCount ? 'warn' : 'ok'}`} data-testid="statement-open-state">{st.openCount ? cr('z.toCheck', { n: n(st.openCount) }) : cr('z.allMatched')}</span>
+        </h2>
         <p className="a2-xs a2-mute">{cr('z.openSub')}</p>
         {st.open.length ? (
           <>
