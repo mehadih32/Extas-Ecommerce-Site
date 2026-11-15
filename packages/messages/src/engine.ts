@@ -45,6 +45,7 @@ import { consentBlock, offerConsent } from './consent';
 import { recordSendCost } from './costs';
 import { recordReviewRequest, REVIEW_STEP, reviewAskBlock } from './review-requests';
 import { emailHeaders, emailHtml, emailLinks, emailText, emailUrls } from './email-html';
+import { loadEmailLook } from './email-look';
 import { nowOf, setting, TX, type MessagesDeps, type OutgoingMessage, type SendResult } from './context';
 import { ADVANCE_REQUEST, ADVANCE_RESEND_EVENT, ADVANCE_TOKENS, advanceChannelsOf, bagBackLink, CART_RECOVERY_STEP, CART_RECOVERY_TEMPLATES, FOLLOW_UP_STEP, FOLLOW_UP_TEMPLATES, followUpTick, advanceDedupeKey, answerTemplate, audienceFits, dedupeKey, dueAt, EVENT_TOKENS, isAdvanceRequest, isCapped, maskingSender, messageLocale, NEVER_QUIET, orderLink, payLink, phoneOf, quietUntil, render, SELF_CONFIRM_ANSWER, smsCostMinor, smsParts, stepsOf, stillFits, STEP_EVENT_TYPES, templateValues, tokensIn, type RenderInput, type SampleSettings, type TimelineEvent } from './pure';
 
@@ -874,7 +875,9 @@ async function sendOfferEmail(deps: MessagesDeps, c: RunContext, row: Row, opts:
   const words = render(b.body.replaceAll('{link}', home), b.subject.replaceAll('{link}', home), input);
   if (!words.ok) return close(deps, c, row, 'SKIPPED', words.reason, { recipient: to, locale: lang }).then(() => 'SKIPPED');
   const urls = emailUrls(c.host, row.id);
-  const parts = { text: words.text, links: emailLinks(b.body, home), unsubscribeLine: cfg.unsubscribeLine[lang], urls, trackOpens: cfg.trackOpens, trackClicks: cfg.trackClicks, lang } as const;
+  // PR 741: the owner's e-mail look (off as shipped: null, the plain e-mail); a failed look never stops the e-mail
+  const look = await loadEmailLook(deps as never, c.storeId, { storeName: c.storeName, host: c.host, lang }).catch(() => null);
+  const parts = { text: words.text, links: emailLinks(b.body, home), unsubscribeLine: cfg.unsubscribeLine[lang], urls, trackOpens: cfg.trackOpens, trackClicks: cfg.trackClicks, lang, look } as const;
   const attempt = row.attempts + 1;
   let sender = c.senders.get('EMAIL') ?? null;
   let r: SendResult;
