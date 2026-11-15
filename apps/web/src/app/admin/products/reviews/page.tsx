@@ -120,6 +120,8 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
     { id: 'pending', value: n(list.counts.PENDING), note: t(d, 'rev.kpi.pendingNote') },
     { id: 'published', value: n(desk.published), note: t(d, 'rev.kpi.publishedNote') },
     { id: 'average', value: desk.average === null ? t(d, 'rev.kpi.averageNone') : desk.average.toFixed(1), note: t(d, 'rev.kpi.averageNote') },
+    // PR 806 (prototype v5): the fifth figure, published 1-2 star reviews the shop has not answered
+    { id: 'unreplied', value: n(desk.unreplied), note: t(d, 'rev.kpi.unrepliedNote') },
     { id: 'asked', value: n(rq.asked), note: t(d, 'rev.kpi.askedNote', { answered: n(rq.answered), pct: pct(rq.answered, rq.asked), days: n(rq.days) }) },
   ];
 
@@ -134,7 +136,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
         counts={{ reviews: n(desk.published), hidden: n(list.counts.HIDDEN) }}
       />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'rev.readOnly')}</p> : null}
-      <div className="a2-kpis a2-mt12" data-testid="review-kpis">
+      <div className="a2-kpis k5 a2-mt12" data-testid="review-kpis">
         {kpis.map((k) => (
           <div key={k.id} className="a2-card a2-kpi" data-testid={`review-kpi-${k.id}`}>
             <div className="a2-kl">{t(d, `rev.kpi.${k.id}`)}</div>
