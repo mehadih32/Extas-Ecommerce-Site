@@ -13,3 +13,7 @@
 .adm2 .d4-kpis3{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:560px){.adm2 .d4-kpis3{grid-template-columns:minmax(0,1fr)}}
 .adm2 .d4-log td,.adm2 .d4-log th{overflow-wrap:anywhere}
+
+/* ---- With courier: a parcel line with its Ask button ---- */
+.adm2 .d4-li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--ln);flex-wrap:wrap}
+.adm2 .d4-li .a2-btn{min-height:44px}

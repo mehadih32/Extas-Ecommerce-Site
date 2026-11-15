@@ -8,7 +8,7 @@ import { mockCourierWorld, STEADFAST_PROVIDER } from "@extas/adapters";
 import { hashPassword } from "@extas/auth";
 import { HAS_TEST_DB } from "@extas/auth/testing";
 import { confirmOrder } from "@extas/orders";
-import { bookOrders, moveToBackup, parcelHistory, withCourier } from "./index";
+import { askCourier, bookOrders, moveToBackup, parcelHistory, withCourier } from "./index";
 import { setUpShipping, type ShippingFixture } from "./testing";
 
 async function refusal(p: Promise<unknown>): Promise<string> {
@@ -273,5 +273,21 @@ describe.skipIf(!HAS_TEST_DB)("PR 667 · With courier (PostgreSQL)", () => {
     } finally {
       f.overrides.delete("fulfilment.courierWatch");
     }
+  });
+
+  // PR 827 (prototype v5): "Ask courier" and "Ask to send back" are written down, nothing else happens
+  it("ask courier: writes the ask on the order's timeline with the courier and consignment, changes nothing else, and refuses a made-up order or one without a parcel", async () => {
+    const o = await booked("wc-ask");
+    const before = await db().shipment.findUniqueOrThrow({ where: { id: o.shipmentId } });
+    const done = await askCourier(f.shippingDeps(), f.shipper, { orderId: o.orderId, kind: "sendBack" });
+    expect(done.consignmentId).toBe(before.consignmentId);
+    expect(done.courierName).toBe("Steadfast main");
+    expect(await db().orderEvent.count({ where: { orderId: o.orderId, type: "shipment.courierAsked" } })).toBe(1);
+    const after = await db().shipment.findUniqueOrThrow({ where: { id: o.shipmentId } });
+    expect(after.status).toBe(before.status);
+    expect(await refusal(askCourier(f.shippingDeps(), f.shipper, { orderId: "00000000-0000-7000-8000-000000000000", kind: "missing" }))).toBe("NOT_FOUND");
+    expect(await refusal(askCourier(f.shippingDeps(), f.shipper, { orderId: o.orderId, kind: "nope" }))).toBe("INVALID_INPUT");
+    const plain = await f.place("wc-ask-none", { phone: "01700002999" });
+    expect(await refusal(askCourier(f.shippingDeps(), f.shipper, { orderId: plain.orderId, kind: "missing" }))).toBe("NOT_ACTIVE");
   });
 });
