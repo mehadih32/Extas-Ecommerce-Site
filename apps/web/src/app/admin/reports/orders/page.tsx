@@ -19,6 +19,7 @@ import { Columns, Donut } from '@/components/admin/reports/ReportSalesCharts';
 import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
+import { practiceScope } from '@/lib/reports-v5/practice';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -71,7 +72,8 @@ export default async function SalesReportTab({ searchParams }: { searchParams: P
   const cmp = sp.cmp !== '0';
   const ch = isSaleSource(sp.ch) ? sp.ch : 'all';
   const grain = sp.grain === 'week' ? 'week' : 'day';
-  const [rows, was] = await Promise.all([loadSaleOrders(access.deps.db, base.timeZone, q.from, q.to, ch === 'all' ? null : ch), loadSaleOrders(access.deps.db, base.timeZone, base.before.from, base.before.to, ch === 'all' ? null : ch)]);
+  const scope = await practiceScope(access.deps);
+  const [rows, was] = await Promise.all([loadSaleOrders(access.deps.db, base.timeZone, q.from, q.to, ch === 'all' ? null : ch, scope), loadSaleOrders(access.deps.db, base.timeZone, base.before.from, base.before.to, ch === 'all' ? null : ch, scope)]);
   const k = saleFacts(rows);
   const kw = saleFacts(was);
   const dl = (x: number | null) => (cmp ? x : undefined);
