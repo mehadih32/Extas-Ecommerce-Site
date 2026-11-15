@@ -21,6 +21,8 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { productHref } from '@/lib/admin-products';
 import { stockAccess } from '@/lib/admin-stock';
+import { loadStockOverview } from '@/lib/admin-stock-overview';
+import { StockOverviewView, type StockFilter } from '@/components/admin/stock/StockOverviewView';
 import { t, type Dict } from '@/lib/i18n';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 
@@ -46,7 +48,10 @@ function errorLine(d: Dict, line: string | null, locale: string): string | null 
   return text === key ? line : text;
 }
 
-export default async function StockPage() {
+type Search = Promise<Record<string, string | string[] | undefined>>;
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+export default async function StockPage({ searchParams }: { searchParams: Search }) {
   const deps = adminDeps();
   const view = await adminView(deps);
   const access = await pageAccess('inventory.read', deps, MOTHER_STORE_ID);
@@ -56,6 +61,9 @@ export default async function StockPage() {
 
   const s = await stockAccess(access);
   const d = view.dict;
+  const sp = await searchParams;
+  const fRaw = one(sp.f);
+  const filter: StockFilter = { q: (one(sp.q) ?? '').slice(0, 100), f: fRaw === 'low' || fRaw === 'out' ? fRaw : 'all' };
   const [health, docs, low, queue] = await Promise.all([
     inv.syncHealth(s.deps, s.who),
     inv.listErpPushes(s.deps, s.who, { status: ['FAILED', 'DEAD', 'SKIPPED_NO_ERP', 'PENDING'] }),
@@ -63,6 +71,10 @@ export default async function StockPage() {
     inv.stockQueue(s.deps, s.who),
   ]);
   const now = new Date(health.checkedAt);
+  // PR 785 (prototype v5 parity): the figures and the "Stock by product" rows the prototype's Stock page opens with
+  const [lowPieces, currency] = await Promise.all([s.deps.settings.value('catalogue.admin.lowStockPieces', { storeId: s.storeId }), s.deps.settings.value('store.currency', { storeId: s.storeId })]);
+  const overview = await loadStockOverview(s.deps, s.storeId, Number(lowPieces) || 2, s.can('catalogue.prices'));
+  const sinceMin = health.stock.lastSuccessAt ? Math.max(0, Math.floor((now.getTime() - new Date(health.stock.lastSuccessAt).getTime()) / 60_000)) : null;
   const num = (n: number) => formatNumber(n, view.locale);
   const when = (iso: string) => dateTime(iso, view.locale, view.timeZone);
   const canSync = s.can('inventory.sync');
@@ -83,7 +95,34 @@ export default async function StockPage() {
 
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'stock.title')} sub={t(d, 'stock.intro')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={t(d, 'stock.title')}
+        sub={t(d, 'stock.intro')}
+        right={
+          <a className="ad-btn ad-btn-ghost pa-hd-btn" href="/api/admin/inventory/stock-list" download data-testid="stock-download">
+            <Icon name="doc" size={18} />
+            {t(d, 'stock.ov.download')}
+          </a>
+        }
+      />
+
+      <StockOverviewView
+        d={d}
+        lang={view.lang === 'bn' ? 'bn' : 'en'}
+        locale={view.locale}
+        currency={String(currency)}
+        data={overview}
+        filter={filter}
+        lowPieces={Number(lowPieces) || 2}
+        lastSyncText={ago(d, health.stock.lastSuccessAt, now, view.locale, view.timeZone)}
+        nextSyncMin={sinceMin === null ? null : Math.max(1, health.stock.pollMinutes - sinceMin)}
+        recent={health.recentRuns.slice(0, 3).map((r) => `${when(r.startedAt)} · ${t(d, `stock.runs.kind.${keyOf(r.kind)}`)}`)}
+        canSync={canSync}
+      />
+
+      <h2 className="sk-sec">{t(d, 'stock.ov.healthH')}</h2>
 
       <div className={`ad-note ad-note-top st-verdict lv-${health.level}`} role="status">
         <span className={LEVEL_DOT[health.level]} />
