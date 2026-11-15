@@ -91,7 +91,7 @@ export function RolesScreen(p: RolesScreenProps) {
               const keys = b.keys.map((k) => k.key);
               return (
                 <details key={b.group} className="a2-mt6" open={triOf(keys, held) !== 'none'}>
-                  <summary>
+                  <summary className="s28-sum">
                     <Box state={role.isOwner ? 'all' : triOf(keys, held)} label={lab(b.label)} disabled={locked} onChange={(on) => setHeld(toggleGroup(held, keys, on))} />
                   </summary>
                   <div className="a2-mt6" style={{ paddingLeft: 24 }}>
