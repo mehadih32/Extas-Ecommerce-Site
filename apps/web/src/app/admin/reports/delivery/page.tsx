@@ -11,9 +11,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { ymdIn } from '@extas/metrics';
 import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { SummaryTiles } from '@/components/admin/lumen/SummaryTiles';
+import { ReportDeliveryProto } from '@/components/admin/reports/ReportDeliveryProto';
+import { loadDelivery } from '@/lib/reports-v5/delivery';
 import { SwitchButton } from '@/components/admin/courier-report/Parts';
 import { PerfTable, pct } from '@/components/admin/courier-report/PerfTable';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
@@ -66,7 +69,8 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
   const from = new Date(to.getTime() - days * 86_400_000);
   const lang = view.lang === 'bn' ? 'bn' : 'en';
   const at = { storeId: MOTHER_STORE_ID };
-  const [perf, book, bookSwitch, currency, mis, misSwitch] = await Promise.all([
+  const [proto, perf, book, bookSwitch, currency, mis, misSwitch] = await Promise.all([
+    loadDelivery(access.deps.db, view.timeZone, ymdIn(from, view.timeZone), ymdIn(to, view.timeZone), to),
     sh.courierPerformance(sd, who, { from, to, lang, lateRows: LATE_SHOWN }),
     sh.rtoReport(sd, who, { from, to, lang }),
     access.deps.resolver.value('delivery.courier.rtoBook', at),
@@ -110,6 +114,7 @@ export default async function DeliveryReportPage({ searchParams }: { searchParam
           </Link>
         ))}
       </nav>
+      <ReportDeliveryProto f={proto.facts} c={c} num={n} money={m} dec={(x) => new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 1 }).format(x)} locale={view.locale} />
       <SummaryTiles className="a2-mt12" tiles={figureTiles(kpis, { locale: view.locale })} label={c('title')} testId="delivery-kpis" />
       {perf.practiceLeftOut ? <p className="a2-xs a2-mute">{c('practice', { n: n(perf.practiceLeftOut) })}</p> : null}
       {perf.cut ? <p className="a2-xs cr-warn">{c('cut', { n: n(sh.PERFORMANCE_MAX_PARCELS) })}</p> : null}
