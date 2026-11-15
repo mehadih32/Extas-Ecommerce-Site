@@ -70,6 +70,12 @@ export const reportsLibrarySchema = z
     restockCoverDays: z.number().int().min(1).max(180),
     /** A style still in stock with nothing sold in 30 days counts as "sitting unsold" once it is this many days old. */
     deadAfterDays: z.number().int().min(7).max(720),
+    /** PR 732 (Reports › Products, the style tree): "Buy in bulk" = at least this many pieces in the period at this margin % or better. */
+    bulkPieces: z.number().int().min(1).max(100000).default(20), // hardcode-ok: the prototype's figures; the owner edits them
+    bulkMarginPct: z.number().int().min(0).max(100).default(45), // hardcode-ok: as above
+    /** "Stop buying" = this many pieces or fewer in the period (with sales), or a margin % below this. */
+    stopPieces: z.number().int().min(0).max(100000).default(2), // hardcode-ok: as above
+    stopMarginPct: z.number().int().min(0).max(100).default(15), // hardcode-ok: as above
   })
   .strict();
 export type ReportsLibrarySettings = z.output<typeof reportsLibrarySchema>;
@@ -132,7 +138,7 @@ export const productsFinanceV5Settings = {
   'reports.library': setting({
     scope: 'store',
     schema: reportsLibrarySchema,
-    default: { restockCoverDays: 14, deadAfterDays: 60 }, // hardcode-ok: restock within two weeks of stock; unsold after two months; both editable
+    default: { restockCoverDays: 14, deadAfterDays: 60, bulkPieces: 20, bulkMarginPct: 45, stopPieces: 2, stopMarginPct: 15 }, // hardcode-ok: restock within two weeks of stock; unsold after two months; both editable
     valueType: 'JSON',
     group: 'reports',
     labelKey: 'reports.library.label',
