@@ -7,7 +7,7 @@
       "closes": "Closes"
     },
     "sub": {
-      "account": "What Retail owes the ERP, from the shop's own ledger. An entry is never changed or deleted: a mistake is put right by a new entry.",
+      "account": "What the shop owes the ERP for the pieces it sells. An entry is never changed or deleted: a mistake is put right by a new entry.",
       "match": "Every night the shop's books are checked against the ERP's, day by day, with zero tolerance. One paisa off is a difference.",
       "differences": "What did not match, and how it is put right. A number is never edited: a mistake is undone by a reversing entry and a new one.",
       "closes": "Days close by themselves at night. A month is closed with the owner's PIN once every day matched."

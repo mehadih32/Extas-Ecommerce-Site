@@ -14,6 +14,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { MoneyReportCard } from '@/components/admin/money/MoneyReportCard';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { adminDeps } from '@/lib/admin-auth';
 import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -124,7 +125,17 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="a2-z" data-testid="money-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={t(d, 'lf.fp.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={c('title')}
+        sub={t(d, 'lf.fp.sub')}
+        right={
+          <>
+            <Link className="a2-btn" href="/admin/money/month-end" data-testid="pl-cs">
+              {t(d, 'lf.mn.act.close')}
+            </Link>
+            <PrintButton label={t(d, 'lf.mn.act.dl')} testId="pl-dl" />
+          </>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
 
       <nav className="ct-actions a2-mt12" aria-label={cr('quick.label')} data-testid="pl-quick">
