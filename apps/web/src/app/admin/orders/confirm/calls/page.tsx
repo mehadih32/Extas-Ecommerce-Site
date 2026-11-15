@@ -8,6 +8,7 @@
 // Words: messages/admin-calls.*.json (`cl.*`); model: lib/admin-orders/calls-view.ts.
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as od from '@extas/orders';
@@ -82,11 +83,13 @@ export default async function CallsPage({ searchParams }: { searchParams: Search
   const who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const rd = readDeps(access.deps);
   const now = (access.deps.now ?? (() => new Date()))();
-  const [queue, counts, outcomes, cards] = await Promise.all([
+  const [queue, counts, outcomes, cards, desk] = await Promise.all([
     od.callQueue(rd, who, { status, ...(reason ? { reason } : {}), ...(cursor ? { cursor } : {}) }),
     od.callReasonCounts(rd, who),
     access.deps.resolver.value('orders.callOutcomes', { storeId: MOTHER_STORE_ID }),
     callsCards(access.deps, MOTHER_STORE_ID),
+    // PR 828 (prototype v5): the call desk's two cards
+    od.callDesk(rd, who),
   ]);
   const canEdit = access.guard.permissions?.has('risk.rules.write') ?? false;
   const canRecord = access.guard.permissions?.has('orders.confirm') ?? false;
@@ -127,6 +130,52 @@ export default async function CallsPage({ searchParams }: { searchParams: Search
       <div className="a2-z cl-page" data-testid="calls-page" data-lm-ready="">
         <PageHead view={view} place={locateKey(KEY)} title={w('title')} sub={sub} />
         <SectionTabs view={view} current={KEY} />
+        <div className="d4-desk a2-mt12" data-testid="call-desk">
+          <section className="a2-card" aria-label={w('desk.h')} data-testid="call-desk-staff">
+            <h2 className="a2-h4">{w('desk.h')}</h2>
+            <p className="a2-xs a2-mute">{w('desk.sub')}</p>
+            {desk.staff.length ? (
+              <div className="d4-st a2-mt12">
+                <span className="a2-xs a2-mute">{w('desk.staff')}</span>
+                <span className="a2-xs a2-mute r">{w('desk.calls')}</span>
+                <span className="a2-xs a2-mute r">{w('desk.confirmed')}</span>
+                <span className="a2-xs a2-mute r">{w('desk.noAnswer')}</span>
+                {desk.staff.map((x) => (
+                  <Fragment key={x.staffUserId}>
+                    <span>{x.name}</span>
+                    <b className="r">{n(x.calls)}</b>
+                    <b className="r">{n(x.confirmed)}</b>
+                    <b className="r">{n(x.noAnswer)}</b>
+                  </Fragment>
+                ))}
+              </div>
+            ) : (
+              <p className="a2-xs a2-mute a2-mt12">{w('desk.noStaff')}</p>
+            )}
+          </section>
+          <section className="a2-card" aria-label={w('desk.dueH', { n: n(desk.dueTotal) })} data-testid="call-desk-due">
+            <h2 className="a2-h4">{w('desk.dueH', { n: n(desk.dueTotal) })}</h2>
+            <p className="a2-xs a2-mute">{w('desk.dueSub')}</p>
+            {desk.due.length ? (
+              desk.due.map((x) => (
+                <div key={x.taskId} className="a2-between d4-li" data-testid="call-desk-due-row">
+                  <span className="a2-ell">
+                    <b className="a2-mono">{x.order?.number ?? '—'}</b> · {x.order?.customerName ?? ''} · {reasonLabel(d, x.reason)}
+                    {x.tries ? ` · ${w('desk.tries', { n: n(x.tries) })}` : ''}
+                  </span>
+                  {x.order ? (
+                    <Link className="a2-btn sm pri" href={`/admin/orders/${x.order.id}`} data-testid="call-desk-call">
+                      <ShellIcon name="phone" size={14} />
+                      {w('desk.call')}
+                    </Link>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <p className="a2-xs a2-mute a2-mt12">{w('desk.noneDue')}</p>
+            )}
+          </section>
+        </div>
         <nav className="a2-views" aria-label={w('statusAria')} data-testid="calls-status">
           {(['open', 'closed'] as const).map((s) => (
             <Link key={s} className={`a2-view${status === s ? ' on' : ''}`} href={hrefOf({ status: s, reason })} aria-current={status === s ? 'page' : undefined} scroll={false}>

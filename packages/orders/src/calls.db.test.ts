@@ -4,7 +4,7 @@
 // what he typed as he typed it. Every value is a made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HAS_TEST_DB } from '@extas/auth/testing';
-import { callQueue, confirmOrder } from './index';
+import { callDesk, callQueue, confirmOrder } from './index';
 import { setUpOrders, type OrdersFixture } from './testing';
 
 async function code(p: Promise<unknown>): Promise<string> {
@@ -55,5 +55,25 @@ describe.skipIf(!HAS_TEST_DB)('PR 563 · no order is ever held over an address (
     const nobody = await f.t.prisma.staffUser.create({ data: { email: 'nobody-calls@example.com', displayName: 'No role', passwordHash: 'not-a-login' } });
     expect(await code(callQueue(f.ordersDeps(), { actor: { staffUserId: nobody.id }, storeId: f.S }))).not.toBe('ok');
     expect(await code(callQueue(f.ordersDeps(), f.reader, { status: 'later' }))).toBe('INVALID_INPUT');
+  });
+
+  // PR 828 (prototype v5): the call desk's Staff today and Call again now
+  it('the call desk counts the confirmations of the day by the person, lists only the calls whose time has come, and needs orders.read', async () => {
+    const before = await callDesk(f.ordersDeps(), f.reader);
+    const o = await f.place('desk', { address: 'Notun Para, Shahid Minar er pashe 2' });
+    await confirmOrder(f.ordersDeps(), f.staff, o.orderId);
+    const after = await callDesk(f.ordersDeps(), f.reader);
+    const mine = (d: typeof after) => d.staff.find((x) => x.staffUserId === f.staff.actor.staffUserId)?.confirmed ?? 0;
+    expect(mine(after)).toBe(mine(before) + 1);
+    const task = await f.t.prisma.callTask.findFirstOrThrow({ where: { orderId: o.orderId } });
+    await f.t.prisma.callTask.update({ where: { id: task.id }, data: { dueAt: new Date(Date.now() + 3_600_000) } });
+    const later = await callDesk(f.ordersDeps(), f.reader);
+    expect(later.due.some((x) => x.taskId === task.id)).toBe(false);
+    await f.t.prisma.callTask.update({ where: { id: task.id }, data: { dueAt: new Date(Date.now() - 3_600_000) } });
+    const now = await callDesk(f.ordersDeps(), f.reader);
+    expect(now.due.some((x) => x.taskId === task.id)).toBe(true);
+    expect(now.dueTotal).toBeGreaterThanOrEqual(1);
+    const nobody = await f.t.prisma.staffUser.create({ data: { email: 'nobody-desk@example.com', displayName: 'No role', passwordHash: 'not-a-login' } });
+    expect(await code(callDesk(f.ordersDeps(), { actor: { staffUserId: nobody.id }, storeId: f.S }))).not.toBe('ok');
   });
 });

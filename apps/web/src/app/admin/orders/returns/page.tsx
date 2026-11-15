@@ -17,7 +17,10 @@ import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { validDay } from '@/lib/admin-orders/range';
+import { countByTab, inRange, isTab, remindersOf, tabOf } from '@/lib/admin-returns/lens';
 import { returnsHref } from '@/lib/admin-returns/model';
+import { ReturnsLens } from '@/components/admin/orders/ReturnsLens';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-returns.bn.json';
@@ -55,6 +58,11 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
   const [plain, sp, access] = await Promise.all([adminView(deps), searchParams, pageAccess('returns.view', deps, MOTHER_STORE_ID)]);
   const view = withScreen(plain);
   const q = { case: one(sp.case), order: one(sp.order), line: one(sp.line), reason: one(sp.reason), size: one(sp.size) };
+  // PR 828 (prototype v5): the chip tab and the date range (a day typed wrong is left out)
+  const tabIn = one(sp.tab) ?? undefined;
+  const tab = isTab(tabIn) ? tabIn : null;
+  const from = validDay(one(sp.from) ?? undefined);
+  const to = validDay(one(sp.to) ?? undefined);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(returnsHref(q))}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -108,6 +116,11 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
       window: chosen && chosen.status === 'REQUESTED' ? await maybe(od.exchangeWindowV6(rd, who, chosen.id)) : null,
     };
   const d = view.dict;
+  // PR 828: the date range narrows the board and the chip tabs; the reminders and counts follow it
+  const now = new Date();
+  const inRows = inRange(data.rows, from, to, view.timeZone);
+  data.rows = inRows;
+  const tabRows = tab ? inRows.filter((x) => tabOf(x) === tab) : null;
   // PR 191: the refused parcels and the refused-parcel list beside Receive & QC
   const right = (
     <div className="a2-gap8">
@@ -135,5 +148,8 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
       ) : null}
     </div>
   );
-  return <ReturnsBoard view={view} data={data} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
+  const lens = (
+    <ReturnsLens view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
+  );
+  return <ReturnsBoard view={view} data={data} lens={lens} tabRows={tabRows} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }
