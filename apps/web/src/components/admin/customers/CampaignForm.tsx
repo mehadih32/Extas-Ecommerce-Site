@@ -39,6 +39,19 @@ export interface CampaignFormProps {
 }
 
 const INT = /^\d+$/;
+/** More SMS parts than this per person earns the "shorten it" warning (the prototype's own line). */
+const LONG_SMS = 2; // hardcode-ok: the prototype's warning point; it only changes a hint
+/**
+ * How an SMS is counted (the carrier's own rule, not shop policy): Bengali and any non-basic letter make the SMS
+ * Unicode, which holds 70 letters, or 67 each when it is cut into parts; plain English holds 160, or 153 each.
+ */
+export function smsParts(text: string): { n: number; parts: number; uni: boolean; one: number } {
+  const n = [...text].length;
+  const uni = /[^\x00-\x7F]/.test(text);
+  const one = uni ? 70 : 160; // hardcode-ok: the carrier's SMS size
+  const multi = uni ? 67 : 153; // hardcode-ok: the carrier's SMS size
+  return { n, parts: n === 0 ? 0 : n <= one ? 1 : Math.ceil(n / multi), uni, one };
+}
 /** The segment choice that means every customer (a blast, only when allowed). */
 const ALL = '*';
 
@@ -66,6 +79,7 @@ export function CampaignForm(p: CampaignFormProps) {
   const changed = name !== p.name || channel !== p.channel || templateId !== (p.templateId ?? '') || segmentId !== segWas || (!blast && ruleNow !== ruleWas);
   const choices = p.templates.filter((tp) => tp.channel === channel);
   const picked = choices.find((tp) => tp.id === templateId) ?? null;
+  const sms = smsParts(picked ? picked.body.replace('{customerName}', x('sampleName')) : '');
 
   const save = async () => {
     const bad = blast
@@ -106,7 +120,14 @@ export function CampaignForm(p: CampaignFormProps) {
         </label>
         <input id={`${uid}-n`} className="a2-inp" value={name} maxLength={80} placeholder={x(blast ? 'namePhBlast' : 'namePh')} disabled={!p.canWrite} onChange={(e) => setName(e.target.value)} />
       </div>
-      <h2 className="a2-h3">{x('who')}</h2>
+      <ol className="wb-stepbar a2-sm" data-testid="wb-stepbar" aria-label={x('stepsLabel')}>
+        {(['stepWho', 'stepMessage', 'stepWhen'] as const).map((k, i) => (
+          <li key={k} className={i < 2 || p.id ? 'done' : ''}>
+            <b>{i + 1}</b> {x(k)}
+          </li>
+        ))}
+      </ol>
+      <h2 className="a2-h3">1 · {x('who')}</h2>
       {blast ? (
         p.segmentsOn || p.allowEveryone ? (
           <div className="a2-fld">
@@ -167,7 +188,7 @@ export function CampaignForm(p: CampaignFormProps) {
       ) : (
         <p className="a2-xs a2-mute">{x('segmentsOff')}</p>
       )}
-      <h2 className="a2-h3">{x('what')}</h2>
+      <h2 className="a2-h3">2 · {x('what')}</h2>
       <div className="a2-fld">
         <label className="a2-lbl" htmlFor={`${uid}-c`}>
           {x('channel')}
@@ -216,6 +237,30 @@ export function CampaignForm(p: CampaignFormProps) {
             {picked.body}
           </div>
           {channel === 'WHATSAPP' && !picked.approved ? <p className="a2-xs a2-mt6">{x('waNotApproved')}</p> : null}
+          <p className="wb-sms a2-xs a2-mt6" data-testid="wb-sms">
+            <span>
+              {x('letters')}: <b>{sms.n}</b>
+            </span>
+            {channel === 'SMS' ? (
+              <>
+                <span>
+                  {x('smsEach')}: <b>{sms.parts}</b>
+                </span>
+                <span>{x(sms.uni ? 'limitBn' : 'limitEn', { one: String(sms.one) })}</span>
+              </>
+            ) : null}
+          </p>
+          {channel === 'SMS' && p.willGet ? (
+            <div className="a2-note a2-mt6" data-testid="wb-sms-cost">
+              {x('smsCost', { n: String(p.willGet), parts: String(sms.parts) })}
+              {p.cost ? <b> {x('smsCostIs', { cost: p.cost })}</b> : null}
+            </div>
+          ) : null}
+          {channel === 'SMS' && sms.parts > LONG_SMS ? (
+            <div className="a2-note warn a2-mt6" data-testid="wb-sms-long">
+              {x('smsLong')}
+            </div>
+          ) : null}
         </div>
       ) : null}
       <p className="a2-xs a2-mute">{x('noOffer')}</p>
@@ -231,19 +276,20 @@ export function CampaignForm(p: CampaignFormProps) {
       {p.id ? (
         <>
           <div className="a2-hr" />
-          <h2 className="a2-h3">{x('when')}</h2>
+          <h2 className="a2-h3">3 · {x('when')}</h2>
           {p.canSend ? (
             <>
               <div className="mail-when">
-                <label className="a2-ckb">
-                  <input type="radio" name={`${uid}-w`} checked={!later} onChange={() => setLater(false)} />
-                  {x('now')}
-                </label>
-                <label className="a2-ckb">
-                  <input type="radio" name={`${uid}-w`} checked={later} onChange={() => setLater(true)} />
-                  {x('later')}
-                </label>
+                <span className="a2-seg" role="group" aria-label={x('when')} data-testid="wb-when">
+                  <button type="button" className={later ? '' : 'on'} aria-pressed={!later} onClick={() => setLater(false)}>
+                    {x('now')}
+                  </button>
+                  <button type="button" className={later ? 'on' : ''} aria-pressed={later} onClick={() => setLater(true)}>
+                    {x('later')}
+                  </button>
+                </span>
                 {later ? <input type="datetime-local" className="a2-inp" aria-label={x('time')} value={at} onChange={(e) => setAt(e.target.value)} /> : null}
+                <span className="a2-xs a2-mute">{x('bestTime')}</span>
               </div>
               {asking ? (
                 <div className="mail-ask" role="alertdialog" aria-label={x('scheduleAsk')} data-testid="wb-schedule-ask">

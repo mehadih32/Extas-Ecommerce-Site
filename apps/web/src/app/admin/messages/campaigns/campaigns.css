@@ -5,4 +5,11 @@
 .adm2 .wb-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .adm2 .wb-steps li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--ln2)}
 .adm2 .wb-steps li b{white-space:nowrap}
+/* parity F4 · PR 835 — the wizard's three numbered steps and the SMS length line (prototype Message campaigns) */
+.adm2 .wb-stepbar{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.adm2 .wb-stepbar li{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--bg2);color:var(--ink2)}
+.adm2 .wb-stepbar li.done{color:var(--ink);font-weight:600}
+.adm2 .wb-stepbar li b{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:50%;background:var(--ln2)}
+.adm2 .wb-sms{display:flex;flex-wrap:wrap;gap:6px 16px}
+.adm2 .mail-when .a2-seg button{min-height:44px}
 .adm2 .wb-phone{max-width:320px;white-space:pre-wrap;padding:12px;border:1px solid var(--ln2);border-radius:14px;background:var(--bg2)}
