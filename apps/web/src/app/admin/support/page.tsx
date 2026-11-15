@@ -22,11 +22,13 @@ import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ago, kindName, span, withInbox } from '@/lib/admin-support/i18n';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { supportDeps } from '@/lib/support-api';
+import '@/components/admin/lane-f/lane-f.css';
 import './support.css';
 
 export const dynamic = 'force-dynamic';
@@ -46,7 +48,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const sq = await searchParams;
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('support.read', deps, MOTHER_STORE_ID)]);
-  const view = withInbox(plain);
+  const view = withLaneF(withInbox(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="supportInbox" text={t(d, 'page.noDb')} />;
@@ -66,6 +68,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     // PR 538: the desk's hours (null while they are off: always open)
     sp.supportDesk(sd, MOTHER_STORE_ID),
   ]);
+  // prototype v5: the head's one line (open, not assigned, first reply on average, longest wait)
+  const an = await sp.supportAnalytics(sd, who, {}).catch(() => null);
   const deskTime = (at: Date, tz: string) => {
     const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(view.locale, { timeZone: tz, numberingSystem: 'latn', ...o }).format(at);
     // a time later today shows the hour only; another day shows the day too
@@ -82,11 +86,24 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   };
   const kinds = [...new Set(box.channels.map((c) => c.kind))];
   const me = who.actor.staffUserId;
+  const longest = box.rows.reduce((m, r) => (r.waitingSince && r.status !== 'SOLVED' ? Math.max(m, (now.getTime() - new Date(r.waitingSince).getTime()) / 60_000) : m), 0); // hardcode-ok: ms per minute
+  const mins = (x: number | null) => (x === null || x <= 0 ? '—' : span(d, view.locale, x));
+  const headLine = t(d, 'lf.ib.sub', { open: n(box.counts.open), un: n(box.counts.unassigned), avg: mins(an?.total.firstAverage ?? null), wait: mins(longest) });
+  const viewLabel = (v: string) => (['open', 'mine', 'unassigned', 'solved', 'all'].includes(v) ? t(d, `lf.ib.view.${v}`) : t(d, `sup.views.${v}`));
 
   return (
     <div className="a2-z" data-testid="support-inbox" data-lm-ready="">
-      <PageHead view={view} place={locateKey('supportInbox')} title={t(d, 'sup.title')} sub={t(d, 'sup.sub')} />
+      <PageHead view={view} place={locateKey('supportInbox')} title={t(d, 'lf.ib.title')} sub={headLine} />
       <SectionTabs view={view} current="supportInbox" />
+      <div className="lf-viewbar a2-mt12" data-testid="support-viewbar">
+        <nav className="lf-seg" aria-label={t(d, 'lf.ib.title')}>
+          <Link className="on" href={HERE} aria-current="page">
+            {t(d, 'lf.ib.viewMsgs')}
+          </Link>
+          <Link href={`${HERE}/comments`}>{t(d, 'lf.ib.viewComments')}</Link>
+        </nav>
+        <span className="a2-xs a2-mute">{t(d, 'lf.ib.viewNoteMsgs')}</span>
+      </div>
       {desk ? (
         <p className={`sp-desk${desk.open ? '' : ' closed'}`} data-testid="support-desk">
           <ShellIcon name="clock" size={14} />
@@ -104,16 +121,16 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         <nav className="a2-seg" aria-label={t(d, 'sup.views.label')} style={{ flexWrap: 'wrap' }}>
           {sp.INBOX_VIEWS.filter((v) => (v !== 'followup' || box.followUps || current === 'followup') && (v !== 'blocked' || box.blockList || current === 'blocked')).map((v) => (
             <Link key={v} className={v === current ? 'on' : undefined} href={link({ view: v, page: undefined })} scroll={false} aria-current={v === current ? 'page' : undefined} data-testid={`support-view-${v}`}>
-              {t(d, `sup.views.${v}`)} · {n(box.counts[v])}
+              {viewLabel(v)} · {n(box.counts[v])}
             </Link>
           ))}
         </nav>
         <form method="get" action={HERE} className="sp-filters" role="search" data-testid="support-search">
           <input type="hidden" name="view" value={current} />
-          <input className="a2-inp" name="q" defaultValue={q} maxLength={80} placeholder={t(d, 'sup.search')} aria-label={t(d, 'sup.search')} />
+          <input className="a2-inp" name="q" defaultValue={q} maxLength={80} placeholder={t(d, 'lf.ib.search')} aria-label={t(d, 'lf.ib.search')} />
           {kinds.length > 1 ? (
             <select className="a2-sel" name="channel" defaultValue={channel ?? ''} aria-label={t(d, 'sup.channelLabel')}>
-              <option value="">{t(d, 'sup.channelAll')}</option>
+              <option value="">{t(d, 'lf.ib.channels')}</option>
               {kinds.map((k) => (
                 <option key={k} value={k}>
                   {kindName(d, k)}
@@ -152,7 +169,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
                     <span className="sp-meta">
                       <span className={`a2-pill ${statusTone(r.status)}`}>{t(d, `sup.status.${r.status}`)}</span>
                       <span className="a2-pill line">{kindName(d, r.channel.kind)}</span>
-                      <span>{r.assignedTo ? (r.assignedTo.id === me ? t(d, 'sup.you') : r.assignedTo.name) : t(d, 'sup.nobody')}</span>
+                      {r.assignedTo ? <span>{r.assignedTo.id === me ? t(d, 'lf.ib.you') : r.assignedTo.name}</span> : <span className="a2-pill warn">{t(d, 'lf.ib.noOwner')}</span>}
                       {r.waitingSince && r.status !== 'SOLVED' ? <span>· {t(d, 'sup.waitingFor', { time: ago(d, view.locale, r.waitingSince, now) })}</span> : null}
                       {r.clock ? (
                         <span className={`a2-pill ${r.clock.late ? 'bad' : 'line'}`} data-testid="support-row-clock" data-late={r.clock.late ? 'yes' : 'no'}>
