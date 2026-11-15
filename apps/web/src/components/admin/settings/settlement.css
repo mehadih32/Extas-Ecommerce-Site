@@ -1,0 +1,4 @@
+/* PR 817 — Settings › Payments › "Where the money lands" (prototype v5). Lumen tokens only; wraps, never cuts text; taps are 44px. */
+.adm2 .ck-settle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.adm2 .ck-settle-way { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 12px; border: 1px solid var(--lm-ln); border-radius: 12px; overflow-wrap: anywhere; }
+.adm2 .ck-settle-way .a2-sel, .adm2 .ck-settle-way .a2-inp, .adm2 [data-testid="ck-settle-accounts"] { min-height: 44px; font-size: 16px; width: 100%; min-width: 0; }

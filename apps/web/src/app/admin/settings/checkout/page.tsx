@@ -10,6 +10,8 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { MOBILE_WALLETS } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CheckoutEditor } from '@/components/admin/settings/CheckoutEditor';
+import { SettlementCard } from '@/components/admin/settings/SettlementCard';
+import { settlementRead } from '@/lib/admin-checkout/settlement';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -56,6 +58,7 @@ export default async function CheckoutSettingsPage() {
     );
   const v = await checkoutView({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx });
   const canEdit = access.guard.permissions?.has('settings.write') ?? false;
+  const settle = await settlementRead(access.deps.resolver, MOTHER_STORE_ID); // PR 817: where the money lands
   const g = (k: string) => t(d, `ck.${k}`);
   return (
     <div className="a2-z bm-page" data-testid="ck-page" data-lm-ready="">
@@ -65,6 +68,7 @@ export default async function CheckoutSettingsPage() {
         <span>{g('note')}</span>
       </div>
       <CheckoutEditor payments={v.cards.payments} form={v.cards.form} gift={v.cards.gift} unit={v.unit} wallets={[...MOBILE_WALLETS]} texts={flat((d.ck ?? {}) as Dict)} canEdit={canEdit} owner={v.owner} />
+      <SettlementCard value={settle} canEdit={canEdit && v.owner} texts={flat(((d.ck as Dict | undefined)?.settle ?? {}) as Dict)} />
     </div>
   );
 }
