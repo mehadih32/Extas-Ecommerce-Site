@@ -3,6 +3,7 @@
 // the server for today's counts again (the feed is built fresh each time Google or Facebook fetches it; nothing is pushed), the two
 // switches turn the Google and the Facebook feed on or off, "Mark all as own brand" and "Fill N descriptions" go through
 // /api/admin/marketing/shopping-feed. Words come from the page.
+import { LmSwitch } from '../settings/LmSwitch';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
@@ -74,7 +75,7 @@ export function FeedSwitch({ which, on, label, onLabel, offLabel, canWrite, text
     <div className="lf6-li" data-testid={`sf-${which}`}>
       <b className="grow">{label}</b>
       <span className={`a2-pill ${on ? 'ok' : 'line'}`}>{on ? onLabel : offLabel}</span>
-      <input type="checkbox" role="switch" aria-label={label} checked={on} disabled={!canWrite || busy} onChange={(e) => void flip(e.target.checked)} />
+      <LmSwitch on={on} label={label} disabled={!canWrite || busy} onFlip={(next) => void flip(next)} testId={`sf-${which}-switch`} />
       <Said said={said} />
     </div>
   );

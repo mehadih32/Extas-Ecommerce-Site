@@ -269,6 +269,8 @@ import adminAiStripEn from '../../../messages/admin-ai-strip.en.json';
 import adminAiStripBn from '../../../messages/admin-ai-strip.bn.json';
 import adminLaneFEn from '../../../messages/admin-lane-f.en.json';
 import adminLaneFBn from '../../../messages/admin-lane-f.bn.json';
+import adminLaneF6En from '../../../messages/admin-lane-f6.en.json';
+import adminLaneF6Bn from '../../../messages/admin-lane-f6.bn.json';
 import adminSysinfoEn from '../../../messages/admin-sysinfo.en.json';
 import adminSysinfoBn from '../../../messages/admin-sysinfo.bn.json';
 import adminTelegramControlEn from '../../../messages/admin-telegram-control.en.json';
@@ -410,6 +412,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-ai-limits': { en: adminAiLimitsEn, bn: adminAiLimitsBn },
   'admin-ai-strip': { en: adminAiStripEn, bn: adminAiStripBn },
   'admin-lane-f': { en: adminLaneFEn, bn: adminLaneFBn },
+  'admin-lane-f6': { en: adminLaneF6En, bn: adminLaneF6Bn },
   'admin-sysinfo': { en: adminSysinfoEn, bn: adminSysinfoBn },
   'admin-telegram-control': { en: adminTelegramControlEn, bn: adminTelegramControlBn },
   'admin-website-control': { en: adminWebsiteControlEn, bn: adminWebsiteControlBn },

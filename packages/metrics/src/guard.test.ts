@@ -42,6 +42,7 @@ export const ALLOWED: Record<string, string> = {
   'apps/web/src/lib/reports-v5/marketing.ts': "the Marketing report's ad-sales line by day (PR 855) sums the delivered orders that carry an ad channel per day, a per-campaign view",
   'packages/catalogue/src/product-sales.ts': "the product page's 'Sales 30 days' card (PR 831) sums that one product's own order lines, not the shop's sales figure",
   'packages/combos/src/sets-list.ts': "a set's own sold value on the Sets page (PR 773) from that set's order lines, not the shop's sales figure",
+  'apps/web/src/lib/reports-v5/products-extra.ts': "the Products report's heat maps and returns table (PR 863) add up each style's own order lines for the period, a per-style view",
   'packages/shipping/src/couriers-v5.ts': "the COD amount still on the road with each courier (the courier scorecard, PR 670), money owed to the shop, not a sales figure",
 };
 

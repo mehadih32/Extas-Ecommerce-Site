@@ -310,7 +310,7 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
   it('PR 867: History lists the values the last changes replaced; Undo puts one back as a new change and never deletes a step', async () => {
     const row = (await hubScreen(deps(), as(owner))).rows.find((r) => r.id === 'dup');
     if (row?.type !== 'setting') throw new Error('no dup row');
-    await t.prisma.settingChange.create({ data: { storeId: A, key: row.key, action: 'SET', oldValue: { enabled: true, lookbackDays: 3, reviewFrom: 'medium' }, newValue: row.value as never, reason: 'Rules', actorId: writer.staffUserId } });
+    await t.prisma.settingChange.create({ data: { storeId: A, key: row.key, action: 'SET', oldValue: { enabled: true, lookbackDays: 3, reviewFrom: 'medium', autoHold: false }, newValue: row.value as never, reason: 'Rules', actorId: writer.staffUserId } });
     await t.prisma.settingChange.create({ data: { storeId: A, key: row.key, action: 'SET', oldValue: row.value as never, newValue: row.value as never, reason: 'no change', actorId: writer.staffUserId } });
     const h = await hubHistory(deps(), as(reader), { id: 'dup' });
     expect(h).toHaveLength(1);
