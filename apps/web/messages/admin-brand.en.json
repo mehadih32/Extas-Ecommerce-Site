@@ -132,7 +132,7 @@
       "linkAdd": "Add a link",
       "moveTo": "Move to column",
       "contact": "Contact block",
-      "contactHelp": "Which of your contact details the footer shows. The numbers themselves come from your contact settings.",
+      "contactHelp": "Which of your contact details the footer shows. The numbers themselves are in the Contact & sharing card above.",
       "contactOpt": {
         "whatsapp": "WhatsApp",
         "hotline": "Hotline",
@@ -145,7 +145,45 @@
       "pay": "Payment marks",
       "payHelp": "Which payment marks show, and in what order. Hidden ones stay in the list.",
       "copyright": "Copyright line",
-      "copyrightHelp": "{year} and {store} are filled in for you."
+      "copyrightHelp": "{year} and {store} are filled in for you.",
+      "blocks": "Footer boxes",
+      "blocksHelp": "Drag the boxes to change their order, and untick a box to hide it. On a computer the link columns, contact, social and payment boxes stay together in one wide block, which sits where the first of them is.",
+      "block": {
+        "promise": "Promise strip",
+        "brand": "Shop name and sign-up",
+        "columns": "Link columns",
+        "contact": "WhatsApp, hotline and hours",
+        "social": "Social marks",
+        "pay": "Payment marks",
+        "legal": "Last line (copyright and language)"
+      },
+      "blockLegal": "Always shown, so the language switch is never lost.",
+      "linkIcon": "Little picture beside the link",
+      "iconDefault": "Plain arrow",
+      "linkScreens": "Shows on",
+      "screens": {
+        "both": "Phone and computer",
+        "desk": "Computer only",
+        "phone": "Phone only"
+      }
+    },
+    "contact": {
+      "h": "Contact & sharing",
+      "d": "How people reach your shop, and the picture shown when a link to it is shared.",
+      "phone": "Hotline number",
+      "phoneHelp": "Shown on the shop and used for the Call button. A Bangladesh mobile may be typed the usual way (01XXXXXXXXX); other countries start with +.",
+      "whatsapp": "WhatsApp number",
+      "whatsappHelp": "Opens the WhatsApp chat from the shop. Leave empty to hide the WhatsApp buttons.",
+      "email": "Email",
+      "emailHelp": "Shown in the footer and on invoices. Leave empty to hide it.",
+      "address": "Shop address",
+      "addressHelp": "Shown on the help pages and invoices, in both languages. Leave both empty to show no address.",
+      "hours": "Opening hours",
+      "hoursHelp": "For example \"Every day, 10am to 8pm\". Both languages, or leave both empty.",
+      "og": "Link preview picture",
+      "ogHelp": "The picture shown when a link to your shop is sent in WhatsApp or Facebook. A wide picture works best.",
+      "shareLook": "How a shared link looks",
+      "shareNone": "No picture yet. Links show only the shop name."
     }
   }
 }

@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "ogImage": {
+      "label": "Link preview picture",
+      "help": "The picture shown when a link to your shop is sent in WhatsApp or Facebook or found in search. Not set: no picture is added."
+    }
+  },
+  "card": {
+    "tagBadges": {
+      "label": "Tag badges on product cards",
+      "help": "Which tag becomes the small badge on a product card, in what order, and with which words. Empty: the product's first tag, as before."
+    }
+  },
+  "catalogue": {
+    "collections": {
+      "order": {
+        "label": "Collection order",
+        "help": "Your own order of the collections in the admin list. Empty: by name."
+      }
+    }
+  }
+}

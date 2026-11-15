@@ -301,3 +301,5 @@ export * from './registry-products-v5';
 export * from './registry-practice';
 // S28 · PR 740–744 — the e-mail look, the cookie banner and the home-screen app (registry-page-settings.ts, version 740).
 export * from './registry-page-settings';
+// PR 745–749 — link preview picture, tag badges, collection order (registry-customise.ts, version 745).
+export * from './registry-customise';

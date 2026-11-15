@@ -239,8 +239,23 @@ export const FOOTER_SOCIAL = [...SOCIAL_NETWORKS, 'whatsapp'] as const;
 /** H13 (CN-008) · 'ref' the owner's reference layout · 'classic' the earlier desktop footer. */
 export const FOOTER_DESK_STYLES = ['ref', 'classic'] as const;
 
+/**
+ * PR 745 — the footer's boxes the owner can move and hide: the promise strip, the brand box (name, slogan, sign-up),
+ * the link columns, the contact buttons (WhatsApp, hotline, hours), the social marks, the payment marks and the last
+ * line (copyright and the language switch; it moves but never hides, so the language switch is always there).
+ */
+export const FOOTER_BLOCKS = ['promise', 'brand', 'columns', 'contact', 'social', 'pay', 'legal'] as const;
+export type FooterBlock = (typeof FOOTER_BLOCKS)[number];
+
 export const footerSchema = z
   .object({
+    /** PR 745 · the boxes shown, in the owner's order; one left out is hidden. Not set (as shipped): every box, in the approved order. */
+    blockOrder: z
+      .array(z.enum(FOOTER_BLOCKS))
+      .max(FOOTER_BLOCKS.length)
+      .refine((a) => new Set(a).size === a.length, { message: 'each box once' })
+      .refine((a) => a.includes('legal'), { message: 'the last line always stays' })
+      .optional(),
     deskStyle: z.enum(FOOTER_DESK_STYLES),
     /** CN-012 (Note 54, item 1): a small line icon beside every link of the reference desktop footer; off = words only (V12.1). */
     deskIcons: z.boolean(),
@@ -826,7 +841,7 @@ export const storefrontSettings = {
     isOwnerData: false,
     isPublic: true,
     sortOrder: 50,
-    version: V,
+    version: 745, // PR 745: `blockOrder` added to the schema
   }),
   // ---- PR 503 / 84 · language ----
   'language.bengali.enabled': setting({

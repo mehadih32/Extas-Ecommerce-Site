@@ -14,7 +14,7 @@ export interface Pair {
 /** The shop's words at a dictionary key (the owner's own change of it wins), in both languages. */
 export type Words = (key: string) => Pair;
 
-export const CARD_KEYS = ['brand', 'menu', 'footer'] as const;
+export const CARD_KEYS = ['brand', 'menu', 'footer', 'contact'] as const;
 export type CardKey = (typeof CARD_KEYS)[number];
 
 // ---- the cards ----
@@ -74,6 +74,11 @@ export interface PromiseRow {
 export interface FooterLinkRow {
   id: string;
   label: Pair | null;
+  /** PR 745: the little picture beside the link ('' = the shop's own choice for it). */
+  icon?: string;
+  /** PR 745: where the link shows: both screens, the computer only or the phone only. */
+  dev?: LinkScreen;
+  /** The category's link name, for a category link. */
   cat: string;
   href: string;
   editHref: boolean;
@@ -91,7 +96,14 @@ export interface MarkRow {
   id: string;
   on: boolean;
 }
+/** The footer's boxes the owner moves and hides (PR 745), in the approved order. */
+export const FOOTER_BLOCK_IDS = ['promise', 'brand', 'columns', 'contact', 'social', 'pay', 'legal'] as const;
+export type FooterBlockId = (typeof FOOTER_BLOCK_IDS)[number];
+export type LinkScreen = 'both' | 'desk' | 'phone';
+
 export interface FooterCardValue {
+  /** PR 745: every box with whether it shows, the shown ones first in the owner's order (the last line cannot be hidden). */
+  blocks: MarkRow[];
   promiseOn: boolean;
   promise: PromiseRow[];
   joinOn: boolean;
@@ -103,7 +115,17 @@ export interface FooterCardValue {
   copyright: Pair;
 }
 
-export type CardValue = { brand: BrandCardValue; menu: MenuCardValue; footer: FooterCardValue };
+/** PR 745: how people reach the shop (the numbers, the address, the hours) and the picture a shared link shows. */
+export interface ContactCardValue {
+  phone: string;
+  whatsapp: string;
+  email: string;
+  address: Pair | null;
+  hours: Pair | null;
+  ogImage: string | null;
+}
+
+export type CardValue = { brand: BrandCardValue; menu: MenuCardValue; footer: FooterCardValue; contact: ContactCardValue };
 
 // ---- words ----
 
@@ -174,6 +196,19 @@ function marks(stored: readonly { id: string; on: boolean }[], all: readonly str
   return [...stored.map((x) => ({ id: x.id, on: x.on })), ...all.filter((id) => !have.has(id)).map((id) => ({ id, on: false }))];
 }
 
+/** The boxes as rows: not set = every box in the approved order; set = the listed ones first, the rest hidden behind them. */
+export function blocksOf(order: readonly string[] | undefined): MarkRow[] {
+  if (!order) return FOOTER_BLOCK_IDS.map((id) => ({ id, on: true }));
+  const known = order.filter((id) => (FOOTER_BLOCK_IDS as readonly string[]).includes(id));
+  return [...known.map((id) => ({ id, on: true })), ...FOOTER_BLOCK_IDS.filter((id) => !known.includes(id)).map((id) => ({ id, on: false }))];
+}
+
+/** The boxes back to the setting: the approved order with every box on is "not set" (undefined); else the shown boxes in order, the last line always in. */
+export function blockOrderOf(rows: readonly { id: string; on: boolean }[]): FooterBlockId[] | undefined {
+  const shown = rows.filter((r) => r.on || r.id === 'legal').map((r) => r.id as FooterBlockId);
+  return shown.length === FOOTER_BLOCK_IDS.length && shown.every((id, i) => id === FOOTER_BLOCK_IDS[i]) ? undefined : shown;
+}
+
 export function footerCard(
   footer: ShellFooter,
   defaults: ShellFooter,
@@ -184,6 +219,7 @@ export function footerCard(
   const builtCol = idsOf(defaults.columns);
   const builtLink = new Set(defaults.columns.flatMap((c) => c.links.map((l) => l.id)));
   return {
+    blocks: blocksOf(footer.blockOrder),
     promiseOn: footer.promise.on,
     promise: footer.promise.items.map((p) => ({ id: p.id, text: labelPair(p.text, words) ?? { en: '', bn: '' }, on: p.on, builtIn: builtPromise.has(p.id) })),
     joinOn: footer.join.on,
@@ -194,6 +230,8 @@ export function footerCard(
       builtIn: builtCol.has(c.id),
       links: c.links.map((l) => ({
         id: l.id,
+        icon: l.icon ?? '',
+        dev: l.dev ?? 'both',
         label: labelPair(l.label, words),
         cat: l.cat ?? '',
         href: l.href ?? '',
