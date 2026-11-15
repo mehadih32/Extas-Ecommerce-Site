@@ -9,23 +9,22 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
 import { StyleTree, type TreeRow, type TreeTexts } from '@/components/admin/reports/StyleTree';
-import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
+import { ReportTable } from '@/components/admin/reports/ReportParts';
+import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { QUICK_PERIODS, quickPeriod } from '@/lib/cost-report';
 import { marginPct } from '@/lib/group-profit-view';
 import { t } from '@/lib/i18n';
 import { makeFmt } from '@/lib/reports-v5/fmt';
-import { loadBase, loadProducts } from '@/lib/reports-v5/load';
-import { change, daysBetween, heroRange, leaves, seriesOf } from '@/lib/reports-v5/model';
+import { loadBase, loadProducts, loadViews } from '@/lib/reports-v5/load';
+import { change, leaves } from '@/lib/reports-v5/model';
 import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
 import '../../money/money.css';
@@ -61,10 +60,8 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
   const r = await loadProducts(access, b);
   const f = makeFmt(view.locale, b.currency);
   const { q, notes } = b.period;
-  const current = QUICK_PERIODS.find((p) => p === sp.period) ?? QUICK_PERIODS.find((p) => {
-    const x = quickPeriod(p, b.today);
-    return x.from === q.from && x.to === q.to;
-  });
+  const cmp = sp.cmp !== '0';
+  const views = await loadViews(access, 'products');
   const rows = b.limits.maxDayRows;
 
   const styleLeaves = leaves(r.styles.rows).filter((x) => x.id !== null);
@@ -73,35 +70,11 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
   const restock = r.restock?.restock ?? [];
   const unsold = r.restock?.unsold ?? [];
   const num = (id: string, label: string, n: number, extra: Partial<SummaryTile> = {}): SummaryTile => ({ key: id, label, value: n, shown: f.num(n), format: { kind: 'number', locale: view.locale }, ...extra });
-  const tiles: SummaryTile[] = [
-    { key: 'sales', label: c('kSales'), value: r.sales.salesMinor, shown: f.amount(r.sales.salesMinor), format: f.format, delta: change(r.sales.salesMinor, r.salesWas.salesMinor), vs: cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) }) },
-    num('pieces', c('kPieces'), r.styles.total.pieces, { delta: change(r.styles.total.pieces, r.stylesWas.total.pieces) }),
-    num('styles', c('kStyles'), sold),
-    num('losing', c('kLosing'), losing, { tone: losing > 0 ? 'bad' : undefined }),
-    ...(r.restock ? [num('restock', c('kRestock'), restock.length, { vs: c('kRestockSub'), tone: restock.length > 0 ? 'warn' : undefined }), num('unsold', c('kUnsold'), unsold.length, { vs: c('kUnsoldSub') })] : []),
-  ];
-
   const bestStyle = [...styleLeaves].sort((x, y) => y.pieces - x.pieces)[0];
   const lines: AnswerLine[] = [];
   if (bestStyle && bestStyle.pieces > 0) lines.push({ text: c('ans.best', { name: bestStyle.name ?? '', pieces: f.num(bestStyle.pieces), sales: f.amount(bestStyle.salesMinor) }), tone: 'good', act: { label: c('ans.combo'), href: '/admin/combos' } });
   if (restock.length) lines.push({ text: c('ans.restock', { n: restock.length }), tone: 'bad', act: { label: c('ans.reorder'), href: '/admin/stock' } });
   if (unsold.length) lines.push({ text: c('ans.unsold', { n: unsold.length }), act: { label: c('ans.combo'), href: '/admin/combos' } });
-
-  const days = daysBetween(q.from, q.to, rows);
-  const prevDays = daysBetween(b.before.from, b.before.to, rows);
-  const hero = heroRange({
-    key: 'p',
-    label: `${f.dayShort(q.from)} – ${f.dayShort(q.to)}`,
-    days,
-    values: seriesOf(days, r.sales.byDay, (x) => x.salesMinor),
-    before: seriesOf(prevDays, r.salesWas.byDay, (x) => x.salesMinor),
-    total: r.sales.salesMinor,
-    delta: change(r.sales.salesMinor, r.salesWas.salesMinor),
-    vs: cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) }),
-    amount: f.amount,
-    dayLabel: f.dayShort,
-    mini: [{ label: cc('orders'), shown: f.num(r.sales.orders) }],
-  });
 
   // PR 732: the style tree (a verdict from the owner's rules), best sellers, slow sellers and the categories table
   const rules = r.rules;
@@ -114,6 +87,19 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
   const treeRows: TreeRow[] = r.styles.rows
     .filter((x) => x.id !== null)
     .map((x) => ({ id: x.id as string, parentId: x.parentId, depth: x.depth, name: x.name ?? t(d, 'reportsV5.channel.noStyle'), pieces: f.num(x.pieces), sales: f.amount(x.salesMinor), profit: f.amount(x.profitMinor), margin: f.pctOf(marginPct(x)), loss: x.profitMinor < 0, verdict: verdictOf(x) }));
+  const leafVerdicts = styleLeaves.map(verdictOf);
+  const bulkN = leafVerdicts.filter((v) => v === 'bulk').length;
+  const stopN = leafVerdicts.filter((v) => v === 'stop').length;
+  const tiles: SummaryTile[] = [
+    num('restock', c('kRestock'), restock.length, { vs: c('kRestockSub'), tone: restock.length > 0 ? 'warn' : undefined }),
+    num('bulk', c('kBulk'), bulkN, { vs: c('kBulkSub') }),
+    num('stop', c('kStop'), stopN, { vs: c('kStopSub') }),
+    num('pieces', c('kPieces'), r.styles.total.pieces, { delta: change(r.styles.total.pieces, r.stylesWas.total.pieces) }),
+    num('styles', c('kStyles'), sold),
+    { key: 'sales', label: c('kSales'), value: r.sales.salesMinor, shown: f.amount(r.sales.salesMinor), format: f.format },
+    num('losing', c('kLosing'), losing, { tone: losing > 0 ? 'bad' : undefined }),
+    ...(r.restock ? [num('unsold', c('kUnsold'), unsold.length)] : []),
+  ];
   const treeTexts: TreeTexts = { label: c('treeLabel'), name: c('treeName'), pieces: c('treePieces'), sales: c('treeSales'), profit: c('treeProfit'), margin: c('treeMargin'), verdict: c('treeVerdict'), bulk: c('vBulk'), stop: c('vStop'), keep: c('vKeep'), openAll: c('openAll'), closeAll: c('closeAll') };
   const bestSellers = [...styleLeaves].filter((x) => x.pieces > 0).sort((x, y) => y.pieces - x.pieces).slice(0, 8);
   const bestMax = Math.max(1, ...bestSellers.map((x) => x.pieces));
@@ -134,17 +120,21 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
 
   return (
     <div className="a2-z lm-rp" data-testid="rp-products" data-lm-ready="" data-from={q.from} data-to={q.to}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={cc('pageTitle')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={b.today} current={current} csv={`/api/admin/reports/export/products?from=${q.from}&to=${q.to}`} notes={notes} limitDays={b.limits.maxDays} />
-      <p className="a2-xs a2-mute a2-mt12">
-        {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {cc('vs', { from: f.day(b.before.from), to: f.day(b.before.to) })}
-      </p>
-      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
-      <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
-      <div className="a2-mt12 mo-hero">
-        <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} prevName={cc('heroPrev')} testId="rp-hero" />
-      </div>
+      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={b.today} p={typeof sp.p === 'string' ? sp.p : undefined} cmp={cmp} before={b.before} reportKey="products" views={views} day={f.dayShort} csv={`/api/admin/reports/export/products?from=${q.from}&to=${q.to}`} notes={notes} limitDays={b.limits.maxDays} />
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} empty={cc('answersNone')} />
+      <SummaryTiles className="a2-mt12" tiles={tiles.slice(0, 4).map((x) => (cmp ? x : { ...x, delta: undefined }))} label={cc('tilesLabel')} testId="rp-tiles" />
+      {tiles.length > 4 ? (
+        <div className="rp-kchips" data-testid="rp-chips">
+          {tiles.slice(4).map((x) => (
+            <div key={x.key}>
+              <span>{x.label}</span>
+              <b>{x.shown}</b>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <section className="a2-card a2-mt12" aria-labelledby="rp-st" data-testid="rp-styles">
         <h2 className="a2-h3" id="rp-st">
@@ -293,16 +283,6 @@ export default async function ProductsReportPage({ searchParams }: { searchParam
         </p>
       )}
 
-      <HowFigures
-        dict={d}
-        testId="rp-how"
-        items={[
-          { label: c('kSales'), how: c('how.sales'), href: `/admin/money/profit/groups?by=style&from=${q.from}&to=${q.to}`, linkText: c('styles') },
-          { label: c('kPieces'), how: c('how.pieces') },
-          { label: c('kRestock'), how: c('how.restock'), href: '/admin/reports', linkText: c('restock') },
-          { label: c('kUnsold'), how: c('how.unsold'), href: '/admin/reports', linkText: c('unsold') },
-        ]}
-      />
     </div>
   );
 }
