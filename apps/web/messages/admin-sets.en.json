@@ -2,7 +2,7 @@
   "productSets": {
     "metaTitle": "Sets",
     "title": "Sets",
-    "sub": "A set is one product made of several pieces, such as a top and a bottom. One price; the customer picks a size for each piece. The stock of a set is what its weakest piece allows.",
+    "sub": "A set is one product made of a top and a bottom (ERP SKUs). One price, and the customer picks a separate size for each piece.",
     "edit": "Combos & sets",
     "k": {
       "live": "Sets on the shop",
@@ -10,9 +10,12 @@
       "low": "Low stock",
       "lowSub": "at {n} or fewer",
       "soldOut": "Sold out",
-      "soldOutSub": "on the shop with no stock"
+      "soldOutSub": "on the shop with no stock",
+      "sold": "Sold · 30 days",
+      "sales": "Sales · 30 days",
+      "colours": "Colours ready to sell"
     },
-    "note": "A set sells only while every piece has stock. When the top or the bottom runs out, the whole set shows sold out. Prices and the pieces are changed on Combos & sets.",
+    "note": "Stock of a set is the stock of its two pieces in the ERP. When the top or the bottom of a colour runs out, that colour hides from the set by itself.",
     "state": {
       "live": "On the shop",
       "soon": "Starts soon",
@@ -74,6 +77,28 @@
         "network": "No connection. Try again.",
         "other": "Could not save. Try again."
       }
+    },
+    "addListing": "Add as a new listing",
+    "newSet": "New set",
+    "noColour": "No shared colour",
+    "sizes": {
+      "top": "Top sizes",
+      "bottom": "Bottom sizes"
+    },
+    "profit": "Your profit",
+    "soldRow": "Sold · 30 days",
+    "act": {
+      "on": "On the shop",
+      "off": "Off",
+      "edit": "Edit",
+      "archive": "Archive",
+      "bringBack": "Bring back",
+      "archived": "Archived",
+      "confirm": "Archive this set?",
+      "confirmBody": "It leaves the shop. The pieces stay on sale on their own.",
+      "cancel": "Cancel",
+      "failed": "Could not change the set. Try again.",
+      "notReady": "This set cannot go on sale yet: it needs pieces with prices and a set price."
     }
   }
 }
