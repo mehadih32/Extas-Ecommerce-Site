@@ -1,7 +1,7 @@
 {
-  "metaTitle": "Backups · Admin",
-  "title": "Backups",
-  "sub": "Every night the server copies the shop to its own disk, to Azure Blob and to your Google Drive, then checks every copy.",
+  "metaTitle": "Backups & restore · Admin",
+  "title": "Backups & restore",
+  "sub": "A full copy of the shop — orders, customers, products, photos, settings — kept on the server and in your Google Drive.",
   "kpi": {
     "local": "Server copy",
     "drive": "Google Drive",
@@ -67,8 +67,8 @@
     "lastCheck": "Last check: {time}"
   },
   "list": {
-    "title": "Backups in your Drive",
-    "sub": "Newest first. \"Checked\" means the server compared every file after the upload.",
+    "title": "Backups",
+    "sub": "Restore needs your PIN and takes a safety copy first. Newest first. \"Checked\" means the server compared every file after the upload.",
     "load": "Show the backups in Drive",
     "loading": "Reading Drive…",
     "none": "No backup in Drive yet. The first one goes there tonight.",
@@ -136,7 +136,7 @@
     "title": "Back up or test now",
     "sub": "The server starts it within a few minutes and writes back here what happened. A drill restores into a throw-away database, never the live one.",
     "BACKUP": "Back up now",
-    "RESTORE_DRILL": "Run the restore drill now",
+    "RESTORE_DRILL": "Run drill now",
     "asking": "Asking the server…",
     "asked": "Asked. The server starts it within a few minutes; this list shows the outcome.",
     "readOnly": "You can see the requests. Asking for one needs the \"Backups\" permission.",
@@ -158,7 +158,7 @@
     }
   },
   "drillBox": {
-    "title": "Last restore drill",
+    "title": "Monthly restore drill",
     "none": "No drill yet. The first runs on the drill day, or press \"Run the restore drill now\".",
     "from": {
       "local": "Server disk",
@@ -173,7 +173,7 @@
   },
   "plan": {
     "where": "Backup settings",
-    "title": "When, how long, and the monthly drill",
+    "title": "Schedule",
     "desc": "The server reads these within a few minutes; the next backup and drill use them.",
     "dailyTime": "Nightly backup at",
     "keepLocalDays": "Days the server's disk keeps",
@@ -202,7 +202,7 @@
     "default": "default: {v}",
     "on": "on",
     "off": "off",
-    "save": "Save",
+    "save": "Save schedule",
     "saving": "Saving…",
     "saved": "Saved. The server uses it within a few minutes.",
     "unchanged": "Nothing changed.",
@@ -211,7 +211,8 @@
     "containerHint": "small letters, digits and dashes, 3–63; make it in Azure first",
     "freshHours": "\"Ready\": newest copy no older than (hours)",
     "freshHint": "for the go-live checks above",
-    "drillDays": "\"Ready\": restore drill passed within (days)"
+    "drillDays": "\"Ready\": restore drill passed within (days)",
+    "driveKeeps": "Google Drive always keeps the newest {n}. A new one replaces the oldest only after Google has checked it."
   },
   "gate": {
     "title": "Backups ready for real orders",
@@ -286,6 +287,15 @@
       "ok": "Done",
       "fail": "Failed",
       "refused": "Refused"
-    }
+    },
+    "confirmTitle": "Restore this backup?",
+    "confirmText": "The shop goes back to {backup}. A safety copy of now is taken first, so nothing is lost. The shop pauses for about 5 minutes."
+  },
+  "hero": {
+    "safe": "Your data is safe",
+    "late": "Backup is late",
+    "line": "Last backup {when} · copied to Google Drive",
+    "lineServer": "Last backup {when} · server only",
+    "never": "No backup has been made yet"
   }
 }

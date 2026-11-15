@@ -301,6 +301,12 @@ export function RestoreCard({
             {local(d, "restore.readyText")}
             {confirming ? (
               <div className="a2-scv a2-mt12">
+                <div data-testid="bk-restore-confirm">
+                  <b>{local(d, "restore.confirmTitle")}</b>{" "}
+                  {local(d, "restore.confirmText", {
+                    backup: newestStaging!.backup ?? "",
+                  })}
+                </div>
                 <div className="a2-fld">
                   <label className="a2-lbl" htmlFor={id("word")}>
                     {local(d, "restore.type", { word: WORD })}
