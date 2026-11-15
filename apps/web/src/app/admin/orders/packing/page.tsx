@@ -38,6 +38,7 @@ import { PeakCard, type PeakTexts, type PeakValue } from '@/components/admin/ful
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PackSelect, type PackSelectRow } from '@/components/admin/fulfil/PackSelect';
 import { invoiceHref } from '@/lib/admin-orders/model';
+import { printedAt } from '@/lib/admin-fulfil/handover';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -160,6 +161,27 @@ export default async function PackPage({ searchParams }: Props) {
       if (!sh.isShippingError(e)) throw e;
     }
   }
+  // PR 814 (prototype v5): which chip the list sits on, the default courier, the Owner / Packer view, the day-end check
+  const mode: 'confirmed' | 'booked' | 'plain' = step === 'pick' && docsFilter === 'notBooked' ? 'confirmed' : step === 'pick' && docsFilter === 'noSticker' ? 'booked' : 'plain';
+  const onPacked = step === 'ready' && docsFilter === 'all';
+  let defaultCourierId = '';
+  if (bulkCouriers.length) {
+    const setup = await sd.settings.value('delivery.couriers', at);
+    defaultCourierId = sh.defaultCourierIdOf(bulkCouriers.map((c) => ({ id: c.id, providerKey: '', name: c.name, archivedAt: null })), setup.defaultCourierId);
+  }
+  const canSeeContact = can('orders.read');
+  const asPacker = one(sp.view) === 'packer' || !canSeeContact;
+  const contacts = mode !== 'plain' && queue.rows.length ? await sh.packContacts(sd, who, queue.rows.map((r) => r.orderId)) : [];
+  const deliverTo: Record<string, string> = Object.fromEntries(
+    contacts.map((c) => [c.orderId, asPacker ? [c.phoneMasked, c.area].filter(Boolean).join(' · ') : [c.phone, c.address || c.area].filter(Boolean).join(' · ')]),
+  );
+  const dayEnd = onPacked ? await sh.dayEndFigures(sd, who) : null;
+  const printLog = onPacked
+    ? (await sh.printJobs(sd, who))
+        .filter((j) => j.kind === 'STICKER')
+        .flatMap((j) => j.orderNumbers.map((num) => ({ num, again: j.isReprint, by: j.by, at: j.at, reason: j.reason })))
+        .slice(0, 12)
+    : [];
   // PR 183: the lines a packer can still raise a card on (one open card per line)
   const reportable = (order?.lines ?? [])
     .filter((l) => !order?.openIssues.some((i) => i.orderItemId === l.lineId))
@@ -270,6 +292,69 @@ export default async function PackPage({ searchParams }: Props) {
           ))}
         </div>
       ) : null}
+      {mode === 'confirmed' ? (
+        <div className="a2-note a2-mt12" data-testid="ship-confirmed-note">
+          <ShellIcon name="info" size={15} />
+          <span>{t(d, 'ful.pack.ship.confirmedNote')}</span>
+        </div>
+      ) : null}
+      {mode === 'booked' ? (
+        <>
+          <div className="d4-seg" data-testid="ship-view">
+            <span className="a2-xs a2-mute">{t(d, 'ful.pack.ship.viewing')}</span>
+            <div className="a2-views" role="group" aria-label={t(d, 'ful.pack.ship.viewing')}>
+              {(['owner', 'packer'] as const).map((v) => (
+                <Link key={v} className={`a2-view${(v === 'packer') === asPacker ? ' on' : ''}`} href={`${HERE}?step=pick${keep}&view=${v}`} aria-current={(v === 'packer') === asPacker ? 'true' : undefined} data-testid={`ship-view-${v}`}>
+                  {t(d, `ful.pack.ship.${v}`)}
+                </Link>
+              ))}
+            </div>
+          </div>
+          {asPacker ? (
+            <div className="a2-note" data-testid="ship-packer-note">
+              <ShellIcon name="info" size={15} />
+              <span>{canSeeContact ? t(d, 'ful.pack.ship.packerNote') : `${t(d, 'ful.pack.ship.packerNote')} ${t(d, 'ful.pack.ship.ownerHint')}`}</span>
+            </div>
+          ) : null}
+          <div className="a2-note" data-testid="ship-booked-note">
+            <ShellIcon name="info" size={15} />
+            <span>{t(d, 'ful.pack.ship.bookedNote')}</span>
+          </div>
+        </>
+      ) : null}
+      {dayEnd ? (
+        <section className="a2-card a2-mt12" aria-label={t(d, 'ful.pack.dayEnd.title')} data-testid="ship-day-end">
+          <div className="a2-ch">
+            <div>
+              <h2 className="a2-h3">{t(d, 'ful.pack.dayEnd.title')}</h2>
+              <p className="a2-xs a2-mute">{t(d, 'ful.pack.dayEnd.sub')}</p>
+            </div>
+            <Link className="a2-lnk" href="/admin/orders/packing/handover" data-testid="ship-day-end-more">
+              {t(d, 'ful.pack.dayEnd.more')}
+              <ShellIcon name="cr" size={14} />
+            </Link>
+          </div>
+          <div className="d4-kpis3">
+            {(
+              [
+                ['packedToday', dayEnd.packedToday, 'box'],
+                ['handed', dayEnd.handedToday, 'truck'],
+                ['notHanded', dayEnd.notHanded, 'alert'],
+              ] as const
+            ).map(([id, value, icon]) => (
+              <div key={id} className="a2-card a2-kpi" data-testid={`ship-day-${id}`}>
+                <div className="a2-kl">
+                  <ShellIcon name={icon} size={14} /> {t(d, `ful.pack.dayEnd.${id}`)}
+                </div>
+                <div className="a2-kv">{n(value)}</div>
+              </div>
+            ))}
+          </div>
+          <p className="a2-xs a2-mute a2-mt6" data-testid="ship-day-end-line">
+            {dayEnd.notHanded ? t(d, 'ful.pack.dayEnd.waiting', { n: n(dayEnd.notHanded) }) : t(d, 'ful.pack.dayEnd.allHanded')}
+          </p>
+        </section>
+      ) : null}
       <form className="a2-card tight pf-form a2-mt12" method="get" action={HERE} role="search" aria-label={t(d, 'ful.pack.filter.title')} data-testid="pack-filter">
         <input type="hidden" name="step" value={step} />
         <label className="a2-xs">
@@ -368,6 +453,10 @@ export default async function PackPage({ searchParams }: Props) {
               canPrint={can('fulfilment.print')}
               couriers={bulkCouriers}
               codeWords={codeWords}
+              mode={mode}
+              defaultCourierId={defaultCourierId}
+              printAllHref="/admin/orders/packing/print"
+              extra={mode === 'plain' ? undefined : deliverTo}
             />
           ) : (
             <div className="a2-state" data-testid="pack-empty">
@@ -583,6 +672,42 @@ export default async function PackPage({ searchParams }: Props) {
           )}
         </div>
       </div>
+      {onPacked ? (
+        <section className="a2-card a2-mt12" aria-label={t(d, 'ful.pack.log.title')} data-testid="ship-print-log">
+          <h2 className="a2-h3">{t(d, 'ful.pack.log.title')}</h2>
+          <p className="a2-xs a2-mute">{t(d, 'ful.pack.log.sub')}</p>
+          {printLog.length ? (
+            <div className="a2-tblw a2-mt6">
+              <table className="a2-tbl d4-log">
+                <thead>
+                  <tr>
+                    <th>{t(d, 'ful.pack.log.order')}</th>
+                    <th>{t(d, 'ful.pack.log.print')}</th>
+                    <th>{t(d, 'ful.pack.log.who')}</th>
+                    <th>{t(d, 'ful.pack.log.when')}</th>
+                    <th>{t(d, 'ful.pack.log.why')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {printLog.map((l, i) => (
+                    <tr key={`${l.num}-${l.at}-${i}`} data-testid="ship-log-row">
+                      <td data-l={t(d, 'ful.pack.log.order')}>
+                        <b className="a2-mono">{l.num}</b>
+                      </td>
+                      <td data-l={t(d, 'ful.pack.log.print')}>{l.again ? t(d, 'ful.pack.log.again') : t(d, 'ful.pack.log.first')}</td>
+                      <td data-l={t(d, 'ful.pack.log.who')}>{l.by ?? '—'}</td>
+                      <td data-l={t(d, 'ful.pack.log.when')}>{printedAt(l.at, view.timeZone)}</td>
+                      <td data-l={t(d, 'ful.pack.log.why')}>{l.again ? (l.reason ?? '—') : t(d, 'ful.pack.log.first')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.pack.log.none')}</p>
+          )}
+        </section>
+      ) : null}
       <FieldsCard url="/api/admin/packing/settings" screen={cards['fulfilment.toShip']} fields={shipFields} texts={shipTexts} canEdit={canSettings} testId="ship-switches" />
     </div>
   );

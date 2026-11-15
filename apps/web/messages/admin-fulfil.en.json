@@ -692,7 +692,16 @@
         "booked": "Booked {n}.",
         "notBooked": "Not booked: {list}",
         "print": "Print selected ({n})",
-        "note": "Book first, then print. A print makes what \"What to print\" on the print run page says, in packing order. Nothing is booked or printed by itself."
+        "note": "Book first, then print. A print makes what \"What to print\" on the print run page says, in packing order. Nothing is booked or printed by itself.",
+        "bar": {
+          "all": "Select all",
+          "courier": "Courier",
+          "default": "default",
+          "book": "Book courier",
+          "stickers": "Print stickers",
+          "printAll": "Print all",
+          "pickFirst": "Pick orders first"
+        }
       },
       "chips": {
         "label": "Where the orders are",
@@ -758,6 +767,38 @@
         "shortNone": "All pieces are there",
         "problems": "Problem orders",
         "problemsNote": "kept apart"
+      },
+      "ship": {
+        "confirmedNote": "Pick the orders and press “Book courier”: every order is sent to the courier by API in one click and gets its tracking number. An order is booked only once.",
+        "bookedNote": "“Print all” gives (1) the summary, (2) the picking list by category → style → colour → size, most pieces first, and (3) the stickers with the courier barcode, in the same order. A sticker prints once: printing makes the order Packed. Handing over to the courier comes from the courier’s pickup report.",
+        "viewing": "Viewing as",
+        "owner": "Owner",
+        "packer": "Packer",
+        "packerNote": "Packer view: phone numbers and full addresses are hidden. Only the area shows. The printed sticker carries the full address for the courier.",
+        "deliverTo": "Deliver to",
+        "ownerHint": "Owner view needs the right to read orders. Without it the phone and address stay hidden."
+      },
+      "dayEnd": {
+        "title": "Day-end check",
+        "sub": "Handed over starts only when the courier’s pickup report says it took the parcel.",
+        "packedToday": "Packed today",
+        "handed": "Handed over",
+        "notHanded": "Not handed over yet",
+        "waiting": "{n} packed parcel(s) wait for the courier’s pickup report. If a parcel is still here after the pickup, ask the courier.",
+        "allHanded": "Every packed parcel is handed over.",
+        "more": "With courier"
+      },
+      "log": {
+        "title": "Print log",
+        "sub": "Every print: who, when, why. A second print needs the owner PIN.",
+        "order": "Order",
+        "print": "Print",
+        "who": "Who",
+        "when": "When",
+        "why": "Why",
+        "first": "First print",
+        "again": "Printed again",
+        "none": "No print yet."
       }
     },
     "printRun": {
