@@ -21,7 +21,9 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
-import { ago, kindName, span, withInbox } from '@/lib/admin-support/i18n';
+import { kindName, span, withInbox } from '@/lib/admin-support/i18n';
+import { Chips } from '@/components/admin/lane-f/Parts';
+import { InboxRows } from '@/components/admin/lane-f/InboxRows';
 import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -41,8 +43,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type Search = { view?: string; q?: string; channel?: string; page?: string };
-
-const statusTone = (s: string) => (s === 'OPEN' ? 'warn' : s === 'SOLVED' ? 'ok' : 'info');
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sq = await searchParams;
@@ -117,7 +117,9 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           <span>{t(d, 'sup.noChannel')}</span>
         </div>
       ) : null}
-      <div className="a2-between a2-mt12" style={{ flexWrap: 'wrap', gap: 8 }}>
+      <div className="lf-ibx a2-mt12" data-testid="support-panes">
+      <div className="lf-ibx-list">
+      <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
         <nav className="a2-seg" aria-label={t(d, 'sup.views.label')} style={{ flexWrap: 'wrap' }}>
           {sp.INBOX_VIEWS.filter((v) => (v !== 'followup' || box.followUps || current === 'followup') && (v !== 'blocked' || box.blockList || current === 'blocked')).map((v) => (
             <Link key={v} className={v === current ? 'on' : undefined} href={link({ view: v, page: undefined })} scroll={false} aria-current={v === current ? 'page' : undefined} data-testid={`support-view-${v}`}>
@@ -127,17 +129,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         </nav>
         <form method="get" action={HERE} className="sp-filters" role="search" data-testid="support-search">
           <input type="hidden" name="view" value={current} />
+          {channel ? <input type="hidden" name="channel" value={channel} /> : null}
           <input className="a2-inp" name="q" defaultValue={q} maxLength={80} placeholder={t(d, 'lf.ib.search')} aria-label={t(d, 'lf.ib.search')} />
-          {kinds.length > 1 ? (
-            <select className="a2-sel" name="channel" defaultValue={channel ?? ''} aria-label={t(d, 'sup.channelLabel')}>
-              <option value="">{t(d, 'lf.ib.channels')}</option>
-              {kinds.map((k) => (
-                <option key={k} value={k}>
-                  {kindName(d, k)}
-                </option>
-              ))}
-            </select>
-          ) : null}
           <button type="submit" className="a2-btn">
             {t(d, 'sup.searchGo')}
           </button>
@@ -148,42 +141,16 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           ) : null}
         </form>
       </div>
+      {kinds.length > 1 ? (
+        <Chips
+          label={t(d, 'sup.channelLabel')}
+          current={channel ?? ''}
+          testId="support-channels"
+          items={[{ key: '', label: t(d, 'lf.ib.channels'), href: link({ channel: undefined, page: undefined }) }, ...kinds.map((k) => ({ key: k, label: kindName(d, k), href: link({ channel: k, page: undefined }) }))]}
+        />
+      ) : null}
       {box.rows.length ? (
-        <ul className="sp-list" data-testid="support-list">
-          {box.rows.map((r) => {
-            const name = r.contact.name ?? r.contact.phone ?? t(d, 'sup.unnamed');
-            const preview = r.lastPreview ? (r.lastDirection === 'OUT' ? t(d, 'sup.lastOut', { text: r.lastPreview }) : r.lastPreview) : (r.subject ?? '');
-            return (
-              <li key={r.id}>
-                <Link className="sp-row" href={`${HERE}/c/${r.id}`} data-testid="support-row" data-status={r.status}>
-                  <span className="sp-av" aria-hidden="true">
-                    {name.trim().charAt(0).toUpperCase() || '?'}
-                  </span>
-                  <span className="sp-body">
-                    <span className="sp-top">
-                      <b>{name}</b>
-                      {r.contact.name && r.contact.phone ? <span className="a2-xs a2-mute a2-mono">{r.contact.phone}</span> : null}
-                      <span className="sp-when">{ago(d, view.locale, r.lastMessageAt, now)}</span>
-                    </span>
-                    <span className="sp-prev">{preview}</span>
-                    <span className="sp-meta">
-                      <span className={`a2-pill ${statusTone(r.status)}`}>{t(d, `sup.status.${r.status}`)}</span>
-                      <span className="a2-pill line">{kindName(d, r.channel.kind)}</span>
-                      {r.assignedTo ? <span>{r.assignedTo.id === me ? t(d, 'lf.ib.you') : r.assignedTo.name}</span> : <span className="a2-pill warn">{t(d, 'lf.ib.noOwner')}</span>}
-                      {r.waitingSince && r.status !== 'SOLVED' ? <span>· {t(d, 'sup.waitingFor', { time: ago(d, view.locale, r.waitingSince, now) })}</span> : null}
-                      {r.clock ? (
-                        <span className={`a2-pill ${r.clock.late ? 'bad' : 'line'}`} data-testid="support-row-clock" data-late={r.clock.late ? 'yes' : 'no'}>
-                          {t(d, `sup.clock.${r.clock.stage}${r.clock.late ? 'Late' : ''}`, { time: span(d, view.locale, Math.abs(r.clock.dueAt.getTime() - now.getTime()) / 60_000) })}
-                        </span>
-                      ) : null}
-                      <span className="a2-mono">· {r.refCode}</span>
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <InboxRows rows={box.rows} d={d} locale={view.locale} me={me} now={now} />
       ) : (
         <div className="a2-state a2-mt12" data-testid="support-empty">
           <div className="a2-sti">
@@ -212,6 +179,12 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           )}
         </nav>
       ) : null}
+      </div>
+      <aside className="lf-ibx-pick" data-testid="support-pick" aria-hidden="true">
+        <ShellIcon name="inbox" size={26} />
+        <p>{t(d, 'lf.ib.pick')}</p>
+      </aside>
+      </div>
     </div>
   );
 }

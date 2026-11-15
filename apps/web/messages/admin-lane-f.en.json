@@ -207,7 +207,9 @@
       "you": "You",
       "search": "Search name, phone or message",
       "unassignedNote": "{n} chats have no owner. Assign them so nobody waits.",
-      "allAssigned": "Every open chat has an owner."
+      "allAssigned": "Every open chat has an owner.",
+      "pick": "Pick a conversation on the left",
+      "goesOut": "Goes out on {channel}"
     },
     "st": {
       "title": "Response times",

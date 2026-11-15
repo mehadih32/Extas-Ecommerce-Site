@@ -60,3 +60,26 @@
 .lf-alerts { display: flex; flex-direction: column; gap: 8px; }
 @media (min-width: 900px) { .lf-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .lf-viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/* Inbox: the list on the left, the chat in the middle, the customer on the right (prototype v5 .ibx). On a phone and a
+   tablet one pane at a time: the list page shows the list, a chat shows the chat (its back link leads to the list). */
+.lf-ibx { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.lf-ibx-pick { display: none; }
+.lf-ibx-list .sp-list { max-height: 72vh; overflow: auto; }
+aside.lf-ibx-list { display: none; }
+/* Response times: the hour charts */
+.lf-hc-cols { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; height: 190px; align-items: end; }
+.lf-hc-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+.lf-hc-bar { display: block; width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--lm-ac); }
+.lf-hc-bar.ok { background: var(--lm-ok); }
+.lf-hc-v { font-size: 10px; color: var(--lm-mute); min-height: 12px; }
+.lf-hc-h { font-size: 10px; color: var(--lm-mute); margin-top: 3px; }
+.lf-hc-col { height: 100%; }
+.lf-st-callout { margin-top: 12px; }
+.lf-st-g2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+@media (min-width: 900px) { .lf-st-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .sp-row.on { background: var(--lm-acbg); }
+@media (min-width: 1180px) {
+  .lf-ibx { grid-template-columns: 340px minmax(0, 1fr); }
+  aside.lf-ibx-list { display: block; }
+  .lf-ibx-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 260px; margin-top: 12px; border: 1px dashed var(--lm-ln); border-radius: 12px; color: var(--lm-mute); background: var(--lm-sf2); text-align: center; padding: 16px; }
+}
