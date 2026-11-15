@@ -1,0 +1,46 @@
+{
+  "aiLimits": {
+    "h": "Costs & limits",
+    "sub": "A ceiling for each kind of spend, a warning at {pct}%, and a cheaper mode when money is tight.",
+    "failed": "That did not save. Please try again.",
+    "warn": "AI: {pct}% of this month's ceiling used ({spent} of {cap}) with {left} days left. At 100% an agent with its own cap pauses by itself.",
+    "pace": "{pct}% used · month end at this pace {amount}",
+    "cross": "Will cross",
+    "within": "Within limit",
+    "messagesLink": "SMS and WhatsApp ceilings are set on Messages › Cost ceilings.",
+    "ceiling": {
+      "name": "AI",
+      "label": "AI ceiling per month",
+      "save": "Save",
+      "saved": "AI ceiling saved.",
+      "invalid": "Type an amount above zero, or leave it empty for no ceiling.",
+      "none": "no ceiling",
+      "help": "Change ceiling: type the most the AI may cost a month, or leave it empty for none. Warning at {pct}%."
+    },
+    "agents": {
+      "h": "Cap per agent",
+      "agent": "Agent",
+      "month": "This month",
+      "cap": "Cap",
+      "capLabel": "Monthly cap for {name}",
+      "saved": "{name}'s cap saved.",
+      "practice": "Practice writer",
+      "hint": "An agent that reaches its cap pauses until the 1st; the others keep going."
+    },
+    "saver": {
+      "h": "Cost-saver mode",
+      "on": "On",
+      "off": "Off",
+      "switch": "Cost-saver mode",
+      "d": "Smaller models, hourly agents run every 3 hours, no nice-to-have drafts. Order checks and alarms stay as they are.",
+      "auto": "Turn on by itself at {pct}% of the AI ceiling",
+      "autoIsOn": "It turns on by itself at {pct}% of the AI ceiling.",
+      "autoIsOff": "It does not turn on by itself at {pct}% of the AI ceiling.",
+      "toastOn": "Cost-saver is on.",
+      "toastOff": "Cost-saver is off.",
+      "toastAutoOn": "It will turn on by itself.",
+      "toastAutoOff": "It will no longer turn on by itself.",
+      "note": "The switch is saved now; each AI job reads it when it runs."
+    }
+  }
+}

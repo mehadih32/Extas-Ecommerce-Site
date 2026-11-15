@@ -305,3 +305,5 @@ export * from './registry-page-settings';
 export * from './registry-customise';
 // PR 789 — Settings > Store details, the rest of the page (registry-store-details.ts, version 789).
 export * from './registry-store-details';
+// PR 815-820 — the small settings of Settings and AI Center (registry-parity-e2.ts).
+export * from './registry-parity-e2';

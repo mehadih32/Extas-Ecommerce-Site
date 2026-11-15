@@ -54,6 +54,11 @@ import en from "../../../../../messages/admin-ai.en.json";
 import stripBn from "../../../../../messages/admin-ai-strip.bn.json";
 import stripEn from "../../../../../messages/admin-ai-strip.en.json";
 import { AiStrip } from "@/components/admin/ai/AiStrip";
+import { CostsLimits } from "@/components/admin/ai/CostsLimits";
+import { controlRoomView } from "@/lib/admin-ai/control-room";
+import { applyAutoSaver } from "@/lib/admin-ai/limits";
+import limitsBn from "../../../../../messages/admin-ai-limits.bn.json";
+import limitsEn from "../../../../../messages/admin-ai-limits.en.json";
 import "@/components/admin/ai/ai-strip.css";
 import "../ai.css";
 import "./cost-book.css";
@@ -69,6 +74,7 @@ function withScreen(view: AdminView): AdminView {
     dict: {
       ...view.dict,
       ...((view.lang === "bn" ? stripBn : stripEn) as unknown as Dict),
+      ...((view.lang === "bn" ? limitsBn : limitsEn) as unknown as Dict),
       aiCostBook: (view.lang === "bn" ? bn : en).aiCostBook as unknown as Dict,
     },
   };
@@ -161,6 +167,36 @@ export default async function AiCostBookPage() {
     return `${c("actualRuns", { runs: num(a.runs), perRun: amount(a.perRunStoreMinor, a.perRunUsdMinor) })} — ${dev}`;
   };
 
+  // PR 818: the AI's month against its own ceiling, the cap of each agent and the cost-saver mode (prototype v5 Costs & limits).
+  const room = await controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID);
+  const nowAt = access.deps.now?.() ?? new Date();
+  const [saverNow, saverAuto] = await Promise.all([
+    applyAutoSaver({ resolver: access.deps.resolver }, room.view.monthMinor, MOTHER_STORE_ID).then(
+      (turnedOn) => turnedOn || access.deps.resolver.value("ai.costSaver", { storeId: MOTHER_STORE_ID }),
+    ),
+    access.deps.resolver.value("ai.costSaverAuto", { storeId: MOTHER_STORE_ID }),
+  ]);
+  const monthDay = Number(
+    new Intl.DateTimeFormat("en-US", { timeZone: view.timeZone, day: "numeric" }).format(nowAt),
+  );
+  const monthLen = new Date(nowAt.getUTCFullYear(), nowAt.getUTCMonth() + 1, 0).getDate();
+  const limits = {
+    money: moneyOf(room.view.currency, view.locale),
+    capMinor: room.view.monthlyCapMinor,
+    spentMinor: room.view.monthMinor,
+    dayOfMonth: monthDay,
+    daysInMonth: monthLen,
+    saver: Boolean(saverNow),
+    saverAuto: Boolean(saverAuto),
+    agents: room.agents.map((a) => ({
+      key: a.key,
+      name: view.lang === "bn" ? a.nameBn : a.nameEn,
+      monthMinor: a.monthMinor,
+      capMinor: a.monthlyCapMinor,
+      provider: a.selectedProvider ?? t(d, "aiLimits.agents.practice"),
+    })),
+  };
+
   // S28 · PR 698: the month's message spend against the SMS and WhatsApp ceilings (shown to whoever may see Messages ›
   // Channels & limits; read only, the ceilings are set on Messages › Cost ceilings)
   const ceilings = access.guard.permissions?.has("messages.channels.read")
@@ -185,6 +221,20 @@ export default async function AiCostBookPage() {
       />
       <SectionTabs view={view} current={KEY} />
       <AiStrip dict={view.dict} on={Boolean(aiOn)} canControl={canControl} />
+      {limits ? (
+        <CostsLimits
+          dict={d}
+          money={limits.money}
+          canControl={canControl}
+          capMinor={limits.capMinor}
+          spentMinor={limits.spentMinor}
+          dayOfMonth={limits.dayOfMonth}
+          daysInMonth={limits.daysInMonth}
+          saver={limits.saver}
+          saverAuto={limits.saverAuto}
+          agents={limits.agents}
+        />
+      ) : null}
 
       {!o.hasUsdRate ? (
         <div
