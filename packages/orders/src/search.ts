@@ -29,5 +29,7 @@ export function orderSearchWhere(raw: string | undefined | null): Prisma.OrderWh
   ];
   const digits = text.replace(/\D/g, '');
   if (digits && PHONE_LIKE.test(text)) any.push({ phone: { contains: digits } });
+  // PR 771 (prototype v5 parity): the prototype's search also finds a district ("Search order, name, phone, district"), read from the address text.
+  if (!PHONE_LIKE.test(text)) any.push({ shippingAddressText: { contains: text, mode: 'insensitive' } });
   return { OR: any };
 }

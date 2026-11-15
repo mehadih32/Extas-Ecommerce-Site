@@ -26,8 +26,8 @@ describe('the order search', () => {
   });
 
   it('a number or a name is not matched against phones; the tracking number drops spaces', () => {
-    expect(fields(orderSearchWhere('EX-1001'))).toEqual(['number', 'customerName', 'shipments']);
-    expect(fields(orderSearchWhere('Rahim'))).toEqual(['number', 'customerName', 'shipments']);
+    expect(fields(orderSearchWhere('EX-1001'))).toEqual(['number', 'customerName', 'shipments', 'shippingAddressText']);
+    expect(fields(orderSearchWhere('Rahim'))).toEqual(['number', 'customerName', 'shipments', 'shippingAddressText']);
     expect(orderSearchWhere('trk 140').OR![2]).toEqual({ shipments: { some: { trackingCode: { contains: 'trk140', mode: 'insensitive' } } } });
   });
 });
