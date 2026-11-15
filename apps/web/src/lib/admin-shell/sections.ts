@@ -374,6 +374,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'launch', more: true, pages: [{ href: '/admin/website/launch-default', perm: 'website.read', keys: ['websiteLaunchDefault'] }] },
       // S02 · PR 600 — On-page edit: the owner's bar on the shop (off as shipped), phone checks and the phone screens.
       { id: 'pageEdit', more: true, pages: [{ href: '/admin/website/page-edit', perm: 'website.read', keys: ['websitePageEdit'] }] },
+      // PR 740–744 — Page settings: the settings inside the shop's pages (flash sale, product page, filters, bag, account, search, currency, e-mail look, cookie banner, home-screen icon), each drawn from its own shape.
+      { id: 'pageSettings', more: true, pages: [{ href: '/admin/website/page-settings', perm: 'website.read', keys: ['websitePageSettings'] }] },
       {
         id: 'seo',
         guide: 'seo',

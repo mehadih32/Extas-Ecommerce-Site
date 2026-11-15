@@ -1,0 +1,20 @@
+{
+  "email": {
+    "look": {
+      "label": "E-mail look",
+      "help": "Off as shipped (plain e-mails). When on, the shop's offer e-mails get the shop's logo or name at the top, your colours and type face, an optional line under the top and an optional footer line."
+    }
+  },
+  "cookie": {
+    "banner": {
+      "label": "Cookie banner",
+      "help": "Off as shipped. When on, a visitor sees a short cookie notice on the first visit, with your words and buttons. The choice is remembered for the days you set."
+    }
+  },
+  "app": {
+    "homeScreen": {
+      "label": "Home-screen icon",
+      "help": "Off as shipped. When on, a phone that adds the shop to its home screen shows your name, picture and colours."
+    }
+  }
+}

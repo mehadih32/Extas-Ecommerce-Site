@@ -148,6 +148,9 @@ import studioEn from '../messages/studio.en.json';
 // S28 · PR 706 (CN-049, registry v380): practice mode and the Reset sample data button.
 import practiceBn from '../messages/practice.bn.json';
 import practiceEn from '../messages/practice.en.json';
+// S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app.
+import pageSettingsBn from '../messages/page-settings.bn.json';
+import pageSettingsEn from '../messages/page-settings.en.json';
 import analyticsBn from '../messages/analytics.bn.json';
 import s28W5bBn from '../messages/s28-w5b.bn.json';
 import s28W5bEn from '../messages/s28-w5b.en.json';
@@ -486,6 +489,9 @@ messages.bn = mergeMessages(messages.bn, rulesHubBn);
 // S28 · PR 706 (CN-049, registry v380): practice mode and the Reset sample data button (registry-practice.ts).
 messages.en = mergeMessages(messages.en, practiceEn);
 messages.bn = mergeMessages(messages.bn, practiceBn);
+// S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app (registry-page-settings.ts).
+messages.en = mergeMessages(messages.en, pageSettingsEn);
+messages.bn = mergeMessages(messages.bn, pageSettingsBn);
 // S16 · CN-031 lane B — finance, costs & reports (registry-finance.ts, versions 160–169).
 messages.en = mergeMessages(messages.en, financeEn);
 messages.bn = mergeMessages(messages.bn, financeBn);
