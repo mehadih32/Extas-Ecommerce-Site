@@ -18,6 +18,8 @@ import { catalogueAccess, one } from '@/lib/admin-products';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { faqFields, fieldsTexts } from '@/lib/products-v5-fields';
 import { productV5Cards } from '@/lib/products-v5-settings-api';
+import { ReviewChips } from '@/components/admin/reviews/ReviewChips';
+import { withReviews } from '@/lib/admin-reviews/i18n';
 import { t } from '@/lib/i18n';
 import '../../settings-cards.css';
 
@@ -36,6 +38,7 @@ export default async function FaqsPage({ searchParams }: { searchParams: Promise
   const deps = adminDeps();
   const [view, sp, access] = await Promise.all([adminView(deps), searchParams, pageAccess('catalogue.read', deps, MOTHER_STORE_ID)]);
   const d = view.dict;
+  const rd = withReviews(view).dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -75,6 +78,11 @@ export default async function FaqsPage({ searchParams }: { searchParams: Promise
     <div className="a2-z" data-testid="product-faqs" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.faq.title')} sub={t(d, 'products.faq.sub')} />
       <SectionTabs view={view} current={KEY} />
+      <ReviewChips
+        current="faqs"
+        aria={t(rd, 'rev.chip.aria')}
+        labels={{ questions: t(rd, 'rev.chip.questions'), reviews: t(rd, 'rev.chip.reviews'), hidden: t(rd, 'rev.chip.hidden'), faqs: t(rd, 'rev.chip.faqs') }}
+      />
       {!on ? (
         <p className="a2-sm a2-mt12" data-testid="faq-off">
           {t(d, 'products.faq.off')}

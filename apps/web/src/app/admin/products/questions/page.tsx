@@ -18,6 +18,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { catalogueAccess, one, productHref } from '@/lib/admin-products';
+import { ReviewChips } from '@/components/admin/reviews/ReviewChips';
 import { withReviews } from '@/lib/admin-reviews/i18n';
 import { reviewSettingCards } from '@/lib/review-settings-api';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -100,6 +101,12 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Se
     <div className="a2-z" data-testid="product-questions" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'revq.title')} sub={t(d, 'revq.sub')} />
       <SectionTabs view={view} current={KEY} />
+      <ReviewChips
+        current="questions"
+        aria={t(d, 'rev.chip.aria')}
+        labels={{ questions: t(d, 'rev.chip.questions'), reviews: t(d, 'rev.chip.reviews'), hidden: t(d, 'rev.chip.hidden'), faqs: t(d, 'rev.chip.faqs') }}
+        counts={{ questions: n(list.counts.open) }}
+      />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'revq.readOnly')}</p> : null}
       <div className="a2-kpis a2-mt12" data-testid="question-kpis">
         {kpis.map((k) => (

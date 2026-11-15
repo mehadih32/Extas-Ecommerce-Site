@@ -213,5 +213,12 @@
       "made": "FAQ added",
       "already": "Already an FAQ there."
     }
-  }
+  },
+  "rev.chip.aria": "Reviews, questions and FAQs",
+  "rev.chip.questions": "Questions",
+  "rev.chip.reviews": "Reviews",
+  "rev.chip.hidden": "Hidden",
+  "rev.chip.faqs": "FAQs",
+  "rev.kpi.lowStar": "1-2 stars, no reply",
+  "rev.kpi.lowStarNote": "unhappy buyers nobody has answered yet"
 }
