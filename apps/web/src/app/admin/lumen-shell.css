@@ -160,7 +160,7 @@
      gate saw it 11 px past a 320 px phone with the Orders badge showing. Its PHONE-BAR-OUTSIDE check holds it there. */
   .lm-shell .lm-bar { display: flex; position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; background: var(--lm-sf); border-radius: var(--lm-r-panel); box-shadow: var(--lm-sh2); padding: 6px; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; contain: layout paint; max-width: calc(100vw - 20px); box-sizing: border-box; }
   .lm-shell .lm-bar::-webkit-scrollbar { display: none; }
-  .lm-shell .lm-bar a { flex: none; min-width: 68px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; border-radius: var(--lm-r-box); color: var(--lm-ink2); font-size: 0.75rem; font-weight: 700; position: relative; white-space: nowrap; }
+  .lm-shell .lm-bar a, .lm-shell .lm-bar .lm-bar-menu { flex: 1 1 0; min-width: 52px; border: 0; background: none; font-family: inherit; cursor: pointer; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; border-radius: var(--lm-r-box); color: var(--lm-ink2); font-size: 0.75rem; font-weight: 700; position: relative; white-space: nowrap; }
   .lm-shell .lm-bar a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
   .lm-shell .lm-bar .lm-bd { position: absolute; top: 2px; right: 6px; margin: 0; padding: 0 5px; min-width: 18px; }
 }
@@ -183,3 +183,9 @@
 
 @keyframes lm-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes lm-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* PR 794: the phone bar's Menu sheet lists every section; each row is at least a finger tall. */
+.lm-bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.lm-bar-list a { display: flex; align-items: center; gap: 12px; min-height: var(--lm-tap, 44px); padding: 8px 12px; border-radius: var(--lm-r-ctl); color: var(--lm-ink); text-decoration: none; overflow-wrap: anywhere; }
+.lm-bar-list a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
+.lm-bar-list .lm-bd { margin-left: auto; }
