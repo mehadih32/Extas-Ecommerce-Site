@@ -2,7 +2,7 @@
   "claimsOverview": {
     "metaTitle": "Claims & payouts",
     "title": "Claims & payouts",
-    "sub": "Every claim against a courier and the money each courier holds, has paid and still owes, in one place.",
+    "sub": "Every claim against a courier and every payout request, in one place.",
     "k": {
       "open": "Open claims",
       "openSub": "{amount} to get back",
@@ -34,7 +34,8 @@
         "sent": "Sent",
         "won": "Won",
         "lost": "Lost"
-      }
+      },
+      "more": "More filters"
     },
     "ledger": {
       "title": "Claims ledger",
@@ -54,8 +55,8 @@
     },
     "off": "Courier claims are switched off, so the steps below are hidden. Raising and moving claims is switched on in Delivery settings.",
     "money": {
-      "title": "Courier money",
-      "sub": "What each courier holds for us, what its statements paid, a payout asked and not yet paid, and the claims it still owes. Nothing is asked or paid from here.",
+      "title": "Payouts across couriers",
+      "sub": "Each courier pays through its own payment request",
       "noPerm": "The money side needs the permission to see payments.",
       "holds": "Holds for us",
       "holdsN": "{n} parcels",
@@ -72,7 +73,13 @@
       "covers": "covers {amount}",
       "paidOn": "paid {amount}",
       "request": "Request payout",
-      "ready": "Ready to request"
+      "ready": "Ready to request",
+      "stRequested": "Requested",
+      "stReady": "Ready",
+      "stIdle": "Nothing to ask yet",
+      "lineRequested": "{amount} requested",
+      "lineReady": "{amount} ready to request",
+      "details": "Money details"
     },
     "opt": {
       "h": "More options",
