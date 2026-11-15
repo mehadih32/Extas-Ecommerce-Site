@@ -12,10 +12,10 @@ import type { ReactNode } from 'react';
 import { salesPerUnit, type DashPart } from '@/lib/admin-look/dashboard-data';
 import type { LookDesign } from '../types';
 import { LookThumb } from '../thumbs';
-import { Bar, Card, Delta, Empty, Lnk, Spark, Tile } from '../kit';
+import { Card, Delta, Lnk, Spark, Tile } from '../kit';
 import type { Fmt } from '../fmt';
 import { can, DashHead, type DashProps } from './common';
-import { ChartDoNow, ProtoLower, ProtoTop, TrendCard } from './ProtoCards';
+import { ChartDoNow, CourierMid, ProtoLower, ProtoTop, TrendCard } from './ProtoCards';
 
 const S1 = 'var(--a3-s1)';
 const S2 = 'var(--a3-s2)';
@@ -98,27 +98,6 @@ export function PinsCard(p: DashProps) {
           />
         ))}
       </div>
-    </Card>
-  );
-}
-
-/** The prototype's "Delivery: by courier" card under "Ads: are they paying?". */
-function CourierMid(p: DashProps) {
-  const { f, data, s } = p;
-  const dl = data.delivery!;
-  return (
-    <Card title={f.t('dsh.proto.courTitle')} sub={f.t('dsh.proto.courSub', { n: f.n(s.courierDays) })} right={can(p.viewer, 'delivery.read') ? <Lnk href="/admin/delivery">{f.t('dsh.proto.courLink')}</Lnk> : null} testId="dash-couriers">
-      {dl.couriers.length ? (
-        dl.couriers.map((c) => (
-          <div key={c.id} className="a3-cr">
-            <b>{c.name}</b>
-            <Bar p={c.rate ?? 0} />
-            <b className="a3-num">{f.pct(c.rate)}</b>
-          </div>
-        ))
-      ) : (
-        <Empty text={f.t('dsh.proto.courNone')} />
-      )}
     </Card>
   );
 }
