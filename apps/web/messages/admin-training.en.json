@@ -52,7 +52,11 @@
       "remove": "Removed for {scope}: {text}",
       "addForbidden": "Forbidden topic added: {text}",
       "removeForbidden": "Forbidden topic removed: {text}",
-      "noChange": "No wording changed"
+      "noChange": "No wording changed",
+      "agoNow": "just now",
+      "agoMin": "{n} min ago",
+      "agoH": "{n} h ago",
+      "agoD": "{n} d ago"
     },
     "opt": {
       "h": "More options",
@@ -81,7 +85,7 @@
       "agent": "Agent",
       "sample": "Sample message",
       "samplePh": "For example: Where is my order?",
-      "go": "Try it",
+      "go": "Test answer",
       "busy": "Thinking…",
       "off": "AI is off, so nothing was tried. Turn AI on to test an agent; no model was called.",
       "unavailable": "The agent could not answer now (paused, no connection ready, or the monthly limit is reached). Nothing was sent.",
@@ -129,8 +133,8 @@
       "save": "Save new version",
       "cancel": "Cancel",
       "saved": "Saved as a new version",
-      "remove": "Remove",
-      "removed": "Document removed (kept in history)"
+      "remove": "Archive",
+      "removed": "Document archived (kept in history)"
     },
     "strip": {
       "on": "AI is on",
