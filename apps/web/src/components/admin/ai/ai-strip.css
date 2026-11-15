@@ -1,0 +1,9 @@
+/* PR 792 — the AI switch strip on every AI Center tab (prototype v5 m-ai.js .ai-strip). Lumen tokens only; wraps, never cuts text. */
+.adm2 .ai-strip { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; margin-top: 12px; }
+.adm2 .ai-strip-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--lm-ok); box-shadow: 0 0 0 6px color-mix(in srgb, var(--lm-ok) 18%, transparent); }
+.adm2 .ai-strip-dot.off { background: var(--lm-ink2); box-shadow: 0 0 0 6px color-mix(in srgb, var(--lm-ink2) 14%, transparent); }
+.adm2 .ai-strip-t { min-width: 0; }
+.adm2 .ai-strip-b { font-size: 18px; }
+.adm2 .ai-strip-h { flex: 1 1 280px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .ai-never { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.adm2 .ai-never li { display: flex; gap: 10px; align-items: center; justify-content: space-between; min-height: 44px; flex-wrap: wrap; overflow-wrap: anywhere; }
