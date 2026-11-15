@@ -51,3 +51,50 @@ export function AcceptFigure({ dict, lineId, amount }: { dict: Dict; lineId: str
     </span>
   );
 }
+
+/** PR 838: "Mark resolved" — a statement line that does not match is closed with a short note (min 3 letters); nothing is paid or moved. */
+export function ResolveLine({ dict, lineId }: { dict: Dict; lineId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const go = async () => {
+    const note = window.prompt(t(dict, 'cr.z.resolveAsk'));
+    if (note === null) return;
+    if (note.trim().length < 3) return setMsg(t(dict, 'cr.z.resolveNote'));
+    setBusy(true);
+    setMsg(null);
+    let data: { ok?: boolean; error?: string } = { ok: false, error: 'other' };
+    try {
+      const res = await fetch(`/api/admin/payments/settlements/lines/${lineId}/resolve`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ note: note.trim() }),
+      });
+      data = (await res.json().catch(() => data)) as typeof data;
+    } catch {
+      data = { ok: false, error: 'network' };
+    }
+    setBusy(false);
+    if (!data.ok) {
+      const k = `cr.z.err.${data.error ?? 'other'}`;
+      const text = t(dict, k);
+      return setMsg(text === k ? t(dict, 'cr.z.err.other') : text);
+    }
+    showToast({ text: t(dict, 'cr.z.resolved'), tone: 'ok' });
+    router.refresh();
+  };
+  return (
+    <span className="a2-stack" style={{ gap: 4 }}>
+      <button type="button" className="a2-btn sm" onClick={go} disabled={busy} data-testid="resolve-line">
+        {t(dict, 'cr.z.resolve')}
+      </button>
+      {msg ? (
+        <span className="a2-xs" role="alert" style={{ color: 'var(--bad)' }}>
+          {msg}
+        </span>
+      ) : null}
+    </span>
+  );
+}
