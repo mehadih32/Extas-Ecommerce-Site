@@ -324,7 +324,7 @@ export const dashboardC: LookDesign<DashProps, DashPart> = {
     en: 'The V12.3 dashboard: headline numbers, the delivered-sales graph and the "Needs you now" list on the page.',
     bn: 'V12.3-এর ড্যাশবোর্ড: বড় সংখ্যা, বিক্রির গ্রাফ আর পাতার ওপর "এখনই করতে হবে" তালিকা।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'ads'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads', 'feed', 'erp', 'pageCheck'],
   Render: DashboardC,
   // The demo's own key for this design is A (97z-adm2-rd2-dash.js a3Design('dashboard', 'A', …)).
   Thumb: () => <LookThumb page="dashboard" id="A" />,

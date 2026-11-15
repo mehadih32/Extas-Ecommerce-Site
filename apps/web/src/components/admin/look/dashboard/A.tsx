@@ -431,7 +431,7 @@ export const dashboardA: LookDesign<DashProps, DashPart> = {
     en: 'One big delivered-sales story with a comparison line, where every order is right now, and four short cards. A money & marketing view sits one click away.',
     bn: 'একটা বড় ডেলিভারি বিক্রির গ্রাফ আর তুলনা, অর্ডার এখন কোথায়, আর চারটা ছোট কার্ড। টাকা ও মার্কেটিং এক ক্লিকে।',
   },
-  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads'],
+  parts: ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'goal', 'profit', 'cod', 'ads', 'feed', 'erp', 'pageCheck'],
   Render: DashboardA,
   // The demo's sketch of this design (its key there is B).
   Thumb: () => <LookThumb page="dashboard" id="B" />,
