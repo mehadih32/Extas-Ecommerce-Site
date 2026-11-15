@@ -7,7 +7,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { checkText, formatNumber, nameIn } from '@/components/admin/products/model';
 import { AUDIT_HOME, auditHref, fixHref } from '@/components/admin/products/tools-model';
@@ -65,20 +67,14 @@ export default async function ProductAuditPage({ searchParams }: { searchParams:
   ];
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'audit.title')}</h1>
-          <p className="ad-intro">{t(d, 'audit.intro')}</p>
-        </div>
-        <Link className="ad-btn ad-btn-ghost pa-hd-btn" href={auditHref({ ...here, recheckSince: report.checkedAt })} prefetch={false}>
-          {t(d, 'audit.recheck')}
-        </Link>
-      </div>
-      <div className="pa-gtabs">
-        <SystemTabs view={view} current={KEY} group="catalogue" />
-      </div>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'audit.title')} sub={t(d, 'audit.intro')} right={
+        <>
+      <Link className="ad-btn ad-btn-ghost pa-hd-btn" href={auditHref({ ...here, recheckSince: report.checkedAt })} prefetch={false}>
+        {t(d, 'audit.recheck')}
+      </Link>
+        </>
+      } />
 
       <div className="pa-kpis">
         {kpis.map((k) => (

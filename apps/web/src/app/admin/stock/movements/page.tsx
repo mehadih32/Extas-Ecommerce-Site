@@ -6,7 +6,9 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { formatNumber } from '@/components/admin/products/model';
 import { MOVEMENTS_HOME } from '@/components/admin/stock/text';
@@ -80,17 +82,8 @@ export default async function StockMovementsPage({ searchParams }: { searchParam
   const signed = (n: number) => (n > 0 ? t(d, 'stock.count.plus', { n: num(n) }) : num(n));
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'stock.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'stock.moves.title')}</h1>
-          <p className="ad-intro">{t(d, 'stock.moves.intro')}</p>
-        </div>
-      </div>
-      <div className="pa-gtabs">
-        <SystemTabs view={view} current={KEY} group="inventory" />
-      </div>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'stock.moves.title')} sub={t(d, 'stock.moves.intro')} />
 
       <form className="ad-card st-filter" method="get" action={MOVEMENTS_HOME}>
         <div className="st-fld">

@@ -7,7 +7,9 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cb from '@extas/combos';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { registry } from '@extas/settings';
 import { ComboReportView } from '@/components/admin/combos/ComboReportView';
 import { CombosScreen } from '@/components/admin/combos/CombosScreen';
@@ -67,7 +69,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
   const upsellRule = editRule?.upsell ? (rules.find((r) => r.id === editRule.upsell!.id) ?? null) : null;
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <CombosScreen
         dict={view.dict}
         lang={view.lang}
@@ -113,10 +115,17 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
             />
           ) : null
         }
-        tabs={
-          <div className="cb-gtabs">
-            <SystemTabs view={view} current={KEY} group="combos" />
-          </div>
+        head={
+          <PageHead
+            view={view}
+            place={locateKey(KEY)}
+            title={t(view.dict, 'combos.title')}
+            sub={
+              <>
+                <span className="cb-bn-sub">{t(view.dict, 'combos.subtitle')}</span> {t(view.dict, 'combos.intro')}
+              </>
+            }
+          />
         }
       />
     </AdminFrame>

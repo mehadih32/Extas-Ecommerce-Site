@@ -7,7 +7,9 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
 import { InterestList } from '@/components/admin/products/InterestList';
 import { formatNumber, nameIn } from '@/components/admin/products/model';
@@ -62,17 +64,8 @@ export default async function BackInStockPage({ searchParams }: { searchParams: 
   ];
 
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd pa-hd">
-        <div className="pa-hd-text">
-          <div className="ad-eyebrow">{t(d, 'products.eyebrow')}</div>
-          <h1 className="ad-h1">{t(d, 'interest.title')}</h1>
-          <p className="ad-intro">{t(d, 'interest.intro')}</p>
-        </div>
-      </div>
-      <div className="pa-gtabs">
-        <SystemTabs view={view} current={KEY} group="catalogue" />
-      </div>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'interest.title')} sub={t(d, 'interest.intro')} />
 
       <div className="pa-kpis">
         {kpis.map((k) => (

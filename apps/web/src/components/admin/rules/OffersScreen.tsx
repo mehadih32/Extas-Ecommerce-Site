@@ -9,6 +9,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { formatValue, offerIssues, OFFER_KINDS, type OfferInput, type OfferIssue, type OfferKindName, type OfferStateName } from '@extas/rules/pure';
 import type { OfferListRow, OfferView, OffersScreen as OffersData } from '@extas/rules';
 import { call } from '../api';
+import { PageHead } from '../shell/ShellHead';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
@@ -21,7 +23,6 @@ export interface OffersScreenProps {
   screen: OffersData;
   scopes: ScopeOption[];
   perms: { write: boolean; approve: boolean };
-  tabs?: ReactNode;
 }
 
 type TFn = (k: string, v?: Record<string, string | number>) => string;
@@ -237,25 +238,20 @@ export function OffersScreen(props: OffersScreenProps) {
 
   return (
     <div className="rh of">
-      <div className="ad-hd rl-hd">
-        <div className="rl-hd-text">
-          <h1 className="ad-h1">{tt('title')}</h1>
-          <p className="ad-intro">{tt('intro')}</p>
-        </div>
-        {perms.write ? (
-          <button
-            type="button"
-            className="ad-btn ad-btn-primary ad-btn-sm"
-            onClick={() => {
-              setWizard({ ...BLANK });
-              setStep(0);
-            }}
-          >
-            <Icon name="plus" size={15} /> {tt('new')}
-          </button>
-        ) : null}
-      </div>
-      {props.tabs}
+      <PageHead view={{ dict: props.dict }} place={locateKey('rulesOffers')} title={tt('title')} sub={tt('intro')} right={
+        perms.write ? (
+        <button
+          type="button"
+          className="ad-btn ad-btn-primary ad-btn-sm"
+          onClick={() => {
+            setWizard({ ...BLANK });
+            setStep(0);
+          }}
+        >
+          <Icon name="plus" size={15} /> {tt('new')}
+        </button>
+      ) : null
+      } />
       <div className="of-kpis">
         <div className="of-kpi">
           <span>{tt('kpi.running')}</span>

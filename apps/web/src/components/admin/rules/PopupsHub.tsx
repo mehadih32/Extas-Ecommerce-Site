@@ -9,6 +9,8 @@ import { useState, type ReactNode } from 'react';
 import { POPUP_GROUPS, POPUPS, type PopupGroupId, type PopupPage } from '@extas/rules/pure';
 import type { PopupView, PopupsScreen } from '@extas/rules';
 import { call } from '../api';
+import { PageHead } from '../shell/ShellHead';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
@@ -19,7 +21,6 @@ export interface PopupsHubProps {
   lang: Lang;
   screen: PopupsScreen;
   perms: { write: boolean };
-  tabs?: ReactNode;
 }
 
 /** Where the mark of each placement sits on its page's small picture (percent from the left and the top). */
@@ -74,13 +75,7 @@ export function PopupsHub(props: PopupsHubProps) {
 
   return (
     <div className="rh">
-      <div className="ad-hd rl-hd">
-        <div className="rl-hd-text">
-          <h1 className="ad-h1">{tt('title')}</h1>
-          <p className="ad-intro">{tt('intro')}</p>
-        </div>
-      </div>
-      {props.tabs}
+      <PageHead view={{ dict: props.dict }} place={locateKey('notices')} title={tt('title')} sub={tt('intro')} />
       <div className="rh-strip" role="status">
         <span className="rh-sp good">{tt('showing', { n: count('on') })}</span>
         <span className="rh-sp">{tt('scheduled', { n: count('scheduled') })}</span>

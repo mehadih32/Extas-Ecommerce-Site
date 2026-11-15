@@ -91,14 +91,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   if (!design.Render) {
     const data = await loadProductList(c, view.locale, query);
     return (
-      <AdminFrame view={view} current={KEY} ready>
+      <AdminFrame view={view} current={KEY} ready crumb={false}>
         <ProductListPage view={view} c={c} query={query} data={data} menu={menu} />
       </AdminFrame>
     );
   }
   const Render = design.Render as unknown as (p: ProductsDesignProps) => ReactNode;
   return (
-    <AdminFrame view={view} current={KEY} ready>
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
       <Render view={view} c={c} query={query} menu={menu} csv={csv} />
     </AdminFrame>
   );

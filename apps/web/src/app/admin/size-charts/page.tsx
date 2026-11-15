@@ -5,7 +5,9 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
+import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
+import { PageHead } from '@/components/admin/shell/ShellParts';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { SizeCharts, type SizeChartCategory, type SizeChartGarmentType } from '@/components/admin/SizeCharts';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -85,13 +87,8 @@ export default async function SizeChartsPage() {
   }));
   const dict = view.dict;
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd">
-        <h1 className="ad-h1">{t(dict, 'sizeCharts.title')}</h1>
-        <p className="ad-intro sc-intro">{t(dict, 'sizeCharts.intro')}</p>
-      </div>
-      {/* PR 12: the Products section's tabs, like its other pages */}
-      <SystemTabs view={view} current={KEY} />
+    <AdminFrame view={view} current={KEY} ready crumb={false}>
+      <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'sizeCharts.title')} sub={t(dict, 'sizeCharts.intro')} />
       <SizeCharts
         dict={dict}
         lang={lang}
