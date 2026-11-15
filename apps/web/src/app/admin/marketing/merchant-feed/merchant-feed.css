@@ -22,3 +22,7 @@
 .mf-table td:last-child { text-align: start; }
 .mf-list { margin: 8px 0 0; padding-left: 20px; color: var(--lm-ink); display: flex; flex-direction: column; gap: 6px; }
 /* PR 589 follow-up: card text is never under the card size (var(--lm-fs-card), 14px): the table heads and the pills. */
+
+/* gate: the screen-reader-only heading of the table sits inside its scroller, so it can never widen the page */
+.mf-table-w{position:relative}
+.mf-page{max-width:100%;overflow-x:clip}

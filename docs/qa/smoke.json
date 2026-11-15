@@ -232,7 +232,7 @@
   ],
   "figures": [
     { "pr": 155, "path": "/admin/combos?tab=report", "selectors": ["[data-testid=cb-kpi-ordered]", "[data-testid=cb-kpi-sales]"], "value": "b" },
-    { "pr": 155, "path": "/admin?home=1&design=B", "selectors": ["[data-testid=dash-kpi-ordered]", "[data-testid=dash-kpi-sales]"], "value": ".a3-num" }
+    { "pr": 155, "path": "/admin?home=1&design=B", "selectors": ["[data-testid=dash-six-orders]", "[data-testid=dash-six-sales]"], "value": ".a3-num" }
   ],
   "mayBeOff": {
     "$comment": "PR 228 (qa-gate): pages an owner's switch closes with a 404 (the sitemaps: seo.sitemaps off, or a kind unticked in seo.indexing). They are opened from the storefront list as usual, but their own 404 is not a failure, so switching them off can never fail a deploy and roll it back; a 5xx or the error screen still fails. Follow-up 611: the bulk-order page (its switch in Settings) and the bag's test page (only on a server with EXTAS_SHOP_TEST_PAGES=1; staging and the live shop answer 404) the same way. The journal search (PR 592 follow-up; blog.journal.search, off as shipped) the same way.",

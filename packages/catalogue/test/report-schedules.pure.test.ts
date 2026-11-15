@@ -18,7 +18,7 @@ function fake() {
       upsert: async ({ where, create, update }: { where: { storeId_reportKey: { storeId: number; reportKey: string } }; create: Row; update: Partial<Row> }) => {
         const r = at(where.storeId_reportKey);
         if (r) Object.assign(r, update);
-        else rows.push({ lastSentAt: null, ...create });
+        else rows.push({ ...create, lastSentAt: create.lastSentAt ?? null });
       },
     },
   };

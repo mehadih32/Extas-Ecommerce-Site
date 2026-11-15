@@ -7,7 +7,7 @@
 //   GET   /api/admin/rules/hub                 the rows, pills and counts (`rules.read`)
 //   PUT   /api/admin/rules/hub/:id             {version, values, pin?} one row's fields (`rules.write`; money rows: the owner's OK and PIN)
 //   POST  /api/admin/rules/hub/:id/try         {values} PR 848: the typed numbers counted on the last 30 days' orders (read only; `rules.read`)
-//   GET   /api/admin/rules/hub/sim             PR 858: the Checkout simulator's pickers · POST {cart} what one made-up cart pays with the live rules (read only)
+//   GET   /api/admin/rules/hub/sim             PR 858: the Checkout simulator's pickers · GET ?q={cart} or POST {cart} what one made-up cart pays with the live rules (read only)
 //   POST  /api/admin/rules/hub/:id/schedule   PR 858: {version, values, from, pin?} start the typed numbers on a later day
 //   POST  /api/admin/rules/hub/:id/unschedule  PR 858: {pin?} cancel the scheduled change (the rule stays as it is)
 //   GET   /api/admin/rules/hub/:id/history   PR 867: the last changes of the row (`rules.read`)
@@ -69,7 +69,18 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
     if (b === 'sim') {
       // PR 858: the Checkout simulator — GET gives the pickers, POST {bandKey, cartMinor, pieces, categoryId?, paymentMethod, couponCode?, newCustomer} prices one made-up cart (read only)
       if (c) return fail(404, 'not-found');
-      if (m === 'GET') return handle(request, deps, 'rules.read', async (x) => ({ choices: await rl.simChoices(x.deps, x.who) }));
+      if (m === 'GET') {
+        // the screen asks with GET ?q=<the cart as JSON> so the read-only check account can open the page (it may not send POST)
+        const q = new URL(request.url).searchParams.get('q');
+        if (q === null) return handle(request, deps, 'rules.read', async (x) => ({ choices: await rl.simChoices(x.deps, x.who) }));
+        let cart: unknown = null;
+        try {
+          cart = JSON.parse(q);
+        } catch {
+          cart = null;
+        }
+        return handle(request, deps, 'rules.read', async (x) => ({ sim: await rl.simulateCheckout(x.deps, x.who, cart) }));
+      }
       if (m !== 'POST') return notAllowed();
       return handle(request, deps, 'rules.read', async (x) => ({ sim: await rl.simulateCheckout(x.deps, x.who, await body(request)) }));
     }

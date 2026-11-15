@@ -39,3 +39,9 @@
 @media (min-width: 768px) { .lf6-g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .lf6-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .lf6-cols > section { min-width: 0; }
+
+/* gate (PR 866): the Shopping feed's four figures wrap to two columns on a phone and never push the page wider */
+@media (max-width: 700px) { [data-testid="sf-kpis"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+[data-testid="sf-kpis"] .a2-card { min-width: 0; overflow-wrap: anywhere; }
+[data-testid="mkt-plan"] { max-width: 100%; }
+[data-testid="mkt-plan"] > * { min-width: 0; max-width: 100%; }

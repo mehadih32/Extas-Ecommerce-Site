@@ -43,7 +43,7 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
     if (!band || cartMinor === null || Number.isNaN(cartMinor) || cartMinor < 1 || !Number.isInteger(n) || n < 1) return setOut(null);
     const mine = ++seq.current;
     const h = setTimeout(() => {
-      void call('POST', API, { bandKey: band, cartMinor, pieces: n, categoryId: cat || null, paymentMethod: pay, couponCode: coupon.trim() || null, newCustomer: fresh }).then((a) => {
+      void call('GET', `${API}?q=${encodeURIComponent(JSON.stringify({ bandKey: band, cartMinor, pieces: n, categoryId: cat || null, paymentMethod: pay, couponCode: coupon.trim() || null, newCustomer: fresh }))}`).then((a) => {
         if (mine !== seq.current) return;
         if (a.status !== 200 || !a.data.sim) {
           setOut(null);
