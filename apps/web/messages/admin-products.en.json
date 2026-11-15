@@ -38,7 +38,9 @@
       "ready": "Ready",
       "draft": "Draft",
       "off": "Taken off",
-      "archived": "Archived"
+      "archived": "Archived",
+      "scheduled": "Scheduled",
+      "demo": "Demo"
     },
     "cats": {
       "label": "Categories",
@@ -675,9 +677,12 @@
     "sort": {
       "label": "Sort",
       "new": "Sort: newest",
-      "best": "Sort: best selling"
+      "best": "Sort: best selling",
+      "margin": "Sort: margin",
+      "stock": "Sort: stock (low first)"
     },
-    "introCount": "{n} products · stock and buying prices come from the ERP"
+    "introCount": "{n} products · stock and buying prices come from the ERP",
+    "introSynced": "{n} products · stock and buying prices come from the ERP (synced {ago} ago)"
   },
   "checks": {
     "sep": ", ",
