@@ -47641,12 +47641,12 @@
   {
    "number": 761,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: AI advisor (S29; parked; CN-054; Size M; depends on 757–760, 733) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: AI advisor** (S29; **parked**; CN-054; Size M; depends on 757–760, 733) — the AI reads the map's figures (with the lenses that are on) and suggests actions: where to advertise more or less, where to stop COD or ask for an advance, which courier per area, which product to push in which area, stock to place, delivery-charge or free-delivery ideas, coverage to add. **Advice only:** each suggestion is a draft in the existing approval queue with the numbers behind it; the AI never changes an ad budget, a campaign, a price, a charge, a COD rule or a courier by itself (hard rule 6), and it runs only while `ai.enabled` is on (off as shipped; with AI off the map works without it). The ad-platform lists (\"more\" and \"less\" districts) are made exactly like Where to advertise (PR 569), to copy by hand. Its own switch `reports.geoMap.ai` (off), a monthly cap on AI cost from the AI cost settings, the AI answers in the language the owner writes. Tests for: AI off means no call and no draft; nothing in the queue changes live data. Guide in the same PR. No migration.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–761 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750761-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47660,10 +47660,12 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    569
+   ],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপের AI পরামর্শদাতা: কোথায় বিজ্ঞাপন, কোথায় COD বন্ধ, কোন কুরিয়ার, কোন পণ্য। শুধু পরামর্শ, অনুমোদন লাগে, নিজে কিছু বদলায় না। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-761"
   }
