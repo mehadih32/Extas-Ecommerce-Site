@@ -130,7 +130,8 @@
     "used": "Products using a chart",
     "missingOne": "{names} has no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
     "missingMany": "{names} have no default chart. Wrong size is the top reason for exchanges, and each exchange costs two courier trips.",
-    "allSet": "Every category has a default size chart."
+    "allSet": "Every category has a default size chart.",
+    "exchanges": "Exchanges for wrong size · 30 days"
   },
   "catCount": "· {n}",
   "badgeDefault": "Default",
@@ -140,5 +141,14 @@
   "noChartForCat": "No chart yet for this category",
   "bringBack": "Bring back",
   "leaveConfirm": "Leave without saving? Your changes to this chart will be lost.",
-  "allCharts": "All size charts"
+  "allCharts": "All size charts",
+  "preview": {
+    "h": "What customers see",
+    "unit": "Unit",
+    "find": "Find my size",
+    "body": "Your {field} in inches",
+    "suggest": "We suggest {size}",
+    "none": "No size in this chart is big enough",
+    "try": "Type a measure to try it"
+  }
 }

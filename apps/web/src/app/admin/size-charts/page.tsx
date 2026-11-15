@@ -96,6 +96,8 @@ export default async function SizeChartsPage() {
     [t(dict, 'sizeCharts.k.saved'), num.format(live.length)],
     [t(dict, 'sizeCharts.k.defaults'), `${num.format(cats.length - missing.length)}/${num.format(cats.length)}`],
     [t(dict, 'sizeCharts.k.used'), num.format(live.reduce((n, c) => n + c.usedBy, 0))],
+    // PR 831 (prototype v5): the 4th figure, exchanges for a wrong size in the last 30 days
+    [t(dict, 'sizeCharts.k.exchanges'), num.format(await cat.wrongSizeExchanges30(d, who))],
   ];
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
