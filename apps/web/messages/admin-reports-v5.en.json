@@ -516,7 +516,8 @@
       "colPeriod": "Period",
       "colPieces": "Pieces",
       "colValue": "Order value",
-      "note": "Order value counts orders on the day they were placed (cancelled orders left out). Delivered sales count the orders that reached the customer. Every figure comes from the shop's own orders."
+      "note": "Order value counts orders on the day they were placed (cancelled orders left out). Delivered sales count the orders that reached the customer. Every figure comes from the shop's own orders.",
+      "drawerSub": "{n} orders"
     },
     "areas": {
       "metaTitle": "Area report",

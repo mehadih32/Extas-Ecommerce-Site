@@ -165,6 +165,8 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
             },
           })
         ).count,
+        // PR 840: the sample customer grades (only the "practice-" ones, and only once no customer holds them)
+        CustomerGrade: (await tx.customerGrade.deleteMany({ where: { storeId, key: { startsWith: 'practice-' }, customers: { none: {} } } })).count,
       };
       const goneCollections = (await tx.collection.deleteMany({ where: { storeId, slug: { startsWith: 'practice-' }, products: { none: {} } } })).count;
       const goneTags = (await tx.tag.deleteMany({ where: { storeId, slug: { startsWith: 'practice-' }, products: { none: {} } } })).count;
