@@ -59,8 +59,8 @@ const OWN_LABEL = 40; // hardcode-ok: a label length
 const OWN_MAX = 1000; // hardcode-ok: a typing guard
 /** The prototype's two Insert chips: the customer's first name and the coupon code (the template words `customerName`, `offerCode`). */
 export const INSERTS = [
-  { token: '{customerName}', label: 'insName' },
-  { token: '{offerCode}', label: 'insCoupon' },
+  { token: '{customerName}', label: 'insName' }, // hardcode-ok: a template word, not a secret
+  { token: '{offerCode}', label: 'insCoupon' }, // hardcode-ok: a template word, not a secret
 ] as const;
 /** Puts `token` where the caret is (over the selection, if any) and says where the caret goes next. */
 export function insertToken(text: string, token: string, from: number, to: number): { text: string; caret: number } {
