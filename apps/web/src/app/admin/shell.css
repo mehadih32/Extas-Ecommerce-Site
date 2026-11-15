@@ -705,6 +705,8 @@
 .adm2 .a2-itm{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;width:100%}
 .adm2 .a2-itm>.a2-cell{flex:1 1 0;min-width:0}
 .adm2 .a2-cell .a2-ell{max-width:min(200px,100%)}
+/* Device gate (TEXT-CUT-OFF): an item name is never cut with an ellipsis; it wraps inside its cell (the cell keeps min-width:0). */
+.adm2 .a2-itm .a2-ell{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;max-width:100%}
 /* Device gate (HORIZONTAL-SCROLL 1324 > 1280 on /admin/orders): a status chip's screen-reader text is position:absolute, and
    with no positioned parent its box belonged to the page, so it sat at the far right of the wide table and stretched the
    page. The table's own wrapper is now its containing block, so the wrapper scrolls it and the page stays the screen's width. */
