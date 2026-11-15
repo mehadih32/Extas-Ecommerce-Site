@@ -220,7 +220,8 @@ describe('settings of these PRs (registry version 7)', () => {
     expect(keys.length).toBeGreaterThanOrEqual(20);
     for (const k of keys) {
       const spec = registry[k as keyof typeof registry];
-      expect(spec.version, k).toBe(7);
+      // PR 746 added `catalogue.collections.order` (the owner's collection order) at registry version 745
+      expect(spec.version, k).toBe(k === 'catalogue.collections.order' ? 745 : 7);
       expect(spec.schema.safeParse(spec.default).success, k).toBe(true);
     }
   });

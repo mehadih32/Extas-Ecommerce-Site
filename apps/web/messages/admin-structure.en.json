@@ -1,0 +1,52 @@
+{
+  "st": {
+    "metaTitle": "Categories & tags",
+    "title": "Categories & tags",
+    "sub": "The order of your categories and collections, and the badge on a product card: change them here and the shop shows them straight away.",
+    "note": "Grab the handle on the left of a row and drag it to move it (on a phone, press and drag). Or use the arrow buttons. Hiding never deletes anything.",
+    "readOnly": "You can look but not change. Changing these needs the product editing permission.",
+    "saved": "Saved. The shop shows it now.",
+    "saving": "Saving…",
+    "save": "Save",
+    "discard": "Discard",
+    "unsaved": "You have changes that are not saved yet.",
+    "show": "Show in the shop",
+    "up": "Move up",
+    "down": "Move down",
+    "drag": "Drag to move",
+    "dragHelp": "Press and drag, or use the arrow keys",
+    "lang": { "en": "English", "bn": "Bengali" },
+    "err": {
+      "STALE": "Someone else changed this just now. It has been read again, so please make your change again.",
+      "INVALID_INPUT": "Something here is not right. Check the words and try again.",
+      "FORBIDDEN": "You are not allowed to change this.",
+      "forbidden": "You are not allowed to change this.",
+      "unauthorized": "Please sign in again.",
+      "network": "No connection. Nothing was saved.",
+      "other": "It was not saved. Please try again."
+    },
+    "categories": {
+      "h": "Categories",
+      "d": "The order your categories show in the shop's menu and tiles. A hidden category is not deleted; the shop just skips it.",
+      "sub": "Sub-categories",
+      "empty": "There are no categories yet.",
+      "products": "{n} products"
+    },
+    "collections": {
+      "h": "Collections",
+      "d": "The order of your collections. A collection you have not placed comes after the placed ones, by name.",
+      "empty": "There are no collections yet.",
+      "kind": { "MANUAL": "Picked by hand", "SEASONAL": "Seasonal", "RULE": "By a rule" }
+    },
+    "tags": {
+      "h": "Tag badges",
+      "d": "The badge in the corner of a product card comes from the product's tags. The tag at the top wins when a product has more than one. Nothing set here means the product's first tag, as before.",
+      "empty": "There are no tags yet.",
+      "show": "Can show as a badge",
+      "words": "Badge words",
+      "wordsHelp": "Leave empty to show the tag's own name. Write both languages, up to 24 letters each.",
+      "bothWords": "Write the badge words in both English and Bengali, or leave both empty.",
+      "order": "The tag at the top is tried first. A tag that is switched off never shows as a badge."
+    }
+  }
+}
