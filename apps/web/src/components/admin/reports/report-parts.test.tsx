@@ -18,16 +18,18 @@ const dict = { reportsV5: en.reportsV5, moneyCostReport: costEn.moneyCostReport 
 const bnDict = { reportsV5: bn.reportsV5, moneyCostReport: costEn.moneyCostReport } as unknown as Dict;
 
 describe('period bar', () => {
-  const html = renderToStaticMarkup(<ReportBar dict={dict} here="/admin/reports/profit" id="rp" from="2026-11-01" to="2026-11-14" today="2026-11-14" current="month" csv="/api/admin/reports/export/profit?from=2026-11-01&to=2026-11-14" notes={['tooLong', 'byMonth']} limitDays={1830} />);
-  it('has the six one-press periods, the current one marked', () => {
-    for (const p of ['today', 'week', 'month', 'lastMonth', 'year', 'lastYear']) expect(html).toContain(`data-testid="rp-quick-${p}"`);
-    expect(html).toMatch(/aria-current="true" data-testid="rp-quick-month" href="\/admin\/reports\/profit\?period=month"/);
+  const html = renderToStaticMarkup(<ReportBar dict={dict} here="/admin/reports/profit" id="rp" from="2026-11-01" to="2026-11-14" today="2026-11-14" p="month" csv="/api/admin/reports/export/profit?from=2026-11-01&to=2026-11-14" notes={['tooLong', 'byMonth']} limitDays={1830} />);
+  it('has the prototype period buttons, the current one marked', () => {
+    for (const p of ['today', 'd7', 'd30', 'month', 'lastMonth', 'm6', 'custom']) expect(html).toContain(`data-testid="rp-quick-${p}"`);
+    expect(html).toMatch(/aria-current="true" data-testid="rp-quick-month"/);
     expect(html.match(/aria-current="true"/g)).toHaveLength(1);
   });
-  it('has two dates that cannot be in the future, Show and the CSV download', () => {
-    expect(html).toContain('max="2026-11-14"');
-    expect(html).toContain('value="2026-11-01"');
-    expect(html).toContain('data-testid="rp-show"');
+  it('has the compare switch on, two dates that cannot be in the future, Show and the Excel download', () => {
+    expect(html).toContain('data-testid="rp-compare"');
+    expect(html).not.toContain('data-testid="rp-form"');
+    const custom = renderToStaticMarkup(<ReportBar dict={dict} here="/admin/reports/profit" id="rp" from="2026-11-01" to="2026-11-14" today="2026-11-14" p="custom" csv="/x" notes={[]} limitDays={1830} />);
+    expect(custom).toContain('max="2026-11-14"');
+    expect(custom).toContain('data-testid="rp-show"');
     expect(html).toMatch(/href="\/api\/admin\/reports\/export\/profit\?from=2026-11-01&amp;to=2026-11-14"[^>]*download/);
   });
   it('says what was changed in the period (the month-by-month note is the money reports\', not shown here)', () => {
@@ -46,7 +48,7 @@ describe('table and fold', () => {
   it('right-aligns figure columns and gives every row its test id', () => {
     const html = renderToStaticMarkup(<ReportTable cols={[{ h: 'Name' }, { h: 'Sales', right: true }]} rows={[['Polo', '৳10'], ['Denim', '৳5']]} testId="t" rowId="r" empty="x" />);
     expect(html.match(/data-testid="r"/g)).toHaveLength(2);
-    expect(html).toMatch(/<th style="text-align:right">Sales<\/th>/);
+    expect(html).toMatch(/<th class="r">Sales<\/th>/);
   });
   it('the fold names each figure, how it is counted, and links to the full figure', () => {
     const html = renderToStaticMarkup(<HowFigures dict={dict} testId="how" items={[{ label: 'Net profit', how: 'Contribution less costs.', href: '/admin/money/profit', linkText: 'Open' }, { label: 'Margin', how: 'A share.' }]} />);

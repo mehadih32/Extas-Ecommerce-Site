@@ -1,0 +1,39 @@
+/* Reports toolbar and tables (prototype v5 .rep-bar, .rep-tbl): one card, a period strip, the compare switch, the second row of tools. */
+.adm2 .rpbar { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; }
+.adm2 .rpbar-top { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.adm2 .rpseg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 10px; background: var(--lm-sf2); max-width: 100%; }
+.adm2 .rpseg a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; font-size: 13px; color: var(--lm-ink2); text-decoration: none; white-space: nowrap; }
+.adm2 .rpseg a.on { background: var(--lm-hero-solid, #1f2a5c); color: #fff; font-weight: 650; }
+.adm2 .rpsw { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 12.5px; color: var(--lm-ink2); text-decoration: none; white-space: nowrap; }
+.adm2 .rpsw i { position: relative; width: 38px; height: 22px; border-radius: 22px; background: var(--lm-ln2, #cbd0dc); flex: none; transition: background 0.15s; }
+.adm2 .rpsw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+.adm2 .rpsw i.on { background: var(--lm-ok); }
+.adm2 .rpsw i.on::after { transform: translateX(16px); }
+.adm2 .rpbar-dates { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.adm2 .rpbar-dates .a2-inp { width: auto; min-height: 44px; }
+.adm2 .rpbar-per { margin: 0; font-size: 12px; color: var(--lm-faint); }
+.adm2 .rpbar-2 { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding-top: 10px; border-top: 1px solid var(--lm-ln); }
+.adm2 .rpbar-grow { flex: 1 1 0; }
+.adm2 .rpbar-btns { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.adm2 .rpbar-2 .rpb2-sel { width: auto; max-width: 100%; min-height: 44px; font-size: 13px; }
+.adm2 .rpb2-save { display: inline-flex; gap: 6px; align-items: center; }
+.adm2 .rpb2-save .a2-inp { width: 160px; min-height: 44px; }
+.adm2 .rpbar .a2-btn.sm { min-height: 44px; }
+@media (max-width: 560px) { .adm2 .rpbar-btns { width: 100%; } .adm2 .rpbar-btns .a2-btn { flex: 1 1 auto; } .adm2 .rpbar-2 .rpb2-sel { flex: 1 1 140px; } .adm2 .rpseg { width: 100%; } .adm2 .rpseg a { flex: 1 1 auto; justify-content: center; } }
+
+/* The prototype's sortable-table look: small capital headings, a rule under each row, the first column bold. */
+.adm2 .rp-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.adm2 .rp-tbl th { text-align: left; padding: 9px 10px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--lm-faint); background: var(--lm-sf2); white-space: nowrap; }
+.adm2 .rp-tbl th.r, .adm2 .rp-tbl td.r { text-align: right; }
+.adm2 .rp-tbl td { padding: 10px; border-bottom: 1px solid var(--lm-ln); vertical-align: top; font-variant-numeric: tabular-nums; }
+.adm2 .rp-tbl tbody tr:last-child td { border-bottom: 0; }
+.adm2 .rp-tbl tr.sub td:first-child { padding-left: 24px; }
+.adm2 .rp-tbl tr.strong td { font-weight: 700; background: var(--lm-sf2); }
+.adm2 .rp-frame { overflow-x: auto; border: 1px solid var(--lm-ln); border-radius: 10px; }
+.adm2 .rp-note { font-size: 12px; color: var(--lm-faint); margin: 10px 0 0; }
+.adm2 .rp-kchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.adm2 .rp-kchips > div { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; background: var(--lm-sf); border: 1px solid var(--lm-ln); border-radius: 10px; padding: 7px 11px; font-size: 12.5px; min-width: 0; }
+.adm2 .rp-kchips span { color: var(--lm-faint); }
+.adm2 .rp-kchips b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.adm2 .rp-numh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.adm2 .rp-donut-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
