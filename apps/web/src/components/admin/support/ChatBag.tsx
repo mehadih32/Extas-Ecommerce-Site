@@ -139,7 +139,7 @@ export function ChatBag({ url, bag: first, lang, money, texts: x }: { url: strin
   const delivery = quote ? (quote.charge.state === 'free' ? x.deliveryFree : t?.deliveryMinor != null ? price(t.deliveryMinor) : x.deliveryUnknown) : null;
 
   return (
-    <section className="a2-card" aria-labelledby={`${id}-h`} data-testid="support-bag">
+    <section className="a2-card" id="sp-chat-bag" aria-labelledby={`${id}-h`} data-testid="support-bag">
       <h2 className="a2-h4" id={`${id}-h`}>
         {x.h}
       </h2>

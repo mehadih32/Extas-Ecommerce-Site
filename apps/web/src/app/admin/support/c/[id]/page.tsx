@@ -163,6 +163,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         money: moneyOf(currency, view.locale),
         photos: files.enabled && files.kinds.image ? Math.min(catalogue.photos, files.maxPerMessage) : 0,
         button: pr('button'),
+        createOrder: pr('createOrder'),
         texts: {
           ...(Object.fromEntries((['h', 'search', 'searchPh', 'searching', 'none', 'close', 'colour', 'size', 'soldOut', 'pickSize', 'photos', 'send', 'sending', 'sent', 'back', 'add', 'added'] as const).map((k) => [k, pr(k)])) as Omit<ComposerProducts['texts'], 'err'>),
           err: errs(d),

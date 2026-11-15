@@ -24,6 +24,8 @@ export interface ComposerProducts {
   texts: ProductDrawerTexts;
   /** PR 430: the chat bag's address when orders from the chat are on for this person ("Add to bag"). */
   addUrl?: string | null;
+  /** The "Create order" button of the reply bar (it jumps to the chat bag); only when orders from the chat are on. */
+  createOrder?: string;
 }
 
 /** S28 · PR 692: a quick reply for the reply box (null while `support.savedReplies` is off): the chat's own language first. */
@@ -301,6 +303,12 @@ export function Composer({
             <ShellIcon name="shirt" size={14} />
             {products.button}
           </button>
+        ) : null}
+        {products?.addUrl && products.createOrder && !note ? (
+          <a className="a2-btn" href="#sp-chat-bag" data-testid="support-create-order">
+            <ShellIcon name="bag" size={14} />
+            {products.createOrder}
+          </a>
         ) : null}
         <span className="sp-grow a2-xs a2-mute">
           {body.length}/{maxChars} · {x.hint}
