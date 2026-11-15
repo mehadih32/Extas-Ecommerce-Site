@@ -47510,12 +47510,12 @@
   {
    "number": 757,
    "stage": "S29",
-   "title": "",
+   "title": "Geography map: courier and coverage lens (S29; parked; CN-054; Size M; depends on 756) —",
    "titleDerived": false,
-   "itemised": false,
-   "scope": "",
+   "itemised": true,
+   "scope": "**Geography map: courier and coverage lens** (S29; **parked**; CN-054; Size M; depends on 756) — per area: courier success rate, delivery time against the band's promise, the best courier by area from the shop's own parcels (advice only: it never changes the courier rules), and **coverage gaps** (areas that have orders or visits but no courier mapped, from `CourierAreaMapping`). Off as shipped (`reports.geoMap.lenses.courier`); sources are the delivery and courier figures of PR 192 and 525, read only. Guide and screen words in the same PR. No migration.",
    "scopeRewritten": false,
-   "filedUnder": "",
+   "filedUnder": "S29 · Geography map (Reports) — PR 750–761 (parked)",
    "registerAnchor": "s29--geography-map-reports--pr-750761-parked",
    "appendixTitle": "",
    "owner": "",
@@ -47529,10 +47529,13 @@
    },
    "builtFacts": null,
    "updates": [],
-   "mentions": [],
+   "mentions": [
+    192,
+    525
+   ],
    "blueprint": [],
-   "bn": "শিগগির — এখনো বানানো হয়নি। “জিওগ্রাফি ম্যাপ (রিপোর্টস)” ধাপের অংশ: পার্ক করা — বাংলাদেশের ম্যাপে জেলা, থানা আর এলাকা রঙ দিয়ে দেখা; আপনার কথা ছাড়া শুরু হবে না।",
-   "bnAuto": true,
+   "bn": "জিওগ্রাফি ম্যাপ: এলাকা ধরে কুরিয়ারের সফলতা, ডেলিভারির সময়, সেরা কুরিয়ার, আর যে এলাকায় কুরিয়ার নেই। পার্ক করা।",
+   "bnAuto": false,
    "bnMissingForBuilt": false,
    "page": "docs/stages/S29.md#pr-757"
   },
