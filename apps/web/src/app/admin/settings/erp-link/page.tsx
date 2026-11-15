@@ -15,6 +15,8 @@ import type * as inv from '@extas/inventory';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { BooksForm } from '@/components/admin/books/BooksForm';
 import { ErpCalls } from '@/components/admin/ErpCalls';
+import { ErpSyncBoard } from '@/components/admin/ErpSyncBoard';
+import { loadSyncBoard } from '@/lib/erp-sync-board';
 import { Integrations } from '@/components/admin/Integrations';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -72,6 +74,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
   const who: inv.Who = { actor: access.guard.actor, storeId, ctx: access.guard.ctx };
   const [site, currency] = await Promise.all([siteAddress(storeId), access.deps.resolver.value('store.currency', { storeId })]);
   const v = await erpLinkView(access.deps, who, site.origin?.origin ?? null, canWrite);
+  const board = await loadSyncBoard(access.deps.db, storeId, access.deps.now(), Number(await access.deps.resolver.value('erp.sync.stockPollMinutes', { storeId })) || 0, 30); // hardcode-ok: rows the log shows
   const s = v.state;
   const d = view.dict;
   const e = (key: string, vars?: Record<string, string | number>) => t(d, `erpLink.${key}`, vars);
@@ -112,6 +115,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
       <PageHead view={view} place={locateKey(KEY)} title={e('title')} sub={e('sub')} />
       <SectionTabs view={view} current={KEY} />
       {picker}
+      <ErpSyncBoard dict={d} board={board} locale={view.locale} />
 
       <section className="a2-card a2-mt12" data-testid="erp-link-status">
         <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>

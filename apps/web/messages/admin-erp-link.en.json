@@ -237,6 +237,61 @@
         "If the ERP is down, orders wait and are sent when it is back. None are lost.",
         "Changing the ERP address or switching to a practice ERP needs your PIN."
       ]
+    },
+    "board": {
+      "never": "Not yet",
+      "onEvent": "When it happens",
+      "ok": "OK",
+      "idle": "Waiting",
+      "failed": "{n} failed in 24 hours",
+      "failedOne": "Failed",
+      "status": {
+        "title": "Sync status",
+        "sub": "What came from the ERP and what went to it, and when it last ran."
+      },
+      "col": {
+        "what": "What",
+        "dir": "Direction",
+        "last": "Last run",
+        "next": "Next run",
+        "items": "Items",
+        "state": "State"
+      },
+      "dir": {
+        "in": "From the ERP",
+        "out": "To the ERP"
+      },
+      "stream": {
+        "product": "Products",
+        "stock": "Stock",
+        "price": "Prices",
+        "return": "Returns",
+        "order": "Orders",
+        "bill": "Shipments",
+        "payment": "Payments",
+        "health": "Other"
+      },
+      "items": {
+        "sizes": "{n} sizes",
+        "sentToday": "{n} sent today",
+        "waiting": "{n} waiting"
+      },
+      "log": {
+        "title": "Activity log",
+        "filters": "Filter the log",
+        "empty": "Nothing here yet."
+      },
+      "filter": {
+        "all": "All",
+        "failed": "Failed",
+        "order": "Orders",
+        "stock": "Stock",
+        "bill": "Shipments",
+        "return": "Returns",
+        "product": "Products",
+        "price": "Prices",
+        "payment": "Payments"
+      }
     }
   }
 }
