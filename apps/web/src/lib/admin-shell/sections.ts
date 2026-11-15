@@ -361,6 +361,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
     guide: 'site',
     // PR 235: Redirects & 404 is the SEO tab's second page (demo WEB-04a). PR 227: Collection pages is the third.
     tabs: [
+      // PR 778 (owner request, 15 Nov 2026) — Control: the first Website tab, a hub of every website setting with a search box.
+      { id: 'control', pages: [{ href: '/admin/website/control', perm: 'website.read', keys: ['websiteControl'] }] },
       // S02 · PR 76 (WEB-02) — Page layouts: each shop page's sections, their order, show / hide and screens.
       { id: 'layouts', pages: [{ href: '/admin/website/layouts', perm: 'website.read', keys: ['websiteLayouts'] }] },
       // PR 726 — Brand & menus: the shop's name, logo and favicon, the header, the menu and the footer, with a live preview (More options).
