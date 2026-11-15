@@ -1027,6 +1027,18 @@
   "base": "/admin/website",
   "tabs": [
    {
+    "id": "control",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/control",
+      "keys": [
+       "websiteControl"
+      ]
+     }
+    ]
+   },
+   {
     "id": "layouts",
     "more": false,
     "pages": [

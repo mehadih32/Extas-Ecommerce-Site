@@ -94,6 +94,8 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
     { proto: 'tools', real: ['adPlatforms', 'affiliates', 'landing', 'referrals', 'merchantFeed'] },
   ],
   website: [
+    // PR 778: the owner's own first tab (not in the prototype's A.NAV; EXTRA_TABS below), the prototype's six follow unchanged
+    { proto: 'control', real: ['control'] },
     { proto: 'layout', real: ['layouts'] },
     { proto: 'text', real: ['words'] },
     { proto: 'policies', real: ['policies'] },
@@ -156,6 +158,12 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
  * placed by `NAV_V5` at once. When one of these is built, take it off this list (`nav-v5.test.ts` says so).
  */
 export const AWAITING: readonly string[] = [];
+
+/**
+ * Tabs the owner asked for that the prototype's `A.NAV` does not have, as `<real section>.<proto tab>` (all of them first in
+ * their section). The prototype's own tabs follow in its order and words; nav-v5.test.ts leaves these out when it compares.
+ */
+export const EXTRA_TABS: readonly string[] = ['website.control'];
 
 export interface PendingPage {
   /** `<section>.<tab>` or `<section>.<tab>.<page>`: the key in nav-pending.json. */
