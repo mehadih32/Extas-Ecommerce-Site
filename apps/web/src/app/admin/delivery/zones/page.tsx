@@ -9,15 +9,18 @@
 // address"): the cash-on-delivery limit per band, the sub-area band's own switch, and the area admin — open, rename,
 // re-spell, add, merge, move between bands (never deleting). Guide: docs/admin-guide/pages/delivery/zones.md.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as del from '@extas/delivery';
+import * as sh from '@extas/shipping';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AreaAdmin } from '@/components/admin/delivery/AreaAdmin';
+import { CourierSetupCards, type SetupCourier, type SetupEntry } from '@/components/admin/delivery/CourierSetupCards';
 import { DeliveryBands } from '@/components/admin/delivery/DeliveryBands';
 import { nameOf } from '@/components/admin/delivery/model';
 import { TryAddress } from '@/components/admin/delivery/TryAddress';
-import { moneyOf } from '@/components/admin/products/model';
+import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
@@ -25,6 +28,9 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { deliveryDeps } from '@/lib/delivery-api';
+import { deliverySettingCards } from '@/lib/delivery-settings-api';
+import { shippingDeps } from '@/lib/shipping-api';
+import { withCouriers } from '@/lib/admin-couriers';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-delivery.bn.json';
 import en from '../../../../../messages/admin-delivery.en.json';
@@ -48,7 +54,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DeliveryPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('delivery.read', deps, MOTHER_STORE_ID)]);
-  const view = withScreen(plain);
+  const view = withCouriers(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -72,10 +78,60 @@ export default async function DeliveryPage() {
   const dict = view.dict;
   const choices = bands.map((b) => ({ id: b.id, name: nameOf(view.lang, b) }));
 
+  // PR 803: the prototype's Setup tab — one card per courier, then Alerts and the Default courier
+  const sd = await shippingDeps(access.deps);
+  const [list, cards, rateRows] = await Promise.all([
+    sh.listCouriers(sd, who),
+    deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }),
+    access.deps.db.courierRateCard.findMany({
+      where: { storeId: MOTHER_STORE_ID, OR: [{ validTo: null }, { validTo: { gt: new Date() } }], validFrom: { lte: new Date() } },
+      select: { courierAccountId: true, zoneKey: true, weightFromGrams: true, chargeMinor: true, codFeeBps: true, returnChargeMinor: true },
+      orderBy: [{ weightFromGrams: 'asc' }, { id: 'asc' }],
+    }),
+  ]);
+  const defaultId = sh.defaultCourierIdOf(list.couriers.map((c) => ({ id: c.id, providerKey: c.providerKey, name: c.name, archivedAt: null })), (cards['delivery.couriers'].value as { defaultCourierId: string }).defaultCourierId);
+  const backupId = (cards['fulfilment.courierWatch'].value as { backupCourierId: string }).backupCourierId;
+  const sdict = view.dict;
+  const none = t(sdict, 'cr.su.noRate');
+  const setupCouriers: SetupCourier[] = list.couriers.map((c) => {
+    const mine = rateRows.filter((r) => r.courierAccountId === c.id);
+    const first = mine[0];
+    return {
+      id: c.id,
+      name: c.name,
+      connected: c.mode !== 'MOCK',
+      enabled: c.enabled,
+      isDefault: c.id === defaultId,
+      isBackup: c.id === backupId,
+      rates: bands
+        .filter((b) => b.enabled)
+        .map((b) => {
+          const r = mine.find((x) => x.zoneKey === b.key);
+          return { label: nameOf(view.lang, b), value: r ? formatMoney(r.chargeMinor, money) : none };
+        }),
+      codFee: first?.codFeeBps != null ? `${first.codFeeBps / 100}%` : none,
+      returnCharge: first?.returnChargeMinor != null ? formatMoney(first.returnChargeMinor, money) : none,
+    };
+  });
+
   return (
     <div className="a2-z" data-testid="delivery-zones" data-lm-ready="" lang={view.lang}>
-      <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'delivery.title')} sub={t(dict, 'delivery.pageSub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(dict, 'cr.su.heading')} sub={t(dict, 'cr.su.sub')} right={<Link className="a2-btn" href="/admin/integrations">{t(dict, 'cr.su.keys')} →</Link>} />
       <SectionTabs view={view} current={KEY} />
+      <CourierSetupCards
+        dict={dict}
+        couriers={setupCouriers}
+        entries={(cards['delivery.courier.setup'].value as { couriers: Record<string, SetupEntry> }).couriers}
+        setup={cards['delivery.courier.setup']}
+        watch={cards['fulfilment.courierWatch']}
+        digits={money.digits}
+        canEdit={can('delivery.charges')}
+        keysHref="/admin/integrations"
+        ratesHref="/admin/money/fees"
+      />
+      <h2 className="a2-h4 a2-mt12" data-testid="delivery-charges-heading">
+        {t(dict, 'cr.su.moreSetup')}
+      </h2>
       {source === null || source === 'sample' ? (
         <div className="a2-note">
           <ShellIcon name="info" size={15} />

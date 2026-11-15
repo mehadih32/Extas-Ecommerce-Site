@@ -86,7 +86,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
   }
   const c = detail.courier;
   // PR 787 (prototype v5 parity): "Make default" in the page's head for a courier that is not the default
-  const defCard = !c.isDefault && (access.guard.permissions?.has('delivery.charges') ?? false) ? await deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }).then((x) => x['delivery.couriers']).catch(() => null) : null;
+  const defCard = !c.isDefault && c.enabled && (access.guard.permissions?.has('delivery.charges') ?? false) ? await deliverySettingCards({ db: access.deps.db, resolver: access.deps.resolver }, { actor: access.guard.actor, ctx: access.guard.ctx }).then((x) => x['delivery.couriers']).catch(() => null) : null;
   const currency = await access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID });
   const money = moneyOf(currency, view.locale);
   const m = (x: number) => formatMoney(x, money);
