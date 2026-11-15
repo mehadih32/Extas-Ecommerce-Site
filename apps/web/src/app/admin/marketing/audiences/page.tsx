@@ -18,6 +18,8 @@ import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { GuideNote, Kpi, KpiGrid } from '@/components/admin/lane-f/Parts';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { AUDIENCE_KIND_EXCLUSION, AUDIENCE_KIND_LOOKALIKE, ruleWords } from '@/lib/marketing/audience-model';
@@ -37,7 +39,7 @@ const VIEWS = ['all', 'archived'] as const;
 const SETTINGS_API = '/api/admin/marketing/audiences/settings';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -111,14 +113,16 @@ export default async function AudiencesPage(props: Props) {
   const names = new Map([...choices.sizes.map((x) => [x.id, x.label] as const), ...choices.grades.map((x) => [x.id, (view.lang === 'bn' && x.nameBn) || x.nameEn] as const)]);
   const day = (iso: string) => new Intl.DateTimeFormat(view.locale, { timeZone, day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', numberingSystem: 'latn' }).format(new Date(iso));
   const rows = list.filter((r) => (v === 'archived' ? r.state === 'ARCHIVED' : r.state !== 'ARCHIVED'));
+  const lastBuilt = list.map((r) => r.countedAt).filter((x): x is string => !!x).sort().pop() ?? null;
+  const exclSize = list.find((r) => r.kind === AUDIENCE_KIND_EXCLUSION)?.size ?? 0;
 
   return (
     <div className="a2-z" data-testid="audiences-page" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}
-        title={s('title')}
-        sub={s('sub')}
+        title={t(d, 'lf.au.title')}
+        sub={t(d, 'lf.au.sub')}
         right={
           canWrite ? (
             <>
@@ -133,6 +137,11 @@ export default async function AudiencesPage(props: Props) {
         }
       />
       <SectionTabs view={view} current={KEY} />
+      <KpiGrid cols={3}>
+        <Kpi testId="au-k-count" label={t(d, 'lf.au.kAud')} value={num(rows.length)} sub={t(d, card.value.push ? 'lf.au.kAudOn' : 'lf.au.kAudOff')} />
+        <Kpi testId="au-k-last" label={t(d, 'lf.au.kLast')} value={lastBuilt ? day(lastBuilt) : t(d, 'lf.au.kNever')} sub={t(d, refresh.value.on ? 'lf.au.kLastAuto' : 'lf.au.kLastManual')} />
+        <Kpi testId="au-k-refused" label={t(d, 'lf.au.kRefused')} value={t(d, 'lf.au.kRefusedPeople', { n: num(exclSize) })} sub={t(d, refused.value.on ? 'lf.au.kRefusedSub' : 'lf.au.kRefusedOff')} />
+      </KpiGrid>
       <div className="a2-note a2-mt12" role="note">
         {s('note')}
       </div>
@@ -187,6 +196,7 @@ export default async function AudiencesPage(props: Props) {
           <p className="a2-sm a2-mute">{s('emptySub')}</p>
         </div>
       )}
+      <GuideNote>{t(d, 'lf.au.guide')}</GuideNote>
       <div id="au-settings" className="a2-mt12">
         <FieldsCard url={SETTINGS_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canWrite} testId="au-settings" />
       </div>

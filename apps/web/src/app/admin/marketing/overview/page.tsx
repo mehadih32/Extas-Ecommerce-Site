@@ -9,6 +9,11 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { V5Number } from '@/components/admin/v5/Parts';
+import { AiLine, GuideNote, Kpi, KpiGrid, PeriodBar, TwoLines, deltaPct } from '@/components/admin/lane-f/Parts';
+import { BarList } from '@/components/admin/reports/ReportCharts';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { PERIOD_KEYS, periodKey } from '@/lib/lane-f/period';
+import { moneyOf, numOf, perOf, symbolOf } from '@/lib/lane-f/format';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
@@ -23,7 +28,6 @@ export const dynamic = 'force-dynamic';
 
 const KEY = 'marketingOverview';
 const HERE = '/admin/marketing/overview';
-const PERIODS = [7, 30, 90] as const; // hardcode-ok: the one-press periods of this page
 const TONE = { SCALE: 'ok', KEEP: 'ok', FIX: 'warn', STOP: 'bad', NONE: '' } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,7 +39,7 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
   const sp = await searchParams;
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('marketing.campaigns.read', deps, MOTHER_STORE_ID)]);
-  const view = withW5a(plain);
+  const view = withLaneF(withW5a(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
@@ -46,62 +50,128 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
       </div>
     );
   const c = (k: string, v?: Record<string, string | number>) => t(d, `w5a.ov.${k}`, v);
-  const asked = typeof sp.days === 'string' ? Number(sp.days) : PERIODS[1];
-  const days = (PERIODS as readonly number[]).includes(asked) ? asked : PERIODS[1];
-  const o = await marketingOverview(access.deps, days);
+  const f = (k: string, v?: Record<string, string | number>) => t(d, `lf.${k}`, v);
+  const period = periodKey(sp.period);
+  const o = await marketingOverview(access.deps, period);
   const moreAds = o.adsTotal > o.ads.length;
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
-  const digits = new Intl.NumberFormat(view.locale, { style: 'currency', currency: o.currency }).resolvedOptions().maximumFractionDigits ?? 2;
-  const money = (minor: number | null) => (minor === null ? c('unknown') : new Intl.NumberFormat(view.locale, { style: 'currency', currency: o.currency, numberingSystem: 'latn' }).format(minor / 10 ** digits));
-  const num = (x: number | null, frac = 2) => (x === null ? '–' : new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: frac }).format(x));
+  const cur = symbolOf(o.currency);
+  const money = (minor: number | null) => moneyOf(minor, o.currency, c('unknown'));
+  const num = (x: number | null, frac = 2) => numOf(x, frac);
   const chip = (v: keyof typeof TONE) => (
     <span className={`a2-pill ${TONE[v]}`} data-testid="mkt-chip" data-verdict={v}>
       {c(`v_${v}`)}
     </span>
   );
+  const perTkAds = o.spendMinor && o.spendMinor > 0 ? o.adSalesMinor / o.spendMinor : null;
+  const perTkAdsPrev = o.prev.spendMinor && o.prev.spendMinor > 0 ? o.prev.adSalesMinor / o.prev.spendMinor : null;
+  const costPer = o.spendMinor !== null && o.adDelivered > 0 ? o.spendMinor / o.adDelivered : null;
+  const costPerPrev = o.prev.spendMinor !== null && o.prev.adDelivered > 0 ? o.prev.spendMinor / o.prev.adDelivered : null;
+  const chName = (k: string) => k.replace(/^ads:/, '').toLowerCase().replace(/^./, (x) => x.toUpperCase());
+  const best = o.campaigns.filter((x) => x.spendMinor > 0 && x.perTk !== null).sort((a, b) => (b.perTk ?? 0) - (a.perTk ?? 0));
+  const eye = o.campaigns
+    .filter((x) => x.spendMinor > 0 && x.verdict !== 'KEEP' && x.verdict !== 'NONE')
+    .map((x) => ({ x, tone: x.verdict === 'STOP' ? 'bad' : x.verdict === 'SCALE' ? 'ok' : 'warn', text: f(x.verdict === 'STOP' ? 'ov.eyeStop' : x.verdict === 'SCALE' ? 'ov.eyeScale' : 'ov.eyeFix', { name: x.name, spend: money(x.spendMinor), n: x.delivered, per: perOf(x.perTk, o.currency), cur }) }));
+  const top = best[0];
+  const low = best[best.length - 1];
+  const aiText = top
+    ? [f('ov.aiBestCh', { name: top.name, per: perOf(top.perTk, o.currency), cur }), low && low !== top ? f('ov.aiWeak', { name: low.name, per: perOf(low.perTk, o.currency), cur }) : ''].filter(Boolean).join(' ')
+    : f('ov.aiNone');
 
   return (
     <div className="a2-z" data-testid="mkt-overview" data-lm-ready="">
       <PageHead
         view={view}
         place={locateKey(KEY)}
-        title={c('title')}
-        sub={c('sub', { from: o.from, to: o.to })}
+        title={f('ov.title')}
+        sub={f('ov.sub')}
         right={
           <span className="a2-gap8">
-            {PERIODS.map((p) => (
-              <Link key={p} className={`a2-btn sm${p === days ? ' pri' : ''}`} href={`${HERE}?days=${p}`}>
-                {c('lastDays', { n: p })}
-              </Link>
-            ))}
-            <Link className="a2-btn sm" href="/admin/marketing/plan">
-              {c('toPlan')}
+            <Link className="a2-btn" href="/admin/marketing/plan">
+              {f('ov.toPlan')}
+            </Link>
+            <Link className="a2-btn pri" href="/admin/marketing/campaigns">
+              {f('ov.toCampaigns')}
             </Link>
           </span>
         }
       />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-kpis a2-mt12">
-        <div className="a2-card" data-testid="mkt-spend">
-          <div className="a2-xs a2-mute">{c('kSpend')}</div>
-          <div className="a2-h2">{money(o.spendMinor)}</div>
-        </div>
-        <div className="a2-card" data-testid="mkt-sales">
-          <div className="a2-xs a2-mute">{c('kSales')}</div>
-          <div className="a2-h2">{money(o.salesMinor)}</div>
-          <div className="a2-xs a2-mute">{c('delivered', { n: o.delivered })}</div>
-        </div>
-        <div className="a2-card" data-testid="mkt-pertk">
-          <div className="a2-xs a2-mute">{c('kPerTk')}</div>
-          <div className="a2-h2">{num(o.perTk)}</div>
-          <div className="a2-mt6">{chip(o.verdict)}</div>
-        </div>
-        <div className="a2-card" data-testid="mkt-profit">
-          <div className="a2-xs a2-mute">{c('kProfit')}</div>
-          <div className="a2-h2">{money(o.profitMinor)}</div>
-        </div>
+      <PeriodBar current={period} note={f('per.vs')} items={PERIOD_KEYS.map((k) => ({ key: k, label: f(`per.${k}`), href: `${HERE}?period=${k}` }))} />
+      <AiLine>{aiText}</AiLine>
+      <KpiGrid cols={5}>
+        <Kpi testId="mkt-spend" label={f('ov.kSpend')} value={money(o.spendMinor)} delta={deltaPct(o.spendMinor, o.prev.spendMinor)} inverse />
+        <Kpi testId="mkt-sales" label={f('ov.kSales')} value={money(o.adSalesMinor)} delta={deltaPct(o.adSalesMinor, o.prev.adSalesMinor)} sub={c('delivered', { n: o.adDelivered })} />
+        <Kpi testId="mkt-pertk" label={f('ov.kPer', { cur })} value={perOf(perTkAds, o.currency)} delta={deltaPct(perTkAds, perTkAdsPrev)} sub={chip(o.verdict)} />
+        <Kpi testId="mkt-cost" label={f('ov.kCost')} value={money(costPer === null ? null : Math.round(costPer))} delta={deltaPct(costPer, costPerPrev)} inverse />
+        <Kpi testId="mkt-profit" label={f('ov.kProfit')} value={money(o.profitMinor)} delta={deltaPct(o.profitMinor, o.prev.profitMinor)} sub={f('ov.kProfitSub')} />
+      </KpiGrid>
+      <div className="lf-grid lf-g3 a2-mt12">
+        <section className="a2-card" data-testid="mkt-by-channel">
+          <h2 className="a2-h3" style={{ marginBottom: 10 }}>
+            {f('ov.byChannel', { cur })}
+          </h2>
+          {o.byChannel.length ? (
+            <BarList testId="mkt-ch" items={o.byChannel.map((x) => ({ key: x.key, label: chName(x.key), value: x.perTk ?? 0, shown: perOf(x.perTk, o.currency) }))} />
+          ) : (
+            <p className="a2-sm a2-mute">{c('noCampaigns')}</p>
+          )}
+        </section>
+        <section className="a2-card" data-testid="mkt-eye">
+          <h2 className="a2-h3" style={{ marginBottom: 10 }}>
+            {f('ov.eye')}
+          </h2>
+          {eye.length ? (
+            <div className="lf-eye">
+              {eye.map((e) => (
+                <Link key={e.x.id} href="/admin/marketing/campaigns">
+                  <span className={`a2-pill ${e.tone}`}>{c(`v_${e.x.verdict}`)}</span>
+                  <span>{e.text}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute">{f('ov.eyeNone')}</p>
+          )}
+        </section>
+        <section className="a2-card" data-testid="mkt-messages">
+          <h2 className="a2-h3" style={{ marginBottom: 10 }}>
+            {f('ov.msg')}
+          </h2>
+          <div className="lf-rows">
+            <div>
+              <span>{f('ov.msgSent')}</span>
+              <b>{numOf(o.messages.sent)}</b>
+            </div>
+            <div>
+              <span>{f('ov.msgOrders')}</span>
+              <b>{numOf(o.messages.orders)}</b>
+            </div>
+            <div>
+              <span>{f('ov.msgSales')}</span>
+              <b>{money(o.messages.salesMinor)}</b>
+            </div>
+            <div>
+              <span>{f('ov.msgCost')}</span>
+              <b>{money(o.messages.costMinor)}</b>
+            </div>
+          </div>
+        </section>
       </div>
-      <p className="a2-xs a2-mute a2-mt6">{c('rule', { scale: o.thresholds.scale, keep: o.thresholds.keep, fix: o.thresholds.fix })}</p>
+      <section className="a2-card a2-mt12" data-testid="mkt-daily">
+        <h2 className="a2-h3" style={{ marginBottom: 10 }}>
+          {f('ov.daily')}
+        </h2>
+        <TwoLines
+          testId="mkt-daily-chart"
+          labels={o.daily.map((x) => x.day.slice(5))}
+          series={[
+            { name: f('ov.dailySales'), tone: 'ok', values: o.daily.map((x) => x.salesMinor) },
+            { name: f('ov.kSpend'), tone: 'ac', values: o.daily.map((x) => x.spendMinor) },
+          ]}
+        />
+      </section>
+      <GuideNote>{f('ov.rule', { scale: o.thresholds.scale, keep: o.thresholds.keep, fix: o.thresholds.fix, cur })}</GuideNote>
 
       <section className="a2-card a2-mt12" data-testid="mkt-campaigns">
         <h2 className="a2-h3" style={{ marginBottom: 10 }}>

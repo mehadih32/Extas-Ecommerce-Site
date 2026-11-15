@@ -4,11 +4,12 @@
 // days and the delivered orders that came through each, the ad-level rows from `AdCreativeDay`. Nothing here pauses, changes
 // or sends anything; chips and the plan are advice from the owner's `marketing.verdicts` numbers.
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { daysPeriod, deliveredSalesByCampaign, marketingReport, ymdIn } from '@extas/metrics';
+import { daysPeriod, deliveredSalesByCampaign, kpiByDay, marketingReport, ymdIn } from '@extas/metrics';
 import type { MarketingVerdictsSettings, ReportChannels } from '@extas/settings';
 import type { AdminDeps } from '../admin-auth';
 import { channelProfitView } from '../channel-profit-view';
 import { calendarOverview } from './calendar';
+import { resolvePeriod, type PeriodKey } from '../lane-f/period';
 import { fatigueOf, overlaps, planBudget, salesPerTk, verdictOf, type PlanRow, type Verdict, type WarnItem } from './overview-model';
 
 const S = MOTHER_STORE_ID;
@@ -33,6 +34,9 @@ export interface OverviewCampaignRow {
   delivered: number;
   perTk: number | null;
   verdict: Verdict;
+  clicks: number;
+  purchases: number;
+  dailyBudgetMinor: number | null;
 }
 export interface OverviewAdRow {
   id: string;
@@ -62,13 +66,25 @@ export interface Overview {
   campaigns: OverviewCampaignRow[];
   ads: OverviewAdRow[];
   adsTotal: number;
+  /** The period just before (same length): the figures the change chips compare with (null spend/profit = unknown). */
+  prev: { spendMinor: number | null; adSalesMinor: number; adDelivered: number; profitMinor: number | null };
+  /** Sales and delivered orders that came through the ad channels (the shop's own figures are `salesMinor`, `delivered`). */
+  adSalesMinor: number;
+  adDelivered: number;
+  /** Ad channels, best sales per Tk 1 first (prototype "By channel"). */
+  byChannel: { key: string; spendMinor: number; salesMinor: number; delivered: number; perTk: number | null; verdict: Verdict }[];
+  /** Per shop day: ad spend and the shop's delivered Sales (prototype "Spend vs delivered sales per day"). */
+  daily: { day: string; spendMinor: number; salesMinor: number }[];
+  /** Message sends started in the period (the prototype's "Message campaigns" card). */
+  messages: { sent: number; orders: number; salesMinor: number; costMinor: number };
 }
 
+const sumAds = (rows: readonly { kind: string; salesMinor: number; delivered: number }[], k: 'salesMinor' | 'delivered') => rows.filter((r) => r.kind === 'ads').reduce((a, r) => a + r[k], 0);
 const DAY_MS = 86_400_000; // hardcode-ok: ms in a day
 const addDay = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 
 /** The overview for the last `days` shop days (today included). */
-export async function marketingOverview(deps: OverviewDeps, days: number): Promise<Overview> {
+export async function marketingOverview(deps: OverviewDeps, days: number | PeriodKey): Promise<Overview> {
   const at = { storeId: S };
   const [timeZone, currency, rules, thresholds, settings] = await Promise.all([
     deps.resolver.value('store.timeZone', at) as Promise<string>,
@@ -78,28 +94,51 @@ export async function marketingOverview(deps: OverviewDeps, days: number): Promi
     deps.resolver.value('marketing.report', at) as Promise<{ resultDays: number; maxDays: number }>,
   ]);
   const today = ymdIn(deps.now?.() ?? new Date(), timeZone);
-  const n = Math.min(Math.max(1, Math.floor(days)), settings.maxDays);
-  const from = addDay(today, -(n - 1));
-  const period = daysPeriod(from, today, timeZone);
-  const [report, profit] = await Promise.all([
-    marketingReport(deps.db, S, { from, to: today }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax: 1 }),
-    channelProfitView({ db: deps.db, resolver: deps.resolver as never }, S, { from, to: today }, { maxDays: settings.maxDays, maxDayRows: settings.maxDays }).catch(() => null),
+  // a number is "the last n days"; a pair is a chosen period (this month, last month ...), never past today or longer than the report limit
+  const named = typeof days === 'number' ? null : resolvePeriod(days, today);
+  const to = named ? (named.to > today ? today : named.to) : today;
+  const lenOf = (a: string, b: string) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / DAY_MS) + 1;
+  const n = Math.min(Math.max(1, named ? lenOf(named.from, to) : Math.floor(days as number)), settings.maxDays);
+  const from = named ? addDay(to, -(n - 1)) : addDay(today, -(n - 1));
+  const period = daysPeriod(from, to, timeZone);
+  const pTo = addDay(from, -1);
+  const pFrom = addDay(pTo, -(n - 1));
+  const sendsMax = 200; // hardcode-ok: one page of sends is enough for the page's totals card
+  const [report, profit, prevReport, prevProfit, dayKpis, spendDays] = await Promise.all([
+    marketingReport(deps.db, S, { from, to }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax }),
+    channelProfitView({ db: deps.db, resolver: deps.resolver as never }, S, { from, to }, { maxDays: settings.maxDays, maxDayRows: settings.maxDays }).catch(() => null),
+    marketingReport(deps.db, S, { from: pFrom, to: pTo }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax: 1 }),
+    channelProfitView({ db: deps.db, resolver: deps.resolver as never }, S, { from: pFrom, to: pTo }, { maxDays: settings.maxDays, maxDayRows: settings.maxDays }).catch(() => null),
+    kpiByDay(deps.db, S, { from, to }, timeZone),
+    deps.db.adSpendDaily.groupBy({ by: ['date'], where: { storeId: S, date: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }, _sum: { spendStoreMinor: true } }),
   ]);
+  const spendByDay = new Map(spendDays.map((r) => [r.date.toISOString().slice(0, 10), r._sum.spendStoreMinor ?? 0]));
+  const daily = dayKpis.map((k) => ({ day: k.key, spendMinor: spendByDay.get(k.key) ?? 0, salesMinor: k.sales.valueMinor }));
+  const byChannel = report.channels
+    .filter((c) => c.kind === 'ads')
+    .map((c) => {
+      const p = salesPerTk(c.salesMinor, c.spendMinor);
+      return { key: c.key, spendMinor: c.spendMinor ?? 0, salesMinor: c.salesMinor, delivered: c.delivered, perTk: p, verdict: verdictOf(p, thresholds) };
+    })
+    .sort((a, b) => (b.perTk ?? -1) - (a.perTk ?? -1));
+  const messages = { sent: report.sends.reduce((a, x) => a + x.sent, 0), orders: report.sends.reduce((a, x) => a + x.orders, 0), salesMinor: report.sends.reduce((a, x) => a + x.salesMinor, 0), costMinor: report.messageSpendMinor };
   const perTk = salesPerTk(report.shop.salesMinor, report.spendMinor);
 
   const [adCampaigns, spendRows, saleOf] = await Promise.all([
-    deps.db.adCampaign.findMany({ where: { storeId: S, archivedAt: null }, select: { id: true, name: true, status: true, adAccount: { select: { platform: true } } }, take: 500 }), // hardcode-ok: a list guard
-    deps.db.adSpendDaily.groupBy({ by: ['adCampaignId'], where: { storeId: S, adCampaignId: { not: null }, date: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${today}T00:00:00Z`) } }, _sum: { spendStoreMinor: true } }),
+    deps.db.adCampaign.findMany({ where: { storeId: S, archivedAt: null }, select: { id: true, name: true, status: true, dailyBudgetMinor: true, adAccount: { select: { platform: true } } }, take: 500 }), // hardcode-ok: a list guard
+    deps.db.adSpendDaily.groupBy({ by: ['adCampaignId'], where: { storeId: S, adCampaignId: { not: null }, date: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }, _sum: { spendStoreMinor: true, clicks: true, purchases: true } }),
     deliveredSalesByCampaign(deps.db, S, period),
   ]);
   const spendOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.spendStoreMinor ?? 0]));
+  const clicksOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.clicks ?? 0]));
+  const buysOf = new Map(spendRows.map((r) => [r.adCampaignId, r._sum.purchases ?? 0]));
   const campaigns: OverviewCampaignRow[] = adCampaigns
     .map((c) => {
       const spendMinor = spendOf.get(c.id) ?? 0;
       const sale = saleOf.get(c.id) ?? { salesMinor: 0, delivered: 0 };
       const s = { v: sale.salesMinor, n: sale.delivered };
       const p = salesPerTk(s.v, spendMinor);
-      return { id: c.id, name: c.name, platform: String(c.adAccount.platform), status: c.status, spendMinor, salesMinor: s.v, delivered: s.n, perTk: p, verdict: verdictOf(p, thresholds) };
+      return { id: c.id, name: c.name, platform: String(c.adAccount.platform), status: c.status, spendMinor, salesMinor: s.v, delivered: s.n, perTk: p, verdict: verdictOf(p, thresholds), clicks: clicksOf.get(c.id) ?? 0, purchases: buysOf.get(c.id) ?? 0, dailyBudgetMinor: c.dailyBudgetMinor };
     })
     .filter((c) => c.spendMinor > 0 || c.salesMinor > 0)
     .sort((a, b) => b.spendMinor - a.spendMinor);
@@ -135,7 +174,7 @@ export async function marketingOverview(deps: OverviewDeps, days: number): Promi
     currency,
     today,
     from,
-    to: today,
+    to,
     thresholds,
     spendMinor: report.spendMinor,
     salesMinor: report.shop.salesMinor,
@@ -146,6 +185,12 @@ export async function marketingOverview(deps: OverviewDeps, days: number): Promi
     campaigns,
     ads: allAds.slice(0, AD_ROWS),
     adsTotal: allAds.length,
+    prev: { spendMinor: prevReport.spendMinor, adSalesMinor: sumAds(prevReport.channels, 'salesMinor'), adDelivered: sumAds(prevReport.channels, 'delivered'), profitMinor: prevProfit?.report.total.profitMinor ?? null },
+    adSalesMinor: sumAds(report.channels, 'salesMinor'),
+    adDelivered: sumAds(report.channels, 'delivered'),
+    byChannel,
+    daily,
+    messages,
   };
 }
 
@@ -153,6 +198,10 @@ export interface PlanData {
   currency: string;
   today: string;
   from: string;
+  to: string;
+  /** Days in the period (the spend and move figures are for this many days). */
+  days: number;
+  timeZone: string;
   thresholds: MarketingVerdictsSettings;
   rows: PlanRow[];
   overlaps: { a: string; b: string }[];
@@ -162,7 +211,7 @@ export interface PlanData {
 }
 
 /** The Plan page: the channel plan from delivered sales per Tk 1, and the calendar's two warnings (overlap, low stock). */
-export async function marketingPlan(deps: OverviewDeps, days: number): Promise<PlanData> {
+export async function marketingPlan(deps: OverviewDeps, days: number | PeriodKey): Promise<PlanData> {
   const at = { storeId: S };
   const [timeZone, currency, rules, thresholds, settings, lowStockAt] = await Promise.all([
     deps.resolver.value('store.timeZone', at) as Promise<string>,
@@ -173,9 +222,12 @@ export async function marketingPlan(deps: OverviewDeps, days: number): Promise<P
     deps.resolver.value('bag.lowStockAt', at) as Promise<number>,
   ]);
   const today = ymdIn(deps.now?.() ?? new Date(), timeZone);
-  const n = Math.min(Math.max(1, Math.floor(days)), settings.maxDays);
-  const from = addDay(today, -(n - 1));
-  const report = await marketingReport(deps.db, S, { from, to: today }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax: 1 });
+  const named = typeof days === 'number' ? null : resolvePeriod(days, today);
+  const to = named ? (named.to > today ? today : named.to) : today;
+  const len = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${named ? named.from : addDay(today, -(Math.floor(days as number) - 1))}T00:00:00Z`)) / DAY_MS) + 1;
+  const n = Math.min(Math.max(1, len), settings.maxDays);
+  const from = addDay(to, -(n - 1));
+  const report = await marketingReport(deps.db, S, { from, to }, { currency, timeZone, rules, resultDays: settings.resultDays, sendsMax: 1 });
   const rows = planBudget(
     report.channels.filter((c) => c.kind === 'ads').map((c) => ({ key: c.key, spendMinor: c.spendMinor ?? 0, salesMinor: c.salesMinor })),
     thresholds,
@@ -196,7 +248,7 @@ export async function marketingPlan(deps: OverviewDeps, days: number): Promise<P
     const a = availOf.get(v.id) ?? 0;
     if (!cur || a < cur.available) byProduct.set(v.product.id, { id: v.product.id, name: v.product.nameEn, available: a });
   }
-  return { currency, today, from, thresholds, rows, overlaps: pairs, lowStock: [...byProduct.values()].sort((a, b) => a.available - b.available).slice(0, 10), lowStockAt, hasUpcoming: live.length > 0 }; // hardcode-ok: a list guard
+  return { currency, today, from, to, days: n, timeZone, thresholds, rows, overlaps: pairs, lowStock: [...byProduct.values()].sort((a, b) => a.available - b.available).slice(0, 10), lowStockAt, hasUpcoming: live.length > 0 }; // hardcode-ok: a list guard
 }
 
 /** The writer for the platform sync (mock until a key is typed) and for a hand entry: one ad's day, replacing that day. */

@@ -13,6 +13,11 @@ import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { marketingPlan } from '@/lib/marketing/overview';
+import { salesByArea } from '@extas/metrics';
+import { Delta, PeriodBar, deltaPct } from '@/components/admin/lane-f/Parts';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { PERIOD_KEYS, periodKey } from '@/lib/lane-f/period';
+import { moneyOf, numOf, perOf, symbolOf } from '@/lib/lane-f/format';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import '../../reports/delivery/report.css';
@@ -21,7 +26,11 @@ export const dynamic = 'force-dynamic';
 
 const KEY = 'marketingPlan';
 const HERE = '/admin/marketing/plan';
-const WINDOW_DAYS = 30; // hardcode-ok: the plan reads the last 30 days, said on the page
+/** A district needs this many finished orders (delivered or returned) before its return rate advises anything. */
+const DISTRICT_MIN = 3; // hardcode-ok: the prototype's own floor
+/** Return rates above these two lines turn the advice to "ask the delivery charge first" and "avoid COD-only ads" (prototype rule). */
+const RETURN_WARN = 0.15; // hardcode-ok: prototype rule
+const RETURN_BAD = 0.25; // hardcode-ok: prototype rule
 const TONE = { SCALE: 'ok', KEEP: 'ok', FIX: 'warn', STOP: 'bad', NONE: '' } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,10 +38,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'w5a.plan.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function MarketingPlanPage() {
+export default async function MarketingPlanPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const deps = adminDeps();
-  const [plain, access] = await Promise.all([adminView(deps), pageAccess('marketing.campaigns.read', deps, MOTHER_STORE_ID)]);
-  const view = withW5a(plain);
+  const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('marketing.campaigns.read', deps, MOTHER_STORE_ID), searchParams]);
+  const view = withLaneF(withW5a(plain));
   const d = view.dict;
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
@@ -43,55 +52,124 @@ export default async function MarketingPlanPage() {
       </div>
     );
   const c = (k: string, v?: Record<string, string | number>) => t(d, `w5a.plan.${k}`, v);
-  const p = await marketingPlan(access.deps, WINDOW_DAYS);
-  const digits = new Intl.NumberFormat(view.locale, { style: 'currency', currency: p.currency }).resolvedOptions().maximumFractionDigits ?? 2;
-  const money = (minor: number) => new Intl.NumberFormat(view.locale, { style: 'currency', currency: p.currency, numberingSystem: 'latn' }).format(minor / 10 ** digits);
-  const num = (x: number | null) => (x === null ? '–' : new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 2 }).format(x));
+  const f = (k: string, v?: Record<string, string | number>) => t(d, `lf.${k}`, v);
+  const period = periodKey(sp.period);
+  const p = await marketingPlan(access.deps, period);
+  const areas = await salesByArea(access.deps.db, MOTHER_STORE_ID, { from: p.from, to: p.to }, { timeZone: p.timeZone, level: 'district' }).catch(() => null);
+  const cur = symbolOf(p.currency);
+  const money = (minor: number) => moneyOf(minor, p.currency);
+  const scale = 30 / p.days; // hardcode-ok: the plan is shown per 30-day month
+  const plan = p.rows.map((r) => ({ ...r, now: Math.round(r.spendMinor * scale), next: Math.round((r.spendMinor + r.moveMinor) * scale) }));
+  const nowTotal = plan.reduce((a, r) => a + r.now, 0);
+  const nextTotal = plan.reduce((a, r) => a + r.next, 0);
   const moves = p.rows.some((r) => r.moveMinor !== 0);
+  const districts = (areas?.rows ?? [])
+    .map((r) => ({ id: r.areaId, name: r.nameEn, orders: r.delivered + r.returned, rate: r.returnRate ?? 0 }))
+    .filter((r) => r.orders >= DISTRICT_MIN)
+    .sort((a, b) => b.orders - a.orders)
+    .slice(0, 10); // hardcode-ok: a short list
+  const advice = (rate: number) => (rate > RETURN_BAD ? 'bad' : rate > RETURN_WARN ? 'warn' : 'good');
 
   return (
     <div className="a2-z" data-testid="mkt-plan" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub', { n: WINDOW_DAYS })} right={<Link className="a2-btn sm" href="/admin/marketing/overview">{c('back')}</Link>} />
+      <PageHead view={view} place={locateKey(KEY)} title={f('pl.title')} sub={f('pl.sub')} right={<Link className="a2-btn sm" href="/admin/marketing/overview">{c('back')}</Link>} />
       <SectionTabs view={view} current={KEY} />
+      <PeriodBar current={period} note={f('per.vs')} items={PERIOD_KEYS.map((k) => ({ key: k, label: f(`per.${k}`), href: `${HERE}?period=${k}` }))} />
       <div className="a2-note a2-mt12">{c('advice')}</div>
-      <section className="a2-card a2-mt12" data-testid="mkt-plan-channels">
-        <h2 className="a2-h3" style={{ marginBottom: 10 }}>
-          {c('channels')}
-        </h2>
-        {p.rows.length ? (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="a2-table">
-              <thead>
-                <tr>
-                  <th>{c('colChannel')}</th>
-                  <th>{c('colSpend')}</th>
-                  <th>{c('colSales')}</th>
-                  <th>{c('colPerTk')}</th>
-                  <th>{c('colVerdict')}</th>
-                  <th>{c('colMove')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {p.rows.map((r) => (
-                  <tr key={r.key} data-testid="mkt-plan-row">
-                    <td>{r.key}</td>
-                    <td>{money(r.spendMinor)}</td>
-                    <td>{money(r.salesMinor)}</td>
-                    <td>{num(r.perTk)}</td>
-                    <td>
-                      <span className={`a2-pill ${TONE[r.verdict]}`}>{c(`v_${r.verdict}`)}</span>
-                    </td>
-                    <td>{r.moveMinor === 0 ? '–' : `${r.moveMinor > 0 ? '+' : '−'}${money(Math.abs(r.moveMinor))}`}</td>
+      <div className="lf-grid lf-g2 a2-mt12">
+        <section className="a2-card" data-testid="mkt-plan-channels">
+          <h2 className="a2-h3" style={{ marginBottom: 10 }}>
+            {f('pl.budget')}
+          </h2>
+          {plan.length ? (
+            <div className="a2-tblw">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{f('pl.colChannel')}</th>
+                    <th className="r">{f('pl.colPer', { cur })}</th>
+                    <th className="r">{f('pl.colNow')}</th>
+                    <th className="r">{f('pl.colNext')}</th>
+                    <th>{c('colVerdict')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="a2-sm a2-mute">{c('noChannels')}</p>
-        )}
-        <p className="a2-xs a2-mute a2-mt6">{moves ? c('moveNote', { pct: p.thresholds.shiftPct }) : c('noMove')}</p>
-      </section>
+                </thead>
+                <tbody>
+                  {plan.map((r) => (
+                    <tr key={r.key} data-testid="mkt-plan-row">
+                      <td>
+                        <b>{r.key}</b>
+                      </td>
+                      <td className="r a2-num">{perOf(r.perTk, p.currency)}</td>
+                      <td className="r a2-num">{money(r.now)}</td>
+                      <td className="r a2-num">
+                        <b>{money(r.next)}</b> <Delta pct={deltaPct(r.next, r.now)} />
+                      </td>
+                      <td>
+                        <span className={`a2-pill ${TONE[r.verdict]}`}>{c(`v_${r.verdict}`)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute">{c('noChannels')}</p>
+          )}
+          {plan.length ? <p className="a2-sm a2-mt12">{f('pl.total', { now: money(nowTotal), next: money(nextTotal) })}</p> : null}
+          <p className="a2-xs a2-mute a2-mt6">{moves ? c('moveNote', { pct: p.thresholds.shiftPct }) : c('noMove')}</p>
+        </section>
+        <section className="a2-card" data-testid="mkt-plan-districts">
+          <h2 className="a2-h3">{f('pl.district')}</h2>
+          <p className="a2-xs a2-mute" style={{ marginBottom: 10 }}>
+            {f('pl.districtSub')}
+          </p>
+          {districts.length ? (
+            <div className="a2-tblw">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{f('pl.colDistrict')}</th>
+                    <th className="r">{f('pl.colOrders')}</th>
+                    <th className="r">{f('pl.colReturn')}</th>
+                    <th>{f('pl.colAdvice')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {districts.map((r) => (
+                    <tr key={r.id} data-testid="mkt-district-row">
+                      <td>
+                        <b>{r.name}</b>
+                      </td>
+                      <td className="r a2-num">{numOf(r.orders)}</td>
+                      <td className="r a2-num">{numOf(r.rate * 100, 0)}%</td>
+                      <td>
+                        <span className={`a2-pill ${advice(r.rate)}`}>{f(`pl.adv.${advice(r.rate)}`)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="a2-sm a2-mute">{f('pl.districtNone')}</p>
+          )}
+        </section>
+        <section className="a2-card" data-testid="mkt-plan-ideas">
+          <h2 className="a2-h3">{f('pl.ideas')}</h2>
+          <p className="a2-sm a2-mute a2-mt6">{f('pl.ideasBody')}</p>
+          <Link className="a2-btn sm a2-mt12" href="/admin/marketing/studio">
+            {f('pl.ideasGo')}
+          </Link>
+        </section>
+        <section className="a2-card" data-testid="mkt-plan-comp">
+          <h2 className="a2-h3">{f('pl.comp')}</h2>
+          <p className="a2-xs a2-mute">{f('pl.compSub')}</p>
+          <p className="a2-sm a2-mute a2-mt6">{f('pl.compBody')}</p>
+          <Link className="a2-btn sm a2-mt12" href="/admin/marketing/intel">
+            {f('pl.compGo')}
+          </Link>
+        </section>
+      </div>
       <section className="a2-card a2-mt12" data-testid="mkt-plan-overlap">
         <h2 className="a2-h3" style={{ marginBottom: 10 }}>
           {c('overlap')}

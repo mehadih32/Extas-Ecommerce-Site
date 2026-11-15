@@ -20,6 +20,8 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
+import { withLaneF } from '@/lib/admin-lane-f';
+import { overlaps } from '@/lib/marketing/overview-model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { calendarOverview } from '@/lib/marketing/calendar';
@@ -53,7 +55,7 @@ function weekStart(locale: string): number {
 }
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
+  return withLaneF({ ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -74,7 +76,7 @@ export default async function MarketingCalendarPage(props: Props) {
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
-  const o = await calendarOverview({ db: access.deps.db, resolver: access.deps.resolver }, { from: sp.from, view: sp.view });
+  const o = await calendarOverview({ db: access.deps.db, resolver: access.deps.resolver }, { from: sp.from, view: sp.view === 'bars' ? 'bars' : 'month' });
   const month = o.view === 'month';
   const storeLocale = (await access.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }).catch(() => null)) as string | null;
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
@@ -91,7 +93,7 @@ export default async function MarketingCalendarPage(props: Props) {
     const vw = q.view ?? o.view;
     const from = q.from === undefined ? (sp.from && vw === o.view ? o.range.from : null) : q.from;
     const ln = q.lane === undefined ? lane : q.lane;
-    if (vw === 'month') p.set('view', 'month');
+    if (vw === 'bars') p.set('view', 'bars');
     if (from) p.set('from', from);
     if (ln) p.set('lane', ln);
     const s = p.toString();
@@ -108,6 +110,16 @@ export default async function MarketingCalendarPage(props: Props) {
     { kind: 'number', path: 'days', label: c('days'), help: c('daysHelp'), min: CALENDAR_DAYS_MIN, max: CALENDAR_DAYS_MAX },
   ];
   const plans = new Map(o.plans.map((p) => [p.id, p]));
+  // prototype v5: the next big day with its "is anything planned before it" line, and the offers that overlap (advice only)
+  const upcoming = o.items.filter((i) => i.lane === 'festive' && i.starts > o.today).sort((a, b) => a.starts.localeCompare(b.starts))[0];
+  const dayN = (x: string) => Math.round(Date.parse(`${x}T00:00:00Z`) / 86_400_000); // hardcode-ok: ms in a day
+  const before = upcoming ? dayN(upcoming.starts) - 14 : 0; // hardcode-ok: the prototype's two-week look before a big day
+  const prepared = upcoming ? o.items.some((i) => ['campaign', 'ads', 'message'].includes(i.lane) && dayN(i.ends ?? i.starts) >= before && dayN(i.starts) <= dayN(upcoming.starts)) : true;
+  const live = o.items.filter((i) => (i.lane === 'campaign' || i.lane === 'ads') && i.state !== 'ended' && i.state !== 'off').map((i) => ({ id: i.id, title: i.title.en, starts: i.starts, ends: i.ends, open: i.open }));
+  const alerts: string[] = [
+    ...(upcoming ? [`${t(d, 'lf.cal.next', { name: itemTitle(upcoming, isBn), days: dayN(upcoming.starts) - dayN(o.today), date: short(upcoming.starts) })} ${t(d, prepared ? 'lf.cal.prepared' : 'lf.cal.notPrepared')}`] : []),
+    ...overlaps(live).slice(0, 2).map(([a, b]) => t(d, 'lf.cal.clash', { a: a.title, b: b.title })), // hardcode-ok: a short list of alerts
+  ];
 
   const when = (i: CalendarItem) => {
     if (i.marks?.length) return g('list.marks', { list: i.marks.map((m) => `${m.label} ${short(m.day)}`).join(' · ') });
@@ -153,11 +165,32 @@ export default async function MarketingCalendarPage(props: Props) {
 
   return (
     <div className="a2-z" data-testid="mc-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={t(d, 'lf.cal.title')}
+        sub={t(d, 'lf.cal.sub')}
+        right={
+          canWrite && on ? (
+            <a className="a2-btn pri" href="#mc-plan" data-testid="mc-add-top">
+              {t(d, 'lf.cal.add')}
+            </a>
+          ) : undefined
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       <div className="a2-note a2-mt12" role="note">
         <span>{g('note')}</span>
       </div>
+      {on && alerts.length ? (
+        <div className="lf-alerts a2-mt12" data-testid="mc-alerts">
+          {alerts.map((a, i) => (
+            <div key={i} className="a2-note warn">
+              {a}
+            </div>
+          ))}
+        </div>
+      ) : null}
       {!on ? (
         <section className="a2-card a2-mt12" data-testid="mc-off">
           <h2 className="a2-h3">{g('offTitle')}</h2>
@@ -218,7 +251,7 @@ export default async function MarketingCalendarPage(props: Props) {
           </section>
           <section className="a2-card a2-mt12" aria-labelledby="mc-list-h" data-testid="mc-list">
             <h2 className="a2-h3" id="mc-list-h">
-              {g('list.h')}
+              {month ? t(d, 'lf.cal.thisMonth') : g('list.h')}
             </h2>
             {shown.length ? <ul className="mc-list">{shown.map(item)}</ul> : <p className="a2-sm a2-mute a2-mt6">{g('list.empty')}</p>}
           </section>
