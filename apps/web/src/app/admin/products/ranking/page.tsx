@@ -3,6 +3,7 @@
 // order" puts it on the shop. More options (days that count as new, healthy stock, the order by itself) are a store setting
 // (`shop.ranking`). Seeing it needs `catalogue.read`; changing it `catalogue.write`. Words: messages/admin-ranking.*.json.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
@@ -73,8 +74,32 @@ export default async function RankingPage() {
   ];
   return (
     <div className="a2-z" data-testid="ranking-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'productRanking.title')} sub={t(view.dict, 'productRanking.sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={t(view.dict, 'productRanking.title')}
+        sub={t(view.dict, 'productRanking.sub')}
+        right={
+          <Link className="a2-btn" href="/admin/website/seo" data-testid="ranking-google">
+            {t(view.dict, 'productRanking.googleLink')}
+          </Link>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
+      {/* PR 785 (prototype v5 parity): "How shop ranking works", three short steps */}
+      <section className="a2-card a2-mb12" data-testid="ranking-how">
+        <h2 className="a2-h3">{t(view.dict, 'productRanking.how.title')}</h2>
+        <p className="a2-cs">{t(view.dict, 'productRanking.how.sub')}</p>
+        <div className="rk-how">
+          {(['1', '2', '3'] as const).map((n) => (
+            <div key={n}>
+              <b className="rk-n">{n}</b>
+              <b>{t(view.dict, `productRanking.how.s${n}.h`)}</b>
+              <p className="a2-xs a2-mute">{t(view.dict, `productRanking.how.s${n}.p`)}</p>
+            </div>
+          ))}
+        </div>
+      </section>
       <RankingScreen dict={view.dict} weights={ranking.settings.weights} defaults={registry['shop.ranking'].default.weights} rows={ranking.rows.map((r) => ({ productId: r.productId, name: r.name, sold30: r.sold30, score: r.score, rank: r.rank, pin: r.pin, moved: r.moved }))} savedAt={ranking.savedAt} canEdit={canEdit} />
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/catalogue/ranking/options" screen={{ key: card.key, value: { ...card.value }, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="ranking-options" />

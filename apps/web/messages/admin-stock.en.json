@@ -82,7 +82,7 @@
     },
     "metaTitle": "Stock and ERP sync",
     "eyebrow": "Stock",
-    "title": "Stock and ERP sync",
+    "title": "Stock",
     "intro": "Stock lives in the ERP warehouse. The shop shows it and holds pieces for open orders.",
     "sep": " · ",
     "more": "{n} more",
@@ -398,6 +398,52 @@
       "gap": "The changes do not add up to the stock now ({now}). Re-sync this SKU.",
       "empty": "No movements in these days.",
       "truncated": "Only the first lines are shown; pick fewer days or one SKU."
+    },
+    "ov": {
+      "download": "Download stock list",
+      "pieces": "Pieces on the shop",
+      "value": "Stock value (buying price)",
+      "held": "Held for open orders",
+      "pcs": "{n} pcs",
+      "heldSub": "not yet handed to courier",
+      "low": "Sizes almost out",
+      "lowSub": "{n} or fewer left",
+      "out": "Sizes sold out",
+      "sync": "ERP stock sync",
+      "lastSync": "Last sync",
+      "nextSync": "Next sync",
+      "inMin": "in {n} min",
+      "warehouse": "Warehouse",
+      "soon": "Running out soon",
+      "soonNone": "Nothing is running out.",
+      "noSales": "no sales",
+      "daysLeft": "{n} days left",
+      "dead": "{n} products have more than 30 pieces but sold nothing in 30 days. Try a combo or a discount.",
+      "deadValue": "{n} products have more than 30 pieces but sold nothing in 30 days ({v} stuck at buying price). Try a combo or a discount.",
+      "byProduct": "Stock by product",
+      "byProductSub": "Tap a product to see every colour and size",
+      "search": "Search product or style code",
+      "searchGo": "Search",
+      "filters": "Show products",
+      "f": {
+        "all": "All",
+        "low": "Low",
+        "out": "Has sold-out sizes"
+      },
+      "col": {
+        "product": "Product",
+        "stock": "Stock",
+        "held": "Held",
+        "sold": "Sold 30d",
+        "days": "Days left",
+        "value": "Value"
+      },
+      "heatNote": "{days} days of stock",
+      "total": "Total",
+      "heldN": "{n} held",
+      "openProduct": "Open product",
+      "none": "No product matches this search",
+      "healthH": "ERP sync health and documents"
     }
   }
 }

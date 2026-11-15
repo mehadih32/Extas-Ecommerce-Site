@@ -269,3 +269,20 @@ export function reconcileHandler(request: Request, deps: AdminDeps | null): Prom
   if (method(request) !== 'POST') return notAllowed();
   return handle(request, deps, 'inventory.sync', async (c) => ({ reconcile: await inv.reconcileWithErp(c.deps, c.who) }));
 }
+
+/** PR 785: the stock list as a CSV (product, style, colour, size, SKU, available, held). Reading needs `inventory.read`. */
+export function stockListHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'GET') return notAllowed();
+  return handle(request, deps, 'inventory.read', async (c) => {
+    const rows = await c.deps.db.productVariant.findMany({
+      where: { storeId: c.who.storeId, archivedAt: null, product: { storeId: c.who.storeId, status: 'PUBLISHED', archivedAt: null, isDemo: false } },
+      orderBy: [{ product: { nameEn: 'asc' } }, { sku: 'asc' }],
+      select: { id: true, sku: true, product: { select: { nameEn: true, erpStyleCode: true } }, colour: { select: { nameEn: true } }, size: { select: { label: true } } },
+    });
+    const lv = await c.deps.db.stockLevel.groupBy({ by: ['variantId'], where: { variant: { storeId: c.who.storeId } }, _sum: { available: true, reserved: true } });
+    const at = new Map(lv.map((l) => [l.variantId, l._sum]));
+    const q = (s: string | null | undefined) => `"${(s ?? '').replace(/"/g, '""')}"`;
+    const lines = ['Product,Style,Colour,Size,SKU,Available,Held', ...rows.map((v) => [q(v.product.nameEn), q(v.product.erpStyleCode), q(v.colour?.nameEn), q(v.size?.label), q(v.sku), Math.max(0, at.get(v.id)?.available ?? 0), Math.max(0, at.get(v.id)?.reserved ?? 0)].join(','))];
+    return new Response(lines.join('\n') + '\n', { status: 200, headers: { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="stock-list.csv"', 'cache-control': 'no-store' } });
+  });
+}

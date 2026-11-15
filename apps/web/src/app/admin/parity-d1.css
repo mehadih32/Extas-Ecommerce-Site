@@ -22,3 +22,9 @@
 .adm2 .a2-olife>div{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--mute)}
 .adm2 .a2-olife b{font-size:15px;color:var(--ink)}
 @media (max-width:1199px){.adm2 .a2-dtabs{display:none}.adm2 .a2-dgrid[data-dt]>.a2-dside,.adm2 .a2-dgrid[data-dt]>.a2-dmain{display:flex!important}}
+
+/* ---- Shop ranking: "How shop ranking works" (PR 785) ---- */
+.adm2 .rk-how{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);margin-top:10px}
+@media (min-width:768px){.adm2 .rk-how{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.adm2 .rk-n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--g);color:#fff;font-size:12px;margin-right:6px}
+.adm2 .a2-mb12{margin-bottom:12px}

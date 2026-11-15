@@ -106,3 +106,28 @@
   .st-fld-sku, .st-fld-btn { grid-column: auto; }
 }
 @media (min-width: 760px) { .st-kpis-moves { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ---- Stock (PR 785): the prototype's top part ---- */
+.sk-top{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);margin-bottom:14px}
+@media (min-width:1100px){.sk-top{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}}
+.sk-sec{font-size:15px;margin:22px 0 10px}
+.sk-tools{display:flex;gap:8px;margin:8px 0}
+.sk-tools .ad-input{flex:1;min-width:0}
+.sk-head,.sk-row{display:grid;grid-template-columns:minmax(0,3fr) repeat(2,minmax(52px,1fr));gap:8px;align-items:center;padding:9px 6px}
+.sk-head{font-size:12px;color:var(--lm-ink2);border-bottom:1px solid var(--lm-ln);margin-top:10px}
+.sk-head .r,.sk-row .r{text-align:right}
+.sk-head .sk-hm,.sk-row .sk-hm{display:none}
+@media (min-width:768px){.sk-head,.sk-row{grid-template-columns:minmax(0,3fr) repeat(5,minmax(60px,1fr))}.sk-head .sk-hm,.sk-row .sk-hm{display:block}}
+.sk-prod{border-bottom:1px solid var(--lm-ln)}
+.sk-row{cursor:pointer;list-style:none;min-height:44px}
+.sk-row::-webkit-details-marker{display:none}
+.sk-name{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.sk-lowv{color:var(--lm-warn);font-weight:600}
+.sk-heat{padding:6px 6px 14px}
+.sk-heatw{overflow-x:auto;margin:8px 0}
+.sk-ht{border-collapse:collapse;font-size:13px}
+.sk-ht th,.sk-ht td{padding:6px 10px;text-align:center;border:1px solid var(--lm-ln)}
+.sk-ht .sk-cn{text-align:left;white-space:nowrap}
+.sk-sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid var(--lm-ln)}
+.sk-ht small{display:block;font-size:10px;font-weight:400}
+.sk-h-out{background:var(--lm-badbg)}.sk-h-low{background:var(--lm-warnbg)}.sk-h-mid{background:var(--lm-sf2)}.sk-h-ok{background:var(--lm-okbg)}
