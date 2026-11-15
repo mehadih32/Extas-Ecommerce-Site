@@ -213,5 +213,12 @@
       "made": "FAQ যোগ হলো",
       "already": "ওখানে আগেই FAQ আছে।"
     }
-  }
+  },
+  "rev.chip.aria": "রিভিউ, প্রশ্ন ও FAQ",
+  "rev.chip.questions": "প্রশ্ন",
+  "rev.chip.reviews": "রিভিউ",
+  "rev.chip.hidden": "লুকানো",
+  "rev.chip.faqs": "FAQ",
+  "rev.kpi.lowStar": "1-2 স্টার, উত্তর নেই",
+  "rev.kpi.lowStarNote": "অসন্তুষ্ট ক্রেতা, এখনো কেউ উত্তর দেয়নি"
 }
