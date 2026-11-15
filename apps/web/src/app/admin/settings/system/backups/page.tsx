@@ -17,6 +17,7 @@ import { backupRequests, driveView, restoreRequests } from "@extas/jobs";
 import { registry } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import {
+  BackupNowButton,
   BackupSettingsCard,
   RequestsCard,
   type BackupSettings,
@@ -40,6 +41,7 @@ import { runtimeState, type Backup } from "@/lib/status";
 import bn from "../../../../../../messages/admin-backups.bn.json";
 import en from "../../../../../../messages/admin-backups.en.json";
 import "../../settings.css";
+import "../sysinfo.css";
 
 export const dynamic = "force-dynamic";
 
@@ -149,6 +151,11 @@ export default async function BackupsPage() {
     ["drive", state.backups.drive],
     ["test", state.restoreTest],
   ];
+  // PR 842: the prototype's big light — safe while the newest server copy is fresh (the go-live setting's hours), late otherwise.
+  const lastLocalAt = state.backups.local?.at;
+  const ageHours = lastLocalAt ? ((access.deps.now ? access.deps.now() : new Date()).getTime() - new Date(lastLocalAt).getTime()) / 3_600_000 : null;
+  const heroState = ageHours !== null && state.backups.local?.result === "ok" && ageHours <= gateSet.freshHours ? "safe" : "late";
+  const offSiteOk = Boolean(drive?.connected) && state.backups.drive?.result === "ok";
   const kpis: [string, string, string, string | undefined][] = [
     [
       "local",
@@ -187,8 +194,21 @@ export default async function BackupsPage() {
         place={locateKey(KEY)}
         title={c("title")}
         sub={c("sub")}
+        right={<BackupNowButton d={d} canRun={canBackup} />}
       />
       <SectionTabs view={view} current={KEY} />
+
+      <section className="a2-sc a2-mt12 sy-hero" data-testid="bk-hero" data-state={heroState}>
+        <i className={`sy-dot${heroState === "safe" ? "" : " bad"}`} aria-hidden="true" />
+        <div>
+          <div className="sy-big">{c(heroState === "safe" ? "hero.safe" : "hero.late")}</div>
+          <div className="a2-scd">
+            {lastLocalAt
+              ? c(offSiteOk ? "hero.line" : "hero.lineServer", { when: when(lastLocalAt) })
+              : c("hero.never")}
+          </div>
+        </div>
+      </section>
 
       <div className="a2-kpis">
         {kpis.map(([k, value, foot, tone]) => (

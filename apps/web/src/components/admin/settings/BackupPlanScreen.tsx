@@ -66,6 +66,35 @@ const PILL: Record<string, string> = {
   CANCELLED: "line",
 };
 
+/** PR 842: the prototype's "Back up now" button in the page head (the same request as the card's button below). */
+export function BackupNowButton({ d, canRun }: { d: Dict; canRun: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState<{ ok: boolean; text: string } | null>(null);
+  if (!canRun) return null;
+  const go = async () => {
+    setBusy(true);
+    setSaid(null);
+    const a = await call("POST", `${API}/request`, { kind: "BACKUP" });
+    setBusy(false);
+    setSaid(a.status === 200 && a.data.ok ? { ok: true, text: local(d, "requests.asked") } : { ok: false, text: problem(d, a) });
+    if (a.status === 200 && a.data.ok) router.refresh();
+  };
+  return (
+    <>
+      <button type="button" className="a2-btn pri" onClick={go} disabled={busy} aria-busy={busy || undefined} data-testid="bk-head-now">
+        <ShellIcon name="dl" size={14} />
+        {local(d, busy ? "requests.asking" : "requests.BACKUP")}
+      </button>
+      {said ? (
+        <span className={`a2-xs ${said.ok ? "a2-mute" : "s28-bad"}`} role={said.ok ? "status" : "alert"}>
+          {said.text}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 /** "Back up now", "Run the restore drill now" and the last requests. */
 export function RequestsCard({
   d,
@@ -369,6 +398,11 @@ export function BackupSettingsCard({
           <div className="a2-scw">{local(d, "plan.where")}</div>
           <h2 className="a2-h3">{local(d, "plan.title")}</h2>
           <p className="a2-scd">{local(d, "plan.desc")}</p>
+          {v.drive.keepCopies > 0 ? (
+            <p className="a2-scd" data-testid="bk-plan-drive-keeps">
+              {local(d, "plan.driveKeeps", { n: v.drive.keepCopies })}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="a2-scb">
