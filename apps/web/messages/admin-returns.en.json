@@ -594,5 +594,37 @@
   },
   "kind": {
     "replacement": "Replacement"
+  },
+  "lens": {
+    "dateLabel": "Date",
+    "date": {
+      "any": "Any date",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "days7": "7 days",
+      "month": "This month",
+      "lastMonth": "Last month",
+      "custom": "Custom",
+      "from": "From",
+      "to": "to",
+      "go": "Show"
+    },
+    "rem": {
+      "label": "What needs a person today",
+      "requests": "Exchange requests waiting",
+      "coming": "Old piece clock ending",
+      "waiting": "ERP check waiting"
+    },
+    "tabs": "Return and exchange lists",
+    "tab": {
+      "requests": "Exchange requests",
+      "coming": "Coming back",
+      "handed": "Handed back",
+      "waiting": "Waiting ERP check",
+      "replace": "Replacements",
+      "approved": "Approved",
+      "declined": "Declined (our loss)",
+      "cancelled": "Cancelled"
+    }
   }
 }

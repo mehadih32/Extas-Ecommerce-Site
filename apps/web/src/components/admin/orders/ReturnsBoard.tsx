@@ -491,17 +491,32 @@ function OptionFacts({ view, o, m }: { view: AdminView; o: ExchangeChoices['opti
   );
 }
 
-export function ReturnsBoard({ view, data, head, tabs }: { view: AdminView; data: ReturnsData; head: React.ReactNode; tabs: React.ReactNode }) {
+export function ReturnsBoard({ view, data, head, tabs, lens, tabRows }: { view: AdminView; data: ReturnsData; head: React.ReactNode; tabs: React.ReactNode; /** PR 828: the date bar, reminder strip and chip tabs. */ lens?: React.ReactNode; /** PR 828: the cases of the chosen chip tab (null: the four-column board). */ tabRows?: ExchangeView[] | null }) {
   return (
     <div className="a2-z" data-testid="orders-returns" data-lm-ready="">
       {head}
       {tabs}
+      {lens}
       {data.chosen ? (
         <div className="a2-row">
           <CaseCard view={view} x={data.chosen} data={data} />
         </div>
       ) : null}
-      <Board view={view} rows={data.rows} chosen={data.chosen?.id ?? null} />
+      {tabRows ? (
+        <div className="a2-card a2-mt12" data-testid="returns-tab-list">
+          {tabRows.length ? (
+            <div className="d4-cards">
+              {tabRows.map((x) => (
+                <BoardCard key={x.id} view={view} x={x} on={x.id === data.chosen?.id} />
+              ))}
+            </div>
+          ) : (
+            <div className="a2-xs a2-mute rt-empty">{r(view.dict, 'empty')}</div>
+          )}
+        </div>
+      ) : (
+        <Board view={view} rows={data.rows} chosen={data.chosen?.id ?? null} />
+      )}
       <div className="a2-row a2-mt12 rt-start">
         <StartCard view={view} data={data} />
       </div>

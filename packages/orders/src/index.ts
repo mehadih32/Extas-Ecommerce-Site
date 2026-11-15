@@ -71,6 +71,7 @@ export * from './day-range';
 export * from './cancelled-summary';
 export * from './followups';
 export * from './calls';
+export * from './call-desk';
 export * from './addon';
 export * from './admin-read';
 export * from './history';
