@@ -59,5 +59,6 @@ export * from './demo';
 export * from './demo-catalogue';
 export * from './wizard';
 export * from './ranking';
+export * from './product-sales';
 export * from './report-library';
 export * from './report-schedules';

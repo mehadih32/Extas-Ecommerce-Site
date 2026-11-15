@@ -18,6 +18,7 @@ import { ErpChartPanel } from '@/components/admin/products/ErpChartPanel';
 import { erpChartFields, fieldsTexts, photoCheckFields, videoFields } from '@/lib/products-v5-fields';
 import { productV5Cards } from '@/lib/products-v5-settings-api';
 import { formatMoney, nameIn } from '@/components/admin/products/model';
+import { ProductHeadV5 } from '@/components/admin/products/ProductHeadV5';
 import { WizardBar } from '@/components/admin/products/WizardBar';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -96,6 +97,7 @@ export default async function ProductEditPage({
   }
   const video = await cat.getProductVideo(c.deps, c.who, id);
   const erpChart = await cat.erpChartView(c.deps, c.who, id);
+  const sales = await cat.productSales30(c.deps, c.who, id);
   const wizard = wizardStep ? await cat.wizardView(c.deps, c.who, id) : null;
   const lowest = product.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
   const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
@@ -130,6 +132,18 @@ export default async function ProductEditPage({
         <h1 className="ad-h1">{nameIn(view.lang, product)}</h1>
         <p className="ad-intro">{t(d, 'products.edit.intro')}</p>
       </div>
+      <ProductHeadV5
+        dict={d}
+        id={id}
+        code={product.erpStyleCode}
+        category={product.category ? (view.lang === 'bn' && product.category.nameBn ? product.category.nameBn : product.category.nameEn) : null}
+        status={product.status}
+        path={product.path}
+        listHref={PRODUCTS_HOME}
+        sales={sales}
+        money={(m) => formatMoney(m, money)}
+        num={(n) => n.toLocaleString(view.locale)}
+      />
       <ProductForm
         dict={d}
         lang={view.lang}

@@ -102,3 +102,11 @@
 .wz-ck.no .wz-ck-i{color:var(--warn)}
 .wz-cta{display:block;width:100%;margin:6px 0;padding:6px;border:0;border-radius:8px;background:var(--lm-accent);color:var(--lm-on-ac);font-size:12px}
 .wz-step .wz-link{min-height:44px}
+/* PR 831: product page, the line under the name, the buttons and the sales card */
+.pv5-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px}
+.pv5-btns{display:flex;flex-wrap:wrap;gap:8px}
+.pv5-btns .a2-btn{min-height:44px;display:inline-flex;align-items:center}
+.pv5-sales{margin:0 0 12px}
+.pv5-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.pv5-kpi{display:flex;flex-direction:column;gap:2px;padding:10px;border:1px solid var(--lm-ln);border-radius:10px;min-width:0}
+.pv5-kpi b{font-size:1.25rem;overflow-wrap:anywhere}

@@ -6,7 +6,7 @@
 // screen only shows what the API answers. The demo's "Read from spec sheet photo (AI)" waits for the AI stage.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { SizeChartDetail, SizeChartResolution, SizeChartSettings, SizeChartView } from '@extas/catalogue';
-import { bothUnits, parsePasted, sortSizes, suggestRow } from '@extas/catalogue/size-chart-math';
+import { bothUnits, parsePasted, sizeForBody, sortSizes, suggestRow } from '@extas/catalogue/size-chart-math';
 import { t, type Dict } from '@/lib/i18n';
 import { call, errorText, type Answer } from './api';
 import { Icon } from './Icon';
@@ -466,6 +466,16 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
             ))}
           </ol>
         </div>
+
+        <CustomerPreview
+          tt={tt}
+          labels={labels}
+          units={cur.fields.map((f) => f.unit)}
+          rows={draft.rows.map((r) => ({ size: r.size, label: sizeLabel(r.size), values: r.values.map((v) => num(v)) }))}
+          order={order}
+          easeInch={Number.isFinite(num(draft.easeInch)) ? num(draft.easeInch) : 0}
+          cmDecimals={options.cmDecimals}
+        />
 
         <div className="sc-sec">
           <div className="ad-label">{tt('coverage')}</div>
@@ -1247,5 +1257,93 @@ function Drawing({ kind }: { kind: string }) {
         [162, 46],
       ].map(([x, y], i) => dot(x!, y!, i + 1))}
     </svg>
+  );
+}
+
+// PR 831 (prototype v5): "What customers see" — the size guide the way the product page shows it, from the chart as it is typed
+// now (not yet saved): an inch / cm switch, a size picked to stand out, and "Find my size" from a body measure in inches
+// (the same rule-based finder the shop uses; it works with AI off). Read only; nothing here saves.
+function CustomerPreview({
+  tt,
+  labels,
+  units,
+  rows,
+  order,
+  easeInch,
+  cmDecimals,
+}: {
+  tt: TT;
+  labels: string[];
+  units: ('inch' | 'cm')[];
+  rows: { size: string; label: string; values: number[] }[];
+  order: string[];
+  easeInch: number;
+  cmDecimals: number;
+}) {
+  const [unit, setUnit] = useState<'inch' | 'cm'>('inch');
+  const [pick, setPick] = useState(0);
+  const [body, setBody] = useState('');
+  const shown = (v: number, from: 'inch' | 'cm') => (Number.isFinite(v) && v > 0 ? (unit === 'cm' ? bothUnits(v, from, cmDecimals).cm : bothUnits(v, from, cmDecimals).inch) : tt('none'));
+  const bodyNum = Number(body);
+  const found = body.trim() !== '' && bodyNum > 0 ? sizeForBody(rows.map((r) => ({ size: r.size, values: r.values })), order, 0, bodyNum, easeInch) : null;
+  const foundLabel = rows.find((r) => r.size === found)?.label ?? found;
+  const at = Math.min(pick, Math.max(0, rows.length - 1));
+  return (
+    <div className="sc-sec sc-cust" data-testid="sc-customer-preview">
+      <div className="sc-bar">
+        <div className="ad-label sc-m0">{tt('preview.h')}</div>
+        <div className="sc-seg" role="group" aria-label={tt('preview.unit')}>
+          {(['inch', 'cm'] as const).map((u) => (
+            <button key={u} type="button" className="ad-btn ad-btn-ghost ad-btn-sm" aria-pressed={unit === u} onClick={() => setUnit(u)} data-testid={`sc-preview-${u}`}>
+              {u === 'cm' ? tt('unitCm') : tt('unitIn')}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="sc-pv-sizes">
+        {rows.map((r, i) => (
+          <button key={r.size} type="button" className={`sc-pv-sz${i === at ? ' on' : ''}`} aria-pressed={i === at} onClick={() => setPick(i)}>
+            {r.label}
+          </button>
+        ))}
+      </div>
+      <div className="sc-tblw">
+        <table className="sc-tbl">
+          <thead>
+            <tr>
+              <th scope="col">
+                <span className="sc-sr">{tt('size')}</span>
+              </th>
+              {rows.map((r, i) => (
+                <th scope="col" key={r.size} className={i === at ? 'on' : undefined}>
+                  {r.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {labels.map((l, fi) => (
+              <tr key={l}>
+                <td>{l}</td>
+                {rows.map((r, i) => (
+                  <td key={r.size} className={i === at ? 'on' : undefined}>
+                    {shown(r.values[fi] ?? NaN, units[fi] ?? 'inch')}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="sc-pv-find">
+        <label className="ad-label" htmlFor="sc-pv-body">
+          {tt('preview.find')}
+        </label>
+        <input id="sc-pv-body" className="ad-input sc-in" type="number" inputMode="decimal" step="0.5" min={0} value={body} placeholder={tt('preview.body', { field: labels[0] ?? '' })} onChange={(e) => setBody(e.target.value)} />
+        <div className="sc-xs sc-dim" role="status" data-testid="sc-pv-result">
+          {found ? tt('preview.suggest', { size: foundLabel ?? '' }) : body.trim() !== '' && bodyNum > 0 ? tt('preview.none') : tt('preview.try')}
+        </div>
+      </div>
+    </div>
   );
 }
