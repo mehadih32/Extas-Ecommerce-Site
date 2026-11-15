@@ -12,21 +12,21 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { adsVerdict } from '@/components/admin/look/dashboard/ProtoCards';
 import type { DashDesignSettings } from '@/lib/admin-look/dashboard-data';
-import { HeroChart } from '@/components/admin/lumen/HeroChart';
+import { LineChart } from '@/components/admin/look/kit';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { ReportAnswers, type AnswerLine } from '@/components/admin/reports/ReportAnswers';
 import { ReportBar } from '@/components/admin/reports/ReportBar';
-import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
+import { ReportTable } from '@/components/admin/reports/ReportParts';
+import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { QUICK_PERIODS, quickPeriod } from '@/lib/cost-report';
 import { t } from '@/lib/i18n';
 import { makeFmt } from '@/lib/reports-v5/fmt';
-import { loadMarketing } from '@/lib/reports-v5/load';
-import { change, daysBetween, heroRange, previousSpan, seriesOf } from '@/lib/reports-v5/model';
+import { loadMarketing, loadViews } from '@/lib/reports-v5/load';
+import { change, daysBetween, previousSpan, seriesOf } from '@/lib/reports-v5/model';
 import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
 import '../../money/money.css';
@@ -57,17 +57,13 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
     );
   const c = (k: string, v?: Record<string, string | number>) => t(d, `reportsV5.marketing.${k}`, v);
   const cc = (k: string, v?: Record<string, string | number>) => t(d, `reportsV5.common.${k}`, v);
-  const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
-  const [m, lim] = await Promise.all([loadMarketing(access.deps, sp), access.deps.resolver.value('admin.dashboardDesigns', { storeId: MOTHER_STORE_ID }) as Promise<DashDesignSettings>]);
+  const [m, lim, views] = await Promise.all([loadMarketing(access.deps, sp), access.deps.resolver.value('admin.dashboardDesigns', { storeId: MOTHER_STORE_ID }) as Promise<DashDesignSettings>, loadViews(access, 'marketing')]);
   const f = makeFmt(view.locale, m.now.currency);
   const { q, notes } = m.now.period;
   const before = previousSpan(q.from, q.to);
-  const current = QUICK_PERIODS.find((p) => p === sp.period) ?? QUICK_PERIODS.find((p) => {
-    const x = quickPeriod(p, m.now.today);
-    return x.from === q.from && x.to === q.to;
-  });
-  const r = m.now.report;
+  const r = m.now.report!;
   const w = m.was.report;
+  const cmp = sp.cmp !== '0';
   const channelName = (k: string) => {
     const x = t(d, `reportsV5.channel.${k}`);
     return x === `reportsV5.channel.${k}` ? k.replace(/^source:/, '') : x;
@@ -77,37 +73,24 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
 
   const header = (
     <>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={cc('pageTitle')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
     </>
   );
-  if (!r)
-    return (
-      <div className="a2-z lm-rp" data-testid="rp-marketing" data-lm-ready="">
-        {header}
-        <section className="a2-card a2-mt12" data-testid="rp-marketing-off">
-          <h2 className="a2-h3">{c('offTitle')}</h2>
-          <p className="a2-sm a2-mute a2-mt6">{canWrite ? c('offBody') : c('offAsk')}</p>
-          <div className="ct-actions a2-mt12">
-            <Link className="a2-btn pri cr-tap" href="/admin/marketing/report">
-              {c('toReportBtn')}
-            </Link>
-          </div>
-        </section>
-      </div>
-    );
-
-  const vs = cc('vs', { from: f.day(before.from), to: f.day(before.to) });
+  const adCh = r.channels.filter((x) => x.kind === 'ads');
+  const adSales = adCh.reduce((n, x) => n + x.salesMinor, 0);
+  const adOrders = adCh.reduce((n, x) => n + x.orders, 0);
+  const adRoas = r.spendMinor ? adSales / r.spendMinor : null;
+  const adRoasWas = w && w.spendMinor ? w.channels.filter((x) => x.kind === 'ads').reduce((n, x) => n + x.salesMinor, 0) / w.spendMinor : null;
+  const cpo = r.spendMinor !== null && adOrders ? Math.round(r.spendMinor / adOrders) : null;
+  const dl = (x: ReturnType<typeof change>) => (cmp ? x : undefined);
   const tiles: SummaryTile[] = [
     r.spendMinor === null
       ? { key: 'spend', label: c('kSpend'), value: 0, shown: cc('unknown'), format: f.format, word: true, vs: c('spendNone') }
-      : { key: 'spend', label: c('kSpend'), value: r.spendMinor, shown: f.amount(r.spendMinor), format: f.format, delta: change(r.spendMinor, w?.spendMinor ?? null), good: 'down', vs: r.adsImported ? c('spendSub', { ads: f.maybe(r.adSpendMinor, cc('unknown')), msg: f.amount(r.messageSpendMinor) }) : c('spendNone') },
-    { key: 'ordered', label: c('kOrdered'), value: r.shop.orderedMinor, shown: f.amount(r.shop.orderedMinor), format: f.format, delta: change(r.shop.orderedMinor, w?.shop.orderedMinor ?? null), vs: c('orderedSub', { n: r.shop.orders }) },
-    { key: 'sales', label: c('kSales'), value: r.shop.salesMinor, shown: f.amount(r.shop.salesMinor), format: f.format, delta: change(r.shop.salesMinor, w?.shop.salesMinor ?? null), vs: c('salesSub', { n: r.shop.delivered }) },
-    { key: 'pertk', label: c('kPerTk'), value: r.roasPercent === null ? 0 : r.roasPercent / 100, shown: perTk(r.roasPercent), format: { kind: 'number', locale: view.locale }, ...(r.roasPercent === null ? { word: true } : {}), delta: change(r.roasPercent, w?.roasPercent ?? null), vs: c('perTkSub') },
-    m.sales.netProfitMinor === null
-      ? { key: 'profit', label: c('kProfit'), value: 0, shown: cc('unknown'), format: f.format, word: true }
-      : { key: 'profit', label: c('kProfit'), value: m.sales.netProfitMinor, shown: f.amount(m.sales.netProfitMinor), format: f.format },
+      : { key: 'spend', label: c('kSpend'), value: r.spendMinor, shown: f.amount(r.spendMinor), format: f.format, delta: dl(change(r.spendMinor, w?.spendMinor ?? null)), good: 'down' },
+    { key: 'adsales', label: c('kAdSales'), value: adSales, shown: f.amount(adSales), format: f.format, delta: dl(change(adSales, w ? w.channels.filter((x) => x.kind === 'ads').reduce((n, x) => n + x.salesMinor, 0) : null)), vs: c('kAdSalesSub') },
+    { key: 'roas', label: c('kRoas'), value: adRoas ?? 0, shown: perTk(adRoas === null ? null : adRoas * 100), format: { kind: 'number', locale: view.locale }, ...(adRoas === null ? { word: true } : {}), delta: dl(change(adRoas, adRoasWas)) },
+    { key: 'cpo', label: c('kCpo'), value: cpo ?? 0, shown: cpo === null ? cc('unknown') : f.amount(cpo), format: f.format, ...(cpo === null ? { word: true } : {}), good: 'down' },
   ];
 
   const camps = r.campaigns.filter((x) => x.roasPercent !== null && x.spendMinor !== null && x.spendMinor > 0);
@@ -125,125 +108,135 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
   const paidPct = allOrders ? Math.round((paidOrders / allOrders) * 100) : 0;
   const freeOrders = allOrders - paidOrders;
   const days = daysBetween(q.from, q.to, maxRows);
-  const hero = heroRange({
-    key: 'p',
-    label: `${f.dayShort(q.from)} – ${f.dayShort(q.to)}`,
-    days,
-    values: seriesOf(days, m.days, (x) => x.spendMinor),
-    total: r.adSpendMinor ?? m.days.reduce((s, x) => s + x.spendMinor, 0),
-    amount: f.amount,
-    dayLabel: f.dayShort,
-    mini: [{ label: c('kPerTk'), shown: perTk(r.roasPercent) }],
-  });
+  const spendDays = seriesOf(days, m.days, (x) => x.spendMinor);
+  const couponUses = m.coupons.reduce((n, x) => n + x.uses, 0);
+  const couponCost = m.coupons.reduce((n, x) => n + x.discountMinor, 0);
+  const chartSeries = [
+    { v: spendDays, color: 'var(--a3-c1)', name: c('heroSeries'), area: true, shown: spendDays.map((v) => f.amount(v)) },
+  ];
 
   return (
     <div className="a2-z lm-rp" data-testid="rp-marketing" data-lm-ready="" data-from={q.from} data-to={q.to}>
       {header}
-      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={m.now.today} current={current} csv={`/api/admin/reports/export/marketing?from=${q.from}&to=${q.to}`} notes={notes} limitDays={maxRows} />
-      <p className="a2-xs a2-mute a2-mt12">
-        {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {vs}
-      </p>
-      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} />
+      <ReportBar dict={d} here={HERE} id="rp" from={q.from} to={q.to} today={m.now.today} p={typeof sp.p === 'string' ? sp.p : undefined} cmp={cmp} before={before} reportKey="marketing" views={views} day={f.dayShort} csv={`/api/admin/reports/export/marketing?from=${q.from}&to=${q.to}`} notes={notes} limitDays={maxRows} />
+      <ReportAnswers kicker={cc('answers')} question={c('ans.q')} lines={lines} empty={cc('answersNone')} />
       <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
-      <div className="a2-mt12 mo-hero">
-        <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} testId="rp-hero" />
+      <div className="rp-kchips" data-testid="rp-chips">
+        <div>
+          <span>{c('chipPaid')}</span>
+          <b>{allOrders ? `${paidPct}%` : '—'}</b>
+          <span>{c('chipPaidSub', { n: f.num(paidOrders) })}</span>
+        </div>
+        <div>
+          <span>{c('chipCoupon')}</span>
+          <b>{f.amount(couponCost)}</b>
+          <span>{c('chipCouponSub', { n: f.num(couponUses) })}</span>
+        </div>
       </div>
 
-      <section className="a2-card a2-mt12" aria-labelledby="rp-pf" data-testid="rp-paidfree">
-        <h2 className="a2-h3" id="rp-pf">
-          {c('paidFree')}
-        </h2>
-        <p className="a2-cs">{c('paidFreeSub')}</p>
-        {allOrders ? (
-          <div className="rp-donut-row">
-            <svg viewBox="0 0 42 42" width="132" height="132" role="img" aria-label={c('paidFreeAria', { paid: paidPct, free: 100 - paidPct })}>
-              <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c3, var(--ok))" strokeWidth="7" />
-              <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c1, var(--acc))" strokeWidth="7" strokeDasharray={`${paidPct} ${100 - paidPct}`} strokeDashoffset="25" />
-              <text x="21" y="22.5" textAnchor="middle" fontSize="6.5" fontWeight="700" fill="currentColor">
-                {paidPct}%
-              </text>
-            </svg>
-            <ul className="a2-stack" style={{ listStyle: 'none', padding: 0, margin: 0, gap: 8 }}>
-              <li>
-                <i className="rp-dot" style={{ background: 'var(--lm-c1, var(--acc))' }} /> {c('fromAds')}: <b>{f.num(paidOrders)}</b>
-              </li>
-              <li>
-                <i className="rp-dot" style={{ background: 'var(--lm-c3, var(--ok))' }} /> {c('withoutAds')}: <b>{f.num(freeOrders)}</b>
-              </li>
-            </ul>
-          </div>
-        ) : (
-          <p className="a2-sm a2-mute">{c('noChannels')}</p>
-        )}
-      </section>
+      <div className="rp-grid3 a2-mt12">
+        <section className="a2-card" aria-labelledby="rp-sv" data-testid="rp-spendvs">
+          <h2 className="a2-h3" id="rp-sv">
+            {c('spendVs')}
+          </h2>
+          <p className="a2-cs">{c('spendVsSub')}</p>
+          <LineChart
+            id="rp-mk-spend"
+            labels={days.map((x) => f.dayShort(x))}
+            series={chartSeries}
+            h={220}
+            label={c('spendVs')}
+            yfmt={(v) => f.amount(Math.round(v))}
+            foot={days.map((_, i) => f.amount(spendDays[i] ?? 0))}
+          />
+        </section>
 
-      <section className="a2-card a2-mt12" aria-labelledby="rp-ch" data-testid="rp-channels">
-        <h2 className="a2-h3" id="rp-ch">
-          {c('channels')}
-        </h2>
-        <p className="a2-cs">{c('channelsSub')}</p>
-        <ReportTable
-          testId="rp-channels-table"
-          rowId="rp-channel-row"
-          empty={c('noChannels')}
-          cols={[{ h: c('colName') }, { h: c('colSpend'), right: true }, { h: c('colOrders'), right: true }, { h: c('colSales'), right: true }, { h: c('colPerTk'), right: true }]}
-          rows={r.channels.map((x) => [<b key="n">{channelName(x.key)}</b>, x.kind === 'ads' ? f.maybe(x.spendMinor, cc('unknown')) : '—', f.num(x.orders), f.amount(x.salesMinor), x.kind === 'ads' ? perTk(x.roasPercent) : '—'])}
-        />
-      </section>
+        <section className="a2-card" aria-labelledby="rp-pf" data-testid="rp-paidfree">
+          <h2 className="a2-h3" id="rp-pf">
+            {c('paidFree')}
+          </h2>
+          {allOrders ? (
+            <div className="rp-donut-row">
+              <svg viewBox="0 0 42 42" width="132" height="132" role="img" aria-label={c('paidFreeAria', { paid: paidPct, free: 100 - paidPct })}>
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c3, var(--ok))" strokeWidth="7" />
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-c1, var(--acc))" strokeWidth="7" strokeDasharray={`${paidPct} ${100 - paidPct}`} strokeDashoffset="25" />
+                <text x="21" y="22.5" textAnchor="middle" fontSize="6.5" fontWeight="700" fill="currentColor">
+                  {paidPct}%
+                </text>
+              </svg>
+              <ul className="a2-stack" style={{ listStyle: 'none', padding: 0, margin: 0, gap: 8 }}>
+                <li>
+                  <i className="rp-dot" style={{ background: 'var(--lm-c1, var(--acc))' }} /> {c('fromAds')}: <b>{f.num(paidOrders)}</b>
+                </li>
+                <li>
+                  <i className="rp-dot" style={{ background: 'var(--lm-c3, var(--ok))' }} /> {c('withoutAds')}: <b>{f.num(freeOrders)}</b>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <div className="rp-donut-row">
+              <svg viewBox="0 0 42 42" width="132" height="132" role="img" aria-label={c('paidFreeAria', { paid: 0, free: 0 })}>
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="var(--lm-sf2)" strokeWidth="7" />
+                <text x="21" y="22.5" textAnchor="middle" fontSize="6.5" fontWeight="700" fill="currentColor">
+                  —
+                </text>
+              </svg>
+              <ul className="a2-stack" style={{ listStyle: 'none', padding: 0, margin: 0, gap: 8 }}>
+                <li>
+                  <i className="rp-dot" style={{ background: 'var(--lm-c1, var(--acc))' }} /> {c('fromAds')}: <b>0</b>
+                </li>
+                <li>
+                  <i className="rp-dot" style={{ background: 'var(--lm-c3, var(--ok))' }} /> {c('withoutAds')}: <b>0</b>
+                </li>
+              </ul>
+            </div>
+          )}
+        </section>
+      </div>
 
       <section className="a2-card a2-mt12" aria-labelledby="rp-camp" data-testid="rp-campaigns">
         <h2 className="a2-h3" id="rp-camp">
-          {c('campaigns')}
+          {c('campTitle')}
         </h2>
         <p className="a2-cs">{c('campaignsSub')}</p>
         <ReportTable
           testId="rp-campaigns-table"
           rowId="rp-campaign-row"
           empty={c('noCampaigns')}
-          cols={[{ h: c('colName') }, { h: c('colSpend'), right: true }, { h: c('colOrders'), right: true }, { h: c('colSales'), right: true }, { h: c('colPerTk'), right: true }, { h: c('colDo') }]}
-          rows={r.campaigns.map((x) => [
-            <Link key="n" className="a2-lnk cr-link" href={`/admin/marketing/campaigns/${x.id}`}>
-              {m.now.campaigns[x.id]?.name ?? x.id}
-            </Link>,
-            f.maybe(x.spendMinor, cc('unknown')),
-            f.num(x.orders),
-            f.amount(x.salesMinor),
-            perTk(x.roasPercent),
-            (() => {
-              const per = x.roasPercent === null || !x.spendMinor ? null : x.roasPercent / 100;
-              const v = adsVerdict(per, lim);
-              return v ? (
-                <span key="v">
-                  <span className={`a2-pill ${v === 'scale' ? 'ok' : v === 'stop' ? 'bad' : v === 'fix' ? 'warn' : ''}`}>{c(`v.${v}`)}</span>
-                  <span className="a2-xs a2-mute" style={{ display: 'block', whiteSpace: 'normal', maxWidth: 300, marginTop: 3 }}>
-                    {c(`why.${v}`, { per: (per ?? 0).toFixed(1) })}
+          cols={[{ h: c('colCampaign') }, { h: c('colSpend'), right: true }, { h: c('colSales'), right: true }, { h: c('colRoas'), right: true }, { h: c('colCpo'), right: true }, { h: c('colDo') }]}
+          rows={[...r.campaigns]
+            .sort((x, y) => (y.roasPercent ?? -1) - (x.roasPercent ?? -1))
+            .map((x) => [
+              <Link key="n" className="a2-lnk cr-link" href={`/admin/marketing/campaigns/${x.id}`}>
+                <b>{m.now.campaigns[x.id]?.name ?? x.id}</b>
+              </Link>,
+              f.maybe(x.spendMinor, cc('unknown')),
+              f.amount(x.salesMinor),
+              <b key="r">{perTk(x.roasPercent)}</b>,
+              x.spendMinor !== null && x.orders ? f.amount(Math.round(x.spendMinor / x.orders)) : '—',
+              (() => {
+                const per = x.roasPercent === null || !x.spendMinor ? null : x.roasPercent / 100;
+                const v = adsVerdict(per, lim);
+                return v ? (
+                  <span key="v">
+                    <span className={`a2-pill ${v === 'scale' ? 'ok' : v === 'stop' ? 'bad' : v === 'fix' ? 'warn' : ''}`}>{c(`v.${v}`)}</span>
+                    <span className="a2-xs a2-mute" style={{ display: 'block', whiteSpace: 'normal', maxWidth: 300, marginTop: 3 }}>
+                      {c(`why.${v}`, { per: (per ?? 0).toFixed(1) })}
+                    </span>
                   </span>
-                </span>
-              ) : (
-                '—'
-              );
-            })(),
-          ])}
+                ) : (
+                  '—'
+                );
+              })(),
+            ])}
         />
         {r.untiedSpendMinor ? <p className="a2-xs a2-mute a2-mt6">{c('untied', { amount: f.amount(r.untiedSpendMinor) })}</p> : null}
-        <div className="ct-actions a2-mt12">
-          <Link className="a2-btn cr-tap" href="/admin/marketing/overview" data-testid="rp-to-overview">
-            {c('toOverviewBtn')}
-          </Link>
-          <Link className="a2-btn cr-tap" href="/admin/marketing/report" data-testid="rp-to-report">
-            {c('toReportBtn')}
-          </Link>
-        </div>
-        <p className="a2-xs a2-mute a2-mt6">
-          {c('toOverview')} · {c('toReport')}
-        </p>
       </section>
 
       <section className="a2-card a2-mt12" aria-labelledby="rp-cp" data-testid="rp-coupons">
         <h2 className="a2-h3" id="rp-cp">
           {c('coupons')}
         </h2>
-        <p className="a2-cs">{c('couponsSub')}</p>
         <ReportTable
           testId="rp-coupons-table"
           rowId="rp-coupon-row"
@@ -260,16 +253,6 @@ export default async function MarketingReportTab({ searchParams }: { searchParam
           ])}
         />
       </section>
-
-      <HowFigures
-        dict={d}
-        testId="rp-how"
-        items={[
-          { label: c('kSpend'), how: c('how.spend'), href: '/admin/marketing/report', linkText: c('toReportBtn') },
-          { label: c('kPerTk'), how: c('how.perTk') },
-          { label: c('kProfit'), how: c('how.profit'), href: `/admin/money/profit?from=${q.from}&to=${q.to}`, linkText: t(d, 'reportsV5.profit.open') },
-        ]}
-      />
     </div>
   );
 }
