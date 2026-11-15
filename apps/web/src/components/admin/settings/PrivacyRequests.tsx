@@ -10,6 +10,7 @@
 import { useId, useState } from 'react';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
+import { daysLeft } from '@/lib/admin-privacy/days';
 import { ConfirmDialog } from './ConfirmDialog';
 import { showToast } from '../lumen/Toast';
 
@@ -30,7 +31,7 @@ export interface RequestRow {
 const API = '/api/admin/privacy';
 const fill = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m));
 
-export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canErase, locale, timeZone }: { w: Words; effects: string[]; rows: RequestRow[]; on: boolean; canRequest: boolean; canErase: boolean; locale: string; timeZone: string }) {
+export function PrivacyRequests({ w, effects, rows: first, on, answerDays, nowIso, canRequest, canErase, locale, timeZone }: { w: Words; effects: string[]; rows: RequestRow[]; on: boolean; answerDays: number; nowIso: string; canRequest: boolean; canErase: boolean; locale: string; timeZone: string }) {
   const id = useId();
   const [rows, setRows] = useState(first);
   const [phone, setPhone] = useState('');
@@ -127,7 +128,14 @@ export function PrivacyRequests({ w, effects, rows: first, on, canRequest, canEr
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} data-testid="privacy-request-row" data-kind={r.kind} data-source={r.source}>
-                  <td className="a2-tdh">{when(r.at)}</td>
+                  <td className="a2-tdh">
+                    {when(r.at)}
+                    {r.status === 'REQUESTED' ? (
+                      <span className="a2-xs a2-mute" style={{ display: 'block' }} data-testid="privacy-request-left">
+                        {daysLeft(r.at, nowIso, answerDays) >= 0 ? fill(w['req.daysLeft']!, { n: daysLeft(r.at, nowIso, answerDays) }) : fill(w['req.daysOver']!, { n: -daysLeft(r.at, nowIso, answerDays) })}
+                      </span>
+                    ) : null}
+                  </td>
                   <td data-l={w['req.who']}>{r.name || r.phoneEnd ? `${r.name ?? ''}${r.phoneEnd ? ` ···${r.phoneEnd}` : ''}` : w['req.erased']}</td>
                   <td data-l={w['req.kind']}>
                     {w[`req.kinds.${r.kind}`] ?? r.kind}
