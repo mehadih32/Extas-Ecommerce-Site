@@ -427,7 +427,10 @@
           "other": "The books did not take the cost. Nothing was changed."
         },
         "NOT_PENDING": "This line matches; there is nothing to resolve.",
-        "INVALID_INPUT": "A short note is needed."
+        "INVALID_INPUT": "A short note is needed.",
+        "FEATURE_OFF": "Courier claims are switched off. Switch them on under the courier settings.",
+        "ALREADY_OPEN": "A claim of this kind is already open for this parcel.",
+        "NOT_CLAIMABLE": "The parcel's records do not support this claim."
       },
       "matchedParcels": "Matched parcels",
       "allMatched": "All matched",
@@ -435,7 +438,30 @@
       "resolve": "Mark resolved",
       "resolveAsk": "Write a short note on how this line was settled (at least 3 letters).",
       "resolveNote": "A short note is needed to mark a line resolved.",
-      "resolved": "Marked resolved."
+      "resolved": "Marked resolved.",
+      "claim": "Raise claim",
+      "claimConfirm": "Raise a claim against the courier for {amount}? It is recorded under Claims; nothing is paid or moved.",
+      "claimed": "Claim raised. Follow it under Claims.",
+      "claimNoteShort": "Statement line for {order}: the courier paid less cash than we expected.",
+      "claimNoteCharge": "Statement line for {order}: the courier took a charge above our rate card.",
+      "whatToMatch": "What to match",
+      "courier": "Courier",
+      "period": "Period",
+      "statementSrc": "Courier statement",
+      "csvChoose": "Choose the CSV file the courier sent",
+      "csvFirst": "Choose the CSV file first",
+      "csvConfirm": "Match {file} with our parcels? Every line is checked; nothing is paid and no money moves.",
+      "csvDone": "{n} lines checked: {ok} matched, {bad} to check.",
+      "csvToast": "Statement matched.",
+      "csvNoRight": "Matching a statement file needs the right to settle courier money.",
+      "matchNow": "Match now",
+      "matching": "Matching…",
+      "csvErr": {
+        "INVALID_INPUT": "The file cannot be read. Check it is the courier's CSV and try again.",
+        "other": "That did not work. Try again.",
+        "network": "No connection. Try again.",
+        "FORBIDDEN": "You do not have permission for this."
+      }
     },
     "su": {
       "heading": "Courier setup",

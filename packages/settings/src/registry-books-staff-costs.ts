@@ -20,6 +20,21 @@ const monthSchema = z.string().regex(MONTH);
 
 export const staffCostAmountSchema = z.object({ from: monthSchema, minor: z.number().int().min(0).max(1_000_000_000_000) }).strict();
 
+/**
+ * parity F4 · PR 849 (prototype Salaries): what changes one person's pay in one month, on top of the amount: an advance already
+ * taken, a bonus and a deduction, with a short note. The amount itself is never edited here, so a month's pay can always be
+ * worked out again: net to pay = the amount + bonus - deduction - advance (never below 0).
+ */
+export const staffCostAdjustSchema = z
+  .object({
+    adv: z.number().int().min(0).max(1_000_000_000_000),
+    bonus: z.number().int().min(0).max(1_000_000_000_000),
+    ded: z.number().int().min(0).max(1_000_000_000_000),
+    note: z.string().trim().max(120),
+  })
+  .strict();
+export type StaffCostAdjust = z.output<typeof staffCostAdjustSchema>;
+
 export const staffCostPersonSchema = z
   .object({
     id: z.string().min(1).max(40),
@@ -32,6 +47,8 @@ export const staffCostPersonSchema = z
     amounts: z.array(staffCostAmountSchema).min(1).max(120),
     /** Stopped from this month on (null = still running). */
     stoppedFrom: monthSchema.nullable(),
+    /** PR 849: the advance, bonus and deduction of a month (key `YYYY-MM`); a month with none is not listed. */
+    adj: z.record(monthSchema, staffCostAdjustSchema).optional(),
   })
   .strict();
 export type StaffCostPerson = z.output<typeof staffCostPersonSchema>;
@@ -51,10 +68,24 @@ export function staffAmountAt(p: Pick<StaffCostPerson, 'amounts' | 'stoppedFrom'
   return best ? best.minor : 0;
 }
 
+/** What one person is paid in a month: the amount plus bonus, less deduction and advance (never below 0). */
+export function staffNetAt(p: Pick<StaffCostPerson, 'amounts' | 'stoppedFrom' | 'adj'>, month: string): { base: number; adv: number; bonus: number; ded: number; net: number } {
+  const base = staffAmountAt(p, month);
+  const a = p.adj?.[month];
+  const adv = base ? (a?.adv ?? 0) : 0;
+  const bonus = base ? (a?.bonus ?? 0) : 0;
+  const ded = base ? (a?.ded ?? 0) : 0;
+  return { base, adv, bonus, ded, net: Math.max(0, base + bonus - ded - adv) };
+}
+
 /** A month's totals per kind (what the month's fixed costs would be). */
 export function staffTotalsFor(people: readonly StaffCostPerson[], month: string): Record<StaffCostKind, number> {
   const t: Record<StaffCostKind, number> = { salary: 0, rent: 0, utilities: 0, other: 0 };
-  for (const p of people) t[p.kind] += staffAmountAt(p, month);
+  // The cost of a month is the amount plus bonus less deduction; an advance only moves the day the money is paid, not the cost.
+  for (const p of people) {
+    const x = staffNetAt(p, month);
+    t[p.kind] += x.base ? x.base + x.bonus - x.ded : 0;
+  }
   return t;
 }
 

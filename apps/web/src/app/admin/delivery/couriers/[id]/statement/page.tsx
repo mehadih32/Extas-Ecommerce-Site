@@ -9,6 +9,7 @@ import { notFound, redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as pay from '@extas/payments';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { MatchControls } from '@/components/admin/couriers/MatchControls';
 import { OpenLines } from '@/components/admin/couriers/OpenLines';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
@@ -88,12 +89,20 @@ export default async function CourierStatementPage({ params, searchParams }: { p
   const n = (x: number) => formatNumber(x, view.locale);
   const day = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', numberingSystem: 'latn' });
   const moreLines = Math.max(0, st.openCount - st.open.length);
+  // PR 849: the courier choice and the months back of the "What to match" card (the six months up to the one shown)
+  const couriers = await access.deps.db.courierAccount.findMany({ where: { storeId: MOTHER_STORE_ID, archivedAt: null }, orderBy: { name: 'asc' }, select: { id: true, name: true }, take: 50 }); // hardcode-ok: a short list of the shop's couriers
+  const monthsBack = Array.from({ length: 6 }, (_, i) => {
+    const [y, mo] = st.ym.split('-').map(Number);
+    const dt = new Date(Date.UTC(y!, mo! - 1 - i, 1));
+    return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}`;
+  });
   const href = (ym: string) => `/admin/delivery/couriers/${id}/statement?month=${ym}`;
 
   return (
     <div className="a2-z" data-testid="courier-statement" data-lm-ready="" data-month={st.ym}>
       {head}
       <SectionTabs view={view} current="courierStatement" />
+      <MatchControls dict={d} couriers={couriers} courierId={id} months={monthsBack} month={st.ym} canUpload={access.guard.permissions?.has('payments.settle') ?? false} />
       <div className="a2-between a2-mt12" style={{ flexWrap: 'wrap', gap: 8 }}>
         <h2 className="a2-h3" data-testid="statement-month">
           {st.courier.name} · {st.ym}
@@ -188,7 +197,7 @@ export default async function CourierStatementPage({ params, searchParams }: { p
         <p className="a2-xs a2-mute">{cr('z.openSub')}</p>
         {st.open.length ? (
           <>
-            <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} lines={st.open} />
+            <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} canClaim={access.guard.permissions?.has('delivery.claims') ?? false} lines={st.open} />
             {moreLines ? <p className="a2-xs a2-mute">{cr('m.openMore', { n: n(moreLines) })}</p> : null}
           </>
         ) : (

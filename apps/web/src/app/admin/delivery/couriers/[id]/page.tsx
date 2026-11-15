@@ -348,7 +348,7 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
             <p className="a2-xs a2-mute">{cr('m.openSub')}</p>
             {mo.open.length ? (
               <>
-                <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} lines={mo.open.map((l) => ({ ...l, extraChargeMinor: pay.extraChargeOf({ matchState: l.matchState, reasonCode: l.reasonCode, chargeMinor: l.chargeMinor, expectedChargeMinor: l.expectedChargeMinor }) }))} />
+                <OpenLines dict={d} money={m} canAccept={access.guard.permissions?.has('payments.settle') ?? false} canClaim={access.guard.permissions?.has('delivery.claims') ?? false} lines={mo.open.map((l) => ({ ...l, extraChargeMinor: pay.extraChargeOf({ matchState: l.matchState, reasonCode: l.reasonCode, chargeMinor: l.chargeMinor, expectedChargeMinor: l.expectedChargeMinor }) }))} />
                 {moreLines ? <p className="a2-xs a2-mute">{cr('m.openMore', { n: n(moreLines) })}</p> : null}
                 <p className="a2-xs a2-mute a2-mt6">{cr('m.openDetail')}</p>
               </>
