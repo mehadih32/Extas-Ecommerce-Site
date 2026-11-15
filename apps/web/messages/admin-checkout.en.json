@@ -140,6 +140,28 @@
       "amount": "Amount",
       "needAmount": "Write the fixed amount (more than 0).",
       "needPercent": "Write a percentage from 1 to 100."
+    },
+    "settle": {
+      "h": "Where the money lands",
+      "d": "Which of your accounts each way of paying settles into, and in how many working days. A note the books read; it moves no money.",
+      "accounts": "Your accounts (one on each line)",
+      "accountsPh": "For example: DBBL current account",
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "card": "Card",
+      "cod": "Cash from couriers",
+      "pick": "Choose an account",
+      "days": "Working days to arrive",
+      "daysCod": "Couriers pay weekly",
+      "daysN": "Arrives in {n} working day(s)",
+      "note": "Changing where money lands is for the owner. Finance › Money in & out matches every payment against these accounts.",
+      "save": "Save",
+      "saved": "Saved. New payments are noted against these accounts.",
+      "failed": "That did not save. Try again.",
+      "FORBIDDEN": "Only the owner can change where money lands.",
+      "ACCOUNT_NOT_LISTED": "Every way of paying must use an account from your list.",
+      "INVALID_INPUT": "Some values are not right (days are 0 to 30).",
+      "readOnly": "Only the owner can change this."
     }
   }
 }
