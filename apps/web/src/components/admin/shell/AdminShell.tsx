@@ -33,6 +33,7 @@ import { DEFAULT_THEME, themeAttrs, themeOnRoot, themeStyle, type ThemeMode } fr
 import { resolveGuideMode } from '@/lib/admin-shell/help-pages';
 import { lumenNav } from '@/lib/admin-shell/lumen-nav';
 import { RAIL_COOKIE, viewerOf, type ShellModel, type TodoItem } from '@/lib/admin-shell/model';
+import { quickSections } from '@/lib/admin-shell/bottom-bar';
 import { jumpStep, recentPath } from '@/lib/admin-shell/shortcuts';
 import { currentItem, settingsItems } from '@/lib/admin-shell/settings-list';
 import { locate, sectionHome, sectionVisible, SHELL_SECTIONS, visiblePages, visibleTabs, type ShellSection } from '@/lib/admin-shell/sections';
@@ -41,6 +42,7 @@ import { ChartTips } from '../look/ChartTips';
 import { LUMEN_DEFAULTS, LumenProvider } from '../lumen/context';
 import { ToastHost } from '../lumen/Toast';
 import { GUIDE_EVENT, PALETTE_EVENT, TODO_EVENT, type GuideRequest } from './events';
+import { Drawer } from './Drawer';
 import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
 import { Palette } from './Palette';
@@ -85,6 +87,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const [notes, setNotes] = useState<ShellNote[] | null>(null);
   const [seen, setSeen] = useState<string | null>(model.notesSeenAt ?? null);
   const [pal, setPal] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [todoAt, setTodoAt] = useState<number | null>(null);
   const [later, setLater] = useState<Record<string, number>>({});
   const [guide, setGuide] = useState<GuideRequest | null>(null);
@@ -590,7 +593,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
         </div>
       </div>
       <nav className="lm-bar a2-z" aria-label={tt('nav.quick')} data-testid="lm-bar">
-        {all.map((s) => {
+        {quickSections(all).map((s) => {
           const on = active === s.id;
           const n = badge(s);
           return (
@@ -605,7 +608,29 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             </Link>
           );
         })}
+        <button type="button" className="lm-bar-menu" aria-haspopup="dialog" aria-expanded={menu} data-testid="lm-bar-menu" onClick={() => setMenu(true)}>
+          <ShellIcon name="menu" size={20} />
+          <span>{tt('nav.more')}</span>
+        </button>
       </nav>
+      {menu ? (
+        <Drawer title={tt('nav.more')} closeLabel={tt("nav.close")} onClose={() => setMenu(false)} testId="lm-bar-sheet">
+          <ul className="lm-bar-list">
+            {all.map((s) => {
+              const n = badge(s);
+              return (
+                <li key={s.id}>
+                  <Link href={sectionHome(s, viewer)} className={active === s.id ? 'on' : ''} onClick={() => setMenu(false)}>
+                    <ShellIcon name={s.icon} size={18} />
+                    <span>{label(s)}</span>
+                    {n ? <i className="lm-bd">{n > 99 ? '99+' : n}</i> : null}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </Drawer>
+      ) : null}
       {todoAt !== null ? (
         <TodoDrawer
           dict={d}
