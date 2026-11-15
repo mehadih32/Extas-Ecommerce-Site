@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 764 filed: legacy practice pictures still load (branch `claude/fix-media-legacy`, from `origin/main` b83801e3)
+
+The deploy of 932528a4 (PR 728) was rolled back again: 15 pages saw 404 for practice sizes already in the library whose file names hold a capital colour code (`practice-polo-F5F5F5-front-card.<hash>.avif`). Cause: `isRenditionKey` served lower case only, so those rows 404ed the moment the new version went live, before the keeper's repair could reach them. Fix: the route accepts either letter case in the name part (only a size the library lists is served), `renditionFile` also tries the lower-case key (old addresses of re-made sizes keep working), and `healPracticeRendition` draws a missing practice picture again on the spot. Tests in `packages/media/test/pipeline.test.ts` and `practice.db.test.ts`. No migration, no setting.
+
 ## 15 Nov 2026 — PR 728 filed: practice pictures load (branch `claude/fix-media-path`, from `origin/main` 6da62662, local, NOT pushed)
 
 The deploy of 6da62662 was rolled back by its smoke test: every sample picture answered 404 (74 problems, all `/media/media/s1/r/…`). The doubled `media/media` is the normal address of every upload (the storage key itself starts with `media/`); the real cause is that practice file names carried the colour code in capitals and `isRenditionKey` serves lower case only. Fixed in `slugOfKey` and the practice slug; `assetFilesExist` is checked before a picture is placed; `repairPracticePhotos` redraws lost or wrongly named pictures; no picture is made while the storage is in-process memory in production (`Storage.volatile`). The deploy log held no other failure; its one warning (admin.theme changed without a version bump, PR 724) is fixed by raising the version to 728. Register row 728, S28 70/70, 728 PRs / 718 active / 695 built.

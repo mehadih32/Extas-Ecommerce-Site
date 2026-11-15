@@ -10,10 +10,14 @@ import { stampWatermark } from './watermark';
 /** A rendition file, or null (unknown key, an original, a download copy, or an archived photo: never served). */
 export async function renditionFile(deps: Pick<MediaDeps, 'db' | 'storage'>, key: string): Promise<{ body: Uint8Array; contentType: string } | null> {
   if (!isRenditionKey(key)) return null;
-  const r = await deps.db.mediaRendition.findFirst({ where: { storageKey: key }, select: { storeId: true, format: true, asset: { select: { storage: true, archivedAt: true } } } });
+  const select = { storageKey: true, storeId: true, format: true, asset: { select: { storage: true, archivedAt: true } } } as const;
+  let r = await deps.db.mediaRendition.findFirst({ where: { storageKey: key }, select });
+  // PR 764: a size made again after PR 728 is named in lower case; a page or cache still holding its old capital-letter address finds it
+  const lower = key.toLowerCase();
+  if (!r && lower !== key) r = await deps.db.mediaRendition.findFirst({ where: { storageKey: lower }, select });
   if (!r || r.asset.archivedAt) return null;
   const storage = await deps.storage(r.storeId, r.asset.storage);
-  const f = await storage.get(key);
+  const f = await storage.get(r.storageKey);
   return f ? { body: f.body, contentType: `image/${r.format}` } : null;
 }
 

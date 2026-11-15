@@ -584,7 +584,7 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
       }
     }
     // the first live run (PR 725): sizes were named with a capital colour code (…-1E1E20-…), a name the /media route refuses;
-    // such a picture is made again under a servable name
+    // PR 764: those rows are already live; the route serves them at their own address (file present), never a 404
     const legacy = await db.mediaRendition.findMany({ where: { assetId: assets[0]!.id } });
     for (const r of legacy) {
       const parts = r.storageKey.split('/');
@@ -596,8 +596,9 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     }
     const first = legacy[0]!;
     const upKey = (await db.mediaRendition.findUniqueOrThrow({ where: { id: first.id } })).storageKey;
-    expect((await mediaFileHandler(new Request('https://x.test/m'), deps, upKey.split('/'))).status).toBe(404);
-    expect((await repairPracticePhotos(deps, S, {})).repaired).toBe(1);
+    expect(upKey).toMatch(/[A-Z]/);
+    expect((await mediaFileHandler(new Request('https://x.test/m'), deps, upKey.split('/'))).status).toBe(200);
+    expect((await repairPracticePhotos(deps, S, {})).repaired).toBe(0);
     for (const r of await db.mediaRendition.findMany({ where: { assetId: assets[0]!.id } })) {
       expect((await mediaFileHandler(new Request('https://x.test/m'), deps, r.storageKey.split('/'))).status, r.storageKey).toBe(200);
     }
@@ -605,10 +606,12 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     const lost = await db.mediaRendition.findMany({ where: { storeId: S, asset: { folder: 'practice' } }, select: { storageKey: true } });
     const wiped = memoryStorage('LOCAL_DISK');
     const deps2: MediaDeps = { ...deps, storage: async () => wiped };
-    expect((await mediaFileHandler(new Request('https://x.test/m'), deps2, lost[0]!.storageKey.split('/'))).status).toBe(404);
+    // PR 764: asked for at its address, the lost picture is drawn again on the spot: 200, never a 404
+    expect((await mediaFileHandler(new Request('https://x.test/m'), deps2, lost[0]!.storageKey.split('/'))).status).toBe(200);
     const fixed = await repairPracticePhotos(deps2, S, {});
-    expect(fixed.repaired).toBe(2);
-    for (const r of lost) expect(await wiped.head(r.storageKey), r.storageKey).not.toBeNull();
+    expect(fixed.repaired).toBe(1);
+    // (a legacy capital-letter row is renamed to its lower-case size when it is made again, so look at the rows as they are now)
+    for (const r of await db.mediaRendition.findMany({ where: { storeId: S, asset: { folder: 'practice' } }, select: { storageKey: true } })) expect(await wiped.head(r.storageKey), r.storageKey).not.toBeNull();
     expect((await mediaFileHandler(new Request('https://x.test/m'), deps2, lost[0]!.storageKey.split('/'))).status).toBe(200);
     expect((await repairPracticePhotos(deps2, S, {})).repaired).toBe(0);
     // an old run left a picture without its files and the product already points at it: the next step puts them back first

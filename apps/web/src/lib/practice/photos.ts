@@ -429,3 +429,33 @@ export async function repairPracticePhotos(
   }
   return { checked: rows.length, repaired, next: rows.length === batch ? rows[rows.length - 1]!.id : null };
 }
+
+/**
+ * PR 764 — a practice size asked for at its address whose file is not in storage (an older run, a lost disk): the picture
+ * is drawn again, put back under its own key and its sizes are made again, then the size asked for is returned from its
+ * (now current, lower-case) record. Only a practice picture is ever healed; anything else, or a picture that cannot be
+ * drawn again to the same bytes, gives null (the route answers 404). Safe to repeat.
+ */
+export async function healPracticeRendition(
+  deps: MediaDeps,
+  key: string,
+): Promise<{ body: Uint8Array; contentType: string } | null> {
+  const r = await deps.db.mediaRendition.findFirst({
+    where: { storageKey: key },
+    select: { assetId: true, preset: true, format: true, asset: { select: { id: true, storeId: true, storage: true, storageKey: true, originalFileName: true, checksumSha256: true, folder: true, archivedAt: true, isOriginal: true } } },
+  });
+  const a = r?.asset;
+  if (!r || !a || a.archivedAt || a.folder !== PRACTICE_MEDIA_FOLDER || !a.isOriginal) return null;
+  const storage = await deps.storage(a.storeId, a.storage);
+  if (storageIsPerProcess(storage)) return null;
+  const d = drawingOfName(a.originalFileName);
+  if (!d) return null;
+  const body = await drawingPng(d.kind, d.hex, d.view);
+  if (createHash("sha256").update(body).digest("hex") !== a.checksumSha256) return null;
+  await storage.put(a.storageKey, body, "image/png");
+  await renderAsset(deps, a.id, { force: true });
+  const now = await deps.db.mediaRendition.findUnique({ where: { assetId_preset_format: { assetId: r.assetId, preset: r.preset, format: r.format } }, select: { storageKey: true } });
+  if (!now || !isRenditionKey(now.storageKey)) return null;
+  const f = await storage.get(now.storageKey);
+  return f ? { body: f.body, contentType: `image/${r.format}` } : null;
+}

@@ -62,9 +62,15 @@ export function downloadKey(o: { storeId: number; assetId: string; slug: string;
   return `${storeDir(o.storeId)}/w/${o.assetId}/${o.slug}-download.${o.hash}.jpg`;
 }
 
-/** Only renditions are public. Originals and download copies are never served under their storage key. */
+/**
+ * Only renditions are public. Originals and download copies are never served under their storage key.
+ * PR 764: the name part may hold capital letters. Files made before PR 728 carry a colour code in capitals
+ * (`practice-polo-F5F5F5-front-card.<hash>.avif`) and their rows are already in the database; refusing them was a 404
+ * on every live page right after a deploy. New files are still named in lower case (`slugOfKey`). The route looks the
+ * key up in the library first, so only a recorded rendition is ever served; the letters allowed add no way to leave the folder.
+ */
 export function isRenditionKey(key: string): boolean {
-  return /^media\/s\d+\/r\/[0-9a-f-]{36}\/[a-z0-9-]+\.[0-9a-f]{12}\.(avif|webp|jpg)$/.test(key);
+  return /^media\/s\d+\/r\/[0-9a-f-]{36}\/[A-Za-z0-9-]+\.[0-9a-f]{12}\.(avif|webp|jpg)$/.test(key);
 }
 
 /** The slug part of an original's key (`…/<hash16>-<slug>.<ext>`). */
