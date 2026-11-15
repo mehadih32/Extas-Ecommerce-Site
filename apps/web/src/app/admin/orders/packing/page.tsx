@@ -106,6 +106,9 @@ export default async function PackPage({ searchParams }: Props) {
     sh.shipChips(sd, who, { ...(from ? { from } : {}), ...(to ? { to } : {}), docs: docsFilter }),
     packingSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx }),
   ]);
+  // PR 813 (prototype v5): the Booked chip's four figures
+  const onBooked = step === 'pick' && docsFilter === 'noSticker';
+  const booked = onBooked ? await sh.bookedFigures(sd, who, { ...(from ? { from } : {}), ...(to ? { to } : {}), docs: docsFilter }) : null;
   // PR 410: the documents an order has, in words (B&W: words, never a colour)
   const docsLine = (x: sh.PackDocs) => {
     const have = [
@@ -247,6 +250,26 @@ export default async function PackPage({ searchParams }: Props) {
         <b>{t(d, 'ful.pack.summary')}</b> {t(d, 'ful.picking.sheet.counts', { orders: n(picking.summary.orders), pieces: n(picking.summary.pieces), lines: n(picking.summary.lineItems) })} ·{' '}
         {t(d, 'ful.picking.sheet.categories', { list: picking.summary.categories.map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—' })}
       </p>
+      {booked ? (
+        <div className="a2-kpis a2-mt12" data-testid="ship-booked-kpis">
+          {(
+            [
+              ['stickers', n(booked.stickers), t(d, 'ful.pack.kpi.stickersNote')],
+              ['pieces', n(booked.pieces), picking.summary.categories.slice(0, 3).map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—'],
+              ['short', n(booked.short), booked.firstShort ?? t(d, 'ful.pack.kpi.shortNone')],
+              ['problems', n(booked.problems), t(d, 'ful.pack.kpi.problemsNote')],
+            ] as const
+          ).map(([id, value, note]) => (
+            <div key={id} className="a2-card a2-kpi" data-testid={`ship-kpi-${id}`}>
+              <div className="a2-kl">{t(d, `ful.pack.kpi.${id}`)}</div>
+              <div className="a2-kv">{value}</div>
+              <div className="a2-kf">
+                <span className="a2-kn">{note}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <form className="a2-card tight pf-form a2-mt12" method="get" action={HERE} role="search" aria-label={t(d, 'ful.pack.filter.title')} data-testid="pack-filter">
         <input type="hidden" name="step" value={step} />
         <label className="a2-xs">
