@@ -163,7 +163,7 @@ describe('the row’s chips', () => {
     expect(sels.map((s) => s.name)).toEqual(['range', 'status', 'payment', 'source', 'risk', 'section', 'sort']);
     expect(sels.find((s) => s.name === 'risk')).toMatchObject({ value: 'high', options: [{ value: 'high', label: 'High' }] });
     expect(sels.find((s) => s.name === 'section')!.options.map((o) => o.value)).toEqual([...RISK_SECTIONS]);
-    expect(sels.find((s) => s.name === 'sort')!.options).toEqual([{ value: 'risk', label: 'Lowest courier score first (highest risk)' }]);
+    expect(sels.find((s) => s.name === 'sort')!.options.map((o) => o.value)).toEqual(['old', 'value', 'risk']); // PR 771: the prototype's sorts
     expect(sectionSummary(view('en'), { section: 'high', previous: 'watch', because: ['refusals'], review: true })).toBe('High risk · because: ' + t(adminDicts.en, 'orders.risk.sig.refusals') + ' · waits for a person · was Watch');
     expect(sectionSummary(view('en'), {})).toBeNull();
     expect(signalDetail(view('en'), { key: 'orderPieces', weight: 15, values: { pieces: 6, atLeast: 4 } } as never, 'BDT')).toBe('6 pieces (from 4)');

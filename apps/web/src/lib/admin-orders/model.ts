@@ -63,6 +63,38 @@ export const RET_TONE: Readonly<Record<string, Tone>> = {
 /** A courier booking that no longer holds the parcel (the order is not "booked", D5). */
 export const UNBOOKED_SHIPMENT: ReadonlySet<string> = new Set(['BOOKING_FAILED', 'CANCELLED']);
 
+/** PR 783 (prototype v5 parity, m-orders.js `S7`): the eight steps drawn on an order page, in order (words: `orders.view.<id>`). */
+export const ORDER_STEPS = ['new', 'processing', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid'] as const;
+
+/**
+ * Where an order is on the eight steps (the index into ORDER_STEPS), or -1 for an order that left the road (cancelled, returned,
+ * a draft). `booked` is a courier booking that still holds the parcel; `needsPerson` is a new order a person still has to
+ * sort out (waiting for advance, on hold, in review); `settled` is a delivered order with nothing left to collect.
+ */
+export function orderStep(status: string, o: { booked: boolean; needsPerson: boolean; settled: boolean }): number {
+  const at = (k: (typeof ORDER_STEPS)[number]) => ORDER_STEPS.indexOf(k);
+  switch (status) {
+    case 'PLACED':
+      return o.needsPerson ? at('processing') : at('new');
+    case 'AWAITING_ADVANCE':
+    case 'ON_HOLD':
+      return at('processing');
+    case 'CONFIRMED':
+    case 'PROCESSING':
+      return o.booked ? at('booked') : at('confirmed');
+    case 'PACKED':
+      return at('packed');
+    case 'HANDED_OVER':
+    case 'IN_TRANSIT':
+      return at('handedOver');
+    case 'DELIVERED':
+    case 'PARTIALLY_DELIVERED':
+      return o.settled ? at('paid') : at('delivered');
+    default:
+      return -1;
+  }
+}
+
 /**
  * The list pages of the Orders section and the views each shows (in this order; the first is the default). PR 541
  * (SIM-F-020): "Prepaid" — paid orders nothing flagged, confirmed without a call — beside the call queue.
@@ -70,7 +102,14 @@ export const UNBOOKED_SHIPMENT: ReadonlySet<string> = new Set(['BOOKING_FAILED',
 export const LIST_PAGES = {
   // PR 660 (CN-048): "Processing" (a view, not a status) and "Cancelled" join the saved views of All orders; the Processing
   // tab (the address stays /admin/orders/confirm) opens on the Processing view, with the old queues as its chips.
-  all: { base: '/admin/orders', views: ['all', 'processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished', 'cancelled'] },
+  all: {
+    base: '/admin/orders',
+    views: ['all', 'new', 'processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished', 'cancelled', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned'],
+    // PR 783 (prototype v5 parity, m-orders.js CHIPS + CHIPS2): the chips drawn on All orders, in the prototype's order and
+    // words. The other views above stay valid (the Processing tab, the tiles, the dashboard and old links open them).
+    chips: ['all', 'new', 'processing', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid'],
+    chips2: ['returned', 'cancelled'],
+  },
   confirm: { base: '/admin/orders/confirm', views: ['processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'inReview', 'cancelRequests'] },
 } as const;
 
