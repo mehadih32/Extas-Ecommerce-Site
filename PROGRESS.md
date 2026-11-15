@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 15 Nov 2026 — PR 727 filed: every admin menu page draws its section's tab bar (branch `claude/round1`, local, NOT pushed)
+
+From the nav-fix branch: 24 pages drew no tab bar, three gave it the wrong key, two courier pages jumped into Delivery's menu; now all draw it, with `tools/nav-audit.mjs`, the `nav-audit` workflow and `nav-pages.test.ts`. Register row 727, S28 69/69, totals 727 PRs / 717 active / 694 built. The same session fixed CI findings of the combined PR: Admin map line and words-list entry for Brand & menus, the demo makes 4 combos (the fifth names styles the 72 do not hold), the rich test's ad-row threshold, and 44 px tap targets on Brand & menus and Settings › Roles.
+
 ## 15 Nov 2026 — CN-053: PR 646 cancelled, PR 587 done (owner decisions; branch `claude/round1`, local, NOT pushed)
 
 PR 646 (Lumen section: AI Center) is cancelled by the owner and no longer counts as active: S00 is 46/46. PR 587 (WordPress migration) is done: the owner switched `seo.redirects.wordpressMapLive` on and the 45 old addresses answer 301 (`/shop` and `/contact` were deliberately dropped by the owner). S19 is 19/19, Launch 330/330, totals 726 PRs / 716 active / 693 built. Register, README, `docs/stages/`, `docs/LAUNCH-TRACK.md`, `docs/owner/PARKED.md` and `bn.json` are updated; the stage generator now treats a Build status row with state "cancelled …" as not built and not counted.
