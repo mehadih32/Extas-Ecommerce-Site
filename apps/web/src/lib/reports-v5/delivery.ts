@@ -99,6 +99,8 @@ export interface DeliveryFacts {
     rt: number;
     success: number;
     days: number | null;
+    /** PR 863: the return charges of the cell's returned parcels, from each courier's rate card of the day (a parcel with no charge entered adds 0). */
+    returnMinor: number;
     /** PR 854: the cell's parcels (newest first), for the row's drawer. */
     orders: {
       id: string;
@@ -125,6 +127,7 @@ const count = <T>(xs: readonly T[], key: (x: T) => string) => {
 /** Pure part: everything the page draws that comes from the parcel rows alone. */
 export function deliveryFromRows(
   rows: readonly ParcelRow[],
+  returnCharge: ReadonlyMap<string, number> = new Map(),
 ): Pick<
   DeliveryFacts,
   | "sent"
@@ -197,6 +200,9 @@ export function deliveryFromRows(
         rt: os.length - d.length,
         success: pct(d.length, os.length),
         days: avgDays(d),
+        returnMinor: os
+          .filter((p) => p.status === "RETURNED")
+          .reduce((n, p) => n + (returnCharge.get(p.id) ?? 0), 0),
         orders: [...os]
           .sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime())
           .map((p) => ({
@@ -225,6 +231,38 @@ export function deliveryFromRows(
       .sort((a, b) => b.rate - a.rate),
     grid,
   };
+}
+
+/** One line of a courier's rate card: the return charge for a zone from a day on. */
+export interface ReturnCard {
+  courierId: string;
+  zoneKey: string;
+  returnChargeMinor: number | null;
+  validFrom: Date;
+  validTo: Date | null;
+}
+
+/** The return charge of each returned parcel: its courier's rate-card line for the parcel's zone in force the day it was placed (the newest start wins). */
+export function returnCharges(
+  rows: readonly ParcelRow[],
+  cards: readonly ReturnCard[],
+): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const p of rows) {
+    if (p.status !== "RETURNED") continue;
+    const card = cards
+      .filter(
+        (c) =>
+          c.courierId === p.courierId &&
+          c.zoneKey === p.zoneKey &&
+          c.validFrom.getTime() <= p.placedAt.getTime() &&
+          (!c.validTo || c.validTo.getTime() >= p.placedAt.getTime()),
+      )
+      .sort((a, b) => b.validFrom.getTime() - a.validFrom.getTime())[0];
+    if (card?.returnChargeMinor != null)
+      out.set(p.id, card.returnChargeMinor);
+  }
+  return out;
 }
 
 /** The parcels placed in the span that a courier took, with their courier, zone and district. */
@@ -317,7 +355,33 @@ export async function loadDelivery(
   scope: { isPractice?: false } = {},
 ): Promise<{ facts: DeliveryFacts; rows: ParcelRow[] }> {
   const rows = await loadParcels(db, tz, from, to, scope);
-  const base = deliveryFromRows(rows);
+  const courierIds = [...new Set(rows.map((p) => p.courierId))];
+  const cardRows = courierIds.length
+    ? await db.courierRateCard.findMany({
+        where: { storeId: S, courierAccountId: { in: courierIds } },
+        select: {
+          courierAccountId: true,
+          zoneKey: true,
+          returnChargeMinor: true,
+          validFrom: true,
+          validTo: true,
+        },
+        take: 20_000, // hardcode-ok: a guard on the list length
+      })
+    : [];
+  const base = deliveryFromRows(
+    rows,
+    returnCharges(
+      rows,
+      cardRows.map((c) => ({
+        courierId: c.courierAccountId,
+        zoneKey: c.zoneKey,
+        returnChargeMinor: c.returnChargeMinor,
+        validFrom: c.validFrom,
+        validTo: c.validTo,
+      })),
+    ),
+  );
   const finishedIds = rows.filter(finished).map((p) => p.id);
   const retIds = rows.filter((p) => p.status === "RETURNED").map((p) => p.id);
   const partIds = rows

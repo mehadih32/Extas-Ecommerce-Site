@@ -3,7 +3,7 @@
 // the door (not the shop's fault) and the exceptions on the way — per courier, per courier and zone, per district — the
 // parcels past their promise now, and the RTO cost book by district, campaign, product, courier and reason (off until
 // the owner switches it on; the shop's own returned parcels only, never sample rows; a part not entered is named).
-// `?days=7|30|90` (default 30), `?by=` the book's dimension. Seeing needs `reports.read`; the book's switch needs
+// PR 863: the shared period bar of the other reports (`?p=`, `?from=&to=`, `?cmp=`), `?by=` the book's dimension. Seeing needs `reports.read`; the book's switch needs
 // `settings.write` (the API checks again). The fraud report of REP-06 is PR 164's.
 // PR 564: the charge mismatch log — the parcels a courier charged as another band than the customer paid for, per month
 // (cases, paid less, paid more) and the latest cases; a record only, behind its own switch (off as shipped).
@@ -11,12 +11,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MOTHER_STORE_ID } from "@extas/db/client";
-import { ymdIn } from "@extas/metrics";
+import { daysPeriod } from "@extas/metrics";
 import * as sh from "@extas/shipping";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import { SummaryTiles } from "@/components/admin/lumen/SummaryTiles";
+import { ReportBar } from "@/components/admin/reports/ReportBar";
 import { ReportDeliveryProto } from "@/components/admin/reports/ReportDeliveryProto";
+import "@/components/admin/reports/report-bar.css";
 import { loadDelivery } from "@/lib/reports-v5/delivery";
+import { makeFmt } from "@/lib/reports-v5/fmt";
+import { loadBase, loadViews } from "@/lib/reports-v5/load";
 import { SwitchButton } from "@/components/admin/courier-report/Parts";
 import { PerfTable, pct } from "@/components/admin/courier-report/PerfTable";
 import { formatMoney, moneyOf } from "@/components/admin/products/model";
@@ -41,7 +45,6 @@ export const dynamic = "force-dynamic";
 
 const KEY = "reportsDelivery";
 const HERE = "/admin/reports/delivery";
-const PERIODS = [7, 30, 90] as const;
 const DISTRICTS_SHOWN = 15;
 const LATE_SHOWN = 20;
 const MISMATCH_MONTHS = 6;
@@ -58,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DeliveryReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ days?: string; by?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([
@@ -84,11 +87,13 @@ export default async function DeliveryReportPage({
     );
   const c = (k: string, v?: Record<string, string | number>) =>
     t(d, `courierReport.${k}`, v);
-  const days = (PERIODS as readonly number[]).includes(Number(sp.days))
-    ? Number(sp.days)
-    : 30;
-  const by = (sh.RTO_DIMENSIONS as readonly string[]).includes(sp.by ?? "")
-    ? (sp.by as sh.RtoDimension)
+  // PR 863: the shared period bar of the other reports (Today … 6 months, Custom dates, compare, saved views, CSV, Schedule)
+  const rb = await loadBase(access.deps, sp);
+  const q = rb.period.q;
+  const cmp = sp.cmp !== "0";
+  const byIn = typeof sp.by === "string" ? sp.by : "";
+  const by = (sh.RTO_DIMENSIONS as readonly string[]).includes(byIn)
+    ? (byIn as sh.RtoDimension)
     : "district";
   const who: sh.Who = {
     actor: access.guard.actor,
@@ -96,17 +101,22 @@ export default async function DeliveryReportPage({
     ctx: access.guard.ctx,
   };
   const sd = await shippingDeps(access.deps);
-  const to = new Date();
-  const from = new Date(to.getTime() - days * 86_400_000);
+  const span = daysPeriod(q.from, q.to, view.timeZone);
+  const from = span.from;
+  const to = span.to;
+  const days = Math.max(
+    1,
+    Math.round((to.getTime() - from.getTime()) / 86_400_000), // hardcode-ok: milliseconds in a day
+  );
   const lang = view.lang === "bn" ? "bn" : "en";
   const at = { storeId: MOTHER_STORE_ID };
-  const [proto, perf, book, bookSwitch, currency, mis, misSwitch] =
+  const [proto, perf, book, bookSwitch, currency, mis, misSwitch, views] =
     await Promise.all([
       loadDelivery(
         access.deps.db,
         view.timeZone,
-        ymdIn(from, view.timeZone),
-        ymdIn(to, view.timeZone),
+        q.from,
+        q.to,
         to,
         await practiceScope(access.deps),
       ),
@@ -120,6 +130,7 @@ export default async function DeliveryReportPage({
         lang,
       }),
       access.deps.resolver.value("delivery.chargeMismatch", at),
+      loadViews(access, "delivery"),
     ]);
   const canSwitch = access.guard.permissions?.has("settings.write") ?? false;
   const money = moneyOf(currency, view.locale);
@@ -138,8 +149,17 @@ export default async function DeliveryReportPage({
     year: "numeric",
     numberingSystem: "latn",
   });
-  const href = (o: { days?: number; by?: string }) =>
-    `${HERE}?days=${o.days ?? days}&by=${o.by ?? by}`;
+  // the book's tabs keep the period (and the compare switch) of the bar above
+  const href = (o: { by?: string }) => {
+    const u = new URLSearchParams();
+    for (const k of ["p", "from", "to", "cmp"]) {
+      const v = sp[k];
+      if (typeof v === "string") u.set(k, v);
+    }
+    u.set("by", o.by ?? by);
+    return `${HERE}?${u.toString()}`;
+  };
+  const rf = makeFmt(view.locale, rb.currency);
   const tot = perf.total;
   const moreDistricts = perf.byDistrict.length > DISTRICTS_SHOWN;
   const moreLate = perf.lateNow.count > perf.lateNow.rows.length;
@@ -199,18 +219,23 @@ export default async function DeliveryReportPage({
         sub={c("sub")}
       />
       <SectionTabs view={view} current={KEY} />
-      <nav className="a2-views a2-mt12" aria-label={c("period.label")}>
-        {PERIODS.map((p) => (
-          <Link
-            key={p}
-            className={`a2-view cr-tap${p === days ? " on" : ""}`}
-            href={href({ days: p })}
-            aria-current={p === days ? "page" : undefined}
-          >
-            {c(`period.d${p}`)}
-          </Link>
-        ))}
-      </nav>
+      <ReportBar
+        dict={d}
+        here={HERE}
+        id="rd"
+        from={q.from}
+        to={q.to}
+        today={rb.today}
+        p={typeof sp.p === "string" ? sp.p : undefined}
+        cmp={cmp}
+        before={rb.before}
+        reportKey="delivery"
+        views={views}
+        day={rf.dayShort}
+        csv={`/api/admin/reports/export/couriers?from=${q.from}&to=${q.to}`}
+        notes={rb.period.notes}
+        limitDays={rb.limits.maxDays}
+      />
       <ReportDeliveryProto
         f={proto.facts}
         c={c}

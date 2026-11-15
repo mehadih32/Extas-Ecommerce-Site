@@ -283,7 +283,8 @@
       "gridDrawerSub": "{n} parcels, newest first",
       "more": "Show all {n}",
       "less": "Show fewer",
-      "close": "Close"
+      "close": "Close",
+      "colReturnCost": "Return cost"
     }
   }
 }

@@ -1,6 +1,6 @@
 // PR 797 — the Delivery & returns report's sums from the parcel rows: success, average days, by courier, zone, district and the grid.
 import { describe, expect, it } from "vitest";
-import { deliveryFromRows, type ParcelRow } from "./delivery";
+import { deliveryFromRows, returnCharges, type ParcelRow } from "./delivery";
 
 const day = (n: number) => new Date(Date.UTC(2026, 10, n));
 const p = (id: string, over: Partial<ParcelRow> = {}): ParcelRow => ({
@@ -91,5 +91,46 @@ describe("Delivery report sums (PR 797)", () => {
     expect(
       deliveryFromRows([p("x", { status: "IN_TRANSIT", deliveredAt: null })]),
     ).toMatchObject({ finished: 0, success: null, avgDays: null });
+  });
+});
+
+describe("Return cost in the courier and zone grid (PR 863)", () => {
+  const card = (over: Record<string, unknown> = {}) => ({
+    courierId: "c1",
+    zoneKey: "dhaka",
+    returnChargeMinor: 6000,
+    validFrom: day(1),
+    validTo: null as Date | null,
+    ...over,
+  });
+  const rows = [
+    p("a"),
+    p("r1", { status: "RETURNED", deliveredAt: null }),
+    p("r2", { status: "RETURNED", deliveredAt: null }),
+    p("r3", { courierId: "c2", courier: "Steadfast", status: "RETURNED", deliveredAt: null }),
+  ];
+  it("takes each returned parcel's charge from its courier and zone card of the day", () => {
+    const m = returnCharges(rows, [card()]);
+    expect([...m.entries()]).toEqual([
+      ["r1", 6000],
+      ["r2", 6000],
+    ]);
+  });
+  it("uses the newest card in force and ignores a card that had ended or not yet begun", () => {
+    const late = [p("r1", { status: "RETURNED", deliveredAt: null, placedAt: day(5) })];
+    const m = returnCharges(late, [
+      card({ returnChargeMinor: 5000 }),
+      card({ returnChargeMinor: 7000, validFrom: day(3) }),
+      card({ returnChargeMinor: 9000, validFrom: day(20) }),
+      card({ returnChargeMinor: 4000, validFrom: day(1), validTo: new Date(Date.UTC(2026, 9, 1)) }),
+    ]);
+    expect(m.get("r1")).toBe(7000);
+  });
+  it("a parcel with no charge entered adds nothing, and the grid sums per cell", () => {
+    const f = deliveryFromRows(rows, returnCharges(rows, [card()]));
+    const cell = f.grid.find((g) => g.courierId === "c1")!;
+    expect(cell.returnMinor).toBe(12000);
+    expect(f.grid.find((g) => g.courierId === "c2")!.returnMinor).toBe(0);
+    expect(deliveryFromRows(rows).grid.every((g) => g.returnMinor === 0)).toBe(true);
   });
 });
