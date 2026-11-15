@@ -241,6 +241,11 @@ export async function handoverRoute(request: Request, deps: AdminDeps | null, pa
     if (m !== 'POST') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.read', async (x) => json({ ok: true, ...(await sh.moveToBackup(x.deps, x.who, await body(request))) }));
   }
+  // PR 827 (prototype v5): "Ask courier" / "Ask to send back" are written on the order's timeline and in the audit log
+  if (path[0] === 'ask') {
+    if (m !== 'POST') return fail(405, 'method-not-allowed');
+    return guarded(request, deps, 'fulfilment.handover', async (x) => json({ ok: true, ...(await sh.askCourier(x.deps, x.who, await body(request))) }));
+  }
   if (path[0] === 'copy') {
     if (m !== 'POST') return fail(405, 'method-not-allowed');
     return guarded(request, deps, 'fulfilment.handover', async (x) => {
