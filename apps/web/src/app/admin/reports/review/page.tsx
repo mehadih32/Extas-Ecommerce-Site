@@ -15,6 +15,8 @@ import {
   type SummaryTile,
 } from "@/components/admin/lumen/SummaryTiles";
 import { PrintButton } from "@/components/admin/reports/PrintButton";
+import { scheduleTexts } from "@/components/admin/reports/ReportBar";
+import { ScheduleButton } from "@/components/admin/reports/ScheduleButton";
 import { TelegramButton } from "@/components/admin/reports/TelegramButton";
 import { ReportTable } from "@/components/admin/reports/ReportParts";
 import "@/components/admin/reports/report-bar.css";
@@ -372,6 +374,12 @@ export default async function MonthlyReviewPage({
             >
               {c("everyMonth")}
             </Link>
+            <ScheduleButton
+              report="review"
+              name={c("metaTitle")}
+              texts={scheduleTexts(d)}
+              testId="rp-schedule"
+            />
             <TelegramButton
               testId="rp-tg"
               disabledReason={
