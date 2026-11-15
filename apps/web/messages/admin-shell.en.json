@@ -93,6 +93,7 @@
       "settings": {
         "store": "Business settings",
         "policies": "Policies & texts",
+        "checkout": "Checkout",
         "practice": "Practice data",
         "keys": "System (owner only)",
         "erp": "ERP link",
