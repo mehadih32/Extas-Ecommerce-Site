@@ -8,19 +8,22 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
-import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import Link from 'next/link';
+import { PageHead, SectionTabs, ShellState, shellViewer } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { LEGAL_FIELD_IDS, legalMaxLength, storeView } from '@/lib/admin-store/service';
+import { storeWhere } from '@/lib/admin-store/where';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-store.bn.json';
 import en from '../../../../../messages/admin-store.en.json';
 import '../settings.css';
 import '../../settings-cards.css';
+import './where.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +73,8 @@ export default async function StorePage() {
   const fields: FieldsCardField[] = LEGAL_FIELD_IDS.map((f) => ({ kind: 'text', path: f, label: s(`legal.${f}`), help: helpOf[f], max: legalMaxLength(f) }));
   const card = v.cards.legal;
   const filled = LEGAL_FIELD_IDS.length - v.missing.length;
+  // PR 781 (prototype v5): the prototype's other Store details cards open where their values live
+  const where = storeWhere(await shellViewer());
 
   return (
     <div className="a2-z lm-st" data-lm-ready="" data-testid="store-page">
@@ -94,6 +99,28 @@ export default async function StorePage() {
       ) : null}
 
       <FieldsCard url={API} screen={{ key: card.key, value: card.value, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="store-legal" />
+
+      {where.length ? (
+        <section className="a2-mt12" aria-labelledby="store-where-h" data-testid="store-where">
+          <h2 className="a2-h2" id="store-where-h">
+            {s('where.h')}
+          </h2>
+          <p className="a2-subt">{s('where.d')}</p>
+          <ul className="st-where">
+            {where.map((c) => (
+              <li key={c.id}>
+                <Link className="a2-card st-wc" href={c.href} data-testid={`store-where-${c.id}`}>
+                  <span className="st-wt">{s(`where.${c.id}.t`)}</span>
+                  <span className="st-wd">{s(`where.${c.id}.d`)}</span>
+                  <span className="st-wg" aria-hidden="true">
+                    {s('where.open')} →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

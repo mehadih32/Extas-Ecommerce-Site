@@ -1,7 +1,7 @@
 {
   "erpLink": {
     "metaTitle": "ERP link",
-    "title": "ERP link",
+    "title": "ERP connection",
     "sub": "This store's own link to its ERP company: its keys, what was synced, what is waiting, the balance and the switch to the new ERP contract.",
     "storePick": "Store",
     "model": {

@@ -1,0 +1,9 @@
+/* PR 781 — Store details: the cards that open where the values live. Lumen tokens only; targets 44 px; no sideways scroll at 390 px. */
+.st-where { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.st-where > li { min-width: 0; display: flex; }
+.st-wc { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; min-height: 44px; padding: 14px; border: 1px solid var(--lm-ln); border-radius: 14px; background: var(--lm-sf); color: var(--lm-ink); text-decoration: none; }
+.st-wc:hover { border-color: var(--lm-ac-ink); }
+.st-wc:focus-visible { outline: 2px solid var(--lm-focus); outline-offset: 2px; }
+.st-wt { font-weight: 600; overflow-wrap: anywhere; }
+.st-wd { font-size: 13px; color: var(--lm-ink2); overflow-wrap: anywhere; }
+.st-wg { margin-top: auto; padding-top: 6px; font-size: 13px; color: var(--lm-ac-ink); }
