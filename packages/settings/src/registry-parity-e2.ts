@@ -18,6 +18,11 @@ export const aiDigestSchema = z.object({ on: z.boolean(), time: hhmm, telegram: 
 export type AiDigestSettings = z.output<typeof aiDigestSchema>;
 export const AI_DIGEST_DEFAULT: AiDigestSettings = { on: false, time: '08:00', telegram: true, email: false }; // hardcode-ok: shipped off, editable on the Approvals page
 
+/** The line staff and the shop see while AI is off, in both languages; empty = the built-in words (PR 819). */
+export const AI_OFF_TEXT_MAX = 300; // hardcode-ok: technical bound
+export const aiOffTextSchema = z.object({ en: text(AI_OFF_TEXT_MAX), bn: text(AI_OFF_TEXT_MAX) }).strict();
+export type AiOffTextSettings = z.output<typeof aiOffTextSchema>;
+
 /** A technical bound (a save may not become a book), not a business number. */
 export const TRAINING_OFF_MAX = 400; // hardcode-ok: technical bound
 export const aiTrainingOffSchema = z.object({ ids: z.array(z.string().trim().min(1).max(64)).max(TRAINING_OFF_MAX) }).strict();
@@ -85,6 +90,16 @@ export const parityE2Settings = {
     default: AI_DIGEST_DEFAULT,
     labelKey: 'ai.digest.label',
     helpKey: 'ai.digest.help',
+    sortOrder: 819,
+    version: 819,
+  }),
+  'ai.offText': setting({
+    ...base,
+    group: 'ai',
+    schema: aiOffTextSchema,
+    default: { en: '', bn: '' },
+    labelKey: 'ai.offText.label',
+    helpKey: 'ai.offText.help',
     sortOrder: 819,
     version: 819,
   }),

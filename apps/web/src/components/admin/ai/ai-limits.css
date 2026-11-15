@@ -7,6 +7,4 @@
 .adm2 .ai-lim-bar > div { height: 100%; }
 .adm2 .ai-lim-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 .adm2 .ai-lim-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 44px; }
-.adm2 .ai-check { display: flex; align-items: center; gap: 8px; min-height: 44px; overflow-wrap: anywhere; }
-.adm2 .ai-check input { width: 20px; height: 20px; flex: none; }
 @media (max-width: 900px) { .adm2 .ai-lim-grid { grid-template-columns: minmax(0, 1fr); } }

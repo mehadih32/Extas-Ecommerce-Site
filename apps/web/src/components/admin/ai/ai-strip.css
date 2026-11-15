@@ -7,3 +7,20 @@
 .adm2 .ai-strip-h { flex: 1 1 280px; min-width: 0; overflow-wrap: anywhere; }
 .adm2 .ai-never { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .adm2 .ai-never li { display: flex; gap: 10px; align-items: center; justify-content: space-between; min-height: 44px; flex-wrap: wrap; overflow-wrap: anywhere; }
+
+/* PR 819 — Approvals: "Waiting / Decided" and one chip per kind (prototype v5 m-ai.js), the digest card, and the Edit box of the AI-off text. */
+.adm2 .ai-ap-filter { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+.adm2 .ai-ap-seg, .adm2 .ai-ap-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm2 .ai-ap-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--lm-ln); color: var(--lm-ink); text-decoration: none; overflow-wrap: anywhere; }
+.adm2 .ai-ap-chip.on { background: var(--lm-ac); border-color: var(--lm-ac); color: var(--lm-ac-ink); }
+.adm2 .ai-ap-chip-n { font-size: 12px; opacity: 0.8; }
+.adm2 .ai-dg { display: flex; flex-direction: column; gap: 12px; }
+.adm2 .ai-dg-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 44px; }
+.adm2 .ai-dg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.adm2 .ai-fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adm2 .ai-check { display: flex; align-items: center; gap: 8px; min-height: 44px; overflow-wrap: anywhere; }
+.adm2 .ai-check input { width: 20px; height: 20px; flex: none; }
+.adm2 .ai-dg-pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; padding: 12px; border-radius: 10px; background: var(--lm-chip); font: inherit; }
+.adm2 .ai-dg-prev summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; }
+.adm2 .ai-off-form { margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-width: 520px; }
+.adm2 .ai-off-form textarea { width: 100%; }
