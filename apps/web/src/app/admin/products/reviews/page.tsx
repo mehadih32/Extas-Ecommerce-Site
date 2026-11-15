@@ -18,6 +18,7 @@ import * as cat from '@extas/catalogue';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatNumber, nameIn } from '@/components/admin/products/model';
 import { ReviewActions } from '@/components/admin/reviews/ReviewActions';
+import { ReviewChips } from '@/components/admin/reviews/ReviewChips';
 import { ReviewImport } from '@/components/admin/reviews/ReviewImport';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -126,6 +127,12 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
     <div className="a2-z" data-testid="product-reviews" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'rev.title')} sub={t(d, 'rev.sub')} />
       <SectionTabs view={view} current={KEY} />
+      <ReviewChips
+        current={tab === 'HIDDEN' ? 'hidden' : 'reviews'}
+        aria={t(d, 'rev.chip.aria')}
+        labels={{ questions: t(d, 'rev.chip.questions'), reviews: t(d, 'rev.chip.reviews'), hidden: t(d, 'rev.chip.hidden'), faqs: t(d, 'rev.chip.faqs') }}
+        counts={{ reviews: n(desk.published), hidden: n(list.counts.HIDDEN) }}
+      />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'rev.readOnly')}</p> : null}
       <div className="a2-kpis a2-mt12" data-testid="review-kpis">
         {kpis.map((k) => (
