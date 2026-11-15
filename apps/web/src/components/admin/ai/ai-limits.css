@@ -1,0 +1,12 @@
+/* PR 818 — AI Center › Costs & limits (prototype v5 m-ai.js renderCosts). Lumen tokens only; wraps, never cuts text; taps are 44px. */
+.adm2 .ai-lim-meter { display: flex; flex-direction: column; gap: 8px; }
+.adm2 .ai-lim-top { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+.adm2 .ai-lim-v { font-size: 24px; overflow-wrap: anywhere; }
+.adm2 .ai-lim-bar { height: 8px; border-radius: 4px; background: var(--lm-ln); overflow: hidden; }
+.adm2 .ai-lim-bar.sm { height: 6px; margin-top: 6px; max-width: 120px; }
+.adm2 .ai-lim-bar > div { height: 100%; }
+.adm2 .ai-lim-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.adm2 .ai-lim-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 44px; }
+.adm2 .ai-check { display: flex; align-items: center; gap: 8px; min-height: 44px; overflow-wrap: anywhere; }
+.adm2 .ai-check input { width: 20px; height: 20px; flex: none; }
+@media (max-width: 900px) { .adm2 .ai-lim-grid { grid-template-columns: minmax(0, 1fr); } }
