@@ -75,6 +75,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
   const s = v.state;
   const d = view.dict;
   const e = (key: string, vars?: Record<string, string | number>) => t(d, `erpLink.${key}`, vars);
+  const flow = (view.lang === 'bn' ? bn : en).erpLink.flow;
   const bd = { bk: d.bk as Dict };
   const money = moneyOf(currency as string, view.locale);
   const m = (minor: number | null | undefined) => (minor == null ? '—' : formatMoney(minor, money));
@@ -143,6 +144,46 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
         ) : (
           <p className="a2-sm a2-mute a2-mt6">{e('link.none')}</p>
         )}
+      </section>
+
+      <section className="a2-card a2-mt12" data-testid="erp-link-flow" aria-labelledby="erp-link-flow-h">
+        <h2 className="a2-h4" id="erp-link-flow-h">
+          {e('flow.h')}
+        </h2>
+        <div className="s28-grid a2-mt12">
+          {(
+            [
+              ['toShop', flow.in],
+              ['toErp', flow.out],
+            ] as const
+          ).map(([k, items]) => (
+            <div key={k} data-testid={`erp-link-flow-${k}`}>
+              <div className="a2-pill line">{e(`flow.${k}`)}</div>
+              <ul className="a2-stack a2-mt6">
+                {items.map((x) => (
+                  <li key={x} className="a2-sm">
+                    {x}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="a2-xs a2-mute a2-mt12">
+          {e('flow.erpNode')} ({e('flow.erpSub')}) ⇄ {e('flow.shopNode')} ({e('flow.shopSub')})
+        </p>
+        <div className="a2-note a2-mt12">
+          <ShellIcon name="alert" size={15} />
+          <span>{e('flow.price')}</span>
+        </div>
+        <h3 className="a2-h4 a2-mt12">{e('flow.safeH')}</h3>
+        <ul className="a2-stack a2-mt6" data-testid="erp-link-safety">
+          {flow.safe.map((x) => (
+            <li key={x} className="a2-sm">
+              {x}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div className="a2-mt12" data-testid="erp-link-keys">

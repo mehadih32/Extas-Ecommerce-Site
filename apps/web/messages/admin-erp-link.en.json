@@ -209,6 +209,34 @@
         "queued": "{n} waiting v5 orders",
         "steps": "{n} steps done"
       }
+    },
+    "flow": {
+      "h": "What moves between the ERP and the shop",
+      "erpNode": "Extas ERP",
+      "erpSub": "stock · buying price · warehouse",
+      "shopNode": "The shop",
+      "shopSub": "customers · orders · selling price",
+      "toShop": "ERP → shop",
+      "toErp": "Shop → ERP",
+      "in": [
+        "Products by style code — when you import",
+        "Stock — every hour",
+        "Buying price changes — at once",
+        "Return check results — after the check"
+      ],
+      "out": [
+        "Confirmed orders as sales orders — after the call",
+        "Bill at buying price — parcel to courier",
+        "Returns to check — parcel back",
+        "Payments — when you pay"
+      ],
+      "price": "The selling price is yours: when the ERP changes a buying price, the shop price stays the same and only your margin changes. You get a note.",
+      "safeH": "Safety",
+      "safe": [
+        "Nothing is ever deleted between the two. Mistakes are corrected with a reversing entry.",
+        "If the ERP is down, orders wait and are sent when it is back. None are lost.",
+        "Changing the ERP address or switching to a practice ERP needs your PIN."
+      ]
     }
   }
 }
