@@ -28,3 +28,19 @@
 .adm2 .rp-grid3 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 .adm2 .rp-grid2 { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1100px) { .adm2 .rp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .adm2 .rp-grid3 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+
+/* PR 796 (prototype v5 Reports): donut legend and column chart of the Sales, Customers and Delivery reports. */
+.adm2 .rpd-leg { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; min-width: 0; }
+.adm2 .rpd-leg .rp-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+.adm2 .rpc { display: flex; align-items: flex-end; gap: 4px; height: 150px; margin-top: 12px; }
+.adm2 .rpc-c { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+.adm2 .rpc-c i { display: block; width: 100%; max-width: 28px; border-radius: 5px 5px 0 0; background: var(--lm-ac); min-height: 2px; }
+.adm2 .rpc.c2 .rpc-c i { background: var(--lm-warn); }
+.adm2 .rpc-c span { font-size: 11px; color: var(--lm-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.adm2 .rp-grid3e { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .adm2 .rp-grid3e { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.adm2 .rp-ks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.adm2 .rp-ks > div { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; background: var(--lm-sf); border: 1px solid var(--lm-ln); border-radius: 10px; padding: 7px 11px; font-size: 12.5px; min-width: 0; }
+.adm2 .rp-ks span { color: var(--lm-faint); }
+.adm2 .rpf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.adm2 .rpf select { min-height: 44px; }
