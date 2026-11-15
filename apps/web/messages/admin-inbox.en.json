@@ -627,7 +627,7 @@
       }
     },
     "person": {
-      "h": "Same person",
+      "h": "Other chats (same person)",
       "d": "This person's other chats, on other channels or earlier.",
       "none": "No other chat of this person.",
       "contacts": "Channel accounts: {n}",
@@ -644,8 +644,8 @@
       "h": "Customer",
       "byCustomer": "Found from the chat's customer. Worked out again each time the chat opens.",
       "byPhone": "Found from the chat's number. Worked out again each time the chat opens.",
-      "unknown": "Nobody known yet: no customer and no number on this chat. Set the number under \"Same person\".",
-      "none": "No order for this customer or number yet.",
+      "unknown": "Nobody known yet: no customer and no number on this chat. Set the number under “Other chats (same person)”.",
+      "none": "No orders yet",
       "orders": "Orders",
       "delivered": "Delivered",
       "refused": "Refused at the door",
@@ -658,16 +658,16 @@
       "noBand": "Score",
       "noRisk": "No score yet",
       "noHistory": "Counts and the risk score show only to people who may read customers.",
-      "live": "On the way now",
+      "live": "Live order",
       "liveNone": "No order on its way.",
-      "recent": "Latest orders",
-      "open": "Open customer",
+      "recent": "Orders",
+      "open": "Open Customer 360",
       "exchanges": "Exchanges asked for",
       "notes": "Team notes",
       "pinned": "Pinned"
     },
     "prod": {
-      "button": "Products",
+      "button": "Send order link",
       "h": "Send a product",
       "search": "Search products",
       "searchPh": "Name, SKU or colour…",
@@ -688,7 +688,8 @@
       "notOpened": "not opened yet",
       "ordered": "ordered {number}",
       "add": "Add to bag",
-      "added": "Added to the chat bag."
+      "added": "Added to the chat bag.",
+      "createOrder": "Create order"
     },
     "cart": {
       "h": "Chat bag",
@@ -712,7 +713,7 @@
       "address": "Full address",
       "check": "Check price and stock",
       "checking": "Checking…",
-      "create": "Create order (Cash on Delivery)",
+      "create": "Create order",
       "creating": "Creating…",
       "advance": "Take advance",
       "advanceLine": "The shop's rule asks {amount} ahead for this order, so it is not a Cash on Delivery order. Take advance makes the order, it waits for the advance, and the pay link goes into the chat.",
