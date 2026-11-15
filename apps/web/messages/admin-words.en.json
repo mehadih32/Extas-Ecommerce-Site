@@ -1,12 +1,12 @@
 {
   "wd": {
     "metaTitle": "Words & language · Website",
-    "title": "Words & language",
-    "sub": "Every word the shop shows, in English and Bengali. Change any of them; your word wins over the shop's.",
+    "title": "Shop text",
+    "sub": "Every word customers see — buttons, messages, checkout, invoice, SMS, email — in English and Bengali. Nothing is fixed in the code.",
     "note": "An empty box gives the shop's own word back, so nothing is lost. Words with {name} keep those parts: the shop fills them in. A word you write with a number, a date or \"this week\" is yours to change when it stops being true.",
     "summary": "{total} words · {changed} changed by you · {untr} with Bengali still in English",
     "search": "Search",
-    "searchPh": "A word in English or Bengali, or its key",
+    "searchPh": "Search all text…",
     "where": "Where",
     "everywhere": "Everywhere",
     "show": "Show",

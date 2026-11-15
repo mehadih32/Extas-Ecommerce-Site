@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { requirePermission } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { AnalyticsSub } from '@/components/admin/analytics/AnalyticsSub';
 import { VisitorsScreen } from '@/components/admin/analytics/VisitorsScreen';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
@@ -59,6 +60,7 @@ export default async function WebsiteAnalyticsPage({ searchParams }: { searchPar
     <div className="a2-z" data-testid="web-analytics-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'webAnalytics.title')} sub={t(view.dict, 'webAnalytics.sub')} />
       <SectionTabs view={view} current={KEY} />
+      <AnalyticsSub dict={view.dict} current="overview" />
       <VisitorsScreen dict={view.dict} view={v} canEdit={canEdit} canBehaviour span={span} />
     </div>
   );
