@@ -9,6 +9,7 @@ import * as rl from '@extas/rules';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { OffersScreen } from '@/components/admin/rules/OffersScreen';
 import { adminDeps } from '@/lib/admin-auth';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { ruleScopes, rulesAccess, rulesEnv } from '@/lib/admin-rules';
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function OffersPage() {
   const deps = adminDeps();
-  const view = await adminView(deps);
+  const view = withLaneF(await adminView(deps));
   const access = await pageAccess('rules.read', deps, MOTHER_STORE_ID);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
