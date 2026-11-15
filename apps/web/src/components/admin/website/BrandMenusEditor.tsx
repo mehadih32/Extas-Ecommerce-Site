@@ -379,7 +379,7 @@ function BrandCard(props: BrandEditorProps & { previews: BrandPreviews; onSaved:
           <PairInputs label={x('brand.sloganShort')} value={v.sloganShort} max={60} disabled={card.off} onChange={(p) => set({ sloganShort: p })} testId="bm-brand-slogan-short" help={x('brand.sloganShortHelp')} x={x} />
           <PairInputs label={x('brand.tabTitle')} value={v.tabTitle} max={300} disabled={card.off} onChange={(p) => set({ tabTitle: p ?? blank })} testId="bm-brand-tab-title" help={x('brand.tabTitleHelp')} x={x} />
           <p className="a2-xs full">
-            <a href={props.seoHref} data-testid="bm-brand-seo-link">
+            <a className="bm-seo-link" href={props.seoHref} data-testid="bm-brand-seo-link">
               {x('brand.seoLink')}
             </a>
           </p>
