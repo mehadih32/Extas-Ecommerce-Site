@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { isOwner } from '@extas/auth';
-import { CHAT_KEEP_MONTHS, MEDIA_KEEP_MONTHS, PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
+import { CHAT_KEEP_MONTHS, MEDIA_KEEP_MONTHS, PRIVACY_ANSWER_DAYS_MAX, PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PrivacyBoard } from '@/components/admin/settings/PrivacyBoard';
@@ -114,6 +114,7 @@ export default async function PrivacyPage() {
   ];
   const lcard = v.cards.location;
   const keepMonths = await access.deps.resolver.value('privacy.keepMonths');
+  const answerDays = await access.deps.resolver.value('privacy.answerDays');
   const owner = access.guard.actor.staffUserId ? await isOwner(access.deps.db, access.guard.actor.staffUserId) : false;
   const waitingN = (v.requests ?? []).filter((r) => r.status === 'REQUESTED').length;
   const flatWords = flat(words as unknown as Record<string, unknown>);
@@ -159,7 +160,7 @@ export default async function PrivacyPage() {
       {waitingN > 0 ? (
         <div className="a2-note a2-mt12" role="status" data-testid="privacy-waiting">
           <ShellIcon name="alert" size={15} />
-          <span>{s('board.waiting', { n: num(waitingN) })}</span>
+          <span>{s('board.waiting', { n: num(waitingN), days: num(answerDays) })}</span>
         </div>
       ) : null}
 
@@ -169,6 +170,8 @@ export default async function PrivacyPage() {
           effects={[...words.req.confirmEffects]}
           rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
           on={on}
+          answerDays={answerDays}
+          nowIso={new Date().toISOString()}
           canRequest={v.canRequest}
           canErase={v.canErase}
           locale={view.locale}
@@ -180,6 +183,8 @@ export default async function PrivacyPage() {
         w={flatWords}
         chips={[...words.board.own.chips]}
         keep={{ media: keepMonths.media, chat: keepMonths.chat }}
+        answerDays={answerDays}
+        answerMax={PRIVACY_ANSWER_DAYS_MAX}
         mediaOptions={MEDIA_KEEP_MONTHS}
         chatOptions={CHAT_KEEP_MONTHS}
         canEdit={canEdit}

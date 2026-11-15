@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
+import { buildZip } from '@/lib/zip-store';
 import { ConfirmDialog } from './ConfirmDialog';
 
 const BOARD = '/api/admin/privacy/board';
@@ -28,6 +29,9 @@ export interface PrivacyBoardProps {
   w: Record<string, string>;
   chips: string[];
   keep: { media: number; chat: number };
+  /** PR 846: the days the shop has to answer a customer's privacy request (setting `privacy.answerDays`). */
+  answerDays: number;
+  answerMax: number;
   mediaOptions: readonly number[];
   chatOptions: readonly number[];
   canEdit: boolean;
@@ -48,12 +52,15 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
   const [media, setMedia] = useState(p.keep.media);
   const [chat, setChat] = useState(p.keep.chat);
   const [busy, setBusy] = useState<string | null>(null);
-  const [pin, setPin] = useState(false);
-  const dirty = media !== p.keep.media || chat !== p.keep.chat;
+  const [pin, setPin] = useState<'customers' | 'all' | null>(null);
+  const [answer, setAnswer] = useState(String(p.answerDays));
+  const answerN = Number(answer);
+  const answerOk = Number.isInteger(answerN) && answerN >= 1 && answerN <= p.answerMax;
+  const dirty = media !== p.keep.media || chat !== p.keep.chat || (answerOk && answerN !== p.answerDays);
 
   async function saveKeep() {
     setBusy('keep');
-    const a = await call('POST', BOARD, { action: 'keep', media, chat });
+    const a = await call('POST', BOARD, { action: 'keep', media, chat, answerDays: answerN });
     setBusy(null);
     if (a.data.ok) {
       showToast({ text: x('keep.saved'), tone: 'ok' });
@@ -75,6 +82,26 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
       showToast({ text: err('network'), tone: 'bad' });
     }
     setBusy(null);
+  }
+  /** PR 846: "Everything (one ZIP)" — the three exports the page already makes, in one file. The PIN is for the customers file. */
+  async function everything(pinText: string): Promise<string | null> {
+    try {
+      const cust = await fetch(BOARD, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'exportCustomers', pin: pinText }) });
+      if (!cust.ok) {
+        const j = (await cust.json().catch(() => ({}))) as { error?: string };
+        return err(j.error);
+      }
+      const files = [{ name: fileName(cust, `customers-${p.today}.csv`), data: await cust.text() }];
+      const orders = await fetch('/api/admin/orders/export', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: '{}' });
+      if (orders.ok) files.push({ name: fileName(orders, `orders-${p.today}.csv`), data: await orders.text() });
+      const products = await fetch('/api/admin/catalogue/csv/export', { credentials: 'same-origin' });
+      if (products.ok) files.push({ name: fileName(products, `products-${p.today}.csv`), data: await products.text() });
+      download(new Blob([buildZip(files) as BlobPart], { type: 'application/zip' }), `extas-data-${p.today}.zip`);
+      showToast({ text: files.length === 3 ? x('export.done') : x('export.partial'), tone: files.length === 3 ? 'ok' : 'bad' });
+      return null;
+    } catch {
+      return err('network');
+    }
   }
   async function customers(pinText: string): Promise<string | null> {
     try {
@@ -101,17 +128,16 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
             {(['orders', 'customers', 'products'] as const).map((k) => (
               <li key={k} className="s28-row between" style={{ alignItems: 'center' }}>
                 <span className="s28-grow">{x(`export.${k}`)}</span>
-                <button type="button" className="a2-btn sm" disabled={busy !== null || (k === 'customers' && !p.isOwner)} onClick={() => (k === 'customers' ? setPin(true) : void simple(k))} data-testid={`privacy-export-${k}`}>
+                <button type="button" className="a2-btn sm" disabled={busy !== null || (k === 'customers' && !p.isOwner)} onClick={() => (k === 'customers' ? setPin('customers') : void simple(k))} data-testid={`privacy-export-${k}`}>
                   {x('export.button')}
                 </button>
               </li>
             ))}
             <li className="s28-row between" style={{ alignItems: 'center' }}>
-              <span className="s28-grow">
-                {x('export.all')}
-                <span className="a2-xs a2-mute" style={{ display: 'block' }}>{x('export.allSoon')}</span>
-              </span>
-              <button type="button" className="a2-btn sm" disabled data-testid="privacy-export-all">{x('export.button')}</button>
+              <span className="s28-grow">{x('export.all')}</span>
+              <button type="button" className="a2-btn sm" disabled={busy !== null || !p.isOwner} onClick={() => setPin('all')} data-testid="privacy-export-all">
+                {x('export.button')}
+              </button>
             </li>
           </ul>
         </section>
@@ -126,9 +152,11 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
           <select id="pv-c" className="a2-sel" value={chat} disabled={!p.canEdit} onChange={(e) => setChat(Number(e.target.value))}>
             {p.chatOptions.map((m) => <option key={m} value={m}>{optionLabel(w, m)}</option>)}
           </select>
+          <label className="a2-lbl a2-mt12" htmlFor="pv-a">{x('keep.answer')}</label>
+          <input id="pv-a" className="a2-inp" type="number" inputMode="numeric" min={1} max={p.answerMax} value={answer} disabled={!p.canEdit} onChange={(e) => setAnswer(e.target.value)} aria-invalid={!answerOk} data-testid="pv-answer" style={{ maxWidth: 120 }} />
           <p className="a2-xs a2-mute a2-mt12">{x('keep.hint')}</p>
           <div className="a2-mt12">
-            <button type="button" className="a2-btn sm" disabled={!p.canEdit || !dirty || busy !== null} onClick={() => void saveKeep()} data-testid="pv-save">{x('keep.save')}</button>
+            <button type="button" className="a2-btn sm" disabled={!p.canEdit || !dirty || !answerOk || busy !== null} onClick={() => void saveKeep()} data-testid="pv-save">{x('keep.save')}</button>
           </div>
         </section>
 
@@ -163,11 +191,11 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
           testId="privacy-export-pin"
           tone="pri"
           texts={{ title: x('export.pinTitle'), effects: [x('export.pinText')], reason: null, cancel: w['prv.board.export.cancel'] ?? 'Cancel', ok: x('export.pinOk'), working: '…', close: w['prv.board.export.cancel'] ?? 'Cancel', pin: w['board.dlg.pin'] ?? 'PIN' }}
-          onClose={() => setPin(false)}
+          onClose={() => setPin(null)}
           onConfirm={async (_r, pinText) => {
             if (!pinText) return err('PIN_REQUIRED');
-            const bad = await customers(pinText);
-            if (!bad) setPin(false);
+            const bad = await (pin === 'all' ? everything(pinText) : customers(pinText));
+            if (!bad) setPin(null);
             return bad;
           }}
         />

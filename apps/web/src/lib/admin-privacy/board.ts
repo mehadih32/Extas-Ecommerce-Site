@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { isOwner, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { exportCustomers, isCustomersError } from '@extas/customers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import { CHAT_KEEP_MONTHS, INSTALLATION, MEDIA_KEEP_MONTHS, privacyKeepMonthsSchema } from '@extas/settings';
+import { CHAT_KEEP_MONTHS, INSTALLATION, MEDIA_KEEP_MONTHS, PRIVACY_ANSWER_DAYS_MAX, privacyKeepMonthsSchema } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { requireOwnerPin } from '../owner-pin';
 
@@ -31,15 +31,23 @@ export function parseKeep(raw: unknown): { media: (typeof MEDIA_KEEP_MONTHS)[num
   return r.data;
 }
 
-export async function saveKeep(deps: AdminDeps, actor: Actor, raw: unknown): Promise<void> {
-  await requirePermission(deps.db, actor, 'security.write', { storeId: MOTHER_STORE_ID });
-  const next = parseKeep(raw);
-  const cur = await deps.resolver.value('privacy.keepMonths');
-  if (cur.media === next.media && cur.chat === next.chat) return;
-  await deps.resolver.set('privacy.keepMonths', next, INSTALLATION, { actorId: actor.staffUserId ?? null, reason: 'Settings › Data & privacy: how long things are kept' });
+/** PR 846: the days to answer a customer's privacy request; absent = unchanged. */
+export function parseAnswerDays(raw: unknown): number | null {
+  if (raw === undefined) return null;
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1 || raw > PRIVACY_ANSWER_DAYS_MAX) throw new PrivacyBoardError(400, 'INVALID_INPUT', ['answerDays']); // hardcode-ok: the setting's own lower bound
+  return raw;
 }
 
-/** POST /api/admin/privacy/board: {action: 'keep', media, chat} (`security.write`) · {action: 'exportCustomers', pin} → the CSV (owner, PIN). */
+export async function saveKeep(deps: AdminDeps, actor: Actor, raw: unknown, answerDaysRaw?: unknown): Promise<void> {
+  await requirePermission(deps.db, actor, 'security.write', { storeId: MOTHER_STORE_ID });
+  const next = parseKeep(raw);
+  const days = parseAnswerDays(answerDaysRaw);
+  const cur = await deps.resolver.value('privacy.keepMonths');
+  if (cur.media !== next.media || cur.chat !== next.chat) await deps.resolver.set('privacy.keepMonths', next, INSTALLATION, { actorId: actor.staffUserId ?? null, reason: 'Settings › Data & privacy: how long things are kept' });
+  if (days !== null && days !== (await deps.resolver.value('privacy.answerDays'))) await deps.resolver.set('privacy.answerDays', days, INSTALLATION, { actorId: actor.staffUserId ?? null, reason: 'Settings › Data & privacy: days to answer a customer request' });
+}
+
+/** POST /api/admin/privacy/board: {action: 'keep', media, chat, answerDays?} (`security.write`) · {action: 'exportCustomers', pin} → the CSV (owner, PIN). */
 export async function privacyBoardRoute(request: Request, deps: AdminDeps | null): Promise<Response> {
   const g = await guardAdmin(request, deps, { permission: 'security.write', storeId: MOTHER_STORE_ID });
   if (g instanceof Response) return g;
@@ -48,7 +56,7 @@ export async function privacyBoardRoute(request: Request, deps: AdminDeps | null
   try {
     const b = await body(request);
     if (b.action === 'keep') {
-      await saveKeep(deps, g.actor, { media: b.media, chat: b.chat });
+      await saveKeep(deps, g.actor, { media: b.media, chat: b.chat }, b.answerDays);
       return json({ ok: true });
     }
     if (b.action === 'exportCustomers') {
