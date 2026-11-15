@@ -56,7 +56,11 @@
       "ESCALATION": "You cannot give more than you hold yourself.",
       "NOT_FOUND": "Not found.",
       "network": "No connection. Try again.",
-      "server-error": "Something went wrong. Try again."
+      "server-error": "Something went wrong. Try again.",
+      "PIN_REQUIRED": "Enter your PIN.",
+      "PIN_NOT_SET": "The owner has not set a PIN yet.",
+      "PIN_LOCKED": "Too many wrong tries. Try again in a little while.",
+      "WRONG_PIN": "That PIN is not right."
     },
     "roles": {
       "metaTitle": "Roles",
@@ -66,7 +70,7 @@
       "ownerNote": "The owner always holds everything.",
       "archivedNote": "Archived: this role gives nothing.",
       "people": "{n} people",
-      "tickNote": "A half box means only some pages of the group are on.",
+      "tickNote": "Tick a section to give all its pages; a half box means some pages only.",
       "save": "Save changes",
       "undo": "Undo",
       "saved": "Role saved.",
@@ -79,10 +83,25 @@
       "created": "Role created.",
       "new": {
         "title": "New role",
-        "nameEn": "Name in English",
-        "nameBn": "Name in Bengali",
+        "nameEn": "Role name (English)",
+        "nameBn": "Role name (Bengali)",
         "from": "Start from",
-        "go": "Create role"
+        "go": "Create",
+        "chip": "New role",
+        "close": "Close",
+        "cancel": "Cancel",
+        "example": "e.g. Photo editor"
+      },
+      "cardTitle": "What each role can open",
+      "ownerAlways": "Owner can always do everything",
+      "systemGroup": "Settings › System",
+      "ownerOnly": "Owner only",
+      "pin": {
+        "title": "Save role access?",
+        "effect": "{name}: staff see the new access when their next page loads.",
+        "label": "Owner PIN",
+        "ok": "Save",
+        "working": "Saving…"
       }
     },
     "activity": {

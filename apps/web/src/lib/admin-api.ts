@@ -54,6 +54,7 @@ import {
 import { adminSettingsResponse } from './settings';
 import { noteBotSignals } from './security/bot-check';
 import { addressRefused } from './admin-security/access';
+import { requireOwnerPin } from './owner-pin';
 
 const str =(v: unknown) => (typeof v === 'string' ? v : '');
 const isResponse = (v: unknown): v is Response => v instanceof Response;
@@ -225,7 +226,9 @@ export async function roleHandler(request: Request, deps: AdminDeps | null, id: 
   if (isResponse(g)) return g;
   if (!isUuid(id)) return fail(404, 'NOT_FOUND');
   try {
-    const { archived, ...patch } = await body(request);
+    const { archived, pin, ...patch } = await body(request);
+    // PR 841: the role screen sends the owner's PIN with a change of access (prototype m-settings.js: Save role access asks it); a wrong one is refused.
+    if (pin !== undefined) await requireOwnerPin(g.deps, g.actor, g.ctx, pin, 'roles.access.change', MOTHER_STORE_ID);
     let role = Object.keys(patch).length ? await updateRole(g.deps.db, g.actor, id, patch as RolePatch, g.ctx) : undefined;
     if (typeof archived === 'boolean') role = await setRoleArchived(g.deps.db, g.actor, id, archived, g.ctx);
     if (!role) return fail(400, 'INVALID_INPUT', ['(empty change)']);
