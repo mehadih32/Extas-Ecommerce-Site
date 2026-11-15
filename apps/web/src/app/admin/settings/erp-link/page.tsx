@@ -16,6 +16,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { BooksForm } from '@/components/admin/books/BooksForm';
 import { ErpCalls } from '@/components/admin/ErpCalls';
 import { ErpSyncBoard } from '@/components/admin/ErpSyncBoard';
+import { ErpHeadActions, ErpMatching, ErpSafety } from '@/components/admin/ErpConnectionParts';
 import { loadSyncBoard } from '@/lib/erp-sync-board';
 import { Integrations } from '@/components/admin/Integrations';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -29,8 +30,11 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { erpLinkView } from '@/lib/erp-link-admin';
+import { currentModeChoice, matchingView } from '@/lib/erp-link-extra';
 import { t, type Dict } from '@/lib/i18n';
 import { siteAddress } from '@/lib/seo/site';
+import './erp.css';
+import '../system/sysinfo.css';
 import bn from '../../../../../messages/admin-erp-link.bn.json';
 import en from '../../../../../messages/admin-erp-link.en.json';
 
@@ -74,11 +78,21 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
   const who: inv.Who = { actor: access.guard.actor, storeId, ctx: access.guard.ctx };
   const [site, currency] = await Promise.all([siteAddress(storeId), access.deps.resolver.value('store.currency', { storeId })]);
   const v = await erpLinkView(access.deps, who, site.origin?.origin ?? null, canWrite);
-  const board = await loadSyncBoard(access.deps.db, storeId, access.deps.now(), Number(await access.deps.resolver.value('erp.sync.stockPollMinutes', { storeId })) || 0, 30); // hardcode-ok: rows the log shows
+  const pollMinutes = Number(await access.deps.resolver.value('erp.sync.stockPollMinutes', { storeId })) || 0; // hardcode-ok: the poll setting, as the board reads it
+  const board = await loadSyncBoard(access.deps.db, storeId, access.deps.now ? access.deps.now() : new Date(), pollMinutes, 30); // hardcode-ok: rows the log shows
+  const erpConn = v.connections.find((c) => c.kind === 'ERP' && c.integrationId) ?? null;
+  const connected = Boolean(erpConn?.enabled && erpConn.keySaved);
+  const erpHost = (erpConn?.config.find((c) => c.field === 'baseUrl')?.value ?? '').replace(/^https?:\/\//, '').replace(/\/$/, '') || '—';
+  const stockAt = board.streams.find((x) => x.key === 'stock')?.lastAt ?? null;
+  const failedRows = board.log.filter((x) => !x.ok).slice(0, 3);
+  const healthy = connected && !board.log.slice(0, 5).some((x) => !x.ok);
+  const problems = failedRows.map((x) => ({ at: x.at, kind: x.kind === 'stock' || x.kind === 'order' ? x.kind : 'other' }));
+  const [matching, modeChoice] = await Promise.all([matchingView(access.deps, who), currentModeChoice(access.deps, storeId)]);
   const s = v.state;
   const d = view.dict;
   const e = (key: string, vars?: Record<string, string | number>) => t(d, `erpLink.${key}`, vars);
-  const flow = (view.lang === 'bn' ? bn : en).erpLink.flow;
+  const flow_ = (view.lang === 'bn' ? bn : en).erpLink.flow;
+  const flow = flow_;
   const bd = { bk: d.bk as Dict };
   const money = moneyOf(currency as string, view.locale);
   const m = (minor: number | null | undefined) => (minor == null ? '—' : formatMoney(minor, money));
@@ -112,10 +126,126 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
 
   return (
     <div className="a2-z lm-st" data-lm-ready="" data-testid="erp-link-page" data-model={s.model} data-store={storeId}>
-      <PageHead view={view} place={locateKey(KEY)} title={e('title')} sub={e('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={e('title')} sub={e('sub')} right={canWrite ? <ErpHeadActions dict={d} storeId={storeId} importHref="/admin/products/erp-import" /> : undefined} />
       <SectionTabs view={view} current={KEY} />
       {picker}
-      <ErpSyncBoard dict={d} board={board} locale={view.locale} />
+      <section className="a2-sc a2-mt12 sy-hero" data-testid="erp-hero" data-state={healthy ? 'ok' : 'warn'}>
+        <i className={`sy-dot${healthy ? '' : ' warn'}`} aria-hidden="true" />
+        <div>
+          <div className="sy-big">
+            {connected ? e('hero.connected') : e('hero.notConnected')} · {e('hero.lastSync')} {stockAt ? at(stockAt) : e('hero.never')}
+          </div>
+          <div className="a2-scd">
+            {erpConn?.mode === 'SANDBOX' || erpConn?.mode === 'MOCK' ? e('hero.practice') : e('hero.live')} · {e('hero.safe')}
+          </div>
+        </div>
+      </section>
+      {problems.length ? (
+        <section className="a2-card a2-mt12" data-testid="erp-plain">
+          <h2 className="a2-h4">{e('plain.h')}</h2>
+          {problems.map((x, i) => (
+            <div key={`${x.at}-${i}`} className="erp-plain">
+              <i className="sy-dot warn" aria-hidden="true" />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <b>{e(`plain.${x.kind}.t`)}</b> <span className="a2-xs a2-mute">{at(x.at)}</span>
+                <div className="a2-sm">
+                  {e('plain.todo')}: {e(`plain.${x.kind}.d`)}
+                </div>
+              </div>
+              <Link className="a2-xs" href="/admin/help/manual">
+                {e('plain.manual')}
+              </Link>
+            </div>
+          ))}
+        </section>
+      ) : null}
+      <div className="erp-kpis" data-testid="erp-cards">
+        <div className="a2-card">
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <i className={`sy-dot${healthy ? '' : ' warn'}`} aria-hidden="true" />
+            <div style={{ minWidth: 0 }}>
+              <b style={{ fontSize: 16 }}>{connected ? e('hero.connected') : e('hero.notConnected')}</b>
+              <div className="a2-xs a2-mute" style={{ overflowWrap: 'anywhere' }}>
+                {erpHost} · {erpConn?.mode === 'SANDBOX' || erpConn?.mode === 'MOCK' ? e('hero.practice') : e('hero.live')}
+              </div>
+              <div className="a2-xs a2-mute">
+                {e('card.checked')} {erpConn?.lastTest ? at(erpConn.lastTest.at) : e('synced.never')}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{e('card.company')}</div>
+          <div className="a2-kv" style={{ fontSize: 18, overflowWrap: 'anywhere' }}>
+            {s.link?.erpCompanyId ?? '—'}
+          </div>
+          <div className="a2-kf">
+            <span className="a2-kn">{matching.warehouse || e('card.notSet')}</span>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{e('card.stockSynced')}</div>
+          <div className="a2-kv" style={{ fontSize: 18 }}>
+            {stockAt ? at(stockAt) : e('hero.never')}
+          </div>
+          <div className="a2-kf">
+            <span className="a2-kn">{pollMinutes > 0 ? e('card.poll', { n: n(pollMinutes) }) : ''}</span>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{e('card.owe')}</div>
+          <div className="a2-kv a2-num">{m(s.balance.erpMinor)}</div>
+          <div className="a2-kf">
+            <Link className="a2-xs" href={booksHref(storeId, '/admin/money/books/match')}>
+              {e('card.account')} →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <section className="a2-card a2-mt12" data-testid="erp-link-flow" aria-labelledby="erp-link-flow-h">
+        <h2 className="a2-h4" id="erp-link-flow-h">
+          {e('flow.h')}
+        </h2>
+        <div className="s28-grid a2-mt12">
+          {(
+            [
+              ['toShop', flow.in],
+              ['toErp', flow.out],
+            ] as const
+          ).map(([k, items]) => (
+            <div key={k} data-testid={`erp-link-flow-${k}`}>
+              <div className="a2-pill line">{e(`flow.${k}`)}</div>
+              <ul className="a2-stack a2-mt6">
+                {items.map((x) => (
+                  <li key={x} className="a2-sm">
+                    {x}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="a2-xs a2-mute a2-mt12">
+          {e('flow.erpNode')} ({e('flow.erpSub')}) ⇄ {e('flow.shopNode')} ({e('flow.shopSub')})
+        </p>
+        <div className="a2-note a2-mt12">
+          <ShellIcon name="alert" size={15} />
+          <span>{e('flow.price')}</span>
+        </div>
+      </section>
+
+      <ErpSyncBoard
+        dict={d}
+        board={board}
+        locale={view.locale}
+        side={
+          <>
+            <ErpMatching dict={d} storeId={storeId} canWrite={canWrite} warehouse={matching.warehouse} accounts={matching.accounts} suggestions={matching.suggestions} />
+            <ErpSafety dict={d} storeId={storeId} lines={[...flow_.safe]} isOwner={v.owner} mode={modeChoice} />
+          </>
+        }
+      />
 
       <section className="a2-card a2-mt12" data-testid="erp-link-status">
         <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
@@ -150,45 +280,6 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
         )}
       </section>
 
-      <section className="a2-card a2-mt12" data-testid="erp-link-flow" aria-labelledby="erp-link-flow-h">
-        <h2 className="a2-h4" id="erp-link-flow-h">
-          {e('flow.h')}
-        </h2>
-        <div className="s28-grid a2-mt12">
-          {(
-            [
-              ['toShop', flow.in],
-              ['toErp', flow.out],
-            ] as const
-          ).map(([k, items]) => (
-            <div key={k} data-testid={`erp-link-flow-${k}`}>
-              <div className="a2-pill line">{e(`flow.${k}`)}</div>
-              <ul className="a2-stack a2-mt6">
-                {items.map((x) => (
-                  <li key={x} className="a2-sm">
-                    {x}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <p className="a2-xs a2-mute a2-mt12">
-          {e('flow.erpNode')} ({e('flow.erpSub')}) ⇄ {e('flow.shopNode')} ({e('flow.shopSub')})
-        </p>
-        <div className="a2-note a2-mt12">
-          <ShellIcon name="alert" size={15} />
-          <span>{e('flow.price')}</span>
-        </div>
-        <h3 className="a2-h4 a2-mt12">{e('flow.safeH')}</h3>
-        <ul className="a2-stack a2-mt6" data-testid="erp-link-safety">
-          {flow.safe.map((x) => (
-            <li key={x} className="a2-sm">
-              {x}
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <div className="a2-mt12" data-testid="erp-link-keys">
         <Integrations dict={d} initial={v.connections} canWrite={canWrite} vaultReady={v.vaultReady} locale={view.locale} timeZone={view.timeZone} storeId={storeId} title={e('keys.title')} sub={e('keys.sub')} look="a2" />
