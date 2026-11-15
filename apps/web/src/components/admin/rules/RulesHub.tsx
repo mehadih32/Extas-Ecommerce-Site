@@ -14,6 +14,7 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
+import { CheckoutSimulator } from './CheckoutSimulator';
 import { moneyFromInput, moneyToInput, numberFromInput, type Lang, type RulesEnv, rulesRefusal } from './model';
 
 export interface HubRole {
@@ -196,7 +197,14 @@ export function RulesHub(props: RulesHubProps) {
           {!rows.length ? <p className="ad-intro">{tt('noMatch')}</p> : null}
         </div>
         <aside className="rh-side" aria-live="polite">
-          {selRow ? editor(selRow) : <p className="rh-hint">{tt('pickOne')}</p>}
+          {selRow ? (
+            editor(selRow)
+          ) : (
+            <>
+              <p className="rh-hint">{tt('pickOne')}</p>
+              <CheckoutSimulator dict={d} lang={lang} env={env} />
+            </>
+          )}
         </aside>
       </div>
     </div>
@@ -257,6 +265,9 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
   // PR 848: "Customer sees" (the words, worked out from the numbers typed now) and "Try on last 30 days' orders"
   const [tried, setTried] = useState<TryResult | null>(null);
   const [trying, setTrying] = useState(false);
+  // PR 858: "Start on a later date" (prototype Rules › More options): a day after today makes Save schedule the typed numbers
+  const [from, setFrom] = useState('');
+  const today = new Date().toISOString().slice(0, 10); // hardcode-ok: ISO date
   const onField = row.fields.find((f) => f.path === 'enabled' || f.path === 'on');
   const isOff = row.id === 'free' ? vals[''] === null || vals[''] === undefined : onField ? vals[onField.path] !== true : false;
   const seesVars = (): Record<string, string | number> => {
@@ -296,7 +307,29 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
   const save = () => {
     const values: Record<string, unknown> = {};
     for (const f of changed) values[f.path] = vals[f.path];
+    if (from) {
+      if (from <= today) return sayBad(tt('schedule.needLater'));
+      return void (async () => {
+        setBusy(true);
+        const a = await call('POST', `${API}/${row.id}/schedule`, { version: row.version, values, from, ...(row.money ? { pin } : {}) });
+        setBusy(false);
+        if (a.status !== 200) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+        say(tt('schedule.done', { date: from }));
+        setPin('');
+        setFrom('');
+        await onSaved();
+      })();
+    }
     void send(`${API}/${row.id}`, 'PUT', { version: row.version, values, ...(row.money ? { pin } : {}) }, 'saved');
+  };
+  const unschedule = async () => {
+    setBusy(true);
+    const a = await call('POST', `${API}/${row.id}/unschedule`, row.money ? { pin } : {});
+    setBusy(false);
+    if (a.status !== 200) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+    say(tt('schedule.cancelled'));
+    setPin('');
+    await onSaved();
   };
   const back = () => {
     if (!window.confirm(tt('backConfirm'))) return;
@@ -481,6 +514,14 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
       {row.pill === 'sample' ? <div className="ad-note warn">{tt('sampleNote')}</div> : null}
       {row.money ? <div className="ad-note">{tt('moneyNote')}</div> : null}
       {blocked ? <div className="ad-note warn">{tt('needsOwner')}</div> : null}
+      {row.scheduled ? (
+        <div className="ad-note" data-testid="rh-scheduled">
+          {tt('schedule.scheduled', { date: row.scheduled.from })}{' '}
+          <button type="button" className="rl-link" onClick={() => void unschedule()} disabled={busy || !canWrite || blocked || (row.money && pin.trim() === '')} data-testid="rh-unschedule">
+            {tt('schedule.cancel')}
+          </button>
+        </div>
+      ) : null}
       <div className="rh-fields">{row.fields.map(control)}</div>
       <div className="rh-sees" data-testid="rh-sees">
         <div className="rh-sub">{tt('sees.title')}</div>
@@ -511,7 +552,7 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
       ) : null}
       <div className="rl-actions">
         <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={save} disabled={busy || !canWrite || blocked || !changed.length || (row.money && pin.trim() === '')}>
-          <Icon name="check" size={15} /> {row.money ? tt('savePin') : tt('save')}
+          <Icon name="check" size={15} /> {from ? (row.money ? tt('schedule.goPin') : tt('schedule.go')) : row.money ? tt('savePin') : tt('save')}
         </button>
         <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={onClose}>
           {tt('cancel')}
@@ -520,6 +561,11 @@ function HubEditor({ row, tt, d, env, roles, canWrite, canApprove, busy, setBusy
       <details className="rh-more">
         <summary>{tt('more.title')}</summary>
         <div className="rh-moreb">
+          <div className="rh-later" data-testid="rh-later">
+            <div className="rh-sub">{tt('schedule.title')}</div>
+            <input type="date" className="ad-input rh-date" min={today} value={from} onChange={(e) => setFrom(e.target.value)} aria-label={tt('schedule.title')} disabled={!canWrite || blocked} data-testid="rh-from" />
+            <p className="rh-hint">{tt('schedule.help')}</p>
+          </div>
           <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={back} disabled={busy || !canWrite || blocked || row.isDefault || (row.money && pin.trim() === '')}>
             <Icon name="sync" size={14} /> {tt('more.back')}
           </button>

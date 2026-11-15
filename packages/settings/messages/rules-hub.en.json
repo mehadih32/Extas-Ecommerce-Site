@@ -1,6 +1,10 @@
 {
   "rules": {
     "hub": {
+      "schedule": {
+        "label": "Rule changes that start on a later date",
+        "help": "A change to a rule that you asked to start on a later date waits here. On that day the rules clock puts it in. A rule that changes what customers pay needs the owner's PIN when it is scheduled. Cancelling removes it and the rule stays as it was."
+      },
       "popups": {
         "label": "Pop-ups and notices: your own words",
         "help": "Your own text and dates for the shop's twelve pop-ups and notices. A placement you have not set keeps the shop's wording and the state of the rule that drives it. Nothing here opens by itself on the first page a visitor sees."

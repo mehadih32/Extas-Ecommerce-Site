@@ -585,6 +585,61 @@
         "free": "Last {days} days: {total} orders. {now} got free delivery with the saved number; with the number above {tried} would, and {waived} of delivery charge would not be collected. Nothing is saved.",
         "repeat": "Last {days} days: {total} orders. {now} came from a number that had ordered before (saved days); with the days above {tried} would. Nothing is saved."
       }
+    },
+    "schedule": {
+      "title": "Start on a later date",
+      "help": "Leave empty to change it now. With a date, Save schedules it: nothing changes before that day.",
+      "go": "Schedule",
+      "goPin": "Schedule · PIN",
+      "scheduled": "Scheduled: from {date} this changes. Nothing changes before that day.",
+      "cancel": "Cancel schedule",
+      "done": "Scheduled for {date}.",
+      "cancelled": "Schedule cancelled.",
+      "needLater": "Pick a day after today."
+    },
+    "sim": {
+      "title": "Checkout simulator",
+      "sub": "Pick a customer and a cart: see exactly what they pay with all your live rules working together. Nothing is saved or sent.",
+      "area": "Delivery area",
+      "cart": "Cart value",
+      "pieces": "Pieces",
+      "category": "Category",
+      "anyCategory": "Any category",
+      "pay": "How they pay",
+      "coupon": "Coupon code (optional)",
+      "newCustomer": "New customer (first order)",
+      "products": "Products ({n} pcs)",
+      "delivery": "Delivery ({area}, {days} days)",
+      "deliveryPlain": "Delivery",
+      "free": "Free",
+      "notSet": "Not set",
+      "pays": "Customer pays",
+      "deliveryUnknown": "delivery (not set yet)",
+      "codOk": "Cash on delivery is allowed for this cart.",
+      "codNo": "Cash on delivery is not allowed for this cart: the customer must pay another way.",
+      "prepaid": "Paid before delivery.",
+      "toFree": "Add {amount} more for free delivery.",
+      "payWay": {
+        "COD": "Cash on delivery",
+        "BKASH": "bKash",
+        "NAGAD": "Nagad",
+        "CARD": "Card",
+        "ONLINE": "Online"
+      },
+      "offer": {
+        "discount": "Offer: {rule}",
+        "setTier": "Buy more, save: {rule}"
+      },
+      "couponState": {
+        "unlocks": "Coupon {code} is on and counted.",
+        "unknown": "Coupon {code} was not found.",
+        "off": "Coupon {code} is off, not started, ended or used up."
+      },
+      "waiting": {
+        "COUPON": "Rule {rule} waits for a coupon.",
+        "MIN_SUBTOTAL": "Rule {rule} waits for a bigger cart.",
+        "MIN_QUANTITY": "Rule {rule} needs {n} more piece(s)."
+      }
     }
   }
 }

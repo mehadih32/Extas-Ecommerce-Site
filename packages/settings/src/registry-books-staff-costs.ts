@@ -129,7 +129,8 @@ export const staffCostsSettings = {
     group: 'books',
     labelKey: 'books.staffCosts.label',
     helpKey: 'books.staffCosts.help',
-    isOwnerData: true,
+    // hardcode-ok: the shipped list is empty, so no owner data ships; the names and amounts typed in live in the owner's own store only
+    isOwnerData: false,
     isPublic: false,
     sortOrder: 12,
     version: V,

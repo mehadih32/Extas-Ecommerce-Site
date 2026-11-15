@@ -14,5 +14,6 @@ export * from './holiday';
 export * from './festive';
 export * from './peak';
 export * from './hub-catalog';
+export * from './hub-schedule';
 export { TRYABLE_ROWS, TRY_DAYS, isTryable, type TryResult, type TryableRow } from './hub-try';
 export * from './offers-model';

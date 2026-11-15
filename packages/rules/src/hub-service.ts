@@ -9,7 +9,9 @@
 // Reading needs `rules.read`; saving `rules.write`. Every save is in the audit log with before and after. The Smart Rules engine,
 // the coupons and the notices are not touched here: they stay on their own services (PR 208–219).
 import { createHash } from 'node:crypto';
-import { registry, storeTarget, POPUP_KEYS, popupEntrySchema, type PopupEntry } from '@extas/settings';
+import { SYSTEM } from '@extas/auth';
+import { registry, storeTarget, POPUP_KEYS, popupEntrySchema, type HubScheduleEntry, type PopupEntry } from '@extas/settings';
+import { scheduleDateProblem, splitDue, withEntry } from './hub-schedule';
 import { allow, found, holds, logChange, nowOf, type RulesDeps, type SettingsReader, type Who } from './context';
 import { RulesError } from './errors';
 import { HUB_ROWS, POPUPS, smartGroupOf, type HubField, type HubGroupId, type HubRow, type HubSettingRow, type PopupSpec } from './hub-catalog';
@@ -75,6 +77,8 @@ export interface HubSettingRowView {
   /** Still the shipped value. */
   isDefault: boolean;
   pill: HubPill;
+  /** PR 858: a change waiting for its day ("Start on a later date"), or null. */
+  scheduled: { from: string; values: Record<string, unknown> } | null;
 }
 
 export interface HubLinkRowView {
@@ -126,6 +130,9 @@ function pillOf(row: HubSettingRow, value: unknown, def: unknown): HubPill {
 export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
   await allow(deps, who, 'rules.read');
   const st = anySettings(deps);
+  // PR 858: a change whose day has come is put in first, so the screen shows what the shop uses now
+  await applyDueHubSchedules(deps, { storeId: who.storeId });
+  const waiting = await readSchedule(deps, who.storeId);
   const rows: HubRowView[] = [];
   for (const row of HUB_ROWS as readonly HubRow[]) {
     if (row.type === 'setting') {
@@ -144,6 +151,7 @@ export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
         defaultValue: def,
         isDefault: JSON.stringify(value) === JSON.stringify(def),
         pill: pillOf(row, value, def),
+        scheduled: ((e) => (e ? { from: e.from, values: e.values } : null))(waiting.find((x) => x.rowId === row.id)),
       });
     } else {
       if (row.needs && !hasKey(row.needs)) continue;
@@ -381,4 +389,96 @@ export async function savePopup(deps: HubDeps, who: Who, input: { key: string; e
   }
   await logChange(deps.db, who, { action: 'rules.hub.popup', entityType: 'HubPopup', entityId: spec.key, before: before[spec.key] ?? null, after: entry.data });
   return popupsScreen(deps, who);
+}
+
+// ------------------------------------------------------------------------------------------------ "Start on a later date" (PR 858)
+
+const SCHEDULE_KEY = 'rules.hub.schedule';
+
+async function readSchedule(deps: HubDeps, storeId: number): Promise<HubScheduleEntry[]> {
+  if (!hasKey(SCHEDULE_KEY)) return [];
+  const v = await anySettings(deps).value(SCHEDULE_KEY, { storeId });
+  return isObj(v) && Array.isArray(v.entries) ? (v.entries as HubScheduleEntry[]) : [];
+}
+
+async function writeSchedule(deps: HubDeps, who: Who, entries: HubScheduleEntry[], reason: string, approved: boolean): Promise<void> {
+  await anySettings(deps).set(SCHEDULE_KEY, { entries }, storeTarget(who.storeId), { actorId: who.actor.staffUserId ?? null, reason, ...(approved ? { ownerApproved: true } : {}) });
+}
+
+const todayOf = (deps: HubDeps) => nowOf(deps).toISOString().slice(0, 10); // hardcode-ok: ISO date
+
+/**
+ * Schedules a row's typed numbers to start on `from` (a day after today). Same rights as saving: `rules.write`, and a money row needs
+ * the owner's OK now (the PIN is checked by the route). Nothing changes today; one row has one scheduled change (a new one replaces it).
+ */
+export async function scheduleHubRow(deps: HubDeps, who: Who, input: { id: string; version: string; values: Record<string, unknown>; from: unknown }): Promise<{ id: string; from: string }> {
+  await allow(deps, who, 'rules.write');
+  const row = rowFor(input.id);
+  const problem = scheduleDateProblem(input.from, todayOf(deps));
+  if (problem) throw new RulesError('INVALID_INPUT', 'the start date is not valid', [`from:${problem}`]);
+  const from = input.from as string;
+  const st = anySettings(deps);
+  const before = await st.value(row.key, { storeId: who.storeId });
+  if (versionOf(before) !== input.version) throw new RulesError('STALE_DRAFT', 'someone changed this rule since you opened it');
+  const allowed = new Set(row.fields.map((f) => f.path));
+  let next: unknown = before;
+  for (const [path, v] of Object.entries(input.values)) {
+    if (!allowed.has(path)) throw new RulesError('INVALID_INPUT', 'a field is not part of this rule', [path]);
+    next = setPath(next, path, v);
+  }
+  if (JSON.stringify(next) === JSON.stringify(before)) throw new RulesError('INVALID_INPUT', 'nothing changed', ['values']);
+  const schema = (registry as unknown as Record<string, { schema: { safeParse(v: unknown): { success: boolean } } } | undefined>)[row.key]?.schema;
+  if (schema && !schema.safeParse(next).success) throw new RulesError('INVALID_INPUT', 'the numbers are not valid', [row.id]);
+  const approved = await ownerOk(deps, who, row);
+  const entry: HubScheduleEntry = { rowId: row.id, from, values: input.values, by: who.actor.staffUserId ?? null, at: nowOf(deps).toISOString() };
+  await writeSchedule(deps, who, withEntry(await readSchedule(deps, who.storeId), row.id, entry), 'Rules: scheduled a change', approved);
+  await logChange(deps.db, who, { action: 'rules.hub.schedule', entityType: 'HubRule', entityId: row.id, before: null, after: { from, values: input.values } });
+  return { id: row.id, from };
+}
+
+/** Cancels a row's scheduled change (the rule stays as it is). Money rows need the owner's OK, as scheduling did. */
+export async function cancelHubSchedule(deps: HubDeps, who: Who, input: { id: string }): Promise<{ id: string }> {
+  await allow(deps, who, 'rules.write');
+  const row = rowFor(input.id);
+  const now = await readSchedule(deps, who.storeId);
+  const had = now.find((e) => e.rowId === row.id);
+  if (!had) throw new RulesError('NOT_FOUND', 'nothing is scheduled for this rule');
+  const approved = await ownerOk(deps, who, row);
+  await writeSchedule(deps, who, withEntry(now, row.id, null), 'Rules: cancelled a scheduled change', approved);
+  await logChange(deps.db, who, { action: 'rules.hub.schedule.cancel', entityType: 'HubRule', entityId: row.id, before: { from: had.from, values: had.values }, after: null });
+  return { id: row.id };
+}
+
+/**
+ * Puts in every scheduled change whose day has come (the rules clock, and each time the Rules screen opens). Written in the system's name,
+ * with the OK the owner gave when scheduling; a change that no longer fits the rule is dropped and logged, never forced.
+ */
+export async function applyDueHubSchedules(deps: HubDeps, opts: { storeId: number }): Promise<{ applied: number; dropped: number }> {
+  const entries = await readSchedule(deps, opts.storeId);
+  const { due, waiting } = splitDue(entries, todayOf(deps));
+  if (!due.length) return { applied: 0, dropped: 0 };
+  const who: Who = { actor: SYSTEM, storeId: opts.storeId, ctx: { source: 'job' } };
+  const st = anySettings(deps);
+  let applied = 0;
+  let dropped = 0;
+  for (const e of due) {
+    const row = (HUB_ROWS as readonly HubRow[]).find((r): r is HubSettingRow => r.type === 'setting' && r.id === e.rowId);
+    if (!row || !hasKey(row.key)) {
+      dropped++;
+      continue;
+    }
+    const before = await st.value(row.key, { storeId: opts.storeId });
+    let next: unknown = before;
+    for (const [path, v] of Object.entries(e.values)) next = setPath(next, path, v);
+    try {
+      await st.set(row.key, next, storeTarget(opts.storeId), { actorId: null, reason: 'Rules: scheduled change started', ...(row.money ? { ownerApproved: true } : {}) });
+      await logChange(deps.db, who, { action: 'rules.hub.schedule.start', entityType: 'HubRule', entityId: row.id, before, after: next });
+      applied++;
+    } catch {
+      await logChange(deps.db, who, { action: 'rules.hub.schedule.dropped', entityType: 'HubRule', entityId: row.id, before: { from: e.from, values: e.values }, after: null });
+      dropped++;
+    }
+  }
+  await st.set(SCHEDULE_KEY, { entries: waiting }, storeTarget(opts.storeId), { actorId: null, reason: 'Rules: scheduled changes started', ownerApproved: true });
+  return { applied, dropped };
 }
