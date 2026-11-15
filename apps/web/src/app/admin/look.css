@@ -650,3 +650,53 @@
 @media (max-width:760px){.adm2 .a3-latest{grid-template-columns:minmax(0,1fr) auto}.adm2 .a3-latest .a2-pill,.adm2 .a3-lt-ago{display:none}}
 .adm2 .a3-codstrip{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--warnbg);color:inherit;font-size:13px;margin-top:20px}
 .adm2 .a3-codstrip span{flex:1 1 220px;min-width:0}
+
+/* PR 862 (prototype v5 Home): the month target as a navy hero card with "Change target", the arrow mark on every "Do now" row. */
+.adm2 .a3-card.a3-hero-card{background:var(--lm-hero);color:var(--lm-on-hero);border-color:transparent}
+.adm2 .a3-hero-card .a3-chd h2,.adm2 .a3-hero-card .a3-cap,.adm2 .a3-hero-card .a3-empty,.adm2 .a3-hero-card .a3-empty *{color:var(--lm-on-hero)}
+.adm2 .a3-hero-card .a3-cap.c{color:var(--lm-on-hero2)}
+.adm2 .a3-hero-card .a3-bar{background:var(--lm-on-hero-line)}
+.adm2 .a3-hero-card .a3-bar i{background:var(--lm-on-hero)}
+.adm2 .a3-tgt-btn{margin-top:10px;min-height:44px;padding:0 4px;background:none;border:0;color:inherit;text-decoration:underline;font-size:13px;font-weight:600;cursor:pointer}
+.adm2 .a3-tgt-dlg{border:1px solid var(--lm-ln);border-radius:16px;padding:20px;width:min(420px,calc(100vw - 32px));background:var(--lm-sf);color:var(--lm-ink)}
+.adm2 .a3-tgt-dlg::backdrop{background:color-mix(in srgb,var(--lm-hero-solid) 45%,transparent)}
+.adm2 .a3-tgt-dlg h3{font-size:17px;margin:0 0 12px}
+.adm2 .a3-tgt-dlg label{display:block;font-size:13px;color:var(--lm-ink2);margin-bottom:6px}
+.adm2 .a3-tgt-in{display:flex;align-items:center;gap:8px}
+.adm2 .a3-tgt-in input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--lm-ln);border-radius:10px;background:var(--lm-sf2);color:inherit;font-size:16px}
+.adm2 .a3-tgt-err{color:var(--bad);font-size:13px;margin-top:8px}
+.adm2 .a3-tgt-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.adm2 .a3-tgt-foot .a2-btn{min-height:44px}
+.adm2 .a3-prob .a3-go{flex:none;align-self:center;width:8px;height:8px;border-top:2px solid var(--mute);border-right:2px solid var(--mute);transform:rotate(45deg);margin:0 4px 0 2px}
+.adm2 .a3-prob:hover .a3-go{border-color:var(--g)}
+[data-lm-look] .lm-today .lm-goal{background:var(--lm-hero);color:var(--lm-on-hero)}
+[data-lm-look] .lm-today .lm-goal>h2,[data-lm-look] .lm-today .lm-goal .lm-goal-n,[data-lm-look] .lm-today .lm-goal .lm-ring-t{color:var(--lm-on-hero);fill:var(--lm-on-hero)}
+[data-lm-look] .lm-today .lm-goal .lm-goal-x,[data-lm-look] .lm-today .lm-goal .lm-note{color:var(--lm-on-hero2)}
+[data-lm-look] .lm-today .lm-goal .lm-ring-bg{stroke:var(--lm-on-hero-line)}
+[data-lm-look] .lm-today .lm-goal .lm-ring-fg{stroke:var(--lm-ok-on-hero)}
+[data-lm-look] .lm-today .lm-goal .a3-tgt-btn{color:var(--lm-on-hero)}
+[data-lm-look] .lm-today .lm-goal .lm-btn{color:var(--lm-on-hero);border-color:var(--lm-on-hero-line)}
+
+/* PR 862 (prototype v5 Home B "Calm" and C "Classic"): the navy hero card, "Do now" beside four figures, four figure cards in a row. */
+.adm2 .a3-calm{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;padding:22px 24px;margin-top:20px}
+.adm2 .a3-calm .a3-chd{display:none}
+.adm2 .a3-calm-l{display:flex;flex-direction:column;gap:6px;min-width:0}
+.adm2 .a3-calm-v{font-size:34px;line-height:1.15;color:var(--lm-on-hero);overflow-wrap:anywhere}
+.adm2 .a3-calm .a3-cap{color:var(--lm-on-hero2);white-space:normal}
+.adm2 .a3-calm-t{margin-top:12px}
+.adm2 .a3-calm-r{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--lm-on-hero2);min-width:0}
+.adm2 .a3-calm-r p{margin:0}
+.adm2 .a3-calm .a3-dlt{color:var(--lm-on-hero)}
+.adm2 .a3-calm-g2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;margin-top:20px;align-items:start}
+.adm2 .a3-calm-g2.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+.adm2 .a3-calm-g2.solo{grid-template-columns:minmax(0,1fr)}
+.adm2 .a3-calm-g2 .a3-six{margin-top:0}
+.adm2 .a3-six.a3-six-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.adm2 .a3-six.a3-six-4 .a3-six-v{font-size:26px}
+.adm2 .a3-calm-g2 .a3-six.a3-six-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.adm2 .a3-classic-trend{margin-top:20px}
+.adm2 .a3-dg3.a3-proto .a3-stk>.a3-card{margin:0}
+.adm2 .lm-island .a3-calm-g2>*{min-width:0}
+@media (max-width:1199px){.adm2 .a3-six.a3-six-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1023px){.adm2 .a3-calm{grid-template-columns:minmax(0,1fr)}.adm2 .a3-calm-g2,.adm2 .a3-calm-g2.even{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:599px){.adm2 .a3-calm{padding:16px}.adm2 .a3-calm-v{font-size:28px}.adm2 .a3-six.a3-six-4,.adm2 .a3-calm-g2 .a3-six.a3-six-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
