@@ -17,7 +17,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { costsScreen, statementCostsCard } from '@/lib/costs-api';
+import { costsScreen, staffCostsCard, statementCostsCard } from '@/lib/costs-api';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { inventoryDeps } from '@/lib/inventory-api';
 import { t, type Dict } from '@/lib/i18n';
@@ -56,7 +56,7 @@ export default async function CostsPage() {
   const who: inv.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const idep = await inventoryDeps(access.deps);
   const at = { storeId: MOTHER_STORE_ID };
-  const [screen, currency, resendDays, stCard] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at), statementCostsCard(access.deps, MOTHER_STORE_ID)]);
+  const [screen, currency, resendDays, stCard, staff] = await Promise.all([costsScreen(idep, who), access.deps.resolver.value('store.currency', at), access.deps.resolver.value('books.resend.days', at), statementCostsCard(access.deps, MOTHER_STORE_ID), staffCostsCard(access.deps, MOTHER_STORE_ID)]);
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   const canEnterLines = canEdit || (access.guard.permissions?.has('costlines.write') ?? false);
   const today = screen.fixed.today;
@@ -83,7 +83,7 @@ export default async function CostsPage() {
     <div className="a2-z" data-testid="costs-page" data-lm-ready="" data-linked={screen.fixed.linked ? 'yes' : 'no'}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyCosts.title')} sub={t(view.dict, 'moneyCosts.sub')} />
       <SectionTabs view={view} current={KEY} />
-      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} />
+      <CostsScreen dict={view.dict} locale={view.locale} money={moneyOf(currency, view.locale)} fixed={screen.fixed} entries={screen.entries.rows} entriesMore={screen.entries.more} entriesLimit={screen.entries.limit} noCostLines={screen.noCostLines} lines={inv.COST_LINE_ORDER} openFrom={openFrom} canEdit={canEdit} canEnterLines={canEnterLines} staff={{ people: [...staff.value.people], version: staff.version }} />
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/costs/statements" screen={{ key: stCard.key, value: { ...stCard.value }, version: stCard.version }} fields={stFields} texts={stTexts} canEdit={canEdit} testId="costs-from-statements" />
       </div>

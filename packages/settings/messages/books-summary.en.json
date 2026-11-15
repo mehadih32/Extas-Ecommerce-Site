@@ -43,6 +43,10 @@
         "label": "Costs from the imported statements",
         "help": "Courier charges: a courier's COD statement, once imported, writes the charges it deducted as one Courier cost on the day of the import. Gateway fees: a gateway's statement writes its fees as one Payment and COD fees cost. Turn one on only when nobody enters the same costs by hand any more, or they count twice."
       }
+    },
+    "staffCosts": {
+      "label": "Salaries and monthly costs",
+      "help": "Each person's salary and each monthly bill (rent, internet, other) with the amount from a month on. A changed amount counts from its month: earlier months keep the old one. The month's fixed costs are still saved on Money > Costs; this list only adds them up. No money is paid from here."
     }
   }
 }

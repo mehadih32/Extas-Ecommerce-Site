@@ -127,6 +127,55 @@
         "network": "No connection. Nothing was saved; try again.",
         "other": "It could not be saved. Try again."
       }
+    },
+    "staff": {
+      "title": "Salaries and monthly costs",
+      "sub": "Each person's salary and each monthly bill, with the amount from a month on. Change an amount from a month: earlier months keep the old figure.",
+      "none": "Nobody added yet. Add a person or a monthly bill (rent, internet).",
+      "colName": "Name",
+      "colKind": "Kind",
+      "colPayDay": "Pay day",
+      "colAmount": "{month}",
+      "colActions": "Actions",
+      "kind": {
+        "salary": "Salary",
+        "rent": "Rent",
+        "utilities": "Utilities",
+        "other": "Other"
+      },
+      "stoppedFrom": "Stopped from {month}",
+      "stops": "stops",
+      "change": "Change amount",
+      "stop": "Stop",
+      "resume": "Resume",
+      "newAmount": "New monthly amount",
+      "fromMonth": "From month",
+      "fromHelp": "Earlier months keep their old amount.",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "post": "Post (optional)",
+      "monthlyAmount": "Monthly amount",
+      "add": "Add person or bill",
+      "addOk": "Add to the list",
+      "totalsFor": "{month} adds up to",
+      "use": "Use for {month}",
+      "save": "Save list",
+      "saving": "Saving…",
+      "saved": "Salaries and monthly costs saved.",
+      "filled": "The fixed costs below are filled from the list. Check them, then press Save there.",
+      "needAll": "Write a name, an amount, a month and a pay day from 1 to 28.",
+      "needAmount": "Write an amount and a month.",
+      "note": "Nothing is paid from here. Use for a month only fills the form above; saving that form is what records the month.",
+      "err": {
+        "STALE": "Someone changed this list. The page is read again; please try once more.",
+        "INVALID_INPUT": "Something in the list is not valid, or a saved person or amount was removed (stop a person instead).",
+        "FORBIDDEN": "You may not change this list.",
+        "forbidden": "You may not change this list.",
+        "unauthorized": "Please sign in again.",
+        "network": "No connection. Try again.",
+        "other": "The list was not saved. Try again."
+      },
+      "history": "History"
     }
   }
 }
