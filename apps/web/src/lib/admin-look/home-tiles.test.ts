@@ -6,6 +6,7 @@ import type { ShellViewer } from '../admin-shell/sections';
 const profit: DashProfit = {
   cur: { salesMinor: 200_000, netMinor: null, adsMinor: 50_000, orders: 10 },
   prev: { salesMinor: 100_000, netMinor: 5_000, adsMinor: 0, orders: 8 },
+  snap: [],
 };
 
 describe('PR 691 · Home Command tiles', () => {

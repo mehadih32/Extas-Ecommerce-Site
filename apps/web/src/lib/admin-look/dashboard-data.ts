@@ -199,9 +199,16 @@ export interface DashProfitSpan {
   adsMinor: number | null;
   orders: number;
 }
+/** The prototype's "Profit snapshot": today, the last 7 days and this month, each with the span just before it (same hours yesterday, the 7 days before, the same days of last month). */
+export interface DashSnap {
+  key: 'today' | '7d' | 'month';
+  cur: DashProfitSpan;
+  prev: DashProfitSpan;
+}
 export interface DashProfit {
   cur: DashProfitSpan;
   prev: DashProfitSpan;
+  snap: DashSnap[];
 }
 /** The cash the couriers hold for the shop (COD collected, not yet paid out) and how many parcels it is in. */
 /** PR 729: one ad channel of the period — what was spent, the delivered sales it brought and the sales per 1 spent. */
@@ -634,7 +641,20 @@ async function profit(c: DashCtx): Promise<DashProfit> {
     return { salesMinor: r.salesMinor, netMinor: r.netProfitMinor, adsMinor: r.adsMinor, orders: r.orders };
   };
   const [cur, prev] = await Promise.all([span(c.range.from, c.range.to), span(c.range.prev.from, c.range.prev.to)]);
-  return { cur, prev };
+  const day = c.range.to;
+  const mFrom = monthOf(day).from;
+  const mDays = Number(day.slice(8, 10));
+  const [py, pm] = [Number(mFrom.slice(0, 4)), Number(mFrom.slice(5, 7))];
+  const pmFrom = new Date(Date.UTC(py, pm - 2, 1)).toISOString().slice(0, 10);
+  const pmLast = new Date(Date.UTC(py, pm - 1, 0)).getUTCDate();
+  const pmTo = `${pmFrom.slice(0, 8)}${String(Math.min(mDays, pmLast)).padStart(2, '0')}`;
+  const defs: { key: DashSnap['key']; from: string; to: string; pf: string; pt: string }[] = [
+    { key: 'today', from: day, to: day, pf: shiftDay(day, -1), pt: shiftDay(day, -1) },
+    { key: '7d', from: shiftDay(day, -6), to: day, pf: shiftDay(day, -13), pt: shiftDay(day, -7) },
+    { key: 'month', from: mFrom, to: day, pf: pmFrom, pt: pmTo },
+  ];
+  const snap = await Promise.all(defs.map(async (d) => ({ key: d.key, cur: await span(d.from, d.to), prev: await span(d.pf, d.pt) })));
+  return { cur, prev, snap };
 }
 
 /** S28 · PR 691: the cash the couriers hold for the shop. */
@@ -645,7 +665,7 @@ async function cod(c: DashCtx): Promise<DashCod> {
 
 /** PR 729: the period's ad spend and delivered sales channel by channel (Marketing › Report's own figures; none when it is switched off). */
 async function ads(c: DashCtx): Promise<DashAds> {
-  const o = await reportOverview({ db: c.db, resolver: c.settings as Parameters<typeof reportOverview>[0]['resolver'], now: () => c.now }, { from: c.range.from, to: c.range.to });
+  const o = await reportOverview({ db: c.db, resolver: c.settings as Parameters<typeof reportOverview>[0]['resolver'], now: () => c.now }, { from: c.range.from, to: c.range.to }, { always: true });
   const rows = (o.report?.channels ?? [])
     .filter((x) => x.kind === 'ads')
     .map((x) => ({ key: x.key, spendMinor: x.spendMinor, salesMinor: x.salesMinor, per: salesPerUnit(x.salesMinor, x.spendMinor) }));

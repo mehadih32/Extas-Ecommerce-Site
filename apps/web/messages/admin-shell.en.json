@@ -884,7 +884,18 @@
         "fix": "Fix",
         "stop": "Stop"
       },
-      "shortKeepWas": "In this period you keep {keep} of every {hundred} sold, after all costs (the period before: {was})."
+      "shortKeepWas": "In this period you keep {keep} of every {hundred} sold, after all costs (the period before: {was}).",
+      "snap_today": "Today",
+      "snap_7d": "Last 7 days",
+      "snap_month": "This month",
+      "snapVs_today": "vs same hours yesterday",
+      "snapVs_7d": "vs the 7 days before",
+      "snapVs_month": "vs same days of last month",
+      "snapNote": "Net profit after every cost. Monthly fixed costs (rent, salaries) are spread per day, so Today is fair. Tap Profit & loss for the details.",
+      "courTitle": "Delivery: by courier",
+      "courSub": "Delivery success, last {n} days",
+      "courLink": "Delivery report",
+      "courNone": "No parcel has finished yet"
     }
   },
   "look": {
