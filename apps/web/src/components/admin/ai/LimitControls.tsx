@@ -8,59 +8,58 @@ import { useState } from 'react';
 import { toMajor, toMinor, type Money } from '@/components/admin/products/model';
 import { runCall, withBody, type LmCall } from '@/lib/admin-lumen/safety';
 import { showToast } from '@/components/admin/lumen/Toast';
+import { call } from '@/components/admin/api';
+import { ConfirmDialog } from '@/components/admin/settings/ConfirmDialog';
 
 const CALL: LmCall = { method: 'POST', url: '/api/admin/ai/limits' };
 
-export function CeilingInput({ capMinor, money, label, saveLabel, savedText, failedText, invalidText }: { capMinor: number | null; money: Money; label: string; saveLabel: string; savedText: string; failedText: string; invalidText: string }) {
+export interface CeilingPinTexts {
+  title: string;
+  text: string;
+  label: string;
+  ok: string;
+  cancel: string;
+  /** Error words by code (PIN_REQUIRED, WRONG_PIN, …, other). */
+  err: Record<string, string>;
+}
+
+/** The monthly AI ceiling is a money limit: saving it asks the owner's PIN (the server checks it again). No Undo toast: an undo would need the PIN too. */
+export function CeilingInput({ capMinor, money, label, saveLabel, savedText, failedText, invalidText, pin }: { capMinor: number | null; money: Money; label: string; saveLabel: string; savedText: string; failedText: string; invalidText: string; pin: CeilingPinTexts }) {
   const router = useRouter();
   const [saved, setSaved] = useState(toMajor(capMinor, money));
   const [text, setText] = useState(saved);
-  const [busy, setBusy] = useState(false);
+  const [ask, setAsk] = useState(false);
   const dirty = text !== saved;
 
-  const save = async () => {
-    if (busy) return;
+  const open = () => {
     const minor = toMinor(text, money);
     if (minor === undefined || (minor !== null && minor < 1)) {
       showToast({ text: invalidText, tone: 'bad' });
       return;
     }
-    const prev = toMinor(saved, money) ?? null;
-    setBusy(true);
-    const ok = await runCall(withBody(CALL, { aiCapMinor: minor }));
-    setBusy(false);
-    if (!ok) {
-      showToast({ text: failedText, tone: 'bad' });
-      return;
-    }
+    setAsk(true);
+  };
+  const save = async (pinText: string): Promise<string | null> => {
+    if (!pinText) return pin.err.PIN_REQUIRED ?? failedText;
+    const minor = toMinor(text, money) ?? null;
+    const r = await call('POST', CALL.url, { aiCapMinor: minor, pin: pinText });
+    if (!r.data.ok) return r.status === 0 ? failedText : (pin.err[String(r.data.error)] ?? pin.err.other ?? failedText);
     setSaved(text);
+    setAsk(false);
     router.refresh();
-    showToast({
-      text: savedText,
-      undo: {
-        kind: 'setting.switch',
-        run: async () => {
-          const u = await runCall(withBody(CALL, { aiCapMinor: prev }));
-          if (u) {
-            const back = toMajor(prev, money);
-            setSaved(back);
-            setText(back);
-            router.refresh();
-          }
-          return u;
-        },
-      },
-    });
+    showToast({ text: savedText, tone: 'ok' });
+    return null;
   };
 
   return (
     <div className="ai-cap" data-testid="ai-ceiling">
-      <input type="text" inputMode="decimal" aria-label={label} className="a2-sel ai-capin" data-testid="ai-ceiling-input" value={text} disabled={busy} onChange={(e) => setText(e.target.value)} />
+      <input type="text" inputMode="decimal" aria-label={label} className="a2-sel ai-capin" data-testid="ai-ceiling-input" value={text} onChange={(e) => setText(e.target.value)} />
       {dirty ? (
-        <button type="button" className="a2-btn sm pri" disabled={busy} onClick={() => void save()} data-testid="ai-ceiling-save">
+        <button type="button" className="a2-btn sm pri" onClick={open} data-testid="ai-ceiling-save">
           {saveLabel}
         </button>
       ) : null}
+      {ask ? <ConfirmDialog testId="ai-ceiling-pin" tone="pri" texts={{ title: pin.title, effects: [pin.text], reason: null, cancel: pin.cancel, ok: pin.ok, working: '…', close: pin.cancel, pin: pin.label }} onClose={() => setAsk(false)} onConfirm={(_r, pinText) => save(pinText)} /> : null}
     </div>
   );
 }

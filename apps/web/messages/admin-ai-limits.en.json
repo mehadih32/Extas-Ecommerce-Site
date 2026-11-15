@@ -15,7 +15,19 @@
       "saved": "AI ceiling saved.",
       "invalid": "Type an amount above zero, or leave it empty for no ceiling.",
       "none": "no ceiling",
-      "help": "Change ceiling: type the most the AI may cost a month, or leave it empty for none. Warning at {pct}%."
+      "help": "Change ceiling: type the most the AI may cost a month, or leave it empty for none. Warning at {pct}%.",
+      "pin": {
+        "title": "Change the AI ceiling?",
+        "text": "This is a money limit, so it needs the owner's PIN.",
+        "label": "Owner's PIN",
+        "ok": "Change ceiling",
+        "cancel": "Cancel",
+        "PIN_REQUIRED": "Type the owner's PIN.",
+        "PIN_NOT_SET": "The owner has not set a PIN yet.",
+        "PIN_LOCKED": "Too many wrong tries. Wait a while.",
+        "WRONG_PIN": "That PIN is not right.",
+        "other": "That did not save. Please try again."
+      }
     },
     "agents": {
       "h": "Cap per agent",
