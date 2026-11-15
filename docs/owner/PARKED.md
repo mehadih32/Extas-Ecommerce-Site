@@ -1,4 +1,4 @@
-# PARKED — everything that is closed, parked or switched off (14 Nov 2026, CN-051)
+# PARKED — everything that is closed, parked or switched off (14 Nov 2026, CN-051; S29 added 15 Nov, CN-054)
 
 **The project has no open work.** What is listed here stays as it is until the owner says so. A new problem comes to
 the chat first and is discussed there. Claude shows the owner this list when he asks "what is parked?".
@@ -15,6 +15,7 @@ Where things are written: the register [`docs/MASTER-REGISTER.md`](../MASTER-REG
 |---|---|---|
 | **S17 Multi-store** (PR 356–377, 511–512; 24 PRs) | The shop is built for one store, extas.com.bd. 1 PR is built and kept (PR 362, the Cloudflare cache rule and host names); **23 PRs are closed**, not built. S17 stays switched off (`stages.closedShown`). | The owner says "open S17". Then `stages.closedShown` for S17 is switched on and the 23 PRs are built in register order, same gates as the rest. |
 | **S26 Installation, documentation and distribution** (PR 513–518; 6 PRs) | The handover pack for giving the shop to another business. Parked. | The owner says "build S26". Needs S17 first for anything that needs a second store. |
+| **S29 Geography map (Reports)** (PR 750–755; 6 PRs, CN-054, 15 Nov 2026) | A map of Bangladesh coloured by district, thana and area: orders, sales, delivered, returned, return rate, top product and category; day / month / 6 months / year / custom; drill-down; a click shows the top products; two periods side by side. Planned only, nothing built. Recommended to wait: the shop is new, and the boundary files are the open risk. Plan (Bengali): [`docs/reports/2026-11-15-geo-map-plan.md`](../reports/2026-11-15-geo-map-plan.md). | The owner says "build the geography map" (or "build the light version", PR 750–753). Then it is built in register order with the same gates. One switch `reports.geoMap`, off as shipped. |
 | **S27 No-ERP stock module** (unnumbered) | A stock module for a shop with no ERP. Has no PR numbers yet. | The owner approves it, the next free PR numbers are filed in the register, then it is built. |
 | **Admin look ক Clear Day** (PR 649) | A second Lumen look. Parked. The look the owner selected stays. | The owner says "build ক"; the look lives on the theme layer of PR 625 and shows in Settings › Admin look (PR 630). Mock-up: `docs/demo/admin-look/ADMIN-LOOKS-V1.html`. |
 | **Admin look খ Night Atelier** (PR 650) | A third Lumen look. Parked. | The owner says "build খ". Same place as above. |
