@@ -10,20 +10,21 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { HeroChart } from '@/components/admin/lumen/HeroChart';
 import { SummaryTiles, type SummaryTile } from '@/components/admin/lumen/SummaryTiles';
 import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { TelegramButton } from '@/components/admin/reports/TelegramButton';
-import { HowFigures, ReportTable } from '@/components/admin/reports/ReportParts';
+import { ReportTable } from '@/components/admin/reports/ReportParts';
+import '@/components/admin/reports/report-bar.css';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
+import { quickPeriod } from '@/lib/cost-report';
 import { t } from '@/lib/i18n';
 import { makeFmt } from '@/lib/reports-v5/fmt';
 import { loadReview, loadReviewBase } from '@/lib/reports-v5/load';
-import { change, changePerDay, daysBetween, heroRange, reviewLines, seriesOf, spanDays, type ReviewLine } from '@/lib/reports-v5/model';
+import { change, changePerDay, reviewLines, spanDays, type ReviewLine } from '@/lib/reports-v5/model';
 import { withReportsV5 } from '@/lib/reports-v5/words';
 import '../../settings-cards.css';
 import '../../money/money.css';
@@ -68,6 +69,23 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
       return q.from.slice(0, 7);
     }
   })();
+  const monthOf = (ymd: string, long = true) => {
+    try {
+      return new Intl.DateTimeFormat(view.locale, { month: long ? 'long' : 'short', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${ymd}T12:00:00Z`));
+    } catch {
+      return ymd.slice(0, 7);
+    }
+  };
+  const lastSpan = quickPeriod('lastMonth', b.today);
+  const thisSpan = quickPeriod('month', b.today);
+  const monthYear = (ymd: string) => {
+    try {
+      return new Intl.DateTimeFormat(view.locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${ymd}T12:00:00Z`));
+    } catch {
+      return ymd.slice(0, 7);
+    }
+  };
+  const beforeName = monthOf(b.before.to);
   const rate = r.channels.total.returnRatePct;
   const rateWas = r.channelsWas.total.returnRatePct;
   const perDay = (a: number | null, z: number | null) => changePerDay(a, nowDays, z, wasDays);
@@ -92,7 +110,6 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
   );
   const say = (l: ReviewLine) => c(`line.${l.key}`, l.vars);
 
-  const vs = c('compared', { from: f.day(b.before.from), to: f.day(b.before.to) });
   const tiles: SummaryTile[] = [
     { key: 'sales', label: c('kSales'), value: now.salesMinor, shown: f.amount(now.salesMinor), format: f.format, delta: salesChange, vs: c('perDay') },
     now.netProfitMinor === null
@@ -103,22 +120,6 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
       ? { key: 'returns', label: c('kReturns'), value: 0, shown: '—', format: { kind: 'number', locale: view.locale }, word: true }
       : { key: 'returns', label: c('kReturns'), value: rate, shown: f.pctOf(rate), format: { kind: 'number', locale: view.locale }, delta: change(rate, rateWas), good: 'down' },
   ];
-
-  const days = daysBetween(q.from, q.to, b.limits.maxDayRows);
-  const prevDays = daysBetween(b.before.from, b.before.to, b.limits.maxDayRows);
-  const hero = heroRange({
-    key: 'p',
-    label: month,
-    days,
-    values: seriesOf(days, now.byDay, (x) => x.salesMinor),
-    before: seriesOf(prevDays, was.byDay, (x) => x.salesMinor),
-    total: now.salesMinor,
-    delta: salesChange,
-    vs,
-    amount: f.amount,
-    dayLabel: f.dayShort,
-    mini: [{ label: cc('orders'), shown: f.num(now.orders) }],
-  });
 
   const net = (p: typeof now) => p.netProfitMinor;
   const numbers: { key: string; a: number | null; z: number | null; sub?: boolean; strong?: boolean }[] = [
@@ -161,34 +162,35 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
 
   return (
     <div className="a2-z lm-rp" data-testid="rp-review" data-lm-ready="" data-from={q.from} data-to={q.to} data-month={b.which}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title', { month })} sub={c('sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={cc('pageTitle')} sub={c('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <nav className="ct-actions a2-mt12" aria-label={c('switch')} data-testid="rp-month-switch">
-        {(['last', 'this'] as const).map((m) => (
-          <Link key={m} className={`a2-btn cr-tap${b.which === m ? ' pri' : ''}`} href={`${HERE}?m=${m}`} aria-current={b.which === m ? 'true' : undefined} data-testid={`rp-month-${m}`}>
-            {c(m)}
-          </Link>
-        ))}
-        <a className="a2-btn cr-tap" href={`/api/admin/reports/export/review?m=${b.which}`} download data-testid="rp-csv">
-          {cc('csv')}
-        </a>
-        <PrintButton label={c('pdf')} testId="rp-pdf" />
-        <TelegramButton
-          testId="rp-tg"
-          disabledReason={access.guard.permissions?.has('reports.analytics.write') ? null : c('tgNoKey')}
-          texts={{ label: c('tg'), sending: c('tgSending'), sent: c('tgSent'), skipped: c('tgSkipped'), failed: c('tgFailed') }}
-        />
-        <Link className="a2-btn cr-tap" href="/admin/reports/packs" data-testid="rp-to-packs">
-          {c('toPacksBtn')}
-        </Link>
-      </nav>
-      <p className="a2-xs a2-mute a2-mt6">
-        {cc('period', { from: f.day(q.from), to: f.day(q.to) })} · {vs}
-      </p>
+      <section className="rpbar a2-card a2-mt12" data-testid="rp-bar" aria-label={c('switch')}>
+        <div className="rpbar-top">
+          <nav className="rpseg" aria-label={c('switch')} data-testid="rp-month-switch">
+            {(['last', 'this'] as const).map((m) => (
+              <Link key={m} className={b.which === m ? 'on' : ''} href={`${HERE}?m=${m}`} aria-current={b.which === m ? 'true' : undefined} data-testid={`rp-month-${m}`}>
+                {m === 'last' ? monthOf(lastSpan.from) : c('thisSoFar', { month: monthOf(thisSpan.from) })}
+              </Link>
+            ))}
+          </nav>
+          <span className="rpbar-per" data-testid="rp-period">
+            {c('comparedWith', { month: beforeName })}
+          </span>
+          <span className="rpbar-grow" />
+          <span className="rpbar-btns">
+            <PrintButton label={`⎙ ${c('pdfShort')}`} testId="rp-pdf" cls="a2-btn sm cr-tap" />
+            <Link className="a2-btn sm cr-tap" href="/admin/reports/packs" data-testid="rp-to-packs">
+              {c('everyMonth')}
+            </Link>
+            <TelegramButton
+              testId="rp-tg"
+              disabledReason={access.guard.permissions?.has('reports.analytics.write') ? null : c('tgNoKey')}
+              texts={{ label: c('tg'), sending: c('tgSending'), sent: c('tgSent'), skipped: c('tgSkipped'), failed: c('tgFailed') }}
+            />
+          </span>
+        </div>
+      </section>
       <SummaryTiles className="a2-mt12" tiles={tiles} label={cc('tilesLabel')} testId="rp-tiles" />
-      <div className="a2-mt12 mo-hero">
-        <HeroChart title={c('heroTitle')} ranges={[hero]} format={f.format} seriesName={c('heroSeries')} prevName={cc('heroPrev')} testId="rp-hero" />
-      </div>
 
       <div className="a2-kpis k3 a2-mt12">
         <section className="a2-card" data-testid="rp-good">
@@ -212,39 +214,33 @@ export default async function MonthlyReviewPage({ searchParams }: { searchParams
       </div>
 
       <section className="a2-card a2-mt12" aria-labelledby="rp-num" data-testid="rp-numbers">
-        <h2 className="a2-h3" id="rp-num">
-          {c('numbers')}
-        </h2>
-        <p className="a2-cs">{c('numbersSub')}</p>
+        <div className="rp-numh">
+          <h2 className="a2-h3" id="rp-num">
+            {c('numbers')}
+          </h2>
+          <Link className="a2-lnk cr-link" href="/admin/reports" data-testid="rp-all-reports">
+            {c('allReports')} →
+          </Link>
+        </div>
         <ReportTable
           testId="rp-numbers-table"
           rowId="rp-number-row"
           empty={cc('none')}
-          cols={[{ h: c('colLine') }, { h: c('colThis'), right: true }, { h: c('colBefore'), right: true }]}
+          rowCls={(i) => (numbers[i]?.strong ? 'strong' : numbers[i]?.sub ? 'sub' : undefined)}
+          cols={[{ h: c('colLine') }, { h: monthYear(q.from), right: true }, { h: beforeName, right: true }]}
           rows={numbers.map((x) => {
             const label = c(`line.${x.key}`);
-            return [x.strong ? <b key="l">{label}</b> : <span key="l" style={x.sub ? { paddingLeft: 14 } : undefined}>{label}</span>, x.strong ? <b key="a">{f.maybe(x.a, cc('unknown'))}</b> : f.maybe(x.a, cc('unknown')), quiet(f.maybe(x.z, cc('unknown')))];
+            return [label, f.maybe(x.a, cc('unknown')), quiet(f.maybe(x.z, cc('unknown')))];
           })}
         />
-        <div className="ct-actions a2-mt12">
-          <Link className="a2-btn cr-tap" href={`/admin/money/profit?from=${q.from}&to=${q.to}`} data-testid="rp-open-pnl">
+        <p className="rp-note">
+          {c('numbersSub')}{' '}
+          <Link className="a2-lnk cr-link" href={`/admin/money/profit?from=${q.from}&to=${q.to}`} data-testid="rp-open-pnl">
             {c('open')}
           </Link>
-        </div>
+        </p>
       </section>
 
-      <HowFigures
-        dict={d}
-        testId="rp-how"
-        items={[
-          { label: c('kSales'), how: c('how.sales') },
-          { label: c('kProfit'), how: c('how.profit'), href: `/admin/money/profit?from=${q.from}&to=${q.to}`, linkText: c('open') },
-          { label: c('kOrders'), how: c('how.orders') },
-          { label: c('kReturns'), how: c('how.returns'), href: `/admin/money/profit/channels?from=${q.from}&to=${q.to}`, linkText: t(d, 'reportsV5.profit.byChannel') },
-          { label: `${c('good')} / ${c('bad')}`, how: c('how.lines') },
-        ]}
-      />
-      <p className="a2-xs a2-mute a2-mt12">{c('toPacks')}</p>
     </div>
   );
 }
