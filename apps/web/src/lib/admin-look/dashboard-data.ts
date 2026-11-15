@@ -13,9 +13,10 @@ import { profitReport } from '@extas/inventory';
 import type { AdminToday } from '@extas/settings';
 import type { QueueRow } from '../admin-shell/queues';
 import type { ShellViewer } from '../admin-shell/sections';
+import { latestNightlyCheck } from '../admin-health/smoke-runs';
 import { OFF_SITE, offSiteMissing } from '../backup-gate';
 import { reportOverview } from '../marketing/report';
-import { moneyOverview } from '../money-overview';
+import { COD_OWED_OUTCOMES, COD_OWED_STATES, moneyOverview } from '../money-overview';
 import { chartWindow, shiftDay, type DashRange } from './range';
 
 // PR 631 (CN-036): 'feed' (the newest orders, Lumen Today's live feed) and 'goal' (this month's Sales against the
@@ -25,7 +26,7 @@ import { chartWindow, shiftDay, type DashRange } from './range';
 // `admin.dashboardDesigns.courierDays` days of orders by weekday and 2-hour slot, for the Command center design).
 // S28 · PR 691 (admin prototype v5, Home Command): 'profit' (net profit, delivered sales and ad spend of the period and the one before,
 // from the same report as Finance), 'cod' (the cash the couriers hold) and 'pins' (the library cards pinned to Home).
-export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours', 'profit', 'cod', 'pins', 'ads'] as const;
+export const DASH_PARTS = ['money', 'stages', 'delivery', 'top', 'lowStock', 'queues', 'offSite', 'feed', 'goal', 'funnel', 'hours', 'profit', 'cod', 'pins', 'ads', 'erp', 'pageCheck'] as const;
 export type DashPart = (typeof DASH_PARTS)[number];
 
 /** The keys a part needs (any one of them); the owner holds every key. */
@@ -45,6 +46,8 @@ export const PART_KEYS: Readonly<Record<DashPart, readonly string[]>> = {
   cod: ['payments.view'],
   pins: ['reports.read'],
   ads: ['marketing.campaigns.read'],
+  erp: ['vault.read'],
+  pageCheck: ['health.read'],
 };
 
 export const mayRead = (part: DashPart, v: ShellViewer) => v.owner || PART_KEYS[part].length === 0 || PART_KEYS[part].some((k) => v.perms.has(k));
@@ -220,6 +223,21 @@ export interface DashAdsRow {
   /** Sales per 1 spent (null: no spend or an unknown one). */
   per: number | null;
 }
+/** Prototype v5 Home "ERP link" card: whether the link works, when stock was last pulled, orders sent today and what the shop owes the ERP. */
+export interface DashErp {
+  linked: boolean;
+  failed: number;
+  stockAt: string | null;
+  sentToday: number;
+  owedMinor: number | null;
+}
+/** Prototype v5 Home "Nightly page check" line: the newest nightly run's time text, pages checked and the pages that failed. */
+export interface DashPageCheck {
+  at: string;
+  pages: number;
+  failed: string[];
+}
+
 export interface DashAds {
   rows: DashAdsRow[];
 }
@@ -227,6 +245,8 @@ export interface DashAds {
 export interface DashCod {
   minor: number;
   parcels: number;
+  /** Prototype v5 Home strip: parcels whose cash has been with a courier more than 7 days, and what they hold. */
+  old: { parcels: number; minor: number };
 }
 /** One library card pinned to Home: its figure (and the span before) when Home has it, else a link to the library. */
 export interface DashPin {
@@ -278,6 +298,8 @@ export interface DashboardData {
   cod: DashCod | null;
   pins: DashPin[] | null;
   ads: DashAds | null;
+  erp: DashErp | null;
+  pageCheck: DashPageCheck | null;
 }
 
 const OPEN = {
@@ -660,7 +682,12 @@ async function profit(c: DashCtx): Promise<DashProfit> {
 /** S28 · PR 691: the cash the couriers hold for the shop. */
 async function cod(c: DashCtx): Promise<DashCod> {
   const o = await moneyOverview(c.db, c.storeId, c.now, c.timeZone);
-  return { minor: o.cod.minor, parcels: o.cod.parcels };
+  const rows = await c.db.codCollection.findMany({
+    where: { storeId: c.storeId, outcome: { in: [...COD_OWED_OUTCOMES] }, state: { in: [...COD_OWED_STATES] }, settlementLineId: null, occurredAt: { lt: new Date(c.now.getTime() - 7 * DAY) } },
+    select: { collectedMinor: true, chargeCollectedMinor: true },
+  });
+  const old = rows.filter((r) => r.collectedMinor + r.chargeCollectedMinor > 0);
+  return { minor: o.cod.minor, parcels: o.cod.parcels, old: { parcels: old.length, minor: old.reduce((n, r) => n + r.collectedMinor + r.chargeCollectedMinor, 0) } };
 }
 
 /** PR 729: the period's ad spend and delivered sales channel by channel (Marketing › Report's own figures; none when it is switched off). */
@@ -672,12 +699,27 @@ async function ads(c: DashCtx): Promise<DashAds> {
   return { rows };
 }
 
+/** Prototype v5 Home "ERP link": read from the store's own ERP rows (queue, stock cursor, newest account figure). */
+async function erpCard(c: DashCtx): Promise<DashErp> {
+  const { db, storeId } = c;
+  const day = ymdIn(c.now, c.timeZone);
+  const since = period(c, day, day).from;
+  const [link, stock, sent, failed, acct] = await Promise.all([
+    db.erpStoreLink.findFirst({ where: { storeId, endedAt: null }, select: { id: true } }),
+    db.erpSyncState.findUnique({ where: { storeId_resource: { storeId, resource: 'stock' } }, select: { lastSuccessAt: true } }),
+    db.erpPush.count({ where: { storeId, documentType: 'order.create', status: 'SENT', sentAt: { gte: since } } }),
+    db.erpPush.count({ where: { storeId, status: { in: ['FAILED', 'DEAD'] } } }),
+    db.erpAccountState.findFirst({ where: { storeId }, orderBy: { checkedAt: 'desc' }, select: { balanceMinor: true } }),
+  ]);
+  return { linked: !!link, failed, stockAt: iso(stock?.lastSuccessAt), sentToday: sent, owedMinor: acct?.balanceMinor == null ? null : Number(acct.balanceMinor) };
+}
+
 export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Promise<DashboardData> {
   const parts = new Set(wanted.filter((p) => mayRead(p, c.viewer)));
   const chart = chartWindow(c.range, c.s.chartMinDays);
   const on = <T>(p: DashPart, f: () => Promise<T>): Promise<T | null> => (parts.has(p) ? f() : Promise.resolve(null));
   const needProfit = parts.has('profit') || parts.has('pins');
-  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr, pf, cd, pinRows, ad] = await Promise.all([
+  const [m, st, dl, tp, ls, qs, off, fd, gl, fn, hr, pf, cd, pinRows, ad, erp, pgc] = await Promise.all([
     on('money', () => money(c, chart)),
     on('stages', () => stages(c)),
     on('delivery', () => delivery(c)),
@@ -693,6 +735,8 @@ export async function loadDashboard(c: DashCtx, wanted: readonly DashPart[]): Pr
     on('cod', () => cod(c)),
     on('pins', () => c.db.reportView.findMany({ where: { storeId: c.storeId, reportKey: 'pin', archivedAt: null }, orderBy: { createdAt: 'asc' }, select: { name: true } })),
     on('ads', () => ads(c)),
+    on('erp', () => erpCard(c)),
+    on('pageCheck', () => latestNightlyCheck()),
   ]);
-  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr, profit: parts.has('profit') ? pf : null, cod: cd, pins: pinRows ? pinTiles(pinRows.map((r) => r.name), pf) : null, ads: ad };
+  return { parts, range: c.range, chart, money: m, stages: st, delivery: dl, top: tp, lowStock: ls, queues: qs, offSite: off, feed: fd, goal: gl, funnel: fn, hours: hr, profit: parts.has('profit') ? pf : null, cod: cd, pins: pinRows ? pinTiles(pinRows.map((r) => r.name), pf) : null, ads: ad, erp, pageCheck: pgc };
 }

@@ -18,6 +18,95 @@ import { can, rangeText, type DashProps } from './common';
 /** Slow stock and set-up lists are "This week"; bad-tone lists are "Urgent"; the rest is "Today" (the same split as design B). */
 const WEEK_LISTS: ReadonlySet<string> = new Set(['lowStock', 'countsReview', 'launch', 'agentFixes', 'erpKeptAtSwitch', 'ordersTwoSizes']);
 
+/**
+ * Prototype v5 "Do now": the dashed line under the list, "Nightly page check (03:00): N pages checked · all fine / N failed — pages",
+ * a link to the website analytics. Shown for a person who may read site health; "no run kept yet" before the first nightly run.
+ */
+export function PageCheckLine({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  if (!data.parts.has('pageCheck')) return null;
+  const pc = data.pageCheck;
+  const clock = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : new Intl.DateTimeFormat(f.locale, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: f.timeZone, numberingSystem: 'latn' }).format(d);
+  };
+  const text = pc
+    ? f.t('dsh.proto.pcLine', { at: clock(pc.at), pages: f.n(pc.pages), result: pc.failed.length ? f.t('dsh.proto.pcFailed', { n: f.n(pc.failed.length), names: pc.failed.slice(0, 2).join(', ') }) : f.t('dsh.proto.pcOk') })
+    : f.t('dsh.proto.pcNone');
+  return (
+    <Link className="a3-pchk" href="/admin/reports/health/smoke" data-testid="dash-pagecheck">
+      <ShellIcon name={pc && pc.failed.length ? 'alert' : 'check'} size={15} />
+      <span>{text}</span>
+    </Link>
+  );
+}
+
+/** Prototype v5 "ERP link" card: connection, when stock was last pulled, orders sent today and what the shop owes the ERP (or paid ahead). */
+export function ErpCard({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  const e = data.erp;
+  if (!e) return null;
+  const state = !e.linked ? 'off' : e.failed > 0 ? 'needs' : 'ok';
+  const owed = e.owedMinor ?? 0;
+  return (
+    <Card title={f.t('dsh.proto.erpTitle')} right={<Lnk href="/admin/settings/erp-link">{f.t('dsh.proto.erpDetails')}</Lnk>} testId="dash-erp">
+      <div className="a3-prob">
+        <span>
+          <b>{f.t('dsh.proto.erpConn')}</b>
+        </span>
+        <span className={`a2-pill ${state === 'ok' ? 'ok' : state === 'needs' ? 'warn' : ''}`}>{f.t(`dsh.proto.erp_${state}`)}</span>
+      </div>
+      <div className="a3-prob">
+        <span>
+          <b>{f.t('dsh.proto.erpStock')}</b>
+        </span>
+        <span className="a3-cap c">{e.stockAt ? f.ago(e.stockAt) : f.t('dsh.proto.erpNever')}</span>
+      </div>
+      <div className="a3-prob">
+        <span>
+          <b>{f.t('dsh.proto.erpSent')}</b>
+        </span>
+        <b className="a3-num">{f.n(e.sentToday)}</b>
+      </div>
+      <div className="a3-prob">
+        <span>
+          <b>{owed >= 0 ? f.t('dsh.proto.erpOwed') : f.t('dsh.proto.erpAhead')}</b>
+        </span>
+        <b className="a3-num">{e.owedMinor === null ? '—' : f.money(Math.abs(owed))}</b>
+      </div>
+    </Card>
+  );
+}
+
+/** Prototype v5 "Latest orders": the newest orders (number, name, place, total, status, how long ago), each a link to the order. */
+export function LatestOrders({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  const rows = data.feed;
+  if (!rows) return null;
+  return (
+    <Card title={f.t('dsh.proto.feedTitle')} right={<Lnk href="/admin/orders">{f.t('dsh.proto.feedAll')}</Lnk>} testId="dash-latest">
+      {rows.length ? (
+        rows.map((r) => {
+          const area = f.lang === 'bn' && r.areaBn ? r.areaBn : r.areaEn;
+          return (
+            <Link key={r.id} className="a3-latest" href={`/admin/orders/${r.id}`} data-testid="dash-latest-row">
+              <span className="a3-lt-n">
+                <b>#{r.number}</b> · {r.name ?? f.t('dsh.lm.someone')}
+                {area ? <span className="a3-cap c"> · {area}</span> : null}
+              </span>
+              <b className="a3-num">{f.money(r.totalMinor)}</b>
+              <span className="a2-pill">{f.t(`orders.st.${r.status}`)}</span>
+              <span className="a3-cap c a3-lt-ago">{f.ago(r.placedAt)}</span>
+            </Link>
+          );
+        })
+      ) : (
+        <Empty text={f.t('dsh.lm.noFeed')} />
+      )}
+    </Card>
+  );
+}
+
 export function DoNow({ p }: { p: DashProps }) {
   const { f, data } = p;
   const q = data.queues ?? [];
@@ -48,6 +137,7 @@ export function DoNow({ p }: { p: DashProps }) {
       ) : (
         <Empty text={f.t('dsh.prob.none')} />
       )}
+      <PageCheckLine p={p} />
     </Card>
   );
 }
@@ -256,29 +346,34 @@ export function SixTiles({ p }: { p: DashProps }) {
   const { f, data } = p;
   const m = data.money;
   const pf = data.profit;
-  type T = { key: string; label: string; value: string; sub?: string; line?: readonly number[]; color: string };
+  type T = { key: string; href: string; icon: ShellIconName; label: string; value: string; sub?: string; line?: readonly number[]; color: string };
   const tiles: T[] = [];
   if (m) {
-    tiles.push({ key: 'orders', label: f.t('dsh.proto.tOrders'), value: f.n(m.cur.ordered.orders), sub: f.money(m.cur.ordered.valueMinor), line: m.chart.orders, color: 'var(--a3-c1)' });
-    tiles.push({ key: 'sales', label: f.t('dsh.proto.tSales'), value: f.money(m.cur.sales.itemsMinor), sub: f.t('dsh.proto.tDelivered', { n: f.n(m.cur.sales.orders) }), line: m.chart.sales, color: 'var(--a3-c2, var(--a3-c1))' });
+    tiles.push({ key: 'orders', href: '/admin/orders', icon: 'bag', label: f.t('dsh.proto.tOrders'), value: f.n(m.cur.ordered.orders), sub: f.money(m.cur.ordered.valueMinor), line: m.chart.orders, color: 'var(--a3-c1)' });
+    tiles.push({ key: 'sales', href: '/admin/reports/orders', icon: 'truck', label: f.t('dsh.proto.tSales'), value: f.money(m.cur.sales.itemsMinor), sub: f.t('dsh.proto.tDelivered', { n: f.n(m.cur.sales.orders) }), line: m.chart.sales, color: 'var(--a3-c2, var(--a3-c1))' });
   }
-  if (pf && pf.cur.netMinor !== null) tiles.push({ key: 'net', label: f.t('dsh.proto.tNet'), value: f.money(pf.cur.netMinor), sub: pf.cur.salesMinor > 0 ? f.t('dsh.proto.shortKeep', { keep: f.per100(pf.cur.netMinor / pf.cur.salesMinor), hundred: f.hundred }) : undefined, color: 'var(--a3-c1)' });
-  if (data.cod) tiles.push({ key: 'cod', label: f.t('dsh.proto.tCod'), value: f.money(data.cod.minor), sub: f.t('dsh.proto.tParcels', { n: f.n(data.cod.parcels) }), color: 'var(--a3-c1)' });
-  if (data.delivery) tiles.push({ key: 'ret', label: f.t('dsh.proto.tReturn'), value: f.pct(data.delivery.returnRate), sub: f.t('dsh.proto.tOfFinished', { n: f.n(data.delivery.finished) }), color: 'var(--a3-c1)' });
+  if (pf && pf.cur.netMinor !== null) tiles.push({ key: 'net', href: '/admin/money', icon: 'chart', label: f.t('dsh.proto.tNet'), value: f.money(pf.cur.netMinor), sub: pf.cur.salesMinor > 0 ? f.t('dsh.proto.shortKeep', { keep: f.per100(pf.cur.netMinor / pf.cur.salesMinor), hundred: f.hundred }) : undefined, color: 'var(--a3-c1)' });
+  if (data.cod) tiles.push({ key: 'cod', href: '/admin/money', icon: 'wallet', label: f.t('dsh.proto.tCod'), value: f.money(data.cod.minor), sub: f.t('dsh.proto.tParcels', { n: f.n(data.cod.parcels) }), color: 'var(--a3-c1)' });
+  if (data.delivery) tiles.push({ key: 'ret', href: '/admin/reports/delivery', icon: 'undo', label: f.t('dsh.proto.tReturn'), value: f.pct(data.delivery.returnRate), sub: f.t('dsh.proto.tOfFinished', { n: f.n(data.delivery.finished) }), color: 'var(--a3-c1)' });
   if (pf) {
     const per = salesPerUnit(pf.cur.salesMinor, pf.cur.adsMinor);
-    tiles.push({ key: 'ads', label: f.t('dsh.proto.tAds'), value: pf.cur.adsMinor === null ? '—' : f.money(pf.cur.adsMinor), sub: per === null ? undefined : `${per.toFixed(1)}x`, color: 'var(--a3-c1)' });
+    tiles.push({ key: 'ads', href: '/admin/marketing', icon: 'mega', label: f.t('dsh.proto.tAds'), value: pf.cur.adsMinor === null ? '—' : f.money(pf.cur.adsMinor), sub: per === null ? undefined : `${per.toFixed(1)}x`, color: 'var(--a3-c1)' });
   }
   if (!tiles.length) return null;
   return (
     <div className="a3-six" data-testid="dash-six">
       {tiles.map((t) => (
-        <div className="a3-card a3-kpi" key={t.key} data-testid={`dash-six-${t.key}`}>
-          <span className="a3-cap">{t.label}</span>
+        <Link className="a3-card a3-kpi" href={t.href} key={t.key} data-testid={`dash-six-${t.key}`}>
+          <span className="a3-cap a3-six-h">
+            <i className="a3-six-i" aria-hidden="true">
+              <ShellIcon name={t.icon} size={15} />
+            </i>
+            {t.label}
+          </span>
           <b className="a3-num a3-six-v">{t.value}</b>
           {t.sub ? <span className="a3-cap c">{t.sub}</span> : null}
           {t.line && t.line.length > 1 ? <Spark id={`six-${t.key}`} values={t.line} color={t.color} w={120} h={32} /> : null}
-        </div>
+        </Link>
       ))}
     </div>
   );
@@ -348,26 +443,54 @@ export function ProtoLower(p: DashProps & { mid?: ReactNode }) {
         {mid}
       </div>,
     );
-  if (canMoney)
+  if (canMoney || data.erp)
     cols.push(
       <div className="a3-stk" key="r">
-        <InShort p={p} />
-        <MonthTarget p={p} />
+        {canMoney ? <InShort p={p} /> : null}
+        {canMoney ? <MonthTarget p={p} /> : null}
+        <ErpCard p={p} />
       </div>,
     );
-  if (!cols.length) return null;
+  if (!cols.length && !data.feed) return null;
   return (
-    <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: cols.length }} data-testid="dash-proto">
-      {cols}
-    </div>
+    <>
+      {cols.length ? (
+        <div className="a3-dg3 a3-proto" style={{ ['--n' as string]: cols.length }} data-testid="dash-proto">
+          {cols}
+        </div>
+      ) : null}
+      {data.feed ? (
+        <div className="a3-stk a3-latest-w">
+          <LatestOrders p={p} />
+        </div>
+      ) : null}
+    </>
   );
 }
 
 /** The prototype's profit snapshot and six figures (design A; D draws its own six tiles). */
+export function CodStrip({ p }: { p: DashProps }) {
+  const { f, data } = p;
+  const o = data.cod?.old;
+  if (!o || !o.parcels) return null;
+  return (
+    <div className="a3-codstrip" data-testid="dash-codstrip">
+      <ShellIcon name="alert" size={16} />
+      <span>
+        <b>{f.t('dsh.proto.codOldBold', { n: f.n(o.parcels) })}</b> {f.t('dsh.proto.codOldRest', { v: f.money(o.minor) })}
+      </span>
+      <Link className="a2-btn sm" href="/admin/money">
+        {f.t('dsh.proto.codOldList')}
+      </Link>
+    </div>
+  );
+}
+
 export function ProtoTop(p: DashProps) {
   if (!can(p.viewer, 'metrics.read')) return null;
   return (
     <>
+      <CodStrip p={p} />
       <ProfitSnap p={p} />
       <SixTiles p={p} />
     </>

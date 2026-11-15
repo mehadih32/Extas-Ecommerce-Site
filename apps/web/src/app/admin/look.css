@@ -632,3 +632,21 @@
 .adm2 .a3-snapv{font-size:26px;line-height:1.1}
 .adm2 .a3-cr{display:grid;grid-template-columns:minmax(70px,1fr) 2fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--lm-ln,#e5e7ee)}
 @media (max-width:760px){.adm2 .a3-snap3{grid-template-columns:1fr}}
+
+/* PR 795 (prototype v5 Home): the dashed "Nightly page check" line under Do now, the six tiles' icons, the ERP link card and the Latest orders list. */
+.adm2 .a3-pchk,.lm-today .a3-pchk{display:flex;gap:8px;align-items:center;margin-top:12px;padding:10px 12px;min-height:44px;border-radius:10px;background:var(--lm-sf2);color:var(--lm-ink2);font-size:12.5px;line-height:1.4;text-decoration:none;border:1px dashed var(--lm-ln)}
+.adm2 .a3-pchk:hover,.lm-today .a3-pchk:hover{border-color:var(--lm-ac)}
+.adm2 .a3-pchk svg,.lm-today .a3-pchk svg{flex:none}
+.adm2 .a3-six a.a3-kpi{color:inherit;text-decoration:none}
+.adm2 .a3-six a.a3-kpi:hover{border-color:var(--lm-ac)}
+.adm2 .a3-six-h{display:flex;align-items:center;gap:8px}
+.adm2 .a3-six-i{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--lm-sf2);color:var(--lm-ac);flex:none;font-style:normal}
+.adm2 .a3-latest{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:12px;align-items:center;min-height:44px;padding:8px 0;border-top:1px solid var(--lm-ln);color:inherit;text-decoration:none}
+.adm2 .a3-latest:first-child{border-top:0}
+.adm2 .a3-latest:hover .a3-lt-n b{color:var(--lm-ac)}
+.adm2 .a3-lt-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm2 .a3-lt-ago{min-width:70px;text-align:right}
+.adm2 .a3-latest-w{margin-top:20px}
+@media (max-width:760px){.adm2 .a3-latest{grid-template-columns:minmax(0,1fr) auto}.adm2 .a3-latest .a2-pill,.adm2 .a3-lt-ago{display:none}}
+.adm2 .a3-codstrip{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--warnbg);color:inherit;font-size:13px;margin-top:20px}
+.adm2 .a3-codstrip span{flex:1 1 220px;min-width:0}

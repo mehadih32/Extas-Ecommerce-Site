@@ -175,3 +175,22 @@ export async function smokeShot(deps: SmokeDeps, who: SmokeWho, slot: unknown, f
     throw new SmokePageError('NOT_FOUND', 404);
   }
 }
+
+/**
+ * Prototype v5 Home, "Nightly page check" line under "Do now": the newest kept nightly (scheduled) run in a few facts: when it
+ * ran (the run's own time text), how many pages it checked and which pages failed on some screen. Read-only; no permission is
+ * checked here (the Home loader asks for `health.read` first). `null` when no nightly run is kept (or there is no state folder).
+ */
+export interface NightlyCheck {
+  at: string;
+  pages: number;
+  failed: string[];
+}
+export async function latestNightlyCheck(stateDir?: string | null): Promise<NightlyCheck | null> {
+  const dir = stateDir === undefined ? process.env.EXTAS_STATE_DIR || null : stateDir;
+  if (!dir) return null;
+  const k = await runOf(dir, 'scheduled');
+  if (!k) return null;
+  const failed = pagesOf(k.rows, 'failed', false).map((p) => p.path);
+  return { at: k.run.at, pages: k.run.pages || new Set(k.rows.map((r) => r.path)).size, failed };
+}
