@@ -27,6 +27,7 @@
     "tab": {
       "products": {
         "ranking": "Shop ranking",
+        "structure": "Categories & tags",
         "all": "All products",
         "queue": "Launch queue",
         "combos": "Combos",

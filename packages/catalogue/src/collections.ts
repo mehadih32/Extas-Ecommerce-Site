@@ -156,6 +156,9 @@ export async function listCollections(deps: CatalogueDeps, who: Who, opts: { inc
     include: collectionInclude,
     orderBy: [{ nameEn: 'asc' }, { id: 'asc' }],
   });
+  // PR 746: the owner's own order (`catalogue.collections.order`): the ones he placed first, in his order, then the rest by name (empty = by name, as before)
+  const order = await setting(deps, who, 'catalogue.collections.order');
+  if (order.length) rows.sort((a, b) => (order.includes(a.slug) ? order.indexOf(a.slug) : order.length) - (order.includes(b.slug) ? order.indexOf(b.slug) : order.length));
   const out: CollectionView[] = [];
   for (const c of rows) {
     const rule = c.kind === 'RULE' ? readRules(c.rules).rule : null;

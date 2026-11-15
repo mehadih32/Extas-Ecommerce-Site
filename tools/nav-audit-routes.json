@@ -336,6 +336,18 @@
     ]
    },
    {
+    "id": "structure",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/products/structure",
+      "keys": [
+       "productStructure"
+      ]
+     }
+    ]
+   },
+   {
     "id": "import",
     "more": true,
     "pages": [

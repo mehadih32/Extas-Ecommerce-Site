@@ -129,6 +129,8 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'queue', pages: [{ href: '/admin/products/queue', perm: 'catalogue.read', keys: ['publishQueue'] }] },
       // S28 · PR 686: Products → Shop ranking — the score of each product by the owner's weights and the order the shop shows.
       { id: 'ranking', pages: [{ href: '/admin/products/ranking', perm: 'catalogue.read', keys: ['productRanking'] }] },
+      // PR 746/747 — Categories & tags: the order of the categories and collections, and the badge on a product card.
+      { id: 'structure', pages: [{ href: '/admin/products/structure', perm: 'catalogue.read', keys: ['productStructure'] }] },
       // S02 · PR 598 — the bag's "Take 2 | Take 3 | Take 4" box (its switch, days, rules shown, own words), beside the combos.
       { id: 'combos', guide: 'combos', pages: [{ href: '/admin/combos', perm: 'combos.read', keys: ['combos'] }, { href: '/admin/combos/bag-box', perm: 'combos.read', keys: ['combosBagBox'] }] },
       // S28 · PR 712 (CN-048): Products › Sets — the sets on their own tab (Combos & sets stays), read only.

@@ -62,9 +62,9 @@ export interface BrandEditorProps {
 }
 
 type Say = { text: string; bad: boolean } | null;
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-const pick = (p: Pair | null, lang: 'en' | 'bn') => (p ? p[lang].trim() || p.en.trim() : '');
-const blank: Pair = { en: '', bn: '' };
+export const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+export const pick = (p: Pair | null, lang: 'en' | 'bn') => (p ? p[lang].trim() || p.en.trim() : '');
+export const blank: Pair = { en: '', bn: '' };
 
 /** One card's draft, its version and its save (the same rules as every settings card: STALE reads it again). */
 function useCard<K extends CardKey>(screen: BrandScreen<K>, x: (k: string) => string, canEdit: boolean, onSaved: (p: BrandPreviews) => void, check?: (v: CardValue[K]) => string | null) {
@@ -110,7 +110,7 @@ function useCard<K extends CardKey>(screen: BrandScreen<K>, x: (k: string) => st
   return { base, draft, edit, busy, said, dirty, off: !canEdit || busy, save, discard: () => edit(base.value) };
 }
 
-function Frame(props: { id: string; title: string; sub: string; testId: string; canEdit: boolean; readOnly: string; card: { busy: boolean; dirty: boolean; said: Say; save: () => void; discard: () => void }; x: (k: string) => string; children: ReactNode }) {
+export function Frame(props: { id: string; title: string; sub: string; testId: string; canEdit: boolean; readOnly: string; card: { busy: boolean; dirty: boolean; said: Say; save: () => void; discard: () => void }; x: (k: string) => string; children: ReactNode }) {
   const { card: c, x } = props;
   return (
     <section className="a2-sc a2-mt12 bm-card" aria-labelledby={`${props.id}-h`} data-testid={props.testId}>
@@ -149,7 +149,7 @@ function Frame(props: { id: string; title: string; sub: string; testId: string; 
   );
 }
 
-function PairInputs(props: { label: string; value: Pair | null; max: number; disabled: boolean; onChange: (p: Pair | null) => void; testId: string; help?: string; x: (k: string) => string }) {
+export function PairInputs(props: { label: string; value: Pair | null; max: number; disabled: boolean; onChange: (p: Pair | null) => void; testId: string; help?: string; x: (k: string) => string }) {
   const id = useId();
   const v = props.value ?? blank;
   const set = (lang: 'en' | 'bn', text: string) => {
@@ -169,7 +169,7 @@ function PairInputs(props: { label: string; value: Pair | null; max: number; dis
 }
 
 /** A box that shows or hides: a labelled checkbox, a 44 px target. */
-function Show(props: { on: boolean; label: string; disabled: boolean; onChange: (on: boolean) => void; testId: string }) {
+export function Show(props: { on: boolean; label: string; disabled: boolean; onChange: (on: boolean) => void; testId: string }) {
   return (
     <label className="bm-tgl">
       <input type="checkbox" className="a2-chk" checked={props.on} disabled={props.disabled} onChange={(e) => props.onChange(e.target.checked)} data-testid={props.testId} />
@@ -195,7 +195,7 @@ interface RowProps {
   testId: string;
 }
 
-function Row(p: RowProps) {
+export function Row(p: RowProps) {
   const over = p.drag.over && p.drag.over.list === p.list && p.drag.over.before === p.id && p.drag.from?.kind === p.kind;
   const mine = p.drag.from?.id === p.id && p.drag.from.kind === p.kind;
   return (
@@ -217,7 +217,7 @@ function Row(p: RowProps) {
   );
 }
 
-function List(props: { kind: string; list: string; drag: ReturnType<typeof useDragging>; empty: string; label: string; children: ReactNode; isEmpty: boolean; testId: string }) {
+export function List(props: { kind: string; list: string; drag: ReturnType<typeof useDragging>; empty: string; label: string; children: ReactNode; isEmpty: boolean; testId: string }) {
   const end = props.drag.over && props.drag.over.list === props.list && props.drag.over.before === null && props.drag.from?.kind === props.kind;
   return (
     <ul className="bm-list" data-sl-list={props.list} data-sl-kind={props.kind} data-end={end ? 'true' : undefined} aria-label={props.label} data-testid={props.testId}>
@@ -228,22 +228,22 @@ function List(props: { kind: string; list: string; drag: ReturnType<typeof useDr
 }
 
 /** Rows of one list put in the order a drop or an arrow asks for. */
-function place<T extends { id: string }>(list: T[], id: string, before: string | null): T[] {
+export function place<T extends { id: string }>(list: T[], id: string, before: string | null): T[] {
   const row = list.find((r) => r.id === id);
   return row ? dropInto(list, row, before) : list;
 }
-function nudgeIn<T extends { id: string }>(list: T[], id: string, delta: -1 | 1): T[] {
+export function nudgeIn<T extends { id: string }>(list: T[], id: string, delta: -1 | 1): T[] {
   return moveBy(
     list,
     list.findIndex((r) => r.id === id),
     delta,
   );
 }
-const patch = <T extends { id: string }>(list: T[], id: string, change: Partial<T>): T[] => list.map((r) => (r.id === id ? { ...r, ...change } : r));
+export const patch = <T extends { id: string }>(list: T[], id: string, change: Partial<T>): T[] => list.map((r) => (r.id === id ? { ...r, ...change } : r));
 
 // ---- Brand ----
 
-function LogoPicker(props: { id: string; label: string; help: string; value: string | null; savedId: string | null; serverUrl: string | null; disabled: boolean; x: (k: string) => string; onChange: (id: string | null) => void; testId: string }) {
+export function LogoPicker(props: { id: string; label: string; help: string; value: string | null; savedId: string | null; serverUrl: string | null; disabled: boolean; x: (k: string) => string; onChange: (id: string | null) => void; testId: string }) {
   const [local, setLocal] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');

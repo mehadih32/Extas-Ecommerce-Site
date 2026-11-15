@@ -281,3 +281,40 @@ export async function updateCategory(deps: CatalogueDeps, who: Who, id: string, 
   emitCacheEvent({ kind: 'category', storeId: who.storeId, categoryIds: [id] });
   return getCategory(deps, who, id);
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// PR 746 — the order of the categories next to each other (Products › Categories & tags: drag, then save)
+// ---------------------------------------------------------------------------------------------------------------
+
+export const categoryOrderInput = z.object({ parentId: z.uuid().nullable(), ids: z.array(z.uuid()).min(1).max(500) }).strict();
+export type CategoryOrderInput = z.input<typeof categoryOrderInput>;
+
+/**
+ * The live categories inside one parent (or at the top) put in the order given: every one of them named once, none of
+ * another parent's. A category's place is its `sortOrder` (0, 10, 20 …). Archived ones keep their own number. One audit
+ * row names the parent and the order before and after.
+ */
+export async function reorderCategories(deps: CatalogueDeps, who: Who, input: CategoryOrderInput): Promise<{ changed: number }> {
+  await allow(deps, who, 'catalogue.write');
+  const d = parse(categoryOrderInput, input, 'order');
+  let moved = 0;
+  await deps.db.$transaction(async (tx) => {
+    const rows = await rowsOf(tx, who.storeId);
+    if (d.parentId) found(rows.find((r) => r.id === d.parentId), 'category');
+    const sibs = rows.filter((r) => (r.parentId ?? null) === d.parentId && !r.archivedAt);
+    const named = new Set(d.ids);
+    if (named.size !== d.ids.length || sibs.length !== named.size || !sibs.every((s) => named.has(s.id))) {
+      throw new CatalogueError('INVALID_INPUT', 'name each category of that list once', ['ids']);
+    }
+    const before = sibs.map((s) => s.id);
+    for (const [i, id] of d.ids.entries()) {
+      const row = sibs.find((s) => s.id === id)!;
+      if (row.sortOrder === i * 10) continue;
+      await tx.category.update({ where: { id }, data: { sortOrder: i * 10 } });
+      moved += 1;
+    }
+    if (moved) await logChange(tx, who, 'category.reorder', 'Category', d.parentId ?? 'top', { order: before }, { order: d.ids, parentId: d.parentId });
+  }, TX);
+  if (moved) emitCacheEvent({ kind: 'category', storeId: who.storeId, categoryIds: d.ids });
+  return { changed: moved };
+}
