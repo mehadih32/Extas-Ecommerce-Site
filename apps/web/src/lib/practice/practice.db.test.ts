@@ -3,15 +3,16 @@
 // nothing that could leave the system (no ERP push, message, stock row, reservation), and "Reset practice data"
 // removes only practice rows: a real order with its timeline, a product the owner uploaded and a demo product stay,
 // and the demo product goes only when asked. A practice flag can never be switched on for a real record.
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { PRACTICE_PHONE_PREFIX } from '@extas/db/client';
 import { memoryStorage } from '@extas/adapters';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
-import { photoSetStatus, type MediaDeps } from '@extas/media';
+import { imageSources, mediaUrl, photoSetStatus, type MediaDeps } from '@extas/media';
+import { mediaFileHandler } from '../media';
 import { DEMO_PACK } from './data';
 import { seedPractice, completeProducts } from './seed';
-import { addPracticePhotos, drawingPng, practicePhotoProgress } from './photos';
+import { addPracticePhotos, drawingPng, practicePhotoProgress, repairPracticePhotos } from './photos';
 import { practiceCounts, resetPractice } from './reset';
 
 const NOW = new Date('2026-11-13T08:00:00Z');
@@ -557,6 +558,82 @@ describe.skipIf(!HAS_TEST_DB)('practice data on PostgreSQL (PR 706, CN-049)', ()
     const two = await addPracticePhotos(deps, S, { maxPhotos: 3 });
     expect(two.photos).toBe(3);
     expect(await db.productMedia.count({ where: { storeId: S } })).toBe(6);
+    await resetPractice(db, S);
+  }, 240_000);
+  it('PR 728: a practice picture is served at the address the normal upload path gives, every file is in storage before it is used, and missing files are put back', async () => {
+    const db = t.prisma;
+    await resetPractice(db, S);
+    await seedPractice(db, S, NOW);
+    await syncSettings(db, { registry, messages });
+    const storage = memoryStorage('LOCAL_DISK');
+    const deps: MediaDeps = { db, settings: new SettingsResolver(prismaBackend(db), registry, { checkIntervalMs: 0 }), storage: async () => storage, now: () => NOW };
+    expect((await addPracticePhotos(deps, S, { maxPhotos: 2 })).photos).toBe(2);
+    const assets = await db.mediaAsset.findMany({ where: { storeId: S, folder: 'practice' }, select: { id: true } });
+    const src = await imageSources(deps, S, assets.map((a) => a.id));
+    expect(src.size).toBe(2);
+    for (const img of src.values()) {
+      expect(img.variants.length).toBeGreaterThan(0);
+      for (const v of img.variants) {
+        // the same address builder as every other upload ('/media/' + the storage key, whose own first folder is "media")
+        const row = await db.mediaRendition.findFirstOrThrow({ where: { assetId: img.id, preset: v.preset, format: v.format } });
+        expect(v.url).toBe(mediaUrl(row.storageKey, null));
+        expect(v.url.startsWith('/media/media/s')).toBe(true);
+        // and the /media route finds the file there (what the live smoke does)
+        const res = await mediaFileHandler(new Request(`https://x.test${v.url}`), deps, v.url.replace(/^\/media\//, '').split('/'));
+        expect(res.status, v.url).toBe(200);
+      }
+    }
+    // the first live run (PR 725): sizes were named with a capital colour code (…-1E1E20-…), a name the /media route refuses;
+    // such a picture is made again under a servable name
+    const legacy = await db.mediaRendition.findMany({ where: { assetId: assets[0]!.id } });
+    for (const r of legacy) {
+      const parts = r.storageKey.split('/');
+      const base = parts.pop()!;
+      const up = [...parts, base.replace(/^[^.]+/, (x) => x.toUpperCase())].join('/');
+      const f = await storage.get(r.storageKey);
+      await storage.put(up, f!.body, f!.contentType);
+      await db.mediaRendition.update({ where: { id: r.id }, data: { storageKey: up } });
+    }
+    const first = legacy[0]!;
+    const upKey = (await db.mediaRendition.findUniqueOrThrow({ where: { id: first.id } })).storageKey;
+    expect((await mediaFileHandler(new Request('https://x.test/m'), deps, upKey.split('/'))).status).toBe(404);
+    expect((await repairPracticePhotos(deps, S, {})).repaired).toBe(1);
+    for (const r of await db.mediaRendition.findMany({ where: { assetId: assets[0]!.id } })) {
+      expect((await mediaFileHandler(new Request('https://x.test/m'), deps, r.storageKey.split('/'))).status, r.storageKey).toBe(200);
+    }
+    // the files are lost (a server that lost its disk): the pictures are made again, with the same keys
+    const lost = await db.mediaRendition.findMany({ where: { storeId: S, asset: { folder: 'practice' } }, select: { storageKey: true } });
+    const wiped = memoryStorage('LOCAL_DISK');
+    const deps2: MediaDeps = { ...deps, storage: async () => wiped };
+    expect((await mediaFileHandler(new Request('https://x.test/m'), deps2, lost[0]!.storageKey.split('/'))).status).toBe(404);
+    const fixed = await repairPracticePhotos(deps2, S, {});
+    expect(fixed.repaired).toBe(2);
+    for (const r of lost) expect(await wiped.head(r.storageKey), r.storageKey).not.toBeNull();
+    expect((await mediaFileHandler(new Request('https://x.test/m'), deps2, lost[0]!.storageKey.split('/'))).status).toBe(200);
+    expect((await repairPracticePhotos(deps2, S, {})).repaired).toBe(0);
+    // an old run left a picture without its files and the product already points at it: the next step puts them back first
+    await resetPractice(db, S);
+    await seedPractice(db, S, NOW);
+    const early = await addPracticePhotos(deps, S, { maxPhotos: 1 });
+    expect(early.photos).toBe(1);
+    const a = await db.mediaAsset.findFirstOrThrow({ where: { storeId: S, folder: 'practice' } });
+    await db.productMedia.deleteMany({ where: { assetId: a.id } });
+    const empty = memoryStorage('LOCAL_DISK');
+    const deps3: MediaDeps = { ...deps, storage: async () => empty };
+    await addPracticePhotos(deps3, S, { maxPhotos: 1 });
+    expect(await empty.head(a.storageKey)).not.toBeNull();
+    for (const r of await db.mediaRendition.findMany({ where: { assetId: a.id } })) expect(await empty.head(r.storageKey)).not.toBeNull();
+    // storage that lives in one process only (production) never makes pictures
+    vi.stubEnv('NODE_ENV', 'production');
+    try {
+      await resetPractice(db, S);
+      await seedPractice(db, S, NOW);
+      const blocked = await addPracticePhotos(deps, S, { maxPhotos: 1 });
+      expect(blocked).toMatchObject({ photos: 0, blocked: 'per-process-storage' });
+      expect(await db.mediaAsset.count({ where: { storeId: S, folder: 'practice' } })).toBe(0);
+    } finally {
+      vi.unstubAllEnvs();
+    }
     await resetPractice(db, S);
   }, 240_000);
 });

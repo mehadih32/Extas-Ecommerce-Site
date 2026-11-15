@@ -71,5 +71,7 @@ export function isRenditionKey(key: string): boolean {
 export function slugOfKey(key: string): string {
   const base = key.split('/').pop() ?? '';
   const m = /^[0-9a-f]{16}-(.+)\.[a-z0-9]+$/.exec(base);
-  return m?.[1] ?? 'image';
+  // only a-z, 0-9 and '-' are served (isRenditionKey): a slug made some other way (capital letters in a colour code) must not give a size nobody can fetch
+  const slug = (m?.[1] ?? 'image').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'image';
 }

@@ -11,7 +11,8 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 234;
+// PR 728: bumped from 234 — PR 724 changed this setting's default accent without raising its version (the deploy warned)
+const V = 728;
 
 /** Every admin look of docs/demo/admin-look/ADMIN-LOOKS-V1.html, in the order Settings › Admin look lists them. */
 export const ADMIN_THEME_LOOKS = [

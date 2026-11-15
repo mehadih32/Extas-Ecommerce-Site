@@ -12,7 +12,7 @@ import type { MediaDeps } from '@extas/media';
 import type { AdminDeps } from '../admin-auth';
 import { DEMO_PACK } from './data';
 import { practiceId } from './ids';
-import { addPracticePhotos } from './photos';
+import { addPracticePhotos, repairPracticePhotos } from './photos';
 import { seedPractice, type SeedResult } from './seed';
 import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
 
@@ -102,11 +102,33 @@ export async function ensurePractice(deps: EnsureDeps, storeId: number, opts: { 
       try {
         const r = await addPracticePhotos(deps.media, storeId, { maxPhotos: PHOTO_STEP });
         out.photos = r.photos;
-        out.pending = out.pending || !r.complete;
+        // no picture is made while the files would not last (per-process storage): the clock does not spin on it
+        out.pending = out.pending || (!r.complete && !r.blocked);
+        if (r.blocked) warnOnce('practice: pictures are paused: the media storage is in this server process only (set EXTAS_MEDIA_DIR or connect Blob/S3)');
       } finally {
         await dropLease(deps.db, 'photos', storeId);
       }
     } else out.pending = true;
   }
+  // 4. pictures whose files are gone from storage are drawn and put back (a few per step, walking the library round)
+  if (enabled.on && opts.photos !== false && deps.media && out.photos === 0) {
+    const g = globalThis as unknown as { __practiceRepairAfter?: string | null };
+    if (await takeLease(deps.db, 'repair', storeId, now)) {
+      try {
+        const r = await repairPracticePhotos(deps.media, storeId, { after: g.__practiceRepairAfter ?? null });
+        g.__practiceRepairAfter = r.next;
+        if (r.repaired) console.warn(`practice: ${r.repaired} picture(s) had lost their files and were made again`);
+      } finally {
+        await dropLease(deps.db, 'repair', storeId);
+      }
+    }
+  }
   return out;
+}
+
+const said = new Set<string>();
+function warnOnce(text: string): void {
+  if (said.has(text)) return;
+  said.add(text);
+  console.warn(text);
 }

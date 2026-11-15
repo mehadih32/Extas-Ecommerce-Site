@@ -15,6 +15,7 @@ type Objects = Map<string, { body: Uint8Array; contentType: string }>;
 function over(provider: StorageProvider, objects: Objects): Storage {
   return {
     provider,
+    volatile: true,
     async put(key, body, contentType) {
       assertKey(key);
       objects.set(key, { body: new Uint8Array(body), contentType });
