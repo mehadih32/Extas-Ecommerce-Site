@@ -12,6 +12,8 @@ import * as cb from '@extas/combos';
 import { COMBO_SET_TYPES } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { SetActions, type SetActionsTexts } from '@/components/admin/combos/SetActions';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -31,7 +33,6 @@ export const dynamic = 'force-dynamic';
 
 const KEY = 'productSets';
 const HERE = '/admin/products/sets';
-const statePill = { live: 'ok', soon: 'info', off: 'line', ended: 'line', draft: 'warn' } as const;
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, productSets: (view.lang === 'bn' ? bn : en).productSets as unknown as Dict } };
@@ -56,12 +57,11 @@ export default async function SetsPage() {
       </div>
     );
   const a = combosAccess(access);
-  const [list, currency, card] = await Promise.all([cb.listSets(a.deps, a.who), storeCurrency(a), setsOptionsCard(access.deps, MOTHER_STORE_ID)]);
+  const [list, currency, card] = await Promise.all([cb.listSets(a.deps, a.who, { withCost: a.perms.prices }), storeCurrency(a), setsOptionsCard(access.deps, MOTHER_STORE_ID)]);
   const money = moneyOf(currency, view.locale);
   const m = (x: number) => formatMoney(x, money);
   const n = (x: number) => formatNumber(x, view.locale);
   const so = (k: string, v?: Record<string, string | number>) => t(d, `productSets.${k}`, v);
-  const lowCount = list.rows.filter((r) => r.low).length;
 
   const opt = (k: string) => so(`opt.${k}`);
   const texts: FieldsCardTexts = {
@@ -84,68 +84,136 @@ export default async function SetsPage() {
     <div className="a2-card st-fig" data-testid={testId}>
       <span className="a2-xs a2-mute">{label}</span>
       <b>{value}</b>
-      <span className="a2-xs a2-mute">{sub}</span>
+      {sub ? <span className="a2-xs a2-mute">{sub}</span> : null}
     </div>
   );
   const name = (x: { nameEn: string | null; nameBn: string | null }) => (view.lang === 'bn' ? (x.nameBn ?? x.nameEn) : x.nameEn) ?? '—';
+  const actionTexts: SetActionsTexts = {
+    on: so('act.on'),
+    off: so('act.off'),
+    edit: so('act.edit'),
+    archive: so('act.archive'),
+    bringBack: so('act.bringBack'),
+    archived: so('act.archived'),
+    confirm: so('act.confirm'),
+    confirmBody: so('act.confirmBody'),
+    cancel: so('act.cancel'),
+    failed: so('act.failed'),
+    notReady: so('act.notReady'),
+  };
+  const pct = (profit: number, price: number) => (price > 0 ? `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 0 }).format(Math.round((profit / price) * 100))}%` : '—');
 
   return (
     <div className="a2-z" data-testid="sets-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={so('title')} sub={so('sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={so('title')}
+        sub={so('sub')}
+        right={
+          <>
+            <Link className="a2-btn" href="/admin/products/new" data-testid="sets-add-listing">
+              {so('addListing')}
+            </Link>
+            {a.perms.write ? (
+              <Link className="a2-btn primary" href="/admin/combos?tab=new" data-testid="sets-new">
+                <ShellIcon name="plus" size={16} /> {so('newSet')}
+              </Link>
+            ) : null}
+          </>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
 
       <div className="st-figs">
-        {fig(so('k.live'), `${n(list.live)}/${n(list.total)}`, so('k.liveSub', { total: n(list.total) }), 'sets-fig-live')}
-        {fig(so('k.low'), list.lowStockAt > 0 ? n(lowCount) : '—', so('k.lowSub', { n: n(list.lowStockAt) }), 'sets-fig-low')}
-        {fig(so('k.soldOut'), n(list.soldOut), so('k.soldOutSub'), 'sets-fig-soldout')}
+        {fig(so('k.live'), `${n(list.live)}/${n(list.total)}`, '', 'sets-fig-live')}
+        {fig(so('k.sold'), n(list.sold30), '', 'sets-fig-sold')}
+        {fig(so('k.sales'), m(list.sales30Minor), '', 'sets-fig-sales')}
+        {fig(so('k.colours'), n(list.coloursReady), '', 'sets-fig-colours')}
       </div>
-      <div className="a2-note a2-mt12">{so('note')}</div>
+      <div className="a2-note a2-mt12" data-testid="sets-note">{so('note')}</div>
 
       {list.rows.length ? (
         <div className="st-grid" data-testid="sets-grid">
-          {list.rows.map((r) => (
-            <section key={r.id} className="a2-card st-card" data-testid="set-card" data-state={r.state}>
-              <div className="st-head">
-                <div>
+          {list.rows.map((r) => {
+            const archived = r.state === 'ended' || r.state === 'off';
+            const profit = r.costMinor !== null && r.setPriceMinor !== null ? r.setPriceMinor - r.costMinor : null;
+            return (
+              <section key={r.id} className="a2-card st-card" data-testid="set-card" data-state={r.state}>
+                <div className="st-head">
                   <h2 className="a2-h3">{name(r)}</h2>
-                  <span className="a2-xs a2-mute">{so(`type.${r.type}`)} · {r.sameColour ? so('colour.same') : so('colour.free')}</span>
                 </div>
-                <span className={`a2-pill ${statePill[r.state]}`}>{so(`state.${r.state}`)}</span>
-              </div>
-              <ul className="st-pieces" aria-label={so('pieces')}>
-                {r.parts.map((p) => (
-                  <li key={p.position} className={`st-piece${p.position === r.limitedBy && r.stock <= (list.lowStockAt || 0) ? ' limit' : ''}`} data-testid="set-piece">
-                    <span>
-                      <b>{p.label || so('piece', { n: n(p.position + 1) })}</b> · {name(p)}
-                      <span className="a2-xs a2-mute a2-blk">{p.quantity > 1 ? `${so('qty', { n: n(p.quantity) })} · ` : ''}{p.priceMinor === null ? so('noPiecePrice') : m(p.priceMinor)}</span>
+                <div className="st-pcs">
+                  {r.parts.map((p, i) => (
+                    <div key={p.position} className="st-pcw" data-testid="set-piece">
+                      {i > 0 ? <b className="st-plus a2-mute">+</b> : null}
+                      <a className="st-pc" href={p.productId ? `/admin/products/${p.productId}` : undefined}>
+                        <span className="st-pcn">
+                          <b>{name(p)}</b>
+                          <span className="a2-xs a2-mute">{p.quantity > 1 ? `${so('qty', { n: n(p.quantity) })} · ` : ''}{p.label || so('piece', { n: n(p.position + 1) })}</span>
+                        </span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+                <div className="a2-sm st-link-line">
+                  <b>{r.sameColour ? so('colour.same') : so('colour.free')}</b>
+                </div>
+                <div className="st-chips" data-testid="set-colours">
+                  {r.colours.length ? (
+                    r.colours.map((c) => (
+                      <span key={c.id} className={`st-chip${c.ok ? '' : ' off'}`}>
+                        <i style={{ background: c.hex }} aria-hidden="true" />
+                        {name(c)}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="a2-pill bad">{so('noColour')}</span>
+                  )}
+                </div>
+                <div className="a2-xs a2-mute st-sizes" data-testid="set-sizes">
+                  {r.parts.map((p, i) => (
+                    <span key={p.position} className="a2-blk">
+                      {i === 0 ? so('sizes.top') : so('sizes.bottom')}:{' '}
+                      {p.sizes.map((z, j) => (
+                        <span key={z.key}>
+                          {j > 0 ? ' · ' : ''}
+                          <span className={z.inStock ? undefined : 'st-gone'}>{z.label}</span>
+                        </span>
+                      ))}
                     </span>
-                    <span className="a2-xs a2-mute">{so('pieceStock', { n: n(p.stock) })}</span>
-                  </li>
-                ))}
-              </ul>
-              <dl className="st-kv">
-                <dt className="a2-sm a2-mute">{so('price')}</dt>
-                <dd>{r.setPriceMinor === null ? so('noPrice') : m(r.setPriceMinor)}</dd>
-                <dt className="a2-sm a2-mute">{so('sum')}</dt>
-                <dd>{r.sumPartsMinor === null ? so('noPiecePrice') : m(r.sumPartsMinor)}</dd>
-                {r.savingMinor > 0 ? (
-                  <>
-                    <dt className="a2-sm a2-mute">{so('save')}</dt>
-                    <dd>{so('savePct', { amount: m(r.savingMinor), pct: n(r.savingPercent) })}</dd>
-                  </>
-                ) : null}
-                <dt className="a2-sm"><b>{so('stock')}</b></dt>
-                <dd data-testid="set-stock">
-                  {so('stockN', { n: n(r.stock) })} {r.low ? <span className="a2-pill warn">{so('low')}</span> : null}
-                </dd>
-              </dl>
-              {r.limitedBy !== null && r.parts.length > 1 ? <p className="a2-xs a2-mute a2-mt6">{so('limit', { name: name(r.parts.find((p) => p.position === r.limitedBy)!) })}</p> : null}
-              {r.blocking.length ? <p className="a2-xs a2-mt6" style={{ color: 'var(--bad)' }}>{r.blocking.map((b) => so(`blocking.${b}`)).join(' · ')}</p> : null}
-              <div className="a2-mt6">
-                <Link href="/admin/combos?tab=fixed" className="st-link">{so('edit')}</Link>
-              </div>
-            </section>
-          ))}
+                  ))}
+                </div>
+                <dl className="st-list">
+                  <div>
+                    <dt>{so('price')}</dt>
+                    <dd>
+                      <b>{r.setPriceMinor === null ? so('noPrice') : m(r.setPriceMinor)}</b>
+                      {r.sumPartsMinor !== null && r.setPriceMinor !== null && r.sumPartsMinor > r.setPriceMinor ? <s className="st-was">{m(r.sumPartsMinor)}</s> : null}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{so('profit')}</dt>
+                    <dd data-testid="set-profit">{profit === null || r.setPriceMinor === null ? '—' : <>{m(profit)} · <span className="a2-pill ok">{pct(profit, r.setPriceMinor)}</span></>}</dd>
+                  </div>
+                  <div>
+                    <dt>{so('soldRow')}</dt>
+                    <dd>
+                      <b>{n(r.sold30)}</b>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{so('stock')}</dt>
+                    <dd data-testid="set-stock">
+                      {so('stockN', { n: n(r.stock) })} {r.low ? <span className="a2-pill warn">{so('low')}</span> : null}
+                    </dd>
+                  </div>
+                </dl>
+                {r.blocking.length ? <p className="a2-xs a2-mt6" style={{ color: 'var(--bad)' }}>{r.blocking.map((b) => so(`blocking.${b}`)).join(' · ')}</p> : null}
+                <SetActions id={r.id} on={r.state === 'live' || r.state === 'soon'} archived={archived} editHref="/admin/combos?tab=fixed" canPublish={a.perms.publish} canEdit={a.perms.write} texts={actionTexts} />
+              </section>
+            );
+          })}
         </div>
       ) : (
         <div className="a2-card a2-mt12" data-testid="sets-none">
