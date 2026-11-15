@@ -31,7 +31,7 @@ export const isShopLang = (v: unknown): v is ShopLang => v === 'en' || v === 'bn
  * redirected to a lowercase address that doesn't exist.
  */
 const NOT_SHOP =
-  /^\/(admin|api|erp-api|status|media|_next|favicon\.ico|robots\.txt|sitemap\.xml|sitemaps|reset|sw\.js|service-worker\.js|OneSignalSDKWorker\.js|firebase-messaging-sw\.js)(\/|$)/;
+  /^\/(admin|api|erp-api|status|media|_next|favicon\.ico|manifest\.webmanifest|robots\.txt|sitemap\.xml|sitemaps|reset|sw\.js|service-worker\.js|OneSignalSDKWorker\.js|firebase-messaging-sw\.js)(\/|$)/;
 
 export function isShopPath(path: string): boolean {
   return !NOT_SHOP.test(path);

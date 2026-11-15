@@ -19,6 +19,7 @@ const NOT_PROXIED = [
   'robots.txt',
   'sitemap.xml',
   'favicon.ico',
+  'manifest.webmanifest',
   'reset',
   'sw.js',
   'service-worker.js',
