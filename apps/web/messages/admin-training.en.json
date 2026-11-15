@@ -11,24 +11,24 @@
     },
     "instr": {
       "h": "Your instructions",
-      "d": "One instruction per line, for every agent or for one.",
+      "d": "All agents follow these every time.",
       "agent": "For",
       "text": "Instruction",
-      "placeholder": "For example: write replies short and warm, in Bengali first.",
-      "add": "Add instruction",
+      "placeholder": "Teach all agents a rule…",
+      "add": "Add",
       "added": "Instruction saved as a new version",
       "failed": "Could not save. Someone may have saved first: reload the page and try again.",
       "none": "No instructions yet.",
-      "remove": "Remove",
+      "remove": "Archive",
       "removeLabel": "Remove instruction",
       "removed": "Instruction removed as a new version"
     },
     "forbidden": {
       "h": "Forbidden topics",
-      "d": "Topics no agent may bring up.",
+      "d": "Agents politely refuse these in chats and posts.",
       "text": "Topic",
-      "placeholder": "For example: politics",
-      "add": "Add topic",
+      "placeholder": "Add a topic to avoid…",
+      "add": "Add",
       "added": "Topic saved as a new version",
       "failed": "Could not save. Someone may have saved first: reload the page and try again.",
       "none": "No forbidden topics yet.",
@@ -41,7 +41,7 @@
       "inUse": "In use",
       "v": "Version {n}",
       "by": "by {name}",
-      "restore": "Restore this version",
+      "restore": "Roll back",
       "restoreLabel": "Restore version",
       "restored": "Restored as a new version",
       "failed": "Could not restore. Someone may have saved first: reload the page and try again.",
@@ -76,7 +76,7 @@
       }
     },
     "try": {
-      "h": "Try it",
+      "h": "Try it safely (sandbox)",
       "d": "Type a sample message and see what the agent would answer with the instructions above. Nothing is sent to anyone and nothing is saved until you press the button below the answer.",
       "agent": "Agent",
       "sample": "Sample message",
@@ -98,15 +98,18 @@
       "noExamples": "No examples yet."
     },
     "note": {
-      "h": "Describe a problem",
-      "d": "Write what an agent got wrong, in your own words. It is saved as a note for you and your team; no AI is called.",
+      "h": "Describe a problem in Bengali",
+      "d": "Write the way you speak. It is saved as a note for Gyani and your team; no AI is called.",
       "agent": "Agent",
       "text": "What went wrong",
-      "placeholder": "For example: the support agent promised a refund date.",
-      "add": "Save note",
+      "placeholder": "e.g. Why did returns go up in Chattogram this week?",
+      "add": "Send to Gyani",
       "added": "Note saved",
       "failed": "Could not save. Try again.",
-      "none": "No notes yet."
+      "none": "No notes yet.",
+      "kindQ": "Question",
+      "kindBug": "Something is wrong",
+      "kindIdea": "Idea"
     },
     "doc": {
       "h": "Extra documents",
@@ -128,6 +131,23 @@
       "saved": "Saved as a new version",
       "remove": "Remove",
       "removed": "Document removed (kept in history)"
+    },
+    "strip": {
+      "on": "AI is on",
+      "off": "AI is off",
+      "offHint": "When AI is off, staff and the shop see: \"AI is resting. Orders, rules, templates and alerts keep working; drafts and ideas wait until AI is back.\"",
+      "onHint": "Agents follow the instructions below. Replies to buyers always wait for you.",
+      "edit": "Edit",
+      "version": "Version {n}",
+      "switchLabel": "AI master switch: on or off",
+      "toastOn": "AI turned on",
+      "toastOff": "AI turned off",
+      "toastFailed": "Could not change AI. Try again."
+    },
+    "corr": {
+      "h": "Corrections that became examples",
+      "d": "Made when you edit a draft or say no with a reason.",
+      "none": "No corrections yet. Use \"Try it safely\" and save a better answer."
     }
   }
 }
