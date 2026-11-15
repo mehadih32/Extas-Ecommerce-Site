@@ -60,7 +60,7 @@ export default async function CostsPage() {
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   // PR 859: Pay salary is for the roles that hold both the fixed-costs and the cashbook rights (Accounts, owner); the cashbook asks for the PIN
   const canPaySalary = canEdit && (access.guard.permissions?.has('cash.record') ?? false);
-  const cashAccounts = canPaySalary ? (await inv.cashbookView(idep, who, { limit: 1 })).accounts.filter((a) => !a.archived).map((a) => ({ key: a.key, name: view.locale === 'bn' && a.nameBn ? a.nameBn : a.nameEn })) : [];
+  const cashAccounts = canPaySalary ? (await inv.cashbookView(idep, who, { limit: 1 })).accounts.filter((a) => !a.archived).map((a) => ({ key: a.key, name: view.locale === 'bn' && a.nameBn ? a.nameBn : a.nameEn })) : []; // hardcode-ok: only the account list is needed, one row is enough
   const canEnterLines = canEdit || (access.guard.permissions?.has('costlines.write') ?? false);
   const today = screen.fixed.today;
   const openFrom = [screen.fixed.startDay ?? today, inv.addDays(today, -resendDays)].sort().at(-1)!;
