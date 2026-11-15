@@ -20,11 +20,11 @@ describe('the admin`s own words (PR 78 follow-up, 677)', () => {
     const rows = adminWordRows();
     expect(rows.length).toBeGreaterThan(1000);
     const title = rows.find((r) => r.file === 'admin-words' && r.key === 'wd.title');
-    expect(title).toEqual({ file: 'admin-words', key: 'wd.title', en: 'Words & language', bn: expect.stringMatching(/\p{Script=Bengali}/u) });
+    expect(title).toEqual({ file: 'admin-words', key: 'wd.title', en: 'Shop text', bn: expect.stringMatching(/\p{Script=Bengali}/u) });
   });
 
   it('searches the file, the key and both languages, and pages', () => {
-    const found = adminWordList({ q: 'Words & language' }, 10);
+    const found = adminWordList({ q: 'Shop text' }, 10);
     expect(found.rows.some((r) => r.key === 'wd.title')).toBe(true);
     expect(adminWordList({ q: 'admin-words' }, 10).total).toBeGreaterThan(10);
     const p2 = adminWordList({ p: 2 }, 10);

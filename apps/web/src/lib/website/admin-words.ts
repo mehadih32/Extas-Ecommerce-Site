@@ -263,6 +263,18 @@ import adminWebsiteAnalyticsEn from '../../../messages/admin-website-analytics.e
 import adminWebsiteAnalyticsBn from '../../../messages/admin-website-analytics.bn.json';
 import adminWebsitePoliciesEn from '../../../messages/admin-website-policies.en.json';
 import adminWebsitePoliciesBn from '../../../messages/admin-website-policies.bn.json';
+import adminAiLimitsEn from '../../../messages/admin-ai-limits.en.json';
+import adminAiLimitsBn from '../../../messages/admin-ai-limits.bn.json';
+import adminAiStripEn from '../../../messages/admin-ai-strip.en.json';
+import adminAiStripBn from '../../../messages/admin-ai-strip.bn.json';
+import adminLaneFEn from '../../../messages/admin-lane-f.en.json';
+import adminLaneFBn from '../../../messages/admin-lane-f.bn.json';
+import adminSysinfoEn from '../../../messages/admin-sysinfo.en.json';
+import adminSysinfoBn from '../../../messages/admin-sysinfo.bn.json';
+import adminTelegramControlEn from '../../../messages/admin-telegram-control.en.json';
+import adminTelegramControlBn from '../../../messages/admin-telegram-control.bn.json';
+import adminWebsiteControlEn from '../../../messages/admin-website-control.en.json';
+import adminWebsiteControlBn from '../../../messages/admin-website-control.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -395,6 +407,12 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-vat': { en: adminVatEn, bn: adminVatBn },
   'admin-words': { en: adminWordsEn, bn: adminWordsBn },
   'admin-youtube': { en: adminYoutubeEn, bn: adminYoutubeBn },
+  'admin-ai-limits': { en: adminAiLimitsEn, bn: adminAiLimitsBn },
+  'admin-ai-strip': { en: adminAiStripEn, bn: adminAiStripBn },
+  'admin-lane-f': { en: adminLaneFEn, bn: adminLaneFBn },
+  'admin-sysinfo': { en: adminSysinfoEn, bn: adminSysinfoBn },
+  'admin-telegram-control': { en: adminTelegramControlEn, bn: adminTelegramControlBn },
+  'admin-website-control': { en: adminWebsiteControlEn, bn: adminWebsiteControlBn },
 };
 
 export interface AdminWordRow {
