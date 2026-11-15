@@ -38,6 +38,8 @@ import adminBooksBn from '../../../messages/admin-books.bn.json';
 import adminBooksDailyEn from '../../../messages/admin-books-daily.en.json';
 import adminBooksDailyBn from '../../../messages/admin-books-daily.bn.json';
 import adminBrandEn from '../../../messages/admin-brand.en.json';
+import adminPageSettingsEn from '../../../messages/admin-pagesettings.en.json';
+import adminPageSettingsBn from '../../../messages/admin-pagesettings.bn.json';
 import adminBrandBn from '../../../messages/admin-brand.bn.json';
 import adminBuildEn from '../../../messages/admin-build.en.json';
 import adminBuildBn from '../../../messages/admin-build.bn.json';
@@ -282,6 +284,7 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-books': { en: adminBooksEn, bn: adminBooksBn },
   'admin-books-daily': { en: adminBooksDailyEn, bn: adminBooksDailyBn },
   'admin-brand': { en: adminBrandEn, bn: adminBrandBn },
+  'admin-pagesettings': { en: adminPageSettingsEn, bn: adminPageSettingsBn },
   'admin-build': { en: adminBuildEn, bn: adminBuildBn },
   'admin-cache': { en: adminCacheEn, bn: adminCacheBn },
   'admin-calendar': { en: adminCalendarEn, bn: adminCalendarBn },
