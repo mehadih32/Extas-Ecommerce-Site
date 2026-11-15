@@ -1,0 +1,33 @@
+.lf-tiles { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) { .lf-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .lf-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.lf-tile { background: var(--lm-sf); border: 1px solid var(--lm-ln); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 44px; text-decoration: none; color: inherit; }
+.lf-tile:hover { border-color: var(--lm-ac); }
+.lf-tile.warn { border-color: var(--lm-warn); }
+.lf-tile.bad { border-color: var(--lm-bad); }
+.lf-tl { font-size: 12.5px; color: var(--lm-ink2); font-weight: 600; }
+.lf-tv { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.lf-ts { font-size: 12.5px; color: var(--lm-ink2); line-height: 1.45; overflow-wrap: anywhere; }
+.lf-mini { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--lm-ink2); }
+.lf-mini b { color: var(--lm-ink); font-variant-numeric: tabular-nums; }
+.lf-hold { display: flex; gap: 3px; margin-top: 4px; }
+.lf-hold i { flex: 1; height: 6px; border-radius: 2px; background: var(--lm-sf2); }
+.lf-hold i.u { background: var(--lm-ok); }
+.lf-hold i.w { background: var(--lm-warn); }
+.lf-hold i.x { background: var(--lm-bad); }
+.lf-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.lf-in { color: var(--lm-ok); font-variant-numeric: tabular-nums; }
+.lf-out { color: var(--lm-bad); font-variant-numeric: tabular-nums; }
+.lf-io { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; margin-top: 8px; }
+.lf-callout { margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 13px; border: 1px solid var(--lm-ln); background: var(--lm-sf2); overflow-wrap: anywhere; }
+.lf-callout.ok { border-color: var(--lm-ok); background: var(--lm-okbg); }
+.lf-callout.warn { border-color: var(--lm-warn); }
+.lf-callout.bad { border-color: var(--lm-bad); background: var(--lm-badbg); }
+.lf-day > summary { cursor: pointer; list-style: none; }
+.lf-tw { overflow-x: auto; }
+.lf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lf-table th, .lf-table td { padding: 8px 6px; border-bottom: 1px solid var(--lm-ln); text-align: left; white-space: nowrap; }
+.lf-table .r { text-align: right; font-variant-numeric: tabular-nums; }
+.lf-ml { margin-left: 6px; }
+.lf-two2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) { .lf-two2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

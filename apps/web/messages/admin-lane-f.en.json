@@ -320,6 +320,69 @@
       },
       "none": "No offers here yet.",
       "costNote": "Cost = discount given. Click a row for the full picture."
+    },
+    "mn": {
+      "now": "Where the money is now",
+      "hand": "In hand",
+      "handSub": "Cash, bank, bKash and Nagad together",
+      "handNone": "The cashbook is not set up for you to see.",
+      "couriers": "With couriers",
+      "couriersSub": "{n} delivered parcels not paid yet · oldest {d} day(s)",
+      "couriersNone": "No delivered parcel waits for money.",
+      "erp": "Owed to ERP",
+      "erpPaid": "Paid {d} days ago · orders stop in {left} days without a payment",
+      "erpLate": "No payment for {d} days · orders stop in {left} days",
+      "erpHold": "Orders are on hold until you pay",
+      "erpNoDate": "What the shop owes the ERP for the pieces it sells",
+      "erpOff": "The ERP link is not set up yet",
+      "wallets": "Customer wallets",
+      "walletsSub": "Money we owe {n} customers (they spend it on next orders)",
+      "cm": {
+        "title": "Courier money",
+        "sub": "One claims list for the whole shop: raise it here or in Orders, it shows everywhere.",
+        "cod": "COD with couriers",
+        "codSub": "{n} delivered parcels, not paid yet",
+        "claims": "Courier claims to receive",
+        "claimsSub": "{n} open claim(s)",
+        "payouts": "Payouts",
+        "noPayout": "No payout is expected right now.",
+        "c360": "Open Courier 360",
+        "account": "Courier account",
+        "match": "Match courier statement",
+        "st": {
+          "REQUESTED": "Requested",
+          "PROCESSING": "Processing"
+        }
+      },
+      "fc": {
+        "title": "Next {n} days of cash",
+        "series": "Money in hand",
+        "tight": "Tightest day: <b>{day}</b>, about <b>{amt}</b> in hand.",
+        "in": "in",
+        "out": "out",
+        "dayBy": "Day by day",
+        "dayHead": "Day",
+        "inHead": "In",
+        "outHead": "Out",
+        "handHead": "In hand",
+        "badge": "Tightest",
+        "fixed": "Fixed costs due in this time: {amt}.",
+        "none": "No forecast yet. The cashbook has to be on and visible to you.",
+        "start": "Start: {amt} in hand. Courier cash arrives evenly, then the fixed costs go out. A guess, never a promise.",
+        "title2": "Cash forecast, day by day"
+      },
+      "bm": {
+        "title": "Books match with the ERP",
+        "bad": "<b>Not matching.</b> Our books: {ours} · ERP says: {erp} · {n} line(s) to fix.",
+        "good": "<b>Matching.</b> Both say {amt}. Daily summary sent every night.",
+        "fix": "Fix the mismatch",
+        "off": "The ERP link is not set up yet, so there is nothing to match."
+      },
+      "act": {
+        "targets": "Targets",
+        "bank": "Bank / loan pack",
+        "dl": "Download / Print"
+      }
     }
   }
 }

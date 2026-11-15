@@ -24,6 +24,12 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { ProfitSnapshot, DecideToday, type DecideCard, type SnapCol } from '@/components/admin/lane-f/MoneyParts';
 import { withLaneF } from '@/lib/admin-lane-f';
+import * as inv from '@extas/inventory';
+import { inventoryDeps } from '@/lib/inventory-api';
+import { BooksMatch, CashForecast, CourierMoney, MoneyTiles, Rich, type NowTile } from '@/components/admin/lane-f/MoneyNow';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
+import { loadMoneyNow } from '@/lib/lane-f/money-now';
+import { moneyOf as plainMoney } from '@/lib/lane-f/format';
 import { deltaPct } from '@/components/admin/lane-f/Parts';
 import { previousPeriod, resolvePeriod, type PeriodKey } from '@/lib/lane-f/period';
 import { dayIn, moneyOverview, type ReceivedDay } from '@/lib/money-overview';
@@ -99,11 +105,55 @@ export default async function MoneyOverviewPage() {
   if (o.refunds.waiting) decide.push({ key: 'refunds', tone: 'warn', head: f('dec.refHead', { n: o.refunds.waiting }), text: f('dec.refText', { amt: amount(o.refunds.waitingMinor) }), action: { label: f('dec.refBtn'), href: '/admin/money/refunds' } });
   if (o.claims?.late) decide.push({ key: 'claims', tone: 'bad', head: f('dec.claimHead', { n: o.claims.late }), text: f('dec.claimText', { amt: amount(o.claims.minor) }), action: { label: f('dec.claimBtn'), href: '/admin/delivery/claims' } });
   if (!vat.enabled) decide.push({ key: 'vat', tone: 'ok', head: f('dec.vatHead'), text: f('dec.vatText'), action: { label: f('dec.vatBtn'), href: '/admin/money/vat' } });
+  // prototype v5 (PR 821): where the money is now, courier money, the cash forecast and the ERP match, from the real records
+  const perms = access.guard.permissions;
+  const who: inv.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
+  const now = await loadMoneyNow({ db: access.deps.db, deps: await inventoryDeps(access.deps), who, money: o, can: { books: perms?.has('books.read') ?? false, erp: perms?.has('erp.account.read') ?? false }, locale: view.lang === 'bn' ? 'bn' : 'en' });
+  const m = (k: string, vars?: Record<string, string | number>) => t(d, `lf.mn.${k}`, vars);
+  const short = (minor: number) => plainMoney(minor, currency);
+  const holdDays = now.erp?.daysSincePayment ?? null;
+  const holdLeft = now.erp?.holdsInDays ?? null;
+  const holdBar: ('u' | 'w' | 'x' | '')[] | undefined = holdDays !== null && holdLeft !== null ? Array.from({ length: Math.max(1, holdDays + holdLeft) }, (_, i) => (i < holdDays ? (i >= holdDays + holdLeft - Math.ceil((holdDays + holdLeft) / 6) ? 'x' : i >= (holdDays + holdLeft) / 2 ? 'w' : 'u') : '')) : undefined; // hardcode-ok: bar segments
+  const nowTiles: NowTile[] = [
+    { key: 'hand', label: m('hand'), value: now.inHandMinor === null ? '–' : short(now.inHandMinor), sub: now.inHandMinor === null ? m('handNone') : m('handSub'), href: '/admin/money/cash', mini: now.accounts?.map((a) => ({ label: a.name, shown: short(a.minor) })) },
+    { key: 'couriers', label: m('couriers'), value: short(o.cod.minor), sub: o.cod.parcels ? m('couriersSub', { n: o.cod.parcels, d: o.cod.oldestDays ?? 0 }) : m('couriersNone'), tone: (o.cod.oldestDays ?? 0) > 4 ? 'warn' : undefined, href: '/admin/money/cash', mini: o.cod.byCourier.map((k) => ({ label: k.courier ?? c('cod.noCourier'), shown: short(k.minor) })) }, // hardcode-ok: parcel age that turns the tile orange
+    {
+      key: 'erp',
+      label: m('erp'),
+      value: now.erp ? short(now.erp.owedMinor) : '–',
+      sub: !now.erp ? m('erpOff') : now.erp.onHold ? m('erpHold') : holdDays !== null && holdLeft !== null ? (now.erp.tone === 'good' ? m('erpPaid', { d: holdDays, left: holdLeft }) : m('erpLate', { d: holdDays, left: holdLeft })) : m('erpNoDate'),
+      tone: now.erp && now.erp.tone !== 'good' ? now.erp.tone : undefined,
+      href: '/admin/money/books',
+      ...(holdBar ? { holdBar } : {}),
+    },
+    { key: 'wallets', label: m('wallets'), value: short(now.walletsMinor), sub: m('walletsSub', { n: now.walletHolders }), href: '/admin/money/refunds' },
+  ];
+  const claimsMinor = o.claims?.minor ?? 0;
+  const payoutRows = now.payouts.map((p) => ({ id: p.id, label: `${p.courier} · ${m(`cm.st.${p.state}`)} · ${short(p.minor)}`, tone: 'info' as const }));
+  const topCourier = o.claims?.byCourier[0]?.courierId ?? null;
+  const fcDays = (now.forecast?.days ?? []).map((x) => ({ day: x.day, label: dayLabel(x.day, view.locale), inShown: short(x.inMinor), outShown: short(x.outMinor), balShown: short(x.balanceMinor), bal: x.balanceMinor, tight: now.forecast?.tightest?.day === x.day }));
+  const fcTight = now.forecast?.tightest ?? null;
+  const fcIn = (now.forecast?.days ?? []).reduce((n, x) => n + x.inMinor, 0);
+  const fcOut = (now.forecast?.days ?? []).reduce((n, x) => n + x.outMinor, 0);
+  const fcStart = now.inHandMinor ?? 0;
+  const books = now.erp;
   const ranges = heroRanges(o.received.daily ?? [], view.locale, amount, 10 ** money.digits, c);
 
   return (
     <div className="a2-z" data-testid="money-overview" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.fn.title')} sub={t(d, 'lf.fn.asOf', { at: dateTime(o.at, view.locale, view.timeZone) })} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.fn.title')} sub={t(d, 'lf.fn.asOf', { at: dateTime(o.at, view.locale, view.timeZone) })}
+        right={
+          <>
+            <Link className="a2-btn" href="/admin/money/budgets" data-testid="fn-targets">
+              {m('act.targets')}
+            </Link>
+            <Link className="a2-btn" href="/admin/reports" data-testid="fn-bank">
+              {m('act.bank')}
+            </Link>
+            <PrintButton label={m('act.dl')} testId="fn-dl" />
+          </>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       {vat.enabled ? null : (
         <p className="a2-xs a2-mute" data-testid="mo-vat-off">
@@ -118,6 +168,27 @@ export default async function MoneyOverviewPage() {
         cols={snapRows}
         texts={{ title: t(d, 'lf.fn.sn.title'), sub: t(d, 'lf.fn.sn.sub'), open: t(d, 'lf.fn.sn.open'), bar: t(d, 'lf.fn.sn.bar'), sales: t(d, 'lf.fn.sn.sales'), costs: t(d, 'lf.fn.sn.costs'), note: t(d, 'lf.fn.sn.note'), more: t(d, 'lf.fn.sn.more'), moreHref: '/admin/money/profit' }}
       />
+      <MoneyTiles title={m('now')} tiles={nowTiles} />
+      <CourierMoney
+        texts={{ title: m('cm.title'), sub: m('cm.sub'), cod: m('cm.cod'), codSub: m('cm.codSub', { n: o.cod.parcels }), claims: m('cm.claims'), claimsSub: m('cm.claimsSub', { n: o.claims?.count ?? 0 }), payouts: m('cm.payouts'), noPayout: m('cm.noPayout'), c360: m('cm.c360'), account: m('cm.account'), match: m('cm.match') }}
+        codShown={short(o.cod.minor)}
+        claimsShown={short(claimsMinor)}
+        claimsBad={claimsMinor > 0}
+        payouts={payoutRows}
+        links={{ c360: topCourier ? `/admin/delivery/couriers/${topCourier}` : '/admin/delivery/couriers', account: '/admin/money/couriers', match: '/admin/money/couriers' }}
+      />
+      <div className="a2-mt12">
+        <CashForecast
+          texts={{ title: m('fc.title', { n: fcDays.length || '' }), series: m('fc.series'), tightest: m('fc.tight'), inWord: m('fc.in'), outWord: m('fc.out'), dayBy: m('fc.dayBy'), dayHead: m('fc.dayHead'), inHead: m('fc.inHead'), outHead: m('fc.outHead'), handHead: m('fc.handHead'), tightBadge: m('fc.badge'), fixed: m('fc.fixed'), none: m('fc.none'), start: m('fc.start') }}
+          days={fcDays}
+          tightLine={fcTight ? m('fc.tight', { day: dayLabel(fcTight.day, view.locale), amt: short(fcTight.balanceMinor) }) : null}
+          tightBad={!!fcTight && fcTight.balanceMinor <= 0}
+          inTotal={short(fcIn)}
+          outTotal={short(fcOut)}
+          startLine={m('fc.start', { amt: short(fcStart) })}
+          fixedLine={now.forecast && now.forecast.fixedMinor > 0 ? m('fc.fixed', { amt: short(now.forecast.fixedMinor) }) : null}
+        />
+      </div>
       {ranges.length ? (
         <div className="a2-mt12 mo-hero">
           <HeroChart title={c('hero.title')} ranges={ranges} format={fmt} seriesName={c('hero.series')} prevName={c('hero.prev')} testId="mo-hero" />
@@ -237,6 +308,21 @@ export default async function MoneyOverviewPage() {
         </Link>
       </section>
       <DecideToday cards={decide} texts={{ title: t(d, 'lf.fn.dec.title'), sub: t(d, 'lf.fn.dec.sub'), none: t(d, 'lf.fn.dec.none') }} />
+      {books ? (
+        books.openLines > 0 || (books.erpSaysMinor !== null && books.erpSaysMinor !== books.owedMinor) ? (
+          <BooksMatch title={m('bm.title')} tone="bad" action={{ label: m('bm.fix'), href: '/admin/money/books' }}>
+            <Rich text={m('bm.bad', { ours: short(books.owedMinor), erp: short(books.erpSaysMinor ?? books.owedMinor), n: books.openLines })} />
+          </BooksMatch>
+        ) : (
+          <BooksMatch title={m('bm.title')} tone="ok">
+            <Rich text={m('bm.good', { amt: short(books.owedMinor) })} />
+          </BooksMatch>
+        )
+      ) : (
+        <BooksMatch title={m('bm.title')} tone="info">
+          {m('bm.off')}
+        </BooksMatch>
+      )}
     </div>
   );
 }
@@ -244,6 +330,14 @@ export default async function MoneyOverviewPage() {
 /** The hero chart's two ranges from the 30 days (oldest first): the last 7 with the 7 before as a dashed line, and all 30. */
 type Say = (k: string, vars?: Record<string, string | number>) => string;
 type Amount = (minor: number) => string;
+
+function dayLabel(day: string, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T12:00:00Z`));
+  } catch {
+    return day;
+  }
+}
 
 function heroRanges(daily: readonly ReceivedDay[], locale: string, amount: Amount, unit: number, c: Say): HeroRange[] {
   if (!daily.length) return [];
