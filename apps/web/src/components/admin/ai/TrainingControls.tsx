@@ -42,26 +42,31 @@ export function TrainingAddForm({ scopes, base, texts: x }: { scopes: readonly S
     if (await act({ action: 'add', agent, text: text.trim() })) setText('');
   };
   return (
-    <div className="tr-form" data-testid="training-add">
-      <label className="a2-sm" htmlFor="tr-agent">
-        {x.agent}
-      </label>
-      <select id="tr-agent" className="a2-sel" value={agent} disabled={busy} onChange={(e) => setAgent(e.target.value)} data-testid="training-agent">
+    // PR 820 (prototype v5): one line, "Teach all agents a rule…" and Add; the agent pick stays, smaller, before the box
+    <div className="tr-form tr-oneline" data-testid="training-add">
+      <select id="tr-agent" className="a2-sel tr-oneline-sel" aria-label={x.agent} value={agent} disabled={busy} onChange={(e) => setAgent(e.target.value)} data-testid="training-agent">
         {scopes.map((s) => (
           <option key={s.key} value={s.key}>
             {s.label}
           </option>
         ))}
       </select>
-      <label className="a2-sm" htmlFor="tr-text">
-        {x.text}
-      </label>
-      <textarea id="tr-text" className="a2-inp" rows={3} maxLength={x.max} placeholder={x.placeholder} value={text} disabled={busy} onChange={(e) => setText(e.target.value)} data-testid="training-text" />
-      <div>
-        <button type="button" className="a2-btn pri" disabled={busy || !text.trim()} onClick={() => void go()} data-testid="training-add-go">
-          {x.add}
-        </button>
-      </div>
+      <input
+        id="tr-text"
+        type="text"
+        className="a2-inp tr-oneline-in"
+        aria-label={x.text}
+        maxLength={x.max}
+        placeholder={x.placeholder}
+        value={text}
+        disabled={busy}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && void go()}
+        data-testid="training-text"
+      />
+      <button type="button" className="a2-btn pri" disabled={busy || !text.trim()} onClick={() => void go()} data-testid="training-add-go">
+        {x.add}
+      </button>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 // S28 · PR 713 — AI Center › Training: "Try it" (with "Use as a training example"), reference documents and "Describe a problem". Every call is
 // `POST /api/admin/ai/training/extras`; "Try it" never saves or sends anything and the server answers `off` without calling a model while AI is off.
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
+import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/admin/lumen/Toast";
 
@@ -197,7 +199,9 @@ export function TryItBox({
 export function DocAddForm({
   scopes,
   texts: x,
+  onAdded,
 }: {
+  onAdded?: () => void;
   scopes: readonly ScopeOpt[];
   texts: {
     agent: string;
@@ -229,6 +233,7 @@ export function DocAddForm({
     ) {
       setTitle("");
       setText("");
+      onAdded?.();
     }
   };
   return (
@@ -297,8 +302,10 @@ export function DocRow({
   title,
   text,
   meta,
+  use,
   texts: x,
 }: {
+  use?: { on: boolean; label: string; onText: string; offText: string; failedText: string };
   id: string;
   title: string;
   text: string;
@@ -340,6 +347,7 @@ export function DocRow({
         )}
       </span>
       <span className="tr-acts">
+        {use ? <UseSwitch id={id} on={use.on} label={`${use.label}: ${title}`} onText={use.onText} offText={use.offText} failedText={use.failedText} testId="training-doc-use" /> : null}
         {open ? (
           <>
             <button
@@ -392,6 +400,86 @@ export function DocRow({
         </button>
       </span>
     </div>
+  );
+}
+
+/** PR 820: the "Use" switch beside a correction or an extra document. Off = the row stays, the agents stop using it (setting `ai.trainingOff`). */
+export function UseSwitch({ id, on, label, onText, offText, failedText, testId }: { id: string; on: boolean; label: string; onText: string; offText: string; failedText: string; testId: string }) {
+  const router = useRouter();
+  const [enabled, setEnabled] = useState(on);
+  const [busy, setBusy] = useState(false);
+  const flip = async () => {
+    if (busy) return;
+    const next = !enabled;
+    setBusy(true);
+    const r = await post({ action: "setUse", id, on: next });
+    setBusy(false);
+    if (!r.ok) {
+      showToast({ text: failedText, tone: "bad" });
+      return;
+    }
+    setEnabled(next);
+    showToast({ text: next ? onText : offText, tone: "ok" });
+    router.refresh();
+  };
+  return (
+    <button type="button" role="switch" aria-checked={enabled} aria-label={label} className={`lm-sw${enabled ? " on" : ""}`} onClick={() => void flip()} disabled={busy} data-testid={testId}>
+      <span aria-hidden="true" />
+    </button>
+  );
+}
+
+/** PR 820 (prototype "Add document" popup): a button that opens the add-document form in a dialog, so the card stays a plain list. */
+export function DocAddDialog({
+  scopes,
+  buttonLabel,
+  title,
+  close,
+  texts,
+}: {
+  scopes: readonly ScopeOpt[];
+  buttonLabel: string;
+  title: string;
+  close: string;
+  texts: Parameters<typeof DocAddForm>[0]["texts"];
+}) {
+  const uid = useId();
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  return (
+    <>
+      <button type="button" className="a2-btn sm a2-mt12" onClick={() => setOpen(true)} data-testid="training-doc-open">
+        <ShellIcon name="plus" size={15} />
+        {buttonLabel}
+      </button>
+      {open && mounted
+        ? createPortal(
+            <div className="adm2 a2-z a2-ov mid" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
+              <div className="a2-dlg" role="dialog" aria-modal="true" aria-labelledby={`${uid}-t`} data-testid="training-doc-dialog">
+                <div className="a2-dlgh">
+                  <h2 className="a2-h3" id={`${uid}-t`}>
+                    {title}
+                  </h2>
+                  <button type="button" className="a2-icb" onClick={() => setOpen(false)} aria-label={close}>
+                    <ShellIcon name="x" size={18} />
+                  </button>
+                </div>
+                <div className="a2-dlgb">
+                  <DocAddForm scopes={scopes} texts={{ ...texts, done: texts.done }} onAdded={() => setOpen(false)} />
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   );
 }
 

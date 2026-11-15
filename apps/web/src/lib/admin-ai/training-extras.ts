@@ -18,6 +18,7 @@ import { AiError } from './errors';
 import { guideQaAnswer } from './guide-qa-dispatch';
 import { validScope, instructionState } from './training-instructions';
 import { CORRECTION_KIND } from './training';
+import { trainingOffIds } from './training-use';
 
 export const DOCUMENT_KIND = 'document';
 export const NOTE_KIND = 'note';
@@ -100,7 +101,8 @@ export async function tryIt(deps: ExtrasDeps, input: unknown, agentName: (key: s
   const [state, extras] = await Promise.all([instructionState({ db: deps.db }), extrasState(deps.db)]);
   const agent = String(input.agent);
   const lines = state.agents.filter((a) => a.key === TRAINING_ALL || a.key === agent).flatMap((a) => a.lines);
-  const docs = extras.docs.filter((d) => d.agentKey === TRAINING_ALL || d.agentKey === agent);
+  const off = await trainingOffIds(deps.resolver); // PR 820: a document the owner switched off is not shown to the agent
+  const docs = extras.docs.filter((d) => (d.agentKey === TRAINING_ALL || d.agentKey === agent) && !off.has(d.id));
   const facts = sandboxFacts({ agentName: agentName(agent), lines, forbidden: state.forbidden, docs });
   const answer = await guideQaAnswer(deps, MOTHER_STORE_ID, `training:${agent}`, locale, sample, { title: agentName(agent), blocks: [{ t: 'p', c: [{ t: 'text', v: facts }] }] }, {
     agentKey: sandboxAgentKey(agent), // answers as, and is billed to, the agent being trained

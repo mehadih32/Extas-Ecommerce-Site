@@ -20,6 +20,10 @@
   gap: 8px;
   margin-top: 10px;
 }
+/* PR 820 — the one-line instruction form: agent pick, the rule, Add (wraps to two lines on a phone) */
+.adm2 .tr-form.tr-oneline { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+.adm2 .tr-form.tr-oneline .tr-oneline-sel { flex: 0 1 160px; width: auto; }
+.adm2 .tr-form.tr-oneline .tr-oneline-in { flex: 1 1 220px; width: auto; }
 .adm2 .tr-form .a2-sel,
 .adm2 .tr-form .a2-inp,
 .adm2 .tr-inline .a2-inp {
