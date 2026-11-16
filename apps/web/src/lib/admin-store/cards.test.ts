@@ -16,10 +16,11 @@ describe('PR 789 · Store details cards', () => {
   it('every box is a setting that exists or a field of store.details, and no box repeats', () => {
     const seen = new Set<string>();
     for (const { box } of allBoxes()) {
-      expect(Boolean(box.key) !== Boolean(box.d)).toBe(true);
+      expect([box.key, box.d, box.h].filter(Boolean)).toHaveLength(1);
       if (box.key) expect(registry[box.key], box.key).toBeDefined();
+      if (box.h) expect(registry['delivery.holiday']).toBeDefined();
       if (box.d) expect(box.d in STORE_DETAILS_DEFAULT, box.d).toBe(true);
-      const id = box.key ?? `d.${box.d}`;
+      const id = box.key ?? (box.d ? `d.${box.d}` : `h.${box.h}`);
       expect(seen.has(id), id).toBe(false);
       seen.add(id);
     }

@@ -88,10 +88,12 @@
       },
       "addresses": {
         "h": "Addresses",
-        "officeAddr_en": "Office (on invoices), English",
-        "officeAddr_bn": "Office (on invoices), বাংলা",
+        "officeAddr_en": "Office (on invoices)",
+        "officeAddr_bn": "Office (on invoices) · বাংলা",
         "warehouseAddr": "Warehouse — courier pickup",
-        "returnsAddr": "Returns address"
+        "returnsAddr": "Returns address",
+        "warehousePin": "Pin warehouse on map",
+        "warehousePinOn": "Map pin set · move it"
       },
       "contact": {
         "h": "Contact",
@@ -115,7 +117,8 @@
         "facebook": "Facebook",
         "instagram": "Instagram",
         "tiktok": "TikTok",
-        "youtube": "YouTube"
+        "youtube": "YouTube",
+        "webAddress": "Web address"
       },
       "print": {
         "h": "Invoice & sticker",
@@ -123,13 +126,22 @@
         "invFoot": "Invoice footer",
         "stHead": "Sticker header",
         "stFoot": "Sticker footer",
-        "stSize": "Sticker size"
+        "stSize": "Sticker size",
+        "preview": "Preview sticker",
+        "previewTitle": "Sticker preview",
+        "to": "To",
+        "sample": "Rahim · 01712-345678, House 4, Mirpur 10, Dhaka",
+        "cod": "COD ৳1,650",
+        "close": "Close"
       },
       "numbers": {
         "h": "Numbers, money & language",
         "orderPrefix": "Order number starts with",
         "moneyFmt": "Money format",
-        "custLang": "Shop language for customers"
+        "custLang": "Shop language for customers",
+        "holidayOn": "Holiday mode",
+        "holidayMsg": "Banner text",
+        "holidayUntil": "Until"
       },
       "tax": {
         "h": "Tax & VAT",
@@ -142,17 +154,22 @@
         "d": "Home, Finance and the daily Telegram report compare against these.",
         "targetSales": "Sales this month",
         "targetProfit": "Profit this month",
-        "targetAdPct": "Max ad spend (% of sales)"
+        "targetAdPct": "Max ad spend (% of sales)",
+        "salesSoFar": "Sales so far",
+        "profitSoFar": "Profit so far"
       },
       "help": {
         "dbid": "Shown on policy pages",
         "complaintOfficer": "Shown on policy pages",
         "dpo": "Shown on Privacy policy",
         "registeredName": "As on the trade licence.",
-        "orderPrefix": "Capital letters, digits and \"-\", at most 8",
+        "orderPrefix": "Next order: {n}",
         "showVat": "Off — most small online shops start without VAT. Turn on when you have a BIN.",
         "facebook": "A full link starting with https://",
-        "bin": "Printed on every invoice when VAT is on."
+        "bin": "Printed on every invoice when VAT is on.",
+        "warehousePin": "Couriers use the pin to find you.",
+        "holidayOn": "Shop stays open; a banner tells customers when orders ship.",
+        "webAddress": "Changing it needs your PIN"
       },
       "opt": {
         "closedDay": {
@@ -177,17 +194,45 @@
         }
       },
       "logos": {
-        "logo": "Logo",
-        "logoPhone": "Phone logo",
+        "logo": "Wide",
+        "logoPhone": "Square",
         "favicon": "Tab icon",
         "ogImage": "Link picture",
         "replace": "Replace",
         "isSet": "Set",
         "notSet": "Not set",
         "note": "Logos are uploaded in Website › Brand & menus."
+      },
+      "web": {
+        "none": "Not set yet",
+        "change": "Change",
+        "newLabel": "New web address",
+        "pin": "Owner PIN",
+        "cancel": "Cancel",
+        "ok": "Save",
+        "saving": "Saving…",
+        "saved": "Web address changed.",
+        "err": {
+          "INVALID_INPUT": "Type a plain address like shop.example.com.",
+          "PIN_REQUIRED": "Type your PIN.",
+          "WRONG_PIN": "That PIN is not right.",
+          "PIN_NOT_SET": "Set your PIN first.",
+          "PIN_LOCKED": "Too many wrong tries. Wait and try again.",
+          "FORBIDDEN": "Only the owner can change it.",
+          "network": "No connection. Please try again.",
+          "other": "That did not save. Please try again."
+        }
       }
     },
     "licence": "Trade licence expires in {n} days ({day}). Renew it at the city corporation.",
-    "licenceGone": "Trade licence expired on {day}. Renew it at the city corporation."
+    "licenceGone": "Trade licence expired on {day}. Renew it at the city corporation.",
+    "saveAll": "Save changes",
+    "savedAll": "Saved.",
+    "nothingToSave": "Nothing changed yet.",
+    "failedAll": "Some cards did not save. See the red lines.",
+    "more": {
+      "h": "More options",
+      "d": "Notes on the boxes above, kept here so the page stays short."
+    }
   }
 }

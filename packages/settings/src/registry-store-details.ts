@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { setting } from './define';
 
-const V = 789;
+const V = 991; // 789 introduced it; 991 adds the warehouse map pin switch
 
 const text = (max: number) => z.string().trim().max(max);
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'a time like 10:00').or(z.literal(''));
@@ -29,6 +29,8 @@ export const storeDetailsSchema = z
     complaintOfficer: text(160),
     dpo: text(160),
     warehouseAddr: text(300),
+    /** PR 991: the warehouse is pinned on the map for the couriers (the prototype's "Pin warehouse on map"). */
+    warehousePin: z.boolean().default(false),
     returnsAddr: text(300),
     supportEmail: z.email().max(254).or(z.literal('')),
     ordersEmail: z.email().max(254).or(z.literal('')),
@@ -62,6 +64,7 @@ export const STORE_DETAILS_DEFAULT: StoreDetails = {
   complaintOfficer: '',
   dpo: '',
   warehouseAddr: '',
+  warehousePin: false,
   returnsAddr: '',
   supportEmail: '',
   ordersEmail: '',

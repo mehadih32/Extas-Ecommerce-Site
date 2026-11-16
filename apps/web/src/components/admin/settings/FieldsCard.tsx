@@ -6,7 +6,7 @@
 // function crosses from the server page. Saved whole to the page's own API (`url`: GET answers `{cards}`, PUT takes
 // `{key, value, version}`) with the card's version: a card changed by someone else in between is read again and said
 // so. A person without the page's write permission sees it locked.
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 import { ShellIcon } from '../shell/ShellIcon';
@@ -15,11 +15,15 @@ import { commonSaveError } from '@/lib/admin-shell/save-errors';
 
 type Json = Record<string, unknown>;
 
-export type FieldsCardField =
+/** A box shown only while another box of the card has a value (PR 991: the VAT number appears when VAT is on). */
+export type FieldsCardWhen = { path: string; truthy: true };
+export type FieldsCardField = (
   | { kind: 'switch'; path: string; label: string; help?: string }
+  // PR 991: a button that sets a yes/no and reads differently once it is set ("Pin warehouse on map" / "Map pin set · move it")
+  | { kind: 'pin'; path: string; label: string; labelOn: string; help?: string }
   | { kind: 'select'; path: string; label: string; help?: string; numeric?: boolean; options: { value: string; label: string }[] }
   | { kind: 'number'; path: string; label: string; help?: string; min: number; max: number }
-  | { kind: 'text'; path: string; label: string; help?: string; max: number }
+  | { kind: 'text'; path: string; label: string; help?: string; max: number; rows?: number }
   // PR 193: a calendar day (`YYYY-MM-DD`); empty is kept as null (no day set)
   | { kind: 'date'; path: string; label: string; help?: string }
   // PR 789: a time of day (`HH:MM`, empty = not set) and a colour (`#RRGGBB`, empty = not set)
@@ -29,7 +33,8 @@ export type FieldsCardField =
   // PR 384: `rows` makes a taller box for a long text (a policy page's words)
   | { kind: 'pair'; path: string; label: { en: string; bn: string }; help?: string; max: number; rows?: number }
   // SIM-F-048 (PR 550 follow-up): a list of rows (at most `max`); a choice column takes each value once across the rows
-  | { kind: 'rows'; path: string; label: string; help?: string; max: number; add: string; remove: string; empty: string; columns: FieldsCardColumn[] };
+  | { kind: 'rows'; path: string; label: string; help?: string; max: number; add: string; remove: string; empty: string; columns: FieldsCardColumn[] }
+) & { when?: FieldsCardWhen };
 
 /** One column of a `rows` field: a choice (each value once across the rows), or a whole number (empty = null when `optional`).
  * PR 246: or a short text (`lang` marks a Bengali one). */
@@ -59,7 +64,7 @@ export interface FieldsCardScreen {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top, cls }: { top?: ReactNode; cls?: string; url: string; screen: FieldsCardScreen; fields: FieldsCardField[]; texts: FieldsCardTexts; canEdit: boolean; testId: string }) {
+export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top, cls, bare, extra }: { extra?: ReactNode; bare?: boolean; top?: ReactNode; cls?: string; url: string; screen: FieldsCardScreen; fields: FieldsCardField[]; texts: FieldsCardTexts; canEdit: boolean; testId: string }) {
   const id = useId();
   const shell = useShellText();
   const [base, setBase] = useState(screen);
@@ -79,12 +84,16 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
     setDraft(c.value);
   };
 
-  async function save() {
+  /** Saves the card; `quiet` leaves the "Saved" toast to the caller (the page's one Save changes button). */
+  async function save(quiet = false): Promise<boolean> {
     const half = fields.some((f) => f.kind === 'pair' && (() => {
       const p = draft[f.path] as { en?: string; bn?: string } | null;
       return !!p && (!p.en?.trim() || !p.bn?.trim());
     })());
-    if (half) return setSaid({ text: x.pairHelp, bad: true });
+    if (half) {
+      setSaid({ text: x.pairHelp, bad: true });
+      return false;
+    }
     setBusy(true);
     const a = await call('PUT', url, { key: base.key, value: draft, version: base.version });
     setBusy(false);
@@ -93,7 +102,8 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
       // Lumen (CN-036): a save that went through speaks through the admin's one toast (a settings save, no Undo);
       // a refusal stays beside the Save button, where the person is looking.
       setSaid(null);
-      return showToast({ text: x.saved, tone: 'ok' });
+      if (!quiet) showToast({ text: x.saved, tone: 'ok' });
+      return true;
     }
     const code = a.status === 0 ? 'network' : (a.data.error ?? 'other');
     if (code === 'STALE') {
@@ -103,7 +113,21 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
     const fieldsText = (a.data.details ?? []).join(', ');
     // follow-up 508: the page's own words first, then the admin's shared words for no permission / gone / signed out
     setSaid({ text: (x.err[code] ?? commonSaveError(shell.dict, code) ?? x.err.other ?? code).replace('{fields}', fieldsText), bad: true });
+    return false;
   }
+
+  // PR 991: a card drawn `bare` has no Save of its own; the page's Save changes button asks every card to save itself
+  const latest = useRef({ save, dirty });
+  latest.current = { save, dirty };
+  useEffect(() => {
+    if (!bare) return;
+    const on = (e: Event) => {
+      const jobs = (e as CustomEvent<{ jobs: Promise<boolean>[] }>).detail.jobs;
+      if (latest.current.dirty) jobs.push(latest.current.save(true));
+    };
+    window.addEventListener('extas:save-cards', on);
+    return () => window.removeEventListener('extas:save-cards', on);
+  }, [bare]);
 
   const field = (f: FieldsCardField) => {
     const fid = `${id}-${f.path}`;
@@ -117,6 +141,19 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
             {f.help ? <span className="a2-xs a2-mute a2-blk">{f.help}</span> : null}
           </span>
           <button type="button" className={`a2-sw${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={f.label} disabled={off} onClick={() => edit(f.path, !on)} data-testid={`${testId}-${f.path}`} />
+        </div>
+      );
+    }
+    if (f.kind === 'pin') {
+      const on = draft[f.path] === true;
+      return (
+        <div className="a2-fld full" key={f.path}>
+          <div className="a2-gap8" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="a2-btn" disabled={off} onClick={() => edit(f.path, true)} data-testid={`${testId}-${f.path}`}>
+              {on ? f.labelOn : f.label}
+            </button>
+            {f.help ? <span className="a2-xs a2-mute">{f.help}</span> : null}
+          </div>
         </div>
       );
     }
@@ -143,6 +180,16 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
             {f.label}
           </label>
           <input id={fid} className="a2-inp" type="number" inputMode="numeric" min={f.min} max={f.max} value={String(draft[f.path] ?? '')} disabled={off} onChange={(e) => edit(f.path, e.target.value === '' ? '' : Number(e.target.value))} data-testid={`${testId}-${f.path}`} />
+          {help}
+        </div>
+      );
+    if (f.kind === 'text' && f.rows)
+      return (
+        <div className="a2-fld full" key={f.path}>
+          <label className="a2-lbl" htmlFor={fid}>
+            {f.label}
+          </label>
+          <textarea id={fid} className="a2-inp" rows={f.rows} style={{ height: 'auto', padding: '8px 12px', lineHeight: 1.5 }} value={String(draft[f.path] ?? '')} maxLength={f.max} disabled={off} onChange={(e) => edit(f.path, e.target.value)} data-testid={`${testId}-${f.path}`} />
           {help}
         </div>
       );
@@ -330,24 +377,28 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
         </div>
       ) : null}
       {top}
-      <div className="a2-fg a2-mt12">{fields.map(field)}</div>
+      <div className="a2-fg a2-mt12">{fields.filter((f) => !f.when || draft[f.when.path] === true).map(field)}
+        {extra}
+      </div>
+      {bare && !said ? null : (
       <div className="a2-scbar">
         <span className={`a2-sm${said?.bad ? '' : ' a2-mute'}`} role="status" aria-live="polite" data-testid={`${testId}-status`}>
           {said ? said.text : dirty ? x.unsaved : ''}
         </span>
-        {canEdit ? (
+        {canEdit && !bare ? (
           <div className="a2-gap8">
             {dirty ? (
               <button type="button" className="a2-btn" disabled={busy} onClick={() => setDraft(base.value)}>
                 {x.discard}
               </button>
             ) : null}
-            <button type="button" className="a2-btn pri" disabled={busy || !dirty} onClick={save} data-testid={`${testId}-save`}>
+            <button type="button" className="a2-btn pri" disabled={busy || !dirty} onClick={() => save()} data-testid={`${testId}-save`}>
               {busy ? x.saving : x.save}
             </button>
           </div>
         ) : null}
       </div>
+      )}
     </section>
   );
 }
