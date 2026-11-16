@@ -15,7 +15,7 @@ export interface SeoOverviewProps {
   total: number;
   problems: { id: string; label: string; n: number }[];
   weakest: { key: string; name: string; href: string; score: number }[];
-  gsc: null | { clicks: number; impressions: number; position: number | null; queries: { query: string; clicks: number; impressions: number; position: number }[] };
+  gsc: null | { clicks: number; impressions: number; position: number | null; queries: { query: string; clicks: number; impressions: number; position: number | null }[] };
   consoleOn: boolean;
   sitemap: { madeAt: string; pages: number; address: string | null };
   redirects: { id: string; from: string; to: string; hits: number }[] | null;
@@ -25,7 +25,7 @@ export interface SeoOverviewProps {
 export function SeoOverview(p: SeoOverviewProps) {
   const { c, num } = p;
   const tone = p.score === null ? 'mute' : p.score >= 80 ? 'good' : p.score >= 60 ? 'warn' : 'bad'; // hardcode-ok: score bands
-  const top10 = p.gsc ? p.gsc.queries.filter((q) => q.position > 0 && q.position <= 10).length : null; // hardcode-ok: top-10
+  const top10 = p.gsc ? p.gsc.queries.filter((q) => q.position !== null && q.position > 0 && q.position <= 10).length : null; // hardcode-ok: top-10
   const pos = p.gsc?.position == null ? '—' : num(Math.round(p.gsc.position * 10) / 10); // hardcode-ok: one decimal
   return (
     <div className="seo-ov" data-testid="seo-overview">
@@ -81,7 +81,7 @@ export function SeoOverview(p: SeoOverviewProps) {
                     <b>{r.query}</b>
                   </td>
                   <td>
-                    <span className={`seo-pos${r.position <= 3 ? ' t3' : r.position <= 10 ? ' t10' : ''}`}>#{num(Math.round(r.position))}</span>
+                    <span className={`seo-pos${r.position !== null && r.position <= 3 ? ' t3' : r.position !== null && r.position <= 10 ? ' t10' : ''}`}>{r.position === null ? '—' : `#${num(Math.round(r.position))}`}</span>
                   </td>
                   <td>{num(r.impressions)}</td>
                   <td>{num(r.clicks)}</td>

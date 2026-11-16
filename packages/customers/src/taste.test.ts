@@ -21,7 +21,7 @@ describe('tasteOf', () => {
     const t = tasteOf(orders, items, cat, names, new Map());
     expect(t.pieces).toBe(5);
     expect(t.mrpMinor).toBe(2000 * 2 + 1000 + 800 + 0);
-    expect(t.discountMinor).toBe(4800 - 4800 + 200);
+    expect(t.discountMinor).toBe(5800 - 4800 + 200); // MRP less what was paid for the goods, plus the order discounts
   });
   it('gives the usual size per category, always or mostly, and the favourites by pieces', () => {
     const t = tasteOf(orders, items, cat, names, new Map());

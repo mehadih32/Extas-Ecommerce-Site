@@ -201,7 +201,7 @@ export interface JournalList {
  * description of a good length, a focus keyword that is also in the title, a hero picture, a category, a body long enough
  * to answer the question). A rule of thumb for the owner's eye, not a Google figure; the lengths are search-page limits.
  */
-export function seoScoreOf(p: { title: string; metaDescription: string | null; focusKeyword: string | null; heroAssetId: string | null; categoryId: string | null; wordCount: number }): number {
+export function seoScoreOf(p: { title: string; metaDescription: string | null; focusKeyword: string | null; heroAssetId: string | null; categoryId: string | null; wordCount: number | null }): number {
   const between = (n: number, a: number, b: number) => n >= a && n <= b;
   let s = 0;
   if (between(p.title.length, 30, 65)) s += 20; // hardcode-ok: search-page title length
@@ -212,7 +212,7 @@ export function seoScoreOf(p: { title: string; metaDescription: string | null; f
   }
   if (p.heroAssetId) s += 15; // hardcode-ok
   if (p.categoryId) s += 10; // hardcode-ok
-  if (p.wordCount >= 300) s += 10; // hardcode-ok
+  if ((p.wordCount ?? 0) >= 300) s += 10; // hardcode-ok
   return s;
 }
 

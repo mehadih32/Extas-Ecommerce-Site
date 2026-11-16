@@ -16,6 +16,7 @@ CREATE TABLE "BulkQuoteSend" (
     "body" TEXT NOT NULL,
     "sentById" UUID,
     "sentAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "BulkQuoteSend_pkey" PRIMARY KEY ("id")
 );
@@ -28,3 +29,8 @@ ALTER TABLE "BulkQuoteSend" ADD CONSTRAINT "BulkQuoteSend_storeId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "BulkQuoteSend" ADD CONSTRAINT "BulkQuoteSend_quoteId_fkey" FOREIGN KEY ("quoteId") REFERENCES "BulkQuote"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- Append-only (the standard lock, packages/db/src/schema-meta.ts APPEND_ONLY_LOCKED): no edit, no delete, no truncate.
+REVOKE UPDATE, DELETE, TRUNCATE ON "BulkQuoteSend" FROM extas_app;
+CREATE TRIGGER "BulkQuoteSend_append_only" BEFORE UPDATE OR DELETE ON "BulkQuoteSend" FOR EACH ROW EXECUTE FUNCTION extas_append_only();
+CREATE TRIGGER "BulkQuoteSend_no_truncate" BEFORE TRUNCATE ON "BulkQuoteSend" FOR EACH STATEMENT EXECUTE FUNCTION extas_append_only();

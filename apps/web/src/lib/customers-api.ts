@@ -194,7 +194,7 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
       async (x) => {
         const raw = ((await body(request)) ?? {}) as Record<string, unknown>;
         const { pin, ...rest } = raw;
-        await requireOwnerPin(deps!, x.who.actor, x.who.ctx, pin, 'customer.points.adjust', x.who.storeId);
+        await requireOwnerPin(deps!, x.who.actor, x.who.ctx!, pin, 'customer.points.adjust', x.who.storeId);
         return { result: await cu.adjustPoints(x.deps, x.who, { ...rest, key: rest.key ?? x.key }) };
       },
       201,

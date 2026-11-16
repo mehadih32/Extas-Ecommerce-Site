@@ -218,6 +218,7 @@ export const APPEND_ONLY_LOCKED = [
   'BooksPeriodClose',
   'BooksDifferenceNote',
   'BooksAdjustment',
+  'BulkQuoteSend', // PR 1062 (migration 0290): one row per press of Send quote
   'ErpDailySummary',
   'ErpFixedCostMonth',
   'ErpBooksSend',

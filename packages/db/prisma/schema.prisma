@@ -11743,33 +11743,33 @@ enum BulkBatchStatus {
 /// and "Balance received" are marks the team puts with the owner's PIN: they record that the company paid, they never move
 /// money and never make a Payment row (Accounts/Money own that). Delivery is in batches (`BulkBatch`).
 model BulkQuote {
-  id                String       @id @default(uuid(7)) @db.Uuid
+  id                String          @id @default(uuid(7)) @db.Uuid
   storeId           Int
-  store             Store        @relation(fields: [storeId], references: [id])
+  store             Store           @relation(fields: [storeId], references: [id])
   /// The store's running quote number (shown with the setting's prefix).
   refNo             Int
-  enquiryId         String?      @db.Uuid
-  enquiry           BulkEnquiry? @relation(fields: [enquiryId], references: [id])
+  enquiryId         String?         @db.Uuid
+  enquiry           BulkEnquiry?    @relation(fields: [enquiryId], references: [id])
   company           String
   contact           String
   phone             String
   /// [{ name, colour, sizes: { S: 10, M: 20 } }]
   lines             Json
-  pricing           BulkPricing  @default(PIECE)
-  pieceMinor        Int          @default(0)
+  pricing           BulkPricing     @default(PIECE)
+  pieceMinor        Int             @default(0)
   /// [{ from: 50, minor: 72000 }] for TIER.
-  tiers             Json         @default("[]")
+  tiers             Json            @default("[]")
   advancePct        Int
   pieces            Int
   unitMinor         Int
   totalMinor        Int
   advanceMinor      Int
   note              String?
-  advanceReceivedAt DateTime?    @db.Timestamptz(3)
-  balanceReceivedAt DateTime?    @db.Timestamptz(3)
-  createdById       String?      @db.Uuid
-  createdAt         DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
+  advanceReceivedAt DateTime?       @db.Timestamptz(3)
+  balanceReceivedAt DateTime?       @db.Timestamptz(3)
+  createdById       String?         @db.Uuid
+  createdAt         DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @db.Timestamptz(3)
   batches           BulkBatch[]
   sends             BulkQuoteSend[]
 
@@ -11794,6 +11794,7 @@ model BulkQuoteSend {
   body      String
   sentById  String?   @db.Uuid
   sentAt    DateTime  @default(now()) @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, quoteId, sentAt])
 }
