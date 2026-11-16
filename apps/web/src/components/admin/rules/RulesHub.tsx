@@ -452,7 +452,7 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
     const id = `rh-f-${row.id}-${key(f.path)}`;
     if (f.type === 'bool')
       return (
-        <label className="rh-sw" key={f.path}>
+        <label className="rh-sw is-switch" key={f.path}>
           <input type="checkbox" checked={vals[f.path] === true} onChange={(e) => set(f.path, e.target.checked)} disabled={!canWrite || blocked} /> <span>{label}</span>
         </label>
       );
