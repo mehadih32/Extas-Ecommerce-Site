@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { errWords, Msg } from './Parts';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -24,6 +25,7 @@ export function StartLive({ dict, products }: { dict: Dict; products: { id: stri
     const a = await call('POST', `${API}/start`, { title, channelKind: kind, codes });
     setBusy(false);
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
+    showToast({ text: c('startedNow'), tone: 'ok' });
     router.refresh();
   }
   return (
@@ -83,6 +85,7 @@ export function EndLive({ dict }: { dict: Dict }) {
           if (!window.confirm(t(dict, 'w5a.live.endConfirm'))) return;
           const a = await call('POST', `${API}/end`, {});
           if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
+          showToast({ text: t(dict, 'w5a.live.endedNow'), tone: 'ok' });
           router.refresh();
         }}
       >
