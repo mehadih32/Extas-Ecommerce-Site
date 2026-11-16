@@ -52020,7 +52020,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-2`, NOT pushed, status stays parked until the owner says):** `packages/metrics/src/geo-courier.ts` (`courierLens`, `buildCourierLens`): per place of the chosen level, from the shop's own parcels only: courier success = delivered ÷ (delivered + returned) on each parcel's own day, delivery hours from pick-up (else booking) to delivery against the delivery band's promised hours (the late share counts only parcels whose band promised a time), the courier used most and the best courier there (advice only, among couriers with at least `minParcels` settled parcels), and flags (few parcels, low delivery rate, often late, no courier, another courier does better). Coverage: a place is covered by an enabled courier with a live (not archived) mapping on it or on a place above it; the list \"Orders with no courier\" names places with orders and no cover, most orders first (orders only: visits are not stored per area), orders without any area counted apart. Practice (MOCK) parcels, exchange legs, archived orders and other stores are never counted. Setting `reports.geoMapCourier` (registry version 805, store scope, `packages/settings/src/registry-geo-map-courier.ts`, words in `geo-map-courier.{en,bn}.json`): `minParcels`, `lowSuccessPct`, `lateWarnPct`, `gapLimit`, all editable and bounded; the lens itself is switched on in `reports.geoMap.lenses.courier`. API `GET /api/admin/reports/geo-map/lens` (`reports.read`, store-checked, refused when the courier lens is off, read-only; `lib/geo-map/lens-route.ts`), screen part `GeoCourierLens.tsx` and words `admin-geo-lens.{en,bn}.json`. Nothing here changes a courier rule, a booking or a mapping. Tests: `geo-courier.test.ts`, `GeoCourierLens.test.tsx`, `lens-route.test.ts`, `registry-geo-map-courier.test.ts` (ran, pass); `geo-courier.db.test.ts` (5 tests, ran on a real PostgreSQL and pass)."
+    }
+   ],
    "mentions": [
     192,
     525

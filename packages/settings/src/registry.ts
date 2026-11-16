@@ -155,6 +155,7 @@ import { customiseSettings } from './registry-customise';
 import { storeDetailsSettings } from './registry-store-details';
 import { parityE2Settings } from './registry-parity-e2';
 import { parityE5Settings } from './registry-parity-e5';
+import { geoMapCourierSettings } from './registry-geo-map-courier';
 import { parityE3Settings } from './registry-parity-e3';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
@@ -1716,6 +1717,8 @@ export const registry = {
   ...parityE3Settings,
   // ---- PR 846, 851 · the small settings of Settings, lane E5 (registry-parity-e5.ts). ----
   ...parityE5Settings,
+  // ---- S29 · PR 757 · Geography map courier and coverage lens numbers (registry-geo-map-courier.ts, version 805). ----
+  ...geoMapCourierSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;

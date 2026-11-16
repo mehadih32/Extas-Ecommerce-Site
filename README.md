@@ -4216,6 +4216,8 @@ Planned. Parked — register PRs 750–761, built only when the owner says "buil
 
 **16 Nov 2026, local branch `claude/geo-2` (not pushed, not counted):** PR 756 — every slice: Filters for channel, payment, courier and customer type (only the ones switched on), and the "Orders by …" table whose parts add up to the total, with unknown orders counted apart.
 
+**16 Nov 2026, local branch `claude/geo-2` (not pushed, not counted):** PR 757 — the courier and coverage lens: per place, how often the courier delivered, how many came late against the band's promise, the best courier there (advice only) and the places with orders but no courier; its numbers are the editable setting `reports.geoMapCourier`.
+
 ### S28 · Admin v5 (prototype alignment) — Done (191/191)
 
 **Website › Page settings (PR 740–744, 15 Nov 2026).** `/admin/website/page-settings?screen=…` (`website.read` to see, `website.layout.write` to save, audited) holds the inside settings of the home (flash sale), category (filters), product (delivery and return lines), thank-you, bag, account and search (synonyms) pages, plus currency and time, the e-mail look, the cookie banner and the home-screen icon. Every field is a setting with an empty or off default; the shop is unchanged until the owner uses it. Tests beside the code; guide `docs/admin-guide/pages/website/page-settings.md`. বাংলায়: পেজের ভেতরের সেটিং, ইমেইলের চেহারা, কুকি ব্যানার আর হোম স্ক্রিনের আইকন এক জায়গা থেকে।

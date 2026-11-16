@@ -73,3 +73,5 @@ export * from './campaign-profit';
 export * from './geo-types';
 // S29 · PR 756: the Geography map's slices (channel, payment type, courier, customer type) and their breakdown (geo-slices.ts).
 export * from './geo-slices';
+// S29 · PR 757: the Geography map's courier and coverage lens (geo-courier.ts).
+export * from './geo-courier';

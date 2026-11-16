@@ -316,3 +316,5 @@ export * from './registry-parity-e2';
 export * from './registry-parity-e3';
 // PR 846, 851 — the small settings of Settings, lane E5 (registry-parity-e5.ts).
 export * from './registry-parity-e5';
+// S29 · PR 757 — the Geography map's courier and coverage lens numbers (registry-geo-map-courier.ts, version 805).
+export * from './registry-geo-map-courier';
