@@ -245,6 +245,8 @@ export * from './registry-to-ship';
 export * from './registry-courier-watch';
 // S28 · PR 803 — Couriers › Setup: pick-up, minimum payout and pay days per courier (registry-courier-setup.ts, version 803).
 export * from './registry-courier-setup';
+// PR 1010 — Settings › Couriers: pick-up and auto-booking (registry-courier-page.ts, version 1010).
+export * from './registry-courier-page';
 // S28 · PR 678, 679 — the Rules page's pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts, version 320).
 export * from './registry-rules-hub';
 // D10 · PR 1004-1006 - the backup schedule, the health alerts and checks, automatic updates (registry-d10.ts, version 1004).

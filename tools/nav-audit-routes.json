@@ -2065,6 +2065,30 @@
     ]
    },
    {
+    "id": "couriers",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/couriers",
+      "keys": [
+       "settingsCouriers"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "messages",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/settings/messages",
+      "keys": [
+       "settingsMessages"
+      ]
+     }
+    ]
+   },
+   {
     "id": "practice",
     "more": true,
     "pages": [

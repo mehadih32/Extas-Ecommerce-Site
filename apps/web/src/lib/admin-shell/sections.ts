@@ -636,6 +636,9 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'policies', guide: 'settings', pages: [{ href: '/admin/settings/policies', perm: 'settings.read', keys: ['policies'] }] },
       // PR 748/749 — Checkout: the payment ways, Cash on Delivery (owner only), the numbers customers pay to, and the details form.
       { id: 'checkout', guide: 'settings', pages: [{ href: '/admin/settings/checkout', perm: 'settings.read', keys: ['settingsCheckout'] }] },
+      // PR 1010/1011 (final round, lane D11) — Settings › Couriers and Settings › Customer messages, built to the prototype (m-settings.js `renderCouriers`, `renderMsgs`).
+      { id: 'couriers', guide: 'settings', pages: [{ href: '/admin/settings/couriers', perm: 'delivery.read', keys: ['settingsCouriers'] }] },
+      { id: 'messages', guide: 'settings', pages: [{ href: '/admin/settings/messages', perm: 'messages.journey.read', keys: ['settingsMessages'] }] },
       // S28 · PR 706 (CN-049) — Practice data: the switch, the sample data and the reset (owner only inside the page).
       { id: 'practice', guide: 'settings', pages: [{ href: '/admin/settings/practice', perm: 'settings.write', keys: ['practice'] }] },
       { id: 'keys', guide: 'integrations', pages: [{ href: '/admin/integrations', perm: 'vault.read', keys: ['integrations'] }] },

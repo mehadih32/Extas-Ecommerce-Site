@@ -1,0 +1,40 @@
+/* PR 1010 — Settings › Couriers (prototype v5 `renderCouriers`). Lumen tokens only; text wraps, never cut; taps are 44px; at the prototype's phone width (960px) the
+   four right-hand money columns step aside exactly as the prototype's `hide-sm`. */
+.adm2 .cs-wrap { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin-top: 12px; }
+.adm2 .cs-card { min-width: 0; margin: 0; }
+.adm2 .cs-ch { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+.adm2 .cs-tbl { overflow-x: auto; border: 1px solid var(--lm-ln, var(--ln)); border-radius: 12px; }
+.adm2 .cs-tbl .a2-tbl { min-width: 0; }
+.adm2 .cs-tbl .a2-tbl tbody tr { cursor: default; }
+.adm2 .cs-name { min-width: 120px; overflow-wrap: anywhere; }
+.adm2 .cs-prac { margin-top: 2px; max-width: 120px; }
+.adm2 .cs-tbl .a2-pill { white-space: nowrap; }
+.adm2 .cs-acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.adm2 .cs-acts .a2-btn { min-height: 44px; }
+.adm2 .cs-note { margin-top: 12px; border: 1px dashed var(--lm-ln, var(--ln)); background: transparent; }
+.adm2 .cs-two { margin: 0; align-items: stretch; }
+.adm2 .cs-stack { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.adm2 .cs-sw { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 8px; min-width: 0; }
+.adm2 .cs-sw > div { min-width: 0; overflow-wrap: anywhere; }
+.adm2 .cs-two .a2-sel, .adm2 .cs-two .a2-inp { width: 100%; min-height: 44px; font-size: 16px; min-width: 0; }
+.adm2 .cs-save { width: 100%; min-height: 44px; justify-content: center; }
+.adm2 .cs-keys { margin-top: 0; }
+.adm2 .cs-fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.adm2 .cs-money { display: flex; align-items: center; gap: 6px; }
+.adm2 .cs-money span { color: var(--lm-ink2, var(--ink2)); }
+.adm2 .cs-pin { max-width: 160px; min-height: 44px; font-size: 16px; }
+.adm2 .cs-dlg-note { margin-top: 12px; }
+.adm2 .cs-more { min-width: 0; }
+.adm2 .cs-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.adm2 .cs-more-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.adm2 .cs-more-list li { min-width: 0; padding: 12px; border: 1px solid var(--lm-ln, var(--ln)); border-radius: 12px; overflow-wrap: anywhere; }
+.adm2 .cs-more-list .a2-lnk { white-space: normal; min-height: 44px; }
+@media (max-width: 960px) {
+  .adm2 .cs-hide { display: none; }
+}
+@media (max-width: 520px) {
+  .adm2 .cs-fgrid { grid-template-columns: minmax(0, 1fr); }
+}
+.adm2 .cs-tbl .a2-tbl th, .adm2 .cs-tbl .a2-tbl td { padding-left: 8px; padding-right: 8px; }
+.adm2 .cs-tbl .a2-tbl th { white-space: nowrap; letter-spacing: 0; }
+.adm2 .cs-acts { flex-wrap: nowrap; }
