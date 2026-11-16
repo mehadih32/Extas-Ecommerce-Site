@@ -18,6 +18,7 @@ import { ShellIcon } from '../shell/ShellIcon';
 import { CommandButton } from './OrderCommands';
 import { EmptyList, ViewChips } from './OrderListPage';
 import { Chips } from './OrderTable';
+import { ProcessingCards } from './ProcessingCards';
 
 export const pickHref = (query: ListQuery, id: string) => {
   const base = listHref('confirm', query, { cursor: query.cursor });
@@ -85,7 +86,7 @@ function HistoryCard({ h }: { h: ApprovalCard }) {
   );
 }
 
-export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null }) {
+export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null, cards = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null; /** PR 1064: the Processing view's card grid (the orders' own detail reads); null: the queue and call card. */ cards?: OrderDetailView[] | null }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const toConfirm = list.counts.toConfirm ?? 0;
@@ -174,7 +175,16 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
           {mergeLine}
         </p>
       ) : null}
-      {list.rows.length ? (
+      {list.rows.length && cards ? (
+        <>
+          <ProcessingCards view={view} cards={cards} />
+          {list.next ? (
+            <Link className="a2-btn sm a2-mt12" href={listHref('confirm', query, { cursor: list.next })}>
+              {t(d, 'orders.list.next')}
+            </Link>
+          ) : null}
+        </>
+      ) : list.rows.length ? (
         <div className="a2-row a2-r12 a2-start">
           <div className="a2-q" data-testid="call-queue">
             {list.rows.map((r) => (

@@ -3,6 +3,9 @@
 ## 16 Nov 2026 — Final round, lane B (branch `claude/final-b`, from `origin/main` c9b8644f): PR 880 and 881
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1062. Bulk orders: Save & send quote and Send on WhatsApp / Send by SMS, only on a staff press and logged with the words (BulkQuoteSend). Tests of what it touches ran locally; CI runs the rest.
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1063. Returns and exchanges: the courier-side reminders (partial delivery box empty, short count, courier says Delivered and money not in) with their counts and links. Tests of what it touches ran locally; CI runs the rest.
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1064. Processing: the card grid with each order's commands on its card (Confirm, Hold, Cancel, Call), built from the order page's own read. Tests of what it touches ran locally; CI runs the rest.
+
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1063. Returns and exchanges: the courier-side reminders (partial delivery box empty, short count, courier says Delivered and money not in) with their counts and links. Tests of what it touches ran locally; CI runs the rest.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1062. Bulk orders: Save & send quote and Send on WhatsApp / Send by SMS, only on a staff press and logged with the words (BulkQuoteSend). Tests of what it touches ran locally; CI runs the rest.
 
