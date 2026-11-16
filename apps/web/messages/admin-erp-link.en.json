@@ -1,5 +1,7 @@
 {
   "erpLink": {
+    "moreSub": "The link, the keys, what was synced, the balance, the switch to the new ERP contract and its runs.",
+    "more": "More options",
     "metaTitle": "ERP connection",
     "title": "ERP connection",
     "sub": "Your shop and the Extas ERP work as one: the ERP owns stock and buying price, the shop owns customers and orders.",
@@ -337,6 +339,7 @@
       "failed": "The stock sync did not finish. Look at the Activity log."
     },
     "hero": {
+      "test": "Test connection",
       "connected": "Connected",
       "notConnected": "Not connected",
       "lastSync": "last sync",

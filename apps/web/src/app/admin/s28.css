@@ -27,3 +27,7 @@
 /* gate: the activity table scrolls inside its own box instead of widening the page */
 [data-testid="al-rows"]{overflow-x:auto;max-width:100%;position:relative}
 [data-testid="activity-page"]{max-width:100%;overflow-x:clip}
+/* D10 — the prototype's fixed two-column and three-column card rows (g2, g3); one column on a phone */
+.s28-grid.s28-g2{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.s28-grid.s28-g3{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+@media (max-width:760px){.s28-grid.s28-g2,.s28-grid.s28-g3{grid-template-columns:minmax(0,1fr)}}
