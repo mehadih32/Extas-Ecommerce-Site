@@ -64,6 +64,9 @@ export function PairCard({ view, pair, canMerge, noteRequired, money, when, titl
           ))}
         </h2>
       </div>
+      <p className="a2-xs a2-mute a2-mt6" data-testid="merge-hint">
+        {t(d, signals.length === 1 && signals[0] === 'nameAddress' ? 'cus.hint.check' : 'cus.hint.likely')}
+      </p>
       <div className="a2-row a2-r2 a2-mt12" style={{ marginBottom: 12 }}>
         <Side view={view} s={pair.survivor} role="stays" money={money} when={when} />
         <Side view={view} s={pair.merged} role="joins" money={money} when={when} />
