@@ -19,7 +19,9 @@ describe('Settings section in the Lumen look (PR 647)', () => {
   });
 
   it('Keys & connections and Server draw their .ad frame ready', () => {
-    for (const p of ['integrations/page.tsx', 'server/page.tsx']) {
+    // Keys & connections (PR 1020) is drawn like the prototype: the Lumen page head and section tabs, ready from the first paint
+    expect(readAdmin('integrations/page.tsx')).toMatch(/className="a2-z lm-st" data-testid="integrations-page" data-lm-ready=""/);
+    for (const p of ['server/page.tsx']) {
       expect(readAdmin(p), p).toMatch(/<AdminFrame view=\{view\} current=\{KEY\} ready>/);
       // the no-access state too (the deploy's read-only smoke account sees it)
       expect(readAdmin(p), p).toMatch(/kind === 'forbidden'\) return <AdminNotice [^>]*text=\{t\(view\.dict, 'page\.noAccess'\)\} ready \/>/);

@@ -19,7 +19,7 @@
 @media (max-width: 960px) { .st-grid { grid-template-columns: minmax(0, 1fr); } .st-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* PR 991 - Store details: the sticker preview window, the Sales / Profit so far lines and the More options note list. */
 .st-dlg { border: 1px solid var(--lm-ln); border-radius: 14px; background: var(--lm-sf); color: var(--lm-ink); padding: 16px; width: min(92vw, 380px); }
-.st-dlg::backdrop { background: rgb(0 0 0 / 0.35); }
+.st-dlg::backdrop { background: color-mix(in srgb, var(--lm-ink) 35%, transparent); }
 .st-sticker { margin: 12px 0; padding: 14px; border: 2px dashed var(--lm-ln); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
 .st-sthead { font-size: 18px; }
 .st-stline { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
