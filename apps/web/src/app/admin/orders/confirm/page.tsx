@@ -20,11 +20,14 @@ import { ageText, loadOrderList, parseListQuery } from '@/lib/admin-orders/list'
 import { listHref } from '@/lib/admin-orders/model';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { t } from '@/lib/i18n';
+import '../../parity-d6.css';
 
 export const dynamic = 'force-dynamic';
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+/** PR 974: how many cards the Processing grid draws at once (each is the order's own read; "Show more" goes on). */
+const CARDS_SHOWN = 12; // hardcode-ok: a page size, not a business number
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
@@ -51,7 +54,10 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   const q = { view: query.view, ...(query.cursor ? { cursor: query.cursor } : {}) };
   const [list, oldest] = await Promise.all([loadOrderList(rd, who, view, 'confirm', q), od.viewOldest(rd, who, 'toConfirm')]);
   const want = one(sp.order);
-  const pick = list.rows.find((r) => r.id === want) ?? list.rows[0];
+  // PR 974 (prototype v5): the Processing view is a grid of cards with the commands on each card (the first page of the queue)
+  const grid = query.view === 'processing';
+  const pick = grid ? undefined : (list.rows.find((r) => r.id === want) ?? list.rows[0]);
+  const cards = grid ? (await Promise.all(list.rows.slice(0, CARDS_SHOWN).map((r) => loadOrderDetail(rd, who, view, r.id, perms).catch(() => null)))).flatMap((x) => (x ? [x] : [])) : null;
   // PR 533: the customer history at approval, beside the call card (null while the owner's switch is off)
   const [chosen, hist] = pick ? await Promise.all([loadOrderDetail(rd, who, view, pick.id, perms), perms.has('orders.read') ? od.approvalHistory(rd, who, pick.id) : null]) : [null, null];
   const history = hist ? approvalCard(view, hist, new Map((await od.reasonLists(rd, who.storeId)).refusal.map((r) => [r.key, view.lang === 'bn' ? r.bn || r.en : r.en]))) : null;
@@ -63,7 +69,7 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   const open = wantDo && DO_PERM[wantDo] && perms.has(DO_PERM[wantDo]) ? wantDo : null;
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} />
+      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} cards={cards} />
     </CommandsProvider>
   );
 }

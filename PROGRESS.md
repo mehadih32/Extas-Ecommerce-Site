@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 974. Processing: the card grid with each order's commands on its card (Confirm, Hold, Cancel, Call), built from the order page's own read. Tests of what it touches ran locally; CI runs the rest.
+
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 973. Returns and exchanges: the courier-side reminders (partial delivery box empty, short count, courier says Delivered and money not in) with their counts and links. Tests of what it touches ran locally; CI runs the rest.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 972. Bulk orders: Save & send quote and Send on WhatsApp / Send by SMS, only on a staff press and logged with the words (BulkQuoteSend). Tests of what it touches ran locally; CI runs the rest.
