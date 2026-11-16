@@ -102,7 +102,7 @@
 }
 
 /* ---- Filter chips of every list, final round (prototype .chip: 5px 11px, 6px apart; the text stays at the theme's 14 px minimum). From a laptop up; phone and tablet keep the 44 px tap. ---- */
-@media (min-width:1024px){
+@media (min-width:1280px) and (hover:hover) and (pointer:fine){
   [data-lm-look] [data-lm-ready] .a2-view.a2-view{min-height:0;height:auto;padding:5px 11px;gap:4px}
   .adm2 .a2-views,.adm2 .a2-dbar{gap:6px}
   .adm2 .a2-tbl .a2-pill{padding:2px 8px}

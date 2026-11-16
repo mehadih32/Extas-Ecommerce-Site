@@ -354,8 +354,8 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     const s1 = await savePopup(deps(), as(writer), { key: 'thanks', entry: e1, version: s0.version });
     await savePopup(deps(), as(writer), { key: 'thanks', entry: e2, version: s1.version });
     // the settings fake above keeps no history, so the two changes are written the way the real setting does
-    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: {}, newValue: { thanks: e1 } as never, reason: 'Rules', actorId: writer.staffUserId } });
-    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: { thanks: e1 } as never, newValue: { thanks: e2 } as never, reason: 'Rules', actorId: writer.staffUserId } });
+    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: {}, newValue: { thanks: e1 } as never, reason: 'Rules', actorId: writer.staffUserId, createdAt: new Date(Date.now() - 5000) } });
+    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: { thanks: e1 } as never, newValue: { thanks: e2 } as never, reason: 'Rules', actorId: writer.staffUserId, createdAt: new Date(Date.now() - 1000) } });
     const h = await popupHistory(deps(), as(reader), { key: 'thanks' });
     expect(h.map((x) => x.entry?.textEn ?? null)).toEqual(['First words', null]);
     expect(await popupHistory(deps(), as(reader), { key: 'lowstock' })).toEqual([]);
