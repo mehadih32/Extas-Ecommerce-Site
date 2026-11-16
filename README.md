@@ -4210,7 +4210,7 @@ Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking
 
 ### S29 · Geography map (Reports) — Parked
 
-Planned. Parked — register PRs 750–761, built only when the owner says "build the geography map" (light version: 750–753). Plan in Bengali: [`docs/reports/2026-11-15-geo-map-plan.md`](docs/reports/2026-11-15-geo-map-plan.md); [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
+Planned. Parked — register PRs 750–761, built only when the owner says "build the geography map" (light version: 750–753). **16 Nov 2026: PR 750–753 are coded on the local branch `claude/geo-1` (not pushed, not counted); PR 750's boundary pack and licence notice are in `packages/delivery/data/geo/`.** Plan in Bengali: [`docs/reports/2026-11-15-geo-map-plan.md`](docs/reports/2026-11-15-geo-map-plan.md); [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
 
 ### S28 · Admin v5 (prototype alignment) — Done (191/191)
 

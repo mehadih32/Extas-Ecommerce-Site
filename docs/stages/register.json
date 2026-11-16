@@ -51769,6 +51769,13 @@
     {
      "date": "",
      "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-1`, NOT pushed, status stays parked until the owner says):** source geoBoundaries (William & Mary geoLab) release gbOpen, country BGD, simplified GeoJSON of 12 Dec 2023, read from the project's repository; licence per layer: divisions CC0, districts and upazilas CC BY 3.0 IGO (BBS / OCHA ROAP), the project's own work CC BY 4.0; credit written into every pack file; `packages/delivery/data/geo/` holds division.json (8), district.json (64), upazila.json (507), dhakaThana.json (41), centroids.json, unmatched.json (two shapes left for hand fixing: Chittagong Port, Dakshin Sunamganj), hand-fixes.json (23 spelling fixes), LICENSE-NOTICE.md and the source's own metadata; `src/geo-pack.ts` (pure), `src/geo.ts` (reads the files, subpath `@extas/delivery/geo`), `scripts/make-geo-pack.ts` (`pnpm --filter @extas/delivery geo:pack <folder>`); the sample gazetteer's lat/lng are filled for 614 places; whole pack about 0.45 MB; tests `test/geo-pack.pure.test.ts`. Dhaka City areas other than thanas have no shape (pins)."
+    },
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
      "source": "CN-054 (owner asked in chat for a Reports › Geography map; plan only, parked)",
      "sourceLink": "../MASTER-REGISTER.md#extas--master-register",
      "text": "Findings that shaped the split: the repository holds no boundary file at all, and none of the 1717 gazetteer places has a latitude or longitude, so today's bubble map draws nothing; boundaries must come from a licence-clean open source, stored in the repository and drawn as plain SVG with no map library and no call out at view time (PR 750)."
