@@ -1,6 +1,64 @@
 {
   "sysinfo": {
     "health": {
+      "board": {
+        "ai": "AI Diagnose",
+        "optimiseNow": "Optimise now",
+        "saved": "Saved",
+        "err": "Could not save. Try again.",
+        "speed": {
+          "n": "Speed on phones",
+          "none": "Not reported yet"
+        },
+        "errors": {
+          "n": "Errors today",
+          "ok": "None seen by customers",
+          "some": "{n} problem(s) found by the server's own check"
+        },
+        "erp": {
+          "n": "ERP link",
+          "ok": "Checked {when}",
+          "warn": "A recent ERP call failed · checked {when}"
+        },
+        "uptime": {
+          "h": "Uptime, last 14 days",
+          "none": "Not reported yet. The shop's up-time is not recorded here yet.",
+          "hint": "Bars show how far above 99% each day was. Short dips were planned updates at night."
+        },
+        "room": {
+          "h": "Server room",
+          "disk": "Disk",
+          "memory": "Memory",
+          "photos": "Photos"
+        },
+        "alerts": {
+          "h": "Alerts & checks",
+          "telegram": "Telegram alert when something breaks",
+          "telegramSub": "Shop down, backup failed, many errors, ERP link lost",
+          "audit": "Full health & audit check runs",
+          "hourly": "every hour",
+          "daily": "every night",
+          "weekly": "every week",
+          "sub": "A deeper audit also runs every Sunday."
+        },
+        "optimise": {
+          "h": "Last optimise",
+          "never": "Not run yet",
+          "text": "One button: shrinks new photos, refreshes saved pages, checks broken links and slow pages. Safe — it never changes products, prices or orders."
+        },
+        "diag": {
+          "h": "AI Diagnose",
+          "off": "AI is off, so this is the rule-based check. Turn AI on in AI control for a written diagnosis.",
+          "checked": "What I checked",
+          "checkedText": "Uptime, error log, page speed by page type, disk, memory, backups, ERP link, SSL.",
+          "finding": "Finding",
+          "healthy": "Everything is healthy.",
+          "problems": "{n} thing(s) need a look: see the lights on this page.",
+          "close": "Close"
+        },
+        "more": "More options",
+        "moreSub": "The lights the page had before (shop up, nightly page check, backup, restore test, SSL lock, version), what the server found and where alerts go."
+      },
       "metaTitle": "Site health",
       "title": "Site health",
       "sub": "Is the shop up, fast and error-free? Green means nothing to do.",
@@ -61,6 +119,25 @@
       "empty": "Not reported yet"
     },
     "updates": {
+      "board": {
+        "open": "Open test shop",
+        "passed": "all checks passed · a safety copy was taken first",
+        "h": "How updates arrive",
+        "auto": "Install updates by themselves",
+        "autoSub": "Only after every check passes on the test shop; at night; goes back by itself if anything fails.",
+        "check": "Check for updates",
+        "checked": "Checked. This is the version that runs now.",
+        "back": "Go back to previous version",
+        "backNote": "The server goes back by itself when a check fails. A manual go-back is done by the person who looks after the server.",
+        "saved": "Saved",
+        "err": "Could not save. Try again.",
+        "changed": {
+          "h": "What changed",
+          "none": "No list of changes is kept here yet. The build list shows what was finished."
+        },
+        "more": "More options",
+        "moreSub": "Which update ran last, and how much of the build is finished."
+      },
       "metaTitle": "Updates & versions",
       "title": "Updates & versions",
       "sub": "Which version runs now, what changed in plain words, and a safe way back.",
