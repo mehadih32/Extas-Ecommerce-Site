@@ -163,6 +163,19 @@
 .rh-back{margin-top:10px}
 .rh .ad-note.info{background:var(--lm-infobg);color:var(--lm-info)}
 .rh-inline{display:block;grid-column:1/-1}
+/* PR 941 · lane D5 — Checkout simulator (m-rules.js simulator(): rl-rcpt, callout, small notes) */
+.rh-sim{background:var(--lm-sf);border:1px solid var(--lm-ln);border-radius:12px;padding:16px;box-shadow:var(--lm-sh)}
+.rh-sim h3{margin:0;font-size:1rem}
+.rh-sim .good{color:var(--lm-ok)}
+.rh-sim .rh-sees{background:none;border:0;padding:0}
+.rh-sim-ln{font-size:.88rem;border-bottom:1px solid var(--lm-ln)}
+.rh-sim-ln.tot{font-size:1rem;padding-top:10px}
+.rh-call{display:flex;gap:8px;align-items:flex-start;border-radius:10px;padding:10px 12px;font-size:.88rem;margin-top:8px}
+.rh-call svg{flex:none;margin-top:2px}
+.rh-call.good{background:var(--lm-okbg);color:var(--lm-ok)}
+.rh-call.bad{background:var(--lm-badbg);color:var(--lm-bad)}
+.rh-call.warn{background:var(--lm-warnbg);color:var(--lm-warn)}
+.rh-note-sm{margin:6px 0 0;font-size:.82rem;overflow-wrap:anywhere}
 @media (max-width:1180px){
   .rh-l:not(.po-l),.rh-l.has-ed:not(.po-l){grid-template-columns:minmax(0,1fr) minmax(300px,380px)}
   .rh-l:not(.po-l)>.rh-nav{grid-column:1/-1;position:static;flex-direction:row;flex-wrap:wrap}

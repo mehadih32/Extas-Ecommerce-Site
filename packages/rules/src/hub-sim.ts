@@ -115,13 +115,22 @@ export interface CheckoutSimChoices {
   bands: { key: string; nameEn: string; nameBn: string | null; enabled: boolean; chargeMinor: number }[];
   categories: { id: string; nameEn: string; nameBn: string | null }[];
   payments: readonly string[];
+  /** PR 941: the shop's own coupon codes for the picker; `on` is false for one that is off, not started, ended or used up. */
+  coupons: { code: string; on: boolean }[];
 }
 
 export async function simChoices(deps: RulesDeps, who: Who): Promise<CheckoutSimChoices> {
   await allow(deps, who, 'rules.read');
-  const [bands, categories] = await Promise.all([
+  const now = nowOf(deps);
+  const [bands, categories, coupons] = await Promise.all([
     deps.db.deliveryBand.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: [{ sortOrder: 'asc' }, { nameEn: 'asc' }], select: { key: true, nameEn: true, nameBn: true, enabled: true, chargeMinor: true } }),
     deps.db.category.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: 300, select: { id: true, nameEn: true, nameBn: true } }), // hardcode-ok: a cap on one picker
+    deps.db.coupon.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: { code: 'asc' }, take: 200, select: { code: true, enabled: true, startsAt: true, endsAt: true, usageLimit: true, usedCount: true } }), // hardcode-ok: a cap on one picker
   ]);
-  return { bands, categories, payments: SIM_PAYMENTS };
+  return {
+    bands,
+    categories,
+    payments: SIM_PAYMENTS,
+    coupons: coupons.map((c) => ({ code: c.code, on: c.enabled && !(c.startsAt && c.startsAt > now) && !(c.endsAt && c.endsAt < now) && !(c.usageLimit !== null && c.usedCount >= c.usageLimit) })),
+  };
 }
