@@ -47,3 +47,14 @@
 .wdb-prevseg button.on { background: var(--lm-ink, #111); color: var(--lm-sf, #fff); }
 .wdb-phone { border: 6px solid var(--lm-ink, #111); border-radius: 26px; padding: 10px; display: grid; gap: 8px; max-height: 420px; overflow: auto; }
 .wdb-pl { background: var(--lm-sf2, #f4f4f4); border-radius: 10px; padding: 8px 10px; font-size: 12px; overflow-wrap: anywhere; }
+/* PR 1052 (prototype Shop text): one table, Where | English | Bengali, a row per word with its Save beneath; the labels show only on a phone. */
+.wdb-thead { display: none; }
+@media (min-width: 900px) {
+  .wdb-thead { display: grid; grid-template-columns: 150px minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 0 12px 6px; font-weight: 600; color: var(--lm-ink2, #666); }
+  .wdb-row { grid-template-columns: 150px minmax(0, 1fr); align-items: start; }
+  .wdb-row > .wdb-head { grid-column: 1; flex-direction: column; align-items: flex-start; }
+  .wdb-row > .wdb-fold, .wdb-row > .wdb-langs { grid-column: 2; }
+  .wdb-row > .wdb-msg { grid-column: 1 / -1; }
+  .wdb-row .a2-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.wdb-where code { background: none; padding: 0; }
