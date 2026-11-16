@@ -27,4 +27,4 @@
 /* gate: the activity table scrolls inside its own box instead of widening the page */
 [data-testid="al-rows"]{overflow-x:auto;max-width:100%;position:relative}
 [data-testid="activity-page"]{max-width:100%}
-[data-testid="activity-page"] :where(div,section,li,p,span,b,a,small,h2,h3){min-width:0;overflow-wrap:anywhere}
+[data-testid="activity-page"] :where(div,section,li,p,span,b,a,small,h2,h3):not(:where(td,th,table) *){min-width:0;overflow-wrap:anywhere}

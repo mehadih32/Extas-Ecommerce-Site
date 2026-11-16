@@ -1,8 +1,6 @@
 "use client";
 // Final round (prototype v5, phone): the period is one drop-down ("30 days") instead of a grid of buttons. It only shows
 // below a tablet's width (report-bar.css); the buttons stay for a laptop. A choice opens the same address a button does.
-import { useRouter } from "next/navigation";
-
 export function PeriodSelect({
   label,
   value,
@@ -14,7 +12,6 @@ export function PeriodSelect({
   options: readonly { value: string; label: string; href: string }[];
   testId: string;
 }) {
-  const router = useRouter();
   return (
     <select
       className="a2-inp rpsel"
@@ -23,7 +20,7 @@ export function PeriodSelect({
       data-testid={testId}
       onChange={(e) => {
         const o = options.find((x) => x.value === e.target.value);
-        if (o) router.push(o.href);
+        if (o) window.location.assign(o.href);
       }}
     >
       {options.map((o) => (

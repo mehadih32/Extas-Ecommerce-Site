@@ -743,7 +743,6 @@
 
 /* final round: on a phone a pill, a big figure and a code-like value wrap instead of pushing the card wider (this replaces the "clip" on Home, Activity log, ERP connection and Shopping feed) */
 @media (max-width: 599px) {
-  .adm2 .a2-pill { white-space: normal; max-width: 100%; }
   .adm2 .a2-kv { white-space: normal; overflow-wrap: anywhere; }
 }
 .adm2 .a2-mono { overflow-wrap: anywhere; }
