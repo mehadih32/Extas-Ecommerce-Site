@@ -449,7 +449,7 @@
       "sec_SHOP": "Shop-wide FAQs",
       "sec_SHOP_sub": "On every product page.",
       "sec_CATEGORY": "Category FAQs",
-      "sec_CATEGORY_sub": "Added by themselves to every product of the category.",
+      "sec_CATEGORY_sub": "Added to every product of the category by itself",
       "sec_PRODUCT": "Product FAQs",
       "sec_PRODUCT_sub": "Only on that product.",
       "none": "Nothing here yet.",
@@ -709,6 +709,7 @@
     "v5": {
       "fromErp": "from ERP",
       "byHand": "made by hand",
+      "stockNote": "Stock is read-only, synced from the ERP",
       "all": "All products",
       "steps": "Edit step by step",
       "view": "View on shop",

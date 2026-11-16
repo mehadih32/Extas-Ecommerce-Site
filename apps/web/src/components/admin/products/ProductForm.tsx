@@ -537,6 +537,8 @@ export function ProductForm(props: Props) {
           <section className="ad-card" aria-labelledby="sec-variants">
             <h2 id="sec-variants">{t(d, 'products.sections.variants')}</h2>
             <p className="ad-sub">{t(d, 'products.sections.variantsSub')}</p>
+            {/* PR 966 (prototype v5): stock is read only here, it comes from the ERP */}
+            <p className="ad-mini" data-testid="variants-stock-note">{t(d, 'products.v5.stockNote')}</p>
             {can.write ? (
               <div className="pa-tools">
                 <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={fillSkus} disabled={!missingCombos.length}>
