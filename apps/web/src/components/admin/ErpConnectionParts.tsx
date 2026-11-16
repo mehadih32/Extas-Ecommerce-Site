@@ -52,6 +52,30 @@ export function ErpHeadActions({ dict, storeId, importHref }: { dict: Dict; stor
   );
 }
 
+/** The hero's "Test connection" button (prototype v5): runs the ERP connection's own test (the same call as the key card's Test). */
+export function ErpTestButton({ dict, storeId, connectionId }: { dict: Dict; storeId: number; connectionId: string | null }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (!connectionId) return;
+    setBusy(true);
+    const a = await call('POST', `/api/admin/integrations/${encodeURIComponent(connectionId)}?storeId=${storeId}`, { action: 'test' });
+    setBusy(false);
+    if (a.status !== 200) showToast({ text: problem(dict, a), tone: 'bad' });
+    else {
+      const ok = (a.data.test as { ok?: boolean } | undefined)?.ok;
+      showToast({ text: t(dict, ok ? 'integrations.toast.testOk' : 'integrations.toast.testFail'), tone: ok ? 'ok' : 'bad' });
+    }
+    router.refresh();
+  };
+  return (
+    <button type="button" className="a2-btn pri" onClick={() => void run()} disabled={busy || !connectionId} aria-busy={busy || undefined} data-testid="erp-test">
+      <ShellIcon name="check" size={14} />
+      {e(dict, 'hero.test')}
+    </button>
+  );
+}
+
 export interface MatchingProps {
   dict: Dict;
   storeId: number;
