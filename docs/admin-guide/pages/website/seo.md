@@ -216,3 +216,5 @@ Google আর অন্য সার্চ ইঞ্জিন দোকানে
 
 ### PR 802: প্রোটোটাইপ মেলানো
 পাতার নাম এখন **SEO & Google ranking** (এসইও ও গুগল র‍্যাঙ্কিং)।
+
+**Update (PR 914):** the top of the page has an overview card: the SEO score, the problems to fix and the pages with the weakest SEO.

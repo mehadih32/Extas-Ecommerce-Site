@@ -704,5 +704,20 @@
       "sourcesHint": "One site per line: the name, a colon, then the addresses that name it, separated by commas (a full address such as perplexity.ai, or one word of it such as google). AI assistants are checked first, then video, then search engines.",
       "bad": "{box}: line {lines} needs a name, a colon and at least one address."
     }
+  },
+  "ov": {
+    "score": "SEO score",
+    "scoreSub": "{n} of {total} pages need a fix",
+    "problems": "Problems to fix",
+    "weakest": "Pages with the weakest SEO",
+    "all": "See every page",
+    "issue": {
+      "noDescription": "No description",
+      "noPhoto": "No photo",
+      "photoNoAlt": "Photo without a description",
+      "noText": "No page text",
+      "noSearchLine": "No search line",
+      "noStyles": "No styles"
+    }
   }
 }
