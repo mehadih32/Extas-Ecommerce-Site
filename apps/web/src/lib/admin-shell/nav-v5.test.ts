@@ -137,7 +137,7 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     const s = landed.find((x) => x.id === 'settings')!;
     expect(s.tabs.filter((x) => !x.more).map((x) => x.id)).toEqual(['store', 'keys']);
     expect(s.tabs.find((x) => x.id === 'store')!.pages.map((p) => p.keys[0])).toEqual(['store', 'policies', 'people', 'roles', 'staffControls', 'erpLink', 'adminLook', 'productDemo']);
-    expect(s.tabs.find((x) => x.id === 'keys')!.pages.map((p) => p.keys[0])).toEqual(['integrations', 'telegramApprovals', 'cache', 'backups', 'golive', 'siteHealth', 'updates', 'security', 'edge', 'activity', 'privacy', 'startFresh']);
+    expect(s.tabs.find((x) => x.id === 'keys')!.pages.map((p) => p.keys[0])).toEqual(['integrations', 'telegramApprovals', 'cache', 'backups', 'golive', 'siteHealth', 'updates', 'security', 'edge', 'activity', 'privacy', 'startFresh', 'settingsAi']);
     expect(s.tabs.filter((x) => x.more).map((x) => x.id).sort()).toEqual(['checkout', 'practice', 'shell', 'shimmer']);
   });
 });

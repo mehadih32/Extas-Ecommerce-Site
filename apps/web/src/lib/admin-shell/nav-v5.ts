@@ -146,7 +146,7 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
     // System (owner): Keys and connections, Telegram approvals, Backups and system, Security, Activity log, Privacy, Start fresh
     {
       proto: 'keys',
-      real: ['keys', 'telegramApprovals', 'system', 'security', 'activity', 'privacy', 'startFresh'],
+      real: ['keys', 'telegramApprovals', 'system', 'aiControl', 'security', 'activity', 'privacy', 'startFresh'],
       order: ['/admin/integrations', '/admin/settings/telegram-approvals', '/admin/settings/system/cache', '/admin/settings/system/backups', '/admin/settings/system/go-live', '/admin/settings/system/health', '/admin/settings/system/updates', '/admin/settings/security', '/admin/settings/security/edge', '/admin/settings/activity', '/admin/settings/privacy', '/admin/settings/start-fresh'],
     },
   ],
@@ -210,6 +210,8 @@ export const PENDING: readonly PendingPage[] = [
   { key: 'settings.people', pr: 705, section: 'settings', tab: 'people', page: page('/admin/settings/people', 'staff.read', 'people') },
   { key: 'settings.roles', pr: 705, section: 'settings', tab: 'roles', page: page('/admin/settings/roles', 'roles.read', 'roles') },
   { key: 'settings.activity', pr: 705, section: 'settings', tab: 'activity', page: page('/admin/settings/activity', 'audit.read', 'activity') },
+  // D10 (PR 1008): Settings › AI control, the prototype's quick-look card (the whole control room sits under its "More options")
+  { key: 'settings.aiControl', pr: 1008, section: 'settings', tab: 'aiControl', page: page('/admin/settings/ai', 'ai.read', 'settingsAi') },
   { key: 'settings.startFresh', pr: 706, section: 'settings', tab: 'startFresh', page: page('/admin/settings/start-fresh', 'settings.write', 'startFresh') },
 ];
 
