@@ -54,6 +54,12 @@
       "toastAutoOff": "It will no longer turn on by itself.",
       "note": "The switch is saved now; each AI job reads it when it runs.",
       "saves": "Saves about {amount} for the rest of this month."
+    },
+    "chart": {
+      "h": "Spend so far this month",
+      "sub": "Running total by day, {month}",
+      "none": "No AI spend recorded yet this month.",
+      "day": "Day {n}"
     }
   }
 }

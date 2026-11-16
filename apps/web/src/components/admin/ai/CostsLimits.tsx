@@ -4,6 +4,7 @@
 // numbers come from the Control room's own read (this month's ledger), the controls are the small client pieces.
 import Link from 'next/link';
 import { CapInput } from '@/components/admin/ai/CapInput';
+import { SpendChart } from '@/components/admin/ai/SpendChart';
 import { CeilingInput, LimitToggle } from '@/components/admin/ai/LimitControls';
 import { formatMoney, type Money } from '@/components/admin/products/model';
 import { atSaverLine, monthEndAtThisPace, SAVER_AT_PCT, saverSavesMinor } from '@/lib/admin-ai/limits';
@@ -29,6 +30,9 @@ export interface CostsLimitsProps {
   saver: boolean;
   saverAuto: boolean;
   agents: LimitsAgent[];
+  /** PR 935: the running total of this month's AI spend, one number per day (minor units); empty or omitted draws no chart. */
+  daily?: number[];
+  monthLabel?: string;
 }
 
 export function CostsLimits(p: CostsLimitsProps) {
@@ -74,6 +78,8 @@ export function CostsLimits(p: CostsLimitsProps) {
         </div>
         <p className="a2-xs a2-mute">{c('ceiling.help', { pct: SAVER_AT_PCT })}</p>
       </div>
+
+      {p.daily && p.daily.length ? <SpendChart values={p.daily} title={c('chart.h')} sub={c('chart.sub', { month: p.monthLabel ?? '' })} none={c('chart.none')} dayLabel={(n) => c('chart.day', { n })} top={m(Math.max(...p.daily))} /> : null}
 
       <div className="ai-lim-grid a2-mt12">
         <section className="a2-card" data-testid="ai-limits-agents">
