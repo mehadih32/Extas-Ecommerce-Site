@@ -25,6 +25,21 @@
     "newNone": "Nothing is listed yet.",
     "pr": "PR {n}",
     "download": "Download (.md)",
-    "noDocs": "The guide files are not on this server yet. They are copied with every deploy."
+    "noDocs": "The guide files are not on this server yet. They are copied with every deploy.",
+    "adminMap": "Admin map",
+    "files": {
+      "h": "Project files",
+      "blueprint": "Blueprint V2.1",
+      "blueprintD": "The full plan of the shop",
+      "register": "PR register",
+      "registerD": "Every planned piece of work and its status",
+      "all": "All project files",
+      "allD": "Every document of the project, read only",
+      "read": "Read",
+      "stages": "Work by stage (read only)",
+      "stagesGo": "Open",
+      "problem": "Found a problem? Use Ask or report a problem — it goes to the right agent.",
+      "problemGo": "Ask or report a problem"
+    }
   }
 }
