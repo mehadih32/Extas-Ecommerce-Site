@@ -212,6 +212,8 @@ export const APPEND_ONLY_LOCKED = [
   // (ErpEvent, PR 608, is guarded differently: its body never changes and no row is removed, but its processing state
   // moves — trigger ErpEvent_body_fixed, function extas_erp_event_fixed, in the same migration.)
   'ErpAccountEntry',
+  'StaffPayRow',
+  'FixedCostChange',
   'ErpPaymentRecord',
   'ErpPipelineMove',
   'BooksDayClose',

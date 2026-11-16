@@ -84,6 +84,42 @@ export function staffAmountAt(p: Pick<StaffCostPerson, 'amounts' | 'stoppedFrom'
   return best ? best.minor : 0;
 }
 
+/** PR 1040: one advance, bonus or deduction row (table StaffPayRow); a row that points at another (`reversesId`) cancels it. */
+export interface StaffPayRowLite {
+  id: string;
+  personId: string;
+  month: string;
+  kind: 'ADVANCE' | 'BONUS' | 'DEDUCTION';
+  amountMinor: number;
+  note?: string | null;
+  reversesId: string | null;
+}
+
+/**
+ * PR 1040: the people with their advance, bonus and deduction of each month worked out from the rows (new rows each time,
+ * never an edit), on top of anything an older version of the list already holds under `adj` (kept as it was, never changed).
+ * A row that was cancelled, and the row that cancels it, count for nothing.
+ */
+export function withPayRows(people: readonly StaffCostPerson[], rows: readonly StaffPayRowLite[]): StaffCostPerson[] {
+  const cancelled = new Set(rows.filter((r) => r.reversesId).map((r) => r.reversesId as string));
+  const live = rows.filter((r) => !r.reversesId && !cancelled.has(r.id));
+  return people.map((p) => {
+    const mine = live.filter((r) => r.personId === p.id);
+    if (!mine.length) return p;
+    const adj: Record<string, StaffCostAdjust> = { ...(p.adj ?? {}) };
+    for (const r of mine) {
+      const cur = adj[r.month] ?? { adv: 0, bonus: 0, ded: 0, note: '' };
+      adj[r.month] = {
+        adv: cur.adv + (r.kind === 'ADVANCE' ? r.amountMinor : 0),
+        bonus: cur.bonus + (r.kind === 'BONUS' ? r.amountMinor : 0),
+        ded: cur.ded + (r.kind === 'DEDUCTION' ? r.amountMinor : 0),
+        note: [cur.note, r.note ?? ''].filter(Boolean).join(' · ').slice(0, 120),
+      };
+    }
+    return { ...p, adj };
+  });
+}
+
 /** What one person is paid in a month: the amount plus bonus, less deduction and advance (never below 0). */
 export function staffNetAt(p: Pick<StaffCostPerson, 'amounts' | 'stoppedFrom' | 'adj'>, month: string): { base: number; adv: number; bonus: number; ded: number; net: number } {
   const base = staffAmountAt(p, month);

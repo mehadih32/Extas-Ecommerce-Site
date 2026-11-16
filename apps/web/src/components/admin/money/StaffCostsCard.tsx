@@ -5,7 +5,7 @@
 // month" puts the totals in the fixed-costs form above for the owner to check and Save there: nothing is paid or moved here.
 // The whole list is sent with the version it was read at (a second editor gets "STALE"), to /api/admin/costs/staff.
 import { useId, useMemo, useState } from 'react';
-import { STAFF_COST_KINDS, salaryPlan, staffAmountAt, staffNetAt, staffNextChange, staffTotalsFor, type StaffCostKind, type StaffCostPerson } from '@extas/settings/staff-costs';
+import { STAFF_COST_KINDS, salaryPlan, staffAmountAt, staffNetAt, staffNextChange, staffTotalsFor, withPayRows, type StaffCostKind, type StaffCostPerson, type StaffPayRowLite } from '@extas/settings/staff-costs';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -17,6 +17,8 @@ import { useRouter } from 'next/navigation';
 export interface StaffCostsData {
   people: StaffCostPerson[];
   version: string;
+  /** PR 1040: the advance, bonus and deduction rows (new rows each time); they count in the totals and the net shown here. */
+  rows?: StaffPayRowLite[];
 }
 
 const newId = (): string => `s${(globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`).replace(/-/g, '').slice(0, 20)}`;
@@ -55,14 +57,14 @@ export function StaffCostsCard({
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
   const [edit, setEdit] = useState<{ id: string; amount: string; from: string } | null>(null);
-  // PR 849: the advance, bonus and deduction of the month picked (prototype Salaries)
-  const [adjust, setAdjust] = useState<{ id: string; adv: string; bonus: string; ded: string; note: string } | null>(null);
   const [add, setAdd] = useState<{ name: string; post: string; kind: StaffCostKind; amount: string; from: string; payDay: string } | null>(null);
   // PR 859: Pay salary (prototype Salaries): one person or everybody due, from a cashbook account, with the PIN; nothing is automatic
   const [pay, setPay] = useState<{ ids: string[]; account: string; pin: string } | null>(null);
   const dirty = JSON.stringify(people) !== JSON.stringify(data.people) || version !== data.version;
   const useMonth = month || new Date().toISOString().slice(0, 7);
-  const totals = useMemo(() => staffTotalsFor(people, useMonth), [people, useMonth]);
+  // PR 1040: the rows count in what is shown (the list itself is saved without them)
+  const shown = useMemo(() => withPayRows(people, data.rows ?? []), [people, data.rows]);
+  const totals = useMemo(() => staffTotalsFor(shown, useMonth), [shown, useMonth]);
   const monthFmt = useMemo(() => new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }), [locale]);
   const monthName = (ym: string) => monthFmt.format(new Date(`${ym}-01T00:00:00Z`));
   const typed = (text: string): number | undefined => (text.trim() ? (typedMinor(text, money.digits) ?? undefined) : undefined);
@@ -91,28 +93,6 @@ export function StaffCostsCard({
     setEdit(null);
     setSaid(null);
   }
-  function startAdjust(p: StaffCostPerson) {
-    const a = p.adj?.[useMonth];
-    setEdit(null);
-    setAdd(null);
-    setAdjust({ id: p.id, adv: a?.adv ? toMajor(a.adv, money) : '', bonus: a?.bonus ? toMajor(a.bonus, money) : '', ded: a?.ded ? toMajor(a.ded, money) : '', note: a?.note ?? '' });
-  }
-  function commitAdjust() {
-    if (!adjust) return;
-    const parts = { adv: typed(adjust.adv), bonus: typed(adjust.bonus), ded: typed(adjust.ded) };
-    if ((adjust.adv.trim() && parts.adv === undefined) || (adjust.bonus.trim() && parts.bonus === undefined) || (adjust.ded.trim() && parts.ded === undefined)) return setSaid({ text: c('needAmount'), bad: true });
-    const next = { adv: parts.adv ?? 0, bonus: parts.bonus ?? 0, ded: parts.ded ?? 0, note: adjust.note.trim() };
-    const none = !next.adv && !next.bonus && !next.ded && !next.note;
-    setPeople((l) =>
-      l.map((p) => {
-        if (p.id !== adjust.id) return p;
-        const rest = Object.fromEntries(Object.entries(p.adj ?? {}).filter(([k]) => k !== useMonth));
-        return { ...p, adj: none ? rest : { ...rest, [useMonth]: next } };
-      }),
-    );
-    setAdjust(null);
-    setSaid(null);
-  }
   /** A pay slip of one person for the month picked: opens the browser's print page (nothing is sent to the person from here). */
   function paySlip(p: StaffCostPerson) {
     const x = staffNetAt(p, useMonth);
@@ -128,13 +108,12 @@ export function StaffCostsCard({
     w.focus();
     w.print();
   }
-  const salaryDue = (ids?: string[]) => salaryPlan(people, useMonth, ids);
+  const salaryDue = (ids?: string[]) => salaryPlan(shown, useMonth, ids);
   function startPay(ids?: string[]) {
     const plan = salaryDue(ids);
     if (!plan.length) return setSaid({ text: c('payNone'), bad: true });
     setEdit(null);
     setAdd(null);
-    setAdjust(null);
     setPay({ ids: plan.map((x) => x.id), account: accounts[0]?.key ?? '', pin: '' });
   }
   async function payNow() {
@@ -176,7 +155,7 @@ export function StaffCostsCard({
     setSaid({ text: txt === key ? c('err.other') : txt, bad: true });
   }
 
-  const sorted = [...people].sort((x, y) => STAFF_COST_KINDS.indexOf(x.kind) - STAFF_COST_KINDS.indexOf(y.kind) || x.name.localeCompare(y.name));
+  const sorted = [...shown].sort((x, y) => STAFF_COST_KINDS.indexOf(x.kind) - STAFF_COST_KINDS.indexOf(y.kind) || x.name.localeCompare(y.name));
   return (
     <section className="a2-card a2-mt12" data-testid="staff-costs" aria-labelledby={`${id}-h`}>
       <h2 className="a2-h3" id={`${id}-h`}>
@@ -258,11 +237,7 @@ export function StaffCostsCard({
                               {c('pay')}
                             </button>
                           ) : null}
-                          {nx.base && !p.paid?.[useMonth] ? (
-                            <button type="button" className="a2-btn sm" onClick={() => startAdjust(p)} data-testid="staff-adjust-open">
-                              {c('adjust')}
-                            </button>
-                          ) : null}
+                          {/* PR 1040: an advance, bonus or deduction is a new row on the Salaries card above, never an edit here */}
                           {nx.base ? (
                             <button type="button" className="a2-btn sm" onClick={() => paySlip(p)} data-testid="staff-slip">
                               {c('slip')}
@@ -359,36 +334,6 @@ export function StaffCostsCard({
               {c('payGo')}
             </button>
             <button type="button" className="a2-btn" onClick={() => setPay(null)}>
-              {c('cancel')}
-            </button>
-          </div>
-        </div>
-      ) : null}
-      {adjust ? (
-        <div className="ct-form a2-mt12" data-testid="staff-adjust">
-          <p className="a2-sm">
-            <b>{people.find((x) => x.id === adjust.id)?.name}</b> · {monthName(useMonth)}
-          </p>
-          {(['adv', 'bonus', 'ded'] as const).map((k) => (
-            <div className="a2-fld" key={k}>
-              <label className="a2-lbl" htmlFor={`${id}-j${k}`}>
-                {c(k === 'adv' ? 'advanceTaken' : k === 'bonus' ? 'bonus' : 'deduction')}
-              </label>
-              <input id={`${id}-j${k}`} className="a2-inp" inputMode="decimal" value={adjust[k]} onChange={(e) => setAdjust({ ...adjust, [k]: e.target.value })} />
-            </div>
-          ))}
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor={`${id}-jn`}>
-              {c('adjustNote')}
-            </label>
-            <input id={`${id}-jn`} className="a2-inp" maxLength={120} value={adjust.note} onChange={(e) => setAdjust({ ...adjust, note: e.target.value })} />
-          </div>
-          <p className="a2-xs a2-mute">{c('adjustHelp')}</p>
-          <div className="a2-row" style={{ gap: 8 }}>
-            <button type="button" className="a2-btn pri" onClick={commitAdjust} data-testid="staff-adjust-ok">
-              {c('apply')}
-            </button>
-            <button type="button" className="a2-btn" onClick={() => setAdjust(null)}>
               {c('cancel')}
             </button>
           </div>
