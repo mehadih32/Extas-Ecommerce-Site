@@ -20,6 +20,8 @@ import { productV5Cards } from '@/lib/products-v5-settings-api';
 import { formatMoney, nameIn } from '@/components/admin/products/model';
 import { ProductHeadV5 } from '@/components/admin/products/ProductHeadV5';
 import { WizardBar } from '@/components/admin/products/WizardBar';
+import { ProductWizard } from '@/components/admin/products/wizard/ProductWizard';
+import { wizardProps } from '@/lib/admin-wizard-page';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -62,6 +64,25 @@ export default async function ProductEditPage({
   } catch (e) {
     if (cat.isCatalogueError(e) && e.code === 'NOT_FOUND') notFound();
     throw e;
+  }
+  // S28 · PR 1031: the add-product wizard (prototype v5) draws its own eight steps for a draft; a product already on the shop opens as usual.
+  if (wizardStep && (product.status === 'DRAFT' || product.status === 'READY_TO_PUBLISH')) {
+    const wd = view.dict;
+    const props = await wizardProps({ c, access, d: wd, lang: view.lang, locale: view.locale, id, step: wizardStep });
+    return (
+      <AdminFrame view={view} current={KEY} ready>
+        <Link className="pa-back" href={PRODUCTS_HOME}>
+          <Icon name="back" size={14} />
+          {t(wd, 'products.back')}
+        </Link>
+        <div className="ad-hd">
+          <div className="ad-eyebrow">{t(wd, 'products.eyebrow')}</div>
+          <h1 className="ad-h1">{t(wd, 'products.new.title')}</h1>
+          <p className="ad-intro">{t(wd, 'products.new.intro')}</p>
+        </div>
+        <ProductWizard {...props} />
+      </AdminFrame>
+    );
   }
   const [naming, readiness, stock, tree, fabrics, colours, sizes, money, skuTemplate, frontPerColour] = await Promise.all([
     cat.namingView(c.deps, c.who, id),

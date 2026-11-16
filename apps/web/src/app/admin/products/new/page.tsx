@@ -4,13 +4,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
-import * as cat from '@extas/catalogue';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { Icon } from '@/components/admin/Icon';
-import { WizardBar } from '@/components/admin/products/WizardBar';
-import { NewProductForm } from '@/components/admin/products/NewProductForm';
+import { ProductWizard } from '@/components/admin/products/wizard/ProductWizard';
+import { wizardProps } from '@/lib/admin-wizard-page';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -39,9 +38,8 @@ export default async function NewProductPage() {
   if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
 
   const c = catalogueAccess(access);
-  const [tree, fabrics] = await Promise.all([cat.categoryTree(c.deps, c.who), cat.listFabrics(c.deps, c.who)]);
-  const drafts = await cat.wizardDrafts(c.deps, c.who, 5);
   const d = view.dict;
+  const props = await wizardProps({ c, access, d, lang: view.lang, locale: view.locale, id: null, step: 1 });
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
       <Link className="pa-back" href={PRODUCTS_HOME}>
@@ -49,46 +47,7 @@ export default async function NewProductPage() {
         {t(d, 'products.back')}
       </Link>
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.new.title')} sub={t(d, 'products.new.intro')} />
-      <WizardBar dict={d} step={1} productId={null} done={[]} furthest={1} canWrite={c.can('catalogue.write')} preview={null} />
-      {drafts.length ? (
-        <section className="ad-card" aria-label={t(d, 'products.wiz.resume')} data-testid="wizard-resume">
-          <h2>{t(d, 'products.wiz.resume')}</h2>
-          <ul className="ad-mini">
-            {drafts.map((r) => (
-              <li key={r.productId}>
-                <Link href={`/admin/products/${r.productId}?wizard=${r.step}`}>{r.nameEn ?? r.productId}</Link>{' '}
-                {t(d, 'products.wiz.resumeAt', { n: String(r.step) })}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      <div className="pa-ed">
-        <div className="pa-edmain">
-          <NewProductForm
-            dict={d}
-            lang={view.lang}
-            categories={cat.flatten(tree).map((n) => ({
-              id: n.id,
-              nameEn: n.nameEn,
-              nameBn: n.nameBn,
-              depth: n.depth,
-            }))}
-            fabrics={fabrics.map((f) => ({
-              id: f.id,
-              nameEn: f.nameEn,
-              nameBn: f.nameBn,
-            }))}
-            cancelHref={PRODUCTS_HOME}
-          />
-        </div>
-        <aside className="pa-edside">
-          <section className="ad-card">
-            <h2>{t(d, 'products.sections.ready')}</h2>
-            <p className="ad-mini">{t(d, 'products.new.readyNote')}</p>
-          </section>
-        </aside>
-      </div>
+      <ProductWizard {...props} />
     </AdminFrame>
   );
 }
