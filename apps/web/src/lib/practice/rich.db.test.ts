@@ -60,6 +60,41 @@ describe.skipIf(!HAS_TEST_DB)('rich sample data on PostgreSQL (PR 724)', () => {
     expect(await t.prisma.order.count({ where: { storeId: sample } })).toBe(before);
   });
 
+  // PR 880: the live seed command asks for the big set on the owner's own store, after the small set may already be there
+  it('richAnywhere tops a small practice set up to the big one, adds no ad spend, changes no older order, and a second run changes nothing', async () => {
+    const t3 = await createTestDatabase('practice-rich-live');
+    try {
+      const [live] = await seedSampleStores(t3.prisma);
+      const db = t3.prisma;
+      const small = await seedPractice(db, live, NOW);
+      expect(small.seeded).toBe(true);
+      const firstIds = (await db.order.findMany({ where: { storeId: live, isPractice: true }, select: { id: true, totalMinor: true }, orderBy: { id: 'asc' } })).slice(0, 20);
+      const itemsBefore = await db.orderItem.count({ where: { orderId: { in: firstIds.map((o) => o.id) } } });
+      const ignored = await seedPractice(db, live, NOW, { rich: true });
+      expect(ignored.seeded).toBe(false); // without richAnywhere the ask is ignored on a store that is not the sample store
+      const r = await seedPractice(db, live, NOW, { rich: true, richAnywhere: true });
+      expect(r.seeded).toBe(true);
+      expect(await db.order.count({ where: { storeId: live, isPractice: true } })).toBeGreaterThanOrEqual(800);
+      expect(await db.order.count({ where: { storeId: live, isPractice: false } })).toBe(0);
+      expect(await db.customer.count({ where: { storeId: live, isPractice: true } })).toBe(RICH.customers);
+      expect(await db.adSpendDaily.count({ where: { storeId: live } })).toBe(0);
+      expect(await db.adAccount.count({ where: { storeId: live } })).toBe(0);
+      // the older orders keep their own lines and totals
+      const again = await db.order.findMany({ where: { id: { in: firstIds.map((o) => o.id) } }, select: { id: true, totalMinor: true }, orderBy: { id: 'asc' } });
+      expect(again).toEqual(firstIds);
+      expect(await db.orderItem.count({ where: { orderId: { in: firstIds.map((o) => o.id) } } })).toBe(itemsBefore);
+      // every customer's order count matches the orders he has
+      const grouped = await db.order.groupBy({ by: ['customerId'], where: { storeId: live, isPractice: true }, _count: { _all: true } });
+      for (const g of grouped) expect((await db.customer.findUnique({ where: { id: g.customerId! }, select: { orderCount: true } }))!.orderCount).toBe(g._count._all);
+      const before = { orders: await db.order.count({ where: { storeId: live } }), claims: await db.courierClaim.count({ where: { storeId: live } }), payouts: await db.courierSettlement.count({ where: { storeId: live } }) };
+      const second = await seedPractice(db, live, NOW, { rich: true, richAnywhere: true });
+      expect(second.seeded).toBe(false);
+      expect({ orders: await db.order.count({ where: { storeId: live } }), claims: await db.courierClaim.count({ where: { storeId: live } }), payouts: await db.courierSettlement.count({ where: { storeId: live } }) }).toEqual(before);
+    } finally {
+      await t3.drop();
+    }
+  }, 240_000);
+
   it('on a store that is not the sample store, "rich" is ignored', async () => {
     // its own database: the practice ids are made from the record's key alone, so two stores in one database would share them
     const t2 = await createTestDatabase('practice-rich-other');

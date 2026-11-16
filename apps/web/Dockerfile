@@ -73,6 +73,8 @@ COPY --from=build /repo/apps/web/.next/cache /
 # and runs the background worker (PR 6: packages/jobs, `tsx src/main.ts`; infra/stack/app.yml `worker`).
 FROM deps AS migrate
 COPY packages/ packages/
+# PR 880: the practice-data seed command (apps/web/src/lib/practice/live-cli.ts, workflow practice-seed) runs from this image
+COPY apps/web/src/lib/practice apps/web/src/lib/practice
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA NODE_ENV=production PRISMA_HIDE_UPDATE_MESSAGE=1
 USER node
