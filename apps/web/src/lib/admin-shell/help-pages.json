@@ -231,6 +231,7 @@
     { "id": "settings/checkout", "route": "/admin/settings/checkout" },
     { "id": "settings/practice", "route": "/admin/settings/practice" },
     { "id": "settings/keys", "route": "/admin/integrations" },
+    { "id": "settings/ai", "route": "/admin/settings/ai" },
     { "id": "settings/erp-link", "route": "/admin/settings/erp-link" },
     { "id": "settings/security", "route": "/admin/settings/security" },
     { "id": "settings/edge", "route": "/admin/settings/security/edge" },

@@ -2043,6 +2043,12 @@
       "keys": [
        "startFresh"
       ]
+     },
+     {
+      "href": "/admin/settings/ai",
+      "keys": [
+       "settingsAi"
+      ]
      }
     ]
    },

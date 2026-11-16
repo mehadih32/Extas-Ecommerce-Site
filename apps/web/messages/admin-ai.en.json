@@ -63,6 +63,35 @@
     "maskedNote": "Allowed, with masking (names and phone numbers hidden first)."
   },
   "aiControl": {
+    "short": {
+      "title": "AI control",
+      "sub": "AI now has its own menu: AI Center. This is a quick look.",
+      "on": "AI is on",
+      "off": "AI is off",
+      "line": "{running} of {total} agents running · {used} of {cap} this month ({pct}%) · {waiting} waiting for your OK",
+      "lineNoCap": "{running} of {total} agents running · {used} this month · {waiting} waiting for your OK",
+      "open": "Open AI Center",
+      "links": {
+        "approvals": {
+          "n": "Approvals",
+          "d": "One queue of everything AI proposes"
+        },
+        "agents": {
+          "n": "AI agents",
+          "d": "Pause, model, schedule"
+        },
+        "costs": {
+          "n": "Costs & limits",
+          "d": "AI, SMS and WhatsApp ceilings"
+        },
+        "train": {
+          "n": "Training",
+          "d": "Rules, examples, sandbox, versions"
+        }
+      },
+      "more": "More options",
+      "moreSub": "The full control room: the master switch, every agent, which data may reach which model and the AI-off test."
+    },
     "metaTitle": "AI Center",
     "title": "AI Center",
     "sub": "Every AI agent: what it is doing, what it cost, what it decided.",
