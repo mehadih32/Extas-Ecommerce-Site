@@ -107,6 +107,12 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
   let body: React.ReactNode;
   if (section === 'overview') {
     const f = c.last30;
+    // PR 973 (prototype v5 "What to do now"): what needs a person on this courier, each with the section that deals with it.
+    const todo: { key: string; text: string; to: Section; extra?: Record<string, string | number> }[] = [];
+    if (!(c.enabled && c.mode === 'LIVE')) todo.push({ key: 'conn', text: cr('c.todoConn', { name: c.name }), to: 'setup' });
+    if (c.stuck) todo.push({ key: 'stuck', text: cr('c.todoStuck', { n: n(c.stuck) }), to: 'parcels', extra: { f: 'onTheWay' } });
+    if (detail.exceptions) todo.push({ key: 'exc', text: cr('c.exceptions', { n: n(detail.exceptions) }), to: 'parcels', extra: { f: 'problem' } });
+    const dayMax = Math.max(1, ...detail.daily.map((x) => Math.max(x.delivered, x.returned)));
     body = (
       <>
         <dl className="a2-card a2-mt12" data-testid="c360-figures" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
@@ -142,6 +148,48 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
             {cr('c.exceptions', { n: n(detail.exceptions) })} · <Link href={href('parcels', { f: 'problem' })}>{cr('p.f.problem')}</Link>
           </div>
         ) : null}
+        <div className="c360-two a2-mt12">
+          <section className="a2-card" data-testid="c360-todo">
+            <h2 className="a2-h3">{cr('c.todo')}</h2>
+            {todo.length ? (
+              <ul className="c360-list">
+                {todo.map((x) => (
+                  <li key={x.key}>
+                    <span>{x.text}</span> <Link href={href(x.to, x.extra)}>{cr('ov.view')}</Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute">{cr('c.todoNone')}</p>
+            )}
+          </section>
+          <section className="a2-card" data-testid="c360-days">
+            <h2 className="a2-h3">{cr('c.days')}</h2>
+            <p className="a2-xs a2-mute">{cr('c.daysSub')}</p>
+            <div className="c360-bars" role="img" aria-label={cr('c.days')}>
+              {detail.daily.map((x) => (
+                <div key={x.day} className="c360-bar" title={`${day.format(new Date(`${x.day}T00:00:00Z`))}: ${n(x.delivered)} / ${n(x.returned)}`}>
+                  <i className="d" style={{ height: `${Math.round((x.delivered / dayMax) * 100)}%` }} />
+                  <i className="r" style={{ height: `${Math.round((x.returned / dayMax) * 100)}%` }} />
+                  <span>{x.day.slice(8)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+        <section className="a2-card a2-mt12" data-testid="c360-cost">
+          <h2 className="a2-h3">{cr('c.cost')}</h2>
+          <dl className="c360-kv">
+            <dt>{cr('c.costTotal')}</dt>
+            <dd>
+              <b>{m(f.costMinor)}</b>
+            </dd>
+            <dt>{cr('c.costParcels')}</dt>
+            <dd>{n(f.costParcels)}</dd>
+            <dt>{cr('c.costPer')}</dt>
+            <dd>{f.perParcelMinor === null ? '—' : m(f.perParcelMinor)}</dd>
+          </dl>
+        </section>
         <section className="a2-card a2-mt12" data-testid="c360-weeks">
           <h2 className="a2-h3">{cr('c.weeks')}</h2>
           <p className="a2-xs a2-mute">{cr('c.weeksSub')}</p>

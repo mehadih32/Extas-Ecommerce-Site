@@ -3,6 +3,7 @@
 // free delivery), and the report's months in the store's time zone. Every value is made up.
 import { describe, expect, it } from 'vitest';
 import { bandsForCharge, courierReadBand, mismatchGap, monthsBack } from './charge-mismatch';
+import { dailyCounts } from './couriers-v5';
 
 const card = (zoneKey: string, chargeMinor: number, o: { from?: number; to?: number; codFeeBps?: number | null; validFrom?: Date; validTo?: Date | null } = {}) => ({
   zoneKey,
@@ -55,5 +56,22 @@ describe('monthsBack', () => {
     // 31 Oct 19:00 UTC is already 1 Nov in Dhaka
     expect(monthsBack(new Date('2026-10-31T19:00:00Z'), 'Asia/Dhaka', 3)).toEqual(['2026-11', '2026-10', '2026-09']);
     expect(monthsBack(new Date('2026-02-10T00:00:00Z'), 'Asia/Dhaka', 3)).toEqual(['2026-02', '2026-01', '2025-12']);
+  });
+});
+
+describe('PR 973: dailyCounts (Courier 360, last 14 days)', () => {
+  const now = new Date('2026-11-10T09:00:00Z');
+  const one = (status: string, endedAt: string) => ({ status, endedAt: new Date(endedAt), pickedAt: null, bookedAt: null, chargeMinor: null });
+  it('gives 14 days, oldest first, the last one being today', () => {
+    const d = dailyCounts([], now);
+    expect(d).toHaveLength(14);
+    expect(d[13]!.day).toBe('2026-11-10');
+    expect(d[0]!.day).toBe('2026-10-28');
+  });
+  it('counts delivered and returned on the day they ended; older parcels are left out', () => {
+    const d = dailyCounts([one('DELIVERED', '2026-11-10T01:00:00Z'), one('DELIVERED', '2026-11-10T05:00:00Z'), one('RETURNED', '2026-11-09T05:00:00Z'), one('DELIVERED', '2026-10-01T05:00:00Z')], now);
+    expect(d[13]).toMatchObject({ delivered: 2, returned: 0 });
+    expect(d[12]).toMatchObject({ delivered: 0, returned: 1 });
+    expect(d.reduce((a, x) => a + x.delivered + x.returned, 0)).toBe(3);
   });
 });
