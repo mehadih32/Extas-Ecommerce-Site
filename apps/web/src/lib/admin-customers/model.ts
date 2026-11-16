@@ -11,11 +11,16 @@ export interface CustomerQuery {
   source?: string;
   sort?: CustomerSort;
   page?: number;
+  /** PR 904: "Show more" — how many people from the top the list shows. */
+  upto?: number;
   /** PR 287: a saved segment's id. */
   segment?: string;
   /** Follow-up 473: a district's id (the person's latest order with a resolved place is in it). */
   district?: string;
 }
+
+/** PR 904: the list opens as the prototype does, the biggest spenders first; "Ordered recently" is picked by name in the address. */
+export const DEFAULT_SORT: CustomerSort = 'spend';
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() ?? '';
 
@@ -24,12 +29,14 @@ export function parseCustomerQuery(sp: Record<string, string | string[] | undefi
   const view = one(sp.view);
   const sort = one(sp.sort);
   const page = Number(one(sp.page));
+  const upto = Number(one(sp.upto));
   return {
     ...((CUSTOMER_VIEWS as readonly string[]).includes(view) && view !== 'all' ? { view: view as CustomerView } : {}),
     ...(one(sp.q) ? { q: one(sp.q).slice(0, 100) } : {}),
     ...(one(sp.source) ? { source: one(sp.source).slice(0, 60) } : {}),
-    ...((CUSTOMER_SORTS as readonly string[]).includes(sort) && sort !== 'last' ? { sort: sort as CustomerSort } : {}),
+    ...((CUSTOMER_SORTS as readonly string[]).includes(sort) && sort !== DEFAULT_SORT ? { sort: sort as CustomerSort } : {}),
     ...(Number.isInteger(page) && page > 1 ? { page } : {}),
+    ...(Number.isInteger(upto) && upto > 0 && upto <= 2000 ? { upto } : {}),
     ...(/^[0-9a-f-]{36}$/i.test(one(sp.segment)) ? { segment: one(sp.segment) } : {}),
     ...(/^[0-9a-f-]{36}$/i.test(one(sp.district)) ? { district: one(sp.district) } : {}),
   };
@@ -42,8 +49,9 @@ export function customersHref(q: CustomerQuery, change: Partial<Record<keyof Cus
   if (m.view && m.view !== 'all') sp.set('view', m.view);
   if (m.q) sp.set('q', m.q);
   if (m.source) sp.set('source', m.source);
-  if (m.sort && m.sort !== 'last') sp.set('sort', m.sort);
+  if (m.sort && m.sort !== DEFAULT_SORT) sp.set('sort', m.sort);
   if (m.page && m.page > 1) sp.set('page', String(m.page));
+  if (m.upto) sp.set('upto', String(m.upto));
   if (m.segment) sp.set('segment', m.segment);
   if (m.district) sp.set('district', m.district);
   const s = sp.toString();

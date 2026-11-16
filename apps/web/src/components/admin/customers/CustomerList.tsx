@@ -142,7 +142,10 @@ export function groupOf(r: Pick<CustomerRow, 'orders' | 'salesMinor' | 'delivere
   return 'new';
 }
 
-export function CustomerTable({ view, rows, money, when, hrefOf, settings, nowMs = 0 }: { view: AdminView; rows: CustomerRow[]; money: Money; when: Intl.DateTimeFormat; hrefOf?: (id: string) => string; settings?: ListSettings; nowMs?: number }) {
+/** PR 904: how many more people "Show more" adds (the prototype adds 60). */
+const SHOW_MORE_STEP = 60;
+
+function CustomerTable({ view, rows, money, when, hrefOf, settings, nowMs = 0 }: { view: AdminView; rows: CustomerRow[]; money: Money; when: Intl.DateTimeFormat; hrefOf?: (id: string) => string; settings?: ListSettings; nowMs?: number }) {
   const d = view.dict;
   const col = (k: string) => t(d, `cus.list.cols.${k}`);
   const dash = t(d, 'cus.list.none');
@@ -218,9 +221,9 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
   const sortSel: FilterSelect = {
     name: 'sort',
     label: t(d, 'cus.list.sort'),
-    any: t(d, 'cus.list.sortLast'),
+    any: t(d, 'cus.list.sortSpend'),
     value: query.sort ?? '',
-    options: (['new', 'spend', 'orders', 'name'] as const).map((s) => ({ value: s, label: t(d, `cus.list.sort${s[0]!.toUpperCase()}${s.slice(1)}`) })),
+    options: (['orders', 'last', 'refused', 'name', 'new'] as const).map((s) => ({ value: s, label: t(d, `cus.list.sort${s[0]!.toUpperCase()}${s.slice(1)}`) })),
   };
   const current = data.query.view;
   const all = current === 'all' && !filtered;
@@ -293,8 +296,8 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
                 </Link>
               ) : null}
               {data.hasMore ? (
-                <Link className="a2-btn sm" href={customersHref(query, { page: data.query.page + 1 })} data-testid="cus-next">
-                  {t(d, 'cus.list.next')}
+                <Link className="a2-btn sm" href={customersHref(query, { page: undefined, upto: data.rows.length + SHOW_MORE_STEP })} data-testid="cus-next">
+                  {t(d, 'cus.list.showMore', { n: n(Math.max(0, (data.counts[data.query.view] ?? 0) - data.rows.length)) })}
                 </Link>
               ) : null}
             </span>

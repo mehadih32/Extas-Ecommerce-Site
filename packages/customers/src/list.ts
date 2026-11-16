@@ -40,6 +40,8 @@ export const listInput = z
     source: z.string().trim().max(60).optional(),
     sort: z.enum(CUSTOMER_SORTS).optional(),
     page: z.coerce.number().int().min(1).max(10_000).optional(),
+    /** PR 904: "Show more" — the list shows this many people from the top (instead of a page at a time). */
+    upto: z.coerce.number().int().min(1).max(2000).optional(),
     /** PR 287: only the people of this saved segment (an archived, unreadable or other store's segment: nobody). */
     segment: z.string().trim().max(40).optional(),
     /** Follow-up 473: only the people whose latest order with a resolved place is in this district (a GeoArea id). */
@@ -164,6 +166,7 @@ export async function listSql(deps: CustomersDeps, S: number, d: z.output<typeof
     spend: Prisma.sql`b.sales_value DESC, b.orders DESC`,
     orders: Prisma.sql`b.orders DESC, b.last_at DESC NULLS LAST`,
     name: Prisma.sql`lower(COALESCE(b."name", '')) ASC`,
+    refused: Prisma.sql`b.refused DESC, b.orders DESC`,
   }[sort];
   return { rules, views, view, sort, q, source, district, segmentId, seg, base, viewSql, order };
 }
@@ -175,6 +178,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const S = who.storeId;
   const [{ rules, views, view, sort, q, source, district, segmentId, seg, base, viewSql, order }, mask, grading] = await Promise.all([listSql(deps, S, d), maskOf(deps, S), gradingOf(deps, S)]);
   const page = d.page ?? 1;
+  const size = d.upto ?? rules.pageSize;
 
   const now = nowOf(deps);
   const OFFSET_MS = 6 * 3_600_000; // Dhaka is UTC+6 all year
@@ -183,7 +187,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const lastStart = new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth() - 1, 1) - OFFSET_MS);
   const lastSame = new Date(Math.min(lastStart.getTime() + (now.getTime() - monthStart.getTime()), monthStart.getTime()));
   const [rows, countRows, sourceRows, districtRows, extraRows] = await Promise.all([
-    deps.db.$queryRaw<PeopleRow[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${rules.pageSize + 1} OFFSET ${(page - 1) * rules.pageSize}`,
+    deps.db.$queryRaw<PeopleRow[]>`${base} SELECT b.* FROM base b WHERE ${viewSql(view)} ORDER BY ${order}, b."id" LIMIT ${size + 1} OFFSET ${(page - 1) * size}`,
     deps.db.$queryRaw<Record<string, bigint>[]>`${base} SELECT ${Prisma.join(
       views.map((v) => Prisma.sql`count(*) FILTER (WHERE ${viewSql(v)}) AS ${Prisma.raw(`"${v}"`)}`),
       ', ',
@@ -203,7 +207,7 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
   const ex = extraRows[0] ?? {};
   const totalSales = num(ex.total_sales);
   const c = countRows[0] ?? {};
-  const shown = rows.slice(0, rules.pageSize);
+  const shown = rows.slice(0, size);
   const placeRows = shown.length
     ? await deps.db.$queryRaw<{ id: string; de: string | null; db: string | null; ae: string | null }[]>`${base} SELECT b."id"::text AS id,
         (SELECT d."nameEn" FROM own JOIN "Order" o ON o."id" = own."id" AND o."archivedAt" IS NULL JOIN "GeoArea" a ON a."id" = o."areaId"
@@ -242,8 +246,8 @@ export async function customerList(deps: CustomersDeps, who: Who, input: unknown
     views,
     query: { view, q, source, sort, page, segment: segmentId, district },
     segment: seg ? { id: seg.id, name: seg.name } : null,
-    pageSize: rules.pageSize,
-    hasMore: rows.length > rules.pageSize,
+    pageSize: size,
+    hasMore: rows.length > size,
     sources: sourceRows.map((r) => r.s),
     districts: districtRows.map((r) => ({ id: r.id, nameEn: r.nameEn, nameBn: r.nameBn })),
     viewer,
