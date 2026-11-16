@@ -9,13 +9,14 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import { registry } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { formatMoney, nameIn } from '@/components/admin/products/model';
 import { RankingScreen } from '@/components/admin/products/RankingScreen';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
-import { catalogueAccess } from '@/lib/admin-products';
+import { catalogueAccess, storeMoney } from '@/lib/admin-products';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { rankingDeps, rankingOptionsCard } from '@/lib/shop-ranking-api';
@@ -54,6 +55,32 @@ export default async function RankingPage() {
   const c = catalogueAccess(access);
   const canEdit = c.can('catalogue.write');
   const [ranking, card] = await Promise.all([cat.rankingView(rankingDeps(access.deps, c.storeId), c.who), rankingOptionsCard(access.deps, c.storeId)]);
+  // PR 962 (prototype v5): the facts the two previews under the sliders need: the price shown, is it new (the "days a product counts as new" setting), its category
+  const [money, live, cats] = await Promise.all([
+    storeMoney(c, view.locale),
+    c.deps.db.product.findMany({
+      where: { storeId: c.storeId, status: 'PUBLISHED', archivedAt: null },
+      select: { id: true, categoryId: true, createdAt: true, publishedAt: true, variants: { where: { archivedAt: null, active: true }, select: { priceMinor: true } } },
+    }),
+    c.deps.db.category.findMany({ where: { storeId: c.storeId, archivedAt: null }, select: { id: true, nameEn: true, nameBn: true } }),
+  ]);
+  const DAY_MS = 86_400_000;
+  const nowMs = Date.now();
+  const extras = live.map((p) => {
+    const prices = p.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
+    return {
+      productId: p.id,
+      price: prices.length ? formatMoney(Math.min(...prices), money) : null,
+      fresh: nowMs - (p.publishedAt ?? p.createdAt).getTime() <= ranking.settings.freshDays * DAY_MS,
+      categoryId: p.categoryId,
+    };
+  });
+  const catName = new Map(cats.map((x) => [x.id, nameIn(view.lang, x)]));
+  const perCat = new Map<string, number>();
+  for (const x of extras) if (x.categoryId) perCat.set(x.categoryId, (perCat.get(x.categoryId) ?? 0) + 1);
+  const bySize = [...perCat.entries()].sort((a, b) => b[1] - a[1]);
+  const pickCat = bySize.find(([id]) => /polo/i.test(catName.get(id) ?? '')) ?? bySize[0];
+  const previewCat = pickCat ? { id: pickCat[0], name: catName.get(pickCat[0]) ?? '' } : null;
   const o = (key: string) => t(view.dict, `productRanking.options.${key}`);
   const texts: FieldsCardTexts = {
     h: o('h'),
@@ -100,7 +127,7 @@ export default async function RankingPage() {
           ))}
         </div>
       </section>
-      <RankingScreen dict={view.dict} weights={ranking.settings.weights} defaults={registry['shop.ranking'].default.weights} rows={ranking.rows.map((r) => ({ productId: r.productId, name: r.name, sold30: r.sold30, score: r.score, rank: r.rank, pin: r.pin, moved: r.moved }))} savedAt={ranking.savedAt} canEdit={canEdit} />
+      <RankingScreen dict={view.dict} extras={extras} previewCat={previewCat} weights={ranking.settings.weights} defaults={registry['shop.ranking'].default.weights} rows={ranking.rows.map((r) => ({ productId: r.productId, name: r.name, sold30: r.sold30, score: r.score, rank: r.rank, pin: r.pin, moved: r.moved }))} savedAt={ranking.savedAt} canEdit={canEdit} />
       <div className="a2-mt12">
         <FieldsCard url="/api/admin/catalogue/ranking/options" screen={{ key: card.key, value: { ...card.value }, version: card.version }} fields={fields} texts={texts} canEdit={canEdit} testId="ranking-options" />
       </div>
