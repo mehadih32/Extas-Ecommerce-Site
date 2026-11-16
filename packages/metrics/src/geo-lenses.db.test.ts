@@ -1,15 +1,16 @@
-// S29 · PR 758, 759 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL; written without being run — no database on
-// the machine it was made on): the risk and money-and-stock lenses (PR 758, 759) of Reports › Geography map read the
+// S29 · PR 758–760 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL; written without being run — no database on
+// the machine it was made on): the risk, money-and-stock and demand-and-customers lenses of Reports › Geography map read the
 // shop's own records, by area, for a period; counts only, store-scoped, archived orders left out. Made-up values only.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
+import { geoDemand } from './geo-demand';
 import { geoMoney, MONEY_PARTS, type MoneyPart } from './geo-money';
 import { geoRisk, RISK_PARTS, type RiskPart } from './geo-risk';
 
 const TZ = 'Asia/Dhaka';
 const DAYS = { from: '2026-10-01', to: '2026-10-31' };
 
-describe.skipIf(!HAS_TEST_DB)('PR 758, 759 · the Geography map lenses on PostgreSQL', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 758–760 · the Geography map lenses on PostgreSQL', () => {
   let t: TestDatabase;
   let S = 0;
   let O = 0;
@@ -100,6 +101,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 758, 759 · the Geography map lenses on Postgr
     await order({ area: 'gabtali', product: ids.polo, total: 3000, qty: 3, charge: 60 });
     await order({ area: 'sherpur', product: ids.polo, total: 1000, qty: 1, charge: 0 });
     await order({ area: 'sherpur', product: ids.tee, total: 2000, qty: 2, charge: 100 });
+
+    // demand: one repeat customer (first order before the period), one new customer, a guest
+    await order({ area: 'gabtali', customer: ids.old, status: 'PLACED', placed: '2026-08-01T06:00:00Z' });
+    await order({ area: 'gabtali', customer: ids.old, status: 'PLACED' });
+    await order({ area: 'sherpur', customer: ids.fresh, status: 'PLACED' });
+    await t.prisma.wishlistItem.create({ data: { storeId: S, customerId: ids.old, productId: ids.tee, createdAt: new Date('2026-10-06T06:00:00Z') } });
+    await t.prisma.wishlistItem.create({ data: { storeId: S, visitorId: 'guest-758', productId: ids.tee, createdAt: new Date('2026-10-06T06:00:00Z') } });
+    await t.prisma.analyticsEvent.create({ data: { storeId: S, name: 'search', visitorId: 'v1', customerId: ids.old, isLoggedIn: true, props: { term: 'tee' }, occurredAt: new Date('2026-10-28T06:00:00Z') } });
+    await t.prisma.analyticsEvent.create({ data: { storeId: S, name: 'search', visitorId: 'v2', isLoggedIn: false, props: { term: 'cap' }, occurredAt: new Date('2026-10-28T06:00:00Z') } });
   });
   afterAll(async () => t?.drop());
 
@@ -135,5 +145,15 @@ describe.skipIf(!HAS_TEST_DB)('PR 758, 759 · the Geography map lenses on Postgr
     const r = await geoMoney(t.prisma, S, DAYS, { profit, level: 'district', minOrders: 1, topProducts: 3, parts: new Set<MoneyPart>(['stock']) });
     expect(r.rows[0]!.figures).toMatchObject({ salesMinor: null, deliveryChargeMinor: null, adSpendMinor: null });
     expect(r.hidden).toEqual(['delivery', 'ads']);
+  });
+
+  it('demand: repeat against new customers, demand without sales, guests apart, the style to push', async () => {
+    const r = await geoDemand(t.prisma, S, DAYS, { timeZone: TZ, level: 'upazila', minOrders: 1, topProducts: 3 });
+    const gab = r.rows.find((x) => x.nameEn === 'Gabtali')!;
+    expect(gab.figures).toMatchObject({ repeatCustomers: 1, newCustomers: 0, wishlistAdds: 1, wishlistNoSale: 1, searches: 1, searchesNoSale: 1 });
+    expect(r.rows.find((x) => x.nameEn === 'Sherpur')!.figures).toMatchObject({ newCustomers: 1, repeatCustomers: 0 });
+    expect(r.unknown).toMatchObject({ wishlistAdds: 1, searches: 1, wishlistNoSale: 0, searchesNoSale: 0 }); // the guest's
+    const p = r.extras.products as Record<string, { push: { productId: string; reason: string } | null }>;
+    expect(p[gab.areaId]!.push).toMatchObject({ productId: ids.tee, reason: 'wishlist' });
   });
 });

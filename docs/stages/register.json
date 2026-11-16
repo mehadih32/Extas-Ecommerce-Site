@@ -52160,7 +52160,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-3`, NOT pushed, status stays parked until the owner says):** `geoDemand` in `@extas/metrics` (`geo-demand.ts`, same roll-up and drill-down), per area: orders placed, new and repeat customers (a customer is repeat when the first order of all was before the period; each customer once per area and once over the shop; a guest order in neither), the repeat share and the flags `repeatLeaning` / `newLeaning` (at least `minOrders` known customers, against the whole shop's share); wishlist adds and searches of the period and how many of the signed-in customers' ended without a sale (no later order of that product, and no order after the search in the period), with the flag `demandGap` (at least `minOrders` of them); a guest's add or search has no area, is counted in \"unknown\", is never called \"without a sale\", and `extras.unlocatedShare` says how much of the demand that is; and the styles that sold (`topProducts`) with the style a campaign should push there (the most wished-for-without-a-sale, else the best seller). Counts only: no name, phone, address or order number. `GET /api/admin/reports/geo-map/lens?lens=demand` answers `not_on` while `reports.geoMap.on` or `reports.geoMap.lenses.demand` is off; it needs `reports.read` only (no money in it). Nothing sends, starts a campaign or changes a budget, price or stock. Guide: `docs/admin-guide/pages/reports/geo-map-lenses.md`. Tests: pure (new against repeat, leaning, demand without sales, guests apart, the style to push, drill-down; ran) and PostgreSQL (written, not run). No migration."
+    }
+   ],
    "mentions": [],
    "blueprint": [],
    "bn": "জিওগ্রাফি ম্যাপ: পুরোনো কাস্টমারের অংশ, নতুন বনাম পুরোনো এলাকা, ওয়িশলিস্ট আর সার্চ হয়েছে কিন্তু বিক্রি হয়নি। পার্ক করা।",

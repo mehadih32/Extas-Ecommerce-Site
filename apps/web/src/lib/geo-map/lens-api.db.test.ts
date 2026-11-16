@@ -96,6 +96,18 @@ describe.skipIf(!HAS_TEST_DB)('the Geography map lens route on PostgreSQL (PR 75
     setting = SETTING;
   });
 
+  it('the demand lens is its own switch, and its answer holds counts only', async () => {
+    setting = SETTING; // demand is off in SETTING
+    expect((await get(owner, '&lens=demand')).status).toBe(404);
+    setting = { ...SETTING, lenses: { ...SETTING.lenses, demand: true } };
+    const res = await get(owner, '&lens=demand&level=upazila');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ ok: true, lens: 'demand', hidden: [] });
+    expect(JSON.stringify(body)).not.toMatch(/phone|customerName|email|customerId/i);
+    setting = SETTING;
+  });
+
   it('the owner gets the figures, nothing is hidden for the owner, and the answer is never cached', async () => {
     const res = await get(owner, '&lens=risk&level=district');
     expect(res.status).toBe(200);

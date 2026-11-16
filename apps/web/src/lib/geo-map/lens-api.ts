@@ -5,7 +5,7 @@
 // Every rule is checked here on the server, not only on the screen:
 //   - the page switch `reports.geoMap.on` and the lens's own switch `reports.geoMap.lenses.<lens>` (both off as shipped):
 //     while either is off the route answers `not_on` and reads nothing;
-//   - `reports.read` for the page; each part of a lens also needs the permission of its own source report (risk:
+//   - `reports.read` for the page (the demand lens has no other part: counts only); each part of a lens also needs the permission of its own source report (risk:
 //     refusals `delivery.read`, risk areas `risk.report`, claims `delivery.claims`, tickets `support.read`; money: the
 //     delivery and ad figures `books.read` (ads also `marketing.campaigns.read`), the stock part `reports.read`).
 //     A part the viewer may not see is left out (`null`, named in `hidden`) — it is never read from the database;
@@ -14,14 +14,14 @@
 // Read-only: nothing here changes a setting, an order, a courier, a COD rule, a price, a charge, an ad or stock.
 import { can, type Actor } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { GEO_LEVELS, geoMoney, geoRisk, MONEY_PARTS, RISK_PARTS, ymdIn, type GeoLevel, type LensResult, type MoneyPart, type RiskPart } from '@extas/metrics';
+import { GEO_LEVELS, geoDemand, geoMoney, geoRisk, MONEY_PARTS, RISK_PARTS, ymdIn, type GeoLevel, type LensResult, type MoneyPart, type RiskPart } from '@extas/metrics';
 import { errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
 import { parseReportQuery } from '../cost-report';
 import { profitInputs } from '../order-profit-view';
 import { readLensSetting, type LensKey } from './setting';
 
 /** The lenses this route serves (the courier lens is served by its own lane). */
-export const SERVED_LENSES = ['risk', 'money'] as const satisfies readonly LensKey[];
+export const SERVED_LENSES = ['risk', 'money', 'demand'] as const satisfies readonly LensKey[];
 export type ServedLens = (typeof SERVED_LENSES)[number];
 
 /** The permission of each part of the risk lens (the returns and cancels parts need only the page's own `reports.read`). */
@@ -108,6 +108,9 @@ export async function geoLensRoute(request: Request, deps: AdminDeps | null): Pr
         topBandKey: await topRiskBand(d.resolver, storeId),
         parts: await riskParts(d.db, g.actor, storeId),
       });
+    } else if (lens === 'demand') {
+      // counts only, for the page's own `reports.read` (a customer is never named; no money in it)
+      result = await geoDemand(d.db, storeId, days, { timeZone, level, parentAreaId: parent, minOrders: setting.minOrders, topProducts: setting.topProducts });
     } else {
       result = await geoMoney(d.db, storeId, days, {
         profit: await profitInputs(d.resolver, storeId),
