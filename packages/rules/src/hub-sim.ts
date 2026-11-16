@@ -117,6 +117,8 @@ export interface CheckoutSimChoices {
   payments: readonly string[];
   /** PR 941: the shop's own coupon codes for the picker; `on` is false for one that is off, not started, ended or used up. */
   coupons: { code: string; on: boolean }[];
+  /** PR 949: the advance-payment checkout mode is on (a number that refused parcels before may then be asked to pay ahead). */
+  advanceOn: boolean;
 }
 
 export async function simChoices(deps: RulesDeps, who: Who): Promise<CheckoutSimChoices> {
@@ -127,10 +129,12 @@ export async function simChoices(deps: RulesDeps, who: Who): Promise<CheckoutSim
     deps.db.category.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: 300, select: { id: true, nameEn: true, nameBn: true } }), // hardcode-ok: a cap on one picker
     deps.db.coupon.findMany({ where: { storeId: who.storeId, archivedAt: null }, orderBy: { code: 'asc' }, take: 200, select: { code: true, enabled: true, startsAt: true, endsAt: true, usageLimit: true, usedCount: true } }), // hardcode-ok: a cap on one picker
   ]);
+  const adv = (await setting(deps, who.storeId, 'checkout.advance').catch(() => null)) as { enabled?: boolean } | null;
   return {
     bands,
     categories,
     payments: SIM_PAYMENTS,
+    advanceOn: adv?.enabled === true,
     coupons: coupons.map((c) => ({ code: c.code, on: c.enabled && !(c.startsAt && c.startsAt > now) && !(c.endsAt && c.endsAt < now) && !(c.usageLimit !== null && c.usedCount >= c.usageLimit) })),
   };
 }

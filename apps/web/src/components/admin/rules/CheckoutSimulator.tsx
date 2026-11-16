@@ -24,6 +24,7 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
   const [pay, setPay] = useState('COD');
   const [coupon, setCoupon] = useState('');
   const [fresh, setFresh] = useState(true);
+  const [refused, setRefused] = useState(false); // PR 949: "Phone number refused parcels before"
   const [out, setOut] = useState<CheckoutSimResult | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const seq = useRef(0);
@@ -137,6 +138,9 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
         <label className="rh-sw">
           <input type="checkbox" checked={fresh} onChange={(e) => setFresh(e.target.checked)} /> <span>{tt('newCustomer')}</span>
         </label>
+        <label className="rh-sw">
+          <input type="checkbox" checked={refused} onChange={(e) => setRefused(e.target.checked)} /> <span>{tt('refusedBefore')}</span>
+        </label>
       </div>
       {problem ? <div className="ad-note warn">{problem}</div> : null}
       {q ? (
@@ -186,6 +190,11 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
               <Icon name="check" size={15} /> <span>{tt('prepaid')}</span>
             </div>
           )}
+          {pay === 'COD' && refused ? (
+            <div className={`rh-call ${choices?.advanceOn ? 'warn' : 'good'}`} data-testid="rh-sim-refused">
+              <Icon name={choices?.advanceOn ? 'info' : 'check'} size={15} /> <span>{tt(choices?.advanceOn ? 'refusedAdvanceOn' : 'refusedAdvanceOff')}</span>
+            </div>
+          ) : null}
           {q.delivery.remainingMinor ? <p className="rh-note-sm">{tt('toFree', { amount: money(q.delivery.remainingMinor) })}</p> : null}
           {cp && cp.state !== 'unlocks' ? <p className="rh-note-sm">{tt(`couponState.${cp.state}`, { code: cp.code })}</p> : null}
           {cutoff ? <p className="rh-note-sm">{tt('eidLast', { date: day(cutoff.at) })}</p> : null}

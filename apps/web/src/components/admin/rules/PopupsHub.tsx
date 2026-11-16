@@ -5,7 +5,7 @@
 // in …") follows that rule's switch; the owner's own notices (the bar and the welcome pop-up) are written below, on the same page.
 // Nothing here opens by itself on the first page a visitor sees (the notices engine's own limits stay, PR 216).
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { POPUP_GROUPS, POPUPS, type PopupGroupId, type PopupPage } from '@extas/rules/pure';
 import type { PopupView, PopupsScreen } from '@extas/rules';
 import { call } from '../api';
@@ -113,6 +113,16 @@ export function PopupsHub(props: PopupsHubProps) {
     if (a.status !== 200 || !a.data.popups) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
     setScreen(a.data.popups as PopupsScreen);
     say(tt(done));
+  };
+
+  const undo = async (p: PopupView, changeId: string) => {
+    if (!window.confirm(tt('history.confirm'))) return;
+    setBusy(true);
+    const a = await call('POST', `${API}/${p.key}/undo`, { version: screen.version, changeId });
+    setBusy(false);
+    if (a.status !== 200 || !a.data.popups) return sayBad(rulesRefusal(d, a.data.error, a.data.details ?? []));
+    setScreen(a.data.popups as PopupsScreen);
+    say(tt('history.done'));
   };
 
   const windowText = (p: PopupView) => (p.entry.from || p.entry.to ? `${p.entry.from ? shortDay(p.entry.from, lang) : tt('now')} – ${p.entry.to ? shortDay(p.entry.to, lang) : tt('noEnd')}` : tt('always'));
@@ -268,6 +278,8 @@ export function PopupsHub(props: PopupsHubProps) {
         canWrite={perms.write}
         busy={busy}
         onSave={(entry) => void save(p, entry, 'saved')}
+        version={screen.version}
+        onUndo={(changeId) => void undo(p, changeId)}
         onClose={() => setSel(null)}
       />
     );
@@ -288,6 +300,8 @@ function PopupEditor({
   canWrite,
   busy,
   onSave,
+  onUndo,
+  version,
   onClose,
 }: {
   p: PopupView;
@@ -299,9 +313,19 @@ function PopupEditor({
   canWrite: boolean;
   busy: boolean;
   onSave: (e: PopupView['entry']) => void;
+  onUndo: (changeId: string) => void;
+  version: string;
   onClose: () => void;
 }) {
   const [e, setE] = useState(p.entry);
+  // PR 949: "More options" › "History": what the last changes replaced, and "Undo to this" (a new change; nothing is deleted)
+  const [hist, setHist] = useState<{ changeId: string; entry: PopupView['entry'] | null; at: string; by: string | null }[] | null>(null);
+  useEffect(() => {
+    void call('GET', `${API}/${p.key}/history`).then((a) => {
+      if (a.status === 200 && Array.isArray(a.data.history)) setHist(a.data.history as NonNullable<typeof hist>);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.key, version]);
   const spec = POPUPS.find((x) => x.key === p.key)!;
   const locked = p.notice !== null || p.state === 'waiting';
   const dirty = JSON.stringify(e) !== JSON.stringify(p.entry);
@@ -413,14 +437,42 @@ function PopupEditor({
             <div className={`rh-pv k-${p.shape}`}>{shown}</div>
             <div className="po-both">
               <div>
-                <span className="rh-hint">EN</span> {shownEn}
+                <span className="rh-hint">{tt("langEn")}</span> {shownEn}
               </div>
               <div lang="bn">
-                <span className="rh-hint">বাং</span> {shownBn}
+                <span className="rh-hint">{tt("langBn")}</span> {shownBn}
               </div>
             </div>
             <p className="rh-hint">{tt('sampleHint')}</p>
           </div>
+          <details className="rh-more" data-testid="po-more">
+            <summary>{tt('more.title')}</summary>
+            <div className="rh-hist" data-testid="po-history">
+              <div className="rh-sub">{tt('history.title')}</div>
+              {hist && hist.length ? (
+                <div className="rh-histlist">
+                  {hist.map((h) => (
+                    <div key={h.changeId} data-testid="po-hist-row">
+                      <span>
+                        <b>{h.entry ? (h.entry.on ? tt('history.on') : tt('history.off')) : tt('history.builtin')}</b>
+                        {h.entry && (h.entry.textEn || h.entry.textBn) ? <> · {lang === 'bn' && h.entry.textBn ? h.entry.textBn : h.entry.textEn}</> : null}
+                        <br />
+                        <span className="rh-hint">
+                          {tt('history.until')} {new Date(h.at).toLocaleString(lang === 'bn' ? 'bn-BD-u-nu-latn' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                          {h.by ? ` · ${h.by}` : ''}
+                        </span>
+                      </span>
+                      <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={() => onUndo(h.changeId)} disabled={busy || !canWrite} data-testid="po-undo">
+                        <Icon name="sync" size={14} /> {tt('history.undo')}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rh-hint">{hist === null ? '' : tt('history.none')}</p>
+              )}
+            </div>
+          </details>
           <div className="rl-actions rh-btns">
             <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={onClose}>
               {tt('cancel')}

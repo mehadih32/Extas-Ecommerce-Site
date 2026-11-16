@@ -16,6 +16,8 @@
 //   POST  /api/admin/rules/hub/:id/reset     {version, pin?} back to the shipped value
 //   GET   /api/admin/rules/popups              the twelve placements
 //   PUT   /api/admin/rules/popups/:key         {entry, version} the owner's words, window and switch (`rules.write`)
+//   GET   /api/admin/rules/popups/:key/history PR 949: the last changes of the placement (`rules.read`)
+//   POST  /api/admin/rules/popups/:key/undo    PR 949: {version, changeId} back to what a past change replaced (a new change)
 //   GET   /api/admin/rules/offers              the one list: offers, coupons, built-in rules, points, wallet, results
 //   POST  /api/admin/rules/offers              a new offer (a draft)
 //   GET   /api/admin/rules/offers/:id          one offer with its history · PUT {offer} change a draft
@@ -143,6 +145,17 @@ export async function hubRoute(request: Request, deps: AdminDeps | null, path: s
 
   if (a === 'popups') {
     if (!b) return m === 'GET' ? handle(request, deps, 'rules.read', async (x) => ({ popups: await rl.popupsScreen(hubDeps(x), x.who) })) : notAllowed();
+    if (c === 'history') {
+      if (m !== 'GET') return notAllowed();
+      return handle(request, deps, 'rules.read', async (x) => ({ history: await rl.popupHistory(hubDeps(x), x.who, { key: b }) }));
+    }
+    if (c === 'undo') {
+      if (m !== 'POST') return notAllowed();
+      return handle(request, deps, 'rules.write', async (x) => {
+        const input = await body(request);
+        return { popups: await rl.undoPopup(hubDeps(x), x.who, { key: b, changeId: String(input.changeId ?? ''), version: String(input.version ?? '') }) };
+      });
+    }
     if (c) return fail(404, 'not-found');
     if (m !== 'PUT') return notAllowed();
     return handle(request, deps, 'rules.write', async (x) => {

@@ -395,6 +395,59 @@ export async function savePopup(deps: HubDeps, who: Who, input: { key: string; e
   return popupsScreen(deps, who);
 }
 
+/** PR 949: one past state of a pop-up placement: what it held until `at`. */
+export interface PopupHistoryEntry {
+  changeId: string;
+  /** The entry the change replaced; null: the placement had no entry (the shop's own wording). */
+  entry: PopupEntry | null;
+  at: string;
+  by: string | null;
+}
+
+/** The last changes of one pop-up placement, newest first (`rules.read`): the entry each one replaced, when, and by whom. Nothing is changed. */
+export async function popupHistory(deps: HubDeps, who: Who, input: { key: string }): Promise<PopupHistoryEntry[]> {
+  await allow(deps, who, 'rules.read');
+  if (!(POPUP_KEYS as readonly string[]).includes(input.key)) throw new RulesError('NOT_FOUND', 'no such placement');
+  const changes = await deps.db.settingChange.findMany({
+    where: { key: 'rules.hub.popups', storeId: who.storeId, action: { in: ['SET', 'RESET_TO_DEFAULT'] } },
+    orderBy: { createdAt: 'desc' },
+    take: 60, // hardcode-ok: the newest changes of all twelve placements, read to find this one's last few
+    select: { id: true, oldValue: true, newValue: true, createdAt: true, actorId: true },
+  });
+  const at = (v: unknown): PopupEntry | null => (isObj(v) && isObj(v[input.key]) ? (v[input.key] as unknown as PopupEntry) : null);
+  const kept = changes.filter((c) => JSON.stringify(at(c.oldValue)) !== JSON.stringify(at(c.newValue))).slice(0, HISTORY_SHOWN);
+  const ids = [...new Set(kept.flatMap((c) => (c.actorId ? [c.actorId] : [])))];
+  const people = ids.length ? await deps.db.staffUser.findMany({ where: { id: { in: ids } }, select: { id: true, displayName: true } }) : [];
+  const name = new Map(people.map((p) => [p.id, p.displayName]));
+  return kept.map((c) => ({ changeId: c.id, entry: at(c.oldValue), at: c.createdAt.toISOString(), by: c.actorId ? (name.get(c.actorId) ?? null) : null }));
+}
+
+/** "Undo to this" for a pop-up: the placement goes back to what a past change replaced. A new change on top; the history keeps every step. */
+export async function undoPopup(deps: HubDeps, who: Who, input: { key: string; changeId: string; version: string }): Promise<PopupsScreen> {
+  await allow(deps, who, 'rules.write');
+  const spec = found(
+    POPUPS.find((p) => p.key === input.key),
+    'pop-up',
+  );
+  if (spec.waiting || spec.notice) throw new RulesError('INVALID_INPUT', 'this placement is written elsewhere', [spec.key]);
+  const st = anySettings(deps);
+  const before = ((await st.value('rules.hub.popups', { storeId: who.storeId })) ?? {}) as Record<string, PopupEntry>;
+  if (versionOf(before) !== input.version) throw new RulesError('STALE_DRAFT', 'someone changed the pop-ups since you opened them');
+  const change = await deps.db.settingChange.findFirst({ where: { id: input.changeId, key: 'rules.hub.popups', storeId: who.storeId }, select: { oldValue: true } });
+  if (!change) throw new RulesError('NOT_FOUND', 'no such earlier value');
+  const old = isObj(change.oldValue) && isObj(change.oldValue[spec.key]) ? (change.oldValue[spec.key] as unknown as PopupEntry) : null;
+  const next: Record<string, PopupEntry> = { ...before };
+  if (old) next[spec.key] = old;
+  else delete next[spec.key];
+  try {
+    await st.set('rules.hub.popups', next, storeTarget(who.storeId), { actorId: who.actor.staffUserId ?? null, reason: 'Rules › Pop-ups & notices: undo to an earlier value' });
+  } catch (e) {
+    refuse(e, spec.key);
+  }
+  await logChange(deps.db, who, { action: 'rules.hub.popup', entityType: 'HubPopup', entityId: spec.key, before: before[spec.key] ?? null, after: old });
+  return popupsScreen(deps, who);
+}
+
 // ------------------------------------------------------------------------------------------------ "Start on a later date" (PR 858)
 
 const SCHEDULE_KEY = 'rules.hub.schedule';
