@@ -25,7 +25,7 @@
 [data-lm-look] .lm-dl.bad { background: var(--lm-badbg); color: var(--lm-bad); }
 
 /* ---------- summary tiles (PR 627) ---------- */
-[data-lm-look] .lm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+[data-lm-look] .lm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 172px), 1fr)); gap: 14px; }
 [data-lm-look] .lm-tile { display: flex; flex-direction: column; gap: 6px; background: var(--lm-sf); border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); padding: 18px 20px; color: var(--lm-ink); text-decoration: none; min-width: 0; transition: transform var(--lm-t-fast) var(--lm-ease-out), box-shadow var(--lm-t-fast); }
 [data-lm-look] a.lm-tile:hover { transform: translateY(-2px); }
 [data-lm-look] .lm-tile-h { display: flex; align-items: center; gap: 8px; color: var(--lm-ink2); font-weight: 600; font-size: var(--lm-fs-card); }
