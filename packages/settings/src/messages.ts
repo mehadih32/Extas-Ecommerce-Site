@@ -329,6 +329,8 @@ import couriersV5En from '../messages/couriers-v5.en.json';
 import couriersV5Bn from '../messages/couriers-v5.bn.json';
 import courierSetupEn from '../messages/courier-setup.en.json';
 import courierSetupBn from '../messages/courier-setup.bn.json';
+import courierPageEn from '../messages/courier-page.en.json';
+import courierPageBn from '../messages/courier-page.bn.json';
 import rulesHubEn from '../messages/rules-hub.en.json';
 import rulesHubBn from '../messages/rules-hub.bn.json';
 
@@ -497,6 +499,8 @@ messages.en = mergeMessages(messages.en, couriersV5En);
 messages.bn = mergeMessages(messages.bn, couriersV5Bn);
 messages.en = mergeMessages(messages.en, courierSetupEn);
 messages.bn = mergeMessages(messages.bn, courierSetupBn);
+messages.en = mergeMessages(messages.en, courierPageEn);
+messages.bn = mergeMessages(messages.bn, courierPageBn);
 // S28 · PR 678, 679 (registry v320): the pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts).
 messages.en = mergeMessages(messages.en, rulesHubEn);
 messages.bn = mergeMessages(messages.bn, rulesHubBn);

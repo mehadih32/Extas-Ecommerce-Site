@@ -1,0 +1,14 @@
+{
+  "delivery": {
+    "courier": {
+      "pickup": {
+        "label": "Couriers: where and when they pick up",
+        "help": "Settings › Couriers: pick-up from the warehouse or the office (the addresses are on Store details) and the daily pick-up time. The time is empty until you type it."
+      },
+      "autoBook": {
+        "label": "Couriers: auto-booking",
+        "help": "Off as shipped. On: when an order is packed, its parcel is booked with the default courier. The booking runs in the name of the person who switched it on, with their permission checked each time. Off: staff press Book on each order."
+      }
+    }
+  }
+}

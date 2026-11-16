@@ -94,6 +94,8 @@
         "store": "Business settings",
         "policies": "Policies & texts",
         "checkout": "Checkout",
+        "couriers": "Couriers",
+        "messages": "Customer messages",
         "practice": "Practice data",
         "keys": "System (owner only)",
         "erp": "ERP link",

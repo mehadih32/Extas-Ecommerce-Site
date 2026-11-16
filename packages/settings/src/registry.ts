@@ -188,6 +188,7 @@ import { toShipSettings } from './registry-to-ship';
 import { courierWatchSettings } from './registry-courier-watch';
 import { couriersV5Settings } from './registry-couriers-v5';
 import { courierSetupSettings } from './registry-courier-setup';
+import { courierPageSettings } from './registry-courier-page';
 import { rulesHubSettings } from './registry-rules-hub';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
@@ -1581,6 +1582,8 @@ export const registry = {
   ...courierWatchSettings,
   ...couriersV5Settings,
   ...courierSetupSettings,
+  // PR 1010: Settings › Couriers — the pick-up place and time, and auto-booking (registry-courier-page.ts, version 1010).
+  ...courierPageSettings,
   ...rulesHubSettings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,

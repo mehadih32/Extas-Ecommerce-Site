@@ -229,6 +229,8 @@
     { "id": "settings/store", "route": "/admin/settings/store" },
     { "id": "settings/policies", "route": "/admin/settings/policies" },
     { "id": "settings/checkout", "route": "/admin/settings/checkout" },
+    { "id": "settings/couriers", "route": "/admin/settings/couriers" },
+    { "id": "settings/messages", "route": "/admin/settings/messages" },
     { "id": "settings/practice", "route": "/admin/settings/practice" },
     { "id": "settings/keys", "route": "/admin/integrations" },
     { "id": "settings/erp-link", "route": "/admin/settings/erp-link" },

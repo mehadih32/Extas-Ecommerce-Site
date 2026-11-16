@@ -22,6 +22,7 @@ import { PII_PURGE_JOB, PII_QUEUE, runPiiPurge } from './pii';
 import { INVOICE_ISSUE_JOB, INVOICE_QUEUE, runInvoiceIssue } from './invoices';
 import { runSupportEscalation, SUPPORT_ESCALATE_JOB, SUPPORT_QUEUE } from './support-escalation';
 import { PAYMENTS_QUEUE, PAYMENTS_SWEEP_JOB, paymentsDeps } from './payments';
+import { COURIER_AUTOBOOK_JOB, runCourierAutoBook } from './courier-autobook';
 import { expirePackingPhotos, trackParcels, zoneSyncTurn } from '@extas/shipping';
 import { COURIER_PAYOUTS_JOB, COURIER_QUEUE, COURIER_TRACK_JOB, COURIER_ZONES_JOB, courierDeps, PACKING_PHOTOS_JOB, payoutDeps } from './courier';
 import { SEARCH_INDEX_JOB, SEARCH_QUEUE, searchDeps } from './search';
@@ -287,6 +288,22 @@ const courierPayoutsJob: JobDefinition<{ storeId: number }> = {
 };
 
 /**
+ * PR 1010 — Settings › Couriers › Auto-booking: one store's packed orders booked with the default courier, in the name of the person
+ * who switched it on (courier-autobook.ts; planned per slot of `delivery.courier.autoBook.everyMinutes`, off as shipped).
+ */
+const courierAutoBookJob: JobDefinition<{ storeId: number }> = {
+  key: COURIER_AUTOBOOK_JOB,
+  queue: COURIER_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${COURIER_AUTOBOOK_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: (deps, p) => runCourierAutoBook(deps, p.storeId),
+};
+
+/**
  * PR 182 — one store's packing photos past the owner's days to keep, archived (packages/shipping `expirePackingPhotos`;
  * planned by courier.ts `packingPhotosPlanner` once per day slot). Safe to run twice: an archived photo is left as it is.
  * Nothing is deleted: the file stays in the media library.
@@ -531,6 +548,7 @@ const definitions: JobDefinition<never>[] = [
   courierTrackJob as unknown as JobDefinition<never>,
   courierZonesJob as unknown as JobDefinition<never>,
   courierPayoutsJob as unknown as JobDefinition<never>,
+  courierAutoBookJob as unknown as JobDefinition<never>,
   packingPhotosJob as unknown as JobDefinition<never>,
   invoiceIssueJob as unknown as JobDefinition<never>,
   returnsErpJob as unknown as JobDefinition<never>,
