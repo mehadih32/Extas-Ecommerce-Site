@@ -3,6 +3,11 @@
 .w4-split { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
 @media (min-width: 900px) { .w4-split { grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr); align-items: start; } }
 .w4-sliders { display: grid; gap: 10px; }
+/* PR 962: the two previews under the sliders (a row of small tiles that scrolls sideways inside its card) */
+.rk-coll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-top: 8px; }
+.rk-it { flex: none; width: 86px; font-size: var(--ad-fs-mini); text-align: center; }
+.rk-th { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 4px; border-radius: var(--ad-radius); background: var(--ad-surface2); border: 1px solid var(--ad-line); font-weight: 700; }
+.rk-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .w4-slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; }
 .w4-slider input[type='range'] { grid-column: 1 / -1; width: 100%; }
 .w4-num { text-align: right; font-variant-numeric: tabular-nums; }
