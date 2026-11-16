@@ -33,10 +33,16 @@ export interface MapScreenTask {
 export interface MapScreenProps {
   groups: MapScreenGroup[];
   tasks: MapScreenTask[];
-  text: { search: string; hint: string; noMatch: string; tasks: string; pages: string; open: string; who: string };
+  journey: { id: string; name: string; href: string }[];
+  erpHref: string;
+  text: {
+    search: string; hint: string; noMatch: string; tasks: string; pages: string; open: string; who: string;
+    iWant: string; iWantSub: string; journey: string; journeySide: string; erpTitle: string; erpBox: string; erpShop: string; erpShopBox: string;
+    erpToShop: string; erpToErp: string; erpLive: string; go: string; guide: string; pdf: string; close: string;
+  };
 }
 
-export function AdminMapScreen({ groups, tasks, text }: MapScreenProps) {
+export function AdminMapScreen({ groups, tasks, journey, erpHref, text }: MapScreenProps) {
   const id = useId();
   const [q, setQ] = useState('');
   const pages = useMemo(() => groups.flatMap((g) => g.sections.flatMap((s) => s.pages.map((p) => ({ ...p, secName: s.name })))), [groups]);
@@ -47,11 +53,16 @@ export function AdminMapScreen({ groups, tasks, text }: MapScreenProps) {
   }, [q, tasks, pages]);
   return (
     <div data-testid="admin-map">
-      <div className="a2-fld a2-mt12">
-        <label className="a2-lbl" htmlFor={`${id}-q`}>
-          {text.search}
-        </label>
-        <input id={`${id}-q`} className="a2-inp" type="search" value={q} placeholder={text.hint} autoComplete="off" onChange={(e) => setQ(e.target.value)} data-testid="map-search" />
+      <div className="s28-mp-top a2-mt12">
+        <button type="button" className="a2-btn" onClick={() => window.print()} data-testid="map-pdf">
+          {text.pdf}
+        </button>
+        <a className="a2-btn" href="/admin" data-testid="map-close">
+          {text.close}
+        </a>
+      </div>
+      <div className="s28-mp-q a2-mt12">
+        <input id={`${id}-q`} className="a2-inp" type="search" value={q} placeholder={text.hint} aria-label={text.search} autoComplete="off" onChange={(e) => setQ(e.target.value)} data-testid="map-search" />
       </div>
       {hits ? (
         <section className="a2-card a2-mt12" data-testid="map-results">
@@ -86,7 +97,54 @@ export function AdminMapScreen({ groups, tasks, text }: MapScreenProps) {
           ) : null}
         </section>
       ) : (
-        groups.map((g) => (
+        <>
+          <section className="a2-card a2-mt12" data-testid="map-tasks">
+            <h2 className="a2-h3">{text.iWant}</h2>
+            <p className="a2-xs a2-mute">{text.iWantSub}</p>
+            <div className="s28-mp-tasks">
+              {tasks.map((x) => (
+                <Link key={x.id} href={x.href}>
+                  {x.name}
+                  <span>{x.where}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <div className="s28-grid">
+            <section className="a2-card" data-testid="map-journey">
+              <h2 className="a2-h3">{text.journey}</h2>
+              <div className="s28-mp-flow">
+                {journey.map((j, i) => (
+                  <span key={j.id} className="s28-mp-step">
+                    {i ? <i>→</i> : null}
+                    <Link href={j.href}>{j.name}</Link>
+                  </span>
+                ))}
+              </div>
+              <p className="a2-xs a2-mute a2-mt12">{text.journeySide}</p>
+            </section>
+            <section className="a2-card" data-testid="map-erp">
+              <h2 className="a2-h3">{text.erpTitle}</h2>
+              <div className="s28-mp-erp">
+                <div className="s28-mp-box">
+                  <b>Extas ERP</b>
+                  <div className="a2-xs a2-mute">{text.erpBox}</div>
+                </div>
+                <div className="s28-mp-mid">
+                  <span>{text.erpToShop}</span>
+                  <span>{text.erpToErp}</span>
+                </div>
+                <div className="s28-mp-box">
+                  <b>{text.erpShop}</b>
+                  <div className="a2-xs a2-mute">{text.erpShopBox}</div>
+                </div>
+              </div>
+              <Link className="a2-lnk a2-xs" href={erpHref}>
+                {text.erpLive} →
+              </Link>
+            </section>
+          </div>
+        {groups.map((g) => (
           <section key={g.id} className="a2-mt12" data-testid={`map-group-${g.id}`}>
             <h2 className="a2-h3">{g.name}</h2>
             <div className="s28-grid">
@@ -98,13 +156,21 @@ export function AdminMapScreen({ groups, tasks, text }: MapScreenProps) {
                   <ul className="s28-list">
                     {s.pages.map((p) => (
                       <li key={p.key}>
+                        <b className="s28-mp-name">{p.name}</b>
                         <div className="s28-grow">
-                          <Link href={p.href}>{p.name}</Link>
                           <div className="a2-xs a2-mute">{p.line}</div>
                           <div className="a2-xs a2-mute">
                             {text.who}: {p.who}
                           </div>
                         </div>
+                        <span className="s28-mp-acts">
+                          <Link className="a2-btn" href={p.href}>
+                            {text.go}
+                          </Link>
+                          <Link className="a2-btn" href={`/admin/help/manual?q=${encodeURIComponent(p.name)}`}>
+                            {text.guide}
+                          </Link>
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -112,7 +178,8 @@ export function AdminMapScreen({ groups, tasks, text }: MapScreenProps) {
               ))}
             </div>
           </section>
-        ))
+        ))}
+        </>
       )}
     </div>
   );
