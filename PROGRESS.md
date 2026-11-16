@@ -6,11 +6,8 @@
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1064. Processing: the card grid with each order's commands on its card (Confirm, Hold, Cancel, Call), built from the order page's own read. Tests of what it touches ran locally; CI runs the rest.
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1065. Order page dialogs: cancel, merge and adjust-price words and the owner PIN line as in prototype v5, with every PIN and right check unchanged. Tests of what it touches ran locally; CI runs the rest.
 
-## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1064. Processing: the card grid with each order's commands on its card (Confirm, Hold, Cancel, Call), built from the order page's own read. Tests of what it touches ran locally; CI runs the rest.
 
-## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1063. Returns and exchanges: the courier-side reminders (partial delivery box empty, short count, courier says Delivered and money not in) with their counts and links. Tests of what it touches ran locally; CI runs the rest.
 
-## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1062. Bulk orders: Save & send quote and Send on WhatsApp / Send by SMS, only on a staff press and logged with the words (BulkQuoteSend). Tests of what it touches ran locally; CI runs the rest.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1061. Incomplete orders: List / Report toggle and the By landing page and By device report; the page and device are noted from the first add to the bag. Tests of what it touches ran locally; CI runs the rest.
 
@@ -31,9 +28,7 @@ Round 2 (PR 934–937, the coordinator's six items): Approvals Effect, Read draf
 
 Round 1: four commits, one per register PR, no install and no test run (the lane had no `node_modules`; the gates run in CI). PR 930 Approvals (Preview digest in the head, waiting note, Why line, digest and never cards side by side); PR 931 AI agents (four numbers, Running or Paused and the spend on each card, link to the Control room), AI Center head on every AI tab, cost-saver "Saves about"; PR 932 Training uses the shared AI strip; PR 933 Site manual (Admin map button, Project files). Not changed because the prototype has no screen for them: Control room, Model picks, Ask the chief, Checklist audit, Permissions, Diary, Skills, Agent reports, Learning, Build (Overview, PR pages, Files, Problems, Requests). Left for the shell owner (lane A, `sections.ts`): the AI Center tab bar still has 14 tabs where the prototype has four (the other ten could move under "More"). Left because the data does not exist: the prototype's Approvals "Effect" line, "Open" link and "Read draft" button, the running-total spend chart on Costs & limits, and the six "Keep on when AI is off" feature switches; the PDF download on the Site manual (the real manual downloads Markdown). The counters (865 PRs, 843 active, 820 built, S28 195/195) count only these four; the merge of all lanes must add the others.
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1060. Schema for the final parity round: Cart landing page and device (nullable) and the BulkQuoteSend log table (migration 0290). Tests of what it touches ran locally; CI runs the rest.
-## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1061. Incomplete orders: List / Report toggle and the By landing page and By device report; the page and device are noted from the first add to the bag. Tests of what it touches ran locally; CI runs the rest.
 
-## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1060. Schema for the final parity round: Cart landing page and device (nullable) and the BulkQuoteSend log table (migration 0290). Tests of what it touches ran locally; CI runs the rest.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 959. New bulk order page: empty line and batch words as in prototype v5. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
