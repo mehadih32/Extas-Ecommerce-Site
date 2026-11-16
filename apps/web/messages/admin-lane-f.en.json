@@ -248,6 +248,22 @@
         "note": "Net profit after every cost. Monthly fixed costs (rent, salaries) are spread per day, so \"Today\" is fair. Tap a number to open Profit & loss for that period.",
         "more": "Profit & loss"
       },
+      "ms": {
+        "title": "This month so far",
+        "more": "Profit & loss",
+        "sales": "Sales",
+        "productCost": "Product cost",
+        "courier": "Courier & COD",
+        "packing": "Packing & gateway",
+        "returns": "Returns",
+        "ads": "Ads",
+        "fixed": "Fixed costs",
+        "other": "Other costs",
+        "net": "Net profit",
+        "pace": "Month-end sales (at this pace)",
+        "paceNet": "Month-end net profit",
+        "foot": "{from}–{to} · sales counted on delivery date · same numbers as Home and Reports."
+      },
       "dec": {
         "title": "Decide today",
         "sub": "Each card has one action. Done cards disappear.",

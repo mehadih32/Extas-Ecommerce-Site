@@ -61,3 +61,11 @@
   [data-lm-look] .lyb-frame.dk iframe { transform: scale(0.2); }
   [data-lm-look] .lyb-save { bottom: calc(var(--lm-tap) + 24px); }
 }
+[data-lm-look] .lyb-split { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) {
+  [data-lm-look] .lyb-split { grid-template-columns: minmax(0, 1fr) 320px; }
+  [data-lm-look] .lyb-split > [data-testid='ly-prevcard'] { position: sticky; top: 76px; }
+  [data-lm-look] .lyb-split .lyb-prev { flex-direction: column; flex-wrap: nowrap; }
+  [data-lm-look] .lyb-split .lyb-frame.dk { width: 273px; height: 180px; }
+  [data-lm-look] .lyb-split .lyb-frame.dk iframe { transform: scale(0.2); }
+}

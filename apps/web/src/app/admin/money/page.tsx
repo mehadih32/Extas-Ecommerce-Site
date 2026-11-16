@@ -22,7 +22,7 @@ import type { CountFormat } from '@/lib/admin-lumen/model';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { ProfitSnapshot, DecideToday, type DecideCard, type SnapCol } from '@/components/admin/lane-f/MoneyParts';
+import { ProfitSnapshot, DecideToday, MonthSoFar, type DecideCard, type MonthRow, type SnapCol } from '@/components/admin/lane-f/MoneyParts';
 import { withLaneF } from '@/lib/admin-lane-f';
 import * as inv from '@extas/inventory';
 import { inventoryDeps } from '@/lib/inventory-api';
@@ -53,9 +53,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'moneyOverview.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function MoneyOverviewPage() {
+export default async function MoneyOverviewPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const deps = adminDeps();
-  const [plain, access] = await Promise.all([adminView(deps), pageAccess('payments.view', deps, MOTHER_STORE_ID)]);
+  const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('payments.view', deps, MOTHER_STORE_ID), props.searchParams]);
+  // PR 910: the prototype's Finance overview has none of the older cash cards; they stay one click away (?more=1), nothing is removed
+  const showMore = sp.more === '1';
   const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
@@ -76,11 +78,19 @@ export default async function MoneyOverviewPage() {
   // prototype v5: the profit snapshot (today, 7 days, this month, each against the period before) and Decide today
   const today = dayIn(new Date(), view.timeZone);
   const snapKeys: { key: PeriodKey; id: 'today' | '7d' | 'month' }[] = [{ key: 'today', id: 'today' }, { key: '7d', id: '7d' }, { key: 'month', id: 'month' }];
+  let monthRep: Awaited<ReturnType<typeof profitReport>> | null = null;
+  let monthFrom = '';
+  let monthTo = '';
   const snapRows = await Promise.all(
     snapKeys.map(async ({ key, id }) => {
       const cur = resolvePeriod(key, today);
       const prev = previousPeriod(cur.from, cur.to);
       const [a, b] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, cur.from, cur.to), profitReport(access.deps, MOTHER_STORE_ID, prev.from, prev.to)]);
+      if (id === 'month') {
+        monthRep = a;
+        monthFrom = cur.from;
+        monthTo = cur.to;
+      }
       const net = a.netProfitMinor; // null while a cost is not known: shown as a dash, never as 0
       const cost = net === null ? 0 : Math.max(0, a.salesMinor - net);
       const costPct = net === null ? 0 : a.salesMinor > 0 ? Math.min(100, Math.max(0, (cost / a.salesMinor) * 100)) : net < 0 ? 100 : 0; // hardcode-ok: percent
@@ -146,11 +156,31 @@ export default async function MoneyOverviewPage() {
   const fcOut = (now.forecast?.days ?? []).reduce((n, x) => n + x.outMinor, 0);
   const fcStart = now.inHandMinor ?? 0;
   const books = now.erp;
+  const mr = monthRep as Awaited<ReturnType<typeof profitReport>> | null;
+  const msSales = mr?.salesMinor ?? 0;
+  const msPct = (n: number) => (msSales > 0 ? (Math.abs(n) / msSales) * 100 : 0); // hardcode-ok: percent of sales for a bar length
+  const msRow = (key: string, label: string, n: number, kind: MonthRow['kind']): MonthRow => ({ key, label, shown: `${kind === 'out' && n ? '−' : ''}${short(Math.abs(n))}`, pct: msPct(n), kind });
+  const msFixed = mr?.fixedMinor ?? 0;
+  const msAds = mr?.adsMinor ?? 0;
+  const msNet = mr?.netProfitMinor ?? null;
+  const monthRows: MonthRow[] = mr
+    ? [
+        msRow('sales', f('ms.sales'), msSales, 'in'),
+        msRow('productCost', f('ms.productCost'), mr.parts.productCost, 'out'),
+        msRow('courier', f('ms.courier'), mr.parts.courier, 'out'),
+        msRow('packing', f('ms.packing'), mr.parts.packaging + mr.parts.paymentFees, 'out'),
+        msRow('returns', f('ms.returns'), mr.parts.returnLoss, 'out'),
+        msRow('ads', f('ms.ads'), msAds, 'out'),
+        msRow('fixed', f('ms.fixed'), msFixed, 'out'),
+        msRow('other', f('ms.other'), mr.otherCostsMinor, 'out'),
+        { key: 'net', label: f('ms.net'), shown: msNet === null ? '—' : `${msNet < 0 ? '−' : ''}${short(Math.abs(msNet))}`, pct: msNet === null ? 0 : msPct(msNet), kind: 'net' },
+      ]
+    : [];
   const ranges = heroRanges(o.received.daily ?? [], view.locale, amount, 10 ** money.digits, c);
 
   return (
     <div className="a2-z" data-testid="money-overview" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.fn.title')} sub={t(d, 'lf.fn.asOf', { at: dateTime(o.at, view.locale, view.timeZone) })}
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.fn.title')} sub={t(d, 'lf.fn.asOf', { at: asOfShort(o.at, view.locale, view.timeZone) })}
         right={
           <>
             <Link className="a2-btn" href="/admin/money/budgets" data-testid="fn-targets">
@@ -164,14 +194,6 @@ export default async function MoneyOverviewPage() {
         }
       />
       <SectionTabs view={view} current={KEY} />
-      {vat.enabled ? null : (
-        <p className="a2-xs a2-mute" data-testid="mo-vat-off">
-          {c('vatOff')}{' '}
-          <Link className="cr-link" href="/admin/money/vat">
-            {c('vatLink')}
-          </Link>
-        </p>
-      )}
 
       <ProfitSnapshot
         cols={snapRows}
@@ -186,7 +208,8 @@ export default async function MoneyOverviewPage() {
         payouts={payoutRows}
         links={{ c360: topCourier ? `/admin/delivery/couriers/${topCourier}` : '/admin/delivery/couriers', account: '/admin/money/couriers', match: '/admin/money/couriers' }}
       />
-      <div className="a2-mt12">
+      <div className="lf-split">
+        <MonthSoFar title={f('ms.title')} more={f('ms.more')} moreHref="/admin/money/profit" rows={monthRows} tiles={[]} foot={f('ms.foot', { from: monthFrom.slice(8).replace(/^0/, ''), to: dayLabel(monthTo, view.locale) })} />
         <CashForecast
           texts={{ title: m('fc.title', { n: fcDays.length || '' }), series: m('fc.series'), tightest: m('fc.tight'), inWord: m('fc.in'), outWord: m('fc.out'), dayBy: m('fc.dayBy'), dayHead: m('fc.dayHead'), inHead: m('fc.inHead'), outHead: m('fc.outHead'), handHead: m('fc.handHead'), tightBadge: m('fc.badge'), fixed: m('fc.fixed'), none: m('fc.none'), start: m('fc.start') }}
           days={fcDays}
@@ -198,11 +221,13 @@ export default async function MoneyOverviewPage() {
           fixedLine={now.forecast && now.forecast.fixedMinor > 0 ? m('fc.fixed', { amt: short(now.forecast.fixedMinor) }) : null}
         />
       </div>
-      {ranges.length ? (
+      {showMore && ranges.length ? (
         <div className="a2-mt12 mo-hero">
           <HeroChart title={c('hero.title')} ranges={ranges} format={fmt} seriesName={c('hero.series')} prevName={c('hero.prev')} testId="mo-hero" />
         </div>
       ) : null}
+      {showMore ? (
+      <>
       <div className="a2-mt12 mo-tiles">
         <SummaryTiles tiles={tiles} label={c('hero.tiles')} testId="mo-tiles" />
       </div>
@@ -316,6 +341,8 @@ export default async function MoneyOverviewPage() {
           {c('refunds.open')}
         </Link>
       </section>
+      </>
+      ) : null}
       <DecideToday cards={decide} texts={{ title: t(d, 'lf.fn.dec.title'), sub: t(d, 'lf.fn.dec.sub'), none: t(d, 'lf.fn.dec.none') }} />
       {books ? (
         books.openLines > 0 || (books.erpSaysMinor !== null && books.erpSaysMinor !== books.owedMinor) ? (
@@ -378,4 +405,13 @@ function heroRanges(daily: readonly ReceivedDay[], locale: string, amount: Amoun
   const last7 = daily.slice(-7);
   const before7 = daily.slice(-14, -7);
   return [range('r7', last7, before7), range('r30', daily, [])];
+}
+
+/** The page head's time as the prototype shows it: day, short month, 24-hour time ("12 Nov, 20:00"). */
+function asOfShort(iso: string, locale: string, timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone }).format(new Date(iso));
+  } catch {
+    return dateTime(iso, locale, timeZone);
+  }
 }
