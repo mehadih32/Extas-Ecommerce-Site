@@ -24,6 +24,7 @@ import { MOTHER_STORE_ID, type Prisma, type PrismaClient } from '@extas/db/clien
 import { FOLLOW_UP_CEILING, registry, storeTarget, type CartRecoverySettings, type FollowUpSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import type { AdPlatformsWho } from '../marketing/ad-platforms';
+import { incompleteReport, type IncompleteReport } from './incomplete-report';
 import { bagValue, channelOf, dayKey, fillTemplate, HANDLED_NOTE_MAX, newestFirst, rangeBounds, rangeOf, smsLink, stageOf, viewOf, whatsAppTextLink, zoneOffsetMinutes, type IncompleteRange, type IncompleteStage, type IncompleteView, type VisitChannel } from './incomplete-model';
 
 const S = MOTHER_STORE_ID;
@@ -174,6 +175,8 @@ export interface IncompleteOverview {
   cartRecovery: { card: CartRecoveryCard; sent: number; recovered: number };
   /** PR 668 — the possible-match switch and the four ready messages. */
   v5Card: V5Card;
+  /** PR 1061 — the left checkouts of the filtered days by landing page and by device (null while the List side is open). */
+  report: IncompleteReport | null;
 }
 
 const versionOf = (v: unknown): string => createHash('sha256').update(JSON.stringify(v)).digest('hex').slice(0, 16);
@@ -240,7 +243,7 @@ export async function incompleteOpenCount(deps: IncompleteDeps): Promise<number>
 }
 
 /** The page: the view's rows (hottest first), the counts, unfinished payments, bags without a number and the card. */
-export async function incompleteOverview(deps: IncompleteDeps, me: string | null, rawView: unknown, rawFilter: { range?: unknown; from?: unknown; to?: unknown } = {}): Promise<IncompleteOverview> {
+export async function incompleteOverview(deps: IncompleteDeps, me: string | null, rawView: unknown, rawFilter: { range?: unknown; from?: unknown; to?: unknown; report?: boolean } = {}): Promise<IncompleteOverview> {
   const view = viewOf(rawView);
   const now = deps.now?.() ?? new Date();
   const card = await cardOf(deps);
@@ -345,6 +348,8 @@ export async function incompleteOverview(deps: IncompleteDeps, me: string | null
     staff,
     card,
     v5Card: await v5CardOf(deps),
+    // PR 1061: the report's two splits (only worked out when the Report side is open)
+    report: rawFilter.report ? await incompleteReport(deps.db, S, { ...base, ...viewWhere('open', me) }, ROWS_SHOWN * 10) : null,
     followUp: { card: followUpCard, sent: sentFollowUps, recovered: recovered.length, ceiling: FOLLOW_UP_CEILING },
     cartRecovery: { card: bagCard, sent: sentBags, recovered: recoveredBags.length },
   };

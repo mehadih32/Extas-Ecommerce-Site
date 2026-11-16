@@ -30,6 +30,7 @@ import { trackAddToBag } from '../tracking/shop';
 import { recordAddToBagAnalytics } from '../analytics/shop-hooks';
 import { BN_PREFIX } from './lang';
 import { BOT } from '../experiments/edge';
+import { noteVisit } from './visit-note';
 
 /** The largest request body the bag takes (a code, an id, a number). */
 export const BAG_BODY_MAX = 2_048;
@@ -89,6 +90,8 @@ export async function addLineHandler(request: Request, deps: BagApiDeps | null):
     const quantity = (b.quantity as number | undefined) ?? 1;
     const r = await addItem(deps.cart, { storeId: deps.storeId, cartId: bag.cartId, variantId: b.variantId as string, quantity, source: (b.source as string | undefined) || undefined });
     // PR 257: the ad platforms hear of it from the server while tracking is on (quiet, never stops the add)
+    // PR 1061: the page and device the bag was made on, for the Incomplete orders report (quiet)
+    await noteVisit(deps.cart.db, deps.storeId, bag.cartId, request);
     if (r.added) await trackAddToBag(request, { storeId: deps.storeId, lineId: r.lineId, quantity });
     // S15 · PR 338: the owner's own Analytics section hears of it too, while `analytics.events` is on (quiet)
     if (r.added) await recordAddToBagAnalytics(request, { storeId: deps.storeId, variantId: b.variantId as string, quantity });
