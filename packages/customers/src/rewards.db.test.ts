@@ -4,7 +4,7 @@
 // credit at the owner's rate, once per key, audited; the Loyalty & wallet figures (SIM-F-032). Every value is a
 // made-up test value.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { balanceOf, loyaltyScreen, pointsFor, pointsOf, redeemableOf, redeemPoints, runPoints } from './rewards';
+import { adjustPoints, balanceOf, loyaltyScreen, pointsFor, pointsOf, redeemableOf, redeemPoints, runPoints } from './rewards';
 import { saveCrmSetting } from './settings';
 import { setUpCustomers, type CustomersFixture } from './testing';
 
@@ -111,5 +111,22 @@ describe.skipIf(!process.env.TEST_DATABASE_ADMIN_URL)('rewards and points on Pos
     expect(m.kpis).toMatchObject({ walletMinor: 5_000, walletLines: 1 });
     expect(m.walletLines).toEqual([expect.objectContaining({ reason: 'POINTS', amountMinor: 5_000, customerName: 'Points Buyer' })]);
     expect(m.canWrite).toBe(true);
+  });
+
+  it('PR 905: a manual change is one more entry with its reason; never below 0; the same key once; the history, the top earners and the points held', async () => {
+    const before = await balanceOf(f.t.prisma, f.S, ids.a!);
+    const r = await adjustPoints(f.customersDeps(), f.manager, { customerId: ids.a, points: 50, note: 'Birthday gift', key: 'adjust-key-0001' });
+    expect(r).toMatchObject({ points: 50, balance: before + 50, replay: false });
+    expect(await adjustPoints(f.customersDeps(), f.manager, { customerId: ids.a, points: 50, note: 'Birthday gift', key: 'adjust-key-0001' })).toMatchObject({ replay: true, balance: before + 50 });
+    expect(await balanceOf(f.t.prisma, f.S, ids.a!)).toBe(before + 50);
+    await expect(adjustPoints(f.customersDeps(), f.manager, { customerId: ids.a, points: -(before + 51), note: 'Too many', key: 'adjust-key-0002' })).rejects.toMatchObject({ code: 'NOT_ENOUGH_POINTS' });
+    await expect(adjustPoints(f.customersDeps(), f.manager, { customerId: ids.a, points: 0, note: 'Nothing', key: 'adjust-key-0003' })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
+    await expect(adjustPoints(f.customersDeps(), f.viewer, { customerId: ids.a, points: 5, note: 'Not allowed', key: 'adjust-key-0004' })).rejects.toBeTruthy();
+    const s = await loyaltyScreen(f.customersDeps(), f.manager);
+    expect(s.adjustments[0]).toMatchObject({ points: 50, note: 'Birthday gift', customerName: 'Points Buyer' });
+    expect(s.topEarners[0]).toMatchObject({ customerName: 'Points Buyer', points: before + 50 });
+    expect(s.pointsHeld).toBe(before + 50);
+    const a = await f.t.prisma.auditLog.findFirst({ where: { storeId: f.S, action: 'customer.points.adjust' }, select: { actorType: true, after: true } });
+    expect(a?.after).toMatchObject({ points: 50, note: 'Birthday gift' });
   });
 });

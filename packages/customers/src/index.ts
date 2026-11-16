@@ -84,6 +84,7 @@ export * from './rewards';
 export * from './pure';
 export * from './segments';
 export * from './send-advice';
+export * from './taste';
 export * from './settings';
 export * from './view';
 export * from './winback';

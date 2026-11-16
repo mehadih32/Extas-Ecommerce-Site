@@ -190,8 +190,13 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   const mark = cu.customerMark(await cu.customerGrading(cd, MOTHER_STORE_ID), sv.history);
   // PR 535: the old shop's orders brought in by a legacy import (history only)
   const legacy = await cu.legacyHistory(cd, who, [sv.id, ...sv.members.map((m) => m.id)]);
+  // PR 906: what he buys and how (sizes, favourite categories, MRP value, discount received, influencer code)
+  const taste = await cu.customerTaste(cd, who, sv.id);
+  // PR 906: "Open full page" hides the list beside him; "Open as side panel" brings it back (a view choice, nothing saved)
+  const fullPage = one(sp.view) === 'full';
+  const viewHref = (full: boolean) => `${here}${here.includes('?') ? '&' : '?'}view=${full ? 'full' : 'panel'}`;
   const money = moneyOf(currency, view.locale);
-  const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
+  const when =new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
   const stamp = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium', timeStyle: 'short' });
   const n = (x: number) => formatNumber(x, view.locale);
   const cdict: Dict = { cus: d.cus as Dict };
@@ -238,6 +243,60 @@ export default async function CustomerPage({ params, searchParams }: { params: P
         </div>
       </div>
     </div>
+  );
+
+  const catName = (x: { nameEn: string | null; nameBn: string | null }) => (view.lang === 'bn' ? (x.nameBn ?? x.nameEn) : x.nameEn) ?? t(d, 'cus.profile.taste.other');
+  const maxCat = Math.max(1, ...taste.categories.map((x) => x.pieces));
+  const figs = (
+    <div className="a2-kpis" data-testid="cus-taste-figs">
+      <div className="a2-card a2-kpi" data-testid="cus-kpi-pieces">
+        <div className="a2-kl">{t(d, 'cus.profile.taste.pieces')}</div>
+        <div className="a2-kv">{n(taste.pieces)}</div>
+      </div>
+      <div className="a2-card a2-kpi" data-testid="cus-kpi-mrp">
+        <div className="a2-kl">{t(d, 'cus.profile.taste.mrp')}</div>
+        <b className="a2-kv">{formatMoney(taste.mrpMinor, money)}</b>
+      </div>
+      <div className="a2-card a2-kpi" data-testid="cus-kpi-discount">
+        <div className="a2-kl">{t(d, 'cus.profile.taste.discount')}</div>
+        <b className="a2-kv">{formatMoney(taste.discountMinor, money)}</b>
+      </div>
+    </div>
+  );
+  const tasteCard = (
+    <Card title={t(d, 'cus.profile.taste.title')} testId="cus-taste">
+      {taste.usual.length ? (
+        taste.usual.map((s) => (
+          <div key={s.categoryId ?? 'none'} className="a2-rule" data-testid="cus-size">
+            <span>{catName(s)}</span>
+            <b>{`${s.size} · ${t(d, s.always ? 'cus.profile.taste.always' : 'cus.profile.taste.mostly')}`}</b>
+          </div>
+        ))
+      ) : (
+        <p className="a2-sm a2-mute">{t(d, 'cus.profile.taste.none')}</p>
+      )}
+      {taste.categories.length ? (
+        <>
+          <h3 className="a2-lbl a2-mt12">{t(d, 'cus.profile.taste.favourites')}</h3>
+          {taste.categories.slice(0, 5).map((x) => ( // hardcode-ok: the five most bought categories
+            <div key={x.categoryId ?? 'none'} className="a2-rule" data-testid="cus-fav">
+              <span>{catName(x)}</span>
+              <b>{t(d, 'cus.profile.taste.piecesOf', { n: n(x.pieces) })}</b>
+              <progress className="a2-grow" max={maxCat} value={x.pieces} aria-hidden="true" />
+            </div>
+          ))}
+        </>
+      ) : null}
+    </Card>
+  );
+  const influencerCard = (
+    <Card title={t(d, 'cus.profile.influencer.title')} testId="cus-influencer">
+      {taste.influencer ? (
+        <p className="a2-sm">{t(d, 'cus.profile.influencer.used', { code: taste.influencer.code, name: taste.influencer.name, order: taste.influencer.orderNumber })}</p>
+      ) : (
+        <p className="a2-sm a2-mute">{t(d, 'cus.profile.influencer.none')}</p>
+      )}
+    </Card>
   );
 
   const hist = (
@@ -590,11 +649,18 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <GradePill mark={mark} lang={view.lang} verified={t(d, 'cus.grade.verified')} />
           </>
         }
-        right={sv.viewer.merge ? <MergeWith dict={cdict} customerId={sv.id} /> : null}
+        right={
+          <>
+            <Link className="a2-btn sm" href={viewHref(!fullPage)} data-testid="cus-open-mode">
+              {t(d, fullPage ? 'cus.profile.openPanel' : 'cus.profile.openFull')}
+            </Link>
+            {sv.viewer.merge ? <MergeWith dict={cdict} customerId={sv.id} /> : null}
+          </>
+        }
       />
       <SectionTabs view={view} current="customer" />
       <div className="cus-split" data-testid="cus-split">
-      <CustomerRail view={view} data={rail} list={list} current={sv.id} />
+      {fullPage ? null : <CustomerRail view={view} data={rail} list={list} current={sv.id} />}
       <div className="cus-split-main">
       <CustomerSteps view={view} data={rail} list={list} current={sv.id} />
       {mergedFrom ? (
@@ -615,7 +681,10 @@ export default async function CustomerPage({ params, searchParams }: { params: P
           {tab === 'overview' ? (
             <>
               {kpis}
+              {figs}
               {hist}
+              {tasteCard}
+              {influencerCard}
               {legacyCard}
               {numbers}
               {profileCard}
