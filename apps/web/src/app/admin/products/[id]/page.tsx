@@ -24,6 +24,7 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { catalogueAccess, photosOf, PRODUCTS_HOME, productHref, storeMoney } from '@/lib/admin-products';
+import { loadProductSide } from '@/lib/admin-product-side';
 import { t } from '@/lib/i18n';
 import { mediaDeps } from '@/lib/media';
 
@@ -101,6 +102,7 @@ export default async function ProductEditPage({
   const wizard = wizardStep ? await cat.wizardView(c.deps, c.who, id) : null;
   const lowest = product.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
   const v5 = await productV5Cards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx });
+  const side = await loadProductSide(c, id, product.path);
 
   const d = view.dict;
   return (
@@ -161,6 +163,7 @@ export default async function ProductEditPage({
         gallery={gallery}
         images={images}
         photoNotes={photoNotes}
+        side={side}
         can={{
           write: c.can('catalogue.write'),
           prices: c.can('catalogue.prices'),

@@ -719,8 +719,41 @@
         "revenue": "Revenue",
         "views": "Page views",
         "rating": "Rating",
-        "reviews": "{n} reviews"
-      }
+        "reviews": "{n} reviews",
+        "returns": "Returns",
+        "daily": "Pieces sold each day, last 30 days",
+        "f_views": "Views",
+        "f_carts": "Added to the bag",
+        "f_sold": "Sold",
+        "conv": "{n}% of viewers buy"
+      },
+      "seo": {
+        "score": "SEO score: {n}/100",
+        "good": "Good",
+        "ok": "OK",
+        "weak": "Weak",
+        "tip_title": "Keep the title between 30 and 60 letters",
+        "tip_description": "Description works best at 120–160 letters",
+        "tip_keyword": "Add the word “{word}” — people search for it",
+        "tip_place": "Mention Bangladesh or cash on delivery in the description",
+        "tip_slug": "A shorter web address (slug) is better",
+        "tip_photos": "More photos with alt text help Google Images"
+      },
+      "pricing": {
+        "h": "Pricing",
+        "sub": "The lowest selling price of the sizes below, the ERP buying price and what is left.",
+        "sell": "Selling price",
+        "buy": "Buying price from ERP",
+        "buyHelp": "Changes only in the ERP",
+        "margin": "Margin",
+        "low": "Margin is below your {n}% minimum. After courier, COD fee and packaging very little is left."
+      },
+      "google": {
+        "h": "Google ranking for this type",
+        "none": "No tracked search word for this page yet",
+        "more": "SEO & Google"
+      },
+      "collections": "Collections"
     }
   },
   "checks": {

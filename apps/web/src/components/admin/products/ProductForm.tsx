@@ -18,11 +18,13 @@ import {
   buildSave,
   checkText,
   comboKey,
+  formatMoney,
   formatNumber,
   initialState,
   liveVariants,
   nameIn,
   refusalText,
+  toMinor,
   type CategoryOption,
   type ColourOption,
   type FabricOption,
@@ -34,6 +36,8 @@ import {
 import { statusKey } from './ProductList';
 import { say, sayBad } from './useToast';
 import { PhotoManager, type PhotoNotes } from './PhotoManager';
+import { seoScore } from './seo-score';
+import type { ProductSide } from '@/lib/admin-product-side';
 
 export interface FormCan {
   write: boolean;
@@ -61,6 +65,8 @@ interface Props {
   images: Record<string, ImageSource>;
   /** S28 · PR 680: the photo manager's notes (the plain quality checks) and where their numbers are set. */
   photoNotes?: PhotoNotes;
+  /** PR 968: the Pricing, Google ranking and Collections cards' data (the ERP buying price, the margin floor, search words, collections). */
+  side?: ProductSide;
   can: FormCan;
 }
 
@@ -343,6 +349,20 @@ export function ProductForm(props: Props) {
   const prefix = naming.path.endsWith(naming.slug) ? naming.path.slice(0, naming.path.length - naming.slug.length) : '';
   const previewTitle = (lang === 'bn' ? draft.seoTitleBn || field('seoTitle', 'bn').value : '') || draft.seoTitleEn || field('seoTitle', 'en').value;
   const previewDesc = (lang === 'bn' ? draft.metaDescriptionBn || field('metaDescription', 'bn').value : '') || draft.metaDescriptionEn || field('metaDescription', 'en').value;
+  const seoCategory = categories.find((c) => c.id === draft.categoryId);
+  const seo = seoScore({
+    title: previewTitle || draft.nameEn,
+    description: previewDesc,
+    slug: draft.slug,
+    keyword: seoCategory ? seoCategory.nameEn : null,
+    photos: readiness.photos.count,
+    colours: draft.colours.length,
+  });
+  const typed = Object.values(draft.prices).map((c) => toMinor(c.price, money)).filter((n): n is number => typeof n === "number" && n > 0);
+  const sellMinor = typed.length ? Math.min(...typed) : null;
+  const buying = props.side?.buyingMinor ?? null;
+  const marginPct = sellMinor && buying ? ((sellMinor - buying) / sellMinor) * 100 : null;
+  const floorPct = props.side?.floorMarginPct ?? null;
 
   const st = statusKey(product);
   const isLive = product.status === 'PUBLISHED';
@@ -465,6 +485,23 @@ export function ProductForm(props: Props) {
               <div className="pa-g-url">{`${prefix}${draft.slug}`}</div>
               <div className="pa-g-title">{previewTitle}</div>
               <div className="pa-g-desc">{previewDesc}</div>
+            </div>
+            {/* PR 968 (prototype v5): the SEO score and its tips */}
+            <div className="pa-seo" data-testid="seo-score">
+              <div className="pa-seo-h">
+                <b>{t(d, 'products.v5.seo.score', { n: num(seo.score) })}</b>
+                <span className={`pa-status s-${seo.band === 'good' ? 'PUBLISHED' : seo.band === 'ok' ? 'READY_TO_PUBLISH' : 'DRAFT'}`}>{t(d, `products.v5.seo.${seo.band}`)}</span>
+              </div>
+              <div className="pa-seo-bar" aria-hidden="true">
+                <span style={{ width: `${seo.score}%` }} />
+              </div>
+              {seo.tips.length ? (
+                <ul className="ad-mini pa-seo-tips">
+                  {seo.tips.map((x) => (
+                    <li key={x.key}>{t(d, `products.v5.seo.tip_${x.key}`, { word: x.keyword ?? '' })}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </section>
 
@@ -642,6 +679,36 @@ export function ProductForm(props: Props) {
             <p className="ad-mini pa-gap">{t(d, 'products.variants.note')}</p>
           </section>
 
+          {/* ---------------- Pricing (PR 968, prototype v5): the selling price, the ERP buying price and the margin ---------------- */}
+          {can.prices ? (
+            <section className="ad-card" aria-labelledby="sec-pricing" data-testid="pricing-card">
+              <h2 id="sec-pricing">{t(d, 'products.v5.pricing.h')}</h2>
+              <p className="ad-sub">{t(d, 'products.v5.pricing.sub')}</p>
+              <div className="pa-two">
+                <div>
+                  <div className="ad-label">{t(d, 'products.v5.pricing.sell')}</div>
+                  <div className="ad-input pa-ro" data-testid="pricing-sell">{sellMinor === null ? '—' : formatMoney(sellMinor, money)}</div>
+                </div>
+                <div>
+                  <div className="ad-label">{t(d, 'products.v5.pricing.buy')}</div>
+                  <div className="ad-input pa-ro" data-testid="pricing-buy">{buying === null ? '—' : formatMoney(buying, money)}</div>
+                  <span className="ad-mini">{t(d, 'products.v5.pricing.buyHelp')}</span>
+                </div>
+                <div>
+                  <div className="ad-label">{t(d, 'products.v5.pricing.margin')}</div>
+                  <div className="ad-input pa-ro" data-testid="pricing-margin">
+                    {sellMinor !== null && buying !== null ? `${formatMoney(sellMinor - buying, money)} · ${num(Math.round(marginPct ?? 0))}%` : '—'}
+                  </div>
+                </div>
+              </div>
+              {marginPct !== null && floorPct !== null && marginPct < floorPct ? (
+                <p className="ad-mini bad pa-gap" role="alert" data-testid="pricing-warn">
+                  {t(d, 'products.v5.pricing.low', { n: num(floorPct) })}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+
           {/* ---------------- Photos ---------------- */}
           <section className="ad-card" aria-labelledby="sec-photos">
             <h2 id="sec-photos">{t(d, 'products.sections.photos')}</h2>
@@ -757,6 +824,40 @@ export function ProductForm(props: Props) {
             </ul>
             <p className="ad-mini pa-gap">{t(d, failing.length ? 'products.ready.note' : 'products.ready.allGood')}</p>
           </section>
+
+          {/* ---------------- Google ranking for this type (PR 968, prototype v5) ---------------- */}
+          <section className="ad-card" aria-labelledby="sec-gr" data-testid="google-ranking-card">
+            <h2 id="sec-gr">{t(d, 'products.v5.google.h')}</h2>
+            {props.side?.keywords.length ? (
+              <ul className="pa-hl">
+                {props.side.keywords.map((k) => (
+                  <li key={k.query} className="pa-hli">
+                    <span>{k.query}</span>
+                    <b>{k.position === null ? '—' : `#${num(Math.round(k.position))}`}</b>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="ad-mini">{t(d, 'products.v5.google.none')}</p>
+            )}
+            <a className="ad-mini" href="/admin/website/seo">
+              {t(d, 'products.v5.google.more')}
+            </a>
+          </section>
+
+          {/* ---------------- Collections (PR 968, prototype v5) ---------------- */}
+          {props.side?.collections.length ? (
+            <section className="ad-card" aria-labelledby="sec-coll" data-testid="collections-card">
+              <h2 id="sec-coll">{t(d, 'products.v5.collections')}</h2>
+              <div className="pa-chips">
+                {props.side.collections.map((c) => (
+                  <span key={c.id} className="ad-tag">
+                    {nameIn(lang, c)}
+                  </span>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </aside>
       </div>
 

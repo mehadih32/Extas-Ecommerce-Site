@@ -110,3 +110,8 @@
 .pv5-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .pv5-kpi{display:flex;flex-direction:column;gap:2px;padding:10px;border:1px solid var(--lm-ln);border-radius:10px;min-width:0}
 .pv5-kpi b{font-size:1.25rem;overflow-wrap:anywhere}
+
+.pv5-spark{display:block;width:100%;height:40px;margin:10px 0 4px;color:var(--lm-ac)}
+.pv5-funnel{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.pv5-fr{display:grid;grid-template-columns:minmax(80px,120px) minmax(0,1fr) auto;gap:8px;align-items:center}
+.pv5-bar{display:block;height:10px;border-radius:5px;background:var(--lm-ac)}
