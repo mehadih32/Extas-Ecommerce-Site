@@ -56,7 +56,7 @@ import stripEn from "../../../../../messages/admin-ai-strip.en.json";
 import { AiStrip } from "@/components/admin/ai/AiStrip";
 import { CostsLimits } from "@/components/admin/ai/CostsLimits";
 import { controlRoomView } from "@/lib/admin-ai/control-room";
-import { applyAutoSaver, SAVER_AT_PCT } from "@/lib/admin-ai/limits";
+import { applyAutoSaver, cumulativeByDay, SAVER_AT_PCT } from "@/lib/admin-ai/limits";
 import limitsBn from "../../../../../messages/admin-ai-limits.bn.json";
 import limitsEn from "../../../../../messages/admin-ai-limits.en.json";
 import "@/components/admin/ai/ai-strip.css";
@@ -183,6 +183,15 @@ export default async function AiCostBookPage() {
     new Intl.DateTimeFormat("en-US", { timeZone: view.timeZone, day: "numeric" }).format(nowAt),
   );
   const monthLen = new Date(nowAt.getUTCFullYear(), nowAt.getUTCMonth() + 1, 0).getDate();
+  // PR 935: the running total by day, from the AI usage records already kept (no new data)
+  const ymdOf = (x: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: view.timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(x);
+  const monthYm = ymdOf(nowAt).slice(0, 7);
+  const usage = await access.deps.db.aiUsageLedger.findMany({
+    where: { createdAt: { gte: new Date(nowAt.getTime() - 32 * 864e5), lte: nowAt } }, // hardcode-ok: a month plus time-zone slack, filtered to the month below
+    select: { createdAt: true, costMinor: true },
+  });
+  const dailyTotals = cumulativeByDay(usage.map((u) => ({ at: u.createdAt, minor: u.costMinor })), ymdOf, monthYm, monthDay);
+  const monthLabel = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, month: "long" }).format(nowAt);
   const limits = {
     money: moneyOf(room.view.currency, view.locale),
     capMinor: room.view.monthlyCapMinor,
@@ -236,6 +245,8 @@ export default async function AiCostBookPage() {
           saver={limits.saver}
           saverAuto={limits.saverAuto}
           agents={limits.agents}
+          daily={dailyTotals}
+          monthLabel={monthLabel}
         />
       ) : null}
 

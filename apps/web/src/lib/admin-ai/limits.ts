@@ -41,6 +41,21 @@ export function saverSavesMinor(spentMinor: number, dayOfMonth: number, daysInMo
   return Math.round(((spentMinor / day) * (daysInMonth - day) * SAVER_SAVES_PCT) / 100);
 }
 
+/** PR 935: the running total of the month's AI spend, one number per day from day 1 to `dayOfMonth` (whole minor units).
+ * `ymdOf` turns a time into the store's own `YYYY-MM-DD`; a row from another month is left out; day 1 is index 0. */
+export function cumulativeByDay(rows: readonly { at: Date; minor: number }[], ymdOf: (d: Date) => string, monthYm: string, dayOfMonth: number): number[] {
+  const days = Math.max(1, dayOfMonth);
+  const perDay = new Array<number>(days).fill(0);
+  for (const r of rows) {
+    const ymd = ymdOf(r.at);
+    if (!ymd.startsWith(`${monthYm}-`)) continue;
+    const day = Number(ymd.slice(8, 10));
+    if (day >= 1 && day <= days) perDay[day - 1] = (perDay[day - 1] ?? 0) + r.minor;
+  }
+  let run = 0;
+  return perDay.map((v) => (run += v));
+}
+
 export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean } | { digest: AiDigestSettings } | { offText: AiOffTextSettings };
 
 /** Reads the one change out of a request body, or throws `INVALID_INPUT` / `INVALID_CAP`. */
