@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { CapInput } from '@/components/admin/ai/CapInput';
 import { CeilingInput, LimitToggle } from '@/components/admin/ai/LimitControls';
 import { formatMoney, type Money } from '@/components/admin/products/model';
-import { atSaverLine, monthEndAtThisPace, SAVER_AT_PCT } from '@/lib/admin-ai/limits';
+import { atSaverLine, monthEndAtThisPace, SAVER_AT_PCT, saverSavesMinor } from '@/lib/admin-ai/limits';
 import { t, type Dict } from '@/lib/i18n';
 import './ai-limits.css';
 
@@ -47,7 +47,6 @@ export function CostsLimits(p: CostsLimitsProps) {
 
   return (
     <section className="ai-lim a2-mt12" data-testid="ai-limits" aria-label={c('h')}>
-      <p className="a2-sm a2-mute">{c('sub', { pct: SAVER_AT_PCT })}</p>
       {warn && p.capMinor ? (
         <div className="a2-note a2-mt12" role="note" data-testid="ai-limits-warn">
           <span>{c('warn', { pct: pct ?? 0, spent: m(p.spentMinor), cap: m(p.capMinor), left: p.daysInMonth - p.dayOfMonth })}</span>
@@ -139,6 +138,9 @@ export function CostsLimits(p: CostsLimitsProps) {
           ) : (
             <p className="a2-xs a2-mute a2-mt12">{p.saverAuto ? c('saver.autoIsOn', { pct: SAVER_AT_PCT }) : c('saver.autoIsOff', { pct: SAVER_AT_PCT })}</p>
           )}
+          <p className="a2-sm a2-mt12" data-testid="ai-saver-saves">
+            {c('saver.saves', { amount: m(saverSavesMinor(p.spentMinor, p.dayOfMonth, p.daysInMonth)) })}
+          </p>
           <p className="a2-xs a2-mute a2-mt12">{c('saver.note')}</p>
           <p className="a2-xs a2-mt6">
             <Link href="/admin/messages/cost-ceilings">{c('messagesLink')}</Link>

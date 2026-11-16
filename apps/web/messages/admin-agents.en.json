@@ -1,8 +1,8 @@
 {
   "aiAgents": {
     "metaTitle": "Agents",
-    "title": "The seven agents",
-    "sub": "Each agent's own 360° profile: its role, plan, skills, work log and assignments.",
+    "title": "AI Center",
+    "sub": "Seven helpers, each with one job. See what each is doing now, what it costs, and pause it with one tap.",
     "backToTeam": "All agents",
     "team": {
       "open": "{n} open",
@@ -130,6 +130,25 @@
       "ownerOnly": "Owner only",
       "secretSet": "Webhook secret set",
       "secretMissing": "Webhook secret not set yet — set it in Keys & connections"
-    }
+    },
+    "kpi": {
+      "running": "Running now",
+      "today": "Spent today",
+      "month": "This month",
+      "ofCeiling": "of {cap} ceiling",
+      "noCeiling": "no ceiling set",
+      "waiting": "Waiting for you",
+      "approvals": "Approvals"
+    },
+    "state": {
+      "running": "Running",
+      "paused": "Paused"
+    },
+    "card": {
+      "today": "Today",
+      "month": "Month"
+    },
+    "controlsNote": "Pause, model, schedule, cap and keep-on for each agent are on the",
+    "controlsLink": "Control room"
   }
 }

@@ -1,8 +1,8 @@
 {
   "aiTraining": {
     "metaTitle": "Training",
-    "title": "Training",
-    "sub": "Teach the agents how the shop talks and decides, in your own words. Every change is a new version, and you can bring back an older one.",
+    "title": "AI Center",
+    "sub": "Teach the agents how EXTAS talks and decides. Every change is a new version you can roll back.",
     "needPermission": "You can read this page. Teaching the agents needs the AI control permission.",
     "aiOff": "AI is off. What you write here is saved and kept; the agents use it once AI is turned on.",
     "rules": "Instructions guide how an agent writes and decides. They never override the standing rules: replies to buyers stay on Ask, deletes wait for your approval, and no agent changes permissions.",
