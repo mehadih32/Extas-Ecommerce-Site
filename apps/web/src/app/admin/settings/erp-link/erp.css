@@ -20,3 +20,5 @@
 [data-testid='erp-link-page'] :is(.a2-card, section, details, .a2-z, .a2-between) { min-width: 0; max-width: 100%; }
 [data-testid='erp-link-page'] :is(.a2-sm, .a2-xs, li, p, code, pre) { overflow-wrap: anywhere; }
 [data-testid='erp-link-page'] .a2-between { flex-wrap: wrap; }
+[data-testid='erp-link-page'] :is(select, input, textarea, table) { max-width: 100%; min-width: 0; }
+@media (max-width: 1279px) { [data-testid='erp-link-page'] .erp-g3 { grid-template-columns: minmax(0, 1fr); } }
