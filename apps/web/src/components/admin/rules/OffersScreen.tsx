@@ -368,55 +368,80 @@ export function OffersScreen(props: OffersScreenProps) {
       <p className="rh-hint">{tt(`tabHint.${tab}`)}</p>
       {wizardEl}
       <div className="of-list">
+        <h2 className="of-h">{tt('heading')}</h2>
+        <p className="rh-hint">{tt('headingSub')}</p>
         {rows.length ? (
           <div className="of-wrap">
             <table className="of-tbl">
               <thead>
                 <tr>
                   <th>{tt('col.name')}</th>
-                  <th>{tt('col.type')}</th>
-                  <th>{tt('col.state')}</th>
+                  <th>{tt('col.applies')}</th>
                   <th>{tt('col.when')}</th>
-                  <th className="num">{tt('col.orders')}</th>
-                  <th className="num">{tt('col.given')}</th>
-                  <th className="num">{tt('col.delivered')}</th>
-                  <th className="num">{tt('col.returned')}</th>
+                  <th>{tt('col.limits')}</th>
+                  <th className="num">{tt('col.used')}</th>
+                  <th className="num">{tt('col.cost')}</th>
+                  <th className="num">{tt('col.sales')}</th>
+                  <th className="num">{tt('col.margin')}</th>
+                  <th>{tt('col.state')}</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className={detail === r.offerId && r.offerId ? 'sel' : ''}>
-                    <td data-l={tt('col.name')}>
-                      {r.offerId ? (
-                        <button type="button" className="rl-link" onClick={() => void openDetail(r.offerId!)}>
-                          {nameOf(r)}
-                        </button>
-                      ) : r.href ? (
-                        <Link className="rl-link" href={r.href}>
-                          {nameOf(r)}
-                        </Link>
-                      ) : (
-                        nameOf(r)
-                      )}
-                      {r.code ? <code className="of-code">{r.code}</code> : null}
-                    </td>
-                    <td data-l={tt('col.type')}>{valueText(r)}</td>
-                    <td data-l={tt('col.state')}>{pill(r.state)}</td>
-                    <td data-l={tt('col.when')}>{r.startsAt || r.endsAt ? `${date(r.startsAt) || tt('now')} – ${date(r.endsAt) || tt('noEnd')}` : tt('always')}</td>
-                    <td className="num" data-l={tt('col.orders')}>
-                      {r.results ? r.results.orders : '—'}
-                    </td>
-                    <td className="num" data-l={tt('col.given')}>
-                      {r.results ? money(r.results.discountMinor) : '—'}
-                    </td>
-                    <td className="num" data-l={tt('col.delivered')}>
-                      {r.results ? money(r.results.deliveredMinor) : '—'}
-                    </td>
-                    <td className="num" data-l={tt('col.returned')}>
-                      {r.results ? r.results.returned : '—'}
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((r) => {
+                  const min = r.limits?.minOrderMinor ? tt('minOrder', { v: money(r.limits.minOrderMinor) }) : '';
+                  const whoLine = [r.who ? tt(r.firstOrderOnly ? 'whoFirst' : `who.${r.who.audience}`) : '', min].filter(Boolean).join(' · ');
+                  const lim = r.limits;
+                  const limLines = lim ? [lim.perCustomerLimit ? tt('perCustomer', { n: lim.perCustomerLimit }) : tt('noPerCustomer'), lim.usageLimit ? tt('usesInAll', { n: lim.usageLimit }) : tt('noTotal')] : [];
+                  return (
+                    <tr key={r.id} className={detail === r.offerId && r.offerId ? 'sel' : ''}>
+                      <td data-l={tt('col.name')}>
+                        {r.offerId ? (
+                          <button type="button" className="rl-link" onClick={() => void openDetail(r.offerId!)}>
+                            {nameOf(r)}
+                          </button>
+                        ) : r.href ? (
+                          <Link className="rl-link" href={r.href}>
+                            {nameOf(r)}
+                          </Link>
+                        ) : (
+                          nameOf(r)
+                        )}
+                        <small className="of-sub">
+                          {valueText(r)}
+                          {r.code ? <code className="of-code">{r.code}</code> : null}
+                        </small>
+                      </td>
+                      <td data-l={tt('col.applies')}>
+                        {r.trigger === 'PAY_ONLINE' || r.source === 'reward' ? tt('appliesOnline') : tt('appliesAll')}
+                        {whoLine ? <small className="of-sub">{whoLine}</small> : null}
+                      </td>
+                      <td data-l={tt('col.when')}>{r.startsAt || r.endsAt ? `${date(r.startsAt) || tt('now')} – ${date(r.endsAt) || tt('noEnd')}` : tt('always')}</td>
+                      <td data-l={tt('col.limits')}>
+                        {limLines.length ? (
+                          <>
+                            {limLines[0]}
+                            <small className="of-sub">{limLines[1]}</small>
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="num" data-l={tt('col.used')}>
+                        {r.results ? r.results.orders : '—'}
+                      </td>
+                      <td className="num" data-l={tt('col.cost')}>
+                        {r.results ? money(r.results.discountMinor) : '—'}
+                      </td>
+                      <td className="num" data-l={tt('col.sales')}>
+                        {r.results ? money(r.results.deliveredMinor) : '—'}
+                      </td>
+                      <td className="num" data-l={tt('col.margin')}>
+                        {r.marginPct == null ? '—' : tt(r.marginPct < 20 ? 'marginThin' : 'marginOk', { n: r.marginPct })}
+                      </td>
+                      <td data-l={tt('col.state')}>{pill(r.state)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

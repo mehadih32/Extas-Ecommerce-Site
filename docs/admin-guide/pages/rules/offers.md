@@ -29,7 +29,7 @@
 ## প্রতিটা বোতাম আর ঘরের মানে
 - **New offer** — নতুন অফার বানানো। **Close** — ঘর বন্ধ।
 - **Running now · Discount given, 30 days · Waiting for the owner's OK · Best code by sales** — উপরের কার্ড।
-- **All offers · Calendar · Awaiting OK · History** — ভিউ। **Offer · Type · State · When · Orders · Discount given · Delivered value · Returned** — তালিকার কলাম।
+- **All offers · Calendar · Awaiting OK · History** — ভিউ। **Offer · Applies to · When · Limits · Used (30D) · Cost · Sales · Margin · Status** — "Offers" কার্ডের তালিকার কলাম (খরচ = দেওয়া ছাড়; সারিতে চাপলে পুরো ছবি)। Status-এ **Running**, **Scheduled**, **Off**। **Applies to**-তে **Whole checkout** বা **Online payment**, তার নিচে কে পাবে (**Everyone**, **First order**) আর ন্যূনতম অর্ডার; **Limits**-এ ক্রেতাপ্রতি আর মোট সীমা; **Margin** আসে কোড লাগা অর্ডারের কেনা-দাম থেকে, দাম না থাকলে ড্যাশ।
 - **Free delivery · Percent off · Flat amount off · Points · Wallet credit** — ধরন। **Points** আর **Wallet credit** অফার খসড়া থাকে, চালু হয় না: যে কাজ এগুলো দেয় সেটা এখনো বানানো হয়নি।
 - **Name (English)** আর **Name (Bengali)** — অফারের নাম।
 - **When does it apply** — **On any order that fits** বা **When the customer pays online**। অনলাইনের পুরস্কারে এলাকা, কোড, তারিখ বা সীমা চলে না।
