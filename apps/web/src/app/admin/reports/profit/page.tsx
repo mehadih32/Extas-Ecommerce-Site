@@ -557,29 +557,31 @@ export default async function ProfitReportPage({
         csv={csv}
         notes={notes}
         limitDays={b.limits.maxDays}
-      />
-      <ReportFilters
-        action={HERE}
-        keep={keep}
-        testId="rp-filters"
-        applyLabel={cc("apply")}
-        clearLabel={cc("clear")}
-        fields={[
-          {
-            name: "cat",
-            label: c("fCategory"),
-            all: c("fAllCategories"),
-            options: catOptions,
-            value: catId,
-          },
-          {
-            name: "div",
-            label: c("fArea"),
-            all: c("fAllAreas"),
-            options: divOptions,
-            value: divF,
-          },
-        ]}
+        filters={
+        <ReportFilters
+          action={HERE}
+          keep={keep}
+          testId="rp-filters"
+          applyLabel={cc("apply")}
+          clearLabel={cc("clear")}
+          fields={[
+            {
+              name: "cat",
+              label: c("fCategory"),
+              all: c("fAllCategories"),
+              options: catOptions,
+              value: catId,
+            },
+            {
+              name: "div",
+              label: c("fArea"),
+              all: c("fAllAreas"),
+              options: divOptions,
+              value: divF,
+            },
+          ]}
+        />
+        }
       />
       {filtered ? (
         <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">
