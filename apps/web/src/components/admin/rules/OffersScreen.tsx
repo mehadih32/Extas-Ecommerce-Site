@@ -450,6 +450,26 @@ export function OffersScreen(props: OffersScreenProps) {
         )}
         <p className="rh-hint">{tt('resultsNote')}</p>
       </div>
+      {screen.builtins?.length ? (
+        <section className="rh-card of-builtin" data-testid="of-builtin" aria-label={tt('builtin.title')}>
+          <h2 className="of-h">{tt('builtin.title')}</h2>
+          <p className="rh-hint">{tt('builtin.sub')}</p>
+          {screen.builtins.map((b) => (
+            <div className="of-bi" key={b.id}>
+              <div>
+                <b>{tt(`builtin.${b.id}.name`)}</b>
+                <small className="of-sub">{b.on ? tt(`builtin.${b.id}.on`, { v: b.amountMinor === null ? '' : money(b.amountMinor) }) : tt(`builtin.${b.id}.off`)}</small>
+              </div>
+              <div className="of-bir">
+                <span className={`rh-pl ${b.on ? 'on' : 'off'}`}>{tt(b.on ? 'builtin.on' : 'builtin.off')}</span>
+                <Link className="rl-link" href={b.href}>
+                  {tt('builtin.open')} →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </section>
+      ) : null}
       {detail && info ? (
         <section className="rh-card of-detail" aria-label={tt('detail.title')}>
           <div className="rh-cardhd">

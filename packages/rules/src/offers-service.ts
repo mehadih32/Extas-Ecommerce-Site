@@ -424,6 +424,8 @@ export interface OffersScreen {
   /** The latest ends first; what is waiting for the owner. */
   awaiting: number;
   /** Money given by every code in the last 30 days and orders with a code. */
+  /** PR 948 (prototype "Built-in rules that also change the price"): the basic rules that live in Rules, with their switch. */
+  builtins?: { id: 'free' | 'prepaid' | 'grades'; on: boolean; amountMinor: number | null; href: string }[];
   discount30: { discountMinor: number; orders: number; /** PR 823: what those orders came to (their totals). */ salesMinor: number; /** Share of the goods' price left after discount and the ERP buying cost, in percent, and that profit; null while any order has no cost yet. */ marginPct: number | null; profitMinor: number | null };
 }
 
@@ -613,5 +615,12 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
     _count: { _all: true },
   });
   const marginPct = await marginAfterDiscount(deps, who.storeId, since);
-  return { rows, awaiting: offers.filter((o) => o.state === 'AWAITING_OK').length, discount30: { discountMinor: agg._sum.discountMinor ?? 0, orders: agg._count._all, salesMinor: agg._sum.totalMinor ?? 0, marginPct: marginPct?.pct ?? null, profitMinor: marginPct?.profitMinor ?? null } };
+  const freeOver = (await st.value('delivery.freeOverMinor', { storeId: who.storeId }).catch(() => null)) as number | null;
+  const grades = (await st.value('customers.grades', { storeId: who.storeId }).catch(() => null)) as { enabled?: boolean } | null;
+  const builtins: NonNullable<OffersScreen['builtins']> = [
+    { id: 'free', on: typeof freeOver === 'number', amountMinor: typeof freeOver === 'number' ? freeOver : null, href: '/admin/rules?rule=free' },
+    { id: 'prepaid', on: (await st.value(PR.enabled, { storeId: who.storeId })) === true, amountMinor: null, href: '/admin/rules/offers' },
+    { id: 'grades', on: grades?.enabled === true, amountMinor: null, href: '/admin/customers/settings' },
+  ];
+  return { builtins, rows, awaiting: offers.filter((o) => o.state === 'AWAITING_OK').length, discount30: { discountMinor: agg._sum.discountMinor ?? 0, orders: agg._count._all, salesMinor: agg._sum.totalMinor ?? 0, marginPct: marginPct?.pct ?? null, profitMinor: marginPct?.profitMinor ?? null } };
 }
