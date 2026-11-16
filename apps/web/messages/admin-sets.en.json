@@ -32,7 +32,7 @@
       "BUILD_YOUR_OWN": "Build your own"
     },
     "colour": {
-      "same": "Same colour in every piece",
+      "same": "Same colour top and bottom",
       "free": "Customer picks each colour"
     },
     "pieces": "Pieces",
@@ -95,7 +95,7 @@
       "bringBack": "Bring back",
       "archived": "Archived",
       "confirm": "Archive this set?",
-      "confirmBody": "It leaves the shop. The pieces stay on sale on their own.",
+      "confirmBody": "It leaves the shop. The two pieces stay on sale on their own.",
       "cancel": "Cancel",
       "failed": "Could not change the set. Try again.",
       "notReady": "This set cannot go on sale yet: it needs pieces with prices and a set price."
