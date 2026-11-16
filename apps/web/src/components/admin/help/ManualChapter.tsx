@@ -5,8 +5,12 @@
 // opens it in the guide panel beside the manual.
 // PR 388: a page with a picture (docs/admin-guide/marks.json, taken by the smoke test) shows it under its title with the
 // numbered marks (ManualShots).
+// PR 937 (prototype v5 "set-man"): each page is a fold-out (summary = the page's name) with the guide inside and "Open this page";
+// the first page starts open, a link to a page's place opens it, and "Expand all" / "Collapse all" open or close every one.
+// `allOpen` (the print view that saves the whole manual as a PDF) keeps every page open.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import type { Guide, BoxKind } from '@/lib/admin-shell/guide';
 import { GuideBlocks, type OnGuide } from '../shell/GuidePanel';
 import { openGuide } from '../shell/events';
@@ -21,6 +25,9 @@ export interface ManualChapterTexts {
   /** PR 388: the picture's alt text and "taken …" line. */
   shot: string;
   taken: string | null;
+  /** PR 937: the two buttons above the fold-outs. */
+  expandAll: string;
+  collapseAll: string;
 }
 
 export interface ManualChapterPage {
@@ -38,6 +45,7 @@ export function ManualChapter({
   overview,
   pages,
   texts,
+  allOpen = false,
 }: {
   base: string;
   section: string;
@@ -45,8 +53,25 @@ export function ManualChapter({
   overview: Guide | null;
   pages: ManualChapterPage[];
   texts: ManualChapterTexts;
+  allOpen?: boolean;
 }) {
   const router = useRouter();
+  const [open, setOpen] = useState<Record<string, boolean>>(() => (pages[0] ? { [pages[0].id]: true } : {}));
+  const openAnchor = (anchor: string) => {
+    const hit = pages.find((x) => x.anchor === anchor);
+    if (hit) setOpen((o) => ({ ...o, [hit.id]: true }));
+  };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const h = window.location.hash.replace(/^#/, '');
+    if (!h) return;
+    const hit = pages.find((x) => x.anchor === h);
+    if (!hit) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a link to a page opens its fold-out once, on arrival
+    setOpen((o) => ({ ...o, [hit.id]: true }));
+    requestAnimationFrame(() => document.getElementById(h)?.scrollIntoView({ block: 'start' }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on arrival
+  }, []);
   const onGuide: OnGuide = (to) => {
     if (to.slug) {
       openGuide({ slug: to.slug, section: sectionName });
@@ -56,6 +81,7 @@ export function ManualChapter({
     const [sec, page] = to.page.split('/') as [string, string];
     const anchor = page === 'index' ? 'man-top' : `p-${sec}-${page}`;
     if (sec === section) {
+      openAnchor(anchor);
       document.getElementById(anchor)?.scrollIntoView({ block: 'start' });
       history.replaceState(null, '', `#${anchor}`);
     } else router.push(`${base}?c=${encodeURIComponent(sec)}#${anchor}`);
@@ -68,10 +94,34 @@ export function ManualChapter({
           <GuideBlocks blocks={overview.blocks} onGuide={onGuide} boxes={texts.boxes} />
         </section>
       ) : null}
+      {pages.length > 1 && !allOpen ? (
+        <div className="a2-man-acc-bar" data-testid="manual-acc-bar">
+          <button type="button" className="a2-btn sm" onClick={() => setOpen(Object.fromEntries(pages.map((x) => [x.id, true])))} data-testid="manual-expand">
+            {texts.expandAll}
+          </button>
+          <button type="button" className="a2-btn sm" onClick={() => setOpen({})} data-testid="manual-collapse">
+            {texts.collapseAll}
+          </button>
+        </div>
+      ) : null}
       {pages.map((p) => (
-        <article key={p.id} id={p.anchor} className="a2-card a2-man-sec" data-testid="manual-page" data-page={p.id}>
-          <header className="a2-man-ph">
+        <details
+          key={p.id}
+          id={p.anchor}
+          className="a2-card a2-man-sec a2-man-acc"
+          data-testid="manual-page"
+          data-page={p.id}
+          open={allOpen || Boolean(open[p.id])}
+          onToggle={(e) => {
+            if (allOpen) return;
+            const now = e.currentTarget.open;
+            setOpen((o) => (Boolean(o[p.id]) === now ? o : { ...o, [p.id]: now }));
+          }}
+        >
+          <summary className="a2-man-sum">
             <h2>{p.guide.title}</h2>
+          </summary>
+          <header className="a2-man-ph">
             {p.href ? (
               <Link className="a2-btn" href={p.href} data-testid="manual-open">
                 {texts.open}
@@ -83,7 +133,7 @@ export function ManualChapter({
           <a className="a2-man-top" href="#man-top">
             {texts.top}
           </a>
-        </article>
+        </details>
       ))}
     </div>
   );

@@ -40,6 +40,9 @@
       "stagesGo": "Open",
       "problem": "Found a problem? Use Ask or report a problem — it goes to the right agent.",
       "problemGo": "Ask or report a problem"
-    }
+    },
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "downloadPdf": "Download PDF"
   }
 }
