@@ -71,6 +71,8 @@ export interface ProfitFilter {
   cat: string;
   /** A division name ('all' for none). */
   div: string;
+  /** An order source, the report's channel key ('all' or missing for none). */
+  ch?: string;
 }
 
 /** The orders the filter keeps: the area filter keeps whole orders, the category filter keeps orders with a line of it (lines are cut again by `lineOk`). */
@@ -81,6 +83,7 @@ export function filterOrders(
 ): GeoOrder[] {
   return orders.filter(
     (o) =>
+      (!f.ch || f.ch === "all" || o.source === f.ch) &&
       (f.div === "all" || divOfOrder(o) === f.div) &&
       (f.cat === "all" ||
         !catIds ||
