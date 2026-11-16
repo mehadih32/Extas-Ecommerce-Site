@@ -57,3 +57,5 @@
 পেজের নিচের লাইনে **Trade licence** আর **UBID** সবসময় থাকে; সেটিংসে না দিলে ঘরে "—" দেখায়।
 
 **Update (PR 911):** Policies opens on the Delivery page.
+
+**Update (PR 1053):** the Delivery number cards (one per delivery area and **Free delivery over**) show before the areas are switched on, each saying **Not set yet**; **Trial at the door** and **Tracking** boxes stay as they were.
