@@ -33,6 +33,7 @@ import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
 import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
+import { HEALTH_ISSUES, healthCounts, seoHealth } from "@/lib/seo/health";
 import { seoSnapshot } from "@/lib/seo/admin-api";
 import { draftState } from "@/lib/seo/drafts";
 import { sitemapsState } from "@/lib/seo/sitemap-admin";
@@ -86,6 +87,10 @@ export default async function SeoPage() {
       </div>
     );
   const [snap, drafts, sitemaps, altMissing, shopEn, engines] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID), sitemapsState(MOTHER_STORE_ID), missingAlt(deps.db, MOTHER_STORE_ID), shopContextFor(MOTHER_STORE_ID, "en"), searchEngineState(deps.db)]);
+  const health = await seoHealth(deps.db, MOTHER_STORE_ID, snap.values["category.seo"], shopEn.s["naming.productPathPrefix"]);
+  const hCounts = healthCounts(health.rows);
+  const hTotal = health.products + health.collections;
+  const hScore = hTotal > 0 ? Math.round(((hTotal - health.rows.length) / hTotal) * 100) : null; // hardcode-ok: percent
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `seo.${k}`, vars);
   const canWrite = access.guard.permissions?.has("seo.manage") ?? false;
@@ -143,6 +148,29 @@ export default async function SeoPage() {
             {c("kpi.bengaliOpen")}
           </Link>
         </div>
+      </div>
+
+      <div className="a2-card a2-mt12" data-testid="seo-overview">
+        <div className="a2-kl">{c("ov.score")}</div>
+        <div className="a2-kv" data-testid="seo-score">{hScore === null ? "—" : `${formatNumber(hScore, view.locale)}%`}</div>
+        <div className="a2-kn">{c("ov.scoreSub", { n: formatNumber(health.rows.length, view.locale), total: formatNumber(hTotal, view.locale) })}</div>
+        <div className="a2-kl a2-mt12">{c("ov.problems")}</div>
+        <ul className="a2-list">
+          {HEALTH_ISSUES.filter((i) => hCounts[i] > 0).map((i) => (
+            <li key={i}>
+              <Link href={`/admin/website/seo/health?issue=${i}`}>{c(`ov.issue.${i}`)}</Link> <b>{formatNumber(hCounts[i], view.locale)}</b>
+            </li>
+          ))}
+        </ul>
+        <div className="a2-kl a2-mt12">{c("ov.weakest")}</div>
+        <ul className="a2-list">
+          {[...health.rows].sort((x, y) => y.issues.length - x.issues.length).slice(0, 5).map((r) => (
+            <li key={`${r.kind}-${r.key}`}>
+              <Link href={r.fix}>{r.name}</Link> <span className="a2-kn">{formatNumber(r.issues.length, view.locale)}</span>
+            </li>
+          ))}
+        </ul>
+        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/health">{c("ov.all")}</Link>
       </div>
 
       <div className="a2-note a2-mt12">
