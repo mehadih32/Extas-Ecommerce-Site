@@ -115,7 +115,7 @@ const productSelect = {
   colours: {
     where: { archivedAt: null, colour: { archivedAt: null } },
     orderBy: { sortOrder: 'asc' },
-    select: { noteEn: true, noteBn: true, trueColourAssetId: true, colour: { select: { id: true, key: true, nameEn: true, nameBn: true, hex: true } } },
+    select: { noteEn: true, noteBn: true, siteNameEn: true, siteNameBn: true, trueColourAssetId: true, colour: { select: { id: true, key: true, nameEn: true, nameBn: true, hex: true } } },
   },
   variants: {
     where: { archivedAt: null, active: true },
@@ -223,8 +223,9 @@ async function readProduct(storeId: number, slug: string, now: Date): Promise<Pr
   const colourKey = new Map(p.colours.map((c) => [c.colour.id, c.colour.key]));
   const colours: ProductColourData[] = p.colours.map((c) => ({
     key: c.colour.key,
-    nameEn: c.colour.nameEn,
-    nameBn: c.colour.nameBn,
+    // PR 1032: the name the owner gave this colour on this product, when there is one
+    nameEn: c.siteNameEn ?? c.colour.nameEn,
+    nameBn: c.siteNameBn ?? c.colour.nameBn,
     hex: c.colour.hex,
     noteEn: c.noteEn,
     noteBn: c.noteBn,
