@@ -62,6 +62,12 @@ export async function allowEveryStore(deps: InventoryDeps, who: Who, permission:
 }
 
 /** One setting for the acting store. */
+/** PR 947: the owner's own stock-hold numbers of one store (Rules › Stock hold at checkout); null keeps the installation's. */
+export async function stockHold(deps: InventoryDeps, storeId: number): Promise<{ checkoutMinutes: number | null; placedHours: number | null }> {
+  const v = await deps.settings.value('inventory.stockHold', { storeId });
+  return { checkoutMinutes: v.checkoutMinutes, placedHours: v.placedHours };
+}
+
 export const setting = <K extends Key>(deps: InventoryDeps, storeId: number | null, key: K): Promise<Value<K>> =>
   deps.settings.value(key, storeId == null ? {} : { storeId });
 

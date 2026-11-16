@@ -27,7 +27,7 @@
 // deleted: a released hold stays as a row with its status and time.
 import { z } from 'zod';
 import type { LocationKindName } from '@extas/settings';
-import { nowOf, parse, setting, TX, type Db, type InventoryDeps, type Tx } from './context';
+import { nowOf, parse, setting, stockHold, TX, type Db, type InventoryDeps, type Tx } from './context';
 import { InventoryError } from './errors';
 import { bGradeClosed, isV6 } from './erp-model';
 import { sellableKinds } from './locations';
@@ -235,11 +235,13 @@ export async function holdCart(deps: InventoryDeps, input: HoldInput, opts: { tx
   const d = parse(holdInput, input, 'hold');
   const want = new Map<string, number>();
   for (const l of d.lines) want.set(l.variantId, (want.get(l.variantId) ?? 0) + l.quantity);
-  const [minutes, maxUnits, kinds] = await Promise.all([
+  const [installMinutes, maxUnits, kinds, own] = await Promise.all([
     setting(deps, null, d.signedIn ? 'inventory.reservation.holdMinutesSignedIn' : 'inventory.reservation.holdMinutes'),
     setting(deps, null, 'inventory.reservation.maxUnitsPerLine'),
     sellableKinds(deps),
+    stockHold(deps, d.storeId),
   ]);
+  const minutes = own.checkoutMinutes ?? installMinutes; // PR 947: the owner's own number wins; empty keeps the installation's
   const tooMany = [...want].filter(([, q]) => q > maxUnits).map(([id]) => `${id}:max ${maxUnits}`);
   if (tooMany.length) throw new InventoryError('INVALID_INPUT', `at most ${maxUnits} pieces of one variant`, tooMany);
 
@@ -368,7 +370,7 @@ const convertInput = z.object({ storeId: z.int().min(1), cartId: z.uuid(), order
  */
 export async function convertCart(deps: InventoryDeps, input: z.input<typeof convertInput>, opts: { tx?: Tx } = {}): Promise<{ converted: number; units: number }> {
   const d = parse(convertInput, input, 'order');
-  const hours = await setting(deps, null, 'inventory.reservation.convertedHoldHours');
+  const hours = (await stockHold(deps, d.storeId)).placedHours ?? (await setting(deps, null, 'inventory.reservation.convertedHoldHours')); // PR 947
   return inTx(deps, opts.tx, async (tx) => {
     const now = nowOf(deps);
     const holds = await tx.stockReservation.findMany({ where: { storeId: d.storeId, cartId: d.cartId, status: 'ACTIVE', releasedAt: null }, select: { id: true, variantId: true, quantity: true, expiresAt: true } });
