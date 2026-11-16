@@ -4,7 +4,6 @@ import * as cat from '@extas/catalogue';
 import { productPhotoQuality } from '@extas/media';
 import type { PhotoProps } from '@/components/admin/products/wizard/ctx';
 import type { ProductWizardProps } from '@/components/admin/products/wizard/ProductWizard';
-import { PLACE_WORDS } from '@/components/admin/products/seo-score';
 import type { CatalogueAccess } from './admin-products';
 import { photosOf, PRODUCTS_HOME, storeMoney } from './admin-products';
 import { loadErpStyles, loadWizard, loadWizardLists } from './admin-wizard';
@@ -63,7 +62,6 @@ export async function wizardProps(i: WizardPageInput): Promise<ProductWizardProp
     requirePin: requirePin === true,
     ownBrandId: lists.brands.find((b) => b.isOwnLabel)?.id ?? null,
     photos,
-    place: PLACE_WORDS,
     demoCount,
     settingsHref: '/admin/products',
     listHref: PRODUCTS_HOME,

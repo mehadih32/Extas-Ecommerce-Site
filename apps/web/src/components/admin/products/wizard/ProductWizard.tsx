@@ -15,6 +15,7 @@ import type { Lang, Money } from '../model';
 import { refusalText } from '../model';
 import { say, sayBad } from '../useToast';
 import { Callout, Modal } from '../wizard-ui';
+import { PLACE_WORDS } from '../seo-score';
 import { patchProduct, rememberStep } from './api';
 import type { Can, Ctx, Guard, Live, PhotoProps } from './ctx';
 import { StepColours } from './StepColours';
@@ -43,7 +44,6 @@ export interface ProductWizardProps {
   requirePin: boolean;
   ownBrandId: string | null;
   photos: PhotoProps;
-  place: RegExp;
   demoCount: number;
   settingsHref: string;
   listHref: string;
@@ -146,7 +146,7 @@ export function ProductWizard(p: ProductWizardProps) {
   };
 
   const ctx: Ctx | null = data
-    ? { d, lang: p.lang, money: p.money, data, lists: p.lists, can: p.can, requirePin: p.requirePin, ownBrandId: p.ownBrandId, live, setLive, saved, refuse, refresh, go: (n) => void go(n), photos: p.photos, place: p.place, demoCount: p.demoCount, settingsHref: p.settingsHref }
+    ? { d, lang: p.lang, money: p.money, data, lists: p.lists, can: p.can, requirePin: p.requirePin, ownBrandId: p.ownBrandId, live, setLive, saved, refuse, refresh, go: (n) => void go(n), photos: p.photos, place: PLACE_WORDS, demoCount: p.demoCount, settingsHref: p.settingsHref }
     : null;
 
   const startAgain = async () => {
