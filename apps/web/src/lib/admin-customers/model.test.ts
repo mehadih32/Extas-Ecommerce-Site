@@ -6,10 +6,15 @@ import { customerHref, customersHref, listOf, listParam, parseCustomerQuery, pla
 describe('the Customers list address (PR 285)', () => {
   it('reads only what it knows', () => {
     expect(parseCustomerQuery({})).toEqual({});
-    expect(parseCustomerQuery({ view: 'atrisk', q: ' rahim ', source: 'WEBSITE', sort: 'spend', page: '3' })).toEqual({ view: 'atrisk', q: 'rahim', source: 'WEBSITE', sort: 'spend', page: 3 });
+    expect(parseCustomerQuery({ view: 'atrisk', q: ' rahim ', source: 'WEBSITE', sort: 'orders', page: '3' })).toEqual({ view: 'atrisk', q: 'rahim', source: 'WEBSITE', sort: 'orders', page: 3 });
     expect(parseCustomerQuery({ view: 'everyone', sort: 'phone', page: '0' })).toEqual({});
     expect(parseCustomerQuery({ view: ['returning', 'vip'], page: '1.5' })).toEqual({ view: 'returning' });
-    expect(parseCustomerQuery({ view: 'all', sort: 'last', page: '1' })).toEqual({});
+    expect(parseCustomerQuery({ view: 'all', sort: 'spend', page: '1' })).toEqual({});
+    expect(parseCustomerQuery({ sort: 'last' })).toEqual({ sort: 'last' });
+    expect(parseCustomerQuery({ sort: 'refused' })).toEqual({ sort: 'refused' });
+    expect(parseCustomerQuery({ upto: '100' })).toEqual({ upto: 100 });
+    expect(parseCustomerQuery({ upto: '5000' })).toEqual({});
+    expect(customersHref({ upto: 100 })).toBe('/admin/customers?upto=100');
   });
   it('writes a clean link, with parts changed or dropped', () => {
     expect(customersHref({})).toBe('/admin/customers');

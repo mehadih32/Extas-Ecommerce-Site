@@ -14,7 +14,7 @@ import { moneyOf } from '@/components/admin/products/model';
 import { ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
-import { customerHref, customersHref, parseCustomerQuery } from '@/lib/admin-customers/model';
+import { customerHref, customersHref, DEFAULT_SORT, parseCustomerQuery } from '@/lib/admin-customers/model';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { customersDeps } from '@/lib/customers-api';
@@ -45,7 +45,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
   const cd = customersDeps(access.deps);
   const [data, settings, currency, exportOk] = await Promise.all([
-    cu.customerList(cd, who, query),
+    cu.customerList(cd, who, { ...query, sort: query.sort ?? DEFAULT_SORT }),
     cd.settings.value('customers.list', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
     cu.canExport(cd, who),
