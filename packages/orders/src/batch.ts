@@ -29,6 +29,8 @@ const LIVE_SHIPMENT = ["BOOKING", "IN_REVIEW", "PENDING_PICKUP"] as const;
 export interface BatchOrder {
   id: string;
   number: string;
+  /** The customer's name as typed at checkout (the prototype's order line shows it next to the number). */
+  customerName: string | null;
   status: string;
   placedAt: string;
   totalMinor: number;
@@ -42,6 +44,7 @@ export interface BatchOrder {
 export interface BatchMoved {
   id: string;
   number: string;
+  customerName: string | null;
   /** One line: why the system moved it (the rule's own note, else its reason code). */
   reason: string;
   at: string;
@@ -84,6 +87,7 @@ export async function batchOverview(
     select: {
       id: true,
       number: true,
+      customerName: true,
       status: true,
       placedAt: true,
       totalMinor: true,
@@ -172,6 +176,7 @@ export async function batchOverview(
     return {
       id: o.id,
       number: o.number,
+      customerName: o.customerName,
       status: o.status,
       placedAt: o.placedAt.toISOString(),
       totalMinor: o.totalMinor,
@@ -191,12 +196,14 @@ export async function batchOverview(
   const seen = new Set<string>();
   const moved: BatchMoved[] = [];
   const num = new Map(orders.map((o) => [o.id, o.number]));
+  const who_ = new Map(orders.map((o) => [o.id, o.customerName]));
   for (const e of events) {
     if (seen.has(e.orderId) || !inBatch.has(e.orderId)) continue;
     seen.add(e.orderId);
     moved.push({
       id: e.orderId,
       number: num.get(e.orderId) ?? "",
+      customerName: who_.get(e.orderId) ?? null,
       reason: e.message?.trim() || e.reasonCode || "rule",
       at: e.createdAt.toISOString(),
     });
