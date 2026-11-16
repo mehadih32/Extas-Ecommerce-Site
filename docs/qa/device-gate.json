@@ -557,6 +557,7 @@
       "/admin/money/fees",
       "/admin/money/vat",
       "/admin/money/profit",
+      "/admin/money/profit?more=1",
       "/admin/money/profit/groups",
       "/admin/money/profit/channels",
       "/admin/money/month-end",
@@ -707,7 +708,7 @@
       "/admin/reports/health/smoke": ["[data-testid=\"smoke-page\"][data-lm-ready]"],
       "/admin/reports/health/history": ["[data-testid=\"history-page\"][data-lm-ready]"],
       "/admin/reports/health/fixes": ["[data-testid=\"fixes-page\"][data-lm-ready]"],
-      "/admin/integrations": [".ad[data-lm-ready]", "[data-testid=\"integrations-erp-link\"]"],
+      "/admin/integrations": ["[data-testid=\"integrations-page\"][data-lm-ready]", "[data-testid=\"integrations-erp-link\"]"],
       "/admin/settings/store": ["[data-testid=\"store-page\"][data-lm-ready]"],
       "/admin/settings/policies": ["[data-testid=\"policies-page\"][data-lm-ready]"],
       "/admin/settings/checkout": ["[data-testid=\"ck-page\"][data-lm-ready]", "[data-testid=\"sf-frame\"]", "[data-testid=\"ck-payments\"]", "[data-testid=\"ck-form\"]"],
@@ -781,7 +782,8 @@
       "/admin/money/fees": ["[data-testid=\"fees-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/money/vat": ["[data-testid=\"vat-page\"][data-lm-ready]", "[data-testid=\"a2-tabs\"]"],
       "/admin/money/refunds": ["[data-testid=\"refunds-page\"][data-lm-ready]", "[data-testid=\"rf-kpis\"]", "[data-testid=\"rf-views\"]", "[data-testid=\"rf-list\"]", "[data-testid=\"a2-tabs\"]"],
-      "/admin/money/profit": ["[data-testid=\"money-profit\"][data-lm-ready]", "[data-testid=\"pl-form\"]", "[data-testid=\"pl-kpis\"]", "[data-testid=\"pl-lines\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/profit": ["[data-testid=\"money-profit\"][data-lm-ready]", "[data-testid=\"pl-statement\"]", "[data-testid=\"pl-more\"]", "[data-testid=\"a2-tabs\"]"],
+      "/admin/money/profit?more=1": ["[data-testid=\"money-profit\"][data-lm-ready]", "[data-testid=\"pl-form\"]", "[data-testid=\"pl-kpis\"]", "[data-testid=\"pl-lines\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/money/profit/groups": ["[data-testid=\"profit-groups\"][data-lm-ready]", "[data-testid=\"pg-by\"]", "[data-testid=\"pg-table\"]", "[data-testid=\"a2-tabs\"]"],
       "/admin/money/profit/channels": ["[data-testid=\"profit-channels\"][data-lm-ready]", "[data-testid=\"pc-form\"]", "[data-testid=\"pc-table\"]", "[data-testid=\"a2-tabs\"]"]
     },
@@ -793,7 +795,7 @@
       { "paths": ["/admin/money/books?storeId=2&view=payments"], "clicks": ["[data-testid=\"books-pay\"]"], "expect": ["[data-testid=\"books-pay-panel\"]", "[data-testid=\"books-hold\"][data-hold=\"on\"]"], "langs": ["en", "bn"] },
       { "paths": ["/admin/money/books/match?storeId=2"], "clicks": ["[data-testid=\"books-run\"]"], "expect": ["[data-testid=\"books-run-panel\"]"], "langs": ["en", "bn"] },
       { "paths": ["/admin/money/books/closes?storeId=2"], "clicks": ["[data-testid=\"books-pin-set\"]", "[data-testid=\"books-month-close\"]", "[data-testid=\"books-year-close\"]"], "expect": ["[data-testid=\"books-pin-set-panel\"]", "[data-testid=\"books-month-close-panel\"]", "[data-testid=\"books-year-close-panel\"]"], "langs": ["en", "bn"] },
-      { "paths": ["/admin/settings/erp-link?storeId=2"], "clicks": ["[data-testid=\"erp-link-dryrun\"]", "[data-testid=\"erp-link-newlink\"]", "[data-testid=\"erp-link-demo-key\"]"], "expect": ["[data-testid=\"erp-link-dryrun-panel\"]", "[data-testid=\"erp-link-newlink-panel\"]", "[data-testid=\"erp-link-demo-key-panel\"]", "[data-testid=\"erp-link-balance\"] .a2-pill.gold"], "langs": ["en", "bn"] },
+      { "paths": ["/admin/settings/erp-link?storeId=2"], "clicks": ["[data-testid=\"erp-more\"] > summary", "[data-testid=\"erp-link-dryrun\"]", "[data-testid=\"erp-link-newlink\"]", "[data-testid=\"erp-link-demo-key\"]"], "expect": ["[data-testid=\"erp-link-dryrun-panel\"]", "[data-testid=\"erp-link-newlink-panel\"]", "[data-testid=\"erp-link-demo-key-panel\"]", "[data-testid=\"erp-link-balance\"] .a2-pill.gold"], "langs": ["en", "bn"] },
       { "$comment": "CN-018 (4) · SIM-F-051 (PR 89 follow-up) — Products › Combos › Fixed sets (on the v6 sample store, like every entry here) with \"Sets that break up\" open (the switch, the set kind, the price rule, the charge-under-free switch; closed it is one line).", "paths": ["/admin/combos?tab=fixed&storeId=2"], "clicks": ["[data-testid=\"cb-split-open\"]"], "expect": ["[data-testid=\"cb-split-open-panel\"]"], "langs": ["en", "bn"] }
     ]
   }
