@@ -104,3 +104,5 @@
 - টাকার রিপোর্ট চালু থাকলে ঠিক সময়ে এই পাতার একই হিসাব (বিক্রি, অর্ডারের মূল্য, মোট লাভ, অবদান, বিজ্ঞাপন, স্থায়ী খরচ, নিট লাভ) টেলিগ্রামে যায় — একটা সময়ের জন্য একবারই।
 
 > **PR 982 (প্রোটোটাইপ মেলানো):** পাতা খোলে **This month**-এ; মাথায় পাঁচটা সময় (Today, Last 7 days, This month, Last month, 30 days)। **Statement** টেবিল: Line / This period / Compared / Change; এই মাসে **vs the same days before** বা **vs all of last month** বেছে নেওয়া যায়। পাশে **One average order** আর **Close the month** (মাসের অবস্থা: Closed · locked, Ready to close, Running; **Open Closes** বোতাম)। নিচে **Where the profit comes from** (চ্যানেল ধরে)। আগের তারিখ-ফর্ম, KPI, লাইন-তালিকা, দিন ধরে হিসাব আর টাকার রিপোর্ট সরেনি — নিচের **More: lines, day by day, money report** লিংকে (`?more=1`) আছে।
+
+> **PR 987 (প্রোটোটাইপ মেলানো):** গ্রুপ আর চ্যানেল অনুযায়ী লাভের আলাদা ট্যাব এখন শুধু **More** লিংক খুললে দেখা যায়; সাধারণ পাতায় সেগুলোর লিংক কার্ডের ভেতরেই আছে।
