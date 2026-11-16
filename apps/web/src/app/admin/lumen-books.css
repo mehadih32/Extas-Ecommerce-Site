@@ -21,3 +21,9 @@
 
 /* a pill with a sentence in it ("On hold: …") wraps inside a 320 px phone instead of running past the screen edge */
 [data-lm-look] .lm-bk .a2-pill { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+/* PR 1041: the monthly statement's age bars. */
+.lm-bk .st-track { height: 8px; border-radius: 99px; background: var(--lm-sf2); overflow: hidden; margin: 4px 0; }
+.lm-bk .st-fill { display: block; height: 100%; border-radius: 99px; }
+.lm-bk .st-fill.ok { background: var(--lm-ok); }
+.lm-bk .st-fill.warn { background: var(--lm-warn); }
+.lm-bk .st-fill.bad { background: var(--lm-bad); }
