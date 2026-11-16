@@ -23,9 +23,9 @@ export const SETTINGS_ITEMS: readonly SettingsItemDef[] = [
   // Business (prototype: Store details, ERP connection, Couriers, Payments, Customer messages, Team & roles, Demo products)
   { id: 'store', group: 'b', nav: 'store', icon: 'home' },
   { id: 'erp', group: 'b', nav: 'erpLink', icon: 'refresh' },
-  { id: 'couriers', group: 'b', nav: 'couriers', icon: 'truck' },
+  { id: 'couriers', group: 'b', nav: 'settingsCouriers', icon: 'truck' },
   { id: 'payments', group: 'b', nav: 'settingsCheckout', icon: 'wallet' },
-  { id: 'messages', group: 'b', nav: 'messagesTemplates', icon: 'msg' },
+  { id: 'messages', group: 'b', nav: 'settingsMessages', icon: 'msg' },
   { id: 'team', group: 'b', nav: 'people', icon: 'users' },
   { id: 'demo', group: 'b', nav: 'productDemo', icon: 'box' },
   // System (owner only; prototype: Keys & connections, Backups & restore, Site health, AI control, Updates & versions, Security, Activity log, Data & privacy, Telegram control, Help & manual)
