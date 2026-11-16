@@ -56,8 +56,11 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
   const current = viewOf(sp.view);
   const rangeNow = rangeOf(sp.range);
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  // PR 971: the List / Report toggle (the prototype's two sides of the page)
+  const reportMode = one(sp.mode) === 'report';
   const qs = (view_: string, range_: string, from_?: string | null, to_?: string | null) => {
     const q = new URLSearchParams();
+    if (reportMode) q.set('mode', 'report');
     if (view_ !== 'open') q.set('view', view_);
     if (range_ !== 'all') q.set('range', range_);
     if (range_ === 'custom' && from_ && to_) (q.set('from', from_), q.set('to', to_));
@@ -74,7 +77,7 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
       </div>
     );
   const me = access.guard.actor.staffUserId ?? null;
-  const o = await incompleteOverview({ db: access.deps.db, resolver: access.deps.resolver }, me, current, { range: sp.range, from: one(sp.from), to: one(sp.to) });
+  const o = await incompleteOverview({ db: access.deps.db, resolver: access.deps.resolver }, me, current, { range: sp.range, from: one(sp.from), to: one(sp.to), report: reportMode });
   const now = (access.deps.now ?? (() => new Date()))();
   const canAct = access.guard.permissions?.has('orders.confirm') ?? false;
   const canSet = access.guard.permissions?.has('settings.write') ?? false;
@@ -156,6 +159,15 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
     <div className="a2-z" data-testid="inc-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
+      <nav className="a2-views inc-mt8" aria-label={g('mode.aria')} data-testid="inc-mode">
+        {(['list', 'report'] as const).map((k) => (
+          <Link key={k} className={`a2-view${(k === 'report') === reportMode ? ' on' : ''}`} href={(k === 'report' ? `${HERE}?${new URLSearchParams({ ...(one(sp.range) ? { range: String(one(sp.range)) } : {}), ...(one(sp.from) ? { from: String(one(sp.from)) } : {}), ...(one(sp.to) ? { to: String(one(sp.to)) } : {}), mode: 'report' })}` : `${HERE}${one(sp.range) ? `?${new URLSearchParams({ range: String(one(sp.range)), ...(one(sp.from) ? { from: String(one(sp.from)) } : {}), ...(one(sp.to) ? { to: String(one(sp.to)) } : {}) })}` : ''}`)} aria-current={(k === 'report') === reportMode ? 'page' : undefined} scroll={false}>
+            {g(`mode.${k}`)}
+          </Link>
+        ))}
+      </nav>
+      {!reportMode ? (
+      <>
       {/* PR 804: the prototype's four figures — Open now, Hot (address or payment), Ordered later, Left without a number */}
       <SummaryTiles
         label={g('kpi.aria')}
@@ -181,6 +193,9 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
         </Link>
       </p>
 
+      </>
+      ) : null}
+
       <nav className="a2-views inc-mt8" aria-label={g('filter.aria')} data-testid="inc-range">
         {INCOMPLETE_RANGES.filter((x) => x !== 'custom').map((x) => (
           <Link key={x} className={`a2-view${x === o.range.range ? ' on' : ''}`} href={qs(current, x)} aria-current={x === o.range.range ? 'page' : undefined} scroll={false}>
@@ -202,11 +217,12 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
         </button>
       </form>
 
-      {o.noPhone.bags ? (
+      {!reportMode && o.noPhone.bags ? (
         <div className="a2-note inc-mt8" role="note" data-testid="inc-warn-nonum">
           <span>{g('warnNoNumber', { n: n(o.noPhone.bags) })}</span>
         </div>
       ) : null}
+      {!reportMode ? (
       <nav className="a2-views inc-mt8" aria-label={g('viewsAria')} data-testid="inc-views">
         {INCOMPLETE_VIEWS.map((v) => (
           <Link key={v} className={`a2-view${v === current ? ' on' : ''}`} href={qs(v, o.range.range, o.range.from, o.range.to)} aria-current={v === current ? 'page' : undefined} scroll={false} data-view={v}>
@@ -215,7 +231,37 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
           </Link>
         ))}
       </nav>
+      ) : null}
 
+      {o.report ? (
+        <div data-testid="inc-report">
+          {([['landing', o.report.landing], ['device', o.report.device]] as const).map(([k, rows]) => (
+            <section key={k} className="a2-sc a2-mt12" aria-labelledby={`inc-rep-${k}`} data-testid={`inc-split-${k}`}>
+              <h2 className="a2-h3" id={`inc-rep-${k}`}>
+                {g(`report.${k}`)}
+              </h2>
+              {rows.length ? (
+                <table className="a2-tbl">
+                  <tbody>
+                    {rows.map((r) => (
+                      <tr key={r.key ?? 'none'} data-testid={`inc-split-${k}-row`}>
+                        <td>{r.key === null ? g('report.notRecorded') : k === 'device' ? g(`report.dev.${r.key}`) : r.key}</td>
+                        <td className="a2-num">{n(r.bags)}</td>
+                        <td className="a2-num">{formatMoney(r.valueMinor, m)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="a2-sm a2-mute">{g('report.empty')}</p>
+              )}
+            </section>
+          ))}
+          <p className="a2-sm a2-mute a2-mt12">{g('report.note')}</p>
+        </div>
+      ) : null}
+
+      {!reportMode ? (
       <section className="a2-sc" aria-label={g(`view.${current}`)} data-testid="inc-list">
         {o.rows.length ? (
           <ul className="inc-rows">
@@ -304,6 +350,7 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
           </p>
         )}
       </section>
+      ) : null}
 
       <section className="a2-sc a2-mt12" aria-labelledby="inc-journey-h" data-testid="inc-journey">
         <h2 className="a2-h3" id="inc-journey-h">
