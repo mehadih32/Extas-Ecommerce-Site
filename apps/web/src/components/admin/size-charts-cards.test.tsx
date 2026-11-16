@@ -20,6 +20,8 @@ const chart = (id: string, name: string, extra: object = {}) =>
     easeInch: 2,
     diagram: null,
     copiedFromId: null,
+    finder: [],
+    run: 'true',
     defaultFor: [],
     overrides: 0,
     usedBy: 3,

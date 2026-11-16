@@ -17,6 +17,7 @@ import {
   parsePasted,
   productFitKey,
   readMeta,
+  suggestSizeByWeight,
   readRows,
   readTable,
   roundToStep,
@@ -85,9 +86,9 @@ describe('size chart arithmetic (PR 27)', () => {
   });
 
   it("reads both stored shapes: this PR's object and the sample seed's bare list", () => {
-    expect(readMeta(['chest', 'length'])).toEqual({ fields: ['chest', 'length'], easeInch: null, diagram: null, copiedFromId: null });
-    expect(readMeta({ fields: ['waist'], easeInch: 1, diagram: 'bottom', copiedFromId: null })).toEqual({ fields: ['waist'], easeInch: 1, diagram: 'bottom', copiedFromId: null });
-    expect(readMeta('nonsense')).toEqual({ fields: [], easeInch: null, diagram: null, copiedFromId: null });
+    expect(readMeta(['chest', 'length'])).toEqual({ fields: ['chest', 'length'], easeInch: null, diagram: null, copiedFromId: null, finder: [], run: 'true' });
+    expect(readMeta({ fields: ['waist'], easeInch: 1, diagram: 'bottom', copiedFromId: null, finder: [], run: 'true' })).toEqual({ fields: ['waist'], easeInch: 1, diagram: 'bottom', copiedFromId: null, finder: [], run: 'true' });
+    expect(readMeta('nonsense')).toEqual({ fields: [], easeInch: null, diagram: null, copiedFromId: null, finder: [], run: 'true' });
     expect(readRows([{ size: 's', values: [1, 2] }, { size: 'm', values: ['x'] }])).toEqual([{ size: 's', values: [1, 2] }]);
     expect(readRows({ s: [1], m: [2] })).toEqual([
       { size: 's', values: [1] },
@@ -237,5 +238,30 @@ describe('settings of these PRs (registry version 7)', () => {
       expect(how[k]?.en, k).toBeTruthy();
       expect(how[k]?.bn, k).toBeTruthy();
     }
+  });
+});
+
+describe('PR 972: the size finder and how sizes run', () => {
+  const finder = [
+    { size: 'm', h1: "5'4", h2: "5'7", w1: 55, w2: 65 },
+    { size: 'l', h1: "5'7", h2: "5'10", w1: 66, w2: 75 },
+    { size: 'xl', h1: "5'10", h2: "6'1", w1: 76, w2: 88 },
+  ];
+  it('reads the finder and the run from the stored JSON, and defaults them', () => {
+    expect(readMeta({ fields: ['chest'], finder, run: 'small' })).toMatchObject({ finder, run: 'small' });
+    expect(readMeta({ fields: ['chest'] })).toMatchObject({ finder: [], run: 'true' });
+  });
+  it('suggests by weight; under and over the table gets the first and the last size', () => {
+    expect(suggestSizeByWeight(finder, 'true', 70)).toBe('l');
+    expect(suggestSizeByWeight(finder, 'true', 40)).toBe('m');
+    expect(suggestSizeByWeight(finder, 'true', 120)).toBe('xl');
+    expect(suggestSizeByWeight([], 'true', 70)).toBeNull();
+    expect(suggestSizeByWeight(finder, 'true', 0)).toBeNull();
+  });
+  it('"runs small" moves the suggestion one size up, "runs large" one down, never past the ends', () => {
+    expect(suggestSizeByWeight(finder, 'small', 70)).toBe('xl');
+    expect(suggestSizeByWeight(finder, 'small', 120)).toBe('xl');
+    expect(suggestSizeByWeight(finder, 'large', 70)).toBe('m');
+    expect(suggestSizeByWeight(finder, 'large', 40)).toBe('m');
   });
 });

@@ -150,5 +150,23 @@
     "suggest": "We suggest {size}",
     "none": "No size in this chart is big enough",
     "try": "Type a measure to try it"
+  },
+  "finder": {
+    "h": "Size finder",
+    "sub": "· customers type their height and weight and get a size from this table",
+    "h1": "Height from",
+    "h2": "Height to",
+    "to": "to",
+    "w1": "Weight kg from",
+    "w2": "Weight kg to",
+    "cell": "{size}: {what}",
+    "run": "Sizes run",
+    "run_small": "Runs small",
+    "run_true": "True to size",
+    "run_large": "Runs large",
+    "runHelp": "Runs small moves the suggestion one size up.",
+    "try": "Try a weight (kg)",
+    "suggest": "Suggests {size}",
+    "none": "Fill in the weights above first"
   }
 }

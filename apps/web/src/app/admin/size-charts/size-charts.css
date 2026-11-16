@@ -161,3 +161,5 @@
 .sc-pv-sz.on { border-color: var(--ad-brand); font-weight: 700; }
 .sc-cust .sc-tbl th.on, .sc-cust .sc-tbl td.on { font-weight: 700; }
 .sc-pv-find { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--ad-line); display: flex; flex-direction: column; gap: 6px; max-width: 320px; }
+/* PR 972: the Fit and Sizes run selects under the size finder */
+.sc-f2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
