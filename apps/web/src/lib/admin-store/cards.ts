@@ -6,7 +6,7 @@ import type { Key, StoreDetails } from '@extas/settings';
 export type StoreCardId = 'legal' | 'addresses' | 'contact' | 'brand' | 'social' | 'print' | 'numbers' | 'tax' | 'targets';
 export const STORE_CARD_IDS: readonly StoreCardId[] = ['legal', 'addresses', 'contact', 'brand', 'social', 'print', 'numbers', 'tax', 'targets'];
 
-export type StoreBoxKind = 'text' | 'pair' | 'date' | 'select' | 'switch' | 'number' | 'colour' | 'time';
+export type StoreBoxKind = 'text' | 'pair' | 'date' | 'select' | 'switch' | 'number' | 'colour' | 'time' | 'pin';
 
 export interface StoreBox {
   /** The box's name inside its card (also its label words: `stp.c.<card>.<id>`). */
@@ -17,6 +17,10 @@ export interface StoreBox {
   /** … or a field of `store.details`. */
   d?: keyof StoreDetails;
   options?: readonly string[];
+  /** PR 991: a box of the holiday mode setting (`delivery.holiday`): its switch, banner words or last day. */
+  h?: 'enabled' | 'msg' | 'until';
+  /** PR 991: shown only while this switch of the same card is on. */
+  whenOn?: string;
   /** A number box: lowest and highest value. */
   min?: number;
   max?: number;
@@ -42,6 +46,7 @@ export const STORE_CARDS: Readonly<Record<StoreCardId, readonly StoreBox[]>> = {
     { id: 'officeAddr', kind: 'pair', key: 'contact.address' },
     { id: 'warehouseAddr', kind: 'text', d: 'warehouseAddr' },
     { id: 'returnsAddr', kind: 'text', d: 'returnsAddr' },
+    { id: 'warehousePin', kind: 'pin', d: 'warehousePin' },
   ],
   contact: [
     { id: 'phone', kind: 'text', key: 'contact.phone' },
@@ -75,10 +80,13 @@ export const STORE_CARDS: Readonly<Record<StoreCardId, readonly StoreBox[]>> = {
     { id: 'orderPrefix', kind: 'text', key: 'checkout.order.numberPrefix' },
     { id: 'moneyFmt', kind: 'select', d: 'moneyFmt', options: ['bd', 'intl'] },
     { id: 'custLang', kind: 'select', d: 'custLang', options: ['both', 'bn', 'en'] },
+    { id: 'holidayOn', kind: 'switch', h: 'enabled' },
+    { id: 'holidayMsg', kind: 'text', h: 'msg', whenOn: 'holidayOn' },
+    { id: 'holidayUntil', kind: 'date', h: 'until', whenOn: 'holidayOn' },
   ],
   tax: [
     { id: 'showVat', kind: 'switch', d: 'showVat' },
-    { id: 'bin', kind: 'text', key: 'legal.bin' },
+    { id: 'bin', kind: 'text', key: 'legal.bin', whenOn: 'showVat' },
   ],
   targets: [
     { id: 'targetSales', kind: 'number', d: 'targetSales', min: 0, max: 1_000_000_000 },

@@ -12,3 +12,8 @@ export function GET(request: Request) {
 export function PUT(request: Request) {
   return storeHandler(request, adminDeps());
 }
+
+// PR 991: POST {domain, pin} changes the web address (owner's PIN).
+export function POST(request: Request) {
+  return storeHandler(request, adminDeps());
+}

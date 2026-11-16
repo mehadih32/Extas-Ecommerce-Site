@@ -108,4 +108,24 @@ describe.skipIf(!HAS_TEST_DB)('Settings › Store details on PostgreSQL (PR 383)
     expect((await send('PUT', { key: 'nope', value: {} })).status).toBe(400);
     expect((await send('PUT', { key: 'contact', value: { closedDay: 'none' }, version: (g.a.cards as Record<string, { version: string }>).contact!.version })).status).toBe(409);
   });
+
+  it('PR 991 · holiday mode saves into the delivery holiday setting; the warehouse pin saves; the web address needs the PIN', async () => {
+    const g = await send('GET');
+    // on without a last day is refused
+    expect((await send('PUT', { key: 'numbers', value: { holidayOn: true } })).a).toMatchObject({ error: 'INVALID_INPUT', details: ['holidayUntil'] });
+    const ok = await send('PUT', { key: 'numbers', value: { holidayOn: true, holidayMsg: 'Closed for Eid', holidayUntil: '2099-12-31' }, version: (g.a.cards as Record<string, { version: string }>).numbers!.version });
+    expect(ok.status).toBe(200);
+    const h = (await deps.resolver.value('delivery.holiday', { storeId: MOTHER_STORE_ID })) as { enabled: boolean; to: string; from: string; notice: { en: string } };
+    expect(h).toMatchObject({ enabled: true, to: '2099-12-31', notice: { en: 'Closed for Eid' } });
+    expect(h.from <= h.to).toBe(true);
+    expect((await send('PUT', { key: 'numbers', value: { holidayOn: false } })).a.cards).toBeDefined();
+    expect(((await deps.resolver.value('delivery.holiday', { storeId: MOTHER_STORE_ID })) as { enabled: boolean }).enabled).toBe(false);
+    // the pin
+    expect((await send('PUT', { key: 'addresses', value: { warehousePin: true } })).status).toBe(200);
+    expect(((await deps.resolver.value('store.details', { storeId: MOTHER_STORE_ID })) as { warehousePin: boolean }).warehousePin).toBe(true);
+    // the web address: no PIN, no change
+    const noPin = await send('POST', { domain: 'shop.example.test' });
+    expect(noPin.status).not.toBe(200);
+    expect(await t.prisma.storeDomain.count({ where: { hostname: 'shop.example.test' } })).toBe(0);
+  });
 });
