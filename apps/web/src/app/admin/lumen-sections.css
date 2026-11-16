@@ -135,7 +135,7 @@
 [data-lm-look] [data-lm-ready] .a2-tab:hover { background: var(--lm-hover); color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-tab[aria-current], [data-lm-look] [data-lm-ready] .a2-tab.on { background: var(--lm-ink); color: var(--lm-sf); }
 [data-lm-look] [data-lm-ready] .a2-tab .a2-cnt { background: var(--lm-chip); color: var(--lm-ink2); }
-[data-lm-look] [data-lm-ready] .a2-view { min-height: 40px; height: auto; padding: 0 16px; border: 0; border-radius: var(--lm-r-pill); background: var(--lm-sf); color: var(--lm-ink2); font-weight: 600; box-shadow: var(--lm-sh-sm); }
+[data-lm-look] [data-lm-ready] .a2-view { min-height: 44px; height: auto; padding: 0 16px; border: 0; border-radius: var(--lm-r-pill); background: var(--lm-sf); color: var(--lm-ink2); font-weight: 600; box-shadow: var(--lm-sh-sm); }
 [data-lm-look] [data-lm-ready] .a2-view:hover { background: var(--lm-hover); color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-view.on { background: var(--lm-ink); color: var(--lm-sf); }
 /* PR 632 follow-up (contrast audit): the view's count at full strength (faded, it was 3.3:1 light, 3.5:1 dark) */
@@ -339,3 +339,12 @@
 [data-lm-look] .lm-roas { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 12px 0 0; }
 [data-lm-look] .lm-roas dt { color: var(--lm-ink2); font-size: var(--lm-fs-card); }
 [data-lm-look] .lm-roas dd { margin: 2px 0 0; font-weight: 700; font-size: 1.25rem; }
+
+/* PR 1066 (final round): the device gate's findings. Tap targets reach 44 px; inline links in text 32 px; the map's ERP link wraps. */
+[data-lm-look] [data-lm-ready] a.a2-kn { display: inline-flex; align-items: center; min-height: 44px; }
+.adm2 :is(p, li) > a:not([class]) { display: inline-block; min-height: 32px; padding-block: 8px; box-sizing: border-box; }
+.adm2 p.a2-xs > a, .adm2 .a2-xs > a:not(.a2-btn) { display: inline-block; min-height: 32px; padding-block: 8px; box-sizing: border-box; }
+.seo-list a { display: inline-flex; align-items: center; min-height: 44px; }
+.s28-mp-acts .a2-btn, .s28-mp-top .a2-btn { min-height: 44px; }
+.s28-mp-step a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; }
+[data-testid='map-erp'] .a2-lnk { white-space: normal; min-height: 44px; }

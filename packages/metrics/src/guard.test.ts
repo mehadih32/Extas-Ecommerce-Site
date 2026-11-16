@@ -22,6 +22,8 @@ export const RULES: { name: string; re: RegExp }[] = [
 
 /** Files that add up money for a reason other than a sales figure. Each needs its reason. */
 export const ALLOWED: Record<string, string> = {
+  'apps/web/src/lib/practice/seed.ts': 'the practice shop’s sample customers get a lifetime-value figure added up from their own sample orders (sample data, not a report)',
+  'packages/customers/src/taste.ts': 'one customer’s own list-price and discount figures for the taste card (a per-customer view, not a sales figure)',
   'apps/web/src/lib/bulk-orders.ts': 'the open bulk and corporate quotes (PR 704) add up their own quoted totals and balances still to collect, quotes that are not sold orders, not a sales figure',
   'packages/rules/src/simulate-service.ts': 'a discount simulation adds up its own before/after quotes for the orders it replays, not a sales figure',
   'packages/orders/src/edit.ts': 'a piece taken out of one order lowers that order’s own total and COD amount (PR 142), not a sales figure',

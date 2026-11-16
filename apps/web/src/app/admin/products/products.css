@@ -10,6 +10,7 @@
 /* PR 727: the section's tab bar (`.pa-gtabs` wraps it on the older pages) shows at every width. It was hidden below 1024 px
    ("the page chips already list these pages"), so on a phone those pages lost the section's tabs. */
 
+button.pa-vh { display: none; }
 .pa-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- head: the action at the right; full width on a phone (demo zs-hd) ---------- */
