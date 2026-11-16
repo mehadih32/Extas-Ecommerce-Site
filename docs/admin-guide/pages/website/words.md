@@ -96,3 +96,5 @@
 
 ### PR 802: প্রোটোটাইপ মেলানো
 পাতার নাম এখন **Shop text** (দোকানের লেখা), আর খোঁজার ঘরের লেখা **সব লেখায় খুঁজুন…**। কাজ আগের মতোই।
+
+**Update (PR 911):** the groups are chips with a count; a word is edited in place in the list; the preview shows the page's words in a phone, in English or Bengali.

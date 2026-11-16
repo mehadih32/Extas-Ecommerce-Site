@@ -143,6 +143,10 @@
       "searchPh": "A word in English or Bengali, its key or its file",
       "found": "{n} admin words found",
       "note": "The words of the admin pages, as the app has them. Here they can be read and searched; changing them is not built yet, so they look the same for every staff member."
-    }
+    },
+    "untrHead": "{n} texts have no Bengali.",
+    "untrText": "Bengali visitors see English there.",
+    "bnMissing": "Bengali missing — write it here",
+    "preview": "Preview"
   }
 }

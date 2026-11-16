@@ -55,3 +55,5 @@
 
 ### PR 788: আইনি লাইন (প্রোটোটাইপ মেলানো)
 পেজের নিচের লাইনে **Trade licence** আর **UBID** সবসময় থাকে; সেটিংসে না দিলে ঘরে "—" দেখায়।
+
+**Update (PR 911):** Policies opens on the Delivery page.
