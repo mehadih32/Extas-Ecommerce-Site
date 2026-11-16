@@ -144,6 +144,7 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
           </button>
         </form>
       ) : null}
+      <div className="lyb-split">
       <section className="lm-card lyb-card" aria-labelledby="ly-h" data-testid="ly-card">
         <h2 id="ly-h">{cat ? g('cardH.one').replace('{name}', catName(choices.cats.find((c) => c.slug === cat)!)) : g(`cardH.${page}`)}</h2>
         {page === 'home' ? <p className="lm-sub">{g('seasonal')}</p> : null}
@@ -169,7 +170,6 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
           w={words as never}
         />
       </section>
-      <PageSnapshots key={`${snaps.place}:${snaps.version}:${snaps.snaps[0]?.id ?? ''}`} view={snaps} canEdit={canEdit} lang={view.lang === 'bn' ? 'bn' : 'en'} tz={String(tz)} w={(view.lang === 'bn' ? launchBn : launchEn).ld.page as never} />
       <section className="lm-card lyb-card" aria-labelledby="ly-ph" data-testid="ly-prevcard">
         <h2 id="ly-ph">{g('prev.title')}</h2>
         <div className="lyb-bar">
@@ -179,6 +179,8 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
         </div>
         {takesBlocks || prod ? <LayoutPreview src={shopHref} stamp={lv.version} w={{ show: g('prev.show'), hide: g('prev.hide'), phone: g('prev.phone'), desktop: g('prev.desktop'), note: g('prev.note') }} /> : null}
       </section>
+      </div>
+      <PageSnapshots key={`${snaps.place}:${snaps.version}:${snaps.snaps[0]?.id ?? ''}`} view={snaps} canEdit={canEdit} lang={view.lang === 'bn' ? 'bn' : 'en'} tz={String(tz)} w={(view.lang === 'bn' ? launchBn : launchEn).ld.page as never} />
     </div>
   );
 }

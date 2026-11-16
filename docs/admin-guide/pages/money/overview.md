@@ -60,3 +60,5 @@
 ## এরপর কী হয়
 - নতুন পেমেন্ট এলে, কুরিয়ার টাকা দিলে বা ফেরত দেওয়া হলে পরের বার পাতা খুললেই সংখ্যা বদলায়।
 - কুরিয়ারের টাকা মেলানো (COD মেলানো) আর লাভ-ক্ষতির পাতা পরের PR-এ আসবে; তখন এই কার্ড থেকে সেখানে যাওয়া যাবে।
+
+> **PR 910 (প্রোটোটাইপ মেলানো):** "Next 14 days of cash"-এর পাশে নতুন কার্ড **This month so far**: এই মাসের বিক্রি থেকে নিট লাভ পর্যন্ত প্রতিটা লাইন বারসহ (Sales, Product cost, Courier & COD, Packing & gateway, Returns, Ads, Fixed costs, Other costs, Net profit)। পাতার মাথায় তারিখ এখন "12 Nov, 20:00" ধরনে। আগের ক্যাশ-পাওয়া চার্ট, "Cash received", "COD due from couriers", "Courier claims to receive" আর "Refunds waiting" কার্ড সরানো হয়নি — ঠিকানার শেষে `?more=1` দিলে নিচে দেখা যায়।
