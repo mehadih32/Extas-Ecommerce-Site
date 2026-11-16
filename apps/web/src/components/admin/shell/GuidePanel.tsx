@@ -14,7 +14,7 @@ import type { Block, BoxKind, Guide, Inline } from '@/lib/admin-shell/guide';
 import type { GuideMode } from '@/lib/admin-shell/help-pages';
 import { t, type Dict } from '@/lib/i18n';
 import { Drawer } from './Drawer';
-import type { GuideRequest } from './events';
+import { openMap, type GuideRequest } from './events';
 import { ShellIcon } from './ShellIcon';
 
 /** Opens another guide in the panel: a section guide by its file name, or a page guide by its id. */
@@ -319,6 +319,10 @@ export function GuidePanel({ dict, request, mode = 'side', here, lang = 'en', on
             ) : null}
             <Blocks blocks={ready.guide.blocks} onGuide={toSlug} boxes={boxes} />
             {ready.page ? <AskBox page={ready.page} lang={lang} tt={tt} /> : null}
+            <button type="button" className="a2-btn a2-mt12" onClick={openMap} data-testid="ag-map">
+              <ShellIcon name="menu" size={15} />
+              {tt('seeMap')}
+            </button>
           </article>
         ) : null}
       </>

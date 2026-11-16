@@ -6,6 +6,7 @@
 // S02 · PR 599: "Ask for a new feature" (Help & Build › Feature requests) for whoever may see the build's pages.
 // PR 648 (CN-036): in the Lumen look (data-lm-ready, light and dark): every section is its own card in a grid (icon, name,
 // what it is for, Ready / Planned, then its three doors: the guide, the manual chapter, the section), lumen-help.css.
+import { OpenMapButton } from '@/components/admin/map/OpenMapButton';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -69,10 +70,10 @@ export default async function HelpPage(props: Props) {
         sub={h('subProto')}
         right={
           <>
-            <Link className="a2-btn" href="/admin/map" data-testid="help-map">
+            <OpenMapButton testId="help-map">
               <ShellIcon name="grid" size={14} />
               {h('map')}
-            </Link>
+            </OpenMapButton>
             <a className="a2-btn" href="/api/admin/help/manual-md" download data-testid="help-pdf">
               <ShellIcon name="dl" size={14} />
               {h('pdf')}

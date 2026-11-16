@@ -27,3 +27,10 @@ export function openPalette(): void {
 export function openTodo(): void {
   window.dispatchEvent(new CustomEvent(TODO_EVENT));
 }
+
+/** PR 1066 (prototype v5 `#open-map`): the Admin map opens as an overlay on the same page, from the menu foot, the guide panel and the Help pages. */
+export const MAP_EVENT = 'a3:map';
+
+export function openMap(): void {
+  window.dispatchEvent(new CustomEvent(MAP_EVENT));
+}

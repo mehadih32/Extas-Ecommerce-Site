@@ -9,6 +9,7 @@
 // PR 389: the search box (`?q=`: every word in a guide of a section the person sees, best first, each hit linking to its
 // place) and "What's new" (`?new=1`: the newest built PRs with their plain line; lib/admin-shell/manual-search.ts).
 // PR 390: "Download (.md)" — the whole manual in one Markdown file, made on every deploy beside the blueprint.
+import { OpenMapButton } from '@/components/admin/map/OpenMapButton';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -77,10 +78,10 @@ export default async function ManualPage(props: Props) {
         title={s('title')}
         sub={s('sub')}
         right={
-          <Link className="a2-btn" href="/admin/map" data-testid="manual-map">
+          <OpenMapButton testId="manual-map">
             <ShellIcon name="grid" size={15} />
             {s('adminMap')}
-          </Link>
+          </OpenMapButton>
         }
       />
       <SectionTabs view={view} current={KEY} />

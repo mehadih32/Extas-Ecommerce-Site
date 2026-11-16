@@ -41,7 +41,8 @@ import { t } from '@/lib/i18n';
 import { ChartTips } from '../look/ChartTips';
 import { LUMEN_DEFAULTS, LumenProvider } from '../lumen/context';
 import { ToastHost } from '../lumen/Toast';
-import { GUIDE_EVENT, PALETTE_EVENT, TODO_EVENT, type GuideRequest } from './events';
+import { GUIDE_EVENT, PALETTE_EVENT, TODO_EVENT, openMap, type GuideRequest } from './events';
+import { MapOverlay } from '@/components/admin/map/MapOverlay';
 import { Drawer } from './Drawer';
 import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
@@ -455,6 +456,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   return (
     <LumenProvider value={lumen}>
     <div className={`adm2 a3s lm-shell${col ? ' lm-col' : ''}${guide && guideAs === 'side' ? ' a2-gopen' : ''}`} translate="no" lang={model.lang} data-testid="a2-shell" {...themeAttrs(theme)} style={themeStyle(theme) as CSSProperties}>
+      <MapOverlay />
       <a className="a2-skip" href="#main">
         {tt('nav.skip')}
       </a>
@@ -487,11 +489,11 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
                 {g.sections.map(item)}
               </div>
             ))}
-            {/* PR 780 (prototype v5): "Admin map" closes the list; the map opens in its own window */}
-            <a className="lm-it lm-mapbtn" href="/admin/map" target="_blank" rel="noopener" data-testid="a3-nav-map" title={tt('nav.map')} aria-label={tt('nav.map')}>
+            {/* PR 780 (prototype v5): "Admin map" closes the list; PR 1066: it opens as an overlay on this page (prototype `#open-map`), not a new window */}
+            <button type="button" className="lm-it lm-mapbtn" onClick={() => { setFly(null); openMap(); }} data-testid="a3-nav-map" title={tt('nav.map')} aria-label={tt('nav.map')} aria-haspopup="dialog">
               <ShellIcon name="menu" size={19} />
               <span className="lm-nl">{tt('nav.map')}</span>
-            </a>
+            </button>
           </nav>
           <div className="lm-foot">
             <button type="button" className="lm-me" data-a2pop-btn aria-haspopup="menu" aria-expanded={pop === 'me'} onClick={() => setPop(pop === 'me' ? null : 'me')} data-testid="a2-me">
