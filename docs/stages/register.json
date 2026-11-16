@@ -51979,7 +51979,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-2`, NOT pushed, status stays parked until the owner says):** `packages/metrics/src/geo-slices.ts` — the slices as one set (`categoryId`, `productId`, `channel`, `paymentType`, `courierId`, `customerType`): read from the address or a saved view and checked (a bad value is dropped, never trusted), only the ones switched on in `reports.geoMap.slices` allowed, `orderSliceSql` (one SQL filter on the orders: channel = the order's source, payment = cash on delivery / online / other from the payment method, courier = a courier with a live parcel on the order, customer = New when it is the buyer's first order and Repeat when an earlier one exists, an order that cannot say is counted apart and never dropped) and `geoSliceBreakdown` (\"Orders by channel, payment, courier or customer\": every value that has orders, the parts adding up to the Total line, \"Not known\" as its own bucket, no Sales column without the money right). Screen parts: `GeoSlicesBar.tsx` (Filters: Channel, Payment, Courier, Customer, Apply, Clear filters; only the slices that are on are drawn; the rest of the address and the screen's own category and product are kept), `GeoSliceTable.tsx` (\"Orders by …\" with a link per dimension), words in `admin-geo-slices.{en,bn}.json`. No customer name, phone or address is read. Tests: `geo-slices.test.ts` and `GeoSlices.test.tsx` (ran, pass); `geo-slices.db.test.ts` (7 tests, ran on a real PostgreSQL and pass). Wiring the filter into `geoByArea` happens where the screen's API calls it."
+    }
+   ],
    "mentions": [
     751,
     753,

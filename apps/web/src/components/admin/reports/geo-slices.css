@@ -1,0 +1,114 @@
+/* PR 756 (S29 Geography map): the filter bar of the slices and the "Orders by …" table. Tokens only; text 14 px or more,
+   controls 44 px on a phone, the bar behind one "Filters (n)" button there. */
+.adm2 .gsb {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.adm2 .gsb-toggle {
+  display: none;
+  min-height: 44px;
+  align-self: flex-start;
+}
+.adm2 .gsb-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+.adm2 .gsb-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--lm-ink2);
+  min-width: 0;
+}
+.adm2 .gsb-form select {
+  min-height: 44px;
+  font-size: 14px;
+  max-width: 100%;
+}
+.adm2 .gsb-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.adm2 .gsb-acts .a2-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.adm2 .gsb-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--lm-faint);
+}
+@media (max-width: 700px) {
+  .adm2 .gsb-toggle {
+    display: inline-flex;
+    align-items: center;
+  }
+  .adm2 .gsb:not(.gsb-open) .gsb-form,
+  .adm2 .gsb:not(.gsb-open) .gsb-note {
+    display: none;
+  }
+  .adm2 .gsb-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* orders by one dimension */
+.adm2 .gst-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.adm2 .gst-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--lm-sf2);
+  color: var(--lm-ink2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.adm2 .gst-tab.on {
+  background: var(--lm-hero-solid);
+  color: var(--lm-on-hero);
+}
+.adm2 .gst-wrap {
+  overflow-x: auto;
+}
+.adm2 .gst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.adm2 .gst-table th,
+.adm2 .gst-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--lm-ln);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.adm2 .gst-table .gst-n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.adm2 .gst-table tfoot td,
+.adm2 .gst-table tfoot th {
+  font-weight: 700;
+}
+.adm2 .gst-unk {
+  color: var(--lm-ink2);
+  font-style: italic;
+}

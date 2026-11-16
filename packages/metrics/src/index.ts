@@ -69,3 +69,7 @@ export * from './campaign-tags';
 export * from './marketing-report';
 export * from './campaign-sales';
 export * from './campaign-profit';
+// S29 · PR 750–761 (CN-054): the shared types of Reports › Geography map (geo-types.ts), types only.
+export * from './geo-types';
+// S29 · PR 756: the Geography map's slices (channel, payment type, courier, customer type) and their breakdown (geo-slices.ts).
+export * from './geo-slices';

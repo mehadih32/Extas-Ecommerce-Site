@@ -1,0 +1,60 @@
+{
+  "geoSlices": {
+    "aria": "Filters for the map",
+    "toggle": "Filters",
+    "toggleN": "Filters ({n})",
+    "apply": "Apply",
+    "clear": "Clear filters",
+    "note": "Filters narrow the orders before they are counted. An order that does not say (no courier booked yet, no customer to tell by) is counted apart, never dropped.",
+    "channel": {
+      "label": "Channel",
+      "any": "All channels",
+      "WEBSITE": "Website",
+      "LANDING_PAGE": "Ad page",
+      "MESSENGER": "Messenger",
+      "WHATSAPP": "WhatsApp",
+      "LIVE_CHAT": "Live chat",
+      "PHONE": "Phone",
+      "TELEGRAM": "Telegram",
+      "ADMIN": "Entered by staff",
+      "SHOWROOM": "Showroom",
+      "IMPORT": "Imported"
+    },
+    "payment": {
+      "label": "Payment",
+      "any": "All payments",
+      "COD": "Cash on delivery",
+      "ONLINE": "Online",
+      "OTHER": "Cash at the counter"
+    },
+    "courier": {
+      "label": "Courier",
+      "any": "All couriers",
+      "UNKNOWN": "No courier yet"
+    },
+    "customer": {
+      "label": "Customer",
+      "any": "All customers",
+      "NEW": "New customers",
+      "REPEAT": "Repeat customers",
+      "UNKNOWN": "Not known"
+    },
+    "by": {
+      "title": "Orders by {dimension}",
+      "sub": "Within the filters above. The parts add up to the whole; an order that does not say is counted as not known.",
+      "dimension": "Cut by",
+      "channel": "channel",
+      "paymentType": "payment",
+      "courier": "courier",
+      "customerType": "customer",
+      "name": "Value",
+      "orders": "Orders",
+      "delivered": "Delivered",
+      "returned": "Returned",
+      "sales": "Sales",
+      "total": "Total",
+      "none": "No orders in this period.",
+      "unknown": "Not known"
+    }
+  }
+}
