@@ -25,6 +25,8 @@
 //   GET   /api/admin/customers/merge-preview?a=&b=    two profiles side by side for a person's own merge (customers.read)
 //   GET   /api/admin/customers/merges?limit=          the decisions made, newest first (customers.read)
 //   POST  /api/admin/customers/merge                  {survivorId, mergedId, signals?, note?} (Idempotency-Key) (customers.merge)
+//   POST  /api/admin/customers/points/adjust          PR 905: {customerId, points (+/−), note, key, pin} one more points entry; the owner's PIN
+//                                                     (customers.settings and settings.write; audited; never below 0)
 //   POST  /api/admin/customers/not-same               {aId, bId, signals?, note?} the pair is not suggested again (customers.merge)
 //   POST  /api/admin/customers/merges/:id/undo        {note} a split, or a "not the same person" taken back (customers.merge)
 //   GET   /api/admin/customers/:id/journey?page=      PR 288: the journey view, every touch newest first (customers.read;
@@ -61,6 +63,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { maskForPerson } from './staff-controls';
+import { requireOwnerPin } from './owner-pin';
 
 interface Ctx {
   deps: cu.CustomersDeps;
@@ -125,7 +128,7 @@ async function exportCsv(request: Request, deps: AdminDeps | null): Promise<Resp
 }
 
 /** The list's query parameters (anything else is ignored). */
-const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'segment', 'district'] as const;
+const LIST_PARAMS = ['view', 'q', 'source', 'sort', 'page', 'upto', 'segment', 'district'] as const;
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const notFound = () => Promise.resolve(fail(404, 'not-found'));
@@ -179,6 +182,23 @@ export async function customersRoute(request: Request, deps: AdminDeps | null, p
     if (path.length > 1) return notFound();
     if (m !== 'POST') return notAllowed();
     return handle(request, deps, 'customers.merge', async (x) => ({ result: await cu.mergeCustomers(x.deps, x.who, await body(request), { idempotencyKey: x.key }) }), 201);
+  }
+  if (a === 'points') {
+    // PR 905: POST /api/admin/customers/points/adjust {customerId, points, note, key, pin} — one more points entry, with the owner's PIN
+    if (b !== 'adjust' || path.length > 2) return notFound();
+    if (m !== 'POST') return notAllowed();
+    return handle(
+      request,
+      deps,
+      'customers.settings',
+      async (x) => {
+        const raw = ((await body(request)) ?? {}) as Record<string, unknown>;
+        const { pin, ...rest } = raw;
+        await requireOwnerPin(deps!, x.who.actor, x.who.ctx, pin, 'customer.points.adjust', x.who.storeId);
+        return { result: await cu.adjustPoints(x.deps, x.who, { ...rest, key: rest.key ?? x.key }) };
+      },
+      201,
+    );
   }
   if (a === 'not-same') {
     if (path.length > 1) return notFound();
