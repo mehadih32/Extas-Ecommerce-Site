@@ -695,5 +695,39 @@
       "now": "Saves at once"
     },
     "pinHint": "Money and price changes always ask for the owner PIN."
+  },
+  "offers": {
+    "col": {
+      "name": "Offer",
+      "applies": "Applies to",
+      "limits": "Limits",
+      "used": "Used (30D)",
+      "cost": "Cost",
+      "sales": "Sales",
+      "margin": "Margin",
+      "state": "Status"
+    },
+    "state": {
+      "LIVE": "Running",
+      "SCHEDULED": "Scheduled",
+      "PAUSED": "Off"
+    },
+    "appliesAll": "Whole checkout",
+    "appliesOnline": "Online payment",
+    "who": {
+      "ALL": "Everyone",
+      "GUESTS": "Guests",
+      "MEMBERS": "Members"
+    },
+    "whoFirst": "First order",
+    "minOrder": "min {v}",
+    "perCustomer": "{n} per customer",
+    "noPerCustomer": "No per-customer limit",
+    "usesInAll": "{n} uses in all",
+    "noTotal": "No total limit",
+    "marginOk": "{n}% margin",
+    "marginThin": "Thin {n}%",
+    "heading": "Offers",
+    "headingSub": "Cost = discount given. Click a row for the full picture."
   }
 }

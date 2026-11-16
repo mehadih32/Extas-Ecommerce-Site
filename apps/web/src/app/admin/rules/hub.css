@@ -255,3 +255,8 @@
   .rh-nav button{white-space:nowrap}
   .rh-side{position:static;max-height:none}
 }
+
+/* PR 943: Offers table of the prototype (9 columns, a small second line under the name, who and limits) */
+.of-h{margin:12px 0 0;font-size:16px;font-weight:600}
+.of-sub{display:block;color:var(--lm-ink-3,inherit);font-size:12px;margin-top:2px}
+.of-sub .of-code{margin-left:6px}
