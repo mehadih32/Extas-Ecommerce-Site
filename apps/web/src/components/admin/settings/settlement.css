@@ -2,3 +2,23 @@
 .adm2 .ck-settle-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .adm2 .ck-settle-way { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 12px; border: 1px solid var(--lm-ln); border-radius: 12px; overflow-wrap: anywhere; }
 .adm2 .ck-settle-way .a2-sel, .adm2 .ck-settle-way .a2-inp, .adm2 [data-testid="ck-settle-accounts"] { min-height: 44px; font-size: 16px; width: 100%; min-width: 0; }
+.adm2 .ck-settle-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.adm2 .ck-settle-way { border: 0; padding: 0; }
+.adm2 .ck-settle-more .ck-settle-way { border: 1px solid var(--lm-ln); padding: 12px; }
+.adm2 .ck-settle-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.adm2 .ck-settle-foot > span:first-child { flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .ck-settle-save { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.adm2 .ck-settle-save .a2-inp { width: 140px; min-height: 44px; font-size: 16px; }
+.adm2 .ck-settle-more > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+/* PR 992 — the three method cards (bKash, Nagad, Card) */
+.adm2 .pm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+@media (max-width: 760px) { .adm2 .pm-grid { grid-template-columns: minmax(0, 1fr); } }
+.adm2 .pm-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.adm2 .pm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.adm2 .pm-name { font-size: 16px; overflow-wrap: anywhere; }
+.adm2 .pm-acc { overflow-wrap: anywhere; }
+.adm2 .pm-act { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.adm2 .pm-callout { margin-top: 12px; }
+.adm2 .pm-top { flex-wrap: wrap; }
+.adm2 .pm-name { overflow-wrap: normal; }
+.adm2 .pm-top .a2-pill { flex: none; white-space: nowrap; }
