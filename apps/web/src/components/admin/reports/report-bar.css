@@ -137,13 +137,8 @@
   min-height: 44px;
 }
 @media (max-width: 560px) {
-  /* phone (prototype v5): the period is one drop-down, the filters sit two to a row, the buttons wrap under them */
-  .adm2 .rpseg {
-    display: none;
-  }
-  .adm2 .rpsel {
-    display: block;
-  }
+  /* phone: the period stays as the prototype's buttons (Today, 7 days, 30 days ... wrap over two rows; PR 1069, owner: buttons, not a
+     drop-down), the filters sit two to a row, the buttons wrap under them. The drop-down (.rpsel) is never shown. */
   .adm2 .rpbar-2 .rpf label {
     flex: 1 1 calc(50% - 6px);
     min-width: 0;
