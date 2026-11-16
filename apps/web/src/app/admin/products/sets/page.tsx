@@ -60,6 +60,10 @@ export default async function SetsPage() {
   const a = combosAccess(access);
   const [list, currency, card, options] = await Promise.all([cb.listSets(a.deps, a.who, { withCost: a.perms.prices }), storeCurrency(a), setsOptionsCard(access.deps, MOTHER_STORE_ID), a.perms.write ? cb.comboOptions(a.deps, a.who) : Promise.resolve({ products: [] })]);
   const money = moneyOf(currency, view.locale);
+  // PR 971: the set editor's "Your profit" line needs each piece's ERP buying price (only for someone who may see prices)
+  const costRows = a.perms.prices ? await a.deps.db.productVariant.groupBy({ by: ['productId'], where: { storeId: a.storeId, archivedAt: null, shopPriceMinor: { gt: 0 } }, _min: { shopPriceMinor: true } }) : [];
+  const costs: Record<string, number> = Object.fromEntries(costRows.flatMap((r) => (r._min.shopPriceMinor ? [[r.productId, r._min.shopPriceMinor] as const] : [])));
+  const requirePin = (await a.deps.settings.value('catalogue.prices.requirePin', { storeId: a.storeId })) === true;
   const m = (x: number) => formatMoney(x, money);
   const n = (x: number) => formatNumber(x, view.locale);
   const so = (k: string, v?: Record<string, string | number>) => t(d, `productSets.${k}`, v);
@@ -105,7 +109,7 @@ export default async function SetsPage() {
   const pct = (profit: number, price: number) => (price > 0 ? `${new Intl.NumberFormat(view.locale, { numberingSystem: 'latn', maximumFractionDigits: 0 }).format(Math.round((profit / price) * 100))}%` : '—');
 
   return (
-    <SetEditorHost dict={d} lang={view.lang === 'bn' ? 'bn' : 'en'} locale={view.locale} currency={currency} products={options.products} canPrice={a.perms.prices} failed={so('act.failed')}>
+    <SetEditorHost dict={d} lang={view.lang === 'bn' ? 'bn' : 'en'} locale={view.locale} currency={currency} products={options.products} canPrice={a.perms.prices} costs={costs} requirePin={requirePin} failed={so('act.failed')}>
     <div className="a2-z" data-testid="sets-page" data-lm-ready="">
       <PageHead
         view={view}

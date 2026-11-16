@@ -9,7 +9,8 @@ import type { ComboView, ProductOption } from '@extas/combos';
 import { call } from '../api';
 import { ShellIcon } from '../shell/ShellIcon';
 import type { Dict } from '@/lib/i18n';
-import { COMBOS_API, ComboEditor } from './ComboEditor';
+import { COMBOS_API } from './ComboEditor';
+import { SetModal } from './SetModal';
 import { currencySymbol, money, type Lang } from './model';
 
 const Open = createContext<((id: string | null) => Promise<string | null>) | null>(null); // hardcode-ok: a type, not text
@@ -21,6 +22,8 @@ export function SetEditorHost({
   currency,
   products,
   canPrice,
+  costs,
+  requirePin,
   failed,
   children,
 }: {
@@ -30,6 +33,9 @@ export function SetEditorHost({
   currency: string;
   products: ProductOption[];
   canPrice: boolean;
+  /** PR 971: the ERP buying price of each product (only for someone who may see prices). */
+  costs: Record<string, number>;
+  requirePin: boolean;
   failed: string;
   children: ReactNode;
 }) {
@@ -49,13 +55,15 @@ export function SetEditorHost({
     <Open.Provider value={start}>
       {children}
       {open ? (
-        <ComboEditor
+        <SetModal
           dict={dict}
           lang={lang}
           fmt={(m) => money(m, locale, currency)}
           symbol={currencySymbol(locale, currency)}
           products={products}
           canPrice={canPrice}
+          costs={costs}
+          requirePin={requirePin}
           combo={combo}
           onClose={() => setOpen(false)}
           onSaved={() => {

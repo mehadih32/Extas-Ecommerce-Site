@@ -99,6 +99,27 @@
       "cancel": "Cancel",
       "failed": "Could not change the set. Try again.",
       "notReady": "This set cannot go on sale yet: it needs pieces with prices and a set price."
+    },
+    "modal": {
+      "editTitle": "Edit set",
+      "newTitle": "New set",
+      "name": "Set name",
+      "top": "Top piece",
+      "bottom": "Bottom piece",
+      "link": "Colour link",
+      "shared": "Shared colours: {names}",
+      "none": "none",
+      "sizes": "Sizes stay separate: top {top}, bottom {bottom}.",
+      "price": "One price for the set",
+      "pin": "Owner PIN",
+      "was": "Was price (both added up)",
+      "profit": "Your profit",
+      "save": "Save set",
+      "needPieces": "Pick a top piece and a bottom piece",
+      "samePiece": "The top and the bottom must be two different products",
+      "noShared": "These two have no colour in common — choose “Customer picks each colour”",
+      "belowCost": "Set price must be above the buying price",
+      "needPin": "Enter the owner PIN"
     }
   }
 }
