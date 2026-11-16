@@ -1046,6 +1046,8 @@ export async function loadOrderDetail(deps: od.OrdersDeps, who: od.Who, view: Ad
     chip: chips.find((ch) => ch.icon === 'truck')!,
     rows: ship
       ? [
+          // PR 957 (prototype v5): the Courier card opens with the shop step, then the courier's own status
+          { label: t(d, 'orders.courier.shop'), value: t(d, `orders.st.${o.status}`) },
           { label: t(d, 'orders.courier.name'), value: x?.shipment?.courierName ?? t(d, 'orders.list.none') },
           { label: t(d, 'orders.courier.tracking'), value: ship.trackingCode ?? t(d, 'orders.list.none'), mono: true },
           { label: t(d, 'orders.courier.since'), value: dt.format(ship.createdAt) },
