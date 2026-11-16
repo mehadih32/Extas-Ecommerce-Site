@@ -147,6 +147,12 @@
     "untrHead": "{n}টা লেখার বাংলা নেই।",
     "untrText": "বাংলা ভিজিটররা সেখানে ইংরেজি দেখেন।",
     "bnMissing": "বাংলা নেই — এখানে লিখুন",
-    "preview": "প্রিভিউ"
+    "preview": "প্রিভিউ",
+    "linked": {
+      "invoice": "ইনভয়েস",
+      "sms": "SMS ও WhatsApp",
+      "email": "ইমেইল"
+    },
+    "whereCol": "কোথায়"
   }
 }

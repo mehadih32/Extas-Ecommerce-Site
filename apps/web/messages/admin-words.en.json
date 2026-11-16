@@ -147,6 +147,12 @@
     "untrHead": "{n} texts have no Bengali.",
     "untrText": "Bengali visitors see English there.",
     "bnMissing": "Bengali missing — write it here",
-    "preview": "Preview"
+    "preview": "Preview",
+    "linked": {
+      "invoice": "Invoice",
+      "sms": "SMS & WhatsApp",
+      "email": "Email"
+    },
+    "whereCol": "Where"
   }
 }

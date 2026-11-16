@@ -121,8 +121,9 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
   return (
     <li className="wdb-row" data-testid="wd-row" data-key={row.key}>
       <div className="wdb-head">
-        <code className="a2-xs wdb-key">{row.key}</code>
-        <span className="a2-xs a2-mute">{where}</span>
+        <span className="a2-xs a2-mute wdb-where" title={row.key}>
+          {where} · <code className="wdb-key">{row.key.includes('.') ? row.key.slice(row.key.indexOf('.') + 1) : row.key}</code>
+        </span>
         {changed ? (
           <span className="a2-pill g" data-testid="wd-changed">
             {w.changed}
@@ -167,9 +168,8 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
                 />
               </div>
             ))}
-            <p className="a2-xs a2-mute">
-              {w.emptyHelp}
-              {slots.length ? ` ${w.slotsHelp.replace('{slots}', slots.join(' '))}` : ''}
+            <p className="a2-xs a2-mute" hidden={!slots.length}>
+              {slots.length ? w.slotsHelp.replace('{slots}', slots.join(' ')) : ''}
             </p>
             <div className="wdb-bar">
               <button type="button" className="a2-btn pri" disabled={busy || (draft.en === shownNow(own).en && draft.bn === shownNow(own).bn)} onClick={() => void save({ en: draft.en === row.byDefault.en ? '' : draft.en, bn: draft.bn === row.byDefault.bn ? '' : draft.bn }, w.saved)} data-testid="wd-save">
@@ -235,6 +235,8 @@ interface Props {
   version: string;
   canEdit: boolean;
   where: Record<string, string>;
+  /** PR 1052: the table's first column heading ("Where"). */
+  whereLabel?: string;
   w: WordsEditorWords;
   /** The "Words as a file" card (export for everyone who sees the page, import with `website.words.write`). */
   file: WordsImportWords;
@@ -248,7 +250,7 @@ interface Props {
  * The list of one page of words and the file card. Every save answers the new version of the saved words, which the
  * next save (a row or an import) sends; after an import the page reloads and the rows show the new words.
  */
-export function WordsEditor({ rows, when = {}, version: read, canEdit, where, w, file, head, children }: Props) {
+export function WordsEditor({ rows, when = {}, version: read, canEdit, where, whereLabel = '', w, file, head, children }: Props) {
   const router = useRouter();
   const [version, setVersion] = useState(read);
   const [seen, setSeen] = useState(read);
@@ -278,6 +280,13 @@ export function WordsEditor({ rows, when = {}, version: read, canEdit, where, w,
       <div className="wdb-split a2-mt12">
       <section className="a2-sc" aria-labelledby="wd-h" data-testid="wd-card">
         {head}
+        {canEdit ? (
+          <div className="wdb-thead" aria-hidden="true">
+            <span>{whereLabel}</span>
+            <span>{w.en}</span>
+            <span>{w.bn}</span>
+          </div>
+        ) : null}
         <ul className="wdb-list" data-testid="wd-list">
         {rows.map((r) => (
           <WordItem key={`${r.key}:${read}`} row={r} where={where[r.group] ?? r.group} when={when[r.key]} canEdit={canEdit} version={version} setVersion={setVersion} w={w} />
