@@ -96,7 +96,7 @@
       "NOTHING_TO_IMPORT": "Nothing new in this file: every row is a bad number or an old order brought in already."
     },
     "list": {
-      "title": "All customers",
+      "title": "Customers",
       "sub": "Everyone who ordered, with what they bought, what they spent and how reliable they are.",
       "viewsAria": "Customer views",
       "view": {
@@ -1037,7 +1037,9 @@
         "link": "Open Refunds & wallet"
       },
       "tiers": "Customer grades (New, Verified, Gold) come with their own switch later; points do not change a grade.",
-      "someone": "A customer"
+      "someone": "A customer",
+      "top": { "title": "Top point earners", "pts": "{n} pts" },
+      "bigWallets": { "title": "Biggest wallet balances" }
     },
     "notes": {
       "title": "Tags & notes",

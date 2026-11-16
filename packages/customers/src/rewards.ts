@@ -225,6 +225,10 @@ export interface LoyaltyScreen {
   pointsLines: (PointsEntryView & { customerId: string; customerName: string | null })[];
   /** null without `payments.view`. */
   walletLines: WalletLine[] | null;
+  /** PR 900: the customers holding the most points now (the prototype's "Top point earners"). */
+  topEarners: { customerId: string; customerName: string | null; points: number }[];
+  /** PR 900: the biggest wallet balances (the prototype's "Wallet balances"); null without `payments.view`. */
+  topWallets: { customerId: string; customerName: string | null; balanceMinor: number }[] | null;
   /** The points card saves with `customers.settings` and `settings.write` (a money rate). */
   canWrite: boolean;
 }
@@ -237,7 +241,7 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
   const days = Math.min(Math.max(1, Math.trunc(opts.days ?? 30)), 366);
   const take = Math.min(Math.max(1, Math.trunc(opts.take ?? 20)), 100);
   const since = new Date(nowOf(deps).getTime() - days * DAY);
-  const [points, apology, members, sums, lines] = await Promise.all([
+  const [points, apology, members, sums, lines, earners] = await Promise.all([
     setting(deps, S, 'customers.points'),
     setting(deps, S, 'payments.wallet.apology'),
     deps.db.$queryRaw<{ n: number }[]>`
@@ -248,16 +252,22 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
       SELECT coalesce(sum("points") FILTER (WHERE "points" > 0), 0)::int AS given, coalesce(-sum("points") FILTER (WHERE "points" < 0), 0)::int AS redeemed
       FROM "RewardEntry" WHERE "storeId" = ${S} AND "createdAt" >= ${since}`,
     entriesOf(deps.db, { storeId: S }, take),
+    deps.db.$queryRaw<{ customerId: string; points: number }[]>`
+      SELECT "customerId", "pointsAfter"::int AS points FROM (
+        SELECT DISTINCT ON ("customerId") "customerId", "pointsAfter" FROM "RewardEntry" WHERE "storeId" = ${S}
+        ORDER BY "customerId", "createdAt" DESC, "id" DESC) last WHERE last."pointsAfter" > 0
+      ORDER BY last."pointsAfter" DESC, last."customerId" LIMIT 8`,
   ]);
   const wallet = held.has('payments.view');
-  const [walletSum, walletCount, walletRows] = wallet
+  const [walletSum, walletCount, walletRows, bigWallets] = wallet
     ? await Promise.all([
         deps.db.walletAccount.aggregate({ where: { storeId: S }, _sum: { balanceMinor: true } }),
         deps.db.walletEntry.count({ where: { storeId: S, createdAt: { gte: since } } }),
         deps.db.walletEntry.findMany({ where: { storeId: S }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take, select: { id: true, direction: true, amountMinor: true, reason: true, orderId: true, createdAt: true, wallet: { select: { customerId: true } } } }),
+        deps.db.walletAccount.findMany({ where: { storeId: S, balanceMinor: { gt: 0 } }, orderBy: [{ balanceMinor: 'desc' }, { customerId: 'asc' }], take: 8, select: { customerId: true, balanceMinor: true } }),
       ])
-    : [null, null, null];
-  const customerIds = [...new Set([...lines.map((l) => l.customerId), ...(walletRows ?? []).map((w) => w.wallet.customerId)])];
+    : [null, null, null, null];
+  const customerIds = [...new Set([...lines.map((l) => l.customerId), ...(walletRows ?? []).map((w) => w.wallet.customerId), ...earners.map((e) => e.customerId), ...(bigWallets ?? []).map((w) => w.customerId)])];
   const names = new Map((customerIds.length ? await deps.db.customer.findMany({ where: { storeId: S, id: { in: customerIds } }, select: { id: true, name: true } }) : []).map((c) => [c.id, c.name]));
   const orderIds = [...new Set((walletRows ?? []).map((w) => w.orderId).filter((x): x is string => !!x))];
   const numbers = new Map((orderIds.length ? await deps.db.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, number: true } }) : []).map((o) => [o.id, o.number]));
@@ -269,6 +279,8 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
     walletLines: walletRows
       ? walletRows.map((w) => ({ id: w.id, customerId: w.wallet.customerId, customerName: names.get(w.wallet.customerId) ?? null, direction: w.direction, amountMinor: w.amountMinor, reason: w.reason, orderNumber: w.orderId ? (numbers.get(w.orderId) ?? null) : null, at: w.createdAt }))
       : null,
+    topEarners: earners.map((e) => ({ customerId: e.customerId, customerName: names.get(e.customerId) ?? null, points: e.points })),
+    topWallets: bigWallets ? bigWallets.map((w) => ({ customerId: w.customerId, customerName: names.get(w.customerId) ?? null, balanceMinor: w.balanceMinor })) : null,
     canWrite: held.has('customers.settings') && held.has('settings.write'),
   };
 }

@@ -169,6 +169,38 @@ export default async function LoyaltyPage() {
         </div>
         <div className="a2-stack">
           <CrmSettingCard dict={cdict} settingKey="customers.points" card="points" fields={FIELDS} value={s.points as unknown as Record<string, unknown>} canWrite={s.canWrite} />
+          {s.topEarners.length ? (
+            <section className="a2-card" data-testid="loyalty-top">
+              <h2 className="a2-h3">{t(d, 'cus.loy.top.title')}</h2>
+              <ul className="loy-lines">
+                {s.topEarners.map((e, i) => (
+                  <li key={e.customerId} className="loy-line">
+                    <span className="loy-who">
+                      <Link href={`/admin/customers/${e.customerId}`}>
+                        {i + 1}. {e.customerName ?? t(d, 'cus.loy.someone')}
+                      </Link>
+                    </span>
+                    <span className="a2-num loy-amt">{t(d, 'cus.loy.top.pts', { n: n(e.points) })}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {s.topWallets?.length ? (
+            <section className="a2-card" data-testid="loyalty-big-wallets">
+              <h2 className="a2-h3">{t(d, 'cus.loy.bigWallets.title')}</h2>
+              <ul className="loy-lines">
+                {s.topWallets.map((w) => (
+                  <li key={w.customerId} className="loy-line">
+                    <span className="loy-who">
+                      <Link href={`/admin/customers/${w.customerId}`}>{w.customerName ?? t(d, 'cus.loy.someone')}</Link>
+                    </span>
+                    <span className="a2-num loy-amt">{money(w.balanceMinor)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
           <section className="a2-card" data-testid="loyalty-apology">
             <h2 className="a2-h3">{t(d, 'cus.loy.apology.title')}</h2>
             <p className="a2-xs a2-mute a2-mt6">{t(d, s.apologyOn ? 'cus.loy.apology.on' : 'cus.loy.apology.off')}</p>
