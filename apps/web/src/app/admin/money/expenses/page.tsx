@@ -5,13 +5,16 @@
 // says so and takes nothing. Nothing here moves money. Words: messages/admin-expenses.*.json (`moneyExpenses.*`), the
 // line names and the books errors from admin-costs.*.json.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as inv from '@extas/inventory';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ExpensesScreen } from '@/components/admin/money/ExpensesScreen';
 import { moneyOf } from '@/components/admin/products/model';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
+import { withLaneF } from '@/lib/admin-lane-f';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -43,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ExpensesPage() {
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('books.read', deps, MOTHER_STORE_ID)]);
-  const view = withScreen(plain);
+  const view = withLaneF(withScreen(plain));
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -62,7 +65,23 @@ export default async function ExpensesPage() {
   const canEdit = access.guard.permissions?.has('fixedcosts.write') ?? false;
   return (
     <div className="a2-z" data-testid="expenses-page" data-lm-ready="" data-linked={fixed.linked ? 'yes' : 'no'}>
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyExpenses.title')} sub={t(view.dict, 'moneyExpenses.sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={t(view.dict, 'lf.fh.budgets.title')}
+        sub={t(view.dict, 'lf.fh.budgets.sub')}
+        right={
+          <>
+            <PrintButton label={t(view.dict, 'lf.mn.act.dl')} testId="cs-dl" />
+            <Link className="a2-btn" href="/admin/money/costs" data-testid="cs-fx">
+              {t(view.dict, 'lf.fh.budgets.addHead')}
+            </Link>
+            <Link className="a2-btn pri" href="/admin/money/expenses" data-testid="cs-add">
+              {t(view.dict, 'lf.fh.budgets.addExpense')}
+            </Link>
+          </>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       <ExpensesScreen dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} money={moneyOf(currency, view.locale)} view={v} lines={inv.COST_LINE_ORDER} today={today} openFrom={openFrom} linked={fixed.linked} canEdit={canEdit} receipts={receipts} />
     </div>
