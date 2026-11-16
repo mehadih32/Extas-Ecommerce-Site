@@ -43,6 +43,7 @@ import { imageSources } from '@extas/media';
 import type { SetBuilderSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { mediaDeps } from './media';
+import { requireOwnerPin } from './owner-pin';
 
 export type CombosPerm = cb.CombosPermission;
 
@@ -107,6 +108,17 @@ export async function handle(request: Request, deps: AdminDeps | null, permissio
   }
 }
 
+/**
+ * PR 971 (prototype v5, Sets › "Owner PIN"): with `catalogue.prices.requirePin` on, a set saved with a new or changed price asks for
+ * the owner's PIN (`pin` in the body). `before` is the price the set has now (undefined for a new set).
+ */
+async function pinForSetPrice(x: Ctx, bd: Record<string, unknown>, before: number | null | undefined): Promise<void> {
+  const next = (bd.combo as { setPriceMinor?: number | null } | undefined)?.setPriceMinor;
+  if (next === null || next === undefined || next === before) return;
+  if ((await x.admin.resolver.value('catalogue.prices.requirePin', { storeId: x.who.storeId })) !== true) return;
+  await requireOwnerPin(x.admin, x.who.actor, x.who.ctx, bd.pin, 'combos.set.price', x.who.storeId);
+}
+
 export const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 export const notFound = () => Promise.resolve(fail(404, 'not-found'));
 const asRecord = (v: unknown) => v as unknown as Record<string, unknown>;
@@ -155,7 +167,18 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
 
   if (a === undefined) {
     if (m === 'GET') return handle(request, deps, 'combos.read', async (x) => ({ combos: await cb.listCombos(x.deps, x.who) }));
-    if (m === 'POST') return handle(request, deps, 'combos.write', async (x) => ({ combo: await cb.createCombo(x.deps, x.who, (await body(request)).combo as cb.FixedComboInput) }), 201);
+    if (m === 'POST')
+      return handle(
+        request,
+        deps,
+        'combos.write',
+        async (x) => {
+          const bd = await body(request);
+          await pinForSetPrice(x, bd, undefined);
+          return { combo: await cb.createCombo(x.deps, x.who, bd.combo as cb.FixedComboInput) };
+        },
+        201,
+      );
     return notAllowed();
   }
   if (a === 'preview') {
@@ -168,6 +191,7 @@ export async function combosRoute(request: Request, deps: AdminDeps | null, path
     if (m === 'PUT')
       return handle(request, deps, 'combos.write', async (x) => {
         const bd = await body(request);
+        await pinForSetPrice(x, bd, (await cb.getCombo(x.deps, x.who, a)).setPriceMinor);
         return { combo: await cb.updateCombo(x.deps, x.who, a, bd.combo as cb.FixedComboInput, versionOf(bd)) };
       });
     return notAllowed();
