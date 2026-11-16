@@ -518,25 +518,27 @@ export default async function MarketingReportTab({
         csv={`/api/admin/reports/export/marketing?from=${q.from}&to=${q.to}`}
         notes={notes}
         limitDays={maxRows}
-      />
-      <ReportFilters
-        action={HERE}
-        keep={keep}
-        testId="rp-filters"
-        applyLabel={cc("apply")}
-        clearLabel={cc("clear")}
-        fields={[
-          {
-            name: "adch",
-            label: c("fAdChannel"),
-            all: c("fAllAdChannels"),
-            options: AD_FILTERS.map((x) => ({
-              value: x,
-              label: platformName(x),
-            })),
-            value: adF,
-          },
-        ]}
+        filters={
+        <ReportFilters
+          action={HERE}
+          keep={keep}
+          testId="rp-filters"
+          applyLabel={cc("apply")}
+          clearLabel={cc("clear")}
+          fields={[
+            {
+              name: "adch",
+              label: c("fAdChannel"),
+              all: c("fAllAdChannels"),
+              options: AD_FILTERS.map((x) => ({
+                value: x,
+                label: platformName(x),
+              })),
+              value: adF,
+            },
+          ]}
+        />
+        }
       />
       {adF !== "all" ? (
         <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">

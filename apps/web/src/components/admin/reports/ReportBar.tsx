@@ -4,6 +4,8 @@
 // Excel is the report's CSV (opens in Excel); PDF and Print use the browser's print box; Report packs opens Reports › Report packs.
 // PR 854: Schedule opens the prototype's own box (Telegram / e-mail, how often, hour) for THIS report (ScheduleButton).
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { PeriodSelect } from "./PeriodSelect";
 import { PrintButton } from "./PrintButton";
 import { ReportViews, type ViewOption } from "./ReportViews";
 import { ScheduleButton, type ScheduleTexts } from "./ScheduleButton";
@@ -43,6 +45,8 @@ export interface ReportBarProps {
   views?: readonly SavedView[] | null;
   /** Day text for the period line. */
   day?: (ymd: string) => string;
+  /** The report's filter selects (ReportFilters): drawn inside this card, in the row with Saved views (prototype v5). */
+  filters?: ReactNode;
 }
 
 /** The words of the Schedule box (PR 863: the Monthly review page shows the same button beside its month switch). */
@@ -93,6 +97,7 @@ export function ReportBar({
   reportKey,
   views,
   day,
+  filters,
 }: ReportBarProps) {
   const c = (k: string, v?: Record<string, string | number>) =>
     t(d, `reportsV5.common.${k}`, v);
@@ -152,6 +157,12 @@ export function ReportBar({
             </Link>
           ))}
         </nav>
+        <PeriodSelect
+          label={c("periodsLabel")}
+          value={key}
+          testId={`${id}-period-select`}
+          options={PROTO_PERIODS.map((k) => ({ value: k, label: c(`p.${k}`), href: href(k) }))}
+        />
         <Link
           href={toggle}
           className="rpsw"
@@ -214,6 +225,7 @@ export function ReportBar({
           </p>
         ))}
       <div className="rpbar-2">
+        {filters}
         {reportKey && views !== null ? (
           <ReportViews
             reportKey={reportKey}
@@ -233,7 +245,8 @@ export function ReportBar({
             }}
           />
         ) : null}
-        <span className="rpbar-grow" />
+      </div>
+      <div className="rpbar-3">
         <span className="rpbar-btns">
           <a
             className="a2-btn sm cr-tap"
