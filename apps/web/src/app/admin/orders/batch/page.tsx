@@ -7,6 +7,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Fragment, type ReactNode } from "react";
 import { MOTHER_STORE_ID } from "@extas/db/client";
 import * as od from "@extas/orders";
 import * as sh from "@extas/shipping";
@@ -30,6 +31,7 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { shippingDeps } from "@/lib/shipping-api";
 import { t } from "@/lib/i18n";
 import "../../settings-cards.css";
+import "../../parity-d6.css";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +111,118 @@ export default async function BatchPage({
     .sort((a, z) => z.handedOverAt.localeCompare(a.handedOverAt));
   const pastTotal = canPast ? b.pastCount : 0;
 
+  const stuckRows = b.yours.filter((r) => r.stuck.length);
+  const decided = b.pipeline.confirmed + b.pipeline.booked + b.pipeline.packed;
+  const pct = decided ? Math.round((b.moved.length / decided) * 100) : 0;
+  const fromLastN = b.yours.filter((r) => r.fromLast).length;
+  const insights = [
+    decided && b.moved.length
+      ? g("insight.rules", {
+          pct: n(pct),
+          n: n(Math.max(0, decided - b.moved.length)),
+        })
+      : null,
+    stuckRows.length ? g("insight.stuck", { n: n(stuckRows.length) }) : null,
+    fromLastN ? g("insight.fromLast", { n: n(fromLastN) }) : null,
+  ].filter((x): x is string => !!x);
+  const stuckSubLine = od.STUCK_KINDS.filter((k) => b.stuck[k] > 0)
+    .map((k) => `${g(`stuck.${k}`)} ${n(b.stuck[k])}`)
+    .join(" · ");
+  const pipeCards = [
+    {
+      key: "all",
+      label: g("pipe.all"),
+      value: b.total,
+      sub: g("pipe.allSub"),
+      href: "/admin/orders",
+    },
+    {
+      key: "toConfirm",
+      label: g("stage.toConfirm"),
+      value: b.pipeline.toConfirm,
+      sub: g("pipe.stuckN", { n: n(stuckRows.length) }),
+      href: "/admin/orders/confirm",
+    },
+    {
+      key: "confirmed",
+      label: g("stage.confirmed"),
+      value: b.pipeline.confirmed,
+      sub: g("pipe.confirmedSub"),
+      href: "/admin/orders/packing",
+    },
+    {
+      key: "booked",
+      label: g("stage.booked"),
+      value: b.pipeline.booked,
+      sub: g("pipe.bookedSub"),
+      href: "/admin/orders/packing",
+    },
+    {
+      key: "packed",
+      label: g("stage.packed"),
+      value: b.pipeline.packed,
+      sub: g("pipe.packedSub"),
+      href: "/admin/orders/packing",
+    },
+    {
+      key: "stuck",
+      label: g("pipe.stuck"),
+      value: stuckRows.length,
+      sub: stuckSubLine,
+      href: "/admin/orders/confirm",
+    },
+  ];
+  type Row = (typeof b.yours)[number];
+  const stuckExtra = (r: Row) => (
+    <>
+      {r.stuck.map((k) => (
+        <span key={k} className="a2-pill warn" title={g(`stuckWhy.${k}`)}>
+          {g(`stuck.${k}`)}
+        </span>
+      ))}{" "}
+      {g(`stuckWhy.${r.stuck[0]!}`)}
+    </>
+  );
+  const yourExtra = (r: Row) => (
+    <>
+      {r.stuck[0] ? (
+        <>
+          <span className="a2-pill warn" title={g(`stuckWhy.${r.stuck[0]}`)}>
+            {g(`stuck.${r.stuck[0]}`)}
+          </span>{" "}
+        </>
+      ) : null}
+      {g(`stage.${r.stage}`)}
+    </>
+  );
+  const OrderLine = ({ r, extra }: { r: Row; extra: ReactNode }) => (
+    <div className="o6-li" data-testid="batch-row">
+      <div className="o6-grow">
+        <p>
+          <Link href={orderHref(r.id)}>
+            <b>{r.number}</b>
+          </Link>{" "}
+          {r.fromLast ? (
+            <span className="o6-tag last">{g("fromLast")}</span>
+          ) : null}
+          {r.customerName ? (
+            <span className="a2-sm"> {r.customerName}</span>
+          ) : null}
+        </p>
+        <p className="o6-sub">{extra}</p>
+      </div>
+      <div className="o6-r">
+        <b>
+          {formatMoney(
+            r.totalMinor,
+            moneyOf(r.currency || currency, view.locale),
+          )}
+        </b>
+        <p className="o6-sub">{ageText(view, new Date(r.placedAt), now)}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="a2-z" data-testid="orders-batch" data-lm-ready="">
       <PageHead
@@ -130,9 +244,6 @@ export default async function BatchPage({
         }
       />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-note" role="note">
-        <span>{g("note")}</span>
-      </div>
       <nav
         className="a2-views"
         aria-label={g("viewsAria")}
@@ -169,32 +280,68 @@ export default async function BatchPage({
           data-testid="batch-past"
         >
           <h2 className="a2-h2">{g("pastH")}</h2>
+          <p className="a2-xs a2-mute">{g("pastSub")}</p>
           {pastBatches.length ? (
-            <ul className="a2-list">
-              {pastBatches.map((x) => (
-                <li key={x.batchId} data-testid="batch-past-row">
-                  <p>
-                    <b>{x.courier}</b> · {when(x.handedOverAt)}
-                  </p>
-                  <p className="a2-sm a2-mute">
-                    {g("pastRow", {
-                      parcels: n(x.parcels),
-                      pieces: n(x.pieces),
-                      collect: formatMoney(
-                        x.collectMinor,
-                        moneyOf(x.currency || currency, view.locale),
-                      ),
-                    })}
-                    {x.receivedBy
-                      ? ` · ${g("pastBy", { rider: x.receivedBy })}`
-                      : ""}
-                    {x.leftOut
-                      ? ` · ${g("pastMissing", { n: n(x.leftOut) })}`
-                      : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <div className="a2-tblw o6-tw">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{g("col.batch")}</th>
+                    <th>{g("col.when")}</th>
+                    <th>{g("col.courier")}</th>
+                    <th>{g("col.parcels")}</th>
+                    <th>{g("col.cod")}</th>
+                    <th>{g("col.taken")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pastBatches.map((x, i) => (
+                    <tr key={x.batchId} data-testid="batch-past-row">
+                      <td>
+                        <Link href="/admin/orders/packing/handover">
+                          <b>{n(pastBatches.length - i)}</b>
+                        </Link>
+                      </td>
+                      <td>{when(x.handedOverAt)}</td>
+                      <td>
+                        {x.courier}
+                        {x.receivedBy ? (
+                          <span className="a2-xs a2-mute">
+                            {" "}
+                            · {g("pastBy", { rider: x.receivedBy })}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td>
+                        {g("pastParcels", {
+                          parcels: n(x.parcels),
+                          pieces: n(x.pieces),
+                        })}
+                      </td>
+                      <td>
+                        {formatMoney(
+                          x.collectMinor,
+                          moneyOf(x.currency || currency, view.locale),
+                        )}
+                      </td>
+                      <td>
+                        <span className="a2-pill good">
+                          {g("takenN", { n: n(x.parcels) })}
+                        </span>
+                        {x.leftOut ? (
+                          <>
+                            {" "}
+                            <span className="a2-pill bad">
+                              {g("missingN", { n: n(x.leftOut) })}
+                            </span>
+                          </>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="a2-sm a2-mute" data-testid="batch-past-empty">
               {g("pastEmpty")}
@@ -208,122 +355,121 @@ export default async function BatchPage({
         </section>
       ) : (
         <>
-          <section
-            className="a2-sc"
+          <ul
+            className="o6-pipe"
             aria-label={g("pipelineH")}
             data-testid="batch-pipeline"
           >
-            <h2 className="a2-h2">{g("pipelineH")}</h2>
-            <ul className="a2-stats">
-              {(["toConfirm", "confirmed", "booked", "packed"] as const).map(
-                (k) => (
-                  <li key={k} data-stage={k}>
-                    <b>{n(b.pipeline[k])}</b>{" "}
-                    <span className="a2-mute">{g(`stage.${k}`)}</span>
-                  </li>
-                ),
-              )}
-            </ul>
-          </section>
-          <section
-            className="a2-sc"
-            aria-label={g("stuckH")}
-            data-testid="batch-stuck"
-          >
-            <h2 className="a2-h2">{g("stuckH")}</h2>
-            <p className="a2-xs a2-mute" data-testid="batch-stuck-sub">
-              {g("stuckSub")}{" "}
-              <Link href="/admin/orders/confirm">{g("openProcessing")}</Link>
-            </p>
-            {Object.values(b.stuck).some((x) => x > 0) ? (
-              <ul className="a2-stats">
-                {od.STUCK_KINDS.filter((k) => b.stuck[k] > 0).map((k) => (
-                  <li key={k} data-stuck={k} title={g(`stuckWhy.${k}`)}>
-                    <span className="a2-pill warn">{g(`stuck.${k}`)}</span>{" "}
-                    <b>{n(b.stuck[k])}</b>
-                  </li>
+            {pipeCards.map((c) => (
+              <li key={c.key} data-stage={c.key}>
+                <Link
+                  className={`o6-pc${c.key === "stuck" ? " stuck" : ""}`}
+                  href={c.href}
+                >
+                  <span className="o6-l">{c.label}</span>
+                  <b>{n(c.value)}</b>
+                  <span className="o6-s">{c.sub || "\u00a0"}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {insights.length ? (
+            <div className="a2-note" role="note" data-testid="batch-insight">
+              <span>
+                {insights.map((x, i) => (
+                  <Fragment key={i}>
+                    {i ? <br /> : null}
+                    {x}
+                  </Fragment>
                 ))}
-              </ul>
-            ) : (
-              <p className="a2-sm a2-mute">{g("stuckNone")}</p>
-            )}
-          </section>
-          <section
-            className="a2-sc"
-            aria-label={g("yoursH")}
-            data-testid="batch-yours"
-          >
-            <h2 className="a2-h2">{g("yoursH")}</h2>
-            <p className="a2-xs a2-mute">{g("yoursSub")}</p>
-            {b.yours.length ? (
-              <ul className="a2-list">
-                {b.yours.map((r) => (
-                  <li key={r.id} data-testid="batch-row">
-                    <p>
-                      <Link href={orderHref(r.id)}>
-                        <b>{r.number}</b>
-                      </Link>{" "}
-                      <span className="a2-pill line">
-                        {g(`stage.${r.stage}`)}
-                      </span>
-                      {r.fromLast ? (
-                        <span className="a2-pill info"> {g("fromLast")}</span>
-                      ) : null}
-                      {r.stuck.map((k) => (
-                        <span
-                          key={k}
-                          className="a2-pill warn"
-                          title={g(`stuckWhy.${k}`)}
-                        >
-                          {" "}
-                          {g(`stuck.${k}`)}
-                        </span>
-                      ))}
-                    </p>
-                    <p className="a2-sm a2-mute">
-                      {formatMoney(
-                        r.totalMinor,
-                        moneyOf(r.currency || currency, view.locale),
-                      )}{" "}
-                      ·{" "}
-                      {g("ago", {
-                        age: ageText(view, new Date(r.placedAt), now),
-                      })}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="a2-sm a2-mute">
-                {b.total ? g("yoursNone") : g("empty")}
+              </span>
+            </div>
+          ) : null}
+          {stuckRows.length ? (
+            <section
+              className="a2-sc a2-mt12"
+              aria-label={g("stuckH")}
+              data-testid="batch-stuck"
+            >
+              <h2 className="a2-h2">{g("stuckH")}</h2>
+              <p className="a2-xs a2-mute" data-testid="batch-stuck-sub">
+                {g("stuckSub")}{" "}
+                <Link href="/admin/orders/confirm">{g("openProcessing")}</Link>
               </p>
-            )}
-          </section>
-          <section
-            className="a2-sc"
-            aria-label={g("movedH")}
-            data-testid="batch-moved"
-          >
-            <h2 className="a2-h2">{g("movedH")}</h2>
-            <p className="a2-xs a2-mute">
-              {g("movedSub")}{" "}
-              <Link href="/admin/rules">{g("changeRules")}</Link>
-            </p>
-            {b.moved.length ? (
-              <ul className="a2-list">
-                {b.moved.map((x) => (
-                  <li key={x.id}>
-                    <Link href={orderHref(x.id)}>
-                      <b>{x.number}</b>
-                    </Link>{" "}
-                    <span className="a2-sm a2-mute">{x.reason}</span>
-                  </li>
+              <div className="o6-chips">
+                {od.STUCK_KINDS.filter((k) => b.stuck[k] > 0).map((k) => (
+                  <span
+                    key={k}
+                    className="a2-pill"
+                    data-stuck={k}
+                    title={g(`stuckWhy.${k}`)}
+                  >
+                    {g(`stuck.${k}`)} · {n(b.stuck[k])}
+                  </span>
                 ))}
-              </ul>
-            ) : (
-              <p className="a2-sm a2-mute">{g("movedNone")}</p>
-            )}
-          </section>
+              </div>
+              {stuckRows.map((r) => (
+                <OrderLine key={r.id} r={r} extra={stuckExtra(r)} />
+              ))}
+            </section>
+          ) : null}
+          <div className="o6-half">
+            <section
+              className="a2-sc"
+              aria-label={g("yoursH")}
+              data-testid="batch-yours"
+            >
+              <h2 className="a2-h2">{g("yoursT", { n: n(b.yours.length) })}</h2>
+              <p className="a2-xs a2-mute">{g("yoursSub")}</p>
+              {b.yours.length ? (
+                b.yours
+                  .slice(0, 12)
+                  .map((r) => (
+                    <OrderLine key={r.id} r={r} extra={yourExtra(r)} />
+                  ))
+              ) : (
+                <p className="a2-sm a2-mute">
+                  {b.total ? g("yoursNone") : g("empty")}
+                </p>
+              )}
+            </section>
+            <section
+              className="a2-sc"
+              aria-label={g("movedH")}
+              data-testid="batch-moved"
+            >
+              <h2 className="a2-h2">{g("movedT", { n: n(b.moved.length) })}</h2>
+              <p className="a2-xs a2-mute">
+                {g("movedSub")}{" "}
+                <Link href="/admin/rules">{g("changeRules")}</Link>
+              </p>
+              {b.moved.length ? (
+                b.moved.slice(0, 14).map((x) => (
+                  <div className="o6-li" key={x.id}>
+                    <div className="o6-grow">
+                      <p>
+                        <Link href={orderHref(x.id)}>
+                          <b>{x.number}</b>
+                        </Link>
+                        {x.customerName ? (
+                          <span className="a2-sm"> {x.customerName}</span>
+                        ) : null}
+                      </p>
+                      <p className="o6-sub">
+                        <span className="a2-pill good">{g("rulesTag")}</span>{" "}
+                        {x.reason}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="a2-sm a2-mute">{g("movedNone")}</p>
+              )}
+            </section>
+          </div>
+          <p className="a2-sm a2-mute o6-note" data-testid="batch-note">
+            {g("note")}
+          </p>
         </>
       )}
     </div>

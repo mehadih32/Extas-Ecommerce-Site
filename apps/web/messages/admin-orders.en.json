@@ -2025,7 +2025,7 @@
       "printAll": "Print all",
       "printHelp": "Opens To ship: the summary line, the picking list and the stickers of booked orders.",
       "note": "This batch holds every order that is not yet handed to the courier. When the courier pickup is recorded, those parcels move to “Past”.",
-      "pastH": "All past batches",
+      "pastH": "Past batches",
       "pastEmpty": "No pickup recorded yet.",
       "pastRow": "{parcels} parcels · {pieces} pieces · to collect {collect}",
       "pastBy": "Taken by {rider}",
@@ -2038,7 +2038,36 @@
       "openProcessing": "Open Processing",
       "yoursSub": "Needs a person · oldest first",
       "movedSub": "Rules confirm up to “Confirmed”, never further",
-      "changeRules": "Change the rules"
+      "changeRules": "Change the rules",
+      "pastSub": "A batch is made each time the courier pickup is recorded. Click one to open its orders.",
+      "col": {
+        "batch": "Batch",
+        "when": "Date & time",
+        "courier": "Courier",
+        "parcels": "Parcels",
+        "cod": "COD total",
+        "taken": "Taken / missing"
+      },
+      "pastParcels": "{parcels} parcels · {pieces} pieces",
+      "takenN": "{n} taken",
+      "missingN": "{n} missing",
+      "pipe": {
+        "all": "Not handed over",
+        "allSub": "every open order",
+        "stuckN": "{n} stuck",
+        "confirmedSub": "ready to book",
+        "bookedSub": "ready to print",
+        "packedSub": "waiting for pickup",
+        "stuck": "Stuck"
+      },
+      "insight": {
+        "rules": "Rules confirmed {pct}% of these orders by themselves — {n} needed a person.",
+        "stuck": "{n} stuck in Processing: clear them so they can be booked.",
+        "fromLast": "{n} older orders from before the last pickup are still here — they are on top of your list."
+      },
+      "yoursT": "Your work ({n})",
+      "movedT": "Moved on by itself ({n})",
+      "rulesTag": "Rules"
     },
     "cs": {
       "title": "Courier score",
