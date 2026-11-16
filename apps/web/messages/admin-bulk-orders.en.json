@@ -10,6 +10,7 @@
       "value": "Order value",
       "due": "Balance to collect"
     },
+    "empty": "No bulk orders yet. Press “New bulk order”.",
     "state": {
       "QUOTE_SENT": "Quote sent",
       "IN_DELIVERY": "In delivery",
@@ -73,7 +74,7 @@
       "advanceDone": "Received",
       "advanceBtn": "Advance received",
       "balanceBtn": "Balance received",
-      "afterLast": "after the last batch",
+      "afterLast": "after last batch",
       "quote": "Quotation",
       "invoice": "Company invoice",
       "pin": "Owner PIN",
