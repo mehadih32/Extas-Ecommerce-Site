@@ -358,6 +358,7 @@
       "waitingSub": "Handed back in this month, not approved or declined yet. They do not stop the close: the close lists them as waiting.",
       "waitingSince": "handed back {day}",
       "waitingNone": "Every piece returned in this month is checked."
-    }
+    },
+    "payErp": "Pay ERP"
   }
 }

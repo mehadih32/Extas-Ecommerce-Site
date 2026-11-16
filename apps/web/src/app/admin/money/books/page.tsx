@@ -86,7 +86,19 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
   const bd: Dict = { bk: d.bk as Dict };
   const head = (
     <>
-      <PageHead view={view} place={locateKey('booksAccount')} title={t(d, 'bk.title.account')} sub={t(d, 'bk.sub.account')} />
+      <PageHead
+        view={view}
+        place={locateKey('booksAccount')}
+        title={t(d, 'bk.title.account')}
+        sub={t(d, 'bk.sub.account')}
+        right={
+          ov.link && ov.model !== 'v5' ? (
+            <Link className="a2-btn pri" href={go(`${HERE}?view=payments#books-pay-record`)} data-testid="er-pay">
+              {t(d, 'bk.payErp')}
+            </Link>
+          ) : undefined
+        }
+      />
       <SectionTabs view={view} current="booksAccount" />
     </>
   );
@@ -259,7 +271,7 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
 
       {payments ? (
         <>
-          <section className="a2-card tight a2-mt12" data-testid="books-pay-record">
+          <section className="a2-card tight a2-mt12" id="books-pay-record" data-testid="books-pay-record">
             <p className="a2-xs a2-mute">{t(d, 'bk.pay.warn')}</p>
             {canRecord ? (
               <div className="a2-mt6">
