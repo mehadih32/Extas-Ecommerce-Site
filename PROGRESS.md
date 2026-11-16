@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 952. Processing: the title line says how many need a person and how many the rules already confirmed in the current batch, the Merge looks back line (days and auto-merge on or off from the settings), and the plain empty line Nothing needs a person here; guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
+
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 951. All orders: the Not handed over card on Batch opens the current batch with the Showing the current batch only note and Show all orders; one plain No orders match these filters line; Show more button; guide, messages en+bn, test. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 950. Orders Batch rebuilt to the prototype: six pipeline cards, the insight note, the Stuck card with its order lines, Your work and Moved on by itself side by side with amount and age, Past batches as a table (Batch, Date & time, Parcels, COD total, Taken / missing); guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
