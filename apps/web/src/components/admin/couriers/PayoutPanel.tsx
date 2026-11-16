@@ -139,3 +139,25 @@ export function PayoutRowActions({ dict, payoutId, canCheck, canSettle, canClose
     </span>
   );
 }
+
+/** PR 973 (prototype v5, Claims & payouts › "Refresh status"): asks the courier about every open payout request on the page, one after the other. */
+export function RefreshPayouts({ dict, ids }: { dict: Dict; ids: string[] }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    let bad = 0;
+    for (const payoutId of ids) {
+      const a = await send(`${API}/${payoutId}/check`, {});
+      if (!a.data.ok) bad += 1;
+    }
+    setBusy(false);
+    showToast({ text: bad ? refusal(dict, 'other') : t(dict, 'cr.y.checked'), tone: bad ? 'bad' : 'ok' });
+    router.refresh();
+  };
+  return (
+    <button type="button" className="a2-btn sm" disabled={busy || !ids.length} onClick={() => void go()} data-testid="payouts-refresh">
+      {t(dict, 'cr.y.check')}
+    </button>
+  );
+}

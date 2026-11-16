@@ -91,6 +91,27 @@ export function weeklySuccess(parcels: readonly FinishedParcel[], now: Date, wee
   return out;
 }
 
+export interface DayPoint {
+  /** The day, as an ISO date. */
+  day: string;
+  delivered: number;
+  returned: number;
+}
+
+/** PR 973 (prototype v5, Courier 360 › Last 14 days): parcels delivered and returned per day, oldest first, the last day being `now`'s (pure). */
+export function dailyCounts(parcels: readonly FinishedParcel[], now: Date, days = 14): DayPoint[] {
+  const key = (d: Date) => d.toISOString().slice(0, 10);
+  const out: DayPoint[] = Array.from({ length: days }, (_, i) => ({ day: key(new Date(now.getTime() - (days - 1 - i) * DAY)), delivered: 0, returned: 0 }));
+  const at = new Map(out.map((o) => [o.day, o]));
+  for (const p of parcels) {
+    const row = at.get(key(p.endedAt));
+    if (!row) continue;
+    if ((DELIVERED as readonly string[]).includes(p.status)) row.delivered += 1;
+    else row.returned += 1;
+  }
+  return out;
+}
+
 const finishedSelect = { status: true, deliveredAt: true, returnedAt: true, pickedAt: true, bookedAt: true, chargeMinor: true, courierAccountId: true } as const;
 
 function toFinished(r: { status: string; deliveredAt: Date | null; returnedAt: Date | null; pickedAt: Date | null; bookedAt: Date | null; chargeMinor: number | null }): FinishedParcel | null {
@@ -217,6 +238,8 @@ async function routingSavings(deps: ShippingDeps, who: Who, enabled: boolean, si
 export interface CourierDetail {
   courier: CourierCard;
   weekly: WeekPoint[];
+  /** PR 973: delivered and returned per day, the last 14 days. */
+  daily: DayPoint[];
   /** Exception parcels with the courier now (attempt failed, address, lost, damaged). */
   exceptions: number;
 }
@@ -241,12 +264,11 @@ export async function courierDetail(deps: ShippingDeps, who: Who, courierId: str
     }),
     deps.db.shipment.count({ where: { storeId: who.storeId, courierAccountId: courierId, status: { in: [...EXCEPTION_STATUSES] } } }),
   ]);
+  const finishedRows = rows.map(toFinished).filter((x): x is FinishedParcel => x !== null);
   return {
     courier,
-    weekly: weeklySuccess(
-      rows.map(toFinished).filter((x): x is FinishedParcel => x !== null),
-      now,
-    ),
+    weekly: weeklySuccess(finishedRows, now),
+    daily: dailyCounts(finishedRows, now),
     exceptions,
   };
 }
