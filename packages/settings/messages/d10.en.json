@@ -1,0 +1,20 @@
+{
+  "backups": {
+    "schedule": {
+      "label": "Backup schedule",
+      "help": "How often the shop is backed up (every 6 hours, every 12 hours or once a day) and how many copies the server's own disk keeps (the newest 3 to 7). Google Drive always keeps the newest 3 checked copies."
+    }
+  },
+  "health": {
+    "checks": {
+      "label": "Health alerts and checks",
+      "help": "Whether a Telegram alert goes out when something breaks (shop down, backup failed, many errors, ERP link lost) and how often the full health and audit check runs."
+    }
+  },
+  "updates": {
+    "auto": {
+      "label": "Install updates by themselves",
+      "help": "On: an update is installed by itself at night, only after every check has passed on the test shop, and it goes back by itself if anything fails. Off: updates wait until someone installs them."
+    }
+  }
+}

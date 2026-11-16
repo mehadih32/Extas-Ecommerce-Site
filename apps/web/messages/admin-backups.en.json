@@ -1,4 +1,26 @@
 {
+  "board": {
+    "moreSub": "The four boxes, the go-live check, the Google Drive and Azure Blob cards, the last nightly runs, every backup setting and the last requests.",
+    "more": "More options",
+    "schedule": {
+      "h": "Schedule",
+      "every": "Back up every",
+      "h6": "6 hours",
+      "h12": "12 hours (twice a day)",
+      "daily": "day, at {time}",
+      "keep": "Keep on the server",
+      "newest": "newest {n}",
+      "drive": "Google Drive always keeps the newest {n}. A new one replaces the oldest only after Google has checked it.",
+      "save": "Save schedule",
+      "saved": "Schedule saved"
+    },
+    "drill": {
+      "h": "Monthly restore drill",
+      "passed": "Passed · {when}",
+      "failed": "Failed · {when}",
+      "none": "No restore drill has run yet"
+    }
+  },
   "metaTitle": "Backups & restore · Admin",
   "title": "Backups & restore",
   "sub": "A full copy of the shop — orders, customers, products, photos, settings — kept on the server and in your Google Drive.",

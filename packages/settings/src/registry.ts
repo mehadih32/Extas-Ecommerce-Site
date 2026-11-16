@@ -188,6 +188,7 @@ import { toShipSettings } from './registry-to-ship';
 import { courierWatchSettings } from './registry-courier-watch';
 import { couriersV5Settings } from './registry-couriers-v5';
 import { courierSetupSettings } from './registry-courier-setup';
+import { d10Settings } from './registry-d10';
 import { rulesHubSettings } from './registry-rules-hub';
 import { marketingCalendarSettings } from './registry-marketing-calendar';
 import { marketingReportSettings } from './registry-marketing-report';
@@ -1582,6 +1583,7 @@ export const registry = {
   ...couriersV5Settings,
   ...courierSetupSettings,
   ...rulesHubSettings,
+  ...d10Settings,
   ...marketingCalendarSettings,
   ...marketingReportSettings,
   // S02 · PR 76 · the page builder: the category page's sections (registry-layouts.ts, version 240).

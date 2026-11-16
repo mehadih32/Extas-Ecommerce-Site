@@ -247,6 +247,8 @@ export * from './registry-courier-watch';
 export * from './registry-courier-setup';
 // S28 · PR 678, 679 — the Rules page's pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts, version 320).
 export * from './registry-rules-hub';
+// D10 · PR 1004-1006 - the backup schedule, the health alerts and checks, automatic updates (registry-d10.ts, version 1004).
+export * from './registry-d10';
 // S13 · PR 282 — the marketing calendar: the switch and how many days one view shows (registry-marketing-calendar.ts, version 217).
 export * from './registry-marketing-calendar';
 // S13 · PR 283 — the marketing report: the switch, the longest period and a message send's result days (registry-marketing-report.ts, version 218).
