@@ -536,10 +536,6 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
               <button type="button" className={`lm-tb${guide ? ' on' : ''}`} aria-label={tt('top.guide')} title={tt('top.guide')} aria-expanded={!!guide} onClick={() => (guide ? setGuide(null) : openHere())} data-testid="a2-help">
                 <ShellIcon name="help" size={19} />
               </button>
-              {langGroup}
-              <button type="button" className="lm-tb" aria-pressed={dark} aria-label={dark ? tt('top.light') : tt('top.dark')} title={dark ? tt('top.light') : tt('top.dark')} onClick={toggleMode} data-testid="lm-moon">
-                <ShellIcon name={dark ? 'sun' : 'moon'} size={19} />
-              </button>
               <button
                 type="button"
                 className={`lm-tb${ntf ? ' on' : ''}`}
@@ -562,6 +558,10 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
                   </i>
                 ) : null}
               </button>
+              <button type="button" className="lm-tb" aria-pressed={dark} aria-label={dark ? tt('top.light') : tt('top.dark')} title={dark ? tt('top.light') : tt('top.dark')} onClick={toggleMode} data-testid="lm-moon">
+                <ShellIcon name={dark ? 'sun' : 'moon'} size={19} />
+              </button>
+              {langGroup}
               <button type="button" className="lm-tb lm-av lm-phav" data-a2pop-btn aria-label={`${tt('top.account')} · ${model.me.name}`} aria-haspopup="menu" aria-expanded={pop === 'me2'} onClick={() => setPop(pop === 'me2' ? null : 'me2')} data-testid="a2-avatar">
                 {model.me.initials}
               </button>
