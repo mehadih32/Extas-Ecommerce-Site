@@ -69,6 +69,17 @@
 .adm2 .a2-man-mkl { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .adm2 .a2-man-mkl span { display: inline-flex; gap: 6px; align-items: center; }
 .adm2 .a2-man-shot small { display: block; margin-top: 4px; color: var(--mute); font-size: 12px; }
+/* PR 937 — each page is a fold-out (prototype v5 "set-man"): the page's name is the line you tap; the buttons above open or close all */
+.adm2 .a2-man-acc > .a2-man-sum { cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; list-style: none; }
+.adm2 .a2-man-acc > .a2-man-sum::-webkit-details-marker { display: none; }
+.adm2 .a2-man-acc > .a2-man-sum::before { content: '▸'; flex: none; }
+.adm2 .a2-man-acc[open] > .a2-man-sum::before { content: '▾'; }
+.adm2 .a2-man-acc > .a2-man-sum h2 { font-size: 18px; font-weight: 650; color: var(--ink); margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .a2-man-acc-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.adm2 .a2-man-acc-bar .a2-btn { min-height: 44px; }
+.adm2 .a2-man-printch { break-before: page; }
+@media print { .adm2 .a2-man-acc-bar { display: none; } }
+
 /* PR 933 — Project files under the manual (prototype v5 "Project files"): three small cards that wrap, never cut text. */
 .adm2 .a2-man-files { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 10px; }
 .adm2 .a2-man-file { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow-wrap: anywhere; }

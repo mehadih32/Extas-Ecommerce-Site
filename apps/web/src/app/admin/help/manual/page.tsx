@@ -16,6 +16,7 @@ import type { ReactNode } from 'react';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { ManualChapter, type ManualChapterPage } from '@/components/admin/help/ManualChapter';
+import { PrintNow } from '@/components/admin/help/PrintNow';
 import { PageHead, SectionTabs, ShellState, shellViewer } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -46,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'man.metaTitle'), robots: { index: false, follow: false } };
 }
 
-type Props = { searchParams: Promise<{ c?: string; q?: string; new?: string }> };
+type Props = { searchParams: Promise<{ c?: string; q?: string; new?: string; print?: string }> };
 
 export default async function ManualPage(props: Props) {
   const deps = adminDeps();
@@ -67,7 +68,7 @@ export default async function ManualPage(props: Props) {
   const [outline, mdReady] = await Promise.all([manualOutline(viewer), hasManualMd()]);
   const here = locateKey(KEY);
   const q = (typeof sp.q === 'string' ? sp.q : '').trim().slice(0, Q_MAX);
-  const mode: 'search' | 'new' | 'chapter' = q ? 'search' : sp.new === '1' ? 'new' : 'chapter';
+  const mode: 'search' | 'new' | 'chapter' | 'print' = sp.print === '1' ? 'print' : q ? 'search' : sp.new === '1' ? 'new' : 'chapter';
   const head = (
     <>
       <PageHead
@@ -100,7 +101,34 @@ export default async function ManualPage(props: Props) {
   const tt = (k: string) => t(d, `shell.guide.${k}`);
 
   let main: ReactNode;
-  if (mode === 'search') {
+  if (mode === 'print') {
+    // PR 937: the whole manual on one page, every page folded open, then the browser's print box (Save as PDF)
+    const book = await readShots();
+    const chapters = await Promise.all(outline.map(async (o) => ({ o, chapter: await readChapter(o.section, viewer) })));
+    main = (
+      <>
+        <PrintNow />
+        {chapters.map(({ o, chapter }, i) => (
+          <section key={o.section} className="a2-man-printch" data-testid="manual-print-chapter" data-section={o.section}>
+            <div className="a2-man-chh">
+              <span className="a2-pill line">{s('chapter', { n: i + 1 })}</span>
+              <h2>{secName(o.section)}</h2>
+              {chapter?.overviewTitle ? <p>{chapter.overviewTitle}</p> : null}
+            </div>
+            <ManualChapter
+              base={HERE}
+              section={o.section}
+              sectionName={secName(o.section)}
+              overview={chapter?.overview ?? null}
+              pages={(chapter?.pages ?? []).map((p) => ({ id: p.id, anchor: manualAnchor(p.id), href: p.href, guide: chapter!.guides[p.id]!, shots: book.byGuide[p.id] ?? [] }))}
+              texts={{ about: s('about'), open: s('open'), top: s('top'), shot: s('shot'), taken: book.at ? s('taken', { at: book.at }) : null, boxes: { tip: tt('box.tip'), careful: tt('box.careful'), example: tt('box.example') }, expandAll: s('expandAll'), collapseAll: s('collapseAll') }}
+              allOpen
+            />
+          </section>
+        ))}
+      </>
+    );
+  } else if (mode === 'search') {
     const words = queryWords(q);
     const hits = words.length ? await searchManual(q, viewer) : [];
     main = (
@@ -163,7 +191,7 @@ export default async function ManualPage(props: Props) {
           sectionName={secName(current.section)}
           overview={chapter?.overview ?? null}
           pages={pages}
-          texts={{ about: s('about'), open: s('open'), top: s('top'), shot: s('shot'), taken: book.at ? s('taken', { at: book.at }) : null, boxes: { tip: tt('box.tip'), careful: tt('box.careful'), example: tt('box.example') } }}
+          texts={{ about: s('about'), open: s('open'), top: s('top'), shot: s('shot'), taken: book.at ? s('taken', { at: book.at }) : null, boxes: { tip: tt('box.tip'), careful: tt('box.careful'), example: tt('box.example') }, expandAll: s('expandAll'), collapseAll: s('collapseAll') }}
         />
         {!pages.length ? <p className="a2-card a2-man-none">{s('noGuide')}</p> : null}
         <div className="a2-man-pn">
@@ -197,6 +225,9 @@ export default async function ManualPage(props: Props) {
         </button>
         <Link className={`a2-btn${mode === 'new' ? ' on' : ''}`} href={`${HERE}?new=1`} data-testid="manual-new-link" aria-current={mode === 'new' ? 'page' : undefined}>
           {s('newH')}
+        </Link>
+        <Link className="a2-btn" href={`${HERE}?print=1`} target="_blank" data-testid="manual-pdf">
+          {s('downloadPdf')}
         </Link>
         {mdReady ? (
           <a className="a2-btn" href="/api/admin/help/manual-md" download data-testid="manual-download">
