@@ -154,3 +154,10 @@
 
 /* PR 708: the long "Add the demo catalogue" button wraps inside the card on a phone. */
 .adm2 .dm-hero .a2-btn[data-testid]{display:flex;box-sizing:border-box;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center;justify-content:center;height:auto;min-height:44px;margin-left:0;margin-right:0;width:100%}
+
+/* PR 960: Demo products as the prototype draws it: the big line with its small line under it, and the pop-up as a customer sees it. */
+.dm-big { display: block; font-size: var(--ad-fs-body); }
+.dm-subline { display: block; }
+.dm-pop { margin-top: 10px; padding: 12px; border: 1px solid var(--ad-line); border-radius: var(--ad-radius); background: var(--ad-surface2); overflow-wrap: anywhere; }
+.dm-pop-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.dm-pop-btns .a2-btn { pointer-events: none; }
