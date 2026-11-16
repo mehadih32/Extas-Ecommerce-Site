@@ -11,6 +11,17 @@
       "due": "Balance to collect"
     },
     "empty": "No bulk orders yet. Press “New bulk order”.",
+    "send": {
+      "text": "Hello {who}, here is quote {ref}: {pieces} pieces, total {total}. Advance {pct}% ({advance}), balance {balance} after the last batch. The quote is valid until {date}.",
+      "whatsapp": "Send on WhatsApp",
+      "sms": "Send by SMS",
+      "logged": "Opened with the words ready. Press send there; the press is logged.",
+      "last": "Last sent {when} by {channel} ({n} in all)",
+      "ch": {
+        "WHATSAPP": "WhatsApp",
+        "SMS": "SMS"
+      }
+    },
     "state": {
       "QUOTE_SENT": "Quote sent",
       "IN_DELIVERY": "In delivery",
@@ -57,6 +68,7 @@
       "advance": "Advance %",
       "batches": "Deliver in batches",
       "note": "Note",
+      "saveSend": "Save & send quote",
       "save": "Save quote",
       "saving": "Saving…",
       "saved": "Quote saved.",

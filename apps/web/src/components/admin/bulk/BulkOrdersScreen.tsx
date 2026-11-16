@@ -95,11 +95,34 @@ export function BulkOrdersScreen(p: BulkOrdersScreenProps) {
     setPhone(e.phone);
     setNote(e.itemsText ?? '');
   }
-  async function saveQuote() {
+  /** PR 972: the words of a quote message, from the saved quote's own figures (nothing is typed by the machine into a buyer's phone but this). */
+  const quoteText = (q: { company: string; contact: string; ref: string; pieces: number; totalMinor: number; advancePct: number; advanceMinor: number; balanceMinor: number; validUntil: string }) =>
+    c('send.text', { who: q.contact || q.company, ref: q.ref, pieces: q.pieces, total: m(q.totalMinor), advance: m(q.advanceMinor), pct: q.advancePct, balance: m(q.balanceMinor), date: q.validUntil });
+  /** PR 972: a staff member pressed Send: log it, then open WhatsApp or SMS with the words ready. The person presses send there. */
+  async function sendQuoteNow(quoteId: string, channel: 'WHATSAPP' | 'SMS', text: string) {
+    const win = channel === 'WHATSAPP' ? window.open('', '_blank') : null;
+    const a = await call('POST', `/api/admin/bulk-orders/quotes/${quoteId}/send`, { channel, text });
+    const link = (a.data as { link?: string }).link;
+    if (a.data.ok && link) {
+      if (win) win.location.assign(link);
+      else window.location.assign(link);
+      showToast({ text: c('send.logged'), tone: 'ok' });
+      router.refresh();
+    } else {
+      win?.close();
+      bad(a);
+    }
+  }
+  async function saveQuote(andSend = false) {
     setBusy(true);
     setSaid(null);
     const a = await call('POST', '/api/admin/bulk-orders', { enquiryId, company, contact, phone, lines, ...priceInput(), advancePct: Number(advance), batches: Number(batches), note: note.trim() || null });
     setBusy(false);
+    if (a.data.ok && andSend) {
+      const d = a.data as unknown as { id: string; ref: string; validUntil: string };
+      const f = live;
+      await sendQuoteNow(d.id, 'WHATSAPP', quoteText({ company, contact, ref: d.ref, pieces: f.pieces, totalMinor: f.totalMinor, advancePct: Number(advance) || 0, advanceMinor: f.advanceMinor, balanceMinor: f.balanceMinor, validUntil: d.validUntil }));
+    }
     if (a.data.ok) {
       showToast({ text: c('new.saved'), tone: 'ok' });
       setFormOpen(false);
@@ -234,7 +257,8 @@ export function BulkOrdersScreen(p: BulkOrdersScreenProps) {
                 <div className="s28-row"><span className="grow">{c('sum.advance', { pct: Number(advance) || 0 })}</span><b>{m(live.advanceMinor)}</b></div>
                 <div className="s28-row"><span className="grow">{c('sum.balance')}</span><b>{m(live.balanceMinor)}</b></div>
               </div>
-              <button type="button" className="a2-btn a2-mt12" disabled={busy} onClick={saveQuote} data-testid="bulk-save">{busy ? c('new.saving') : c('new.save')}</button>
+              <button type="button" className="a2-btn a2-mt12" disabled={busy} onClick={() => saveQuote(false)} data-testid="bulk-save">{busy ? c('new.saving') : c('new.save')}</button>
+              <button type="button" className="a2-btn a2-mt12" disabled={busy} onClick={() => saveQuote(true)} data-testid="bulk-save-send" style={{ marginInlineStart: 8 }}>{busy ? c('new.saving') : c('new.saveSend')}</button>
             </div>
           ) : null}
         </section>
@@ -287,7 +311,14 @@ export function BulkOrdersScreen(p: BulkOrdersScreenProps) {
             <div className="s28-row a2-mt6">
               <button type="button" className="a2-btn" onClick={() => paper(q, false)}>{c('card.quote')}</button>
               <button type="button" className="a2-btn" onClick={() => paper(q, true)}>{c('card.invoice')}</button>
+              {p.canEdit && p.view.enabled ? (
+                <>
+                  <button type="button" className="a2-btn" onClick={() => sendQuoteNow(q.id, 'WHATSAPP', quoteText(q))} data-testid="bulk-send-wa">{c('send.whatsapp')}</button>
+                  <button type="button" className="a2-btn" onClick={() => sendQuoteNow(q.id, 'SMS', quoteText(q))} data-testid="bulk-send-sms">{c('send.sms')}</button>
+                </>
+              ) : null}
             </div>
+            {q.sent ? <div className="a2-xs a2-mute a2-mt6" data-testid="bulk-sent">{c('send.last', { when: q.sent.at.slice(0, 16).replace('T', ' '), channel: c(`send.ch.${q.sent.channel}`), n: q.sent.count })}</div> : null}
           </section>
         ))}
       </div>

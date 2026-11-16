@@ -111,4 +111,26 @@ describe.skipIf(!HAS_TEST_DB)('bulk orders on PostgreSQL (PR 704)', () => {
     expect(await t.prisma.payment.count({ where: { storeId: A } })).toBe(0);
     expect(await t.prisma.auditLog.count({ where: { action: { in: ['bulkQuote.advanceReceived', 'bulkQuote.balanceReceived', 'bulkBatch.move'] } } })).toBe(2 + 3 * 3);
   });
+
+  it('PR 972: a quote goes out only on a press of Send: logged with the words, the channel and who; nothing is sent by the server', async () => {
+    const before = await t.prisma.bulkQuoteSend.count();
+    // saving a quote never sends anything by itself
+    expect(before).toBe(0);
+    const text = 'Hello, quote QT-1001: 100 pieces. Valid until 2026-12-01.';
+    expect((await route('POST', ['quotes', quoteId, 'send'], { body: { channel: 'EMAIL', text } })).body.error).toBe('INVALID_INPUT');
+    expect((await route('POST', ['quotes', quoteId, 'send'], { body: { channel: 'WHATSAPP', text: '   ' } })).body.error).toBe('INVALID_INPUT');
+    expect((await route('POST', ['quotes', '019a0000-0000-7000-8000-000000000000', 'send'], { body: { channel: 'SMS', text } })).body.error).toBe('NOT_FOUND');
+    const wa = await route('POST', ['quotes', quoteId, 'send'], { body: { channel: 'WHATSAPP', text } });
+    expect(wa.status).toBe(200);
+    expect(wa.body.link).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
+    const sms = await route('POST', ['quotes', quoteId, 'send'], { body: { channel: 'SMS', text } });
+    expect(sms.body.link).toMatch(/^sms:\+?\d+\?body=/);
+    const rows = await t.prisma.bulkQuoteSend.findMany({ orderBy: { sentAt: 'asc' } });
+    expect(rows.map((r) => r.channel)).toEqual(['WHATSAPP', 'SMS']);
+    expect(rows[0]).toMatchObject({ storeId: A, quoteId, body: text });
+    expect(rows[0]!.sentById).not.toBeNull();
+    expect(await t.prisma.auditLog.count({ where: { action: 'bulkQuote.send' } })).toBe(2);
+    const q = (await route('GET', [])).body.quotes.find((x: any) => x.id === quoteId);
+    expect(q.sent).toMatchObject({ channel: 'SMS', count: 2 });
+  });
 });
