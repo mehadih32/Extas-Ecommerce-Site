@@ -163,3 +163,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-15 18:45 | `7b474d84f1e6` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-15 20:32 | `02c047c8b7d7` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-16 06:38 | `40a179957516` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/rules: request 403: /api/admin/rules/hub/sim (phone); /admin/rules: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/rules/hub/sim) (phone); /admin/rules: request 403: /api/admin/rules/hub/sim (desktop)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-16 12:24 | `7f8403f3d444` | deploy | OK | ok | OK, smoke OK | — |
