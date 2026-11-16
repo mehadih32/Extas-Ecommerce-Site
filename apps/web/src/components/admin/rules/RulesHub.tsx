@@ -4,7 +4,7 @@
 // phone). A setting row edits its setting's own fields; a Smart Rule opens on its own page ("Managed in …"). Money rules ask for the
 // owner's PIN before they save. "What changes" shows before → after; More options holds "back to the shipped value".
 import Link from 'next/link';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { HubGroupId, HubField } from '@extas/rules/pure';
 import { HUB_GROUPS, formatValue, isTryable, type TryResult } from '@extas/rules/pure';
 import type { HubRowView, HubScreen, HubSettingRowView, HubSmartRowView, HubLinkRowView } from '@extas/rules';
@@ -33,6 +33,14 @@ export interface RulesHubProps {
   roles: HubRole[];
   perms: { write: boolean; approve: boolean };
   initialSel: string | null;
+  /** PR 946: what really happened to scored orders, by band (the courier score's report); null when the score is off or not readable. */
+  accuracy?: ScoreAccuracyView | null;
+}
+
+export interface ScoreAccuracyView {
+  days: number;
+  rows: { band: string; orders: number; delivered: number; returned: number; cancelled: number; returnedPct: number | null }[];
+  suggestion: { values: { pct: number } } | null;
 }
 
 type Json = Record<string, unknown>;
@@ -233,11 +241,14 @@ export function RulesHub(props: RulesHubProps) {
                   }
                   const href = r.type === 'smart' ? `/admin/rules/smart?rule=${r.ruleId}` : (r as HubLinkRowView).href;
                   return (
-                    <div key={r.id} className="rh-row">
-                      <Link className="rh-rr" href={href}>
-                        {inner}
-                      </Link>
-                    </div>
+                    <Fragment key={r.id}>
+                      <div className="rh-row">
+                        <Link className="rh-rr" href={href}>
+                          {inner}
+                        </Link>
+                      </div>
+                      {r.id === 'score' && props.accuracy ? accuracyCard(props.accuracy) : null}
+                    </Fragment>
                   );
                 })}
               </section>
@@ -255,6 +266,51 @@ export function RulesHub(props: RulesHubProps) {
       </div>
     </div>
   );
+
+  function accuracyCard(a: ScoreAccuracyView): ReactNode {
+    return (
+      <div className="rh-acc" data-testid="rh-accuracy">
+        <div className="rh-acc-h">
+          <b>{tt('acc.title')}</b>
+          <span className="rh-pl info">{tt('acc.last', { days: a.days })}</span>
+        </div>
+        <p className="rh-hint">{tt('acc.sub')}</p>
+        {a.rows.length ? (
+          <div className="rh-acc-w">
+            <table className="rh-acc-t">
+              <thead>
+                <tr>
+                  <th>{tt('acc.band')}</th>
+                  <th className="num">{tt('acc.orders')}</th>
+                  <th className="num">{tt('acc.delivered')}</th>
+                  <th className="num">{tt('acc.refused')}</th>
+                  <th className="num">{tt('acc.cancelled')}</th>
+                  <th className="num">{tt('acc.rate')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {a.rows.map((r) => (
+                  <tr key={r.band}>
+                    <td data-l={tt('acc.band')}>{tt(`acc.bands.${r.band}`)}</td>
+                    <td className="num" data-l={tt('acc.orders')}>{r.orders}</td>
+                    <td className="num" data-l={tt('acc.delivered')}>{r.delivered}</td>
+                    <td className="num" data-l={tt('acc.refused')}>{r.returned}</td>
+                    <td className="num" data-l={tt('acc.cancelled')}>{r.cancelled}</td>
+                    <td className="num" data-l={tt('acc.rate')}>{r.returnedPct === null ? '—' : `${r.returnedPct}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="rh-hint">{tt('acc.none')}</p>
+        )}
+        <p className="rh-acc-s">
+          <Icon name={a.suggestion ? 'info' : 'check'} size={15} /> {a.suggestion ? tt('acc.sugg', { pct: a.suggestion.values.pct }) : tt('acc.ok')}
+        </p>
+      </div>
+    );
+  }
 
   function titleOfId(id: string | null): string {
     const r = hub.rows.find((x) => x.id === id);

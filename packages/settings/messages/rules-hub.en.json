@@ -20,5 +20,11 @@
       "label": "Peak and Eid mode",
       "help": "Off as shipped. A daily order cap (the shop stops promising a delivery day when the day is full) and the words it shows then, the size of one part for Print all in parts, and the roster for the busy days. Every number is yours."
     }
+  },
+  "inventory": {
+    "stockHold": {
+      "label": "Stock hold at checkout",
+      "help": "Empty as shipped: the installation keeps its own numbers. Minutes a piece is kept while the customer is in checkout, and hours an order keeps its piece until the ERP has the order."
+    }
   }
 }

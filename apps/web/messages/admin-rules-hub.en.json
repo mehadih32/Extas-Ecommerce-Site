@@ -139,6 +139,18 @@
         "title": "Quiet hours & limits",
         "sentence": "No messages {fromHour}:00–{toHour}:00 · they wait until the morning",
         "sentenceOff": "Off"
+      },
+      "stockhold": {
+        "title": "Stock hold at checkout",
+        "sentence": "{checkoutMinutes} min while paying · {placedHours} h after the order until confirmed · then released"
+      },
+      "waTpl": {
+        "title": "WhatsApp templates",
+        "sentence": "The approved message texts sent by WhatsApp. Edited under Messages."
+      },
+      "smsSenders": {
+        "title": "SMS senders",
+        "sentence": "The sender name and number SMS go out with. Edited under Messages."
       }
     },
     "fields": {
@@ -194,6 +206,10 @@
         "on": "Hold messages in quiet hours",
         "fromHour": "Quiet from (hour, 0–23)",
         "toHour": "Quiet until (hour, 0–23)"
+      },
+      "stockhold": {
+        "checkoutMinutes": "Hold while the customer is in checkout (minutes)",
+        "placedHours": "Hold after the order is placed (hours)"
       }
     },
     "opt": {
@@ -383,7 +399,23 @@
       "see": "See",
       "pickTitle": "Pick one to edit",
       "pickNote": "Things like the free-delivery amount or the duplicate look-back are set in their own rule. Those rows have a \"Managed in\" link so nothing is set twice.",
-      "fromHint": "Empty = always"
+      "fromHint": "Empty = always",
+      "more": {
+        "title": "More options · history"
+      },
+      "history": {
+        "title": "History",
+        "until": "until",
+        "undo": "Undo to this",
+        "none": "No changes yet.",
+        "confirm": "Go back to this?",
+        "done": "Went back to the earlier setting.",
+        "on": "On",
+        "off": "Off",
+        "builtin": "The shop's own wording"
+      },
+      "langEn": "EN",
+      "langBn": "বাং"
     },
     "offers": {
       "metaTitle": "Offers & discounts",
@@ -414,20 +446,26 @@
       "col": {
         "name": "Offer",
         "type": "Type",
-        "state": "State",
+        "state": "Status",
         "when": "When",
         "orders": "Orders",
         "given": "Discount given",
         "delivered": "Delivered value",
-        "returned": "Returned"
+        "returned": "Returned",
+        "applies": "Applies to",
+        "limits": "Limits",
+        "used": "Used (30D)",
+        "cost": "Cost",
+        "sales": "Sales",
+        "margin": "Margin"
       },
       "state": {
         "DRAFT": "Draft",
         "AWAITING_OK": "Awaiting OK",
-        "LIVE": "Live",
-        "PAUSED": "Paused",
+        "LIVE": "Running",
+        "PAUSED": "Off",
         "ENDED": "Ended",
-        "SCHEDULED": "Starts later"
+        "SCHEDULED": "Scheduled"
       },
       "kinds": {
         "FREE_DELIVERY": "Free delivery",
@@ -502,8 +540,8 @@
       "who": {
         "label": "Who can use it",
         "ALL": "Everyone",
-        "GUESTS": "Guests (not signed in)",
-        "MEMBERS": "Signed-in members",
+        "GUESTS": "Guests",
+        "MEMBERS": "Members",
         "first": "First order only",
         "onlineAll": "The reward for paying online is for every customer who pays online."
       },
@@ -584,7 +622,41 @@
       "sentBack": "Sent back.",
       "paused": "Paused.",
       "resumed": "Live again.",
-      "ended": "Ended."
+      "ended": "Ended.",
+      "appliesAll": "Whole checkout",
+      "appliesOnline": "Online payment",
+      "whoFirst": "First order",
+      "minOrder": "min {v}",
+      "perCustomer": "{n} per customer",
+      "noPerCustomer": "No per-customer limit",
+      "usesInAll": "{n} uses in all",
+      "noTotal": "No total limit",
+      "marginOk": "{n}% margin",
+      "marginThin": "Thin {n}%",
+      "heading": "Offers",
+      "headingSub": "Cost = discount given. Click a row for the full picture.",
+      "builtin": {
+        "title": "Built-in rules that also change the price",
+        "sub": "Basic rules from Rules › All rules. They are counted in the overlap check above.",
+        "on": "On",
+        "off": "Off",
+        "open": "Open",
+        "free": {
+          "name": "Free delivery rule",
+          "on": "On orders over {v}",
+          "off": "Off"
+        },
+        "prepaid": {
+          "name": "Online-payment discount (basic setting)",
+          "on": "Better: make an online-payment offer above",
+          "off": "Off. Use an online-payment offer instead."
+        },
+        "grades": {
+          "name": "Customer grade discount",
+          "on": "On",
+          "off": "Off"
+        }
+      }
     },
     "sees": {
       "title": "Customer sees",
@@ -667,7 +739,10 @@
       "couponOff": " (off)",
       "codOver": "over {max}",
       "codOff": "turned off",
-      "eidLast": "Eid: last order day {date}"
+      "eidLast": "Eid: last order day {date}",
+      "refusedBefore": "Phone number refused parcels before",
+      "refusedAdvanceOn": "Advance mode is on. If one of your checkout layers flags a number that refused parcels, cash on delivery is not offered and the advance is asked first. The layers are in Orders › Risk rules › Checkout advance.",
+      "refusedAdvanceOff": "Advance mode is off, so this customer can still pay cash on delivery."
     },
     "text": {
       "title": "Edit the customer text",
@@ -694,40 +769,26 @@
       "pin": "Needs owner PIN to save",
       "now": "Saves at once"
     },
-    "pinHint": "Money and price changes always ask for the owner PIN."
-  },
-  "offers": {
-    "col": {
-      "name": "Offer",
-      "applies": "Applies to",
-      "limits": "Limits",
-      "used": "Used (30D)",
-      "cost": "Cost",
-      "sales": "Sales",
-      "margin": "Margin",
-      "state": "Status"
-    },
-    "state": {
-      "LIVE": "Running",
-      "SCHEDULED": "Scheduled",
-      "PAUSED": "Off"
-    },
-    "appliesAll": "Whole checkout",
-    "appliesOnline": "Online payment",
-    "who": {
-      "ALL": "Everyone",
-      "GUESTS": "Guests",
-      "MEMBERS": "Members"
-    },
-    "whoFirst": "First order",
-    "minOrder": "min {v}",
-    "perCustomer": "{n} per customer",
-    "noPerCustomer": "No per-customer limit",
-    "usesInAll": "{n} uses in all",
-    "noTotal": "No total limit",
-    "marginOk": "{n}% margin",
-    "marginThin": "Thin {n}%",
-    "heading": "Offers",
-    "headingSub": "Cost = discount given. Click a row for the full picture."
+    "pinHint": "Money and price changes always ask for the owner PIN.",
+    "acc": {
+      "title": "Score accuracy",
+      "last": "Last {days} days",
+      "sub": "What really happened to scored orders, by band.",
+      "band": "Band",
+      "orders": "Orders",
+      "delivered": "Delivered",
+      "refused": "Refused",
+      "cancelled": "Cancelled",
+      "rate": "Came back",
+      "none": "No scored orders in this period yet.",
+      "sugg": "Green orders came back {pct}% of the time. Consider moving the green limit up.",
+      "ok": "Limits look right.",
+      "bands": {
+        "auto": "Green · confirms by itself",
+        "call": "Middle · call list",
+        "person": "Red · red tag",
+        "unknown": "No score"
+      }
+    }
   }
 }

@@ -110,6 +110,19 @@ export const HUB_ROWS: readonly HubRow[] = [
     more: '/admin/orders/risk-rules',
   },
   { type: 'link', id: 'score', group: 'flow', href: '/admin/orders/risk-rules', needs: 'risk.courierScore' },
+  // PR 947 (prototype "Stock hold at checkout"): the minutes a piece is kept while the customer pays and the hours an order keeps it
+  {
+    type: 'setting',
+    id: 'stockhold',
+    group: 'flow',
+    key: 'inventory.stockHold',
+    fields: [
+      { path: 'checkoutMinutes', type: 'int', min: 1, max: 60, nullable: true },
+      { path: 'placedHours', type: 'int', min: 1, max: 72, nullable: true },
+    ],
+    money: false,
+    optional: true,
+  },
   {
     type: 'setting',
     id: 'dup',
@@ -177,6 +190,9 @@ export const HUB_ROWS: readonly HubRow[] = [
   // Discounts: the smart rules are listed from the database; Offers & discounts is its own page
   { type: 'link', id: 'offers', group: 'discounts', href: '/admin/rules/offers' },
   // Messages
+  // PR 949 (prototype "WhatsApp templates" and "SMS senders"): they live on the Messages pages and are only linked here
+  { type: 'link', id: 'waTpl', group: 'messages', href: '/admin/messages/templates' },
+  { type: 'link', id: 'smsSenders', group: 'messages', href: '/admin/messages/channels' },
   { type: 'link', id: 'popups', group: 'messages', href: '/admin/rules/notices' },
   // PR 833 (prototype "Quiet hours & limits"): messages due in these hours wait until the morning
   {

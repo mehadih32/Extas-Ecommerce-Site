@@ -6,8 +6,10 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
+import { courierScoreAccuracy } from '@extas/orders';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { RulesHub } from '@/components/admin/rules/RulesHub';
+import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
@@ -42,6 +44,12 @@ export default async function RulesHubPage({ searchParams }: { searchParams: Pro
     a.deps.db.role.findMany({ where: { archivedAt: null }, select: { key: true, nameEn: true, nameBn: true }, orderBy: [{ isSystem: 'desc' }, { nameEn: 'asc' }] }),
   ]);
 
+  // PR 946: the courier score's accuracy report sits under its row (only while the score is on and the person may read orders' risk)
+  const scoreOn = hub.rows.some((r) => r.id === 'score' && r.type === 'link' && r.pill === 'on');
+  const accuracy = scoreOn
+    ? await courierScoreAccuracy(readDeps(access.deps), { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx }).catch(() => null)
+    : null;
+
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
       <RulesHub
@@ -50,6 +58,7 @@ export default async function RulesHubPage({ searchParams }: { searchParams: Pro
         lang={view.lang}
         env={env}
         hub={hub}
+        accuracy={accuracy}
         roles={roles.map((r) => ({ key: r.key, name: (view.lang === 'bn' ? r.nameBn : null) || r.nameEn }))}
         perms={{ write: a.perms.write, approve: a.perms.approve }}
         initialSel={rule && hub.rows.some((r) => r.id === rule && r.type === 'setting') ? rule : null}
