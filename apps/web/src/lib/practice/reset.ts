@@ -191,6 +191,32 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
   );
 }
 
+/**
+ * PR 1068 — rebuild the practice SALES only: the practice orders with their parcels, payments, payouts, claims, incomplete
+ * checkouts and people, and the sample reviews, so a fresh `seedPractice` can lay the big set down at the prototype's own
+ * counts. Practice products, colours, charts, photos, couriers, combos and posts are kept as they are. Only rows flagged
+ * `isPractice` (and the sample reviews, named "Practice reviewer ...") go; a real row is never matched. Used by the
+ * `rebuild` command of live-cli.ts after a safety copy; it is not on any screen.
+ */
+export async function resetPracticeSales(db: Db, storeId: number): Promise<ResetResult> {
+  return db.$transaction(
+    async (tx) => {
+      const removed = new Map<string, number>();
+      const fks = await foreignKeys(tx);
+      const history = Number((await tx.$queryRaw<{ n: number }[]>`SELECT extas_purge_practice_history(${storeId}::integer) AS n`)[0]?.n ?? 0);
+      if (history) removed.set('OrderEvent+ShipmentEvent', history);
+      const where = `"storeId" = ${Math.trunc(storeId)} AND "isPractice" = true`;
+      for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer'] as const) {
+        await removeRows(tx, fks, t, where, 0, removed);
+      }
+      const rv = await tx.review.deleteMany({ where: { storeId, displayName: { startsWith: 'Practice reviewer ' }, source: 'STAFF' } });
+      if (rv.count) removed.set('Review', rv.count);
+      return { removed: Object.fromEntries(removed), keptProducts: await tx.product.count({ where: { storeId } }), removedDemoProducts: 0 };
+    },
+    { timeout: 120_000, maxWait: 10_000 }, // hardcode-ok: a transaction time guard
+  );
+}
+
 /** What a reset would remove: the count of practice rows in each root table (the preview). */
 export async function practiceCounts(db: Db, storeId: number): Promise<Record<string, number>> {
   const [orders, customers, incomplete, claims, payouts, products, couriers, shipments] = await Promise.all([

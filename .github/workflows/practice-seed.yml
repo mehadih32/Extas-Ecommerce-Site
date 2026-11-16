@@ -15,9 +15,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "seed = fill the practice shop; status = only count"
+        description: "seed = fill the practice shop; rebuild = remove the practice sales and lay the set down again at the prototype's counts (PR 1068, safety copy first); status = only count"
         type: choice
-        options: [seed, status]
+        options: [seed, rebuild, status]
         default: seed
       turn_on:
         description: "Also switch practice mode on (the owner asked for it on)"
@@ -49,7 +49,7 @@ jobs:
           if ! sudo docker run --rm --entrypoint sh "$MIGRATE" -c 'test -f /repo/apps/web/src/lib/practice/live-cli.ts'; then
             echo "the live version does not carry the practice command yet — wait for the deploy of PR 880 and run again"; exit 1
           fi
-          if [ "$MODE" = seed ]; then
+          if [ "$MODE" = seed ] || [ "$MODE" = rebuild ]; then
             # 1. the safety copy: a custom-format dump on the server, only when there is room for it twice over
             PGX='for d in /usr/lib/postgresql/*/bin; do [ -x "$d/psql" ] && PATH="$d:$PATH"; done; export PATH; exec "$@"'
             size="$(sudo docker exec extas-postgres sh -c "$PGX" pg psql -qtAX -U extas -d extas -c "select pg_database_size('extas')" | tr -d '[:space:]')"
@@ -69,6 +69,6 @@ jobs:
           envf="$(sudo mktemp "$SEC/.practice.XXXXXX")"
           trap 'sudo rm -f "$envf"' EXIT
           sudo sh -c "grep -E '^DATABASE_DIRECT_URL=' '$SEC/app.env' > '$envf'"
-          args="$MODE"; [ "$MODE" = seed ] && args="seed $TURN_ON"
+          args="$MODE"; { [ "$MODE" = seed ] || [ "$MODE" = rebuild ]; } && args="$MODE $TURN_ON"
           sudo docker run --rm --name "extas-practice-$$" --network extas --env-file "$envf" "$MIGRATE" \
             sh -c "cd /repo/packages/seed && exec ./node_modules/.bin/tsx /repo/apps/web/src/lib/practice/live-cli.ts $args"

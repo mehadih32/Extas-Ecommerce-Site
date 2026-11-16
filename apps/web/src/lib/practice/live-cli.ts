@@ -2,6 +2,9 @@
 // Run on the VM by .github/workflows/practice-seed.yml with the migrate image of the live version (it carries this folder):
 //   tsx live-cli.ts seed [--turn-on]   fills the big practice set (about 850 orders over six months, 240 people, 72+ styles,
 //                                      claims, payouts, ad spend, reviews); a shop that holds only the small set is topped up
+//   tsx live-cli.ts rebuild [--turn-on]  PR 1068: removes the practice SALES (flagged practice orders, parcels, payments, payouts,
+//                                      claims, incomplete checkouts, people, sample reviews; products and photos stay), then lays
+//                                      the big set down again at the admin prototype's own counts (861 orders, 420 people ...)
 //   tsx live-cli.ts status             counts only
 // Rules: ADDITIVE and IDEMPOTENT. Every row is made from its own key with "skip when it exists", so a second run changes
 // nothing; a run on a store with the small practice set adds only what is missing and never edits an existing order.
@@ -11,6 +14,7 @@
 // Nothing is printed but names of tables and counts.
 import { MOTHER_STORE_ID, PrismaClient } from '@extas/db/client';
 import { prismaBackend, registry, SettingsResolver, storeTarget } from '@extas/settings';
+import { resetPracticeSales } from './reset';
 import { seedPractice } from './seed';
 import { syncPracticeVisibility } from './visibility';
 
@@ -18,8 +22,8 @@ const REASON = 'PR 880 practice data (workflow practice-seed)'; // hardcode-ok: 
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
-  if (command !== 'seed' && command !== 'status') {
-    console.error('usage: live-cli.ts seed [--turn-on] | status');
+  if (command !== 'seed' && command !== 'rebuild' && command !== 'status') {
+    console.error('usage: live-cli.ts seed [--turn-on] | rebuild [--turn-on] | status');
     return 2;
   }
   const url = process.env.DATABASE_DIRECT_URL || process.env.DATABASE_URL;
@@ -55,6 +59,10 @@ async function main(argv: string[]): Promise<number> {
       return 0;
     }
     console.log(`practice before: ${line(await counts())}`);
+    if (command === 'rebuild') {
+      const gone = await resetPracticeSales(prisma, storeId);
+      console.log(`practice rebuild: removed ${line(gone.removed)}`);
+    }
     const r = await seedPractice(prisma, storeId, new Date(), { rich: true, richAnywhere: true });
     console.log(`practice seed: ${r.seeded ? `added · ${line(r.counts)}` : `nothing to add (${r.reason ?? 'done'})`}`);
     if (rest.includes('--turn-on')) {
