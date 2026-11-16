@@ -5,13 +5,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { UpdatesHow } from '@/components/admin/settings/UpdatesBoard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
+import { siteAddress } from '@/lib/seo/site';
 import { buildId } from '@/lib/build-id';
 import { t, type Dict } from '@/lib/i18n';
 import { buildStatus, runtimeState } from '@/lib/status';
@@ -19,6 +22,7 @@ import bn from '../../../../../../messages/admin-sysinfo.bn.json';
 import en from '../../../../../../messages/admin-sysinfo.en.json';
 import '../../settings.css';
 import '../sysinfo.css';
+import '../../../s28.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,22 +59,57 @@ export default async function UpdatesPage() {
   const done = buildStatus.totals.done;
   const total = buildStatus.totals.active;
   const launch = buildStatus.launch;
+  const b = (k: string) => u(`board.${k}`);
+  const words = Object.fromEntries(['h', 'auto', 'autoSub', 'check', 'checked', 'back', 'backNote', 'saved', 'err'].map((k) => [k, b(k)]));
+  const [autoOn, site] = await Promise.all([access.deps.resolver.value('updates.auto'), siteAddress(MOTHER_STORE_ID)]);
+  const canEdit = access.guard.permissions?.has('settings.write') ?? false;
+  const testShop = site.origin?.href ?? null;
 
   return (
     <div className="a2-z lm-st" data-lm-ready="" data-testid="sysinfo-updates-page">
-      <PageHead view={view} place={locateKey(KEY)} title={u('title')} sub={u('sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={u('title')}
+        sub={u('sub')}
+        right={
+          testShop ? (
+            <a className="a2-btn pri" href={testShop} target="_blank" rel="noreferrer" data-testid="up-test-shop">
+              {b('open')}
+            </a>
+          ) : null
+        }
+      />
       <SectionTabs view={view} current={KEY} />
 
-      <section className="a2-sc a2-mt12 sy-hero" data-testid="sysinfo-version">
+      <section className="a2-card a2-mt12 sy-hero" data-testid="sysinfo-version">
         <i className="sy-dot ok" aria-hidden="true" />
         <div>
           <div className="sy-big">
             {u('version')} {build === 'dev' ? u('dev') : build}
           </div>
-          <div className="a2-scd">{when ? u('installed', { when }) : u('notInstalled')}</div>
+          <div className="a2-scd">{when ? `${u('installed', { when })} · ${b('passed')}` : u('notInstalled')}</div>
         </div>
       </section>
 
+      <div className="s28-grid s28-g2 a2-mt12">
+        <UpdatesHow w={words} auto={autoOn.auto} canEdit={canEdit} />
+        <section className="a2-card" data-testid="up-changed">
+          <h2 className="a2-h3">{b('changed.h')}</h2>
+          <p className="a2-sm a2-mute a2-mt12">{b('changed.none')}</p>
+          <div className="sy-links">
+            <Link className="a2-btn" href="/admin/build">
+              {u('build.list')}
+            </Link>
+          </div>
+        </section>
+      </div>
+
+      <details className="a2-card a2-mt12" data-testid="up-more">
+        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>
+          {b('more')}
+        </summary>
+        <div className="a2-cs">{b('moreSub')}</div>
       <div className="sy-grid">
         <section className="a2-sc" data-testid="sysinfo-how">
           <h2 className="a2-h3">{u('how.h')}</h2>
@@ -116,6 +155,7 @@ export default async function UpdatesPage() {
           </Link>
         </div>
       </section>
+      </details>
     </div>
   );
 }
