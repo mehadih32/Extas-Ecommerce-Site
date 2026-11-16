@@ -14,6 +14,11 @@ const LIGHT_HEAD = ":root,\n[data-lm-look='lumen'] {";
 const DARK_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'] {";
 const ISLAND_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'] :is(";
 const SHARED_HEAD = ':root,\n[data-lm-look] {';
+/** PR 1067: the blocks that apply only where the person chose another accent (the shell's style then carries --lm-accent). */
+const CHOSEN_HEAD = "[data-lm-look='lumen'][style*='--lm-accent'] {";
+const CHOSEN_ISLAND_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent'] :is(";
+/** The shipped accent (burnt orange): it keeps the prototype's own colours; any other accent reads the chosen blocks. */
+const SHIPPED_ACCENT = '#c2410c';
 
 /** The `--name: value` declarations of the block that starts with `head` (comments dropped). */
 export function blockTokens(css: string, head: string): Record<string, string> {
@@ -33,8 +38,13 @@ export function lumenTokens(css: string, mode: ThemeMode, accent?: string): Reco
     ...blockTokens(css, SHARED_HEAD),
     ...blockTokens(css, LIGHT_HEAD),
   };
+  const chosen = !!accent && accent.toLowerCase() !== SHIPPED_ACCENT;
+  if (chosen && css.includes(CHOSEN_HEAD)) Object.assign(t, blockTokens(css, CHOSEN_HEAD));
   if (mode !== 'light') Object.assign(t, blockTokens(css, DARK_HEAD));
-  if (mode === 'island') Object.assign(t, blockTokens(css, ISLAND_HEAD));
+  if (mode === 'island') {
+    Object.assign(t, blockTokens(css, ISLAND_HEAD));
+    if (chosen && css.includes(CHOSEN_ISLAND_HEAD)) Object.assign(t, blockTokens(css, CHOSEN_ISLAND_HEAD));
+  }
   if (accent) t['--lm-accent'] = accent;
   return t;
 }
