@@ -26,6 +26,7 @@ import { SearchEnginesCard } from "@/components/admin/website/SearchEnginesCard"
 import { VitalsCard } from "@/components/admin/website/VitalsCard";
 import { HreflangCard } from "@/components/admin/website/HreflangCard";
 import { PageHead, SectionTabs, ShellState } from "@/components/admin/shell/ShellParts";
+import { SeoOverview } from "@/components/admin/website/SeoOverview";
 import { ShellIcon } from "@/components/admin/shell/ShellIcon";
 import { formatNumber } from "@/components/admin/products/model";
 import { adminDeps } from "@/lib/admin-auth";
@@ -116,10 +117,34 @@ export default async function SeoPage() {
 
   return (
     <div className="a2-z" data-testid="seo-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub")} />
+      <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub")} right={<a className="a2-btn" href={HERE} data-testid="seo-check-again">{c("checkAgain")}</a>} />
       <SectionTabs view={view} current={KEY} />
 
-      <div className="a2-kpis">
+      <SeoOverview
+        c={c}
+        num={(n) => formatNumber(n, view.locale)}
+        date={(iso) => new Intl.DateTimeFormat(view.locale, { dateStyle: "medium", timeStyle: "short", timeZone: view.timeZone }).format(new Date(iso))}
+        score={hScore}
+        needFix={health.rows.length}
+        total={hTotal}
+        problems={HEALTH_ISSUES.map((i) => ({ id: i, label: c(`ov.issue.${i}`), n: hCounts[i] }))}
+        weakest={[...health.rows]
+          .sort((x, y) => y.issues.length - x.issues.length)
+          .slice(0, 8)
+          .map((r) => ({ key: `${r.kind}-${r.key}`, name: r.name, href: r.fix, score: Math.max(0, Math.round(((HEALTH_ISSUES.length - r.issues.length) / HEALTH_ISSUES.length) * 100)) }))}
+        gsc={gsc && gsc.status === "ok" ? { clicks: gsc.data.clicks, impressions: gsc.data.impressions, position: gsc.data.position, queries: gsc.data.queries.slice(0, 20) } : null}
+        consoleOn={engines.some((e) => e.connected)}
+        sitemap={{ madeAt: sitemaps.madeAt, pages: sitemaps.files.reduce((a, f) => a + f.urls, 0), address: sitemaps.index }}
+        redirects={reds ? reds.redirects.slice(0, 6).map((r) => ({ id: String(r.id), from: r.fromPath, to: r.toPath, hits: r.hits })) : null}
+        canWrite={canWrite}
+      />
+
+      <details className="a2-card a2-mt12 seo-more" data-testid="seo-more">
+        <summary>
+          <b>{c("moreTitle")}</b>
+          <span className="a2-kn">{c("moreSub")}</span>
+        </summary>
+      <div className="a2-kpis a2-mt12">
         <div className="a2-card a2-kpi" data-testid="seo-kpi-engines" data-open={open ? "1" : "0"}>
           <div className="a2-kl">{c("kpi.engines")}</div>
           <div className="a2-kv a2-sm a2-kvw">{c(open ? "kpi.open" : "kpi.closed")}</div>
@@ -152,70 +177,6 @@ export default async function SeoPage() {
             {c("kpi.bengaliOpen")}
           </Link>
         </div>
-      </div>
-
-      <div className="a2-card a2-mt12" data-testid="seo-overview">
-        <div className="a2-kl">{c("ov.score")}</div>
-        <div className="a2-kv" data-testid="seo-score">{hScore === null ? "—" : `${formatNumber(hScore, view.locale)}%`}</div>
-        <div className="a2-kn">{c("ov.scoreSub", { n: formatNumber(health.rows.length, view.locale), total: formatNumber(hTotal, view.locale) })}</div>
-        <div className="a2-kl a2-mt12">{c("ov.problems")}</div>
-        <ul className="a2-list">
-          {HEALTH_ISSUES.filter((i) => hCounts[i] > 0).map((i) => (
-            <li key={i}>
-              <Link href={`/admin/website/seo/health?issue=${i}`}>{c(`ov.issue.${i}`)}</Link> <b>{formatNumber(hCounts[i], view.locale)}</b>
-            </li>
-          ))}
-        </ul>
-        <div className="a2-kl a2-mt12">{c("ov.weakest")}</div>
-        <ul className="a2-list">
-          {[...health.rows].sort((x, y) => y.issues.length - x.issues.length).slice(0, 5).map((r) => (
-            <li key={`${r.kind}-${r.key}`}>
-              <Link href={r.fix}>{r.name}</Link> <span className="a2-kn">{formatNumber(r.issues.length, view.locale)}</span>
-            </li>
-          ))}
-        </ul>
-        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/health">{c("ov.all")}</Link>
-      </div>
-
-      <div className="a2-card a2-mt12" data-testid="seo-ranking">
-        <div className="a2-kl">{c("ov.google")}</div>
-        {gsc && gsc.status === "ok" ? (
-          <>
-            <div className="a2-kpis">
-              <div className="a2-kpi"><div className="a2-kl">{c("ov.clicks")}</div><div className="a2-kv">{formatNumber(gsc.data.clicks, view.locale)}</div></div>
-              <div className="a2-kpi"><div className="a2-kl">{c("ov.searches")}</div><div className="a2-kv">{formatNumber(gsc.data.impressions, view.locale)}</div></div>
-              <div className="a2-kpi"><div className="a2-kl">{c("ov.position")}</div><div className="a2-kv">{gsc.data.position === null ? "—" : formatNumber(Math.round(gsc.data.position * 10) / 10, view.locale)}</div></div>
-            </div>
-            <table className="a2-table">
-              <thead><tr><th>{c("ov.query")}</th><th>{c("ov.clicks")}</th><th>{c("ov.searches")}</th><th>{c("ov.position")}</th></tr></thead>
-              <tbody>
-                {gsc.data.queries.slice(0, 8).map((r) => (
-                  <tr key={r.query}><td>{r.query}</td><td>{formatNumber(r.clicks, view.locale)}</td><td>{formatNumber(r.impressions, view.locale)}</td><td>{formatNumber(Math.round(r.position * 10) / 10, view.locale)}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <div className="a2-kn">{c("ov.noConsole")}</div>
-        )}
-        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/organic">{c("ov.console")}</Link>
-      </div>
-
-      <div className="a2-card a2-mt12" data-testid="seo-redirects">
-        <div className="a2-kl">{c("ov.redirects")}</div>
-        {reds && reds.redirects.length > 0 ? (
-          <table className="a2-table">
-            <thead><tr><th>{c("ov.from")}</th><th>{c("ov.to")}</th><th>{c("ov.hits")}</th></tr></thead>
-            <tbody>
-              {reds.redirects.slice(0, 6).map((r) => (
-                <tr key={r.id}><td>{r.fromPath}</td><td>{r.toPath}</td><td>{formatNumber(r.hits, view.locale)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="a2-kn">{c("ov.noRedirects")}</div>
-        )}
-        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/redirects">{c("ov.addRedirect")}</Link>
       </div>
 
       <div className="a2-note a2-mt12">
@@ -284,6 +245,7 @@ export default async function SeoPage() {
       <div className="a2-mt12">
         <AiDraftsCard d={d} value={snap.values["seo.aiDrafts"]} defaults={snap.defaults["seo.aiDrafts"]} version={snap.versions["seo.aiDrafts"]} canWrite={canWrite} initial={drafts} />
       </div>
+      </details>
     </div>
   );
 }

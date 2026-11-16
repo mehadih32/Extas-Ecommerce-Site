@@ -220,3 +220,5 @@ Google আর অন্য সার্চ ইঞ্জিন দোকানে
 **Update (PR 914):** the top of the page has an overview card: the SEO score, the problems to fix and the pages with the weakest SEO.
 
 **Update (PR 915):** the overview also has the Google ranking card and the Redirects table.
+
+**Update (PR 1051):** the first screen is the prototype's: the SEO score, **Clicks from Google / month**, **Searches in top 10** and **Average position**; **Google ranking** table; **Problems to fix** beside **Pages with the weakest SEO**; **Sitemap & Google Search Console** beside **Redirects: old links → new**, with **Send sitemap again**; **Check again** at the top. Every earlier setting (search engines, titles, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console, photo descriptions) is under **More options**.
