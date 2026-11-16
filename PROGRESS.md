@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 17 Nov 2026 - Batch 2026-11-17-1 (branch `batch-2026-11-17-1`, from `origin/main` 5ee5ad27): device-gate fixes and admin parity measure
+
+Device gate (the real failing items of batches 249/251/252): tap size under 44 px on the "More options" headings, the "See more" links, the period buttons and the Product page link; cut product names on Shop ranking; the two logo buttons that overlapped on Store settings at 1180 px; gate expectations moved to the new Profit (old cards under More), Integrations and ERP link screens. Reports: all eleven tabs fit at 1366 px; Marketing has Channel, Category and Area filters (they narrow the sales-from-ads line only; ad spend stays whole). `tools/admin-screens.mjs` now covers every prototype tab (`--set=all`) and writes the page words and facts. Measured on 87 pages at 1366 and 390: all load, no sideways overflow; the remaining differences are mostly period-button names, list-count chips and sample-data words. Not run locally: web typecheck (out of memory here; CI runs it).
+
 ## 16 Nov 2026 — Final round, lane B (branch `claude/final-b`, from `origin/main` c9b8644f): PR 880 and 881
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1062. Bulk orders: Save & send quote and Send on WhatsApp / Send by SMS, only on a staff press and logged with the words (BulkQuoteSend). Tests of what it touches ran locally; CI runs the rest.
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 1063. Returns and exchanges: the courier-side reminders (partial delivery box empty, short count, courier says Delivered and money not in) with their counts and links. Tests of what it touches ran locally; CI runs the rest.
