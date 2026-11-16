@@ -49,6 +49,8 @@ export interface DemoManagerProps {
   minorPerMajor: number;
   /** How many styles the demo catalogue holds. */
   catalogueSize: number;
+  /** The admin's language: the pop-up preview shows that language's words (default English). */
+  lang?: 'en' | 'bn';
 }
 
 export function DemoManager(p: DemoManagerProps) {
@@ -103,8 +105,8 @@ export function DemoManager(p: DemoManagerProps) {
           <span className="dm-name">{t(d, 'products.demo.master')}</span>
         </label>
         <p className="a2-sm" data-testid="demo-summary">
-          {p.setting.on ? t(d, 'products.demo.summaryOn', { n: String(p.showingTotal) }) : t(d, 'products.demo.summaryOff')} ·{' '}
-          {t(d, 'products.demo.madeTotal', { all: String(p.demoTotal), empty: String(p.emptyCategories) })}
+          <b className="dm-big">{p.setting.on ? t(d, 'products.demo.summaryOn', { n: String(p.showingTotal) }) : t(d, 'products.demo.summaryOff')}</b>
+          <span className="a2-xs a2-mute dm-subline">{t(d, 'products.demo.madeTotal', { all: String(p.demoTotal), empty: String(p.emptyCategories) })}</span>
         </p>
         {p.canWrite ? (
           <button
@@ -142,6 +144,7 @@ export function DemoManager(p: DemoManagerProps) {
               <input type="checkbox" checked={s.auto} disabled={!p.canWrite} onChange={(e) => setS({ ...s, auto: e.target.checked })} />
               <span>{t(d, 'products.demo.autoLabel')}</span>
             </label>
+            <p className="a2-xs a2-mute">{t(d, 'products.demo.autoHelp')}</p>
             <div className="lm-fl">
               <label htmlFor="dm-n">{t(d, 'products.demo.autoN')}</label>
               <input
@@ -195,6 +198,13 @@ export function DemoManager(p: DemoManagerProps) {
                 onChange={(e) => setS({ ...s, popupBn: e.target.value })}
               />
             </div>
+            <div className="dm-pop" data-testid="demo-popup-preview">
+              <b>{(p.lang === 'bn' ? s.popupBn : s.popupEn) || s.popupEn}</b>
+              <div className="dm-pop-btns">
+                <span className="a2-btn pri">{t(d, 'products.demo.popupSee')}</span>
+                <span className="a2-btn">{t(d, 'products.demo.popupClose')}</span>
+              </div>
+            </div>
           </section>
           <section className="a2-card">
             <h2 className="a2-h">{t(d, 'products.demo.never')}</h2>
@@ -230,6 +240,7 @@ export function DemoManager(p: DemoManagerProps) {
                 <span className={`a2-pill ${i.showing ? 'ok' : 'line'}`}>{t(d, i.showing ? 'products.demo.showingNow' : 'products.demo.hiddenNow')}</span>
               </div>
               <div className="a2-xs a2-mute">{i.category}</div>
+              <div className="a2-xs a2-mute">{t(d, 'products.demo.sample')}</div>
               {p.canWrite ? (
                 <div className="fq-acts">
                   <a className="a2-btn" href={`/admin/products/${i.id}`}>

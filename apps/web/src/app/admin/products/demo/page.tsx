@@ -67,6 +67,7 @@ export default async function DemoProductsPage() {
         cats={demo.categories.map((x) => ({ id: x.id, parentId: x.parentId, name: nameIn(view.lang, x), demo: x.demo, real: x.real, showing: x.showing }))}
         items={items.map((i) => ({ id: i.id, name: nameIn(view.lang, i), category: catName.get(i.categoryId ?? '') ?? '', showing: showing.get(i.categoryId ?? '') ?? false }))}
         canWrite={c.can('catalogue.write')}
+        lang={view.lang}
         demoTotal={demo.demoTotal}
         showingTotal={demo.showingTotal}
         emptyCategories={demo.emptyCategories}
