@@ -52,7 +52,8 @@
       "toastOff": "Cost-saver is off.",
       "toastAutoOn": "It will turn on by itself.",
       "toastAutoOff": "It will no longer turn on by itself.",
-      "note": "The switch is saved now; each AI job reads it when it runs."
+      "note": "The switch is saved now; each AI job reads it when it runs.",
+      "saves": "Saves about {amount} for the rest of this month."
     }
   }
 }

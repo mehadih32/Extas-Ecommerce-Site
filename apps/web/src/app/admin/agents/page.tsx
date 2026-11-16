@@ -14,6 +14,9 @@ import { TelegramCommandsSwitch } from '@/components/admin/agents/TelegramComman
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { agentProfileList } from '@/lib/admin-ai/agent-profile';
+import { approvalsView } from '@/lib/admin-ai/approvals';
+import { controlRoomView } from '@/lib/admin-ai/control-room';
+import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { isTelegramCommandsEnabled, telegramWebhookSecret } from '@/lib/admin-ai/telegram-routing';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -64,6 +67,13 @@ export default async function AgentsTeamPage() {
     telegramWebhookSecret(access.deps),
   ]);
   const secretSet = tgSecret !== null;
+  // prototype v5 (m-ai.js renderAgents): four numbers above the cards and, on each card, running or paused with today's and this month's spend
+  const [room, queue] = await Promise.all([
+    controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID),
+    approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID),
+  ]);
+  const money = moneyOf(room.view.currency, view.locale);
+  const amount = (minor: number) => formatMoney(minor, money);
 
   return (
     <div className="a2-z agents-page" data-testid="agents-team" data-lm-ready="">
@@ -102,9 +112,42 @@ export default async function AgentsTeamPage() {
         </section>
       )}
 
+      <div className="a2-kpis a2-mt12" data-testid="agents-kpis">
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{c('kpi.running')}</div>
+          <div className="a2-kv">
+            {formatNumber(room.view.runningNow, view.locale)} / {formatNumber(room.view.agentCount, view.locale)}
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{c('kpi.today')}</div>
+          <div className="a2-kv">{amount(room.view.todayMinor)}</div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{c('kpi.month')}</div>
+          <div className="a2-kv">{amount(room.view.monthMinor)}</div>
+          <div className="a2-kf">
+            <span className="a2-kn">{room.view.monthlyCapMinor === null ? c('kpi.noCeiling') : c('kpi.ofCeiling', { cap: amount(room.view.monthlyCapMinor) })}</span>
+          </div>
+        </div>
+        <div className="a2-card a2-kpi">
+          <div className="a2-kl">{c('kpi.waiting')}</div>
+          <div className="a2-kv">{formatNumber(queue.pending.length, view.locale)}</div>
+          <div className="a2-kf">
+            <Link className="a2-kn" href="/admin/ai/approvals">
+              {c('kpi.approvals')} →
+            </Link>
+          </div>
+        </div>
+      </div>
+      <p className="a2-xs a2-mute a2-mt12" data-testid="agents-controls-note">
+        {c('controlsNote')} <Link href="/admin/ai">{c('controlsLink')}</Link>
+      </p>
+
       <div className="ag-grid a2-mt12" data-testid="agents-grid">
         {agents.map((a) => {
           const name = view.lang === 'bn' ? a.nameBn : a.nameEn;
+          const live = room.agents.find((r) => r.key === a.key);
           return (
             <Link key={a.key} href={`/admin/agents/${a.key}`} className="a2-card tight ag-card" data-testid={`agents-card-${a.key}`}>
               <div className="ag-ch">
@@ -114,7 +157,10 @@ export default async function AgentsTeamPage() {
                 <div className="ag-cn">
                   <b>
                     {name}
-                    {a.verified ? <span title={c('verified')}> ✓</span> : null}
+                    {a.verified ? <span title={c('verified')}> ✓</span> : null}{' '}
+                    <span className={`a2-pill ${live?.workingNow ? 'ok' : 'line'}`} data-testid={`agents-state-${a.key}`}>
+                      {live?.workingNow ? c('state.running') : c('state.paused')}
+                    </span>
                   </b>
                   <span className="a2-xs a2-mute">{a.role}</span>
                 </div>
@@ -122,6 +168,14 @@ export default async function AgentsTeamPage() {
               <div className="ag-counts a2-xs a2-mute">
                 <span>{c('team.open', { n: a.openCount })}</span>
                 <span>{c('team.done', { n: a.doneCount })}</span>
+              </div>
+              <div className="ag-counts a2-xs a2-mute">
+                <span>
+                  {c('card.today')}: {amount(live?.todayMinor ?? 0)}
+                </span>
+                <span>
+                  {c('card.month')}: {amount(live?.monthMinor ?? 0)}
+                </span>
               </div>
             </Link>
           );

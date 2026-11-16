@@ -56,7 +56,7 @@ import stripEn from "../../../../../messages/admin-ai-strip.en.json";
 import { AiStrip } from "@/components/admin/ai/AiStrip";
 import { CostsLimits } from "@/components/admin/ai/CostsLimits";
 import { controlRoomView } from "@/lib/admin-ai/control-room";
-import { applyAutoSaver } from "@/lib/admin-ai/limits";
+import { applyAutoSaver, SAVER_AT_PCT } from "@/lib/admin-ai/limits";
 import limitsBn from "../../../../../messages/admin-ai-limits.bn.json";
 import limitsEn from "../../../../../messages/admin-ai-limits.en.json";
 import "@/components/admin/ai/ai-strip.css";
@@ -220,7 +220,7 @@ export default async function AiCostBookPage() {
         view={view}
         place={locateKey(KEY)}
         title={c("title")}
-        sub={c("sub")}
+        sub={t(d, "aiLimits.sub", { pct: SAVER_AT_PCT })}
       />
       <SectionTabs view={view} current={KEY} />
       <AiStrip dict={view.dict} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
