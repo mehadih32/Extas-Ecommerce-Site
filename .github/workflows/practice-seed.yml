@@ -1,0 +1,74 @@
+# PR 880 — the practice shop on the live database, with nobody sitting down for it (owner, 16 Nov 2026). Run by hand
+# (workflow_dispatch) ON the VM through the self-hosted runner (CN-003), with the migrate image of the version that is live
+# (it carries apps/web/src/lib/practice, see apps/web/Dockerfile). It fills the big practice set (about 850 orders over six
+# months, 240 people, the demo's styles, claims, payouts, reviews) and, when turn_on is ticked, switches practice mode on.
+#   - ADDITIVE and IDEMPOTENT: every row is made from its own key and skipped when it exists; a second run changes nothing; a
+#     shop holding only the small practice set is topped up (only the missing orders, payouts and claims are added).
+#   - Never deletes and never touches a real row: every row it makes is flagged practice, so real totals, real customers and
+#     real ad money never include it (the lists follow the practice switch). "Reset practice data" (owner's PIN) removes it.
+#   - A safety copy of the database comes first (pg_dump, kept on the server beside the other deploy state); no copy, no seed.
+#   - It does NOT run "Start fresh" and does not make ad spend (ad spend is read by the profit reports directly).
+# The log names tables and counts only.
+name: practice-seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "seed = fill the practice shop; status = only count"
+        type: choice
+        options: [seed, status]
+        default: seed
+      turn_on:
+        description: "Also switch practice mode on (the owner asked for it on)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 30
+    steps:
+      - name: Safety copy, then the practice set
+        env:
+          MODE: ${{ inputs.mode }}
+          TURN_ON: ${{ inputs.turn_on && '--turn-on' || '' }}
+        run: |
+          set -euo pipefail
+          . /etc/extas/server.conf
+          SEC="$EXTAS_ROOT/config/secrets"
+          MIGRATE="$(sudo jq -r '.migrate // empty' "$EXTAS_ROOT/state/last-good-deploy.json")"
+          if [ -z "$MIGRATE" ] || ! sudo docker image inspect "$MIGRATE" >/dev/null 2>&1; then
+            MIGRATE="$(sudo docker images --format '{{.Repository}}:{{.Tag}}' extas-migrate | head -n 1 || true)"
+          fi
+          [ -n "$MIGRATE" ] || { echo "no migrate image yet — deploy first"; exit 1; }
+          echo "using $MIGRATE"
+          if ! sudo docker run --rm --entrypoint sh "$MIGRATE" -c 'test -f /repo/apps/web/src/lib/practice/live-cli.ts'; then
+            echo "the live version does not carry the practice command yet — wait for the deploy of PR 880 and run again"; exit 1
+          fi
+          if [ "$MODE" = seed ]; then
+            # 1. the safety copy: a custom-format dump on the server, only when there is room for it twice over
+            PGX='for d in /usr/lib/postgresql/*/bin; do [ -x "$d/psql" ] && PATH="$d:$PATH"; done; export PATH; exec "$@"'
+            size="$(sudo docker exec extas-postgres sh -c "$PGX" pg psql -qtAX -U extas -d extas -c "select pg_database_size('extas')" | tr -d '[:space:]')"
+            dir="$EXTAS_ROOT/state/practice-seed"
+            sudo mkdir -p "$dir"
+            free="$(sudo df -B1 --output=avail "$dir" | tail -n 1 | tr -d '[:space:]')"
+            echo "database $((size / 1048576)) MB, free $((free / 1048576)) MB"
+            [ "$free" -gt $((size * 2 + 1073741824)) ] || { echo "not enough free disk for a safety copy — nothing was changed"; exit 1; }
+            out="$dir/before-practice-$(date +%Y%m%d-%H%M%S).dump"
+            sudo docker exec extas-postgres sh -c "$PGX" pg pg_dump -U extas -d extas -Fc -Z 6 | sudo tee "$out" >/dev/null
+            sudo test -s "$out" || { echo "the safety copy is empty — nothing was changed"; sudo rm -f "$out"; exit 1; }
+            echo "safety copy kept: $(sudo basename "$out") ($(sudo du -h "$out" | cut -f1))"
+            # only this workflow's own older copies are tidied: the newest three stay
+            sudo sh -c "ls -1t '$dir'/before-practice-*.dump | tail -n +4 | xargs -r rm -f --"
+          fi
+          # 2. the practice command, on the live database, in the migrate image
+          envf="$(sudo mktemp "$SEC/.practice.XXXXXX")"
+          trap 'sudo rm -f "$envf"' EXIT
+          sudo sh -c "grep -E '^DATABASE_DIRECT_URL=' '$SEC/app.env' > '$envf'"
+          args="$MODE"; [ "$MODE" = seed ] && args="seed $TURN_ON"
+          sudo docker run --rm --name "extas-practice-$$" --network extas --env-file "$envf" "$MIGRATE" \
+            sh -c "cd /repo/packages/seed && exec ./node_modules/.bin/tsx /repo/apps/web/src/lib/practice/live-cli.ts $args"

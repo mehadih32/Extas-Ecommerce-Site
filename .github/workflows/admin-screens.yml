@@ -63,6 +63,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/seeded-app
         with:
+          practice: 'true'
           gate-owner-password-file: ${{ runner.temp }}/gate-password
       - uses: ./.github/actions/playwright
         with:

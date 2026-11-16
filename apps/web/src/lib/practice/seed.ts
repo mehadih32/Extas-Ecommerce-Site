@@ -29,6 +29,7 @@ import {
   HOLD_CODES,
   LAST_NAMES,
   ORDER_PLAN,
+  ORDER_TOTAL,
   OUTSIDE_AREAS,
   PAYMENTS,
   PRACTICE_CUSTOMERS,
@@ -46,6 +47,7 @@ import {
 type Db = PrismaClient;
 const DAY = 86_400_000; // hardcode-ok: milliseconds in a day
 const HOUR = 3_600_000; // hardcode-ok: milliseconds in an hour
+const RICH_DONE_SHARE = 0.9; // hardcode-ok: a store with at least this share of the big set's orders counts as done
 const SEED = 20_261_112; // hardcode-ok: the prototype's own seed, so the practice world matches the prototype's
 
 export interface SeedResult {
@@ -337,6 +339,11 @@ const SAMPLE_PACK_KEY = 'sample-catalogue'; // hardcode-ok: the sample seed's ow
 export interface SeedOptions {
   /** PR 724: the big sample world for screenshots. Honoured only on the sample store; anywhere else it is ignored. */
   rich?: boolean;
+  /**
+   * PR 880: the big sample world on the owner's own store too (the practice period of the real admin). Only the live seed
+   * command and the owner's "Add sample data" ask for it; without it "rich" stays on the sample store only.
+   */
+  richAnywhere?: boolean;
 }
 
 export async function seedPractice(db: Db, storeId: number, now: Date = new Date(), opts: SeedOptions = {}): Promise<SeedResult> {
@@ -351,8 +358,12 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
       currency: store.currency,
     }).resolvedOptions().maximumFractionDigits ?? 2;
   const minor = (taka: number) => Math.round(taka * 10 ** digits);
-  const rich = !!opts.rich && (await db.defaultPackApplication.count({ where: { storeId, packKey: SAMPLE_PACK_KEY } })) > 0;
-  if ((await db.order.count({ where: { storeId, isPractice: true } })) > 0) {
+  const rich = !!opts.rich && (!!opts.richAnywhere || (await db.defaultPackApplication.count({ where: { storeId, packKey: SAMPLE_PACK_KEY } })) > 0);
+  const existingOrders = await db.order.count({ where: { storeId, isPractice: true } });
+  // PR 880: a store that holds only the small practice set (about 94 orders) is topped up to the big one: only the missing
+  // orders, payouts and claims are added; the rows already there are never changed (their figures are recounted after).
+  const topUp = rich && existingOrders > 0 && existingOrders < Math.floor(ORDER_TOTAL * RICH.orderScale * RICH_DONE_SHARE);
+  if (existingOrders > 0 && !topUp) {
     // an older run: bring the catalogue to the demo's (adds only what is missing, nothing else is touched)
     const done = await ensureCatalogue(db, storeId, planProducts(makeRng(SEED), storeId, minor), minor, now);
     return { seeded: false, reason: 'already', counts: done };
@@ -413,6 +424,15 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     });
   }
 
+  if (topUp) {
+    // people that already exist keep their own names, so a new order never names someone differently from his record
+    const names = new Map((await db.customer.findMany({ where: { storeId, isPractice: true }, select: { id: true, name: true } })).map((c) => [c.id, c.name] as const));
+    for (const c of custs) {
+      const n = names.get(c.id);
+      if (n) c.name = n;
+    }
+  }
+
   // ---- orders
   interface Plan {
     kind: OrderKind;
@@ -454,6 +474,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     at: Date;
   }[] = [];
   let num = 10_180;
+  const have = topUp ? new Set((await db.order.findMany({ where: { storeId, isPractice: true }, select: { id: true } })).map((o) => o.id)) : new Set<string>();
 
   plans.forEach((plan, i) => {
     const placedAt = new Date(now.getTime() - plan.ageDays * DAY);
@@ -722,6 +743,21 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     if (!cust.last || placedAt > cust.last) cust.last = placedAt;
   });
 
+  if (topUp) {
+    // keep only what is new: an order that exists is never given more lines, payments or shipments
+    const drop = <T>(rows: T[], isOld: (r: T) => boolean) => {
+      for (let j = rows.length - 1; j >= 0; j--) if (isOld(rows[j]!)) rows.splice(j, 1);
+    };
+    const oldShip = new Set(shipments.filter((x) => have.has(String(x.orderId))).map((x) => String(x.id)));
+    drop(orders, (r) => have.has(String(r.id)));
+    drop(items, (r) => have.has(String(r.orderId)));
+    drop(events, (r) => have.has(String(r.orderId)));
+    drop(payments, (r) => have.has(String(r.orderId)));
+    drop(shipments, (r) => have.has(String(r.orderId)));
+    drop(shipmentEvents, (r) => oldShip.has(String(r.shipmentId)));
+    drop(paidCod, (r) => have.has(r.orderId));
+    drop(claimable, (r) => have.has(r.orderId));
+  }
   const levels = await practiceLevels(db, storeId);
   await db.customer.createMany({
     data: custs.map((c) => ({
@@ -765,7 +801,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     const k = `${p.courierId}:${week}`;
     (weeks.get(k) ?? weeks.set(k, []).get(k)!).push(p);
   }
-  let payoutNo = 0;
+  let payoutNo = topUp ? await db.courierSettlement.count({ where: { storeId, isPractice: true } }) : 0;
+  const payoutBase = payoutNo;
   for (const [, group] of [...weeks].sort((a, b) => a[0].localeCompare(b[0]))) {
     payoutNo += 1;
     const sid = practiceId(`settlement:${payoutNo}`);
@@ -812,7 +849,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
       skipDuplicates: true,
     });
   }
-  counts.payouts = payoutNo;
+  counts.payouts = payoutNo - payoutBase;
 
   // ---- courier claims (lost, damaged, rider overcharge, other) in every state
   const baseKinds = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'LOST', 'DAMAGED'] as const;
@@ -821,8 +858,10 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   const kinds = Array.from({ length: claimTotal }, (_, k) => baseKinds[k % baseKinds.length]!);
   const states = Array.from({ length: claimTotal }, (_, k) => baseStates[(k + Math.floor(k / baseStates.length)) % baseStates.length]!);
   const claims: Prisma.CourierClaimCreateManyInput[] = [];
-  kinds.forEach((kind, k) => {
-    const src = claimable[(k * (rich ? 7 : 5)) % Math.max(1, claimable.length)];
+  const claimBase = topUp ? await db.courierClaim.count({ where: { storeId, isPractice: true } }) : 0;
+  kinds.forEach((kind, k0) => {
+    const k = k0 + claimBase;
+    const src = claimable[(k0 * (rich ? 7 : 5)) % Math.max(1, claimable.length)];
     if (!src) return;
     const claimed = kind === 'RIDER_OVERCHARGE' ? minor(rng.int(30, 120)) : Math.min(src.total, minor(rng.int(700, 1800)));
     claims.push({
@@ -832,20 +871,23 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
       orderId: src.orderId,
       shipmentId: src.shipmentId,
       kind,
-      status: states[k]!,
+      status: states[k0]!,
       claimedMinor: claimed,
-      settledMinor: states[k] === 'SETTLED' ? claimed : null,
-      courierRef: states[k] === 'OPEN' ? null : `CLM-${1000 + k}`,
+      settledMinor: states[k0] === 'SETTLED' ? claimed : null,
+      courierRef: states[k0] === 'OPEN' ? null : `CLM-${1000 + k}`,
       note: 'Practice claim',
       idempotencyKey: `practice:claim:${k}`,
-      sentAt: states[k] === 'OPEN' ? null : new Date(src.at.getTime() + 6 * DAY),
-      closedAt: states[k] === 'SETTLED' || states[k] === 'REJECTED' ? new Date(src.at.getTime() + 12 * DAY) : null,
+      sentAt: states[k0] === 'OPEN' ? null : new Date(src.at.getTime() + 6 * DAY),
+      closedAt: states[k0] === 'SETTLED' || states[k0] === 'REJECTED' ? new Date(src.at.getTime() + 12 * DAY) : null,
       isPractice: true,
       createdAt: new Date(src.at.getTime() + 5 * DAY),
     });
   });
   await db.courierClaim.createMany({ data: claims, skipDuplicates: true });
   counts.claims = claims.length;
+
+  // PR 880: after a top-up the older people's figures are counted again from their orders (practice rows only, and only when a figure differs)
+  if (topUp) counts.customersRecounted = await recountPracticeCustomers(db, storeId, levels);
 
   // ---- incomplete orders (started checkouts that did not finish)
   const drafts: Prisma.CheckoutDraftCreateManyInput[] = [];
@@ -883,7 +925,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   await db.checkoutDraft.createMany({ data: drafts, skipDuplicates: true });
   counts.incomplete = drafts.length;
 
-  if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now));
+  if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now, !opts.richAnywhere));
 
   return { seeded: true, counts };
 }
@@ -901,13 +943,16 @@ async function seedRichExtras(
   rng: ReturnType<typeof makeRng>,
   plan: ProductPlan,
   now: Date,
+  withAds: boolean,
 ): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const accounts: Prisma.AdAccountCreateManyInput[] = [];
   const campaigns: Prisma.AdCampaignCreateManyInput[] = [];
   const spend: Prisma.AdSpendDailyCreateManyInput[] = [];
-  for (const a of RICH_ADS) {
+  // PR 880: the ad accounts and their spend are made on the sample store only. Ad spend is read straight by the profit and
+  // cost reports (no practice switch there), so on the owner's own store it would mix with real ad money.
+  for (const a of withAds ? RICH_ADS : []) {
     const accountId = practiceId(`adaccount:${a.platform}`);
     accounts.push({ id: accountId, storeId, platform: a.platform, externalId: `practice-${a.platform.toLowerCase()}`, name: a.account, currency, enabled: false });
     for (const [ci, name] of a.campaigns.entries()) {
@@ -976,4 +1021,30 @@ async function seedRichExtras(
   await db.review.createMany({ data: reviews, skipDuplicates: true });
   counts.reviews = reviews.length;
   return counts;
+}
+
+/** Counts every practice customer's orders, delivered, returned and lifetime value again from the practice orders; changes only a row whose figure differs. */
+export async function recountPracticeCustomers(db: Db, storeId: number, levels: Parameters<typeof pickGrade>[0]): Promise<number> {
+  const rows = await db.order.findMany({ where: { storeId, isPractice: true, customerId: { not: null } }, select: { customerId: true, status: true, totalMinor: true, placedAt: true } });
+  const by = new Map<string, { orders: number; delivered: number; returned: number; ltv: number; last: Date | null }>();
+  for (const o of rows) {
+    const c = by.get(o.customerId!) ?? by.set(o.customerId!, { orders: 0, delivered: 0, returned: 0, ltv: 0, last: null }).get(o.customerId!)!;
+    c.orders += 1;
+    if (o.status === 'DELIVERED') {
+      c.delivered += 1;
+      c.ltv += o.totalMinor;
+    }
+    if (o.status === 'RETURNED') c.returned += 1;
+    if (!c.last || o.placedAt > c.last) c.last = o.placedAt;
+  }
+  const have = await db.customer.findMany({ where: { storeId, isPractice: true }, select: { id: true, orderCount: true, deliveredCount: true, returnedCount: true, lifetimeValueMinor: true, lastOrderAt: true } });
+  let changed = 0;
+  for (const h of have) {
+    const c = by.get(h.id);
+    if (!c) continue;
+    if (h.orderCount === c.orders && h.deliveredCount === c.delivered && h.returnedCount === c.returned && Number(h.lifetimeValueMinor) === c.ltv && h.lastOrderAt?.getTime() === c.last?.getTime()) continue;
+    await db.customer.update({ where: { id: h.id }, data: { orderCount: c.orders, deliveredCount: c.delivered, returnedCount: c.returned, lifetimeValueMinor: c.ltv, lastOrderAt: c.last, gradeId: pickGrade(levels, c.delivered, c.returned) } });
+    changed += 1;
+  }
+  return changed;
 }
