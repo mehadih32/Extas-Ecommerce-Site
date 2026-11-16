@@ -329,6 +329,8 @@ import couriersV5En from '../messages/couriers-v5.en.json';
 import couriersV5Bn from '../messages/couriers-v5.bn.json';
 import courierSetupEn from '../messages/courier-setup.en.json';
 import courierSetupBn from '../messages/courier-setup.bn.json';
+import d10En from '../messages/d10.en.json';
+import d10Bn from '../messages/d10.bn.json';
 import rulesHubEn from '../messages/rules-hub.en.json';
 import rulesHubBn from '../messages/rules-hub.bn.json';
 
@@ -497,6 +499,9 @@ messages.en = mergeMessages(messages.en, couriersV5En);
 messages.bn = mergeMessages(messages.bn, couriersV5Bn);
 messages.en = mergeMessages(messages.en, courierSetupEn);
 messages.bn = mergeMessages(messages.bn, courierSetupBn);
+// D10 · PR 1004-1006 (registry v1004): the backup schedule, the health alerts and checks, automatic updates (registry-d10.ts).
+messages.en = mergeMessages(messages.en, d10En);
+messages.bn = mergeMessages(messages.bn, d10Bn);
 // S28 · PR 678, 679 (registry v320): the pop-up hub texts and Peak and Eid mode (registry-rules-hub.ts).
 messages.en = mergeMessages(messages.en, rulesHubEn);
 messages.bn = mergeMessages(messages.bn, rulesHubBn);

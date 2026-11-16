@@ -14,7 +14,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { backupRequests, driveView, restoreRequests } from "@extas/jobs";
-import { registry } from "@extas/settings";
+import { BACKUP_EVERY_HOURS, BACKUP_KEEP_ON_SERVER, registry } from "@extas/settings";
 import { AdminNotice } from "@/components/admin/AdminFrame";
 import {
   BackupNowButton,
@@ -23,6 +23,7 @@ import {
   type BackupSettings,
 } from "@/components/admin/settings/BackupPlanScreen";
 import { DriveCard } from "@/components/admin/settings/BackupsScreen";
+import { BackupDrillCard, BackupScheduleCard } from "@/components/admin/settings/BackupsBoard";
 import { RestoreCard } from "@/components/admin/settings/RestoreScreen";
 import {
   PageHead,
@@ -42,6 +43,7 @@ import bn from "../../../../../../messages/admin-backups.bn.json";
 import en from "../../../../../../messages/admin-backups.en.json";
 import "../../settings.css";
 import "../sysinfo.css";
+import "../../../s28.css";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +103,7 @@ export default async function BackupsPage() {
     gateSet,
     requests,
     restores,
+    schedule,
   ] =
     await Promise.all([
       runtimeState(),
@@ -115,6 +118,7 @@ export default async function BackupsPage() {
       r.value("backups.gate"),
       backupRequests(access.deps.db, 10),
       restoreRequests(access.deps.db),
+      r.value("backups.schedule"),
     ]);
   const gate = await backupGateNow(access.deps, state);
   const blobLive = gate.checks.find((x) => x.key === "blobLive")?.ok ?? false;
@@ -210,6 +214,48 @@ export default async function BackupsPage() {
         </div>
       </section>
 
+      <div className="s28-grid s28-g2 a2-mt12" data-testid="bk-board">
+        <BackupScheduleCard
+          d={d}
+          every={schedule.everyHours}
+          keep={schedule.keepOnServer}
+          everyOptions={BACKUP_EVERY_HOURS}
+          keepOptions={BACKUP_KEEP_ON_SERVER}
+          dailyTime={values.plan.dailyTime}
+          driveKeeps={settings.keepCopies}
+          canEdit={canBackup}
+        />
+        <BackupDrillCard
+          d={d}
+          drill={{
+            result: lastDrill?.result ?? null,
+            when: lastDrill?.at ? dateTime(lastDrill.at, view.locale, view.timeZone) : null,
+            detail: lastDrill?.detail ?? null,
+          }}
+          canRun={canBackup}
+          drillOpen={requests.some((x) => x.kind === "RESTORE_DRILL" && (x.status === "QUEUED" || x.status === "RUNNING"))}
+        />
+      </div>
+
+      <div className="a2-mt12">
+        <RestoreCard
+          d={d}
+          locale={view.locale}
+          timeZone={view.timeZone}
+          initial={restores}
+          lastLive={state.restore.production}
+          canStage={canBackup}
+          canRestore={canRestore}
+          connected={{ blob: blobLive, drive: live("driveLive") }}
+        />
+      </div>
+
+      {/* D10: every card the prototype's page does not draw stays on this page, under More options. */}
+      <details className="a2-card a2-mt12" data-testid="bk-more">
+        <summary className="a2-h3" style={{ cursor: "pointer", minHeight: 44 }}>
+          {c("board.more")}
+        </summary>
+        <div className="a2-cs">{c("board.moreSub")}</div>
       <div className="a2-kpis">
         {kpis.map(([k, value, foot, tone]) => (
           <div
@@ -466,18 +512,7 @@ export default async function BackupsPage() {
         </div>
       </div>
 
-      <div className="a2-mt12">
-        <RestoreCard
-          d={d}
-          locale={view.locale}
-          timeZone={view.timeZone}
-          initial={restores}
-          lastLive={state.restore.production}
-          canStage={canBackup}
-          canRestore={canRestore}
-          connected={{ blob: blobLive, drive: live("driveLive") }}
-        />
-      </div>
+      </details>
     </div>
   );
 }
