@@ -43,6 +43,11 @@ export interface ReportBarProps {
   views?: readonly SavedView[] | null;
   /** Day text for the period line. */
   day?: (ymd: string) => string;
+  /**
+   * PR 756 (Geography map): the report's own choices besides the period (its slices: channel, payment, courier …) as address
+   * parts. They are kept when the period changes, saved with a view and written back when a view is picked.
+   */
+  mix?: Readonly<Record<string, string>>;
 }
 
 /** The words of the Schedule box (PR 863: the Monthly review page shows the same button beside its month switch). */
@@ -93,18 +98,24 @@ export function ReportBar({
   reportKey,
   views,
   day,
+  mix,
 }: ReportBarProps) {
   const c = (k: string, v?: Record<string, string | number>) =>
     t(d, `reportsV5.common.${k}`, v);
   const key = protoKey(p, from, to, today);
   const dayText = day ?? ((x: string) => x);
-  const keep = cmp ? "" : "&cmp=0";
+  const mixQs = (m: Readonly<Record<string, string>> | undefined) =>
+    Object.entries(m ?? {})
+      .filter(([k]) => k !== "p" && k !== "from" && k !== "to" && k !== "cmp")
+      .map(([k, v]) => `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("");
+  const keep = `${cmp ? "" : "&cmp=0"}${mixQs(mix)}`;
   const href = (k: ProtoPeriod) => {
     if (k === "custom") return `${here}?p=custom&from=${from}&to=${to}${keep}`;
     const r = protoRange(k, today);
     return `${here}?p=${k}&from=${r.from}&to=${r.to}${keep}`;
   };
-  const toggle = `${here}?p=${key}&from=${from}&to=${to}${cmp ? "&cmp=0" : ""}`;
+  const toggle = `${here}?p=${key}&from=${from}&to=${to}${cmp ? "&cmp=0" : ""}${mixQs(mix)}`;
   const hrefOfView = (v: SavedView) => {
     const k =
       (Object.keys(PRESET_OF) as ProtoPeriod[]).find(
@@ -114,7 +125,7 @@ export function ReportBar({
       k === "custom"
         ? { from: v.filters.from ?? from, to: v.filters.to ?? to }
         : protoRange(k, today);
-    return `${here}?p=${k}&from=${r.from}&to=${r.to}${v.compare ? "" : "&cmp=0"}`;
+    return `${here}?p=${k}&from=${r.from}&to=${r.to}${v.compare ? "" : "&cmp=0"}${mixQs(v.filters)}`;
   };
   const options: ViewOption[] = (views ?? []).map((v) => ({
     id: v.id,
@@ -220,7 +231,7 @@ export function ReportBar({
             views={options}
             preset={PRESET_OF[key]}
             compare={cmp}
-            filters={key === "custom" ? { from, to } : {}}
+            filters={{ ...(key === "custom" ? { from, to } : {}), ...(mix ?? {}) }}
             canSave={views !== undefined}
             testId={id}
             texts={{

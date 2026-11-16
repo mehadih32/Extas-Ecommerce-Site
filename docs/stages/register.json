@@ -51911,8 +51911,18 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
-   "mentions": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-2`, NOT pushed, status stays parked until the owner says):** the click panel and the period compare as separate parts the screen (PR 753) mounts: `apps/web/src/components/admin/reports/GeoPanel.tsx` (the panel: This period / Earlier / Change for orders, sales, delivered, returned and return rate, the top category, the top `topProducts` products fetched on demand with a retry, the \"Too few orders\" and \"return rate at or above your line\" notes, sales hidden without the money right, \"Open these orders\", \"Go deeper\"), `GeoCompareBar.tsx` (Off, Previous period, Same period last year, Own days with two dates, kept in the address), `lib/geo-map/compare.ts` (the earlier period's days by the same-length rule, the change step and its good/bad colour class, return rate changes in points), `panel.ts` (the panel's model, the Orders link, the next level down) and `words.ts` (messages `admin-geo-panel.{en,bn}.json`). \"Open these orders\" needed an `area` filter on the Orders list, which did not exist: `packages/orders/src/list.ts` (`listWhere`: the order's own area or any place under it, same store only), `lib/admin-orders/model.ts` and `list.ts` (`area` in the address, parsed and checked), the three Orders looks count it as a filter. The report bar got an optional `mix` so a saved view keeps the map's own choices. Tests: `compare.test.ts`, `panel.test.ts`, `GeoPanel.test.tsx`, `GeoCompareBar.test.tsx`, `ReportBar.mix.test.tsx` and the area-filter block of `orders.test.ts` (all ran and pass). `packages/orders/src/list-area.db.test.ts` (ran on a real PostgreSQL and passes: the place and every place under it, nothing from another place). The screen's own mounting is not done here (the screen is PR 753, another branch)."
+    }
+   ],
+   "mentions": [
+    753
+   ],
    "blueprint": [],
    "bn": "জিওগ্রাফি ম্যাপ: এলাকায় ক্লিক করলে টপ পণ্য, আর দুই সময় পাশাপাশি তুলনা। পার্ক করা।",
    "bnAuto": false,

@@ -4212,6 +4212,8 @@ Parked — not numbered yet; the seam is kept open by PR 497–499: [the parking
 
 Planned. Parked — register PRs 750–761, built only when the owner says "build the geography map" (light version: 750–753). **16 Nov 2026: PR 750–753 are coded on the local branch `claude/geo-1` (not pushed, not counted); PR 750's boundary pack and licence notice are in `packages/delivery/data/geo/`.** Plan in Bengali: [`docs/reports/2026-11-15-geo-map-plan.md`](docs/reports/2026-11-15-geo-map-plan.md); [the parking lot](docs/MASTER-REGISTER.md#the-parking-lot).
 
+**16 Nov 2026, local branch `claude/geo-2` (not pushed, not counted):** PR 754 — the click panel (top products, "Open these orders", "Go deeper") and the period compare (previous, same period last year, own days) as parts the map screen mounts, plus an area filter on the Orders list so "Open these orders" has somewhere to go.
+
 ### S28 · Admin v5 (prototype alignment) — Done (191/191)
 
 **Website › Page settings (PR 740–744, 15 Nov 2026).** `/admin/website/page-settings?screen=…` (`website.read` to see, `website.layout.write` to save, audited) holds the inside settings of the home (flash sale), category (filters), product (delivery and return lines), thank-you, bag, account and search (synonyms) pages, plus currency and time, the e-mail look, the cookie banner and the home-screen icon. Every field is a setting with an empty or off default; the shop is unchanged until the owner uses it. Tests beside the code; guide `docs/admin-guide/pages/website/page-settings.md`. বাংলায়: পেজের ভেতরের সেটিং, ইমেইলের চেহারা, কুকি ব্যানার আর হোম স্ক্রিনের আইকন এক জায়গা থেকে।

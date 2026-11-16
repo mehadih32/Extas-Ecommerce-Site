@@ -218,7 +218,7 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
   const d = view.dict;
   const page: ListPageId = 'all';
   const [data, incomplete] = await Promise.all([loadOrderList(readDeps(a.deps), a.who, view, page, query), incompleteOpenCount({ db: a.deps.db, resolver: a.deps.resolver })]);
-  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section || query.from || query.to);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.area || query.risk || query.section || query.from || query.to);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   // follow-up 222: the ticked orders' files (Export, Print invoices), each with its own key
   const files = bulkFilesFor(a.perms);

@@ -248,3 +248,18 @@ describe('PR 660 · the date bar and the new views of the order lists', () => {
     expect(cancelledFileRequest('2026-11-01', undefined, '2026-11-13')).toEqual({ url: '/api/admin/orders/export', body: { view: 'cancelled', from: '2026-11-01' }, fileName: 'cancelled-orders-2026-11-13.csv' });
   });
 });
+
+describe('PR 754 · the order list filtered by a delivery area (Geography map, Open these orders)', () => {
+  const AREA = '0195f0a2-7c1e-7a55-9b6e-0e6f6d0c1a2b';
+  it('reads a real area id from the address, drops anything else, and writes it back', () => {
+    expect(parseListQuery('all', { area: AREA }).area).toBe(AREA);
+    expect(parseListQuery('all', { area: 'dhaka; drop' }).area).toBeUndefined();
+    expect(listHref('all', { view: 'all', area: AREA, from: '2026-11-01', to: '2026-11-15' })).toBe(`/admin/orders?area=${AREA}&from=2026-11-01&to=2026-11-15`);
+  });
+  it('the order service filters on the place and every place under it', () => {
+    const where = od.listWhere(1, { view: 'all', area: AREA }, []);
+    expect(JSON.stringify(where)).toContain(`"ancestorIds":{"has":"${AREA}"}`);
+    expect(JSON.stringify(where)).toContain(`"areaId":"${AREA}"`);
+    expect(JSON.stringify(od.listWhere(1, { view: 'all' }, []))).not.toContain('ancestorIds');
+  });
+});
