@@ -28,8 +28,8 @@ export function ProfitSnapshot({ cols, texts }: { cols: readonly SnapCol[]; text
           <h2 className="a2-h3">{texts.title}</h2>
           <div className="a2-cs">{texts.sub}</div>
         </div>
-        <Link className="a2-btn sm ghost" href={texts.moreHref}>
-          {texts.more}
+        <Link className="lf-more" href={texts.moreHref}>
+          {texts.more} →
         </Link>
       </div>
       <div className="lf-snap">
@@ -117,7 +117,7 @@ export function MonthSoFar({ title, more, moreHref, rows, tiles, foot }: { title
     <section className="a2-card" data-testid="fn-month" aria-label={title}>
       <div className="a2-ch">
         <h2 className="a2-h3">{title}</h2>
-        <Link className="a2-btn sm ghost" href={moreHref}>
+        <Link className="lf-more" href={moreHref}>
           {more} →
         </Link>
       </div>

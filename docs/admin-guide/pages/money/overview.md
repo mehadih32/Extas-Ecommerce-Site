@@ -62,3 +62,5 @@
 - কুরিয়ারের টাকা মেলানো (COD মেলানো) আর লাভ-ক্ষতির পাতা পরের PR-এ আসবে; তখন এই কার্ড থেকে সেখানে যাওয়া যাবে।
 
 > **PR 910 (প্রোটোটাইপ মেলানো):** "Next 14 days of cash"-এর পাশে নতুন কার্ড **This month so far**: এই মাসের বিক্রি থেকে নিট লাভ পর্যন্ত প্রতিটা লাইন বারসহ (Sales, Product cost, Courier & COD, Packing & gateway, Returns, Ads, Fixed costs, Other costs, Net profit)। পাতার মাথায় তারিখ এখন "12 Nov, 20:00" ধরনে। আগের ক্যাশ-পাওয়া চার্ট, "Cash received", "COD due from couriers", "Courier claims to receive" আর "Refunds waiting" কার্ড সরানো হয়নি — ঠিকানার শেষে `?more=1` দিলে নিচে দেখা যায়।
+
+> **PR 980 (প্রোটোটাইপ মেলানো):** "Where the money is now"-এর চারটা কার্ডে আইকন; **Courier money** কার্ডে সংখ্যাগুলো বক্স ছাড়া, **Open Courier 360** প্রধান বোতাম। **This month so far**-এর নিচে মাস শেষে বিক্রি ও নিট লাভ এই গতিতে কত দাঁড়াবে। **Decide today**-এ ERP-এর দেনা সবুজ না থাকলে "Pay the ERP … to stay safe" কার্ড; "VAT is off" কার্ডটা আর আসে না (ভ্যাট সেটিং **VAT** ট্যাব/সেটিংসে)।

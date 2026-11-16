@@ -69,7 +69,7 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
     );
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `moneyOverview.${k}`, vars);
-  const [o, currency, vat] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('vat.system', { storeId: MOTHER_STORE_ID })]);
+  const [o, currency] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
   const f = (k: string, vars?: Record<string, string | number>) => t(d, `lf.fn.${k}`, vars);
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
@@ -124,7 +124,6 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
   const openLineCount = await access.deps.db.courierSettlementLine.count({ where: { storeId: MOTHER_STORE_ID, matchState: { in: ['MISMATCH', 'LATE'] }, resolvedAt: null } });
   const shortMinor = openLines.reduce((a, l) => a + (l.expectedMinor !== null && l.expectedMinor > l.codMinor ? l.expectedMinor - l.codMinor : 0), 0); // hardcode-ok: zero fallback, not a business number
   if (openLineCount > 0) decide.push({ key: 'courierLines', tone: 'warn', head: f('dec.lineHead', { n: openLineCount }), text: f('dec.lineText', { amt: amount(shortMinor) }), action: { label: f('dec.lineBtn'), href: '/admin/delivery/couriers' } });
-  if (!vat.enabled) decide.push({ key: 'vat', tone: 'ok', head: f('dec.vatHead'), text: f('dec.vatText'), action: { label: f('dec.vatBtn'), href: '/admin/money/vat' } });
   // prototype v5 (PR 821): where the money is now, courier money, the cash forecast and the ERP match, from the real records
   const perms = access.guard.permissions;
   const who: inv.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
@@ -148,6 +147,8 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
     },
     { key: 'wallets', label: m('wallets'), value: short(now.walletsMinor), sub: m('walletsSub', { n: now.walletHolders }), href: '/admin/money/refunds' },
   ];
+  // PR 980 (prototype): "Pay the ERP … to stay safe" when the shop owes the ERP and the payment gap is not green
+  if (now.erp && now.erp.owedMinor > 0 && now.erp.tone !== 'good' && holdDays !== null && holdLeft !== null) decide.push({ key: 'erpPay', tone: now.erp.tone === 'bad' ? 'bad' : 'warn', head: f('dec.erpHead', { amt: short(now.erp.owedMinor) }), text: f('dec.erpText', { owed: short(now.erp.owedMinor), d: holdDays, left: holdLeft }), action: { label: f('dec.erpBtn'), href: '/admin/money/books' } });
   const claimsMinor = o.claims?.minor ?? 0;
   const payoutRows = now.payouts.map((p) => ({ id: p.id, label: `${p.courier} · ${m(`cm.st.${p.state}`)} · ${short(p.minor)}`, tone: 'info' as const }));
   const topCourier = o.claims?.byCourier[0]?.courierId ?? null;
@@ -177,6 +178,9 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
         { key: 'net', label: f('ms.net'), shown: msNet === null ? '—' : `${msNet < 0 ? '−' : ''}${short(Math.abs(msNet))}`, pct: msNet === null ? 0 : msPct(msNet), kind: 'net' },
       ]
     : [];
+  const dayNo = Number(today.slice(8, 10)) || 1; // hardcode-ok: day of month read from the date text
+  const monthDays = new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0)).getUTCDate(); // hardcode-ok: days in this month
+  const monthTiles = mr ? [{ key: 'pace', label: f('ms.pace'), shown: short(Math.round((msSales / dayNo) * monthDays)) }, ...(msNet === null ? [] : [{ key: 'paceNet', label: f('ms.paceNet'), shown: short(Math.round((msNet / dayNo) * monthDays)) }])] : [];
   const ranges = heroRanges(o.received.daily ?? [], view.locale, amount, 10 ** money.digits, c);
 
   return (
@@ -210,7 +214,7 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
         links={{ c360: topCourier ? `/admin/delivery/couriers/${topCourier}` : '/admin/delivery/couriers', account: '/admin/money/couriers', match: '/admin/money/couriers' }}
       />
       <div className="lf-split">
-        <MonthSoFar title={f('ms.title')} more={f('ms.more')} moreHref="/admin/money/profit" rows={monthRows} tiles={[]} foot={f('ms.foot', { from: monthFrom.slice(8).replace(/^0/, ''), to: dayLabel(monthTo, view.locale) })} />
+        <MonthSoFar title={f('ms.title')} more={f('ms.more')} moreHref="/admin/money/profit" rows={monthRows} tiles={monthTiles} foot={f('ms.foot', { from: monthFrom.slice(8).replace(/^0/, ''), to: dayLabel(monthTo, view.locale) })} />
         <CashForecast
           texts={{ title: m('fc.title', { n: fcDays.length || '' }), series: m('fc.series'), tightest: m('fc.tight'), inWord: m('fc.in'), outWord: m('fc.out'), dayBy: m('fc.dayBy'), dayHead: m('fc.dayHead'), inHead: m('fc.inHead'), outHead: m('fc.outHead'), handHead: m('fc.handHead'), tightBadge: m('fc.badge'), fixed: m('fc.fixed'), none: m('fc.none'), start: m('fc.start') }}
           days={fcDays}
