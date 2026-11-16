@@ -43,7 +43,8 @@
     "view": {
       "entries": "Ledger",
       "payments": "Paid to ERP",
-      "pipeline": "Pipeline"
+      "pipeline": "Pipeline",
+      "statement": "Monthly statement"
     },
     "col": {
       "seq": "#",
@@ -359,6 +360,36 @@
       "waitingSince": "handed back {day}",
       "waitingNone": "Every piece returned in this month is checked."
     },
-    "payErp": "Pay ERP"
+    "payErp": "Pay ERP",
+    "st": {
+      "title": "Monthly statement",
+      "sub": "{from} to {to}. What the shop owed at the start, the bills, credits and payments of the month, and what it owes at the end.",
+      "month": "Month",
+      "go": "Show",
+      "open": "Owed at the start",
+      "bills": "Bills (pieces shipped)",
+      "credits": "Credits (approved returns)",
+      "paid": "Paid",
+      "other": "Other changes",
+      "close": "Owed at the end",
+      "count": "Entries: {n}",
+      "match": "Matches the ledger",
+      "mismatch": "Does not match the ledger: {amount}",
+      "erpSays": "The ERP said {amount} on {at}",
+      "ageTitle": "How old is the balance",
+      "ageSub": "Payments and credits clear the oldest bills first. Counted to {date}.",
+      "age": {
+        "d7": "0 to 7 days",
+        "d15": "8 to 15 days",
+        "d30": "16 to 30 days",
+        "older": "Over 30 days"
+      },
+      "ahead": "Paid ahead: {amount}",
+      "oldest": "Oldest bill still open: {date}",
+      "daily": "Day by day",
+      "day": "Day",
+      "bal": "Owed at day end",
+      "none": "Nothing happened in this month."
+    }
   }
 }
