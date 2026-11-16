@@ -38,7 +38,7 @@ export function productFormHandler(request: Request, deps: AdminDeps | null, id:
     // needs the owner's PIN, checked here (a wrong or missing PIN stops the whole save before anything is written).
     const touchesPrice = !!input.variants?.some((v) => 'priceMinor' in v.patch || 'compareAtMinor' in v.patch);
     if (touchesPrice && (await c.deps.settings.value('catalogue.prices.requirePin', { storeId: c.who.storeId })) === true) {
-      await requireOwnerPin(deps!, c.who.actor, c.who.ctx, pin, 'catalogue.prices.change', c.who.storeId);
+      await requireOwnerPin(deps!, c.who.actor, c.who.ctx!, pin, 'catalogue.prices.change', c.who.storeId);
     }
     const saved = await cat.saveProductForm(c.deps, c.who, id, input);
     // The form starts again from what was written: the product, its names and titles, and the checklist.

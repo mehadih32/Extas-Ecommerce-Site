@@ -6,7 +6,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { canPublish, stepFlags } from '@extas/catalogue';
+import { canPublish, stepFlags } from '@extas/catalogue/wizard-model';
 import type { NewErpStyle } from '@extas/inventory';
 import type { WizardData, WizardLists } from '@/lib/admin-wizard';
 import { t, type Dict } from '@/lib/i18n';
