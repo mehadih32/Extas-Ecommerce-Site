@@ -16,6 +16,14 @@ import { showToast } from '../lumen/Toast';
 
 const noSubscribe = () => () => {};
 
+/** PR 1020: the prototype's "Special permissions" (m-settings.js SPECIAL): four plain-word shortcuts onto real keys of the catalogue. They tick the very same keys the groups below hold, so nobody's access changes by any other road. */
+export const SPECIAL_PERMISSIONS: readonly { id: 'cost' | 'money' | 'export' | 'refund'; keys: readonly string[] }[] = [
+  { id: 'cost', keys: ['books.read'] },
+  { id: 'money', keys: ['payments.record', 'cash.record'] },
+  { id: 'export', keys: ['customers.export'] },
+  { id: 'refund', keys: ['payments.refunds.request'] },
+];
+
 /** PR 841: the "New role" window (prototype m-settings.js, the New role chip): the role's names, which role to start from, Create. */
 function NewRoleDialog({ c, from, roles, nameOf, busy, onClose, onCreate }: { c: (k: string) => string; from: string; roles: { id: string; nameEn: string; nameBn: string }[]; nameOf: (r: { nameEn: string; nameBn: string }) => string; busy: boolean; onClose: () => void; onCreate: (nEn: string, nBn: string, from: string) => void }) {
   const box = useRef<HTMLDivElement>(null);
@@ -105,6 +113,7 @@ export function RolesScreen(p: RolesScreenProps) {
   const [showNew, setShowNew] = useState(false);
   const [askPin, setAskPin] = useState(false);
   const [askDefault, setAskDefault] = useState(false);
+  const allKeys = new Set(p.view.tree.flatMap((b) => b.keys.map((k) => k.key)));
   const from = live.find((r) => !r.isOwner && !r.archived)?.id ?? '';
   const locked = !p.canManage || !role || role.isOwner || role.archived;
   const base = new Set(role?.permissions ?? []);
@@ -181,6 +190,20 @@ export function RolesScreen(p: RolesScreenProps) {
                   {c('systemGroup')} <span className="a2-pill dark">{c('ownerOnly')}</span>
                 </summary>
               </details>
+              <details className="a2-mt6" open data-testid="rl-special">
+                <summary className="s28-sum">{c('special.title')}</summary>
+                <div className="a2-mt6" style={{ paddingLeft: 24 }}>
+                  {SPECIAL_PERMISSIONS.map((sp) => {
+                    const keys = sp.keys.filter((k) => allKeys.has(k));
+                    if (!keys.length) return null;
+                    return (
+                      <label key={sp.id} className="s28-row">
+                        <input type="checkbox" checked={role.isOwner || keys.every((k) => held.has(k))} disabled={locked} onChange={(e) => setHeld(toggleGroup(held, keys, e.target.checked))} data-special={sp.id} /> {c(`special.${sp.id}`)}
+                      </label>
+                    );
+                  })}
+                </div>
+              </details>
             </div>
             <div className="s28-row between a2-mt12">
               <span className="a2-xs a2-mute">{c('tickNote')}</span>
@@ -197,10 +220,16 @@ export function RolesScreen(p: RolesScreenProps) {
                       <span className="a2-xs a2-mute">{changes ? c('changes', { a: d.added.length, r: d.removed.length }) : c('noChanges')}</span>
                     </>
                   ) : null}
-                  <button type="button" className="a2-btn" disabled={busy} onClick={() => go(() => call('PATCH', `/api/admin/roles/${role.id}`, { archived: !role.archived }), role.archived ? c('restored') : c('archived'))}>{role.archived ? c('restore') : c('archive')}</button>
                 </div>
               ) : null}
             </div>
+            {p.canManage && !role.isOwner ? (
+              <details className="a2-more-opts a2-mt12" data-testid="rl-more">
+                <summary>{c('more.title')}</summary>
+                <p className="a2-xs a2-mute a2-mt6">{c('more.archiveNote')}</p>
+                <button type="button" className="a2-btn a2-mt6" disabled={busy} onClick={() => go(() => call('PATCH', `/api/admin/roles/${role.id}`, { archived: !role.archived }), role.archived ? c('restored') : c('archived'))}>{role.archived ? c('restore') : c('archive')}</button>
+              </details>
+            ) : null}
           </>
         ) : null}
       </section>

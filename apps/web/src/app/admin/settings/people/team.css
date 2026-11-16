@@ -1,0 +1,10 @@
+/* PR 1020 (D12) — Settings › Team & roles: the one page of the prototype (m-settings.js renderTeam). Lumen tokens only. */
+[data-testid="people-page"] .a2-note { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: var(--lm-r-ctl); }
+[data-testid="people-page"] .a2-note.warn { background: var(--lm-warnbg, var(--lm-sf2)); }
+[data-testid="people-page"] details.a2-more-opts > summary { cursor: pointer; min-height: var(--lm-tap); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+[data-testid="people-page"] .a2-tbl tbody tr[data-testid="tm-row"] { cursor: pointer; }
+[data-testid="people-page"] .a2-tbl .a2-sw { vertical-align: middle; }
+[data-testid="people-page"] .a2-tbl td.r input { vertical-align: middle; }
+@media (max-width: 760px) {
+  [data-testid="people-page"] .a2-tbl td.a2-tdx, [data-testid="people-page"] .a2-tbl th.a2-tdx { display: none; }
+}
