@@ -5,19 +5,19 @@
 .adm2 .cm-li + .cm-li { border-top: 1px solid var(--lm-ln, var(--ln)); }
 .adm2 .cm-main { flex: 1 1 auto; min-width: 0; }
 .adm2 .cm-text { margin-top: 6px; color: var(--lm-ink2, var(--ink2)); line-height: 1.6; overflow-wrap: anywhere; }
-.adm2 .cm-var { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--lm-acc-bg, var(--acc-bg, rgba(37, 99, 235, 0.12))); color: var(--lm-acc, var(--acc, #2563eb)); font-size: 0.92em; }
+.adm2 .cm-var { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--infobg); color: var(--info); font-size: 0.92em; }
 .adm2 .cm-ctl { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
 .adm2 .cm-sw { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
 .adm2 .cm-ctl .a2-btn { min-height: 44px; }
 .adm2 .cm-ins { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-.adm2 .cm-chip { min-height: 32px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--lm-ln, var(--ln)); background: transparent; color: var(--lm-acc, var(--acc, #2563eb)); cursor: pointer; font: inherit; font-size: 0.85em; }
+.adm2 .cm-chip { min-height: 32px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--lm-ln, var(--ln)); background: transparent; color: var(--info); cursor: pointer; font: inherit; font-size: 0.85em; }
 .adm2 .cm-prev { margin-top: 6px; padding: 10px 12px; border: 1px dashed var(--lm-ln, var(--ln)); border-radius: 10px; overflow-wrap: anywhere; white-space: pre-wrap; }
 .adm2 .cm-which { margin-bottom: 10px; }
 .adm2 .cm-which .a2-sel { width: 100%; min-height: 44px; font-size: 16px; }
 .adm2 #cm-ta { width: 100%; font-size: 16px; }
 .adm2 .cm-problems { margin: 8px 0 0; padding-left: 18px; }
-.adm2 .cm-problems .bad { color: var(--lm-bad, var(--bad, #b91c1c)); }
-.adm2 .cm-problems .warn { color: var(--lm-warn, var(--warn, #b45309)); }
+.adm2 .cm-problems .bad { color: var(--bad); }
+.adm2 .cm-problems .warn { color: var(--warn); }
 .adm2 .cm-usage { margin-top: 12px; }
 .adm2 .cm-note { margin-top: 12px; }
 .adm2 .cm-more { min-width: 0; }
