@@ -69,10 +69,12 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
   const amount = (minor: number) => formatMoney(minor, money);
   // PR 985 (prototype): the wallet money we owe, what was refunded this month and the biggest wallet balances
   const monthFrom = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
-  const [walletSum, refundedMonth, biggest] = await Promise.all([
+  const [walletSum, refundedMonth, biggest, excWait] = await Promise.all([
     access.deps.db.walletAccount.aggregate({ where: { storeId: MOTHER_STORE_ID, balanceMinor: { gt: 0 } }, _sum: { balanceMinor: true }, _count: { _all: true } }),
     access.deps.db.refund.aggregate({ where: { storeId: MOTHER_STORE_ID, status: 'COMPLETED', completedAt: { gte: monthFrom } }, _sum: { amountMinor: true }, _count: { _all: true } }),
     access.deps.db.walletAccount.findMany({ where: { storeId: MOTHER_STORE_ID, balanceMinor: { gt: 0 } }, orderBy: { balanceMinor: 'desc' }, take: 8, select: { id: true, balanceMinor: true, customerId: true, customer: { select: { name: true, phone: true } } } }), // hardcode-ok: the card lists the eight biggest balances
+    // exchange credits still to come: a cheaper swap's credit is added after the old piece passes the check
+    access.deps.db.exchange.aggregate({ where: { storeId: MOTHER_STORE_ID, walletCreditMinor: { gt: 0 }, status: { in: ['REQUESTED', 'APPROVED', 'PICKUP_BOOKED', 'RECEIVED'] } }, _sum: { walletCreditMinor: true }, _count: { _all: true } }),
   ]);
   const at = (x: Date | string | null) => (x ? dateTime(new Date(x).toISOString(), view.locale, view.timeZone) : '');
   const w = flat((refundWords(view.lang) as { w: unknown }).w);
@@ -116,7 +118,13 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
 
   return (
     <div className="a2-z" data-testid="refunds-page" data-lm-ready="" data-view={v.view}>
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.refunds.title')} sub={t(view.dict, 'lf.fh.refunds.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.refunds.title')} sub={t(view.dict, 'lf.fh.refunds.sub')}
+        right={
+          <Link className="a2-btn" href={`${HERE}?rules=1#rf-more`} data-testid="rf-who">
+            {t(view.dict, 'lf.fh.wl.who')}: {t(view.dict, v.rules.fourEyes ? 'lf.fh.wl.whoTwo' : 'lf.fh.wl.whoOne')}
+          </Link>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
 
       <div className="a2-kpis a2-mt12" data-testid="rf-kpis">
@@ -133,6 +141,13 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
           <div className="a2-kf">
             <span className="a2-kn">{t(d, 'lf.fh.wl.waitingNote', { n: v.owed.count })}</span>
             {v.owed.failedMinor ? <span className="a2-kn bk-warn">{c('kpi.failed', { amount: amount(v.owed.failedMinor) })}</span> : null}
+          </div>
+        </div>
+        <div className="a2-card a2-kpi" data-testid="rf-kpi-exchange" data-minor={excWait._sum.walletCreditMinor ?? 0}>
+          <div className="a2-kl">{t(d, 'lf.fh.wl.exchange')}</div>
+          <b className="a2-kv">{amount(excWait._sum.walletCreditMinor ?? 0)}</b>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'lf.fh.wl.exchangeNote', { n: excWait._count._all })}</span>
           </div>
         </div>
         <div className="a2-card a2-kpi" data-testid="rf-kpi-month" data-minor={refundedMonth._sum.amountMinor ?? 0}>
@@ -273,7 +288,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
         )}
       </section>
 
-      <details className="ct-more a2-mt12" data-testid="rf-more">
+      <details className="ct-more a2-mt12" id="rf-more" open={sp.rules === '1'} data-testid="rf-more">
         <summary>{c('more')}</summary>
         {(['refunds', 'walletManual', 'apology'] as const).map((k) => (
           <FieldsCard key={k} url={API} screen={{ key: v.cards[k].key, value: v.cards[k].value, version: v.cards[k].version }} fields={fields[k]} texts={cardTexts(k)} canEdit={v.can.settings} testId={`rf-card-${k}`} />
