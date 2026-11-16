@@ -16,6 +16,10 @@ import { isOwner } from '@extas/auth';
 import { CHAT_KEEP_MONTHS, MEDIA_KEEP_MONTHS, PRIVACY_ANSWER_DAYS_MAX, PRIVACY_REQUEST_KINDS, PRIVACY_REQUEST_WORDS, PRIVACY_REQUEST_WORDS_MAX, privacyCustomerRequestsSchema, registry, SHARED_LOCATION_LINK_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { StartFreshScreen } from '@/components/admin/fresh/StartFreshScreen';
+import { startFreshView } from '@/lib/start-fresh';
+import startBn from '../../../../../messages/admin-start-fresh.bn.json';
+import startEn from '../../../../../messages/admin-start-fresh.en.json';
 import { PrivacyBoard } from '@/components/admin/settings/PrivacyBoard';
 import { PrivacyRequests } from '@/components/admin/settings/PrivacyRequests';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -31,6 +35,7 @@ import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-privacy.bn.json';
 import en from '../../../../../messages/admin-privacy.en.json';
 import '../settings.css';
+import '../../s28.css';
 import '../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
@@ -116,8 +121,12 @@ export default async function PrivacyPage() {
   const keepMonths = await access.deps.resolver.value('privacy.keepMonths');
   const answerDays = await access.deps.resolver.value('privacy.answerDays');
   const owner = access.guard.actor.staffUserId ? await isOwner(access.deps.db, access.guard.actor.staffUserId) : false;
+  const fresh = owner ? await startFreshView(access.deps, access.guard.actor, MOTHER_STORE_ID) : null;
+  const freshDict = { ...d, startFresh: ((view.lang === 'bn' ? startBn : startEn).startFresh as unknown) as Dict };
   const waitingN = (v.requests ?? []).filter((r) => r.status === 'REQUESTED').length;
   const flatWords = flat(words as unknown as Record<string, unknown>);
+  // PrivacyBoard reads its words with the `prv.` prefix, the requests card without it: one table serves both.
+  const boardWords = { ...flatWords, ...Object.fromEntries(Object.entries(flatWords).map(([k, v]) => [`prv.${k}`, v])) };
   const card = v.cards.keep;
   const ccard = v.cards.customer;
   const on = card.value.erasureRequests === true;
@@ -128,6 +137,48 @@ export default async function PrivacyPage() {
       <PageHead view={view} place={locateKey(KEY)} title={s('title')} sub={s('sub')} />
       <SectionTabs view={view} current={KEY} />
 
+      {waitingN > 0 ? (
+        <div className="a2-note a2-mt12" role="status" data-testid="privacy-waiting">
+          <ShellIcon name="alert" size={15} />
+          <span>{s('board.waiting', { n: num(waitingN), days: num(answerDays) })}</span>
+        </div>
+      ) : null}
+
+      <PrivacyBoard
+        lead={v.requests ? (
+
+        <PrivacyRequests
+          w={flatWords}
+          effects={[...words.req.confirmEffects]}
+          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
+          on={on}
+          answerDays={answerDays}
+          nowIso={new Date().toISOString()}
+          canRequest={v.canRequest}
+          canErase={v.canErase}
+          locale={view.locale}
+          timeZone={view.timeZone}
+        />
+      
+        ) : null}
+        fresh={fresh ? <StartFreshScreen dict={freshDict} view={fresh} /> : null}
+        w={boardWords}
+        chips={[...words.board.own.chips]}
+        keep={{ media: keepMonths.media, chat: keepMonths.chat }}
+        answerDays={answerDays}
+        answerMax={PRIVACY_ANSWER_DAYS_MAX}
+        mediaOptions={MEDIA_KEEP_MONTHS}
+        chatOptions={CHAT_KEEP_MONTHS}
+        canEdit={canEdit}
+        isOwner={owner}
+        importHref="/admin/customers/import"
+        freshHref={owner ? '/admin/settings/start-fresh' : null}
+        today={new Date().toISOString().slice(0, 10)}
+      />
+
+      <details className="a2-card a2-mt12" data-testid="privacy-more">
+        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>{s('board.more')}</summary>
+        <div className="a2-cs">{s('board.moreSub')}</div>
       <div className="a2-kpis">
         <div className="a2-card a2-kpi" data-testid="privacy-kpi-days">
           <div className="a2-kl">{s('kpi.days')}</div>
@@ -157,46 +208,11 @@ export default async function PrivacyPage() {
         </div>
       </div>
 
-      {waitingN > 0 ? (
-        <div className="a2-note a2-mt12" role="status" data-testid="privacy-waiting">
-          <ShellIcon name="alert" size={15} />
-          <span>{s('board.waiting', { n: num(waitingN), days: num(answerDays) })}</span>
-        </div>
+      {owner ? (
+        <Link className="a2-btn a2-mt12" href="/admin/settings/start-fresh" data-testid="privacy-fresh-page">
+          {s('board.fresh.open')}
+        </Link>
       ) : null}
-
-      {v.requests ? (
-        <PrivacyRequests
-          w={flatWords}
-          effects={[...words.req.confirmEffects]}
-          rows={v.requests.map((r) => ({ id: r.id, name: r.name, phoneEnd: r.phoneEnd, reason: r.reason, status: r.status, at: r.createdAt.toISOString(), kind: r.kind, source: r.source }))}
-          on={on}
-          answerDays={answerDays}
-          nowIso={new Date().toISOString()}
-          canRequest={v.canRequest}
-          canErase={v.canErase}
-          locale={view.locale}
-          timeZone={view.timeZone}
-        />
-      ) : null}
-
-      <PrivacyBoard
-        w={flatWords}
-        chips={[...words.board.own.chips]}
-        keep={{ media: keepMonths.media, chat: keepMonths.chat }}
-        answerDays={answerDays}
-        answerMax={PRIVACY_ANSWER_DAYS_MAX}
-        mediaOptions={MEDIA_KEEP_MONTHS}
-        chatOptions={CHAT_KEEP_MONTHS}
-        canEdit={canEdit}
-        isOwner={owner}
-        importHref="/admin/customers/import"
-        freshHref={owner ? '/admin/settings/start-fresh' : null}
-        today={new Date().toISOString().slice(0, 10)}
-      />
-
-      <details className="a2-card a2-mt12" data-testid="privacy-more">
-        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>{s('board.more')}</summary>
-        <div className="a2-cs">{s('board.moreSub')}</div>
       {v.purge.overdue ? (
         <div className="a2-note a2-mt12" role="status" data-testid="privacy-overdue">
           <ShellIcon name="alert" size={15} />
