@@ -29,6 +29,8 @@ import stripBn from '../../../../../messages/admin-ai-strip.bn.json';
 import stripEn from '../../../../../messages/admin-ai-strip.en.json';
 import { AiStrip } from '@/components/admin/ai/AiStrip';
 import { DigestForm } from '@/components/admin/ai/AiSettingsForms';
+import { DigestPreviewDialog } from '@/components/admin/ai/DigestPreviewDialog';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import Link from 'next/link';
 import { controlRoomView } from '@/lib/admin-ai/control-room';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
@@ -92,6 +94,14 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
   const todayN = o.decided.filter((r) => r.decidedAt && r.decidedAt.getTime() >= dayAgo).length;
   const approvedN = o.decided.filter((r) => r.status === 'APPROVED').length;
   const rate = o.decided.length ? Math.round((approvedN / o.decided.length) * 100) : 0;
+  const digestBody = [
+    t(d, 'aiDigest.previewTitle', { time: digest.time }),
+    '',
+    o.pending.length ? t(d, 'aiDigest.previewWaiting', { n: o.pending.length }) : t(d, 'aiDigest.previewNone'),
+    ...o.pending.slice(0, 6).map((r) => `• ${r.title}${MONEY_KINDS.includes(r.kind) ? ` ${t(d, 'aiDigest.previewPin')}` : ''}`),
+    '',
+    t(d, 'aiDigest.previewSpend', { amount: formatMoney(room.view.monthMinor, digestMoney) }),
+  ].join('\n');
   const at = (iso: Date) => dateTime(iso.toISOString(), view.locale, view.timeZone);
   const isGate = (r: ApprovalRow) => (GATE_KINDS as readonly string[]).includes(r.kind);
   const canDecide = (r: ApprovalRow) => (isGate(r) ? canApproveFixes : canControl);
@@ -104,7 +114,13 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
 
   return (
     <div className="a2-z ai-page ai-ap" data-testid="approvals-page">
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={c('title')}
+        sub={c('sub')}
+        right={<DigestPreviewDialog buttonLabel={t(d, 'aiDigest.preview')} title={t(d, 'aiDigest.previewH')} close={t(d, 'aiDigest.close')} body={digestBody} note={t(d, 'aiDigest.previewNote')} />}
+      />
       <SectionTabs view={view} current={KEY} />
       <AiStrip dict={d} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
 
@@ -135,6 +151,16 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
           </div>
         </div>
       </div>
+
+      {o.pending.length ? (
+        <div className="a2-note a2-mt12" role="note" data-testid="ai-ap-callout">
+          <ShellIcon name="info" size={15} />
+          <span>
+            <b>{t(d, 'aiCallout.waiting', { n: o.pending.length })}</b> {moneyN ? `${t(d, 'aiCallout.money', { n: moneyN })} ` : ''}
+            {t(d, 'aiCallout.tail')}
+          </span>
+        </div>
+      ) : null}
 
       <nav className="a2-card a2-mt12 ai-ap-filter" aria-label={t(d, 'aiFilter.label')} data-testid="ai-ap-filter">
         <div className="ai-ap-seg" role="group" aria-label={t(d, 'aiFilter.view')}>
@@ -169,7 +195,11 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
                   <span className="a2-xs a2-mute">{c('pending.agent')}: {agentNameOf(r.agentKey)}</span>
                 </div>
                 <div className="ai-ap-title">{r.title}</div>
-                {r.summary ? <div className="a2-sm a2-mute">{r.summary}</div> : null}
+                {r.summary ? (
+                  <div className="a2-sm a2-mute" data-testid="ai-ap-why">
+                    <b>{c('pending.why')}:</b> {r.summary}
+                  </div>
+                ) : null}
                 <div className="a2-xs a2-mute">
                   {c('pending.requested', { when: at(r.createdAt) })}
                   {r.expiresAt ? ` · ${c('pending.expires', { when: at(r.expiresAt) })}` : ''}
@@ -231,7 +261,8 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
 
       ) : null}
 
-      <section className="a2-card a2-mt12" aria-labelledby="ai-digest-h" data-testid="ai-digest">
+      <div className="ai-ap-pair a2-mt12">
+      <section className="a2-card" aria-labelledby="ai-digest-h" data-testid="ai-digest">
         <div className="a2-gap8" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <h2 className="a2-h3" id="ai-digest-h">
             {t(d, 'aiDigest.h')}
@@ -258,35 +289,23 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
             {digest.on ? t(d, 'aiDigest.onHelp') : t(d, 'aiDigest.off')}
           </p>
         )}
-        <details className="ai-dg-prev a2-mt12" data-testid="ai-digest-preview">
-          <summary className="a2-btn sm">{t(d, 'aiDigest.preview')}</summary>
-          <pre className="ai-dg-pre">
-            {[
-              t(d, 'aiDigest.previewTitle', { time: digest.time }),
-              '',
-              o.pending.length ? t(d, 'aiDigest.previewWaiting', { n: o.pending.length }) : t(d, 'aiDigest.previewNone'),
-              ...o.pending.slice(0, 6).map((r) => `• ${r.title}${MONEY_KINDS.includes(r.kind) ? ` ${t(d, 'aiDigest.previewPin')}` : ''}`),
-              '',
-              t(d, 'aiDigest.previewSpend', { amount: formatMoney(room.view.monthMinor, digestMoney) }),
-            ].join('\n')}
-          </pre>
-          <p className="a2-xs a2-mute">{t(d, 'aiDigest.previewNote')}</p>
-        </details>
       </section>
 
-      <section className="a2-card a2-mt12" aria-labelledby="ai-never-h" data-testid="ai-never">
+      <section className="a2-card" aria-labelledby="ai-never-h" data-testid="ai-never">
         <h2 className="a2-h3" id="ai-never-h">
           {t(d, 'aiNever.h')}
         </h2>
         <ul className="ai-never">
           {['money', 'budget', 'message', 'block', 'delete'].map((k) => (
             <li key={k}>
-              <span>{t(d, `aiNever.items.${k}`)}</span>
+              <ShellIcon name="check" size={15} />
+              <span className="ai-never-t">{t(d, `aiNever.items.${k}`)}</span>
               <span className="a2-pill line">{t(d, 'aiNever.waits')}</span>
             </li>
           ))}
         </ul>
       </section>
+      </div>
     </div>
   );
 }

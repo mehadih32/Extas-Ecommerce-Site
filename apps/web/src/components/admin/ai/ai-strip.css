@@ -24,3 +24,8 @@
 .adm2 .ai-dg-prev summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; }
 .adm2 .ai-off-form { margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-width: 520px; }
 .adm2 .ai-off-form textarea { width: 100%; }
+
+/* PR 930 — Approvals: the daily digest card and "What the AI may never do alone" side by side from 900 px (prototype v5 m-ai.js grid g2), a tick before each never-line. */
+.adm2 .ai-ap-pair { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .adm2 .ai-ap-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .ai-never-t { flex: 1 1 140px; min-width: 0; }
