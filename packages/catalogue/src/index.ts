@@ -65,3 +65,4 @@ export * from './ranking';
 export * from './product-sales';
 export * from './report-library';
 export * from './report-schedules';
+export * from './wizard-publish';

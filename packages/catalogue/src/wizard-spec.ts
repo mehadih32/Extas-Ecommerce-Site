@@ -136,7 +136,7 @@ export async function saveWizardSpec(deps: CatalogueDeps, who: Who, productId: s
   const row = await deps.db.$transaction(async (tx) => {
     const saved = await tx.productWizardSpec.upsert({
       where: { storeId_productId: { storeId: who.storeId, productId } },
-      create: { storeId: who.storeId, productId, ...(data as Prisma.ProductWizardSpecUncheckedCreateInput) },
+      create: { ...(data as Prisma.ProductWizardSpecUncheckedCreateInput), storeId: who.storeId, productId },
       update: data,
     });
     if (inCombos !== undefined) await tx.product.update({ where: { id: productId }, data: { inCombos } });

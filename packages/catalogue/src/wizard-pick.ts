@@ -22,7 +22,7 @@ export const WIZARD_PARTS: Record<WizardStepKey, readonly string[]> = {
 /** A step number from the address (`?wizard=3`); anything else means the wizard is off. */
 export function parseWizardStep(raw: unknown): number | null {
   const s = Array.isArray(raw) ? raw[0] : raw;
-  if (typeof s !== 'string' || !/^[2-8]$/.test(s)) return null;
+  if (typeof s !== 'string' || !/^[1-8]$/.test(s)) return null;
   return Number(s);
 }
 

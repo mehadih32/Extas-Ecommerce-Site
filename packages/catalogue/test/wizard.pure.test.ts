@@ -31,10 +31,11 @@ describe('wizard steps (PR 685)', () => {
     expect(WIZARD_PARTS.publish).toEqual(['sec-publish', 'sec-ready']);
   });
 
-  it('reads the step from the address, 2 to 8 only', () => {
+  it('reads the step from the address, 1 to 8 only', () => {
     expect(parseWizardStep('3')).toBe(3);
+    expect(parseWizardStep('1')).toBe(1);
     expect(parseWizardStep(['8'])).toBe(8);
-    for (const bad of ['1', '9', '0', 'x', '', undefined, null, '03']) expect(parseWizardStep(bad)).toBeNull();
+    for (const bad of ['9', '0', 'x', '', undefined, null, '03']) expect(parseWizardStep(bad)).toBeNull();
     expect(wizardKey(1)).toBe('start');
     expect(wizardKey(99)).toBe('publish');
   });
