@@ -67,6 +67,12 @@
     "previewNone": "Nothing is waiting.",
     "previewPin": "(PIN)",
     "previewSpend": "AI spend this month: {amount}",
-    "previewNote": "A preview only: nothing is sent. The settings are saved now; sending the digest comes in a later step."
+    "previewNote": "A preview only: nothing is sent. The settings are saved now; sending the digest comes in a later step.",
+    "close": "Close"
+  },
+  "aiCallout": {
+    "waiting": "{n} waiting.",
+    "money": "{n} touch money and need your PIN.",
+    "tail": "Approve the ones you agree with; a rejected idea is never done."
   }
 }
