@@ -7,6 +7,10 @@
 name: The app on the sample data
 description: Seeds the job's PostgreSQL with the sample data and starts the build job's standalone server on port 3000
 inputs:
+  practice:
+    description: When 'true', the big practice shop (about 850 orders, 240 people, the demo's styles) is added and practice mode switched on, as on the real admin (PR 880)
+    required: false
+    default: 'false'
   gate-owner-password-file:
     description: When set, a throwaway owner (gate@example.test) is made and its first password written to this file
     required: false
@@ -33,6 +37,11 @@ runs:
         pnpm --filter @extas/inventory sample:v6
 
     # A throwaway owner with a generated first password; the device gate changes it at its first sign-in.
+    - name: The practice shop (PR 880; only where asked for)
+      if: inputs.practice == 'true'
+      shell: bash
+      run: pnpm --filter @extas/seed exec tsx ../../apps/web/src/lib/practice/live-cli.ts seed --turn-on
+
     - name: The gate's owner
       if: inputs.gate-owner-password-file != ''
       shell: bash
