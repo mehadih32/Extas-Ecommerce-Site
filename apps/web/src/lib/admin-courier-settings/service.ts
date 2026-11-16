@@ -106,7 +106,11 @@ export async function courierSettingsView(deps: CourierSettingsDeps, who: Courie
     deps.resolver.value('contact.address', { storeId: S }),
     deps.resolver.value('store.details', { storeId: S }),
     deps.resolver.value('store.currency', { storeId: S }),
-    sh.readyToBook(deps.shipping, w, { limit: COUNT_ONLY }),
+    // the count of packed orders needs `delivery.book`; someone who only reads this page (the read-only check account too) sees none instead of a refusal
+    requirePermission(deps.db, who.actor, 'delivery.book', { storeId: S }).then(
+      () => sh.readyToBook(deps.shipping, w, { limit: COUNT_ONLY }),
+      () => ({ total: 0 }),
+    ),
   ]);
   const couriers = overview.cards.map((c): CourierRow => {
     const mine = cards.filter((x) => x.courierAccountId === c.id);
