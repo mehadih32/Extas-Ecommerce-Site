@@ -53,3 +53,5 @@
 
 ## এরপর কী হয়
 লেখার সাথে সাথে অ্যাকাউন্টের ব্যালেন্স আর মাসের ঢোকা-বেরোনো বদলে যায়। উল্টানো এন্ট্রি আর মূল এন্ট্রি দুটোই খাতায় থাকে এবং কে কখন করল তা লগে লেখা হয়। টাকা লেখা বন্ধ রাখতে চাইলে সেটিংসে ক্যাশবুকের সুইচ বন্ধ করুন; তখন পুরোনো লেখা দেখা যায় কিন্তু নতুন লেখা যায় না।
+
+> **PR 981 (প্রোটোটাইপ মেলানো):** **Record money** এখন পাতার মাথায় (Download / Print-এর পাশে)। অ্যাকাউন্টের কার্ডের নিচে **Match courier account** কার্ড (Matched, Short, Overcharged, Payout missing, "N to check") আর যা মিলছে না তার তালিকা **Not matching** (প্রতিটায় **Claim** ও **Accept**, কুরিয়ারের পাতায় যায়)। **All movements**-এর ফিল্টার এখন ঠিক এগুলো: All, Courier payout, Online payment, Refund, Expense, Ad bill, ERP payment, Owner took, Owner put in, Transfer, Other; নোট "What" ঘরের ভেতরে। "Next 14 days" কার্ড `?more=1` দিলে নিচে দেখা যায়।

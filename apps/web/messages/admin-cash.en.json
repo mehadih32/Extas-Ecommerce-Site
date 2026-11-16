@@ -28,18 +28,19 @@
     },
     "kinds": {
       "OPENING": "Opening balance",
-      "COURIER": "From courier",
+      "COURIER": "Courier payout",
       "ONLINE": "Online payment",
       "REFUND": "Refund",
-      "EXPENSE": "Cost",
-      "ADS": "Ads",
-      "ERP": "ERP",
-      "CAPITAL": "Owner put in money",
-      "OWNER_TAKE": "Owner took money",
-      "OTHER_IN": "Other money in",
-      "OTHER_OUT": "Other money out",
-      "TRANSFER": "Move between accounts",
-      "REVERSAL": "Reversal"
+      "EXPENSE": "Expense",
+      "ADS": "Ad bill",
+      "ERP": "ERP payment",
+      "CAPITAL": "Owner put in",
+      "OWNER_TAKE": "Owner took",
+      "OTHER_IN": "Other",
+      "OTHER_OUT": "Other",
+      "TRANSFER": "Transfer",
+      "REVERSAL": "Reversal",
+      "OTHER": "Other"
     },
     "f": {
       "kind": "What happened",
@@ -98,6 +99,25 @@
       "CONFLICT": "This was already done.",
       "amount": "Write an amount above zero.",
       "other": "It could not be saved. Try again."
+    },
+    "match": {
+      "title": "Match courier account",
+      "sub": "One click checks every parcel: COD, delivery charge, return charge and payouts.",
+      "matched": "Matched",
+      "short": "Short",
+      "over": "Overcharged",
+      "payout": "Payout missing",
+      "toCheck": "{n} to check",
+      "allMatched": "All matched",
+      "not": "Not matching",
+      "order": "Order",
+      "wrong": "What is wrong",
+      "shortBy": "Short by",
+      "claim": "Claim",
+      "accept": "Accept",
+      "charge": "Courier charged {a} delivery fee, our rate is {b}",
+      "cash": "Marked delivered, but {a} cash is not in the statement",
+      "other": "Courier paid {a}, we expected {b}"
     }
   }
 }
