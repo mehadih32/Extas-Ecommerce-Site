@@ -36,6 +36,15 @@ async function computeView(deps: AdminDeps | null): Promise<AdminView> {
     } catch {
       storeName = null;
     }
+    // The setting may be unset on a fresh install; the store's own record (typed in at setup) is the brand then.
+    if (!storeName?.trim()) {
+      try {
+        const row = await withTimeout(deps.db.store.findUnique({ where: { id: MOTHER_STORE_ID }, select: { name: true } }), settingsTimeoutMs());
+        storeName = row?.name?.trim() || null;
+      } catch {
+        storeName = null;
+      }
+    }
   }
   return { lang, dict: adminDicts[lang], locale: adminLocale(lang, display.locale), timeZone: display.timeZone, storeName };
 }

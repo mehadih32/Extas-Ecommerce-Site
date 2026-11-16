@@ -13,6 +13,9 @@ export interface HeadView {
 
 /** The guide button of a place (always Bengali: the guides are, CN-014); `overview`: the section's overview alone. */
 export function PlaceGuide({ view, place, overview }: { view: HeadView; place: ShellPlace; overview?: boolean }) {
+  // Final round (prototype v5): the page head carries no guide strip; the top bar's "?" opens this page's guide
+  // (AdminShell `a2-help`). Only a caller that asks for the section overview (Help & manual) still draws the button.
+  if (!overview) return null;
   // A tab with its own guide (Stock, Size charts …) names itself in the panel's title; otherwise the section does.
   const name = place.tab?.guide ? t(view.dict, `shell.tab.${place.section.id}.${place.tab.id}`) : t(view.dict, `shell.sec.${place.section.id}`);
   return <GuideButton slug={guideOf(place)} section={name} label={t(view.dict, 'shell.guide.button')} page={overview ? `${place.section.id}/index` : undefined} />;
