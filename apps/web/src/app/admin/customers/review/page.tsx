@@ -98,6 +98,20 @@ export default async function CustomersReviewPage({ searchParams }: { searchPara
           </section>
         )
       ) : null}
+      <div className="a2-kpis a2-mt12" data-testid="review-kpis">
+        {(
+          [
+            ['suggest', suggest.total],
+            ['merged', decisions.filter((r) => r.decision === 'MERGED' && !r.undone).length],
+            ['different', decisions.filter((r) => r.decision === 'NOT_SAME' && !r.undone).length],
+          ] as const
+        ).map(([k, v]) => (
+          <div key={k} className="a2-card a2-kpi" data-testid={`review-kpi-${k}`}>
+            <div className="a2-kl">{t(d, k === 'suggest' ? 'cus.review.view.suggest' : `cus.hint.${k}`)}</div>
+            <div className="a2-kv">{n(v)}</div>
+          </div>
+        ))}
+      </div>
       <nav className="a2-views a2-mt12" aria-label={t(d, 'cus.review.viewsAria')} data-testid="review-views">
         {VIEWS.map((v) => (
           <Link key={v} className={`a2-view${v === tab ? ' on' : ''}`} href={v === 'suggest' ? HERE : `${HERE}?view=${v}`} aria-current={v === tab ? 'page' : undefined} scroll={false} data-view={v}>
