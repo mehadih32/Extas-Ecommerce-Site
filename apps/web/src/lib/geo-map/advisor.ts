@@ -1,6 +1,6 @@
 // S29 · PR 761 (CN-054; register "Geography map: AI advisor", advice only) — the advisor on the database.
 //
-// What it does: reads the Geography map's lenses (the ones the owner switched on, and only the parts the person who pressed
+// What it does: reads the Geography map's lenses (all of them, and only the parts the person who pressed
 // the button may see), works out the suggestions (advisor-model.ts: numbers only), and for each one asks the guarded AI note
 // (`approvalExplainNote`: agent `gyani`, the master switch `ai.enabled`, the agent's cap, the usage ledger and the diary) for
 // one short paragraph in the owner's language. A suggestion with a note becomes a draft in the approval queue (kind
@@ -8,21 +8,41 @@
 //
 // What it never does: change anything. No ad budget, campaign, price, delivery charge, COD rule, courier, stock or setting is
 // touched (hard rule 6); the only write is the draft itself (`aiApprovalRequest`), and approving a draft changes nothing
-// either: it only records that a person read it. The gates, in order, each one stops the run before any read or AI call:
-//   1. the map is on (`reports.geoMap.on`)  2. the advisor is on (`reports.geoMap.ai`, off as shipped)
-//   3. AI is on (`ai.enabled`, off as shipped)
+// either: it only records that a person read it. There is no geo-specific switch (owner's decision, 16 Nov 2026); the one gate
+// is the site's global AI control, and it stops the run before any read or AI call:  AI is on (`ai.enabled`, off as shipped)
 // With AI off (or paused, or capped, or on the mock) there is no AI call and no draft: a suggestion without its AI note is
 // not queued, so the queue never fills with unexplained cards.
-import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { geoDemand, geoMoney, geoRisk, type LensResult, type MoneyPart, type RiskPart } from '@extas/metrics';
-import { approvalExplainOption, type ApprovalExplainAiDeps, type ApprovalExplainFacts } from '../admin-ai/approval-explain-dispatch';
-import { requestApproval } from '../admin-ai/approvals';
-import { profitInputs } from '../order-profit-view';
-import type { AppResolver } from '../settings';
-import { suggestionsFrom, textOf, type AdviceInput, type CourierHint, type CoverageGap, type Lang, type Suggestion } from './advisor-model';
-import { moneyParts, riskParts, topRiskBand } from './lens-api';
-import { readLensSetting } from './setting';
-import type { Actor } from '@extas/auth';
+import { MOTHER_STORE_ID, type PrismaClient } from "@extas/db/client";
+import {
+  courierLens,
+  geoDemand,
+  geoMoney,
+  geoRisk,
+  type LensResult,
+  type MoneyPart,
+  type RiskPart,
+} from "@extas/metrics";
+import {
+  approvalExplainOption,
+  type ApprovalExplainAiDeps,
+  type ApprovalExplainFacts,
+} from "../admin-ai/approval-explain-dispatch";
+import { requestApproval } from "../admin-ai/approvals";
+import { profitInputs } from "../order-profit-view";
+import type { AppResolver } from "../settings";
+import {
+  suggestionsFrom,
+  textOf,
+  type AdviceInput,
+  type CourierHint,
+  type CoverageGap,
+  type Lang,
+  type Suggestion,
+} from "./advisor-model";
+import { courierHints, coverageGaps } from "./advisor-hints";
+import { moneyParts, riskParts, topRiskBand } from "./lens-api";
+import { readLensSetting } from "./setting";
+import type { Actor } from "@extas/auth";
 
 /** The kind and the reference type of the drafts in the approval queue. */
 export const ADVICE_KIND = 'geo.advice';
@@ -31,15 +51,15 @@ export const ADVICE_AGENT = 'gyani';
 export const ADVICE_CHANNEL = 'geo-map';
 const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day, a unit
 
-export type AdvisorStatus = 'off' | 'advisorOff' | 'aiOff' | 'ready';
+export type AdvisorStatus = "aiOff" | "ready";
 
-/** Where the advisor stands for a store: which gate is closed first, or `ready`. Reads only settings. */
-export async function advisorStatus(resolver: Pick<AppResolver, 'value'>, storeId: number): Promise<AdvisorStatus> {
-  const setting = await readLensSetting(resolver as AppResolver, storeId);
-  if (!setting) return 'off';
-  if (!setting.ai) return 'advisorOff';
-  if (!(await resolver.value('ai.enabled', { storeId }))) return 'aiOff';
-  return 'ready';
+/** Where the advisor stands for a store: global AI off, or `ready`. Reads only settings. */
+export async function advisorStatus(
+  resolver: Pick<AppResolver, "value">,
+  storeId: number,
+): Promise<AdvisorStatus> {
+  if (!(await resolver.value("ai.enabled", { storeId }))) return "aiOff";
+  return "ready";
 }
 
 export interface AdvisorDeps {
@@ -75,7 +95,7 @@ export interface AdvisorInputs {
   actor: Actor;
   lang: Lang;
   days: { from: string; to: string };
-  /** The courier lens's own findings (lane G2), when it is on; the advisor never reads the courier records itself. */
+  /** The courier lens's own findings, when the caller has them; left out, the run reads the courier lens itself (advisor-hints.ts). */
   hints?: {
     courier?: readonly CourierHint[] | null;
     coverage?: readonly CoverageGap[] | null;
@@ -99,14 +119,13 @@ export function districtsOf(risk: LensResult | null) {
   }));
 }
 
-/** Reads the lenses that are on (district level, as the ad lists are) and returns what the figures support. */
+/** Reads the lenses (district level, as the ad lists are) and returns what the figures support. */
 export async function gatherSuggestions(
   deps: Pick<AdvisorDeps, 'db' | 'resolver'>,
   storeId: number,
   inp: AdvisorInputs,
-): Promise<{ suggestions: Suggestion[]; currency: string } | null> {
+): Promise<{ suggestions: Suggestion[]; currency: string }> {
   const setting = await readLensSetting(deps.resolver, storeId);
-  if (!setting) return null;
   const at = { storeId };
   const [timeZone, guide, currency] = await Promise.all([
     deps.resolver.value('store.timeZone', at),
@@ -116,30 +135,38 @@ export async function gatherSuggestions(
   const level = 'district' as const;
   const base = { level, parentAreaId: null, minOrders: setting.minOrders };
 
-  const risk = setting.lenses.risk
-    ? await geoRisk(deps.db, storeId, inp.days, {
-        ...base,
-        timeZone,
-        warnReturnPct: setting.warnReturnPct,
-        topBandKey: await topRiskBand(deps.resolver, storeId),
-        parts: (await riskParts(deps.db, inp.actor, storeId)) as Set<RiskPart>,
-      })
-    : null;
-  const money = setting.lenses.money
-    ? await geoMoney(deps.db, storeId, inp.days, {
-        ...base,
-        profit: await profitInputs(deps.resolver, storeId),
-        topProducts: setting.topProducts,
-        parts: (await moneyParts(deps.db, inp.actor, storeId)) as Set<MoneyPart>,
-      })
-    : null;
-  const demand = setting.lenses.demand
-    ? await geoDemand(deps.db, storeId, inp.days, {
-        ...base,
-        timeZone,
-        topProducts: setting.topProducts,
-      })
-    : null;
+  const risk = await geoRisk(deps.db, storeId, inp.days, {
+    ...base,
+    timeZone,
+    warnReturnPct: setting.warnReturnPct,
+    topBandKey: await topRiskBand(deps.resolver, storeId),
+    parts: (await riskParts(deps.db, inp.actor, storeId)) as Set<RiskPart>,
+  });
+  const money = await geoMoney(deps.db, storeId, inp.days, {
+    ...base,
+    profit: await profitInputs(deps.resolver, storeId),
+    topProducts: setting.topProducts,
+    parts: (await moneyParts(deps.db, inp.actor, storeId)) as Set<MoneyPart>,
+  });
+  const demand = await geoDemand(deps.db, storeId, inp.days, {
+    ...base,
+    timeZone,
+    topProducts: setting.topProducts,
+  });
+
+  // the courier lens's own findings (PR 757): the caller's hints, else the lens itself (read-only, district level)
+  let hints = inp.hints;
+  if (hints?.courier === undefined && hints?.coverage === undefined) {
+    const lens = await courierLens(deps.db, {
+      storeId,
+      timeZone,
+      days: inp.days,
+      level,
+      parentAreaId: null,
+      thresholds: await deps.resolver.value("reports.geoMapCourier", at),
+    });
+    hints = { courier: courierHints(lens), coverage: coverageGaps(lens) };
+  }
 
   const input: AdviceInput = {
     minOrders: setting.minOrders,
@@ -148,22 +175,21 @@ export async function gatherSuggestions(
     risk,
     money,
     demand,
-    courier: setting.lenses.courier ? (inp.hints?.courier ?? null) : null,
-    coverage: setting.lenses.courier ? (inp.hints?.coverage ?? null) : null,
+    courier: hints?.courier ?? null,
+    coverage: hints?.coverage ?? null,
   };
   return { suggestions: suggestionsFrom(input), currency };
 }
 
 /**
- * One run. Gates first (no read, no AI call, no draft while any is closed), then the suggestions, then at most `maxPerRun`
+ * One run. The global AI gate first (no read, no AI call, no draft while it is closed), then the suggestions, then at most `maxPerRun`
  * drafts, each with its own AI note. Never throws for an AI "no": that just leaves the suggestion out.
  */
 export async function runGeoAdvisor(deps: AdvisorDeps, storeId: number = MOTHER_STORE_ID, inp: AdvisorInputs): Promise<AdvisorRun> {
   const status = await advisorStatus(deps.resolver, storeId);
   if (status !== 'ready') return EMPTY(status);
   const got = await gatherSuggestions(deps, storeId, inp);
-  if (!got) return EMPTY('off');
-  const cfg = await deps.resolver.value('reports.geoAdvisor', { storeId });
+  const cfg = await deps.resolver.value("reports.geoAdvisor", { storeId });
   const now = deps.now?.() ?? new Date();
   const run = EMPTY('ready');
   run.found = got.suggestions.length;

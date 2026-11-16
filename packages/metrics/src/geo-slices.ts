@@ -77,15 +77,14 @@ export function slicesToParams(slices: GeoSlices): Record<string, string> {
 /** How many slices are set (the filter bar's "3 filters" chip). */
 export const sliceCount = (slices: GeoSlices): number => Object.keys(slicesToParams(slices)).length;
 
-/** The slices the setting `reports.geoMap.slices` shows: a slice is shown only when its switch is on. */
-export function shownSlices(setting: GeoMapSetting['slices']): SliceKey[] {
-  return SLICE_KEYS.filter((k) => setting[k] === true);
+/** Every slice is shown (owner's decision, 16 Nov 2026: no switches on the Geography map). */
+export function shownSlices(): SliceKey[] {
+  return [...SLICE_KEYS];
 }
 
-/** The mix with every hidden slice taken out (a hidden slice in an old link or a saved view never narrows the figures). */
-export function allowedSlices(slices: GeoSlices, setting: GeoMapSetting['slices']): GeoSlices {
-  const shown = new Set<string>(shownSlices(setting));
-  return Object.fromEntries(Object.entries(normalizeSlices(slices)).filter(([k]) => shown.has(k))) as GeoSlices;
+/** The mix as the figures take it: what is not a known slice value is dropped (never an error). */
+export function allowedSlices(slices: GeoSlices): GeoSlices {
+  return normalizeSlices(slices);
 }
 
 // ---- the SQL a figure adds to its orders (alias `o` = "Order") ---------------------------------------------------------

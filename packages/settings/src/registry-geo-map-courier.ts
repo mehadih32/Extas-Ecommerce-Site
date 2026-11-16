@@ -1,5 +1,5 @@
 // S29 · PR 757 (CN-054; registry version 805) — Reports › Geography map, the courier and coverage lens: its numbers.
-//   `reports.geoMapCourier` — the lens itself is switched on in `reports.geoMap.lenses.courier` (off as shipped, PR 752);
+//   `reports.geoMapCourier` — the lens has no switch (owner's decision, 16 Nov 2026);
 //   these are the numbers it judges by, all editable, none in a screen's code: how many settled parcels an area (or a
 //   courier in it) needs before a rate means anything, the success rate under which an area is flagged, the share of late
 //   deliveries at which it is flagged, and how many coverage gaps the list names. Advice only: nothing here changes a

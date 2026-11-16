@@ -320,7 +320,7 @@ export function GeoPanel({
   useEffect(() => {
     const c = new AbortController();
     const sp = new URLSearchParams(query);
-    sp.set("areaId", model.areaId);
+    sp.set("area", model.areaId);
     sp.set("topProducts", String(topN));
     fetch(`/api/admin/reports/geo-map/area?${sp}`, { signal: c.signal, headers: { accept: "application/json" } })
       .then((res) => res.json())

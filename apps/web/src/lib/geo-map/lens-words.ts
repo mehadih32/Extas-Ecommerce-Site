@@ -1,9 +1,12 @@
 // S29 · PR 757 (CN-054) — the words of the courier and coverage lens (messages/admin-geo-lens.{en,bn}.json, root key `geoLens`).
-import type { GeoCourierLensLabels } from '@/components/admin/reports/GeoCourierLens';
-import type { AdminView } from '../admin-page';
-import { t, type Dict } from '../i18n';
-import bn from '../../../messages/admin-geo-lens.bn.json';
-import en from '../../../messages/admin-geo-lens.en.json';
+import type { GeoCourierLensLabels } from "@/components/admin/reports/GeoCourierLens";
+import type { AdminView } from "../admin-page";
+
+/** What the labels need of a view: the dictionary only (so a client screen can build them from the dictionaries it was given). */
+export type WordsView = Pick<AdminView, "dict">;
+import { t, type Dict } from "../i18n";
+import bn from "../../../messages/admin-geo-lens.bn.json";
+import en from "../../../messages/admin-geo-lens.en.json";
 
 /** The view with the lens's words added (English by default, Bengali with the toggle). */
 export function withGeoLens(view: AdminView): AdminView {
@@ -11,8 +14,9 @@ export function withGeoLens(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, geoLens: (b ? bn : en).geoLens as unknown as Dict } };
 }
 
-export function geoLensLabels(view: AdminView): GeoCourierLensLabels {
-  const w = (k: string, vars?: Record<string, string | number>) => t(view.dict, `geoLens.${k}`, vars);
+export function geoLensLabels(view: WordsView): GeoCourierLensLabels {
+  const w = (k: string, vars?: Record<string, string | number>) =>
+    t(view.dict, `geoLens.${k}`, vars);
   return {
     title: w('title'),
     sub: w('sub'),

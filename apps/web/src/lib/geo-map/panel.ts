@@ -66,10 +66,18 @@ export interface PanelProduct {
 }
 
 /** The top products to show: most pieces first (the answer already is), at most `take`, money dropped when hidden. */
-export function panelProducts(products: readonly GeoTopProduct[], take: number, moneyHidden: boolean): PanelProduct[] {
-  return products
-    .slice(0, Math.max(0, take))
-    .map((p) => ({ productId: p.productId, nameEn: p.nameEn, nameBn: p.nameBn, pieces: p.pieces, salesMinor: moneyHidden ? null : p.salesMinor }));
+export function panelProducts(
+  products: readonly GeoTopProduct[],
+  take: number,
+  moneyHidden: boolean,
+): PanelProduct[] {
+  return products.slice(0, Math.max(0, take)).map((p) => ({
+    productId: p.productId,
+    nameEn: p.nameEn,
+    nameBn: p.nameBn,
+    pieces: p.pieces,
+    salesMinor: moneyHidden ? null : p.salesMinor,
+  }));
 }
 
 /**

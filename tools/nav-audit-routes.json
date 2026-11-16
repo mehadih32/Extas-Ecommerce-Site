@@ -1704,6 +1704,18 @@
     ]
    },
    {
+    "id": "geoMap",
+    "more": true,
+    "pages": [
+     {
+      "href": "/admin/reports/geo-map",
+      "keys": [
+       "reportsGeoMap"
+      ]
+     }
+    ]
+   },
+   {
     "id": "searches",
     "more": true,
     "pages": [

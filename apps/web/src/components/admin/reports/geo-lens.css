@@ -14,3 +14,12 @@
   padding-inline-start: 18px;
   overflow-wrap: anywhere;
 }
+.adm2 .gst-total th,
+.adm2 .gst-total td {
+  font-weight: 700;
+  border-top: 1px solid var(--line);
+}
+.adm2 .gst-extra th,
+.adm2 .gst-extra td {
+  color: var(--mute);
+}

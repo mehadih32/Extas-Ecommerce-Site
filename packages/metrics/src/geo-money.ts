@@ -231,7 +231,11 @@ export async function geoMoney(db: Db, storeId: number, days: { from: string; to
       areaId: d.areaId,
       goodsMinor: Number(d.goods),
       deliveryChargeMinor: Number(d.charge),
-      courierMinor: p ? p.parts.courier.minor : null,
+      // the profit engine gives an order with no parcel a known 0: that is no charge to compare, so a 0 is "not known" here (never counted as a free parcel)
+      courierMinor:
+        p && p.parts.courier.minor !== null && p.parts.courier.minor > 0
+          ? p.parts.courier.minor
+          : null,
       profitMinor: p && cost !== null ? p.profitMinor : null,
     };
   });

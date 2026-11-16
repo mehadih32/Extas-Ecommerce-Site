@@ -1,18 +1,38 @@
 // S29 · PR 757 — the courier and coverage lens of the Geography map without a database: the numbers are built from the
 // parcels, orders, places and mappings the loader reads (made-up values), so every rule is checked on small facts.
-import { describe, expect, it } from 'vitest';
-import { buildCourierLens, rollUp, type CourierLensThresholds, type LensInput, type LensPlace, type ParcelGroup } from './geo-courier';
+import { describe, expect, it } from "vitest";
+import {
+  buildCourierLens,
+  rollUp,
+  type CourierLensThresholds,
+  type LensInput,
+  type CourierPlace,
+  type ParcelGroup,
+} from "./geo-courier";
 
-const place = (id: string, level: string, nameEn: string, ancestorIds: string[], cityCorporation: string | null = null): LensPlace => ({ id, level, ancestorIds, nameEn, nameBn: null, cityCorporation });
-const places: LensPlace[] = [
-  place('dhkDiv', 'DIVISION', 'Dhaka division', []),
-  place('dhk', 'DISTRICT', 'Dhaka', ['dhkDiv']),
-  place('mirpur', 'THANA', 'Mirpur', ['dhkDiv', 'dhk'], 'DNCC'),
-  place('mirpur10', 'AREA', 'Mirpur 10', ['dhkDiv', 'dhk', 'mirpur']),
-  place('savar', 'UPAZILA', 'Savar', ['dhkDiv', 'dhk']),
-  place('rajDiv', 'DIVISION', 'Rajshahi division', []),
-  place('bogura', 'DISTRICT', 'Bogura', ['rajDiv']),
-  place('gabtali', 'UPAZILA', 'Gabtali', ['rajDiv', 'bogura']),
+const place = (
+  id: string,
+  level: string,
+  nameEn: string,
+  ancestorIds: string[],
+  cityCorporation: string | null = null,
+): CourierPlace => ({
+  id,
+  level,
+  ancestorIds,
+  nameEn,
+  nameBn: null,
+  cityCorporation,
+});
+const places: CourierPlace[] = [
+  place("dhkDiv", "DIVISION", "Dhaka division", []),
+  place("dhk", "DISTRICT", "Dhaka", ["dhkDiv"]),
+  place("mirpur", "THANA", "Mirpur", ["dhkDiv", "dhk"], "DNCC"),
+  place("mirpur10", "AREA", "Mirpur 10", ["dhkDiv", "dhk", "mirpur"]),
+  place("savar", "UPAZILA", "Savar", ["dhkDiv", "dhk"]),
+  place("rajDiv", "DIVISION", "Rajshahi division", []),
+  place("bogura", "DISTRICT", "Bogura", ["rajDiv"]),
+  place("gabtali", "UPAZILA", "Gabtali", ["rajDiv", "bogura"]),
 ];
 const g = (courierId: string, areaId: string | null, delivered: number, returned: number, hoursSum = 0, withPromise = 0, late = 0, promiseSum = 0): ParcelGroup => ({ courierId, areaId, delivered, returned, hoursSum, withPromise, late, promiseSum });
 const TH: CourierLensThresholds = { minParcels: 5, lowSuccessPct: 70, lateWarnPct: 30, gapLimit: 20 };

@@ -51,14 +51,16 @@ describe('what a mix may carry', () => {
   });
 });
 
-describe('which slices show (the setting reports.geoMap.slices)', () => {
-  it('only a slice switched on shows; the others are hidden', () => {
-    expect(shownSlices({ channel: true, paymentType: false, courierId: true })).toEqual(['channel', 'courierId']);
-    expect(shownSlices({})).toEqual([]);
+describe("which slices show (all of them: no switch)", () => {
+  it("every slice shows", () => {
+    expect(shownSlices()).toEqual([...SLICE_KEYS]);
   });
-  it('a hidden slice in an old link or saved view never narrows the figures', () => {
-    expect(allowedSlices({ channel: 'PHONE', paymentType: 'COD' }, { channel: true })).toEqual({ channel: 'PHONE' });
-    expect(allowedSlices({ channel: 'PHONE' }, {})).toEqual({});
+  it("a value that is not a known slice value is dropped, never an error", () => {
+    expect(allowedSlices({ channel: "PHONE", paymentType: "COD" })).toEqual({
+      channel: "PHONE",
+      paymentType: "COD",
+    });
+    expect(allowedSlices({ channel: "NOT-A-CHANNEL" as never })).toEqual({});
   });
 });
 

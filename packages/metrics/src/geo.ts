@@ -17,15 +17,27 @@
 // no place to be under, so it is not counted there. Read-only, store-scoped, archived orders left out, minor units, no
 // customer name or phone anywhere. The Sales figure is given only when `includeMoney` is true (the viewer holds
 // `books.read`); otherwise it is null and never computed into a delta.
-import { Prisma } from '@extas/db/client';
-import { basisWhere, practiceVisible, type Db } from './metrics';
-import { COUNTED_LINE_STATUS, daysPeriod, type Period } from './pure';
-import { apportion, categoryParents } from './vat';
-import type { GeoAreaDetail, GeoAreaFigures, GeoAreaRow, GeoByArea, GeoDays, GeoLevel, GeoQuery, GeoTopCategory, GeoTopProduct } from './geo-types';
-import { compareDaysOf, deltaOf } from './geo-pure';
+import { Prisma } from "@extas/db/client";
+import { basisWhere, practiceVisible, type Db } from "./metrics";
+import { COUNTED_LINE_STATUS, daysPeriod, type Period } from "./pure";
+import { apportion, categoryParents } from "./vat";
+import type {
+  GeoAreaDetail,
+  GeoAreaFigures,
+  GeoAreaRow,
+  GeoByArea,
+  GeoDays,
+  GeoLevel,
+  GeoQuery,
+  GeoSlices,
+  GeoTopCategory,
+  GeoTopProduct,
+} from "./geo-types";
+import { orderSliceSql } from "./geo-slices";
+import { compareDaysOf, deltaOf } from "./geo-pure";
 
-export * from './geo-types';
-export * from './geo-pure';
+export * from "./geo-types";
+export * from "./geo-pure";
 
 /** The deepest category tree walked (a loop in the tree never hangs), as in vat.ts. */
 const MAX_DEPTH = 32;
@@ -74,6 +86,17 @@ const NO_AREA = '';
 interface Filters {
   categoryId?: string | null;
   productId?: string | null;
+  /** PR 756: the order-level slices (channel, payment, courier, customer type); category and product are the two above. */
+  orderCut?: Prisma.Sql;
+}
+
+/** The filters of a query: category and product, and the SQL the order-level slices add (empty when none is set). */
+function filtersOf(q: GeoSlices): Filters {
+  return {
+    categoryId: q.categoryId,
+    productId: q.productId,
+    orderCut: orderSliceSql(q),
+  };
 }
 
 /** All the counts of one period, by the order's own area id ('' = no area). `areaIds` narrows to those areas. */
@@ -90,7 +113,8 @@ async function accsByArea(db: Db, storeId: number, days: GeoDays, timeZone: stri
     }
     return a;
   };
-  const inAreas = areaIds ? Prisma.sql`AND o."areaId" = ANY(${areaIds}::uuid[])` : Prisma.empty;
+  // the area narrowing and the order-level slices (both are ` AND …` parts, empty when not set)
+  const inAreas = Prisma.sql`${areaIds ? Prisma.sql`AND o."areaId" = ANY(${areaIds}::uuid[])` : Prisma.empty}${filters.orderCut ?? Prisma.empty}`;
 
   if (!filtered) {
     const [placed, delivered, lines, returned] = await Promise.all([
@@ -238,7 +262,7 @@ interface Bucket {
 /** Orders, Sales, Delivered, Returned and return rate of one store by area, for a period and optionally a second one. */
 export async function geoByArea(db: Db, q: GeoQuery): Promise<GeoByArea> {
   const compareDays = compareDaysOf(q.days, q.compare, q.compareDays);
-  const filters: Filters = { categoryId: q.categoryId, productId: q.productId };
+  const filters: Filters = filtersOf(q);
   const [cur, prev] = await Promise.all([
     accsByArea(db, q.storeId, q.days, q.timeZone, filters, null),
     compareDays ? accsByArea(db, q.storeId, compareDays, q.timeZone, filters, null) : Promise.resolve(new Map<string, Acc>()),
@@ -354,8 +378,10 @@ async function categoryNames(db: Db, storeId: number, ids: string[]): Promise<Ma
  */
 export async function geoAreaDetail(db: Db, q: GeoQuery & { areaId: string; topProducts: number }): Promise<GeoAreaDetail> {
   const compareDays = compareDaysOf(q.days, q.compare, q.compareDays);
-  const filters: Filters = { categoryId: q.categoryId, productId: q.productId };
-  const found = await db.$queryRaw<Place[]>`SELECT ${PLACE_COLUMNS} FROM "GeoArea" g WHERE g."id" = ${q.areaId}::uuid`;
+  const filters: Filters = filtersOf(q);
+  const found = await db.$queryRaw<
+    Place[]
+  >`SELECT ${PLACE_COLUMNS} FROM "GeoArea" g WHERE g."id" = ${q.areaId}::uuid`;
   const place = found[0];
   if (!place) throw new RangeError('no such area');
   const under = await db.$queryRaw<{ id: string }[]>`SELECT g."id" FROM "GeoArea" g WHERE g."id" = ${q.areaId}::uuid OR ${q.areaId}::uuid = ANY(g."ancestorIds")`;
@@ -394,7 +420,7 @@ async function topProductsIn(db: Db, storeId: number, days: GeoDays, timeZone: s
   const period: Period = daysPeriod(days.from, days.to, timeZone);
   const orders = await db.$queryRaw<{ id: string; goods: number }[]>`
     SELECT o."id", (o."subtotalMinor" - o."discountMinor") AS "goods" FROM "Order" o
-     WHERE ${basisWhere('sales', storeId, period)} AND o."areaId" = ANY(${areaIds}::uuid[])`;
+     WHERE ${basisWhere("sales", storeId, period)} AND o."areaId" = ANY(${areaIds}::uuid[]) ${filters.orderCut ?? Prisma.empty}`;
   if (!orders.length) return [];
   const ids = orders.map((o) => o.id);
   const lines = await db.$queryRaw<{ orderId: string; productId: string | null; categoryId: string | null; total: number; quantity: number }[]>`

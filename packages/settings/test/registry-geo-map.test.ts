@@ -20,18 +20,29 @@ describe('geo map setting (v868)', () => {
     }
   });
 
-  it('ships off, and every lens, the advisor and the compare start off', () => {
-    expect(GEO_MAP_DEFAULT.on).toBe(false);
+  it("has no on/off switch: only numbers and choices, the compare starts off", () => {
     expect(GEO_MAP_DEFAULT.compareDefault).toBe(false);
-    expect(GEO_MAP_DEFAULT.ai).toBe(false);
-    expect(Object.values(GEO_MAP_DEFAULT.lenses)).toEqual([false, false, false, false]);
-    // only the two filters the base screen has are visible
-    expect(Object.entries(GEO_MAP_DEFAULT.slices).filter(([, on]) => on).map(([k]) => k)).toEqual(['categoryId', 'productId']);
+    for (const retired of ["on", "slices", "lenses", "ai"])
+      expect(GEO_MAP_DEFAULT).not.toHaveProperty(retired);
   });
 
-  it('keeps every number in bounds', () => {
-    const ok = (patch: Record<string, unknown>) => geoMapSchema.safeParse({ ...GEO_MAP_DEFAULT, ...patch }).success;
-    expect(ok({ on: true })).toBe(true);
+  it("reads an older stored value that still has the retired switch keys, without them", () => {
+    const r = geoMapSchema.safeParse({
+      ...GEO_MAP_DEFAULT,
+      on: true,
+      lenses: { risk: true },
+      slices: { channel: true },
+      ai: true,
+    });
+    expect(r.success).toBe(true);
+    if (r.success)
+      for (const retired of ["on", "slices", "lenses", "ai"])
+        expect(r.data).not.toHaveProperty(retired);
+  });
+
+  it("keeps every number in bounds", () => {
+    const ok = (patch: Record<string, unknown>) =>
+      geoMapSchema.safeParse({ ...GEO_MAP_DEFAULT, ...patch }).success;
     expect(ok({ minOrders: 0 })).toBe(true);
     expect(ok({ minOrders: -1 })).toBe(false);
     expect(ok({ minOrders: 1001 })).toBe(false);
@@ -59,7 +70,6 @@ describe('geo map setting (v868)', () => {
     const ok = (patch: Record<string, unknown>) => geoMapSchema.safeParse({ ...GEO_MAP_DEFAULT, ...patch }).success;
     expect(ok({ budgetShift: 10 })).toBe(false);
     expect(ok({ freeDeliveryFrom: 2000 })).toBe(false);
-    expect(ok({ lenses: { ...GEO_MAP_DEFAULT.lenses, price: true } })).toBe(false);
-    expect(ok({ slices: { ...GEO_MAP_DEFAULT.slices, region: true } })).toBe(false);
+    expect(ok({ price: true })).toBe(false);
   });
 });

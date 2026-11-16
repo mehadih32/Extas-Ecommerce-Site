@@ -9,12 +9,17 @@
 //   - coverage gaps: areas that have orders but no courier mapped (`CourierAreaMapping`, an enabled courier, the place or any
 //     place above it). Only orders count as demand here: the shop keeps no visit per area.
 // Counts and hours only: no customer name, phone or address is ever read. Read-only, store-scoped, practice parcels (the
-// MOCK adapter) and archived orders left out. The thresholds are the setting `reports.geoMapCourier`, the lens switch is
-// `reports.geoMap.lenses.courier` (off as shipped); this file has no business number of its own.
-import { Prisma } from '@extas/db/client';
-import { basisWhere, type Db } from './metrics';
-import { daysPeriod } from './pure';
-import type { GeoDays, GeoLensResponse, GeoLensRow, GeoLevel } from './geo-types';
+// MOCK adapter) and archived orders left out. The thresholds are the setting `reports.geoMapCourier`, there is no lens switch
+// (owner's decision, 16 Nov 2026); this file has no business number of its own.
+import { Prisma } from "@extas/db/client";
+import { basisWhere, type Db } from "./metrics";
+import { daysPeriod } from "./pure";
+import type {
+  GeoDays,
+  GeoLensResponse,
+  GeoLensRow,
+  GeoLevel,
+} from "./geo-types";
 
 export interface CourierLensThresholds {
   /** Settled parcels an area (or a courier in it) needs before a rate means anything. */
@@ -45,7 +50,7 @@ export interface ParcelGroup {
 }
 
 /** A place of the tree, as much of it as the roll-up needs. */
-export interface LensPlace {
+export interface CourierPlace {
   id: string;
   /** DIVISION, DISTRICT, UPAZILA, THANA or AREA. */
   level: string;
@@ -79,6 +84,8 @@ export interface CourierLensResponse extends GeoLensResponse {
   details: Record<string, CourierAreaDetail>;
   /** Names of the couriers the details mention. */
   couriers: { id: string; name: string }[];
+  /** The names of the places of the rows, by areaId (the advisor and the screen word a row without the map's own list). */
+  places: Record<string, { nameEn: string; nameBn: string | null }>;
   /** Places with orders and no courier mapped, most orders first, at most `gapLimit`. */
   gaps: CoverageGap[];
   /** Orders with no area at all (not in any row or gap). */
@@ -96,7 +103,7 @@ export interface LensInput {
   /** Orders placed in the period by their own area (null areaId: none). */
   placed: readonly { areaId: string | null; orders: number }[];
   /** Every place the groups, the orders and their ancestors mention. */
-  places: readonly LensPlace[];
+  places: readonly CourierPlace[];
   /** The areas a courier is mapped on, by area id → the number of couriers (enabled, mapping not archived). */
   mapped: ReadonlyMap<string, number>;
   couriers: readonly { id: string; name: string }[];
@@ -104,8 +111,18 @@ export interface LensInput {
 }
 
 /** The place a given place rolls up to at `level`, or null when it does not reach that level (the rule of `salesByArea`). */
-export function rollUp(level: GeoLevel, own: LensPlace, byId: ReadonlyMap<string, LensPlace>): LensPlace | null {
-  const chain = [own, ...[...own.ancestorIds].reverse().map((id) => byId.get(id)).filter((p): p is LensPlace => !!p)];
+export function rollUp(
+  level: GeoLevel,
+  own: CourierPlace,
+  byId: ReadonlyMap<string, CourierPlace>,
+): CourierPlace | null {
+  const chain = [
+    own,
+    ...[...own.ancestorIds]
+      .reverse()
+      .map((id) => byId.get(id))
+      .filter((p): p is CourierPlace => !!p),
+  ];
   switch (level) {
     case 'division':
       return chain.find((p) => p.level === 'DIVISION') ?? null;
@@ -135,22 +152,33 @@ interface Acc {
 const blank = (): Acc => ({ delivered: 0, returned: 0, hoursSum: 0, withPromise: 0, late: 0, promiseSum: 0, byCourier: new Map(), placed: 0, gapOrders: 0 });
 
 /** Is this order area covered: a courier is mapped on it or on a place above it. */
-function covered(place: LensPlace, mapped: ReadonlyMap<string, number>): boolean {
-  return (mapped.get(place.id) ?? 0) > 0 || place.ancestorIds.some((id) => (mapped.get(id) ?? 0) > 0);
+function covered(
+  place: CourierPlace,
+  mapped: ReadonlyMap<string, number>,
+): boolean {
+  return (
+    (mapped.get(place.id) ?? 0) > 0 ||
+    place.ancestorIds.some((id) => (mapped.get(id) ?? 0) > 0)
+  );
 }
 
 /** Builds the lens from the loaded facts. No database: the loader below feeds it, the tests feed it directly. */
 export function buildCourierLens(input: LensInput): CourierLensResponse {
   const { level, thresholds: th } = input;
   const byId = new Map(input.places.map((p) => [p.id, p]));
-  const inScope = (p: LensPlace) => !input.parentAreaId || p.id === input.parentAreaId || p.ancestorIds.includes(input.parentAreaId);
+  const inScope = (p: CourierPlace) =>
+    !input.parentAreaId ||
+    p.id === input.parentAreaId ||
+    p.ancestorIds.includes(input.parentAreaId);
   const rows = new Map<string, Acc>();
-  const at = (place: LensPlace): Acc => {
+  const at = (place: CourierPlace): Acc => {
     let a = rows.get(place.id);
     if (!a) rows.set(place.id, (a = blank()));
     return a;
   };
-  const target = (areaId: string | null): { own: LensPlace; row: LensPlace } | null => {
+  const target = (
+    areaId: string | null,
+  ): { own: CourierPlace; row: CourierPlace } | null => {
     const own = areaId ? byId.get(areaId) : undefined;
     if (!own || !inScope(own)) return null;
     const row = rollUp(level, own, byId);
@@ -244,6 +272,14 @@ export function buildCourierLens(input: LensInput): CourierLensResponse {
     rows: resultRows,
     details,
     couriers: input.couriers.filter((c) => used.has(c.id)),
+    places: Object.fromEntries(
+      resultRows.flatMap((r) => {
+        const p = byId.get(r.areaId);
+        return p
+          ? [[r.areaId, { nameEn: p.nameEn, nameBn: p.nameBn }] as const]
+          : [];
+      }),
+    ),
     gaps,
     unknownOrders,
     days: input.days,
@@ -308,12 +344,12 @@ export async function courierLens(
 
   const areaIds = [...new Set([...[...groups.values()].map((g) => g.areaId), ...placed.map((p) => p.aid)])].filter((x): x is string => !!x);
   const own = areaIds.length
-    ? await db.$queryRaw<LensPlace[]>`
+    ? await db.$queryRaw<CourierPlace[]>`
         SELECT g."id"::text AS "id", g."level"::text AS "level", g."ancestorIds"::text[] AS "ancestorIds", g."nameEn", g."nameBn", g."cityCorporation" FROM "GeoArea" g WHERE g."id" = ANY(${areaIds}::uuid[])`
     : [];
   const aboveIds = [...new Set(own.flatMap((p) => p.ancestorIds))].filter((id) => !areaIds.includes(id));
   const above = aboveIds.length
-    ? await db.$queryRaw<LensPlace[]>`
+    ? await db.$queryRaw<CourierPlace[]>`
         SELECT g."id"::text AS "id", g."level"::text AS "level", g."ancestorIds"::text[] AS "ancestorIds", g."nameEn", g."nameBn", g."cityCorporation" FROM "GeoArea" g WHERE g."id" = ANY(${aboveIds}::uuid[])`
     : [];
 

@@ -1,6 +1,6 @@
 "use client";
-// S29 · PR 756 (CN-054) — Reports › Geography map: the slices in ONE filter bar. Only the slices the owner switched on
-// (`reports.geoMap.slices`) are drawn; each is a plain choice (channel, payment, courier, customer type) in a GET form,
+// S29 · PR 756 (CN-054) — Reports › Geography map: the slices in ONE filter bar. Every slice is drawn (no on/off
+// switch, owner's decision 16 Nov 2026); each is a plain choice (channel, payment, courier, customer type) in a GET form,
 // so the mix lives in the address and a view can keep it. A phone gets the same bar behind one "Filters (n)" button
 // (a sheet that opens under it); a bigger screen shows it in a row. Category and product are the screen's own pickers:
 // they are carried along untouched. No filter needs a script to work: the button only opens and closes the bar.

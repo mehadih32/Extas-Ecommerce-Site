@@ -1,13 +1,25 @@
 // S29 · PR 752 (CN-054) — what Reports › Geography map asks for, made safe. The page and the API read the same query:
 //   period=day|month|sixMonths|year|custom  with from= and to= (a day, or a custom range)   — the report period bar (PR 689)
-//   level=division|district|upazila|area    parent=<area id> (a drill-down)    category=<id>  product=<id>
+//   level=division|district|upazila|area    parent=<area id> (a drill-down)    category=<id> (or cat=)  product=<id>
+//   channel= pay= courier= cust=   the order-level slices of PR 756 (only the ones the setting `slices` shows count)
 //   compare=off|previous|lastYear|custom    with cfrom= and cto= for custom
 // Anything unknown falls back to the setting's opening choices (`reports.geoMap`), never to a guess: the longest period
 // is the existing `costs.report` limit (never a second one), a period never reaches past today, a reversed one is turned
 // round, and each change is named in `notes` so the page can say what it did. Pure: no database, no clock (the caller
 // gives today).
-import { GEO_COMPARES, GEO_LEVELS, GEO_PERIODS, type GeoCompare, type GeoLevel, type GeoPeriod } from '@extas/metrics/geo-types';
-import { parseReportQuery, type ReportLimits } from '../cost-report';
+import {
+  slicesFromSearch,
+  type GeoSlices as OrderSlices,
+} from "@extas/metrics";
+import {
+  GEO_COMPARES,
+  GEO_LEVELS,
+  GEO_PERIODS,
+  type GeoCompare,
+  type GeoLevel,
+  type GeoPeriod,
+} from "@extas/metrics/geo-types";
+import { parseReportQuery, type ReportLimits } from "../cost-report";
 
 export interface GeoMapDefaults {
   defaultPeriod: Exclude<GeoPeriod, 'custom'>;
@@ -24,7 +36,12 @@ export interface GeoMapQuery {
   compareDays: { from: string; to: string } | null;
   categoryId: string | null;
   productId: string | null;
-  notes: ('future' | 'swapped' | 'tooLong' | 'badCompare')[];
+  /** PR 756: the order-level slices (?channel= &pay= &courier= &cust=); the server drops the ones the setting hides. */
+  slices: Pick<
+    OrderSlices,
+    "channel" | "paymentType" | "courierId" | "customerType"
+  >;
+  notes: ("future" | "swapped" | "tooLong" | "badCompare")[];
 }
 
 type Sp = Record<string, string | string[] | undefined>;
@@ -83,5 +100,28 @@ export function parseGeoMapQuery(sp: Sp, today: string, limits: ReportLimits, de
       notes.push('badCompare');
     }
   }
-  return { period, days, level, parentAreaId, compare, compareDays, categoryId: id(one(sp, 'category')), productId: id(one(sp, 'product')), notes };
+  return {
+    period,
+    days,
+    level,
+    parentAreaId,
+    compare,
+    compareDays,
+    categoryId: id(one(sp, "category") ?? one(sp, "cat")),
+    productId: id(one(sp, "product")),
+    slices: orderSlices(sp),
+    notes,
+  };
+}
+
+/** The order-level slices of an address (the category and product are read apart). */
+function orderSlices(sp: Sp): GeoMapQuery["slices"] {
+  const { channel, paymentType, courierId, customerType } =
+    slicesFromSearch(sp);
+  return {
+    ...(channel ? { channel } : {}),
+    ...(paymentType ? { paymentType } : {}),
+    ...(courierId ? { courierId } : {}),
+    ...(customerType ? { customerType } : {}),
+  };
 }

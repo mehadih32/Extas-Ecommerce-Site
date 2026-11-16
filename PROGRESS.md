@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 16 Nov 2026 — Geography map (S29) joined: PR 750–761 on ONE local branch `claude/geo-all`, no on/off switch (NOT pushed, no pull request)
+
+The three lanes (`claude/geo-1`: 750–753, `claude/geo-2`: 754–757, `claude/geo-3`: 758–761) are joined in register order, one commit per PR. Counters are now S29 12/12, total 828/851 active, 9 parked (S26 and PR 649–651); they count only once the branch is pushed and merged. **Owner decision of 16 Nov 2026: no switches.** `reports.geoMap` lost `on`, `slices`, `lenses` and `ai`; `reports.geoMapCourier` and `reports.geoAdvisor` stay as plain numbers. The map and all lenses are there for everyone with `reports.read` (Sales and money only with `books.read`); the Reports tab, the nav entry, the "Open on map" links, the help rows and the Reports index card are always shown. The AI advisor is advice only and has one gate, the global `ai.enabled`. No column is dropped; a stored value with the old keys is read without them. Finished in this join: the G2 parts (click panel, compare, slices bar, lens table, advisor box) are on the screen; the courier lens's findings feed the advisor; the "Run advisor" button; the lens and slices routes; Bengali guides. Next step when the owner says: push `claude/geo-all` and open one pull request; the README, register and `docs/stages` counters will then need a rebase over whatever moved in `main` since `c9b8644f`.
+
 
 ## 16 Nov 2026 — Geography map (S29) lane G1: PR 750–753 coded, LOCAL ONLY (branch `claude/geo-1`, from `origin/main` c9b8644f, NOT pushed, no pull request)
 

@@ -37,13 +37,14 @@ const cookiesOf = (res: Response) =>
     .filter((c) => c && !c.endsWith('='))
     .join('; ');
 
+// the retired keys (an older stored value) are still there and never read
 const SETTING = {
-  on: true,
+  on: false,
   minOrders: 1,
   warnReturnPct: 10,
   topProducts: 3,
-  lenses: { courier: false, risk: true, money: false, demand: false },
-  ai: true,
+  lenses: { courier: false, risk: false, money: false, demand: false },
+  ai: false,
 };
 
 describe.skipIf(!HAS_TEST_DB)('the Geography map advisor route on PostgreSQL (PR 761)', () => {
@@ -113,23 +114,12 @@ describe.skipIf(!HAS_TEST_DB)('the Geography map advisor route on PostgreSQL (PR
     expect((await ask(owner, 'DELETE')).status).toBe(405);
   });
 
-  it('is off as shipped: the map off, or the advisor off, answers not_on and shows nothing', async () => {
-    geoMap = { ...SETTING, on: false };
-    const a = await ask(owner);
-    expect(a.status).toBe(404);
-    expect(await a.json()).toMatchObject({
-      ok: false,
-      error: 'not_on',
-      status: 'off',
-    });
-    geoMap = { ...SETTING, ai: false };
-    const b = await ask(owner);
-    expect(b.status).toBe(404);
-    expect(await b.json()).toMatchObject({
-      error: 'not_on',
-      status: 'advisorOff',
-    });
+  it('has no geo switch of its own: the only gate is the global AI control (a GET still answers, with the AI state)', async () => {
     geoMap = SETTING;
+    aiEnabled = false;
+    const a = await ask(owner);
+    expect(a.status).toBe(200);
+    expect(await a.json()).toMatchObject({ ok: true, status: 'aiOff' });
   });
 
   it('a GET reports where the advisor stands and lists the waiting drafts, with no AI call and no write', async () => {

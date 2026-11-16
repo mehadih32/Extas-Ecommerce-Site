@@ -3,8 +3,8 @@
 //   POST /api/admin/reports/geo-map/advisor?from=&to=&period=&lang=en|bn&storeId=   one run: drafts into the approval queue
 // Rules checked here on the server:
 //   - `reports.read` for both; a POST also needs `ai.control` (the AI Control room's own permission), because it spends AI;
-//   - the gates `reports.geoMap.on`, `reports.geoMap.ai` and `ai.enabled`, all off as shipped: a closed gate answers `not_on`
-//     with which one, makes no AI call and no draft;
+//   - no geo-specific switch (owner's decision, 16 Nov 2026): the one gate is the site's global AI control `ai.enabled` (off
+//     as shipped); while it is off a POST answers `not_on`, makes no AI call and no draft;
 //   - the run only reads what the person who pressed the button may see (each lens part has its permission, as in lens-api.ts);
 //   - the only write is a draft in the approval queue (kind `geo.advice`), never a setting, order, price, charge, COD rule,
 //     courier, ad or stock. A draft's approval changes nothing either.
@@ -44,18 +44,7 @@ export async function geoAdvisorRoute(request: Request, deps: AdminDeps | null):
   const d = deps!;
   try {
     const status = await advisorStatus(d.resolver, storeId);
-    if (status === 'off' || status === 'advisorOff') {
-      return json(
-        {
-          ok: false,
-          error: 'not_on',
-          status,
-          message: 'The Geography map advisor is off.',
-        } satisfies AdvisorApiResponse,
-        { status: 404 },
-      );
-    }
-    if (method === 'GET') {
+    if (method === "GET") {
       const drafts = await pendingAdvice(d.db, storeId);
       return json({ ok: true, status, drafts, run: null } satisfies AdvisorApiResponse, { headers: { 'cache-control': 'no-store' } });
     }

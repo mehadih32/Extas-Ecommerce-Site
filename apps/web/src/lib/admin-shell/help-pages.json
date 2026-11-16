@@ -173,6 +173,8 @@
     { "id": "reports/team", "route": "/admin/reports/team" },
     { "id": "reports/couriers", "route": "/admin/reports/couriers" },
     { "id": "reports/areas", "route": "/admin/reports/areas" },
+    { "id": "reports/geo-map", "route": "/admin/reports/geo-map" },
+    { "id": "reports/geo-map-lenses", "route": "/admin/reports/geo-map" },
     { "id": "reports/review", "route": "/admin/reports/review" },
     { "id": "reports/marketing", "route": "/admin/reports/marketing" },
     { "id": "reports/products", "route": "/admin/reports/products" },

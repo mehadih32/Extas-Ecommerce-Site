@@ -7,7 +7,6 @@ import { errorResponse, fail, guardAdmin, type AdminDeps } from '@/lib/admin-aut
 import { parseReportQuery } from '@/lib/cost-report';
 
 /** Reads a setting the registry may not have yet (the map's own key arrives with the main screen's PR). */
-type Loose = { value(key: string, at: { storeId: number }): Promise<unknown> };
 
 export async function lensRoute(request: Request, deps: AdminDeps | null): Promise<Response> {
   if (request.method.toUpperCase() !== 'GET') return fail(405, 'method-not-allowed');
@@ -24,18 +23,25 @@ export async function lensRoute(request: Request, deps: AdminDeps | null): Promi
   const d = deps!;
   try {
     const at = { storeId };
-    const loose = d.resolver as unknown as Loose;
-    const [timeZone, limits, thresholds, map] = await Promise.all([
-      d.resolver.value('store.timeZone', at),
-      d.resolver.value('costs.report', at),
-      d.resolver.value('reports.geoMapCourier', at),
-      loose.value('reports.geoMap', at).catch(() => null) as Promise<{ lenses?: { courier?: boolean } } | null>,
+    const [timeZone, limits, thresholds] = await Promise.all([
+      d.resolver.value("store.timeZone", at),
+      d.resolver.value("costs.report", at),
+      d.resolver.value("reports.geoMapCourier", at),
     ]);
-    // the lens is off as shipped: the owner switches it on in the map's settings (PR 752)
-    if (map && map.lenses && map.lenses.courier === false) return fail(403, 'lens-off');
-    const period = parseReportQuery(Object.fromEntries(url.searchParams), ymdIn(new Date(), timeZone), limits);
-    const r = await courierLens(d.db, { storeId, timeZone, days: { from: period.q.from, to: period.q.to }, level, parentAreaId: parent, thresholds });
-    return Response.json(r, { headers: { 'cache-control': 'no-store' } });
+    const period = parseReportQuery(
+      Object.fromEntries(url.searchParams),
+      ymdIn(new Date(), timeZone),
+      limits,
+    );
+    const r = await courierLens(d.db, {
+      storeId,
+      timeZone,
+      days: { from: period.q.from, to: period.q.to },
+      level,
+      parentAreaId: parent,
+      thresholds,
+    });
+    return Response.json(r, { headers: { "cache-control": "no-store" } });
   } catch (e) {
     return errorResponse(e);
   }

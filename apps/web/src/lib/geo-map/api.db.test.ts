@@ -1,19 +1,44 @@
 // S29 · PR 752 — Reports › Geography map's routes on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): every
 // permission edge, the off state, the audited and validated card, Sales only with `books.read`, another store's id
 // dropped, the CSV, the one-area panel. Every value is made up.
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createFirstOwner, createRole, defaultSecurityPolicy, hashPassword, syncAuth, SYSTEM } from '@extas/auth';
-import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { MOTHER_STORE_ID } from '@extas/db/client';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
-import { createVault } from '@extas/vault';
-import type { AdminDeps } from '../admin-auth';
-import { loginHandler } from '../admin-api';
-import { geoMapShapesHandler } from './shapes';
-import { clearGeoMapCache, geoMapAreaHandler, geoMapCsvHandler, geoMapHandler, geoMapSettingHandler } from './api';
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  createFirstOwner,
+  createRole,
+  defaultSecurityPolicy,
+  hashPassword,
+  syncAuth,
+  SYSTEM,
+} from "@extas/auth";
+import {
+  createTestDatabase,
+  HAS_TEST_DB,
+  seedSampleStores,
+  type TestDatabase,
+} from "@extas/auth/testing";
+import { MOTHER_STORE_ID } from "@extas/db/client";
+import {
+  messages,
+  prismaBackend,
+  registry,
+  SettingsResolver,
+  syncSettings,
+} from "@extas/settings";
+import { createVault } from "@extas/vault";
+import type { AdminDeps } from "../admin-auth";
+import { loginHandler } from "../admin-api";
+import { geoMapShapesHandler } from "./shapes";
+import {
+  clearGeoMapCache,
+  geoMapAreaHandler,
+  geoMapCsvHandler,
+  geoMapHandler,
+  geoMapSettingHandler,
+  geoMapSlicesHandler,
+} from "./api";
 
-const HOST = 'admin.example.test';
-const PW = 'a long sentence for the tests';
+const HOST = "admin.example.test";
+const PW = "a long sentence for the tests";
 
 function call(method: string, path: string, cookie?: string, body?: unknown) {
   const headers: Record<string, string> = { host: HOST, 'user-agent': 'SampleBrowser/1.0', 'x-forwarded-for': '192.0.2.75' };
@@ -96,36 +121,54 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Geography map routes on PostgreSQL (P
     expect((await card('GET', undefined, nobody)).status).toBe(403);
   });
 
-  it('is off as shipped: the figure routes answer "not on" and read nothing; the card shows it off', async () => {
-    for (const [p, h] of [[BASE, geoMapHandler], [`${BASE}/csv`, geoMapCsvHandler], [`${BASE}/area?area=${ids.dhaka}`, geoMapAreaHandler]] as const) {
-      const r = await json(p, owner, h).catch(() => null);
-      const g = await get(p, owner, h);
-      expect(g.status, p).toBe(404);
-      expect(JSON.parse(g.text), p).toMatchObject({ ok: false, error: 'not_on' });
-      expect(r).not.toBeNull();
-    }
-    const c = await card('GET');
-    expect(c.status).toBe(200);
-    expect(c.j.card.value.on).toBe(false);
-    expect(c.j.card.key).toBe('reports.geoMap');
-  });
+    it("has no switch: the routes answer from the first call, and the card holds only numbers", async () => {
+      for (const [p, h] of [
+        [BASE, geoMapHandler],
+        [`${BASE}/csv`, geoMapCsvHandler],
+        [`${BASE}/area?area=${ids.dhaka}`, geoMapAreaHandler],
+      ] as const) {
+        expect((await get(p, owner, h)).status, p).toBe(200);
+      }
+      const c = await card("GET");
+      expect(c.status).toBe(200);
+      expect(c.j.card.key).toBe("reports.geoMap");
+      for (const retired of ["on", "slices", "lenses", "ai"])
+        expect(c.j.card.value).not.toHaveProperty(retired);
+    });
 
-  it('only settings.write changes the card; it is audited, validated, stale-safe and refuses unknown fields', async () => {
-    expect((await card('PUT', { on: true }, reader)).status).toBe(403);
-    expect((await card('PUT', { values: { minOrders: -1 } })).status).toBe(400);
-    const bad = await card('PUT', { on: true, values: { budgetShift: 5 } });
-    expect(bad.status).toBe(400);
-    const stale = await card('PUT', { on: true, version: 'old' });
-    expect(stale.status).toBe(409);
-    const ok = await card('PUT', { on: true, values: { minOrders: 2, cacheSeconds: 0 } });
-    expect(ok.status).toBe(200);
-    expect(ok.j.card.value).toMatchObject({ on: true, minOrders: 2, cacheSeconds: 0 });
-    expect(await t.prisma.auditLog.count({ where: { action: 'reports.geoMap.settings' } })).toBe(1);
-    // the same save again changes nothing and writes no second audit row
-    expect((await card('PUT', { on: true, values: { minOrders: 2, cacheSeconds: 0 } })).status).toBe(200);
-    expect(await t.prisma.auditLog.count({ where: { action: 'reports.geoMap.settings' } })).toBe(1);
-    clearGeoMapCache();
-  });
+    it("only settings.write changes the card; it is audited, validated, stale-safe and refuses unknown fields", async () => {
+      expect(
+        (await card("PUT", { values: { minOrders: 2 } }, reader)).status,
+      ).toBe(403);
+      expect((await card("PUT", { values: { minOrders: -1 } })).status).toBe(
+        400,
+      );
+      const bad = await card("PUT", { values: { budgetShift: 5 } });
+      expect(bad.status).toBe(400);
+      const stale = await card("PUT", { version: "old" });
+      expect(stale.status).toBe(409);
+      const ok = await card("PUT", {
+        values: { minOrders: 2, cacheSeconds: 0 },
+      });
+      expect(ok.status).toBe(200);
+      expect(ok.j.card.value).toMatchObject({ minOrders: 2, cacheSeconds: 0 });
+      expect(
+        await t.prisma.auditLog.count({
+          where: { action: "reports.geoMap.settings" },
+        }),
+      ).toBe(1);
+      // the same save again changes nothing and writes no second audit row
+      expect(
+        (await card("PUT", { values: { minOrders: 2, cacheSeconds: 0 } }))
+          .status,
+      ).toBe(200);
+      expect(
+        await t.prisma.auditLog.count({
+          where: { action: "reports.geoMap.settings" },
+        }),
+      ).toBe(1);
+      clearGeoMapCache();
+    });
 
   it('on: the figures by district for the month; Sales only with books.read; the counts stay for a reader', async () => {
     const q = '?period=month&level=district';
@@ -153,17 +196,59 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Geography map routes on PostgreSQL (P
     expect((await get(`${BASE}?storeId=0`)).status).toBe(400);
   });
 
-  it('the CSV has no Sales column for a reader and carries the same rows', async () => {
-    const o = await get(`${BASE}/csv?period=month`, owner, geoMapCsvHandler);
-    expect(o.status).toBe(200);
-    expect(o.res.headers.get('content-type')).toMatch(/text\/csv/);
-    expect(o.res.headers.get('content-disposition')).toMatch(/geography-district-2026-11-01-2026-11-16\.csv/);
-    expect(o.text.split('\r\n')[0]).toContain('salesMinor');
-    expect(o.text).toContain('test.gm.dhaka');
-    const r = await get(`${BASE}/csv?period=month`, reader, geoMapCsvHandler);
-    expect(r.text.split('\r\n')[0]).not.toContain('salesMinor');
-    expect(r.text).not.toContain('300000');
-  });
+    it('the order-level slices (PR 756) narrow the figures (every slice is there, no switch); "Orders by …" adds up to the whole', async () => {
+      expect((await json(`${BASE}?channel=PHONE`)).j.data.total).toMatchObject({
+        orders: 0,
+        delivered: 0,
+      });
+      expect(
+        (await json(`${BASE}?channel=WEBSITE&pay=COD`)).j.data.total.delivered,
+      ).toBe(3);
+      const by = await get(
+        `${BASE}/slices?by=channel&period=month`,
+        owner,
+        geoMapSlicesHandler,
+      );
+      expect(by.status).toBe(200);
+      const j = JSON.parse(by.text);
+      expect(
+        j.data.buckets.map((b: { key: string; delivered: number }) => [
+          b.key,
+          b.delivered,
+        ]),
+      ).toEqual([["WEBSITE", 3]]);
+      expect(j.data.total.delivered).toBe(3);
+      // a person who may not see money gets the counts and no Sales
+      expect(
+        JSON.parse(
+          (
+            await get(
+              `${BASE}/slices?by=paymentType&period=month`,
+              reader,
+              geoMapSlicesHandler,
+            )
+          ).text,
+        ).data.total.salesMinor,
+      ).toBeNull();
+      expect(
+        (await get(`${BASE}/slices?by=nonsense`, owner, geoMapSlicesHandler))
+          .status,
+      ).toBe(400);
+    });
+
+    it("the CSV has no Sales column for a reader and carries the same rows", async () => {
+      const o = await get(`${BASE}/csv?period=month`, owner, geoMapCsvHandler);
+      expect(o.status).toBe(200);
+      expect(o.res.headers.get("content-type")).toMatch(/text\/csv/);
+      expect(o.res.headers.get("content-disposition")).toMatch(
+        /geography-district-2026-11-01-2026-11-16\.csv/,
+      );
+      expect(o.text.split("\r\n")[0]).toContain("salesMinor");
+      expect(o.text).toContain("test.gm.dhaka");
+      const r = await get(`${BASE}/csv?period=month`, reader, geoMapCsvHandler);
+      expect(r.text.split("\r\n")[0]).not.toContain("salesMinor");
+      expect(r.text).not.toContain("300000");
+    });
 
   it('one area’s panel: its figures and best sellers; a bad id is 400, a made-up area 404; Sales hidden for a reader', async () => {
     const o = await json(`${BASE}/area?area=${ids.dhaka}&period=month`, owner, geoMapAreaHandler);
@@ -177,26 +262,25 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Geography map routes on PostgreSQL (P
     expect((await json(`${BASE}/area?area=00000000-0000-4000-8000-000000000002`, owner, geoMapAreaHandler)).status).toBe(404);
   });
 
-  it('the shapes route (PR 753): reports.read only, one level at a time, kept a day by the browser, "not on" when off', async () => {
-    const S1 = `${BASE}/shapes?level=district`;
-    expect((await get(S1, '', geoMapShapesHandler)).status).toBe(401);
-    expect((await get(S1, nobody, geoMapShapesHandler)).status).toBe(403);
-    const ok = await get(S1, reader, geoMapShapesHandler);
-    expect(ok.status).toBe(200);
-    expect(ok.res.headers.get('cache-control')).toMatch(/max-age=\d+/);
-    const pack = JSON.parse(ok.text).pack;
-    expect(pack.level).toBe('district');
-    expect(pack.shapes.length).toBeGreaterThan(60);
-    expect(pack.attribution).toMatch(/geoBoundaries/);
-    expect((await get(`${BASE}/shapes?level=planet`, owner, geoMapShapesHandler)).status).toBe(400);
-    expect((await get(`${BASE}/shapes?level=area`, owner, geoMapShapesHandler)).status).toBe(200);
-    await card('PUT', { on: false });
-    expect((await get(S1, owner, geoMapShapesHandler)).status).toBe(404);
-    await card('PUT', { on: true });
-  });
-
-  it('switching it off again makes every figure route answer "not on"', async () => {
-    expect((await card('PUT', { on: false })).status).toBe(200);
-    expect((await get(BASE)).status).toBe(404);
-  });
-});
+    it("the shapes route (PR 753): reports.read only, one level at a time, kept a day by the browser", async () => {
+      const S1 = `${BASE}/shapes?level=district`;
+      expect((await get(S1, "", geoMapShapesHandler)).status).toBe(401);
+      expect((await get(S1, nobody, geoMapShapesHandler)).status).toBe(403);
+      const ok = await get(S1, reader, geoMapShapesHandler);
+      expect(ok.status).toBe(200);
+      expect(ok.res.headers.get("cache-control")).toMatch(/max-age=\d+/);
+      const pack = JSON.parse(ok.text).pack;
+      expect(pack.level).toBe("district");
+      expect(pack.shapes.length).toBeGreaterThan(60);
+      expect(pack.attribution).toMatch(/geoBoundaries/);
+      expect(
+        (await get(`${BASE}/shapes?level=planet`, owner, geoMapShapesHandler))
+          .status,
+      ).toBe(400);
+      expect(
+        (await get(`${BASE}/shapes?level=area`, owner, geoMapShapesHandler))
+          .status,
+      ).toBe(200);
+    });
+  },
+);

@@ -66,4 +66,27 @@ describe('the query', () => {
     const future = parseGeoMapQuery({ compare: 'custom', cfrom: '2026-11-10', cto: '2027-02-01' }, TODAY, LIMITS, DEFAULTS);
     expect(future.compareDays).toEqual({ from: '2026-11-10', to: TODAY });
   });
+
+  it('reads the order-level slices (channel, payment, courier, customer type) and "cat" as the category, dropping what it does not know', () => {
+    const q = parseGeoMapQuery(
+      { cat: ID, channel: "PHONE", pay: "COD", courier: ID, cust: "NEW" },
+      TODAY,
+      LIMITS,
+      DEFAULTS,
+    );
+    expect(q.categoryId).toBe(ID);
+    expect(q.slices).toEqual({
+      channel: "PHONE",
+      paymentType: "COD",
+      courierId: ID,
+      customerType: "NEW",
+    });
+    const bad = parseGeoMapQuery(
+      { channel: "SMOKE", pay: "CASH", courier: "x", cust: "VIP" },
+      TODAY,
+      LIMITS,
+      DEFAULTS,
+    );
+    expect(bad.slices).toEqual({});
+  });
 });

@@ -1,38 +1,61 @@
-// S29 · PR 758–761 — the lenses' reading of the Geography map setting: off (or missing, or not in the expected shape) is
-// off, never a guess; each lens and the advisor are their own switches.
-import { describe, expect, it } from 'vitest';
-import { LENS_KEYS, lensSettingOf, readLensSetting } from './setting';
+// S29 · PR 758–761 — the lenses' reading of the Geography map setting: only the numbers (no on/off switch, owner's decision
+// 16 Nov 2026); a missing or unusable number is the shipped number, and the retired keys of an older stored value are never read.
+import { describe, expect, it } from "vitest";
+import { GEO_MAP_DEFAULT } from "@extas/settings";
+import { lensSettingOf, readLensSetting } from "./setting";
 
-const ON = { on: true, minOrders: 10, warnReturnPct: 25, topProducts: 5, lenses: { courier: false, risk: true, money: false, demand: true }, ai: false };
+const STORED = { minOrders: 10, warnReturnPct: 25, topProducts: 5 };
 
-describe('lensSettingOf', () => {
-  it('reads the numbers and which lens is on', () => {
-    expect(lensSettingOf(ON)).toEqual({ minOrders: 10, warnReturnPct: 25, topProducts: 5, lenses: { courier: false, risk: true, money: false, demand: true }, ai: false });
+describe("lensSettingOf", () => {
+  it("reads the numbers", () => {
+    expect(lensSettingOf(STORED)).toEqual(STORED);
   });
-  it('the page switch off means off, whatever the lenses say', () => {
-    expect(lensSettingOf({ ...ON, on: false })).toBeNull();
+  it("an older stored value with the retired keys reads the same, whatever they say", () => {
+    expect(
+      lensSettingOf({
+        ...STORED,
+        on: false,
+        lenses: { risk: false },
+        slices: {},
+        ai: false,
+      }),
+    ).toEqual(STORED);
   });
-  it('anything missing or in the wrong shape is off', () => {
-    expect(lensSettingOf(undefined)).toBeNull();
-    expect(lensSettingOf('on')).toBeNull();
-    expect(lensSettingOf({ ...ON, minOrders: '10' })).toBeNull();
-    expect(lensSettingOf({ ...ON, warnReturnPct: Number.NaN })).toBeNull();
-  });
-  it('a lens or the advisor that is not exactly true is off', () => {
-    const s = lensSettingOf({ ...ON, lenses: { risk: 1, money: 'yes' }, ai: 'true' })!;
-    expect(LENS_KEYS.map((k) => s.lenses[k])).toEqual([false, false, false, false]);
-    expect(s.ai).toBe(false);
+  it("anything missing or in the wrong shape is the shipped numbers, never an error", () => {
+    const d = {
+      minOrders: GEO_MAP_DEFAULT.minOrders,
+      warnReturnPct: GEO_MAP_DEFAULT.warnReturnPct,
+      topProducts: GEO_MAP_DEFAULT.topProducts,
+    };
+    expect(lensSettingOf(undefined)).toEqual(d);
+    expect(lensSettingOf("on")).toEqual(d);
+    expect(lensSettingOf({ ...STORED, minOrders: "10" }).minOrders).toBe(
+      d.minOrders,
+    );
+    expect(
+      lensSettingOf({ ...STORED, warnReturnPct: Number.NaN }).warnReturnPct,
+    ).toBe(d.warnReturnPct);
   });
 });
 
 describe('readLensSetting', () => {
   it('reads the stored value for the store', async () => {
     const seen: unknown[] = [];
-    const resolver = { value: async (key: string, at: unknown) => (seen.push([key, at]), ON) };
-    expect((await readLensSetting(resolver as never, 7))?.lenses.risk).toBe(true);
-    expect(seen).toEqual([['reports.geoMap', { storeId: 7 }]]);
+    const resolver = {
+      value: async (key: string, at: unknown) => (seen.push([key, at]), STORED),
+    };
+    expect((await readLensSetting(resolver as never, 7)).minOrders).toBe(10);
+    expect(seen).toEqual([["reports.geoMap", { storeId: 7 }]]);
   });
-  it('a setting that is not registered yet, or a failing read, is off', async () => {
-    expect(await readLensSetting({ value: async () => { throw new Error('unknown setting'); } } as never, 1)).toBeNull();
+  it("a failing read is the shipped numbers", async () => {
+    const got = await readLensSetting(
+      {
+        value: async () => {
+          throw new Error("unknown setting");
+        },
+      } as never,
+      1,
+    );
+    expect(got.minOrders).toBe(GEO_MAP_DEFAULT.minOrders);
   });
 });

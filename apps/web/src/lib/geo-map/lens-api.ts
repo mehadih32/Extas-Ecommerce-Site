@@ -3,8 +3,7 @@
 // The answer is `{ ok, lens, level, days, rows, unknown, outside, total, extras, hidden }` (the figures of
 // @extas/metrics `geoRisk`, `geoMoney` and `geoDemand`: counts and money only, never a customer's name or phone).
 // Every rule is checked here on the server, not only on the screen:
-//   - the page switch `reports.geoMap.on` and the lens's own switch `reports.geoMap.lenses.<lens>` (both off as shipped):
-//     while either is off the route answers `not_on` and reads nothing;
+//   - no on/off switch (owner's decision, 16 Nov 2026): every lens is there for everyone with `reports.read`;
 //   - `reports.read` for the page (the demand lens has no other part: counts only); each part of a lens also needs the permission of its own source report (risk:
 //     refusals `delivery.read`, risk areas `risk.report`, claims `delivery.claims`, tickets `support.read`; money: the
 //     delivery and ad figures `books.read` (ads also `marketing.campaigns.read`), the stock part `reports.read`).
@@ -43,7 +42,7 @@ export const MONEY_PART_PERMISSION: Record<MoneyPart, readonly ('reports.read' |
 
 export type LensApiResponse =
   | ({ ok: true; lens: ServedLens } & LensResult)
-  | { ok: false; error: 'not_on' | 'forbidden' | 'bad_query'; message: string };
+  | { ok: false; error: "forbidden" | "bad_query"; message: string };
 
 const one = (v: string | null) => (v === null || v === '' ? null : v);
 
@@ -81,16 +80,24 @@ export async function geoLensRoute(request: Request, deps: AdminDeps | null): Pr
   const g = await guardAdmin(request, deps, { permission: 'reports.read', storeId });
   if (g instanceof Response) return g;
   const d = deps!;
-  const refuse = (status: number, error: 'not_on' | 'forbidden' | 'bad_query', message: string) => json({ ok: false, error, message } satisfies LensApiResponse, { status });
+  const refuse = (
+    status: number,
+    error: "forbidden" | "bad_query",
+    message: string,
+  ) =>
+    json({ ok: false, error, message } satisfies LensApiResponse, { status });
   try {
-    const lens = SERVED_LENSES.find((l) => l === url.searchParams.get('lens'));
-    if (!lens) return refuse(400, 'bad_query', 'lens');
-    const level = GEO_LEVELS.find((l): l is GeoLevel => l === url.searchParams.get('level')) ?? 'district';
-    const parent = one(url.searchParams.get('parent'));
-    if (parent !== null && !isUuid(parent)) return refuse(400, 'bad_query', 'parent');
-    const setting = await readLensSetting(d.resolver, storeId);
-    if (!setting || !setting.lenses[lens]) return refuse(404, 'not_on', 'The Geography map lens is off.');
+    const lens = SERVED_LENSES.find((l) => l === url.searchParams.get("lens"));
+    if (!lens) return refuse(400, "bad_query", "lens");
+    const level =
+      GEO_LEVELS.find(
+        (l): l is GeoLevel => l === url.searchParams.get("level"),
+      ) ?? "district";
+    const parent = one(url.searchParams.get("parent"));
+    if (parent !== null && !isUuid(parent))
+      return refuse(400, "bad_query", "parent");
 
+    const setting = await readLensSetting(d.resolver, storeId);
     const at = { storeId };
     const [timeZone, limits] = await Promise.all([d.resolver.value('store.timeZone', at), d.resolver.value('costs.report', at)]);
     const today = ymdIn(d.now?.() ?? new Date(), timeZone);

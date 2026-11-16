@@ -1,8 +1,11 @@
 // S29 · PR 761 — the Geography map advisor's setting: two numbers, both with bounds, shipped at a safe default; the advisor's own
-// on/off is `reports.geoMap.ai` (off as shipped, lane G1), so this setting alone never turns anything on.
-import { describe, expect, it } from 'vitest';
-import { registry } from '../src/registry';
-import { GEO_ADVISOR_DEFAULT, geoAdvisorSchema } from '../src/registry-geo-advisor';
+// there is no geo switch (owner's decision, 16 Nov 2026); the global `ai.enabled` is the only gate, so this setting alone never turns anything on.
+import { describe, expect, it } from "vitest";
+import { registry } from "../src/registry";
+import {
+  GEO_ADVISOR_DEFAULT,
+  geoAdvisorSchema,
+} from "../src/registry-geo-advisor";
 
 describe('PR 761 · reports.geoAdvisor', () => {
   it('is in the registry, store scope, at its shipped default', () => {

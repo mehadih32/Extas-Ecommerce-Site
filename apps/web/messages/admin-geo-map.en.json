@@ -3,11 +3,7 @@
     "metaTitle": "Geography map",
     "title": "Geography map",
     "sub": "A map of Bangladesh coloured by orders, sales, delivered, returned or return rate. Tap a district to go down to its upazilas, and a Dhaka thana to its areas.",
-    "offTitle": "The Geography map is off",
-    "offBody": "It is off as shipped. Switch it on here, or in Settings, in the card \"Geography map (Reports)\". Until then nothing is read and no map is drawn.",
-    "needSettings": "Only a person who can change settings can switch it on.",
     "words": {
-      "off": "The Geography map is not switched on.",
       "period": "Period",
       "period.day": "Today",
       "period.month": "This month",
@@ -51,11 +47,14 @@
       "topCategory": "Top category",
       "topProducts": "Best sellers",
       "pieces": "pieces",
-      "credit": "Boundaries: geoBoundaries (William & Mary geoLab), from Bangladesh Bureau of Statistics / OCHA ROAP data (CC BY 3.0 IGO) and Wikimedia Commons (CC0). Simplified by Extas."
+      "credit": "Boundaries: geoBoundaries (William & Mary geoLab), from Bangladesh Bureau of Statistics / OCHA ROAP data (CC BY 3.0 IGO) and Wikimedia Commons (CC0). Simplified by Extas.",
+      "period.custom": "Own days",
+      "range.from": "From",
+      "range.to": "To",
+      "range.apply": "Show",
+      "range.invalid": "Pick two days, the first not after the second."
     },
     "openOnMap": "Open on map",
-    "openOnMapHelp": "The same sales on a map of Bangladesh.",
-    "switchOn": "Switch it on",
-    "switchFailed": "It could not be switched on. Try again."
+    "openOnMapHelp": "The same sales on a map of Bangladesh."
   }
 }

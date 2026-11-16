@@ -1,5 +1,5 @@
-// S29 · PR 761 (CN-054; register "Geography map: AI advisor", advice only) — the advisor's own two numbers. The advisor itself
-// is switched by `reports.geoMap.ai` (off as shipped) and runs only while `ai.enabled` is on; it reads the Geography map's
+// S29 · PR 761 (CN-054; register "Geography map: AI advisor", advice only) — the advisor's own two numbers. The advisor has no switch of its own
+// (owner's decision, 16 Nov 2026) and runs only while the global `ai.enabled` is on; it reads the Geography map's
 // figures and puts each suggestion in the approval queue as a draft. Nothing here changes an ad budget, a campaign, a price,
 // a charge, a COD rule or a courier: the draft only asks a person to decide. Registry version 761.
 //   - `maxPerRun`: the most suggestions one run drafts (each one is one small AI call, so this also bounds the cost of a run);
@@ -20,7 +20,7 @@ export const geoAdvisorSchema = z
   .strict();
 export type GeoAdvisorSettings = z.output<typeof geoAdvisorSchema>;
 
-/** The shipped defaults; the advisor itself ships off, and the owner changes both numbers. */
+/** The shipped defaults; the owner changes both numbers. */
 export const GEO_ADVISOR_DEFAULT: GeoAdvisorSettings = {
   maxPerRun: 10,
   expiresDays: 14,

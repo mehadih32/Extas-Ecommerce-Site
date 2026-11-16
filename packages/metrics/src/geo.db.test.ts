@@ -249,10 +249,62 @@ describe.skipIf(!HAS_TEST_DB)('PR 751 · geoByArea on PostgreSQL', () => {
     expect(none.total).toMatchObject({ orders: 0, delivered: 0, returnRate: null });
   });
 
-  it('one area on demand: its figures with everything under it, its top category and top products', async () => {
-    const d = await geoAreaDetail(t.prisma, { ...base(), areaId: g.dhk!, topProducts: 5, compare: 'previous' });
-    expect(d.level).toBe('district');
-    expect(d.current).toMatchObject({ delivered: 2, salesMinor: 120_000, returned: 1, orders: 1 });
+  it("the order-level slices (channel, payment, courier, customer type) narrow every figure, in a mix with the others", async () => {
+    const all = await geoByArea(t.prisma, base());
+    const web = await geoByArea(
+      t.prisma,
+      base({ channel: "WEBSITE", paymentType: "COD" }),
+    );
+    expect(web.total).toEqual(all.total); // every sample order is a website order paid on delivery
+    const phone = await geoByArea(t.prisma, base({ channel: "PHONE" }));
+    expect(phone.total).toMatchObject({
+      orders: 0,
+      delivered: 0,
+      salesMinor: 0,
+      returned: 0,
+    });
+    expect(phone.rows).toEqual([]);
+    const online = await geoByArea(t.prisma, base({ paymentType: "ONLINE" }));
+    expect(online.total.orders).toBe(0);
+    // the one-area panel takes the same cut
+    const dhaka = all.rows[0]!;
+    const cut = await geoAreaDetail(t.prisma, {
+      ...base({ channel: "PHONE" }),
+      areaId: dhaka.areaId,
+      topProducts: 3,
+    });
+    expect(cut.current.orders).toBe(0);
+    expect(cut.topProducts).toEqual([]);
+    const same = await geoAreaDetail(t.prisma, {
+      ...base({ channel: "WEBSITE" }),
+      areaId: dhaka.areaId,
+      topProducts: 3,
+    });
+    expect(same.current).toEqual(
+      (
+        await geoAreaDetail(t.prisma, {
+          ...base(),
+          areaId: dhaka.areaId,
+          topProducts: 3,
+        })
+      ).current,
+    );
+  });
+
+  it("one area on demand: its figures with everything under it, its top category and top products", async () => {
+    const d = await geoAreaDetail(t.prisma, {
+      ...base(),
+      areaId: g.dhk!,
+      topProducts: 5,
+      compare: "previous",
+    });
+    expect(d.level).toBe("district");
+    expect(d.current).toMatchObject({
+      delivered: 2,
+      salesMinor: 120_000,
+      returned: 1,
+      orders: 1,
+    });
     expect(d.previous).toMatchObject({ delivered: 2, salesMinor: 30_000 });
     expect(d.topCategory).toMatchObject({ nameEn: 'Caps', pieces: 4 });
     expect(d.topProducts.map((p) => [p.nameEn, p.pieces, p.salesMinor])).toEqual([

@@ -24,7 +24,15 @@ function call(method: string, path: string, cookie?: string, body?: unknown) {
 }
 const cookiesOf = (res: Response) => res.headers.getSetCookie().map((c) => c.split(';')[0] ?? '').filter((c) => c && !c.endsWith('=')).join('; ');
 
-const SETTING = { on: true, minOrders: 1, warnReturnPct: 10, topProducts: 3, lenses: { courier: false, risk: true, money: false, demand: false }, ai: false };
+// a stored value from before the switches were removed still carries the retired keys: they are never read
+const SETTING = {
+  on: false,
+  minOrders: 1,
+  warnReturnPct: 10,
+  topProducts: 3,
+  lenses: { courier: false, risk: false, money: false, demand: false },
+  ai: false,
+};
 
 describe('the permission of each part of the risk lens (PR 758)', () => {
   it('each part needs the permission of its own source report; returns and cancels need only the page\'s', () => {
@@ -70,15 +78,12 @@ describe.skipIf(!HAS_TEST_DB)('the Geography map lens route on PostgreSQL (PR 75
     expect((await get(owner, '&lens=risk', 'POST')).status).toBe(405);
   });
 
-  it('is off as shipped: the page switch off, or the lens off, answers not_on', async () => {
-    setting = { ...SETTING, on: false };
-    const a = await get(owner, '&lens=risk');
-    expect(a.status).toBe(404);
-    expect(await a.json()).toMatchObject({ ok: false, error: 'not_on' });
-    setting = { ...SETTING, lenses: { ...SETTING.lenses, risk: false } };
-    expect((await get(owner, '&lens=risk')).status).toBe(404);
-    setting = SETTING;
-  });
+    it("has no switch: every lens answers for a person with the permission, even over an old stored value with the retired keys", async () => {
+      setting = SETTING;
+      const a = await get(owner, "&lens=risk");
+      expect(a.status).toBe(200);
+      expect(await a.json()).toMatchObject({ ok: true, lens: "risk" });
+    });
 
   it('a bad lens, a lens this route does not serve and a bad parent are 400', async () => {
     expect((await get(owner, '&lens=nonsense')).status).toBe(400);
@@ -86,27 +91,29 @@ describe.skipIf(!HAS_TEST_DB)('the Geography map lens route on PostgreSQL (PR 75
     expect((await get(owner, '&lens=risk&parent=1%27%20OR%201=1')).status).toBe(400);
   });
 
-  it('the money lens is its own switch, and the owner gets its figures with nothing hidden', async () => {
-    setting = SETTING; // money is off in SETTING
-    expect((await get(owner, '&lens=money')).status).toBe(404);
-    setting = { ...SETTING, lenses: { ...SETTING.lenses, money: true } };
-    const res = await get(owner, '&lens=money&level=district');
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ ok: true, lens: 'money', hidden: [] });
-    setting = SETTING;
-  });
+    it("the money lens: the owner gets its figures with nothing hidden", async () => {
+      setting = SETTING;
+      const res = await get(owner, "&lens=money&level=district");
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({
+        ok: true,
+        lens: "money",
+        hidden: [],
+      });
+      setting = SETTING;
+    });
 
-  it('the demand lens is its own switch, and its answer holds counts only', async () => {
-    setting = SETTING; // demand is off in SETTING
-    expect((await get(owner, '&lens=demand')).status).toBe(404);
-    setting = { ...SETTING, lenses: { ...SETTING.lenses, demand: true } };
-    const res = await get(owner, '&lens=demand&level=upazila');
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body).toMatchObject({ ok: true, lens: 'demand', hidden: [] });
-    expect(JSON.stringify(body)).not.toMatch(/phone|customerName|email|customerId/i);
-    setting = SETTING;
-  });
+    it("the demand lens: its answer holds counts only", async () => {
+      setting = SETTING;
+      const res = await get(owner, "&lens=demand&level=upazila");
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toMatchObject({ ok: true, lens: "demand", hidden: [] });
+      expect(JSON.stringify(body)).not.toMatch(
+        /phone|customerName|email|customerId/i,
+      );
+      setting = SETTING;
+    });
 
   it('the owner gets the figures, nothing is hidden for the owner, and the answer is never cached', async () => {
     const res = await get(owner, '&lens=risk&level=district');

@@ -161,11 +161,10 @@ export interface GeoLensResponse {
   rows: GeoLensRow[];
 }
 
-/** The setting `reports.geoMap` (PR 752), JSON, store scope, off as shipped. */
+/** The setting `reports.geoMap` (PR 752), JSON, store scope: the numbers of the map (no on/off switch). */
 export interface GeoMapSetting {
-  on: boolean;
-  defaultPeriod: Exclude<GeoPeriod, 'custom'>;
-  defaultMetric: Exclude<GeoMetric, 'change'>;
+  defaultPeriod: Exclude<GeoPeriod, "custom">;
+  defaultMetric: Exclude<GeoMetric, "change">;
   minOrders: number;
   colourSteps: number;
   warnReturnPct: number;
@@ -173,21 +172,21 @@ export interface GeoMapSetting {
   compareDefault: boolean;
   showPins: boolean;
   cacheSeconds: number;
-  /** PR 756: which slices show; PR 757–760: which lenses are on; PR 761: the AI advisor switch. */
-  slices: Partial<Record<keyof GeoSlices, boolean>>;
-  lenses: Record<Exclude<GeoLens, 'overview'>, boolean>;
-  ai: boolean;
 }
 
 /** `GET /api/admin/reports/geo-map` — query string in, this out. */
 export type GeoMapApiResponse =
   | { ok: true; setting: GeoMapSetting; data: GeoByArea; moneyHidden: boolean }
-  | { ok: false; error: 'not_on' | 'forbidden' | 'bad_query'; message: string };
+  | { ok: false; error: "forbidden" | "bad_query"; message: string };
 
 /** `GET /api/admin/reports/geo-map/area` — one area's panel. */
 export type GeoMapAreaApiResponse =
   | { ok: true; detail: GeoAreaDetail; moneyHidden: boolean }
-  | { ok: false; error: 'not_on' | 'forbidden' | 'bad_query' | 'not_found'; message: string };
+  | {
+      ok: false;
+      error: "forbidden" | "bad_query" | "not_found";
+      message: string;
+    };
 
 /** The boundary pack (PR 750): one file per level under `packages/delivery/data/geo/`, loaded when the level opens. */
 export interface GeoShape {

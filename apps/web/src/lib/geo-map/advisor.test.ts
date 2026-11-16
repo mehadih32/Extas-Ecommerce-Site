@@ -1,4 +1,4 @@
-// S29 · PR 761 — the advisor's promises, with no database: every closed gate means no read, no AI call and no draft; an AI "no"
+// S29 · PR 761 — the advisor's promises, with no database: global AI off means no read, no AI call and no draft; an AI "no"
 // leaves a suggestion out; and the only thing the advisor ever writes is a draft (`aiApprovalRequest.create`), never anything else.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LensResult, LensRowOut } from '@extas/metrics';
@@ -7,12 +7,30 @@ const risk = vi.hoisted(() => ({ result: null as unknown }));
 vi.mock('@extas/metrics', async (orig) => ({
   ...((await orig()) as object),
   geoRisk: vi.fn(async () => risk.result),
-  geoMoney: vi.fn(async () => {
-    throw new Error('money lens must not be read');
-  }),
-  geoDemand: vi.fn(async () => {
-    throw new Error('demand lens must not be read');
-  }),
+  geoMoney: vi.fn(async () => ({
+    rows: [],
+    unknown: {},
+    outside: {},
+    total: {},
+    extras: {},
+    hidden: [],
+  })),
+  geoDemand: vi.fn(async () => ({
+    rows: [],
+    unknown: {},
+    outside: {},
+    total: {},
+    extras: {},
+    hidden: [],
+  })),
+  courierLens: vi.fn(async () => ({
+    rows: [],
+    details: {},
+    couriers: [],
+    places: {},
+    gaps: [],
+    unknownOrders: 0,
+  })),
 }));
 vi.mock('./lens-api', () => ({
   riskParts: async () => new Set(['returns', 'refusals']),
@@ -46,12 +64,9 @@ const lensOf = (rows: LensRowOut[]) =>
   }) as unknown as LensResult;
 
 const ON = {
-  on: true,
   minOrders: 10,
   warnReturnPct: 25,
   topProducts: 5,
-  lenses: { courier: false, risk: true, money: false, demand: false },
-  ai: true,
 };
 
 function world(
@@ -117,31 +132,32 @@ beforeEach(() => {
   ]);
 });
 
-describe('the gates', () => {
-  it('reports where it stands: off, advisor off, AI off, ready', async () => {
-    expect(await advisorStatus(world({ geoMap: undefined }).resolver, 1)).toBe('off');
-    expect(await advisorStatus(world({ geoMap: { ...ON, on: false } }).resolver, 1)).toBe('off');
-    expect(await advisorStatus(world({ geoMap: { ...ON, ai: false } }).resolver, 1)).toBe('advisorOff');
-    expect(await advisorStatus(world({ aiEnabled: false }).resolver, 1)).toBe('aiOff');
-    expect(await advisorStatus(world().resolver, 1)).toBe('ready');
+describe("the gates", () => {
+  it("reports where it stands: global AI off, or ready (no geo-specific switch)", async () => {
+    expect(await advisorStatus(world({ geoMap: undefined }).resolver, 1)).toBe(
+      "ready",
+    );
+    expect(await advisorStatus(world({ aiEnabled: false }).resolver, 1)).toBe(
+      "aiOff",
+    );
+    expect(await advisorStatus(world().resolver, 1)).toBe("ready");
   });
 
-  it.each([
-    ['the map is off', { geoMap: { ...ON, on: false } }, 'off'],
-    ['the advisor is off', { geoMap: { ...ON, ai: false } }, 'advisorOff'],
-    ['AI is off', { aiEnabled: false }, 'aiOff'],
-  ] as const)('%s: no AI call, no draft, nothing written', async (_n, over, status) => {
-    const w = world(over);
-    const explain = vi.fn(async () => 'note');
-    const run = await runGeoAdvisor({ ...w, explain }, 1, {
-      actor,
-      lang: 'en',
-      days,
-    });
-    expect(run).toMatchObject({ status, found: 0, drafted: 0 });
-    expect(explain).not.toHaveBeenCalled();
-    expect(w.writes).toEqual([]);
-  });
+  it.each([["AI is off", { aiEnabled: false }, "aiOff"]] as const)(
+    "%s: no AI call, no draft, nothing written",
+    async (_n, over, status) => {
+      const w = world(over);
+      const explain = vi.fn(async () => "note");
+      const run = await runGeoAdvisor({ ...w, explain }, 1, {
+        actor,
+        lang: "en",
+        days,
+      });
+      expect(run).toMatchObject({ status, found: 0, drafted: 0 });
+      expect(explain).not.toHaveBeenCalled();
+      expect(w.writes).toEqual([]);
+    },
+  );
 });
 
 describe('a run', () => {
@@ -191,7 +207,7 @@ describe('a run', () => {
     expect(w.writes.filter((x) => x.op === 'create')).toEqual([]);
   });
 
-  it('reads only the lenses that are on (money and demand are off here and would throw)', async () => {
+  it("reads every lens (no per-lens switch) and still drafts nothing without an AI note", async () => {
     const w = world();
     await expect(
       runGeoAdvisor({ ...w, explain: async () => null }, 1, {
