@@ -153,7 +153,9 @@
       "feedTitle": "Feed / ad title (Google, Facebook)",
       "templateHint": "Empty = the shop's template (shown in grey).",
       "chars": "{n} / {max}",
-      "preview": "Google preview"
+      "preview": "Google preview",
+      "focusKeyword": "Focus keyword",
+      "focusKeywordHelp": "The word customers search for. The Google score checks it is in the title or description. Empty: the category name ({word}) is used."
     },
     "aiDescription": {
       "write": "Write with AI",

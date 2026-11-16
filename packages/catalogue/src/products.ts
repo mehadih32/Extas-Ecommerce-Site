@@ -31,6 +31,7 @@ const fields = {
   descriptionBn: text(10_000).nullable().optional(),
   careEn: text(1000).nullable().optional(),
   careBn: text(1000).nullable().optional(),
+  focusKeyword: text(80).nullable().optional(),
 };
 export const productInput = z.object(fields).strict();
 export const productPatch = z.object({ ...fields, nameEn: fields.nameEn.optional(), archived: z.boolean().optional() }).strict();
@@ -70,6 +71,7 @@ export interface ProductView {
   descriptionBn: string | null;
   careEn: string | null;
   careBn: string | null;
+  focusKeyword: string | null;
   inStock: boolean;
   minPriceMinor: number | null;
   archived: boolean;
@@ -122,6 +124,7 @@ export async function getProduct(deps: CatalogueDeps, who: Who, id: string): Pro
     descriptionBn: r.descriptionBn,
     careEn: r.careEn,
     careBn: r.careBn,
+    focusKeyword: r.focusKeyword,
     inStock: r.inStock,
     minPriceMinor: r.minPriceMinor,
     archived: r.archivedAt != null,
@@ -284,6 +287,7 @@ export async function createProduct(deps: CatalogueDeps, who: Who, input: Produc
         descriptionBn: d.descriptionBn ?? null,
         careEn: d.careEn ?? null,
         careBn: d.careBn ?? null,
+        focusKeyword: d.focusKeyword ?? null,
         status: 'DRAFT',
       },
     });
@@ -312,6 +316,7 @@ export async function updateProduct(deps: CatalogueDeps, who: Who, id: string, p
       descriptionBn: cur.descriptionBn,
       careEn: cur.careEn,
       careBn: cur.careBn,
+      focusKeyword: cur.focusKeyword,
       archivedAt: cur.archivedAt,
     };
     const next = {

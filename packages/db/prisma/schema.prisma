@@ -1387,6 +1387,8 @@ model Product {
   descriptionBn    String?
   careEn           String?
   careBn           String?
+  /// PR 975 (prototype v5, wizard step 7): the search word this product should be found by (the SEO score checks it). Null: the category name is used.
+  focusKeyword     String?
   status           ProductStatus   @default(DRAFT)
   /// PDP template (T1/T2/T3) and first-screen style (A/B), chosen at upload (D4.2).
   templateKey      String?

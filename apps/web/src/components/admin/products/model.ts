@@ -176,6 +176,7 @@ export interface FormState {
   descriptionBn: string;
   careEn: string;
   careBn: string;
+  focusKeyword: string;
   nameEn: string;
   nameBn: string;
   slug: string;
@@ -210,6 +211,7 @@ export function initialState(p: ProductView, n: NamingView, m: Money): FormState
     descriptionBn: p.descriptionBn ?? '',
     careEn: p.careEn ?? '',
     careBn: p.careBn ?? '',
+    focusKeyword: p.focusKeyword ?? '',
     nameEn: n.nameEn,
     nameBn: n.nameBn ?? '',
     slug: n.slug,
@@ -230,7 +232,7 @@ export function isDropped(v: VariantView, s: Pick<FormState, 'colours' | 'sizes'
   return (!!v.colour && !s.colours.includes(v.colour.id)) || (!!v.size && !s.sizes.includes(v.size.id));
 }
 
-const PRODUCT_FIELDS = ['categoryId', 'fabricId', 'erpStyleCode', 'descriptionEn', 'descriptionBn', 'careEn', 'careBn'] as const;
+const PRODUCT_FIELDS = ['categoryId', 'fabricId', 'erpStyleCode', 'descriptionEn', 'descriptionBn', 'careEn', 'careBn', 'focusKeyword'] as const;
 const NAMING_OPTIONAL = ['nameBn', 'seoTitleEn', 'seoTitleBn', 'metaDescriptionEn', 'metaDescriptionBn', 'feedTitle'] as const;
 
 export interface Built {
