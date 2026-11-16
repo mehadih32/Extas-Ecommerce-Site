@@ -79,6 +79,18 @@ export const costsSettings = {
     helpKey: 'costs.packaging.help',
     sortOrder: 320,
   }),
+  // ---- PR 989 · Finance Overview: the share of sales the owner wants ads to stay under. Empty = no target, no card. ----
+  'costs.adShareTarget': setting({
+    ...base,
+    version: 987,
+    isOwnerData: true,
+    schema: z.number().min(1).max(100).nullable(), // hardcode-ok: a percent of sales
+    default: null,
+    valueType: 'DECIMAL',
+    labelKey: 'costs.adShareTarget.label',
+    helpKey: 'costs.adShareTarget.help',
+    sortOrder: 330,
+  }),
   // ---- PR 344 follow-up · the receipt photo on an expense (Money → Expenses), version 90 ----
   'costs.receipts': setting({
     ...base,
