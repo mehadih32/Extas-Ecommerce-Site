@@ -116,7 +116,7 @@ async function pinForSetPrice(x: Ctx, bd: Record<string, unknown>, before: numbe
   const next = (bd.combo as { setPriceMinor?: number | null } | undefined)?.setPriceMinor;
   if (next === null || next === undefined || next === before) return;
   if ((await x.admin.resolver.value('catalogue.prices.requirePin', { storeId: x.who.storeId })) !== true) return;
-  await requireOwnerPin(x.admin, x.who.actor, x.who.ctx, bd.pin, 'combos.set.price', x.who.storeId);
+  await requireOwnerPin(x.admin, x.who.actor, x.who.ctx!, bd.pin, 'combos.set.price', x.who.storeId);
 }
 
 export const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
