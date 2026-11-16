@@ -13,7 +13,9 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { rulePlaces, rulesAccess, rulesEnv } from '@/lib/admin-rules';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
+import bnWords from '../../../../../messages/admin-rules-hub.bn.json';
+import enWords from '../../../../../messages/admin-rules-hub.en.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +62,7 @@ export default async function NoticesPage() {
         before={
           <PopupsHub
             dict={view.dict}
+            otherDict={(view.lang === 'bn' ? enWords : bnWords) as unknown as Dict}
             lang={view.lang}
             screen={hubScreen}
             perms={{ write: a.perms.write }}

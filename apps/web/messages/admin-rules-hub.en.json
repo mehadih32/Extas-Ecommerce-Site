@@ -244,17 +244,17 @@
     },
     "popups": {
       "title": "Pop-ups & notices",
-      "intro": "Every pop-up and notice the shop can show, in four groups. Each row says where it appears, who sees it and when. The picture shows where every number appears.",
-      "showing": "{n} showing",
-      "scheduled": "{n} starting later",
+      "intro": "Every pop-up and notice your shop can show, in one place: where it appears, who sees it, when, and what it says.",
+      "showing": "{n} showing now",
+      "scheduled": "{n} scheduled",
       "off": "{n} off",
       "ownNotices": "Your own notices below",
-      "picture": "Where each number appears",
+      "picture": "Where each one appears",
       "pages": {
-        "home": "Home page",
+        "home": "Shop home",
         "product": "Product page",
         "checkout": "Checkout",
-        "thanks": "Order done page"
+        "thanks": "After order"
       },
       "groups": {
         "shop": "On the shop",
@@ -262,7 +262,7 @@
         "product": "Product pages",
         "after": "After order"
       },
-      "groupCount": "{on} of {n} showing",
+      "groupCount": "· {on} of {n} showing",
       "where": "Where",
       "who": "Who sees it",
       "now": "now",
@@ -276,18 +276,19 @@
         "off": "Off",
         "scheduled": "Starts later",
         "ended": "Ended",
-        "waiting": "Waiting"
+        "waiting": "Waiting",
+        "from": "From {date}"
       },
       "showThis": "Show this",
       "switchedOn": "Switched on.",
       "switchedOff": "Switched off.",
       "saved": "Saved.",
-      "pickOne": "Pick a pop-up or a number in the picture to write its words.",
+      "pickOne": "Click a row (or a number in the picture) to change its text in English and Bengali, set dates, see a preview and turn it on or off.",
       "close": "Close",
       "noticeNote": "This one is written in your own notices below the list: the bar and the welcome pop-up have their own timing and limits.",
-      "waitingNote": "This pop-up waits for demo products. It shows when they are built.",
-      "managedNote": "Its switch is in {rule}. Your words and dates are saved here.",
-      "needsNote": "This only shows while {rule} is on.",
+      "waitingNote": "This pop-up is part of Demo products. Its switch and text are set there.",
+      "managedNote": "Set in {rule}.",
+      "needsNote": "This only shows when {rule} is on.",
       "openIt": "Open",
       "putDetail": "Put in a detail",
       "textEn": "Text in English",
@@ -296,7 +297,7 @@
       "from": "Show from",
       "until": "Until",
       "lowN": "Show when this many are left or fewer",
-      "preview": "Preview",
+      "preview": "Customer sees",
       "sampleHint": "Sample values are used for the {details}.",
       "save": "Save",
       "cancel": "Cancel",
@@ -317,14 +318,14 @@
           "name": "Holiday banner",
           "where": "Under the menu on every page",
           "who": "Every visitor",
-          "managed": "Eid order-by dates",
+          "managed": "Eid last order dates",
           "builtin": "Order by {date} to get it before Eid"
         },
         "freebar": {
           "name": "Free-delivery bar",
           "where": "In the bag, above the total",
           "who": "Customers whose bag is below the free-delivery amount",
-          "needs": "Free delivery",
+          "needs": "Free delivery rule",
           "builtin": "Add {amount} more for free delivery"
         },
         "dup": {
@@ -338,7 +339,7 @@
           "name": "Advance-payment notice",
           "where": "Checkout, next to the payment choice",
           "who": "Customers who must pay an advance",
-          "needs": "Advance payment",
+          "needs": "Advance payment rule",
           "builtin": "Pay {amount} now to confirm this order"
         },
         "stockhold": {
@@ -354,9 +355,9 @@
           "builtin": "Size {size} is gone. Pick another size"
         },
         "demo": {
-          "name": "Demo product \"coming soon\" pop-up",
-          "where": "Product page, when Add to bag is tapped on a demo design",
-          "who": "Visitors who tap a demo design",
+          "name": "Demo-product \"coming soon\" pop-up",
+          "where": "Product page, when Add to bag or Order now is tapped on a demo design",
+          "who": "Visitors who tap a demo product",
           "builtin": "This design is coming soon"
         },
         "lowstock": {
@@ -373,11 +374,16 @@
         },
         "promise": {
           "name": "Delivery promise",
-          "where": "Order done page, and under Order now on product pages",
+          "where": "Order done page (also under Order now on product pages)",
           "who": "Every customer",
           "builtin": "Delivery in {days} days"
         }
-      }
+      },
+      "pictureSub": "Tap a number to open that item. The same number is on its row below.",
+      "see": "See",
+      "pickTitle": "Pick one to edit",
+      "pickNote": "Things like the free-delivery amount or the duplicate look-back are set in their own rule. Those rows have a \"Managed in\" link so nothing is set twice.",
+      "fromHint": "Empty = always"
     },
     "offers": {
       "metaTitle": "Offers & discounts",
