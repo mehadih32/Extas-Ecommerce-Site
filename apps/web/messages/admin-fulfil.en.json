@@ -503,8 +503,12 @@
       }
     },
     "pack": {
-      "title": "Pack",
+      "title": "To ship",
       "sub": "Pick → Pack → Ready for courier → Handed over. A shortage always waits for a person — never cancelled by itself.",
+      "subProto": "{book} to book · {print} to print · {packed} packed, waiting for the courier",
+      "emptyBook": "Nothing to book. New Confirmed orders appear here.",
+      "emptySticker": "No booked order waits for a sticker. Book Confirmed orders first.",
+      "emptyPacked": "No packed parcel waits.",
       "stepsLabel": "Packing steps",
       "steps": {
         "pick": "Pick",
@@ -958,8 +962,8 @@
     "withCourier": {
       "held": {
         "h": "With the courier now",
-        "d": "Parcels a courier holds, with the status it last reported.",
-        "empty": "No courier is holding a parcel now.",
+        "d": "Click a row to open the order. Click the courier status to see the courier’s full history.",
+        "empty": "No parcel with a courier right now.",
         "all": "All",
         "status": "Status",
         "moved": "Last moved",
@@ -982,6 +986,8 @@
         "missing": "Not entered at a courier: {list}",
         "sub": "Handed over starts only when the courier’s pickup report says it took the parcel.",
         "notPicked": "Packed today {packed}, handed over {handed}. The courier’s pickup report does not have these parcels:",
+        "waiting": "{n} packed parcel(s) wait for the courier’s pickup.",
+        "allHanded": "All packed parcels are handed over.",
         "cancelledBooked": "Cancelled order {order} is still booked at the courier ({id}). Ask them to send it back."
       },
       "drawer": {
