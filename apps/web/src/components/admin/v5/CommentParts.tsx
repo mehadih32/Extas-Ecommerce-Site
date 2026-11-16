@@ -5,6 +5,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { errWords, Msg } from './Parts';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -21,7 +22,10 @@ export function CommentActions({ dict, id, hidden, canAct }: { dict: Dict; id: s
     setBusy('');
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
     if (kind === 'private') setMsg({ ok: true, text: a.data.practice ? c('sentPractice') : c('sent') });
-    else router.refresh();
+    else {
+      showToast({ text: c(hidden ? 'shownAgain' : 'hiddenNow'), tone: 'ok' });
+      router.refresh();
+    }
   }
   if (!canAct) return null;
   return (
@@ -71,7 +75,8 @@ export function CommentRules({ dict, before }: { dict: Dict; before: DeskValue }
     const a = await call('POST', `${API}/settings`, { before, value: { ...next, keywords: words(kw), abuseWords: words(ab) } });
     setBusy(false);
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
-    setMsg({ ok: true, text: t(dict, 'w5a.saved') });
+    setMsg({ ok: true, text: c('rulesSaved') });
+    showToast({ text: c('rulesSaved'), tone: 'ok' });
     router.refresh();
   }
   const toggle = (k: 'hidePhone' | 'hideAbuse' | 'autoPrivate', label: string, tid: string) => (

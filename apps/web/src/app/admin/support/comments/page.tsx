@@ -77,7 +77,8 @@ export default async function CommentsPage({ searchParams }: { searchParams: Pro
               </div>
             ))}
           </div>
-          <nav className="a2-views a2-mt12" aria-label={c('title')}>
+          <p className="a2-xs a2-mute a2-mt12">{c('caption')}</p>
+          <nav className="a2-views a2-mt6" aria-label={c('title')}>
             {sp.COMMENT_VIEWS.map((v) => (
               <Link key={v} className={`a2-view${v === cur ? ' on' : ''}`} href={v === 'all' ? HERE : `${HERE}?view=${v}`} aria-current={v === cur ? 'page' : undefined}>
                 {chip(v)}
