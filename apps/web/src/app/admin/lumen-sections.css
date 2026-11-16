@@ -342,8 +342,8 @@
 
 /* PR 1066 (final round): the device gate's findings. Tap targets reach 44 px; inline links in text 32 px; the map's ERP link wraps. */
 [data-lm-look] [data-lm-ready] a.a2-kn { display: inline-flex; align-items: center; min-height: 44px; }
-.adm2 :is(p, li) > a:not([class]) { display: inline-block; min-height: 32px; padding-block: 8px; box-sizing: border-box; }
-.adm2 p.a2-xs > a, .adm2 .a2-xs > a:not(.a2-btn) { display: inline-block; min-height: 32px; padding-block: 8px; box-sizing: border-box; }
+.adm2 p > a:not([class]) { display: inline-block; min-height: 32px; padding-block: 8px; box-sizing: border-box; }
+.adm2 li > a:not([class]) { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; }
 .seo-list a { display: inline-flex; align-items: center; min-height: 44px; }
 .s28-mp-acts .a2-btn, .s28-mp-top .a2-btn { min-height: 44px; }
 .s28-mp-step a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; }
