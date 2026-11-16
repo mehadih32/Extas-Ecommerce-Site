@@ -52,7 +52,8 @@ const PAIRS: Pair[] = [
   ['on view pill quiet part (sf at 0.75) on ink', 'color-mix(in srgb, var(--lm-sf) 75%, transparent)', '--lm-ink'],
   // states: pills, tags, need counts, toasts of every tone, on their tint and on a card
   ...(['ok', 'warn', 'bad', 'info'] as const).flatMap((t): Pair[] => [
-    [`${t} on ${t}bg (pill)`, `--lm-${t}`, `--lm-${t}bg`],
+    // PR 1067: the prototype's own good green #15803d on its tint #e3f5e9 is 4.42:1 (owner: match the prototype's colours exactly); every other pair stays 4.5
+    [`${t} on ${t}bg (pill)`, `--lm-${t}`, `--lm-${t}bg`, undefined, t === 'ok' ? 4.4 : 4.5],
     [`${t} on sf`, `--lm-${t}`, '--lm-sf'],
     [`${t} on sf2`, `--lm-${t}`, '--lm-sf2'],
   ]),

@@ -75,21 +75,25 @@
      the lightest, decides): ink 72% → 66%, brand 78% → 66% (the older pages also use it as text on light tints), the
      primary button 80/70% → 70/60%, the logo 85% light/80% → 70/58% (white letter was 2.7:1). Checked for each swatch
      in light, dark and the island by theme/lumen-contrast.test.ts. */
+  /* PR 1067 (owner, 17 Nov 2026: "match the prototype's colours exactly"): with the shipped accent (burnt orange #c2410c) the
+     accent tokens are the prototype's own: a flat accent button with white text, accent text on the soft accent tint
+     #fdeee6, the logo as the prototype draws it. A person who picks another swatch in Settings > Admin look gets the
+     darker mixes below (the block "a chosen accent"), which keep every pair AA for every swatch. */
   --lm-ac: var(--lm-accent);
-  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
-  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
-  --lm-brand: color-mix(in srgb, var(--lm-accent) 66%, #000000);
-  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 56%, #000000);
+  --lm-acbg: #fdeee6;
+  --lm-ac-ink: var(--lm-accent);
+  --lm-brand: var(--lm-accent);
+  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 88%, #000000);
   --lm-on-ac: #ffffff;
-  --lm-pri: linear-gradient(180deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 60%, #000000));
-  --lm-pri-line: color-mix(in srgb, var(--lm-accent) 56%, #000000);
-  --lm-pri-sh: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 8px 18px color-mix(in srgb, var(--lm-accent) 32%, transparent);
-  --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 58%, #000000));
-  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
-  /* states (text + tint), each AA on its tint */
-  --lm-ok: #147a3a;
+  --lm-pri: var(--lm-accent);
+  --lm-pri-line: var(--lm-accent);
+  --lm-pri-sh: none;
+  --lm-logo: linear-gradient(140deg, var(--lm-accent), color-mix(in srgb, var(--lm-accent) 70%, #000000));
+  --lm-focus: var(--lm-accent);
+  /* states (text + tint): the prototype's good #15803d and warn #b45309 */
+  --lm-ok: #15803d;
   --lm-okbg: #e3f5e9;
-  --lm-warn: #b04f09;
+  --lm-warn: #b45309;
   --lm-warnbg: #fdf3dc;
   --lm-bad: #b91c1c;
   --lm-badbg: #fde7e7;
@@ -97,10 +101,10 @@
   --lm-infobg: #e5edff;
   /* data colours (charts) */
   --lm-c1: var(--lm-accent);
-  --lm-c2: #0f766e;
-  --lm-c3: #7c3aed;
+  --lm-c2: #2b3a80;
+  --lm-c3: #0f766e;
   --lm-c4: #a16207;
-  --lm-c5: #2b3a80;
+  --lm-c5: #7c3aed;
   --lm-c6: #be185d;
   --lm-c2-rgb: 15, 118, 110;
   --lm-cprev: #b6bfd1;
@@ -122,6 +126,19 @@
   --lm-scrim: rgba(12, 16, 32, 0.45);
   --lm-glass: rgba(238, 240, 246, 0.88);
   color-scheme: light;
+}
+
+/* ---- a chosen accent (Settings > Admin look): the darker mixes that keep every pair AA for every swatch (PR 625, 1067) ---- */
+[data-lm-look='lumen'][style*='--lm-accent'] {
+  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-brand: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-brand-deep: color-mix(in srgb, var(--lm-accent) 56%, #000000);
+  --lm-pri: linear-gradient(180deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 60%, #000000));
+  --lm-pri-line: color-mix(in srgb, var(--lm-accent) 56%, #000000);
+  --lm-pri-sh: 0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 8px 18px color-mix(in srgb, var(--lm-accent) 32%, transparent);
+  --lm-logo: linear-gradient(145deg, color-mix(in srgb, var(--lm-accent) 70%, #000000), color-mix(in srgb, var(--lm-accent) 58%, #000000));
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
 }
 
 /* ---- ঘ Lumen, dark (the moon button) ---- */
@@ -151,10 +168,10 @@
   --lm-info: #7aa2ff;
   --lm-infobg: #18244a;
   --lm-cprev: #4a5373;
-  --lm-c2: #2dd4bf;
-  --lm-c3: #a78bfa;
+  --lm-c2: #7f8fe6;
+  --lm-c3: #2dd4bf;
   --lm-c4: #facc15;
-  --lm-c5: #7f8fe6;
+  --lm-c5: #a78bfa;
   --lm-c6: #f472b6;
   --lm-c2-rgb: 45, 212, 191;
   --lm-hero: linear-gradient(135deg, #222c63, #3546a0);
@@ -179,22 +196,22 @@
   --lm-chip: #e6e9f2;
   --lm-hover: #f7f8fb;
   --lm-ac: var(--lm-accent);
-  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
-  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
-  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
-  --lm-ok: #147a3a;
+  --lm-acbg: #fdeee6;
+  --lm-ac-ink: var(--lm-accent);
+  --lm-focus: var(--lm-accent);
+  --lm-ok: #15803d;
   --lm-okbg: #e3f5e9;
-  --lm-warn: #b04f09;
+  --lm-warn: #b45309;
   --lm-warnbg: #fdf3dc;
   --lm-bad: #b91c1c;
   --lm-badbg: #fde7e7;
   --lm-info: #1d4ed8;
   --lm-infobg: #e5edff;
   --lm-cprev: #b6bfd1;
-  --lm-c2: #0f766e;
-  --lm-c3: #7c3aed;
+  --lm-c2: #2b3a80;
+  --lm-c3: #0f766e;
   --lm-c4: #a16207;
-  --lm-c5: #2b3a80;
+  --lm-c5: #7c3aed;
   --lm-c6: #be185d;
   --lm-c2-rgb: 15, 118, 110;
   --lm-swatch-ring: rgba(21, 26, 45, 0.18);
@@ -204,6 +221,13 @@
   color: var(--lm-ink);
   background: var(--lm-bg);
   border-radius: var(--lm-r-card);
+}
+
+/* the same for the light island in the dark look */
+[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent'] :is(.ad:not([data-lm-ready]), .lm-ct:not(:has(> [data-lm-ready])), .lm-island) {
+  --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
+  --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
+  --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);
 }
 
 /* ---- motion: the person's or the team's "Reduce motion", and the system's setting ---- */
