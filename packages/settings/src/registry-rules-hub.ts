@@ -83,7 +83,35 @@ export const hubTextEntrySchema = z.object({ bn: z.string().trim().min(1).max(30
 export const hubTextSchema = z.object({ texts: z.record(z.string().max(60), hubTextEntrySchema) }).strict();
 export type HubTextSetting = z.output<typeof hubTextSchema>;
 
+/**
+ * PR 947 (prototype Rules › Order flow › "Stock hold at checkout"): how long a piece is kept for a customer while he pays, and how long
+ * an order's piece stays held until the ERP has the order. An empty box keeps the installation's own number
+ * (`inventory.reservation.holdMinutes`, `…holdMinutesSignedIn`, `…convertedHoldHours`), so nothing changes until the owner types one.
+ */
+export const stockHoldSchema = z
+  .object({
+    checkoutMinutes: z.int().min(1).max(60).nullable(),
+    placedHours: z.int().min(1).max(72).nullable(),
+  })
+  .strict();
+export type StockHoldSettings = z.output<typeof stockHoldSchema>;
+// hardcode-ok: empty as shipped; the installation's own numbers apply (CN-018)
+export const STOCK_HOLD_DEFAULT: StockHoldSettings = { checkoutMinutes: null, placedHours: null };
+
 export const rulesHubSettings = {
+  'inventory.stockHold': setting({
+    scope: 'store',
+    isOwnerData: false,
+    isPublic: false,
+    group: 'inventory',
+    version: 940,
+    schema: stockHoldSchema,
+    default: STOCK_HOLD_DEFAULT,
+    valueType: 'JSON',
+    labelKey: 'inventory.stockHold.label',
+    helpKey: 'inventory.stockHold.help',
+    sortOrder: 984,
+  }),
   'rules.hub.text': setting({
     scope: 'store',
     isOwnerData: false,
