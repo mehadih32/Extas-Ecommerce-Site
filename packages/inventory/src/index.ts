@@ -40,6 +40,7 @@ export * from './erp-v6-relay';
 // account check with the statement catch-up (follow-up 490), and what Money → Books → ERP account shows.
 export * from './books-errors';
 export * from './erp-account';
+export * from './erp-statement';
 export * from './erp-pipeline';
 export * from './erp-account-check';
 export * from './erp-account-view';

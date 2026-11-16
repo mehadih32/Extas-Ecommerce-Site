@@ -27,7 +27,7 @@ import { t, type Dict } from '@/lib/i18n';
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/money/books';
-const VIEWS = ['entries', 'payments', 'pipeline'] as const;
+const VIEWS = ['entries', 'payments', 'pipeline', 'statement'] as const;
 type View = (typeof VIEWS)[number];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -113,10 +113,12 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
     );
 
   const diff = ov.erp?.balanceMinor != null && ov.balanceMinor != null ? ov.balanceMinor - ov.erp.balanceMinor : null;
-  const [entries, payments, pieces] = await Promise.all([
+  const monthIn = one(sp.month);
+  const [entries, payments, pieces, stmt] = await Promise.all([
     tab === 'entries' ? inv.accountEntries(idp, who, { page, kind, q }) : Promise.resolve(null),
     tab === 'payments' ? inv.accountPayments(idp, who) : Promise.resolve(null),
     tab === 'pipeline' ? inv.pipelinePieces(idp, who, { page, state, q }) : Promise.resolve(null),
+    tab === 'statement' ? inv.monthlyStatement(idp, who, { month: /^\d{4}-(0[1-9]|1[0-2])$/.test(monthIn) ? monthIn : (ov.today ?? '').slice(0, 7) }).catch(() => null) : Promise.resolve(null),
   ]);
   const pager = (p: { page: number; pageSize: number; total: number }, extra: Record<string, string | undefined>) => {
     const pages = Math.max(1, Math.ceil(p.total / p.pageSize));
@@ -193,6 +195,105 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
         ))}
       </nav>
 
+      {tab === 'statement' ? (
+        stmt ? (
+          <section className="a2-mt12" data-testid="books-statement" data-month={stmt.month}>
+            <form className="a2-fbar" action={HERE} method="get" aria-label={t(d, 'bk.st.title')}>
+              <input type="hidden" name="view" value="statement" />
+              {storeId === MOTHER_STORE_ID ? null : <input type="hidden" name="storeId" value={storeId} />}
+              <label className="a2-fsel">
+                <span className="a2-sr">{t(d, 'bk.st.month')}</span>
+                <select className="a2-sel" name="month" defaultValue={stmt.month} data-testid="st-month">
+                  {stmt.months.map((x) => (
+                    <option key={x} value={x}>
+                      {new Intl.DateTimeFormat(view.locale, { timeZone: 'UTC', numberingSystem: 'latn', month: 'long', year: 'numeric' }).format(new Date(`${x}-01T00:00:00Z`))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" className="a2-btn">
+                {t(d, 'bk.st.go')}
+              </button>
+            </form>
+            <p className="a2-sm a2-mute a2-mt12">{t(d, 'bk.st.sub', { from: day(stmt.from), to: day(stmt.to) })}</p>
+            <div className="a2-kpis a2-mt12" data-testid="st-kpis">
+              {(
+                [
+                  ['open', stmt.openingMinor, null],
+                  ['bills', stmt.billsMinor, stmt.counts.bills],
+                  ['credits', stmt.creditsMinor, stmt.counts.credits],
+                  ['paid', stmt.paidMinor, stmt.counts.paid],
+                  ['other', stmt.otherMinor, stmt.counts.other],
+                  ['close', stmt.closingMinor, null],
+                ] as const
+              ).map(([k, v, c]) => (
+                <div className="a2-card a2-kpi" key={k} data-testid={`st-${k}`}>
+                  <div className="a2-kl">{t(d, `bk.st.${k}`)}</div>
+                  <div className="a2-kv a2-num">{m(v)}</div>
+                  <div className="a2-xs a2-mute a2-mt6">{c === null ? (k === 'close' ? (stmt.closingMinor === stmt.ledgerMinor ? t(d, 'bk.st.match') : t(d, 'bk.st.mismatch', { amount: m(stmt.closingMinor - stmt.ledgerMinor) })) : '') : t(d, 'bk.st.count', { n: n(c) })}</div>
+                </div>
+              ))}
+            </div>
+            <section className="a2-card a2-mt12" data-testid="st-age">
+              <h3 className="a2-h3">{t(d, 'bk.st.ageTitle')}</h3>
+              <p className="a2-xs a2-mute">{t(d, 'bk.st.ageSub', { date: day(stmt.asOf) })}</p>
+              <div className="a2-mt12" style={{ display: 'grid', gap: 10 }}>
+                {stmt.age.map((a) => (
+                  <div key={a.band} data-testid="st-age-row" data-band={a.band}>
+                    <div className="a2-between a2-sm">
+                      <span>{t(d, `bk.st.age.${a.band}`)}</span>
+                      <b className="a2-num">{m(a.minor)}</b>
+                    </div>
+                    <div className="st-track" role="presentation">
+                      <i className={a.band === 'older' ? 'st-fill bad' : a.band === 'd30' ? 'st-fill warn' : 'st-fill ok'} style={{ width: `${stmt.closingMinor > 0 ? Math.min(100, (a.minor / stmt.closingMinor) * 100) : 0}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {stmt.paidAheadMinor > 0 ? <p className="a2-xs a2-mt12">{t(d, 'bk.st.ahead', { amount: m(stmt.paidAheadMinor) })}</p> : null}
+              {stmt.oldestOpenDay ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'bk.st.oldest', { date: day(stmt.oldestOpenDay) })}</p> : null}
+              {stmt.erpMinor !== null ? <p className="a2-xs a2-mute a2-mt6">{t(d, 'bk.st.erpSays', { amount: m(stmt.erpMinor), at: at(stmt.erpCheckedAt) })}</p> : null}
+            </section>
+            <section className="a2-card a2-mt12" data-testid="st-daily">
+              <h3 className="a2-h3">{t(d, 'bk.st.daily')}</h3>
+              {stmt.days.length ? (
+                <div className="a2-tblw a2-mt12">
+                  <table className="a2-tbl">
+                    <thead>
+                      <tr>
+                        <th>{t(d, 'bk.st.day')}</th>
+                        <th className="r">{t(d, 'bk.st.bills')}</th>
+                        <th className="r">{t(d, 'bk.st.credits')}</th>
+                        <th className="r">{t(d, 'bk.st.paid')}</th>
+                        <th className="r">{t(d, 'bk.st.other')}</th>
+                        <th className="r">{t(d, 'bk.st.bal')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stmt.days.map((r) => (
+                        <tr key={r.day} data-testid="st-day">
+                          <td className="a2-tdh">{day(r.day)}</td>
+                          <td className="r" data-l={t(d, 'bk.st.bills')}>{r.billsMinor ? m(r.billsMinor) : '—'}</td>
+                          <td className="r" data-l={t(d, 'bk.st.credits')}>{r.creditsMinor ? m(r.creditsMinor) : '—'}</td>
+                          <td className="r" data-l={t(d, 'bk.st.paid')}>{r.paidMinor ? m(r.paidMinor) : '—'}</td>
+                          <td className="r" data-l={t(d, 'bk.st.other')}>{r.otherMinor ? m(r.otherMinor) : '—'}</td>
+                          <td className="r" data-l={t(d, 'bk.st.bal')}>
+                            <b className="a2-num">{m(r.balanceMinor)}</b>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="a2-sm a2-mute a2-mt12">{t(d, 'bk.st.none')}</p>
+              )}
+            </section>
+          </section>
+        ) : (
+          <Empty title={t(d, 'bk.st.none')} />
+        )
+      ) : null}
       {entries ? (
         <>
           <form className="a2-fbar a2-mt12" action={HERE} method="get" role="search" aria-label={t(d, 'bk.view.entries')} data-testid="books-filters">
