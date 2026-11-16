@@ -21,7 +21,7 @@ import { allow, changed, found, logChange, parse, setting, TX, type CatalogueDep
 import { effectiveGarmentTypeOf } from './categories';
 import { CatalogueError } from './errors';
 import type { MeasurementField } from './garment-types';
-import { bothUnits, missingSizes, sortRows, suggestRow, type ChartRow } from './size-chart-math';
+import { bothUnits, CHART_RUNS, missingSizes, sortRows, suggestRow, type ChartRow, type ChartRun, type FinderRow } from './size-chart-math';
 import { normalizeName } from './text';
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,12 @@ interface ChartMeta {
   easeInch: number | null;
   diagram: string | null;
   copiedFromId: string | null;
+  /** PR 972: the size finder's table (empty until the owner fills it) and how the sizes run. Kept in the same JSON as the rest; no migration. */
+  finder: FinderRow[];
+  run: ChartRun;
 }
+
+const finderRowSchema = z.object({ size: z.string().min(1).max(40), h1: z.string().max(16), h2: z.string().max(16), w1: z.number().finite().min(0).max(500), w2: z.number().finite().min(0).max(500) }).strict();
 
 const metaSchema = z
   .object({
@@ -71,15 +76,17 @@ const metaSchema = z
     easeInch: z.number().nullable().optional(),
     diagram: z.string().nullable().optional(),
     copiedFromId: z.string().nullable().optional(),
+    finder: z.array(finderRowSchema).max(40).optional(),
+    run: z.enum(CHART_RUNS).optional(),
   })
   .passthrough();
 
 /** The chart's columns: the object this PR writes, or the bare field list the sample seed writes. */
 export function readMeta(json: Prisma.JsonValue): ChartMeta {
-  if (Array.isArray(json)) return { fields: json.filter((f): f is string => typeof f === 'string'), easeInch: null, diagram: null, copiedFromId: null };
+  if (Array.isArray(json)) return { fields: json.filter((f): f is string => typeof f === 'string'), easeInch: null, diagram: null, copiedFromId: null, finder: [], run: 'true' };
   const r = metaSchema.safeParse(json);
-  if (!r.success) return { fields: [], easeInch: null, diagram: null, copiedFromId: null };
-  return { fields: r.data.fields, easeInch: r.data.easeInch ?? null, diagram: r.data.diagram ?? null, copiedFromId: r.data.copiedFromId ?? null };
+  if (!r.success) return { fields: [], easeInch: null, diagram: null, copiedFromId: null, finder: [], run: 'true' };
+  return { fields: r.data.fields, easeInch: r.data.easeInch ?? null, diagram: r.data.diagram ?? null, copiedFromId: r.data.copiedFromId ?? null, finder: r.data.finder ?? [], run: r.data.run ?? 'true' };
 }
 
 /** The chart's rows: [{ size, values }] (also a plain { size: values } map, as the demo keeps it). */
@@ -92,7 +99,7 @@ export function readRows(json: Prisma.JsonValue): ChartRow[] {
   return [];
 }
 
-const metaJson = (m: ChartMeta): Prisma.InputJsonValue => ({ fields: m.fields, easeInch: m.easeInch, diagram: m.diagram, copiedFromId: m.copiedFromId });
+const metaJson = (m: ChartMeta): Prisma.InputJsonValue => ({ fields: m.fields, easeInch: m.easeInch, diagram: m.diagram, copiedFromId: m.copiedFromId, finder: m.finder, run: m.run });
 const rowsJson = (rows: ChartRow[]): Prisma.InputJsonValue => rows.map((r) => ({ size: r.size, values: r.values }));
 
 const entry = (dict: Dictionary, key: string | null) => (key ? (dict.find((d) => d.key === key) ?? null) : null);
@@ -138,6 +145,9 @@ export interface SizeChartView {
   easeInch: number;
   diagram: { key: string; en: string; bn: string } | null;
   copiedFromId: string | null;
+  /** PR 972: the size finder's table and how the sizes run. */
+  finder: FinderRow[];
+  run: ChartRun;
   /** Categories this chart is the default of (for its fit). */
   defaultFor: { id: string; slug: string; nameEn: string; nameBn: string | null }[];
   /** Products that have this chart as their own (per-style override). */
@@ -291,6 +301,8 @@ function viewOf(chart: ChartRowDb, m: StoreCatalogueMap, s: SizeChartSettings, u
     easeInch: meta.easeInch ?? s.defaultEaseInch,
     diagram: entry(s.diagrams, diagramKey),
     copiedFromId: meta.copiedFromId,
+    finder: meta.finder,
+    run: meta.run,
     defaultFor,
     overrides: m.assignments.filter((a) => a.sizeChartId === chart.id && a.productId).length,
     usedBy,
@@ -364,6 +376,8 @@ export const sizeChartInput = z
     rows: z.array(rowInput).min(1),
     easeInch: z.number().min(0).optional(),
     diagram: dictionaryKeySchema.optional(),
+    finder: z.array(finderRowSchema).max(40).optional(),
+    run: z.enum(CHART_RUNS).optional(),
   })
   .strict();
 export const sizeChartPatch = z
@@ -374,6 +388,8 @@ export const sizeChartPatch = z
     rows: z.array(rowInput).min(1).optional(),
     easeInch: z.number().min(0).optional(),
     diagram: dictionaryKeySchema.optional(),
+    finder: z.array(finderRowSchema).max(40).optional(),
+    run: z.enum(CHART_RUNS).optional(),
     archived: z.boolean().optional(),
   })
   .strict();
@@ -446,7 +462,7 @@ export async function createSizeChart(deps: CatalogueDeps, who: Who, input: Size
     if (!fields.length) throw new CatalogueError('INVALID_INPUT', 'the garment type has no measurements; add them first', ['garmentTypeId']);
     const rows = await checkChart(tx, who.storeId, s, g.fields, fields, d.rows);
     await assertNameFree(tx, who.storeId, d.name);
-    const meta: ChartMeta = { fields, easeInch: d.easeInch ?? s.defaultEaseInch, diagram: d.diagram ?? s.diagramFor[g.key] ?? s.diagrams[0]?.key ?? null, copiedFromId: null };
+    const meta: ChartMeta = { fields, easeInch: d.easeInch ?? s.defaultEaseInch, diagram: d.diagram ?? s.diagramFor[g.key] ?? s.diagrams[0]?.key ?? null, copiedFromId: null, finder: d.finder ?? [], run: d.run ?? 'true' };
     const row = await tx.sizeChart.create({ data: { storeId: who.storeId, garmentTypeId: g.id, name: d.name, fitKey: d.fitKey, columns: metaJson(meta), rows: rowsJson(rows) } });
     await logChange(tx, who, 'sizeChart.create', 'SizeChart', row.id, null, auditView(row));
     return row.id;
@@ -489,7 +505,7 @@ export async function updateSizeChart(deps: CatalogueDeps, who: Who, id: string,
         if (twin) throw new CatalogueError('CONFLICT', 'a category that uses this chart already has a default for that fit', [`categoryId: ${a.categoryId}`]);
       }
     }
-    const nextMeta: ChartMeta = { ...meta, fields, easeInch: d.easeInch ?? meta.easeInch, diagram: d.diagram ?? meta.diagram };
+    const nextMeta: ChartMeta = { ...meta, fields, easeInch: d.easeInch ?? meta.easeInch, diagram: d.diagram ?? meta.diagram, finder: d.finder ?? meta.finder, run: d.run ?? meta.run };
     const next = {
       name: d.name ?? cur.name,
       fitKey: d.fitKey ?? cur.fitKey,

@@ -135,3 +135,30 @@ export function sizeForBody(rows: readonly ChartRow[], order: readonly string[],
   }
   return null;
 }
+
+/** PR 972 (prototype v5, Size charts › "Size finder"): one size's height and weight range, as the customer types them. */
+export interface FinderRow {
+  size: string;
+  /** Height from / to, as typed (e.g. 5'4); text, because shops write feet-inches or cm. */
+  h1: string;
+  h2: string;
+  /** Weight from / to, in kg. */
+  w1: number;
+  w2: number;
+}
+/** PR 972: how the sizes of this chart run: small moves a suggestion up one size, large moves it down one. */
+export const CHART_RUNS = ['small', 'true', 'large'] as const;
+export type ChartRun = (typeof CHART_RUNS)[number];
+
+/**
+ * PR 972 (prototype v5, Size charts › "Size finder"): the size to suggest for a weight, from the finder table. The table's order is
+ * the sizes' order (smallest first); a weight under the first range gets the first size, over the last range the last one; "runs small"
+ * moves the suggestion one size up, "runs large" one size down (never past either end). Empty table or no weight: null.
+ */
+export function suggestSizeByWeight(finder: readonly FinderRow[], run: ChartRun, weightKg: number): string | null {
+  if (!finder.length || !(weightKg > 0)) return null;
+  let i = finder.findIndex((f) => weightKg >= f.w1 && weightKg <= f.w2);
+  if (i < 0) i = weightKg < finder[0]!.w1 ? 0 : finder.length - 1;
+  i = Math.max(0, Math.min(finder.length - 1, i + (run === 'small' ? 1 : run === 'large' ? -1 : 0)));
+  return finder[i]?.size ?? null;
+}
