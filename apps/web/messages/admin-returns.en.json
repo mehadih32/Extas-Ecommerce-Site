@@ -596,6 +596,15 @@
     "replacement": "Replacement"
   },
   "lens": {
+    "empty": {
+      "requests": "No exchange requests.",
+      "coming": "Nothing on the way back.",
+      "waiting": "Nothing waits for the ERP check.",
+      "replace": "No replacements yet.",
+      "approved": "No approved returns yet.",
+      "declined": "Nothing declined. Declined pieces stay as our loss.",
+      "cancelled": "Nothing cancelled."
+    },
     "dateLabel": "Date",
     "date": {
       "any": "Any date",
