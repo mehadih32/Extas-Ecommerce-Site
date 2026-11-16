@@ -55,11 +55,15 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   // PR 533: the customer history at approval, beside the call card (null while the owner's switch is off)
   const [chosen, hist] = pick ? await Promise.all([loadOrderDetail(rd, who, view, pick.id, perms), perms.has('orders.read') ? od.approvalHistory(rd, who, pick.id) : null]) : [null, null];
   const history = hist ? approvalCard(view, hist, new Map((await od.reasonLists(rd, who.storeId)).refusal.map((r) => [r.key, view.lang === 'bn' ? r.bn || r.en : r.en]))) : null;
+  // PR 952 (prototype v5): how many of the current batch the rules already confirmed, and the merge look-back line
+  const batch = perms.has('orders.read') ? await od.batchOverview(rd, who, now).catch(() => null) : null;
+  const merge = (await access.deps.resolver.value('orders.mergeOrders', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { lookBackDays: number; autoMerge: boolean } | null;
+  const mergeLine = merge ? t(view.dict, 'orders.confirm.mergeLine', { days: String(merge.lookBackDays), state: t(view.dict, merge.autoMerge ? 'orders.confirm.on' : 'orders.confirm.off') }) : null;
   const wantDo = one(sp.do) ?? null;
   const open = wantDo && DO_PERM[wantDo] && perms.has(DO_PERM[wantDo]) ? wantDo : null;
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} />
+      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} />
     </CommandsProvider>
   );
 }

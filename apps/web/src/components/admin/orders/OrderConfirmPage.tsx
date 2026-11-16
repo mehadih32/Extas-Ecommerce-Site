@@ -85,11 +85,18 @@ function HistoryCard({ h }: { h: ApprovalCard }) {
   );
 }
 
-export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null }) {
+export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const toConfirm = list.counts.toConfirm ?? 0;
-  const sub = toConfirm ? t(d, 'orders.confirm.sub', { n: n(toConfirm), age: oldest ?? '' }) : t(d, 'orders.confirm.subNone');
+  // PR 952 (prototype v5): "N need a person · rules already confirmed M of the current batch"
+  const needs = list.counts.processing ?? 0;
+  const sub =
+    query.view === 'processing' && rulesConfirmed !== null
+      ? t(d, 'orders.confirm.subProto', { n: n(needs), m: n(rulesConfirmed) })
+      : toConfirm
+        ? t(d, 'orders.confirm.sub', { n: n(toConfirm), age: oldest ?? '' })
+        : t(d, 'orders.confirm.subNone');
   const card = chosen ? (
     <>
       <section className="a2-card" data-testid="call-card" data-order={chosen.number}>
@@ -162,6 +169,11 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
       } />
       <SectionTabs view={view} current="ordersConfirm" />
       <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
+      {mergeLine ? (
+        <p className="a2-sm a2-mute a2-mt12" data-testid="orders-merge-line">
+          {mergeLine}
+        </p>
+      ) : null}
       {list.rows.length ? (
         <div className="a2-row a2-r12 a2-start">
           <div className="a2-q" data-testid="call-queue">
@@ -183,7 +195,7 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
           <div className="a2-stack">{card}</div>
         </div>
       ) : (
-        <EmptyList view={view} filtered={!!query.cursor} clear={listHref('confirm', { view: query.view })} all={false} />
+        <EmptyList view={view} filtered={!!query.cursor} clear={listHref('confirm', { view: query.view })} all={false} none={query.view === 'processing'} />
       )}
     </div>
   );

@@ -86,7 +86,8 @@
         "none": "No orders here yet",
         "noneBody": "Orders placed on the shop come in here, newest first.",
         "view": "Nothing in this view",
-        "viewBody": "When an order needs this, it shows here."
+        "viewBody": "When an order needs this, it shows here.",
+        "queue": "Nothing needs a person here. The rules handled the rest."
       },
       "none": "—",
       "select": "Select order {n}",
@@ -1061,7 +1062,11 @@
       "full": "Full order",
       "never": "After Confirm the next order in the queue opens.",
       "callDesk": "Call desk",
-      "autoRules": "Auto-confirm rules"
+      "autoRules": "Auto-confirm rules",
+      "subProto": "{n} need a person · rules already confirmed {m} of the current batch",
+      "mergeLine": "Merge looks back {days} days · auto-merge is {state}",
+      "on": "on",
+      "off": "off"
     },
     "risk": {
       "title": "Risk",

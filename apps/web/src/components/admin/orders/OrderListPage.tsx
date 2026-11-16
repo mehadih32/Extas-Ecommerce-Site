@@ -109,9 +109,9 @@ export function ViewChips({ view, page, query, counts }: { view: AdminView; page
 }
 
 /** Nothing to show: a filter that matches nothing (with the way back), an empty view, or a shop with no orders yet. */
-export function EmptyList({ view, filtered, clear, all }: { view: AdminView; filtered: boolean; clear: string; all: boolean }) {
+export function EmptyList({ view, filtered, clear, all, none = false }: { view: AdminView; filtered: boolean; clear: string; all: boolean; /** PR 952: the Processing queue's own empty line (prototype: "Nothing needs a person here. The rules handled the rest.") */ none?: boolean }) {
   const d = view.dict;
-  const k = filtered ? 'title' : all ? 'none' : 'view';
+  const k = filtered ? 'title' : all ? 'none' : none ? 'queue' : 'view';
   const b = filtered ? 'body' : all ? 'noneBody' : 'viewBody';
   return (
     <div className="a2-state" data-testid="orders-empty">
@@ -119,7 +119,7 @@ export function EmptyList({ view, filtered, clear, all }: { view: AdminView; fil
         <ShellIcon name={filtered ? 'search' : 'bag'} size={26} />
       </div>
       <h3>{t(d, `orders.list.empty.${k}`)}</h3>
-      {filtered ? null : <p>{t(d, `orders.list.empty.${b}`)}</p>}
+      {filtered || none ? null : <p>{t(d, `orders.list.empty.${b}`)}</p>}
       {filtered ? (
         <div className="a2-gap8">
           <Link className="a2-btn" href={clear}>
