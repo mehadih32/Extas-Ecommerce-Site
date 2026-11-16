@@ -1,13 +1,20 @@
 {
-  "at": "2026-11-16 04:03 (Asia/Dhaka)",
+  "at": "2026-11-16 06:25 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
-  "sha": "02c047c8b7d7",
-  "kind": "first-week",
-  "rolledBack": false,
-  "ok": true,
-  "pages": 682,
-  "failed": 0,
-  "problems": [],
+  "sha": "40a179957516",
+  "kind": "after deploy",
+  "rolledBack": true,
+  "ok": false,
+  "pages": 700,
+  "failed": 3,
+  "problems": [
+    "/admin/rules: request 403: /api/admin/rules/hub/sim (phone)",
+    "/admin/rules: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/rules/hub/sim) (phone)",
+    "/admin/rules: request 403: /api/admin/rules/hub/sim (desktop)",
+    "/admin/rules: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/rules/hub/sim) (desktop)",
+    "/admin/marketing/referrals: request failed: /admin/rules (net::ERR_QUIC_PROTOCOL_ERROR.QUIC_IETF_GQUIC_ERROR_MISSING) (desktop)",
+    "/admin/marketing/referrals: console error: Failed to load resource: net::ERR_QUIC_PROTOCOL_ERROR.QUIC_IETF_GQUIC_ERROR_MISSING (/admin/rules?_rsc=GT6uotN_MS-ZJ4Ei) (desktop)"
+  ],
   "database": {
     "appendOnly": "ok: 41 tables append-only",
     "appRole": "extas_app"
