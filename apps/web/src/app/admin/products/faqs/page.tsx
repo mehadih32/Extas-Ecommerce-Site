@@ -8,7 +8,9 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FaqManager, type FaqItem } from '@/components/admin/products/FaqManager';
-import { nameIn } from '@/components/admin/products/model';
+import { formatNumber, nameIn } from '@/components/admin/products/model';
+import { ReviewTop } from '@/components/admin/reviews/ReviewTop';
+import { loadReviewTop } from '@/lib/admin-reviews/top';
 import { FieldsCard } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -70,18 +72,23 @@ export default async function FaqsPage({ searchParams }: { searchParams: Promise
     archived: f.archived,
     fromQuestion: f.sourceQuestionId !== null,
   }));
+  const top = await loadReviewTop(c);
+  const liveFaqs = (archived ? archivedFaqs : faqs).filter((f) => f.isActive).length;
   const card = cards['catalogue.faq'];
   const canWrite = c.can('catalogue.write');
   const on = (card.value as { on?: boolean }).on === true;
 
   return (
     <div className="a2-z" data-testid="product-faqs" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.faq.title')} sub={t(d, 'products.faq.sub')} />
+      {/* PR 964 (prototype v5): the same heading, figures and rule line as on the other three tabs, then the chips with their counts */}
+      <PageHead view={view} place={locateKey(KEY)} title={t(rd, 'rev.title')} sub={t(rd, 'rev.sub')} />
       <SectionTabs view={view} current={KEY} />
+      {top ? <ReviewTop d={rd} f={top} n={(x) => formatNumber(x, view.locale)} /> : null}
       <ReviewChips
         current="faqs"
         aria={t(rd, 'rev.chip.aria')}
         labels={{ questions: t(rd, 'rev.chip.questions'), reviews: t(rd, 'rev.chip.reviews'), hidden: t(rd, 'rev.chip.hidden'), faqs: t(rd, 'rev.chip.faqs') }}
+        counts={{ faqs: formatNumber(liveFaqs, view.locale), ...(top ? { questions: formatNumber(top.questions, view.locale), reviews: formatNumber(top.pending, view.locale) } : {}) }}
       />
       {!on ? (
         <p className="a2-sm a2-mt12" data-testid="faq-off">
