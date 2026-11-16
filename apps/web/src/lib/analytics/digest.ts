@@ -164,7 +164,7 @@ export interface DigestSendResult {
   email: 'sent' | 'skipped' | 'failed';
 }
 
-async function telegramSend(deps: Pick<DigestDeps, 'db' | 'resolver' | 'vault'>, text: string): Promise<void> {
+export async function telegramSend(deps: Pick<DigestDeps, 'db' | 'resolver' | 'vault'>, text: string): Promise<void> {
   const [testS, cacheS] = await Promise.all([deps.resolver.value('system.integrationTestTimeoutSeconds'), deps.resolver.value('system.integrationKeyCacheSeconds')]);
   const c = createConnections({ db: deps.db, vault: deps.vault ?? { get: async () => null }, adapters: telegramAdapters, secretCacheMs: cacheS * 1000, testTimeoutMs: testS * 1000 });
   const r = await sendOwnerAlert(c, text);

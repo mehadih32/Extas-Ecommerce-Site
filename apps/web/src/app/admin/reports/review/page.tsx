@@ -217,6 +217,23 @@ export default async function MonthlyReviewPage({
         },
   ];
 
+  // PR 891: what "Send to Telegram" sends — this very review (figures, went well, went badly, next steps), not the analytics digest.
+  const tgMessage = [
+    c("title", { month }),
+    ...tiles.map((x) => `${x.label}: ${x.shown}`),
+    "",
+    `${c("good")}:`,
+    ...lines.good.map((l) => `+ ${say(l)}`),
+    "",
+    `${c("bad")}:`,
+    ...lines.bad.map((l) => `- ${say(l)}`),
+    "",
+    `${c("next")}:`,
+    ...lines.next.map((l) => `> ${say(l)}`),
+    "",
+    c("tgOpen"),
+  ].join("\n");
+
   const net = (p: typeof now) => p.netProfitMinor;
   const numbers: {
     key: string;
@@ -382,6 +399,7 @@ export default async function MonthlyReviewPage({
             />
             <TelegramButton
               testId="rp-tg"
+              message={tgMessage}
               disabledReason={
                 access.guard.permissions?.has("reports.analytics.write")
                   ? null
