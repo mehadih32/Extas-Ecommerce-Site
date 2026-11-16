@@ -389,8 +389,8 @@
         "keyHelp": "Lower-case words joined by -, e.g. eid-delivery",
         "kind": "Type",
         "name": "Name (only you see it)",
-        "titleEn": "Title in English",
-        "titleBn": "Title in Bengali",
+        "titleEn": "Heading (English)",
+        "titleBn": "Heading (Bengali)",
         "contentEn": "Text in English",
         "contentBn": "Text in Bengali",
         "ctaLabelEn": "Button text in English",
@@ -400,7 +400,7 @@
         "allPages": "Every page",
         "position": "Where on the page",
         "trigger": "Opens",
-        "delay": "After how many seconds",
+        "delay": "Show after (seconds)",
         "scroll": "After scrolling (percent of the page)",
         "clickKey": "Name of the button that opens it",
         "cap": "How often at most",
@@ -408,8 +408,8 @@
         "rule": "Belongs to the rule (shows only while that rule is live)",
         "noRule": "None",
         "priority": "Priority",
-        "startsAt": "Starts",
-        "endsAt": "Ends",
+        "startsAt": "From",
+        "endsAt": "Until",
         "optional": "optional"
       },
       "positions": {
@@ -430,7 +430,7 @@
         "week": "per week",
         "ever": "ever"
       },
-      "customersSee": "Customers see:",
+      "customersSee": "Customer sees",
       "issues": {
         "ARRIVAL_POPUP": "A pop-up may not open on arrival — give it a delay or a scroll.",
         "DELAY_TOO_SHORT": "The delay is shorter than the shop allows.",
@@ -457,17 +457,5 @@
       "restore": "Bring back",
       "archived": "Archived"
     }
-  },
-  "notices": {
-    "fields": {
-      "titleEn": "Heading (English)",
-      "titleBn": "Heading (Bengali)",
-      "contentEn": "Text in English",
-      "contentBn": "Text in Bengali",
-      "delay": "Show after (seconds)",
-      "startsAt": "From",
-      "endsAt": "Until"
-    },
-    "customersSee": "Customer sees"
   }
 }
