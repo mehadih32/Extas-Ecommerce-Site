@@ -485,6 +485,7 @@ model Store {
   /// CN-020 (4): the addresses spoken into the checkout's mic (SIM-F-047).
   checkoutVoices          CheckoutVoice[]
   productVideos           ProductVideo[]
+  productWizardSpecs      ProductWizardSpec[]
   productFaqs             ProductFaq[]
   erpSizeCharts           ErpSizeChart[]
 }
@@ -1569,6 +1570,9 @@ model ProductColour {
   colour            Colour    @relation(fields: [colourId], references: [id])
   noteEn            String?
   noteBn            String?
+  /// PR 1032 (add-product wizard, step 3): the colour's name on this product's page when it is not the colour list's own. Null = the list's name.
+  siteNameEn        String?
+  siteNameBn        String?
   trueColourAssetId String?   @db.Uuid
   sortOrder         Int       @default(0)
   archivedAt        DateTime? @db.Timestamptz(3)
@@ -1760,6 +1764,45 @@ model ProductVideo {
 enum VideoSource {
   LINK
   FILE
+}
+
+/// @stage S28 · PR 1030 — the add-product wizard's own answers on a draft (prototype v5, "Add product", 8 steps): set or single,
+/// the bottom piece and colour link of a set, who it is for, the category's detail answers, the sizes and
+/// colours kept off the shop, the size finder rows, fit, how the sizes run, the model's
+/// size, the key points, the B-grade (Outlet) switch, the day it should go live and when the price was confirmed with the
+/// PIN. One row per draft, changed in place and kept after publishing. Nothing here reaches a customer before the owner publishes.
+model ProductWizardSpec {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  storeId          Int
+  store            Store     @relation(fields: [storeId], references: [id])
+  productId        String    @db.Uuid
+  /// SINGLE or SET (top + bottom).
+  kind             String?
+  bottomProductId  String?   @db.Uuid
+  /// SAME or ANY: a set's top and bottom share one colour, or the customer picks each.
+  colourLink       String?
+  forWho           String?
+  /// { key: text } — the answers to the category's detail questions (fabric, GSM, collar …).
+  details          Json?
+  keyPoints        String?
+  fit              String?
+  sizesRun         String?
+  modelHeight      String?
+  modelWeightKg    Int?
+  modelWears       String?
+  /// Size ids and colour ids kept off the shop (taken off the variants when the product is published).
+  hiddenSizeIds    Json?
+  hiddenColourIds  Json?
+  /// [{ size, h1, h2, w1, w2 }] — which height and weight fits which size.
+  finder           Json?
+  bGrade           Boolean   @default(false)
+  scheduleAt       DateTime? @db.Timestamptz(3)
+  hideDemo         Boolean?
+  priceConfirmedAt DateTime? @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([storeId, productId])
 }
 
 enum ProductMediaRole {
