@@ -285,6 +285,7 @@
       "kind": "Kind",
       "agent": "Agent",
       "noAgent": "No agent — raised directly",
+      "why": "Why",
       "requested": "Requested {when}",
       "expires": "Expires {when}",
       "noteLabel": "Note (optional)",
