@@ -10,13 +10,13 @@ import * as cat from '@extas/catalogue';
 import { registry } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { formatMoney, nameIn } from '@/components/admin/products/model';
-import { RankingScreen } from '@/components/admin/products/RankingScreen';
+import { RankingHeadSave, RankingScreen } from '@/components/admin/products/RankingScreen';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
-import { catalogueAccess, storeMoney } from '@/lib/admin-products';
+import { catalogueAccess, photosOf, storeMoney } from '@/lib/admin-products';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { rankingDeps, rankingOptionsCard } from '@/lib/shop-ranking-api';
@@ -65,7 +65,22 @@ export default async function RankingPage() {
     c.deps.db.category.findMany({ where: { storeId: c.storeId, archivedAt: null }, select: { id: true, nameEn: true, nameBn: true } }),
   ]);
   const DAY_MS = 86_400_000;
-  const nowMs = Date.now();
+  const nowMs = (c.deps.now ?? (() => new Date()))().getTime();
+  // PR 970: the previews' pictures — each product's primary photo (else its front photo, else any), as the product list shows them
+  const liveIds = live.slice(0, 400).map((p) => p.id);
+  const media = liveIds.length
+    ? await c.deps.db.productMedia.findMany({
+        where: { storeId: c.storeId, productId: { in: liveIds }, archivedAt: null, asset: { kind: 'IMAGE', archivedAt: null } },
+        orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+        select: { productId: true, assetId: true, role: true, isPrimary: true },
+        take: 4000,
+      })
+    : [];
+  const thumb = new Map<string, string>();
+  for (const pass of [(m: (typeof media)[number]) => m.isPrimary, (m: (typeof media)[number]) => m.role === 'FRONT', () => true]) {
+    for (const m of media) if (!thumb.has(m.productId) && pass(m)) thumb.set(m.productId, m.assetId);
+  }
+  const sources = await photosOf(c, [...thumb.values()]);
   const extras = live.map((p) => {
     const prices = p.variants.map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
     return {
@@ -73,6 +88,7 @@ export default async function RankingPage() {
       price: prices.length ? formatMoney(Math.min(...prices), money) : null,
       fresh: nowMs - (p.publishedAt ?? p.createdAt).getTime() <= ranking.settings.freshDays * DAY_MS,
       categoryId: p.categoryId,
+      image: sources[thumb.get(p.id) ?? ''] ?? null,
     };
   });
   const catName = new Map(cats.map((x) => [x.id, nameIn(view.lang, x)]));
@@ -107,9 +123,12 @@ export default async function RankingPage() {
         title={t(view.dict, 'productRanking.title')}
         sub={t(view.dict, 'productRanking.sub')}
         right={
-          <Link className="a2-btn" href="/admin/website/seo" data-testid="ranking-google">
-            {t(view.dict, 'productRanking.googleLink')}
-          </Link>
+          <>
+            <Link className="a2-btn" href="/admin/website/seo" data-testid="ranking-google">
+              {t(view.dict, 'productRanking.googleLink')}
+            </Link>
+            <RankingHeadSave dict={view.dict} canEdit={canEdit} />
+          </>
         }
       />
       <SectionTabs view={view} current={KEY} />
