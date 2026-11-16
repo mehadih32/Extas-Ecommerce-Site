@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { ManualChapter, type ManualChapterPage } from '@/components/admin/help/ManualChapter';
 import { PageHead, SectionTabs, ShellState, shellViewer } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
@@ -69,7 +70,18 @@ export default async function ManualPage(props: Props) {
   const mode: 'search' | 'new' | 'chapter' = q ? 'search' : sp.new === '1' ? 'new' : 'chapter';
   const head = (
     <>
-      <PageHead view={view} place={here} title={s('title')} sub={s('sub')} />
+      <PageHead
+        view={view}
+        place={here}
+        title={s('title')}
+        sub={s('sub')}
+        right={
+          <Link className="a2-btn" href="/admin/map" data-testid="manual-map">
+            <ShellIcon name="grid" size={15} />
+            {s('adminMap')}
+          </Link>
+        }
+      />
       <SectionTabs view={view} current={KEY} />
     </>
   );
@@ -227,6 +239,37 @@ export default async function ManualPage(props: Props) {
         </nav>
         <div className="a2-man-main">{main}</div>
       </div>
+      {viewer.owner || viewer.perms.has('build.read') ? (
+        <section className="a2-card a2-mt12" aria-labelledby="man-files-h" data-testid="manual-files">
+          <h2 className="a2-h3" id="man-files-h">
+            {s('files.h')}
+          </h2>
+          <div className="a2-man-files">
+            {[
+              ['blueprint', '/admin/build/files/read?path=BLUEPRINT.md'],
+              ['register', '/admin/build/files/read?path=MASTER-REGISTER.md'],
+              ['all', '/admin/build/files'],
+            ].map(([k, href]) => (
+              <div key={k} className="a2-card tight a2-man-file" data-testid={`manual-file-${k}`}>
+                <b>{s(`files.${k}`)}</b>
+                <span className="a2-xs a2-mute">{s(`files.${k}D`)}</span>
+                <Link className="a2-btn sm" href={href!}>
+                  {s('files.read')}
+                </Link>
+              </div>
+            ))}
+          </div>
+          <div className="a2-gap8 a2-mt12" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <b className="a2-sm">{s('files.stages')}</b>
+            <Link className="a2-btn sm" href="/admin/build" data-testid="manual-stages">
+              {s('files.stagesGo')}
+            </Link>
+          </div>
+          <p className="a2-xs a2-mute a2-mt12">
+            {s('files.problem')} <Link href="/admin/build/requests">{s('files.problemGo')}</Link>
+          </p>
+        </section>
+      ) : null}
     </div>
   );
 }
