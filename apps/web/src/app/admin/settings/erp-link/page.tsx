@@ -16,7 +16,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { BooksForm } from '@/components/admin/books/BooksForm';
 import { ErpCalls } from '@/components/admin/ErpCalls';
 import { ErpSyncBoard } from '@/components/admin/ErpSyncBoard';
-import { ErpHeadActions, ErpMatching, ErpSafety } from '@/components/admin/ErpConnectionParts';
+import { ErpHeadActions, ErpMatching, ErpSafety, ErpTestButton } from '@/components/admin/ErpConnectionParts';
 import { loadSyncBoard } from '@/lib/erp-sync-board';
 import { Integrations } from '@/components/admin/Integrations';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
@@ -34,6 +34,7 @@ import { currentModeChoice, matchingView } from '@/lib/erp-link-extra';
 import { t, type Dict } from '@/lib/i18n';
 import { siteAddress } from '@/lib/seo/site';
 import './erp.css';
+import '../../s28.css';
 import '../system/sysinfo.css';
 import bn from '../../../../../messages/admin-erp-link.bn.json';
 import en from '../../../../../messages/admin-erp-link.en.json';
@@ -131,7 +132,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
       {picker}
       <section className="a2-sc a2-mt12 sy-hero" data-testid="erp-hero" data-state={healthy ? 'ok' : 'warn'}>
         <i className={`sy-dot${healthy ? '' : ' warn'}`} aria-hidden="true" />
-        <div>
+        <div className="s28-grow">
           <div className="sy-big">
             {connected ? e('hero.connected') : e('hero.notConnected')} · {e('hero.lastSync')} {stockAt ? at(stockAt) : e('hero.never')}
           </div>
@@ -139,6 +140,7 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
             {erpConn?.mode === 'SANDBOX' || erpConn?.mode === 'MOCK' ? e('hero.practice') : e('hero.live')} · {e('hero.safe')}
           </div>
         </div>
+        {canWrite ? <ErpTestButton dict={d} storeId={storeId} connectionId={erpConn?.id ?? null} /> : null}
       </section>
       {problems.length ? (
         <section className="a2-card a2-mt12" data-testid="erp-plain">
@@ -247,6 +249,12 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
         }
       />
 
+      {/* D10: everything the prototype's page does not draw (the link, the keys, what was synced, the balance, the switch to contract v6, the switch runs, the demo key) stays, under More options. */}
+      <details className="a2-card a2-mt12" data-testid="erp-more">
+        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>
+          {e('more')}
+        </summary>
+        <div className="a2-cs">{e('moreSub')}</div>
       <section className="a2-card a2-mt12" data-testid="erp-link-status">
         <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
           <h2 className="a2-h4">{e('link.title')}</h2>
@@ -608,6 +616,8 @@ export default async function ErpLinkPage({ searchParams }: { searchParams: Sear
           ) : null}
         </section>
       ) : null}
+
+      </details>
 
       <div className="ad-note a2-mt12">
         <ShellIcon name="shield" size={16} />
