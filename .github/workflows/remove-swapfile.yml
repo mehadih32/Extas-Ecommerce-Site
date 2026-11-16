@@ -1,0 +1,49 @@
+# PR 881 — removes the old swap file /swapfile-tsc from the server (the owner allowed it, 16 Nov 2026). Run by hand
+# (workflow_dispatch) ON the VM through the self-hosted runner (CN-003). It touches exactly one file and one line:
+#   - swaps /swapfile-tsc off, only when the kernel is using it (never `swapoff -a`, so no other swap is touched);
+#   - removes the file /swapfile-tsc (a plain file, never a link) and its line in /etc/fstab (a copy of fstab is kept first);
+#   - prints free disk and swap before and after.
+# Nothing else is read or changed: no other swap, no data, no database, no other file.
+name: remove-swapfile
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  remove:
+    runs-on: [self-hosted, extas-vm]
+    timeout-minutes: 10
+    steps:
+      - name: Remove /swapfile-tsc
+        run: |
+          set -euo pipefail
+          f=/swapfile-tsc
+          show() { echo "--- $1"; df -h /; echo; echo "swap in use:"; swapon --show || true; echo; free -h | sed -n 1,3p; }
+          show "before"
+          if sudo test -L "$f"; then echo "$f is a link — not touched"; exit 1; fi
+          if sudo test -e "$f"; then
+            if swapon --show=NAME --noheadings | awk '{print $1}' | grep -qx "$f"; then
+              echo "$f is in use — swapping it off (only this file)"
+              sudo swapoff "$f"
+            else
+              echo "$f is not in use"
+            fi
+            sudo test -f "$f" || { echo "$f is not a plain file — not touched"; exit 1; }
+            sudo rm -f -- "$f"
+            echo "removed $f"
+          else
+            echo "$f does not exist (already removed)"
+          fi
+          if awk -v f="$f" '$1 == f { found = 1 } END { exit !found }' /etc/fstab; then
+            bak="/etc/fstab.extas-before-swapfile-tsc"
+            sudo cp -n /etc/fstab "$bak"
+            awk -v f="$f" '$1 != f' /etc/fstab | sudo tee /etc/fstab.new >/dev/null
+            sudo cp /etc/fstab.new /etc/fstab && sudo rm -f /etc/fstab.new
+            echo "removed the $f line from /etc/fstab (copy kept as $bak)"
+          else
+            echo "no $f line in /etc/fstab"
+          fi
+          show "after"
