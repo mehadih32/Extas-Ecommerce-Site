@@ -753,7 +753,18 @@
         "none": "No tracked search word for this page yet",
         "more": "SEO & Google"
       },
-      "collections": "Collections"
+      "collections": "Collections",
+      "pin": {
+        "h": "Confirm price change",
+        "label": "Owner PIN",
+        "ok": "Save new price",
+        "err": {
+          "PIN_REQUIRED": "Enter the owner PIN to change a price",
+          "WRONG_PIN": "That PIN is not right",
+          "PIN_LOCKED": "Too many wrong tries — wait a little and try again",
+          "PIN_NOT_SET": "The owner has not set a PIN yet"
+        }
+      }
     }
   },
   "checks": {

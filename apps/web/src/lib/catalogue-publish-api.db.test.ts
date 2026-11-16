@@ -2,9 +2,9 @@
 // without TEST_DATABASE_ADMIN_URL): sign-in and same-site checks, the checklist, publish refused until it passes, the
 // edit form's save (answering with the product, its names and the checklist), bulk actions and the queue.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
+import { createFirstOwner, defaultSecurityPolicy, setOwnerPin, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import { prismaBackend, registry, SettingsResolver } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { coloursHandler, productsHandler, sizesHandler } from './catalogue-api';
@@ -36,6 +36,7 @@ describe.skipIf(!HAS_TEST_DB)('product admin API (PR 21, 26, 29, 35) on PostgreS
     t = await createTestDatabase('publish_api');
     await seedSampleStores(t.prisma);
     await syncAuth(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
     await createFirstOwner(t.prisma, defaultSecurityPolicy(), { email: 'owner@example.com', displayName: 'Sample owner', password: OWNER_PW, passwordChosenByOwner: true });
     deps = { db: t.prisma, resolver: new SettingsResolver(prismaBackend(t.prisma), registry), vault: null };
     owner = cookiesOf(await loginHandler(call('POST', '/api/admin/auth/login', { body: { email: 'owner@example.com', password: OWNER_PW } }), deps));
@@ -110,5 +111,25 @@ describe.skipIf(!HAS_TEST_DB)('product admin API (PR 21, 26, 29, 35) on PostgreS
     expect((await t.prisma.product.findUniqueOrThrow({ where: { id } })).archivedAt).not.toBeNull();
     const restored = await read(await productsBulkHandler(call('POST', '/x/bulk', { cookie: owner, body: { action: 'restore', productIds: [id] } }), deps));
     expect(restored.body.bulk).toMatchObject({ done: 1 });
+  });
+
+  it('PR 969: with "catalogue.prices.requirePin" on, a price change needs the owner PIN; a text change does not', async () => {
+    const variant = await t.prisma.productVariant.findFirstOrThrow({ where: { productId: id, archivedAt: null } });
+    const price = (priceMinor: number, pin?: string) => productFormHandler(call('POST', `/x/${id}/form`, { cookie: owner, body: { variants: [{ id: variant.id, patch: { priceMinor } }], ...(pin === undefined ? {} : { pin }) } }), deps, id).then(read);
+    // off as shipped: the price saves without a PIN
+    expect((await price(101000)).status).toBe(200);
+    const store = (await t.prisma.product.findUniqueOrThrow({ where: { id } })).storeId;
+    await deps.resolver.set('catalogue.prices.requirePin', true, storeTarget(store), { actorId: null, reason: 'test' });
+    const none = await price(102000);
+    expect([none.status, none.body.error]).toEqual([403, 'PIN_REQUIRED']);
+    expect((await t.prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).priceMinor).toBe(101000);
+    const ownerRow = await t.prisma.staffUser.findUniqueOrThrow({ where: { email: 'owner@example.com' } });
+    await setOwnerPin(t.prisma, { staffUserId: ownerRow.id }, { password: OWNER_PW, pin: '4827' }, { minLength: 4, maxLength: 12, maxAttempts: 5, lockMinutes: 15 }, new Date());
+    expect((await price(102000, '0000')).body.error).toBe('WRONG_PIN');
+    expect((await price(102000, '4827')).status).toBe(200);
+    expect((await t.prisma.productVariant.findUniqueOrThrow({ where: { id: variant.id } })).priceMinor).toBe(102000);
+    // a change that is not a price never asks
+    const text = await read(await productFormHandler(call('POST', `/x/${id}/form`, { cookie: owner, body: { product: { careEn: 'Warm wash.' } } }), deps, id));
+    expect(text.status).toBe(200);
   });
 });

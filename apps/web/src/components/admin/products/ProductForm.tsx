@@ -4,6 +4,7 @@
 // server (product-form.ts) and the form starts again from what was written. Photos are placed at once through the
 // media API (they are files, not form fields). Prices are typed only by someone with `catalogue.prices`; stock is shown,
 // never typed (it comes from the ERP). Taking a colour or size off retires its SKUs — kept, never deleted.
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { NamingView, ProductView, Readiness, VariantView } from '@extas/catalogue';
@@ -67,6 +68,8 @@ interface Props {
   photoNotes?: PhotoNotes;
   /** PR 968: the Pricing, Google ranking and Collections cards' data (the ERP buying price, the margin floor, search words, collections). */
   side?: ProductSide;
+  /** PR 969: `catalogue.prices.requirePin` — a changed price asks for the owner's PIN in the "Confirm price change" box. */
+  requirePin?: boolean;
   can: FormCan;
 }
 
@@ -109,16 +112,29 @@ export function ProductForm(props: Props) {
   const text = (k: TextKey) => ({ value: draft[k], onChange: (e: { target: { value: string } }) => set(k, e.target.value), disabled: !can.write });
 
   // ---------------------------------------------------------------- save, cancel
-  const save = async () => {
+  const [pinAsk, setPinAsk] = useState(false);
+  const [pin, setPin] = useState('');
+  const touchesPrice = !!built.input.variants?.some((v) => 'priceMinor' in v.patch || 'compareAtMinor' in v.patch);
+  const save = async (typedPin?: string) => {
     if (built.problems.length) {
       const list = built.problems.map((p) => (p === 'nameEn' ? t(d, 'products.fields.nameEn') : t(d, `products.save.bad.${p.split(':')[0]}`, { sku: p.slice(p.indexOf(':') + 1) })));
       return say(t(d, 'products.save.check', { list: list.join(t(d, 'checks.sep')) }));
     }
     if (!dirty) return say(t(d, 'products.save.nothing'));
+    if (props.requirePin && touchesPrice && typedPin === undefined) {
+      setPin('');
+      setPinAsk(true);
+      return;
+    }
     setBusy('save');
     try {
-      const a = await call('POST', `/api/admin/catalogue/products/${product.id}/form`, built.input);
-      if (a.status !== 200) return sayBad(refusalText(d, a.data.error, a.data.details));
+      const a = await call('POST', `/api/admin/catalogue/products/${product.id}/form`, typedPin === undefined ? built.input : { ...built.input, pin: typedPin });
+      if (a.status !== 200) {
+        const code = typeof a.data.error === 'string' ? a.data.error : '';
+        return sayBad(code.startsWith('PIN_') || code === 'WRONG_PIN' ? t(d, `products.v5.pin.err.${code}`) : refusalText(d, a.data.error, a.data.details));
+      }
+      setPinAsk(false);
+      setPin('');
       const p = a.data.product as ProductView;
       const n = a.data.naming as NamingView;
       const next = initialState(p, n, money);
@@ -840,9 +856,9 @@ export function ProductForm(props: Props) {
             ) : (
               <p className="ad-mini">{t(d, 'products.v5.google.none')}</p>
             )}
-            <a className="ad-mini" href="/admin/website/seo">
+            <Link className="ad-mini" href="/admin/website/seo">
               {t(d, 'products.v5.google.more')}
-            </a>
+            </Link>
           </section>
 
           {/* ---------------- Collections (PR 968, prototype v5) ---------------- */}
@@ -868,10 +884,48 @@ export function ProductForm(props: Props) {
             <button type="button" className="ad-btn ad-btn-ghost" disabled={!dirty || busy === 'save'} onClick={() => setDraft(base)}>
               {t(d, 'products.save.cancel')}
             </button>
-            <button type="button" className="ad-btn ad-btn-primary" disabled={busy === 'save'} onClick={save}>
+            <button type="button" className="ad-btn ad-btn-primary" disabled={busy === 'save'} onClick={() => void save()}>
               <Icon name="check" size={16} />
               {t(d, busy === 'save' ? 'products.save.saving' : 'products.save.save')}
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* PR 969 (prototype v5, "Confirm price change"): what changes, then the owner's PIN */}
+      {pinAsk ? (
+        <div className="pa-pin-back" role="dialog" aria-modal="true" aria-labelledby="pin-h" data-testid="price-pin-dialog">
+          <div className="ad-card pa-pin">
+            <h2 id="pin-h">{t(d, 'products.v5.pin.h')}</h2>
+            <ul className="pa-hl">
+              <li className="pa-hli">
+                <span>{t(d, 'products.v5.pricing.sell')}</span>
+                <b>
+                  {(() => {
+                    const was = liveVariants(product).map((v) => v.priceMinor).filter((n): n is number => typeof n === 'number' && n > 0);
+                    return `${was.length ? formatMoney(Math.min(...was), money) : '—'} → ${sellMinor === null ? '—' : formatMoney(sellMinor, money)}`;
+                  })()}
+                </b>
+              </li>
+              {marginPct !== null ? (
+                <li className="pa-hli">
+                  <span>{t(d, 'products.v5.pricing.margin')}</span>
+                  <b>{`${num(Math.round(marginPct))}%`}</b>
+                </li>
+              ) : null}
+            </ul>
+            <label className="ad-label" htmlFor="f-pin">
+              {t(d, 'products.v5.pin.label')}
+            </label>
+            <input id="f-pin" className="ad-input" type="password" inputMode="numeric" autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} />
+            <div className="pa-pubacts">
+              <button type="button" className="ad-btn ad-btn-ghost" onClick={() => setPinAsk(false)}>
+                {t(d, 'products.save.cancel')}
+              </button>
+              <button type="button" className="ad-btn ad-btn-primary" disabled={!pin.trim() || busy === 'save'} onClick={() => void save(pin)}>
+                {t(d, 'products.v5.pin.ok')}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

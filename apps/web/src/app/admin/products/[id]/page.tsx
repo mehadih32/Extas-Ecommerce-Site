@@ -164,6 +164,7 @@ export default async function ProductEditPage({
         images={images}
         photoNotes={photoNotes}
         side={side}
+        requirePin={(await c.deps.settings.value('catalogue.prices.requirePin', { storeId: c.storeId })) === true}
         can={{
           write: c.can('catalogue.write'),
           prices: c.can('catalogue.prices'),
