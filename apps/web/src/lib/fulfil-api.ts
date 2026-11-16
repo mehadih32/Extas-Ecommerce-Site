@@ -69,6 +69,7 @@ import { storeGeneratedFile } from '@extas/media';
 import { isOrdersError } from '@extas/orders';
 import * as sh from '@extas/shipping';
 import { body, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { maskForPerson } from './staff-controls';
 import { handoverPdf, type Letterhead } from './admin-fulfil/handover';
 import { printCheck } from './admin-fulfil/print-check';
 import { pickingPdf } from './admin-fulfil/picking';
@@ -94,7 +95,14 @@ async function guarded(request: Request, deps: AdminDeps | null, permission: Ful
   const g = await guardAdmin(request, deps, { permission, storeId });
   if (g instanceof Response) return g;
   try {
-    return await fn({ deps: await shippingDeps(deps!), admin: deps!, who: { actor: g.actor, storeId, ctx: g.ctx }, url });
+    const res = await fn({ deps: await shippingDeps(deps!), admin: deps!, who: { actor: g.actor, storeId, ctx: g.ctx }, url });
+    // PR 892: a role set to hide a customer's phone and address sees them hidden on the pack and handover screens' data too (a printed
+    // sticker or sheet is a file, not this data, and still carries them: it has to reach the courier).
+    if (request.method.toUpperCase() === 'GET' && res.headers.get('content-type')?.includes('application/json')) {
+      const data: unknown = await res.clone().json().catch(() => null);
+      if (data && typeof data === 'object') return json(await maskForPerson(deps!, g.actor.staffUserId ?? null, storeId, data), { status: res.status });
+    }
+    return res;
   } catch (e) {
     // PR 182: a step through the order service answers with the order machine's own refusal (ILLEGAL_TRANSITION, STALE …)
     if (isOrdersError(e)) return json({ ok: false, error: e.code, ...(e.details.length ? { details: e.details } : {}), ...(e.data ? { data: e.data } : {}) }, { status: e.status });
