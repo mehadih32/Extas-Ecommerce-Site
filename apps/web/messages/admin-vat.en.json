@@ -87,6 +87,8 @@
         "line": "{n} orders · Sales {amount}",
         "cut": "Only the newest {n} days are listed; the CSV has every day."
       }
-    }
+    },
+    "offNote": "VAT is off — turn it on in Settings. While it is off, no VAT line shows anywhere in Finance.",
+    "turnOn": "Turn VAT on"
   }
 }

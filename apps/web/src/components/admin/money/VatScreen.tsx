@@ -21,6 +21,8 @@ export interface VatScreenProps {
   canEdit: boolean;
   /** "Example: a ৳1,000 price holds ৳130.43 VAT at 15 %", from the saved default rate (null without one). */
   example: { price: string; vat: string; pct: string } | null;
+  /** PR 986: while VAT is off the prototype shows only a note and one "Turn VAT on" button; `?more=1` shows every card. */
+  more?: boolean;
 }
 
 type ProductRow = { productId: string; name: string; text: string; without: VatRate | null };
@@ -113,6 +115,24 @@ export function VatScreen(p: VatScreenProps) {
       <button type="button" className={`a2-sw${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-labelledby={`${id}-${testId}`} disabled={off || busy} onClick={() => onChange(!on)} data-testid={testId} />
     </div>
   );
+
+  if (!p.view.system.value.enabled && !p.more) {
+    return (
+      <section className="a2-card a2-mt12" data-testid="vat-off-card">
+        <p className="a2-note" data-testid="vat-off-note">
+          {c('offNote')}
+        </p>
+        {p.canEdit ? (
+          <div className="ct-actions a2-mt12">
+            <button type="button" className={`a2-btn pri`} disabled={busy} onClick={() => put('system', { ...sys, enabled: true }, p.view.system.version)} data-testid="vat-turn-on">
+              {confirm === 'system' ? c('confirm') : c('turnOn')}
+            </button>
+          </div>
+        ) : null}
+        {say('system')}
+      </section>
+    );
+  }
 
   return (
     <>
