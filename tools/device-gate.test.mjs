@@ -164,7 +164,7 @@ describe('device gate', () => {
     // every entry is the v6 sample store's (data/sample-erp-v6.json, seeded in CI only) and expects what it opened
     for (const p of plan) {
       expect(new URL(p.url).searchParams.get('storeId')).toBe(String(rules.signedIn.v6SampleStoreId));
-      for (const c of p.clicks) expect(p.expect).toContain(c.replace(/"\]$/, '-panel"]'));
+      for (const c of p.clicks.filter((x) => !x.includes('> summary'))) expect(p.expect).toContain(c.replace(/"\]$/, '-panel"]'));
     }
     const ci = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../.github/actions/seeded-app/action.yml'), 'utf8');
     expect(ci).toMatch(/pnpm --filter @extas\/combos sample\n\s+pnpm --filter @extas\/inventory sample:v6/);

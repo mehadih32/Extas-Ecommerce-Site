@@ -353,7 +353,8 @@
 @media (max-width: 1023px), (pointer: coarse) {
   summary.a2-h3 { min-height: 44px; align-items: center; cursor: pointer; }
   .lf-more, .pf-tap { display: inline-flex; align-items: center; min-height: 44px; }
-  .pl-seg a, .pl-seg-sm a { min-height: 44px; }
+  [data-lm-look] .pl-seg a, [data-lm-look] .pl-seg-sm a { min-height: 44px; }
+  [data-lm-look] .ig-tap { display: inline-flex; align-items: center; min-height: 44px; }
 }
 /* a section with ten tabs or more (Reports has eleven, as the prototype): tighter tab padding so all of them show on a 1366 laptop, none behind "More" */
 [data-lm-look] .a2-tabs-tight .a2-tab { padding-inline: 8px; }
