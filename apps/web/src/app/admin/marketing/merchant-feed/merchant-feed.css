@@ -25,4 +25,5 @@
 
 /* gate: the screen-reader-only heading of the table sits inside its scroller, so it can never widen the page */
 .mf-table-w{position:relative}
-.mf-page{max-width:100%;overflow-x:clip}
+.mf-page{max-width:100%}
+.mf-page :where(div,section,li,p,span,b,a,small,h2,h3){min-width:0;overflow-wrap:anywhere}
