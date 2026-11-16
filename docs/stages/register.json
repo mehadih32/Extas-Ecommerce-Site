@@ -52197,7 +52197,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-3`, NOT pushed, status stays parked until the owner says):** `apps/web/src/lib/geo-map/advisor-model.ts` (pure: the suggestions from the lenses' own figures, each carrying its numbers: ask for an advance or stop COD where a return hotspot had parcels refused at the door or the risk score flags; delivery that costs more than it brings in, numbers only; a better courier and areas with no courier mapped, from the courier lens's own findings when it is on; the ad \"less\" and \"more\" district lists made with Where to advertise's own `wordOf` and `copyLine` and the `ads.geoGuide` numbers; the style to push where it is wished for and not bought; the style to keep near; the most urgent first), `advisor.ts` (the run) and `advisor-api.ts`. Three gates, each off as shipped, each stopping the run before any read, AI call or draft: the map (`reports.geoMap.on`), the advisor (`reports.geoMap.ai`) and AI (`ai.enabled`). Only the lenses that are on and only the parts the person who pressed the button may see are read. Each suggestion gets one note from the existing guarded AI call (`approvalExplainNote`: agent `gyani`, the master switch, the agent's cap and the monthly cap, the usage ledger, the diary; the AI answers in `lang=bn en`), and a suggestion with no note (AI off, paused, capped, no connection, the mock) is left out, never queued unexplained. A noted suggestion becomes a draft in the approval queue (`requestApproval`, kind `geo.advice`, from agent `gyani`, with the numbers, the period and `advisoryOnly`), at most `maxPerRun` per run, expiring after `expiresDays`, never twice while one waits. New setting `reports.geoAdvisor` (`maxPerRun` 10, `expiresDays` 14, registry v761, English and Bengali words). `GET /api/admin/reports/geo-map/advisor` (`reports.read`) says where the advisor stands and lists the waiting drafts, with no AI call; `POST` runs it and needs `reports.read` and `ai.control`; a closed gate answers `not_on` (404, or 409 for AI off). The only write is the draft itself: no ad budget, campaign, price, charge, COD rule, courier, stock or setting is touched, and approving a draft changes nothing either. Guide: `docs/admin-guide/pages/reports/geo-map-lenses.md`. Tests: pure (every suggestion rule, the order, the words in both languages; closed gate means no read, no AI call and no write; an AI \"no\" leaves no draft; the cap; only `aiApprovalRequest` is ever written; ran) and PostgreSQL (written, not run). No migration. The courier and coverage hints are given to the run by the courier lens's lane when the two meet."
+    }
+   ],
    "mentions": [
     569
    ],

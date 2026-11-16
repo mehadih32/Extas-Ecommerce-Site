@@ -1,0 +1,8 @@
+{
+  "reports": {
+    "geoAdvisor": {
+      "label": "Geography map advisor (drafts per run, days kept)",
+      "help": "Advice only. The advisor is switched on in the Geography map's own setting and runs only while AI is on. Each run reads the map's figures and puts at most this many suggestions in the approval queue as drafts, with the numbers behind them. A draft waits in the queue for the number of days set here, then expires. Nothing is changed by a draft: no ad budget, campaign, price, charge, COD rule or courier."
+    }
+  }
+}

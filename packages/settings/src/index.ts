@@ -318,3 +318,5 @@ export * from './registry-parity-e3';
 export * from './registry-parity-e5';
 // S29 · PR 757 — the Geography map's courier and coverage lens numbers (registry-geo-map-courier.ts, version 805).
 export * from './registry-geo-map-courier';
+// S29 · PR 761 — the Geography map advisor's two numbers (registry-geo-advisor.ts, version 761).
+export * from './registry-geo-advisor';

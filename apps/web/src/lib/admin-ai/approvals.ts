@@ -47,6 +47,8 @@ export const KNOWN_KINDS = [
   // PR 585: Tirondaj/Doot's own learning-engine proposal to buy a paid data tool (cost + reason) — decided the
   // same way as every other non-GATE_KINDS request, here only for a proper label (`../admin-ai/learning-engine.ts`).
   { key: 'ai.paidTool', nameEn: 'Paid data tool', nameBn: 'পেইড ডেটা টুল' },
+  // PR 761: the Geography map advisor's draft (advice only: numbers and a note, nothing it says is ever applied by itself).
+  { key: 'geo.advice', nameEn: 'Geography map advice', nameBn: 'জিওগ্রাফি ম্যাপের পরামর্শ' },
   // The two kinds `fixes.ts` (PR 420) already owns and already writes — listed here only so this unifying view can
   // show them with a proper label too; this file never decides them (see `decideApproval` below).
   { key: FIX_KIND, nameEn: 'Site-health fix', nameBn: 'সাইট স্বাস্থ্যের সমাধান' },

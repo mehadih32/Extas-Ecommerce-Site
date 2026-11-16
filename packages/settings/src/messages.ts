@@ -156,6 +156,8 @@ import parityE3Bn from '../messages/parity-e3.bn.json';
 import parityE3En from '../messages/parity-e3.en.json';
 import parityE5Bn from '../messages/parity-e5.bn.json';
 import parityE5En from '../messages/parity-e5.en.json';
+import geoAdvisorBn from '../messages/geo-advisor.bn.json';
+import geoAdvisorEn from '../messages/geo-advisor.en.json';
 import practiceBn from '../messages/practice.bn.json';
 import practiceEn from '../messages/practice.en.json';
 // S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app.
@@ -651,3 +653,6 @@ messages.bn = mergeMessages(messages.bn, parityE5Bn);
 // S29 · PR 757 (registry v805): the Geography map's courier lens numbers.
 messages.en = mergeMessages(messages.en, geoMapCourierEn);
 messages.bn = mergeMessages(messages.bn, geoMapCourierBn);
+// S29 · PR 761 (registry v761): the Geography map advisor's two numbers (registry-geo-advisor.ts).
+messages.en = mergeMessages(messages.en, geoAdvisorEn);
+messages.bn = mergeMessages(messages.bn, geoAdvisorBn);
