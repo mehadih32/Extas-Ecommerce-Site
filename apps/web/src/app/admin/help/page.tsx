@@ -18,6 +18,8 @@ import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey, SHELL_SECTIONS, sectionHome, sectionVisible, visibleTabs, type ShellPlace, type ShellViewer } from '@/lib/admin-shell/sections';
 import { shellSession } from '@/lib/admin-shell/session';
 import { t } from '@/lib/i18n';
+import { buildStatus } from '@/lib/status';
+import '../settings/system/sysinfo.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,9 +30,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(view.dict, 'help.metaTitle'), robots: { index: false, follow: false } };
 }
 
-export default async function HelpPage() {
+type Props = { searchParams: Promise<{ q?: string; s?: string }> };
+
+export default async function HelpPage(props: Props) {
   const deps = adminDeps();
-  const [view, access] = await Promise.all([adminView(deps), pageAccess('help.read', deps)]);
+  const [view, access, sp] = await Promise.all([adminView(deps), pageAccess('help.read', deps), props.searchParams]);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current="help" text={t(view.dict, 'page.noDb')} />;
   if (access.kind === 'forbidden')
@@ -44,11 +48,112 @@ export default async function HelpPage() {
   const d = view.dict;
   const here = locateKey('help');
   const sections = SHELL_SECTIONS.filter((x) => x.id !== 'help' && sectionVisible(x, viewer));
+  const h = (k: string, vars?: Record<string, string | number>) => t(d, `help.${k}`, vars);
+  // hardcode-ok: the longest search text read from the address (a technical bound)
+  const q = (sp.q ?? '').trim().slice(0, 100);
+  const chip = sections.some((x) => x.id === sp.s) ? (sp.s as string) : 'all';
+  const shown = sections.filter((x) => {
+    if (chip !== 'all' && x.id !== chip) return false;
+    if (!q) return true;
+    return `${t(d, `shell.sec.${x.id}`)} ${t(d, `shell.purpose.${x.id}`)}`.toLowerCase().includes(q.toLowerCase());
+  });
+  const chipHref = (id: string) => `${HERE}?${new URLSearchParams({ ...(q ? { q } : {}), ...(id === 'all' ? {} : { s: id }) }).toString()}`.replace(/\?$/, '');
+  const stages = buildStatus.stages.filter((x) => !x.parked);
 
   return (
     <div className="a2-z lm-hb" data-lm-ready="" data-testid="help">
-      <PageHead view={view} place={here} title={t(d, 'help.title')} sub={t(d, 'help.sub')} />
+      <PageHead
+        view={view}
+        place={here}
+        title={t(d, 'help.title')}
+        sub={h('subProto')}
+        right={
+          <>
+            <Link className="a2-btn" href="/admin/map" data-testid="help-map">
+              <ShellIcon name="grid" size={14} />
+              {h('map')}
+            </Link>
+            <a className="a2-btn" href="/api/admin/help/manual-md" download data-testid="help-pdf">
+              <ShellIcon name="dl" size={14} />
+              {h('pdf')}
+            </a>
+          </>
+        }
+      />
       <SectionTabs view={view} current="help" />
+
+      <form className="a2-card a2-mt12" role="search" action={HERE} method="get" data-testid="help-search">
+        <input className="a2-inp" type="search" name="q" defaultValue={q} maxLength={100 /* hardcode-ok: search text bound */} placeholder={h('searchPh')} aria-label={h('searchPh')} data-testid="help-q" />
+        <div className="s28-row a2-mt12" role="group" aria-label={h('chips')}>
+          {[['all', h('all')] as const, ...sections.map((x) => [x.id, t(d, `shell.sec.${x.id}`)] as const)].map(([id, name]) => (
+            <Link key={id} className={`a2-btn sm${chip === id ? ' pri' : ''}`} href={chipHref(id)} aria-current={chip === id ? 'true' : undefined} data-testid="help-chip">
+              {name}
+            </Link>
+          ))}
+        </div>
+        <div className="a2-xs a2-mute a2-mt12">{h('count', { n: shown.length, all: sections.length })}</div>
+      </form>
+
+      <section className="a2-card a2-mt12" data-testid="help-list">
+        {shown.length === 0 ? (
+          <p className="a2-sm a2-mute">{h('nothing')}</p>
+        ) : (
+          shown.map((sec, i) => {
+            const place: ShellPlace = { section: sec, tab: null, page: null };
+            return (
+              <details key={sec.id} open={Boolean(q) && i < 3} data-testid="help-item" data-section={sec.id}>
+                <summary style={{ cursor: 'pointer', minHeight: 44, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ShellIcon name={sec.icon} size={16} />
+                  <b>{t(d, `shell.sec.${sec.id}`)}</b>
+                </summary>
+                <div className="a2-mt6">
+                  <p className="a2-sm">{t(d, `shell.purpose.${sec.id}`)}</p>
+                  <div className="s28-row a2-mt12">
+                    <PlaceGuide view={view} place={place} overview />
+                    <Link className="a2-btn" href={`/admin/help/manual?c=${sec.id}`}>
+                      {h('read')}
+                    </Link>
+                    <Link className="a2-btn pri" href={sectionHome(sec, viewer)}>
+                      {h('openPage')} →
+                    </Link>
+                  </div>
+                </div>
+              </details>
+            );
+          })
+        )}
+      </section>
+
+      <section className="a2-card a2-mt12" data-testid="help-files">
+        <h2 className="a2-h3">{h('files')}</h2>
+        <p className="a2-xs a2-mute a2-mt6">{h('stagesH')}</p>
+        <div className="bd-rows a2-mt12">
+          {stages.map((x) => (
+            <div key={x.id} data-testid="help-stage" style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 36 }}>
+              <span style={{ flex: '1 1 auto', minWidth: 0, overflowWrap: 'anywhere' }}>
+                <b>{x.id}</b> <span className="a2-sm">{x.name}</span>
+              </span>
+              <span className="sy-bar" style={{ flex: '0 0 80px' }} role="img" aria-label={`${x.done}/${x.total}`}>
+                <i style={{ width: `${x.total ? Math.round((x.done / x.total) * 100) : 0}%` }} />
+              </span>
+              <span className="a2-sm" style={{ flex: '0 0 56px', textAlign: 'end' }}>
+                {x.done}/{x.total}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="a2-note a2-mt12">
+          <ShellIcon name="alert" size={15} />
+          <span>{h('hint')}</span>
+        </div>
+      </section>
+
+      {/* D10: what the page had before (the ask-for-a-feature card and every section's card with its three doors) stays, under More options. */}
+      <details className="a2-card a2-mt12" data-testid="help-more">
+        <summary className="a2-h3" style={{ cursor: 'pointer', minHeight: 44 }}>
+          {h('more')}
+        </summary>
+        <div className="a2-cs">{h('moreSub')}</div>
       {viewer.owner || viewer.perms.has('build.read') ? (
         <section className="a2-card a2-helpask" data-testid="help-ask">
           <span className="a2-sm">{t(d, 'help.askLine')}</span>
@@ -88,6 +193,7 @@ export default async function HelpPage() {
           );
         })}
       </section>
+      </details>
     </div>
   );
 }
