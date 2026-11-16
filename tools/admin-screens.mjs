@@ -134,7 +134,8 @@ async function shot(ctx, url, file, wait) {
         const root = document.querySelector('main') || document.body;
         const tx = (e) => (e.innerText || e.getAttribute('aria-label') || e.value || '').replace(/\s+/g, ' ').trim();
         const uniq = (a) => [...new Set(a.filter(Boolean))];
-        const btns = [...root.querySelectorAll('button, [role=button], a[class*=btn], input[type=submit]')].filter(vis);
+        // PR 1069: a filter chip or a period button drawn as a link (a2-view, cl-chip, rpseg a ...) counts as a button, as the prototype's chips do
+        const btns = [...root.querySelectorAll('button, [role=button], [role=tab], a[class*=btn], a[class*=chip], a[class*=a2-view], .rpseg a, input[type=submit]')].filter(vis);
         const filled = btns.find((b) => { const c = getComputedStyle(b).backgroundColor; return c && c !== 'rgba(0, 0, 0, 0)' && c !== 'rgb(255, 255, 255)'; });
         return {
           headings: uniq([...root.querySelectorAll('h1, h2, h3')].filter(vis).map(tx)).slice(0, 40),
