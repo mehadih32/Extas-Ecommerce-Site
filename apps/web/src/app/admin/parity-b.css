@@ -89,3 +89,21 @@
 .adm2 .pa-tbl .pa-pc{min-width:200px}
 .adm2 .pa-tbl .pa-nm{overflow-wrap:normal;word-break:normal}
 @media (max-width:767px){.adm2 .pa-tbl .pa-pc{min-width:0}.adm2 .pa-tbl td.a2-tdc{padding:0 0 0 8px}}
+
+/* ---- Products list, final round: every column of the prototype (Product, Category, Colours, Price, Buying price (ERP) · margin, Stock, Sold 30d, Status) fits a laptop without a sideways scroll ---- */
+@media (min-width:768px){
+  .adm2 .pa-tbl{table-layout:auto;width:100%}
+  .adm2 .pa-tbl th,.adm2 .a2-tbl.a2-ptbl td{padding-left:8px;padding-right:8px}
+  .adm2 .pa-tbl th{white-space:normal;overflow-wrap:normal;word-break:keep-all;line-height:1.25;letter-spacing:0;vertical-align:bottom}
+  .adm2 .pa-tbl .pa-pc{min-width:150px}
+  .adm2 .a2-tbl.a2-ptbl td.a2-tdm{min-width:120px;max-width:200px}
+  .adm2 .a2-tbl.a2-ptbl td.a2-tdw{min-width:0}
+  .adm2 .pa-tbl td.pa-bm .a2-pill{margin-left:4px;padding:2px 6px}
+}
+
+/* ---- Filter chips of every list, final round (prototype .chip: 5px 11px, 6px apart; the text stays at the theme's 14 px minimum). From a laptop up; phone and tablet keep the 44 px tap. ---- */
+@media (min-width:1024px){
+  [data-lm-look] [data-lm-ready] .a2-view.a2-view{min-height:0;height:auto;padding:5px 11px;gap:4px}
+  .adm2 .a2-views,.adm2 .a2-dbar{gap:6px}
+  .adm2 .a2-tbl .a2-pill{padding:2px 8px}
+}
