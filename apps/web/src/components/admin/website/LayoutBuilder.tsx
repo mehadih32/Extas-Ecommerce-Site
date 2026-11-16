@@ -42,6 +42,9 @@ interface Props {
   choices: BlockChoices;
   lang: 'en' | 'bn';
   w: Dict;
+  /** The hero's number of sliding pictures, and where its words are edited (the shop page's own edit bar). */
+  heroCount?: number | null;
+  editHref?: string;
 }
 
 const keyOf = (it: Item) => (it.kind === 'sec' ? `s:${it.row.id}` : `b:${it.block.id}`);
@@ -153,28 +156,23 @@ export function LayoutBuilder(p: Props) {
     return { st, text: [g(`state.${st}`), days].filter(Boolean).join(' · ') };
   };
 
-  return (
-    <div className="lyb" data-testid="ly-editor" data-page={p.page}>
-      {p.cat !== null ? (
-        <div className="lm-setc lyb-own" data-testid="ly-own">
-          <div className="lm-setr">
-            <div>
-              <h3 id="ly-own-t">{g('own.title')}</h3>
-              <p>{own ? g('own.on') : g('own.off')}</p>
-              {p.shared ? <p>{g('own.shared').replace('{n}', String(p.shared))}</p> : null}
-            </div>
-            <button type="button" role="switch" aria-checked={!!own} aria-labelledby="ly-own-t" className={`lm-sw${own ? ' on' : ''}`} disabled={!p.canEdit} onClick={flipOwn} data-testid="ly-own-sw">
-              <span aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      ) : null}
-      <p className="lm-sub" data-testid="ly-count">
-        {g('count').replace('{on}', String(shown)).replace('{all}', String(items.length))}
-      </p>
-      {p.canEdit ? <p className="lm-hint">{g('drag')}</p> : null}
-      <ol className="lyb-list">
-        {items.map((it, i) => {
+  /** The home page keeps its prototype blocks in the list; the shop's other sections sit under "More options". */
+  const EXTRA = new Set(['festive', 'size-finder', 'flash-sale', 'shop-the-look']);
+  const isExtra = (it: Item) => p.page === 'home' && it.kind === 'sec' && EXTRA.has(it.row.id);
+  const mainIdx = items.flatMap((it, i) => (isExtra(it) ? [] : [i]));
+  const extraIdx = items.flatMap((it, i) => (isExtra(it) ? [i] : []));
+  const groupOf = (i: number) => (isExtra(items[i]!) ? extraIdx : mainIdx);
+  const prevOf = (i: number) => {
+    const g2 = groupOf(i);
+    const at = g2.indexOf(i);
+    return at > 0 ? g2[at - 1]! : -1;
+  };
+  const nextOf = (i: number) => {
+    const g2 = groupOf(i);
+    const at = g2.indexOf(i);
+    return at >= 0 && at < g2.length - 1 ? g2[at + 1]! : -1;
+  };
+  const renderItem = (it: Item, i: number, num: number, mv: (from: number, to: number) => void) => {
           const key = keyOf(it);
           const isSec = it.kind === 'sec';
           const id = isSec ? it.row.id : it.block.id;
@@ -207,12 +205,12 @@ export function LayoutBuilder(p: Props) {
                 onDragEnd={() => setDrag(null)}
               >
                 <span className="lyb-num" aria-hidden="true">
-                  {i + 1}
+                  {num}
                 </span>
                 <div className="lyb-name">
                   <b>{name}</b>
                   {isSec ? (
-                    <span className="lm-hint">{isLocked ? `${g(`hint.${id}`)} · ${g('always')}` : g(`hint.${id}`)}</span>
+                    <span className="lm-hint">{[p.page === 'home' && id === 'hero' && p.heroCount ? g('pictures').replace('{n}', String(p.heroCount)) : g(`hint.${id}`), isLocked ? g('always') : ''].filter(Boolean).join(' · ')}</span>
                   ) : (
                     <span className="lm-hint">
                       <span className={`lyb-tag st-${st!.st}`}>{g(`type.${it.block.type}`)}</span> {st!.text}
@@ -232,32 +230,20 @@ export function LayoutBuilder(p: Props) {
                   >
                     <span aria-hidden="true" />
                   </button>
-                  <label className="lyb-sr" htmlFor={`ly-dev-${p.page}-${id}`}>
-                    {`${g('screens')}: ${name}`}
-                  </label>
-                  <select
-                    id={`ly-dev-${p.page}-${id}`}
-                    className="lm-inp lyb-dev"
-                    value={dev}
-                    disabled={fixed}
-                    onChange={(e) => patchAt(i, (x) => (x.kind === 'sec' ? { kind: 'sec', row: { ...x.row, dev: e.target.value as LayoutDevice } } : { kind: 'block', block: { ...x.block, dev: e.target.value as LayoutDevice } }))}
-                    data-testid={`ly-dev-${id}`}
-                  >
-                    {DEVICES.map((d) => (
-                      <option key={d} value={d}>
-                        {g(`dev.${d}`)}
-                      </option>
-                    ))}
-                  </select>
                   {p.canEdit && !fixed ? (
                     <>
-                      <button type="button" className="lm-btn sm lyb-mv" disabled={i === 0} aria-label={`${g('up')}: ${name}`} onClick={() => move(i, i - 1)} data-testid={`ly-up-${id}`}>
+                      <button type="button" className="lm-btn sm lyb-mv" disabled={prevOf(i) < 0} aria-label={`${g('up')}: ${name}`} onClick={() => mv(i, prevOf(i))} data-testid={`ly-up-${id}`}>
                         ▲
                       </button>
-                      <button type="button" className="lm-btn sm lyb-mv" disabled={i === items.length - 1} aria-label={`${g('down')}: ${name}`} onClick={() => move(i, i + 1)} data-testid={`ly-down-${id}`}>
+                      <button type="button" className="lm-btn sm lyb-mv" disabled={nextOf(i) < 0} aria-label={`${g('down')}: ${name}`} onClick={() => mv(i, nextOf(i))} data-testid={`ly-down-${id}`}>
                         ▼
                       </button>
                     </>
+                  ) : null}
+                  {isSec && p.page === 'home' && id === 'hero' && p.editHref ? (
+                    <a className="lm-btn sm" href={p.editHref} target="_blank" rel="noopener noreferrer" title={g('editHero')} data-testid="ly-edit-hero">
+                      {g('edit')}
+                    </a>
                   ) : null}
                   {!isSec && p.canEdit ? (
                     <>
@@ -270,6 +256,26 @@ export function LayoutBuilder(p: Props) {
                     </>
                   ) : null}
                 </div>
+                <details className="lyb-more">
+                <summary>{g('moreOptions')}</summary>
+                    <label className="lyb-sr" htmlFor={`ly-dev-${p.page}-${id}`}>
+                      {`${g('screens')}: ${name}`}
+                    </label>
+                    <select
+                      id={`ly-dev-${p.page}-${id}`}
+                      className="lm-inp lyb-dev"
+                      value={dev}
+                      disabled={fixed}
+                      onChange={(e) => patchAt(i, (x) => (x.kind === 'sec' ? { kind: 'sec', row: { ...x.row, dev: e.target.value as LayoutDevice } } : { kind: 'block', block: { ...x.block, dev: e.target.value as LayoutDevice } }))}
+                      data-testid={`ly-dev-${id}`}
+                    >
+                      {DEVICES.map((d) => (
+                        <option key={d} value={d}>
+                          {g(`dev.${d}`)}
+                        </option>
+                      ))}
+                    </select>
+                </details>
               </div>
               {!isSec && open === id ? (
                 <BlockForm
@@ -286,8 +292,36 @@ export function LayoutBuilder(p: Props) {
               ) : null}
             </li>
           );
-        })}
-      </ol>
+  };
+
+  return (
+    <div className="lyb" data-testid="ly-editor" data-page={p.page}>
+      {p.cat !== null ? (
+        <div className="lm-setc lyb-own" data-testid="ly-own">
+          <div className="lm-setr">
+            <div>
+              <h3 id="ly-own-t">{g('own.title')}</h3>
+              <p>{own ? g('own.on') : g('own.off')}</p>
+              {p.shared ? <p>{g('own.shared').replace('{n}', String(p.shared))}</p> : null}
+            </div>
+            <button type="button" role="switch" aria-checked={!!own} aria-labelledby="ly-own-t" className={`lm-sw${own ? ' on' : ''}`} disabled={!p.canEdit} onClick={flipOwn} data-testid="ly-own-sw">
+              <span aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <p className="lm-sub" data-testid="ly-count">
+        {g('count').replace('{on}', String(shown)).replace('{all}', String(items.length))}
+      </p>
+      {p.canEdit ? <p className="lm-hint">{g('drag')}</p> : null}
+      <ol className="lyb-list">{mainIdx.map((i, n) => renderItem(items[i]!, i, n + 1, move))}</ol>
+      {extraIdx.length ? (
+        <details className="lyb-extras" data-testid="ly-extras">
+          <summary>{g('extrasTitle')}</summary>
+          <p className="lm-hint">{g('extrasSub')}</p>
+          <ol className="lyb-list">{extraIdx.map((i, n) => renderItem(items[i]!, i, n + 1, move))}</ol>
+        </details>
+      ) : null}
       {p.canEdit && takesBlocks ? (
         <div className="lyb-add">
           <button type="button" className="lm-btn" aria-expanded={adding} onClick={() => setAdding(!adding)} data-testid="ly-add">
