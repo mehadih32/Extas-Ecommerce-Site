@@ -4,17 +4,18 @@
 // phone). A setting row edits its setting's own fields; a Smart Rule opens on its own page ("Managed in …"). Money rules ask for the
 // owner's PIN before they save. "What changes" shows before → after; More options holds "back to the shipped value".
 import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { HubGroupId, HubField } from '@extas/rules/pure';
 import { HUB_GROUPS, formatValue, isTryable, type TryResult } from '@extas/rules/pure';
 import type { HubRowView, HubScreen, HubSettingRowView, HubSmartRowView, HubLinkRowView } from '@extas/rules';
 import { call } from '../api';
 import { PageHead } from '../shell/ShellHead';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { Icon } from '../Icon';
+import { Icon, type IconName } from '../Icon';
 import { say, sayBad } from '../products/useToast';
 import { t, type Dict } from '@/lib/i18n';
 import { CheckoutSimulator } from './CheckoutSimulator';
+import { useNarrow } from './useNarrow';
 import { moneyFromInput, moneyToInput, numberFromInput, type Lang, type RulesEnv, rulesRefusal } from './model';
 
 export interface HubRole {
@@ -39,6 +40,20 @@ const isObj = (v: unknown): v is Json => !!v && typeof v === 'object' && !Array.
 const getPath = (v: unknown, path: string): unknown => (path === '' ? v : path.split('.').reduce<unknown>((c, p) => (isObj(c) ? c[p] : undefined), v));
 const key = (path: string) => (path === '' ? 'value' : path.replace(/\./g, '_'));
 const API = '/api/admin/rules/hub';
+/** PR 940: the small picture before each group's name (the prototype's group headings). */
+const GROUP_ICON: Record<HubGroupId, IconName> = {
+  delivery: 'truck',
+  payment: 'doc',
+  checkout: 'check',
+  flow: 'list',
+  courier: 'box',
+  couriermsg: 'notice',
+  exchange: 'swap',
+  customers: 'layers',
+  discounts: 'spark',
+  messages: 'notice',
+};
+const shortDate = (iso: string, lang: Lang) => new Date(iso).toLocaleDateString(lang === 'bn' ? 'bn-BD-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short' });
 const EMPTY_LIMIT = { amountMinor: 0, percent: 0 }; // hardcode-ok: a role ticked with no limit yet
 type SavedFn = () => void | Promise<void>; // hardcode-ok: a type, not text
 
@@ -51,6 +66,7 @@ export function RulesHub(props: RulesHubProps) {
   const [onlySample, setOnlySample] = useState(false);
   const [sel, setSel] = useState<string | null>(props.initialSel);
   const [busy, setBusy] = useState(false);
+  const narrow = useNarrow();
 
   const money = (v: unknown) => (typeof v === 'number' ? (formatValue('money', v, env.ctx) ?? String(v)) : tt('notSet'));
   const show = (f: HubField, v: unknown, rowId: string): string => {
@@ -72,11 +88,22 @@ export function RulesHub(props: RulesHubProps) {
     return out;
   };
   const titleOf = (r: HubRowView) => (r.type === 'smart' ? (lang === 'bn' && r.nameBn ? r.nameBn : r.nameEn) : tt(`rows.${r.id}.title`));
-  const sentenceOf = (r: HubRowView) =>
-    r.type === 'smart' ? ((lang === 'bn' ? r.shortBn : r.shortEn) ?? r.shortEn ?? '') : r.type === 'setting' ? tt(`rows.${r.id}.sentence`, vars(r)) : tt(`rows.${r.id}.sentence`);
+  // PR 940: a rule that is off says so in one short line ("Off", "Off · ready: 250 orders a day") when the words have one
+  const sentenceOf = (r: HubRowView) => {
+    if (r.type === 'smart') return (lang === 'bn' ? r.shortBn : r.shortEn) ?? r.shortEn ?? '';
+    if (r.type === 'setting') {
+      if (r.pill === 'off') {
+        const off = tt(`rows.${r.id}.sentenceOff`, vars(r));
+        if (off !== `rulesHub.rows.${r.id}.sentenceOff`) return off;
+      }
+      return tt(`rows.${r.id}.sentence`, vars(r));
+    }
+    return tt(`rows.${r.id}.sentence`);
+  };
 
   const pill = (r: HubRowView): ReactNode => {
     if (r.type === 'link' && r.pill === null) return <span className="rh-pl link">{tt('pill.page')}</span>;
+    if (r.type === 'setting' && r.scheduled) return <span className="rh-pl from">{tt('pill.from', { date: shortDate(r.scheduled.from, lang) })}</span>;
     const p = r.pill as string;
     const label =
       p === 'from' && r.type === 'smart' && r.startsAt
@@ -90,6 +117,21 @@ export function RulesHub(props: RulesHubProps) {
     for (const r of hub.rows) c[r.group] = (c[r.group] ?? 0) + 1;
     return c;
   }, [hub.rows]);
+  // PR 940: the changes that wait for their day, earliest first ("1 change starts on 20 Nov")
+  const waiting = useMemo(
+    () =>
+      hub.rows
+        .filter((r): r is HubSettingRowView & { scheduled: { from: string; values: Record<string, unknown> } } => r.type === 'setting' && r.scheduled !== null)
+        .sort((a, b) => (a.scheduled.from < b.scheduled.from ? -1 : 1)),
+    [hub.rows],
+  );
+  const ago = (iso: string): string => {
+    const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (m < 1) return tt('strip.ago.now');
+    if (m < 60) return tt('strip.ago.m', { n: m });
+    const h = Math.round(m / 60);
+    return h < 24 ? tt('strip.ago.h', { n: h }) : tt('strip.ago.d', { n: Math.round(h / 24) });
+  };
   const needle = q.trim().toLowerCase();
   const rows = hub.rows.filter((r) => (group === 'all' || r.group === group) && (!onlySample || r.pill === 'sample') && (!needle || `${titleOf(r)} ${sentenceOf(r)}`.toLowerCase().includes(needle)));
   const selRow = hub.rows.find((r) => r.id === sel && r.type === 'setting') as HubSettingRowView | undefined;
@@ -125,10 +167,13 @@ export function RulesHub(props: RulesHubProps) {
         ) : (
           <span className="rh-sp good">{tt('strip.allOwn')}</span>
         )}
+        {waiting.length ? (
+          <button type="button" className="rh-sp info" onClick={() => open(waiting[0]!.id)}>
+            {tt('strip.sched', { n: waiting.length, date: shortDate(waiting[0]!.scheduled.from, lang) })}
+          </button>
+        ) : null}
         {hub.lastChange ? (
-          <span className="rh-sp">
-            {tt('strip.last', { rule: titleOfId(hub.lastChange.rowId), when: new Date(hub.lastChange.at).toLocaleDateString(lang === 'bn' ? 'bn-BD' : 'en-GB', { day: 'numeric', month: 'short' }) })}
-          </span>
+          <span className="rh-sp good">{tt('strip.last', { rule: titleOfId(hub.lastChange.rowId), when: ago(hub.lastChange.at) })}</span>
         ) : null}
       </div>
       <div className={`rh-l ${selRow ? 'has-ed' : ''}`}>
@@ -160,7 +205,9 @@ export function RulesHub(props: RulesHubProps) {
             if (!list.length) return null;
             return (
               <section key={g} className="rh-grp" aria-labelledby={`rh-g-${g}`}>
-                <h2 id={`rh-g-${g}`}>{tt(`groups.${g}`)}</h2>
+                <h2 id={`rh-g-${g}`}>
+                  <Icon name={GROUP_ICON[g]} size={15} /> {tt(`groups.${g}`)}
+                </h2>
                 {list.map((r) => {
                   const inner = (
                     <>
@@ -180,7 +227,7 @@ export function RulesHub(props: RulesHubProps) {
                         <button type="button" className="rh-rr" onClick={() => open(sel === r.id ? null : r.id)} aria-expanded={sel === r.id}>
                           {inner}
                         </button>
-                        {sel === r.id ? <div className="rh-inline">{editor(r)}</div> : null}
+                        {sel === r.id && narrow ? <div className="rh-inline">{editor(r)}</div> : null}
                       </div>
                     );
                   }
@@ -199,13 +246,10 @@ export function RulesHub(props: RulesHubProps) {
           {!rows.length ? <p className="ad-intro">{tt('noMatch')}</p> : null}
         </div>
         <aside className="rh-side" aria-live="polite">
-          {selRow ? (
+          {selRow && !narrow ? (
             editor(selRow)
-          ) : (
-            <>
-              <p className="rh-hint">{tt('pickOne')}</p>
-              <CheckoutSimulator dict={d} lang={lang} env={env} />
-            </>
+          ) : selRow ? null : (
+            <CheckoutSimulator dict={d} lang={lang} env={env} />
           )}
         </aside>
       </div>
@@ -309,6 +353,10 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
     const a = await call('GET', `${API}/${row.id}/history`);
     if (a.status === 200 && Array.isArray(a.data.history)) setHist(a.data.history as { changeId: string; value: unknown; at: string; by: string | null }[]);
   };
+  useEffect(() => {
+    void loadHist();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [row.id, row.version]);
   const summary = (v: unknown) => row.fields.map((f) => show(f, getPath(v, f.path), row.id)).join(' · ');
   const undo = (changeId: string) => {
     if (!window.confirm(tt('history.confirm'))) return;
@@ -553,11 +601,10 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
         </button>
       </div>
       {row.pill === 'sample' ? <div className="ad-note warn">{tt('sampleNote')}</div> : null}
-      {row.money ? <div className="ad-note">{tt('moneyNote')}</div> : null}
       {blocked ? <div className="ad-note warn">{tt('needsOwner')}</div> : null}
       {row.scheduled ? (
-        <div className="ad-note" data-testid="rh-scheduled">
-          {tt('schedule.scheduled', { date: row.scheduled.from })}{' '}
+        <div className="ad-note info" data-testid="rh-scheduled">
+          {tt('schedule.scheduled', { date: shortDate(row.scheduled.from, lang), what: row.fields.map((f) => show(f, row.scheduled!.values[f.path] ?? getPath(row.value, f.path), row.id)).join(' · ') })}{' '}
           <button type="button" className="rl-link" onClick={() => void unschedule()} disabled={busy || !canWrite || blocked || (row.money && pin.trim() === '')} data-testid="rh-unschedule">
             {tt('schedule.cancel')}
           </button>
@@ -599,17 +646,15 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
             {tt('pin')}
           </label>
           <input id={`rh-pin-${row.id}`} className="ad-input rh-pin" type="password" inputMode="numeric" autoComplete="off" value={pin} onChange={(e) => setPin(e.target.value)} disabled={blocked} />
+          <p className="rh-hint">{tt('pinHint')}</p>
         </div>
       ) : null}
-      <p className="rh-hint" data-testid="rh-footer">
-        {row.money ? `🔒 ${tt('footer.pin')}` : tt('footer.now')}
-      </p>
-      <div className="rl-actions">
-        <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={save} disabled={busy || !canWrite || blocked || !changed.length || (row.money && pin.trim() === '')}>
-          <Icon name="check" size={15} /> {from ? (row.money ? tt('schedule.goPin') : tt('schedule.go')) : row.money ? tt('savePin') : tt('save')}
-        </button>
+      <div className="rl-actions rh-btns">
         <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={onClose}>
           {tt('cancel')}
+        </button>
+        <button type="button" className="ad-btn ad-btn-primary ad-btn-sm" onClick={save} disabled={busy || !canWrite || blocked || !changed.length || (row.money && pin.trim() === '')}>
+          <Icon name="check" size={15} /> {from ? (row.money ? tt('schedule.goPin') : tt('schedule.go')) : row.money ? tt('savePin') : tt('save')}
         </button>
       </div>
       <details
@@ -618,7 +663,7 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
           if (e.currentTarget.open && hist === null) void loadHist();
         }}
       >
-        <summary>{tt('more.title')}</summary>
+        <summary>{tt('more.summary', { n: hist ? hist.length : 0 })}</summary>
         <div className="rh-moreb">
           <div className="rh-text" data-testid="rh-text">
             <div className="rh-sub">{tt('text.title')}</div>
@@ -647,9 +692,6 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
             <input type="date" className="ad-input rh-date" min={today} value={from} onChange={(e) => setFrom(e.target.value)} aria-label={tt('schedule.title')} disabled={!canWrite || blocked} data-testid="rh-from" />
             <p className="rh-hint">{tt('schedule.help')}</p>
           </div>
-          <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={back} disabled={busy || !canWrite || blocked || row.isDefault || (row.money && pin.trim() === '')}>
-            <Icon name="sync" size={14} /> {tt('more.back')}
-          </button>
           {isTryable(row.id) ? (
             <div className="rh-try" data-testid="rh-try">
               <div className="rh-sub">{tt('try.title')}</div>
@@ -698,6 +740,11 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
               {tt('more.fuller')}
             </Link>
           ) : null}
+        </div>
+        <div className="rh-back">
+          <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" onClick={back} disabled={busy || !canWrite || blocked || row.isDefault || (row.money && pin.trim() === '')}>
+            <Icon name="sync" size={14} /> {tt('more.back')}
+          </button>
         </div>
       </details>
     </section>
