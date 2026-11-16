@@ -284,15 +284,15 @@ export const COURIERS = [
 
 /** Payment mix and where orders come from, with the prototype's weights. */
 export const PAYMENTS = [
-  ['COD', 78],
+  ['COD', 76],
   ['BKASH', 14],
-  ['NAGAD', 5],
-  ['CARD', 3],
+  ['NAGAD', 6],
+  ['CARD', 4],
 ] as const;
 export const CHANNELS = [
-  ['WEBSITE', 46],
-  ['MESSENGER', 38],
-  ['PHONE', 10],
+  ['WEBSITE', 48],
+  ['MESSENGER', 37],
+  ['PHONE', 9],
   ['WHATSAPP', 6],
 ] as const;
 export const ADS_SOURCES = [
@@ -335,21 +335,42 @@ export const PRACTICE_INCOMPLETE = 18; // hardcode-ok: how many started-but-not-
  * three platforms and ~140 reviews. It only ever runs on the sample store (seed.ts checks the sample marker).
  */
 export const RICH = {
-  orderScale: 9, // hardcode-ok: sample multiplier (94 x 9 = 846 orders, the prototype shows ~850)
-  customers: 240, // hardcode-ok: sample people
-  incomplete: 40, // hardcode-ok: sample incomplete checkouts
-  claims: 36, // hardcode-ok: sample courier claims
+  /** orders at the prototype's own counts, see RICH_PLAN */
+  customers: 420, // hardcode-ok: sample people (the admin prototype v5 has 420)
+  incomplete: 44, // hardcode-ok: sample incomplete checkouts (the prototype has 44)
+  claims: 3, // hardcode-ok: sample courier claims (the prototype's claims list holds CL-401 to CL-403)
   /** every style name is made this many times, each with its own series label (27 styles x 4 = 108 products) */
   seriesPerName: ['', 'Black Label', 'Summer Edit', 'Plus Fit'] as const,
-  reviews: 140, // hardcode-ok: sample reviews
-  adDays: 180, // hardcode-ok: days of ad spend
+  reviews: 64, // hardcode-ok: sample reviews (the prototype has 64)
+  adDays: 56, // hardcode-ok: days of ad spend (6 campaigns x 56 days = the prototype's 336 rows)
 } as const;
+
+/**
+ * PR 1068 (owner, 17 Nov 2026) — the big sample world's orders at the admin prototype v5's own counts: 861 orders over 70
+ * days (New 0, Processing 5, Confirmed 9, Booked 2, Packed 5, Handed over 24, Delivered 25, Paid 673, Returned 75,
+ * Cancelled 43; the prototype's one bulk order is not made), so a screen of the real admin shows the numbers of the
+ * prototype's screen. `age` is days back from now. The recent kinds sit in the last days; Paid, Returned and Cancelled
+ * spread over the 70 days (about 12 orders a day, as the prototype's 9 to 17).
+ */
+export const RICH_PLAN = [
+  { kind: 'PROCESSING', count: 5, age: [0, 1] },
+  { kind: 'CONFIRMED', count: 9, age: [0, 1] },
+  { kind: 'BOOKED', count: 2, age: [0, 1] },
+  { kind: 'PACKED', count: 5, age: [0, 2] },
+  { kind: 'HANDED_OVER', count: 14, age: [1, 3] },
+  { kind: 'IN_TRANSIT', count: 10, age: [1, 4] },
+  { kind: 'DELIVERED', count: 25, age: [2, 9] },
+  { kind: 'PAID', count: 673, age: [3, 70] },
+  { kind: 'RETURNED', count: 75, age: [5, 70] },
+  { kind: 'CANCELLED', count: 43, age: [0, 70] },
+] as const satisfies readonly { kind: OrderKind; count: number; age: readonly [number, number] }[];
+export const RICH_ORDER_TOTAL = RICH_PLAN.reduce((n, p) => n + p.count, 0);
 
 /** The ad accounts and campaigns of the rich sample: platform, daily spend range (whole taka), click-to-order rate. */
 export const RICH_ADS = [
   { platform: 'META', account: 'Practice Facebook ads', campaigns: ['Always-on prospecting', 'Retargeting visitors'], spend: [900, 2600], ctr: 0.021, cvr: 0.032 },
   { platform: 'GOOGLE', account: 'Practice Google ads', campaigns: ['Brand search', 'Shopping feed'], spend: [350, 1100], ctr: 0.034, cvr: 0.041 },
-  { platform: 'TIKTOK', account: 'Practice TikTok ads', campaigns: ['Short video, new drops'], spend: [200, 700], ctr: 0.012, cvr: 0.018 },
+  { platform: 'TIKTOK', account: 'Practice TikTok ads', campaigns: ['Short video, new drops', 'Creator clips'], spend: [200, 700], ctr: 0.012, cvr: 0.018 },
 ] as const;
 
 export const RICH_REVIEW_BODIES = [

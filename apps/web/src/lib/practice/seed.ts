@@ -29,7 +29,8 @@ import {
   HOLD_CODES,
   LAST_NAMES,
   ORDER_PLAN,
-  ORDER_TOTAL,
+  RICH_ORDER_TOTAL,
+  RICH_PLAN,
   OUTSIDE_AREAS,
   PAYMENTS,
   PRACTICE_CUSTOMERS,
@@ -362,7 +363,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   const existingOrders = await db.order.count({ where: { storeId, isPractice: true } });
   // PR 880: a store that holds only the small practice set (about 94 orders) is topped up to the big one: only the missing
   // orders, payouts and claims are added; the rows already there are never changed (their figures are recounted after).
-  const topUp = rich && existingOrders > 0 && existingOrders < Math.floor(ORDER_TOTAL * RICH.orderScale * RICH_DONE_SHARE);
+  const topUp = rich && existingOrders > 0 && existingOrders < Math.floor(RICH_ORDER_TOTAL * RICH_DONE_SHARE);
   if (existingOrders > 0 && !topUp) {
     // an older run: bring the catalogue to the demo's (adds only what is missing, nothing else is touched)
     const done = await ensureCatalogue(db, storeId, planProducts(makeRng(SEED), storeId, minor), minor, now);
@@ -439,8 +440,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     ageDays: number;
   }
   const plans: Plan[] = [];
-  for (const p of ORDER_PLAN)
-    for (let k = 0; k < p.count * (rich ? RICH.orderScale : 1); k++)
+  for (const p of rich ? RICH_PLAN : ORDER_PLAN)
+    for (let k = 0; k < p.count; k++)
       plans.push({
         kind: p.kind,
         ageDays: p.age[0] + rng.next() * (p.age[1] - p.age[0]),
@@ -852,8 +853,9 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   counts.payouts = payoutNo - payoutBase;
 
   // ---- courier claims (lost, damaged, rider overcharge, other) in every state
-  const baseKinds = ['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'LOST', 'DAMAGED'] as const;
-  const baseStates = ['OPEN', 'SENT', 'SETTLED', 'REJECTED', 'OPEN', 'SENT'] as const;
+  // the big set holds the prototype's three claims: a lost parcel (sent), a damaged one (won) and a COD short (open)
+  const baseKinds = rich ? (['LOST', 'DAMAGED', 'OTHER'] as const) : (['LOST', 'DAMAGED', 'RIDER_OVERCHARGE', 'OTHER', 'LOST', 'DAMAGED'] as const);
+  const baseStates = rich ? (['SENT', 'SETTLED', 'OPEN'] as const) : (['OPEN', 'SENT', 'SETTLED', 'REJECTED', 'OPEN', 'SENT'] as const);
   const claimTotal = rich ? RICH.claims : baseKinds.length;
   const kinds = Array.from({ length: claimTotal }, (_, k) => baseKinds[k % baseKinds.length]!);
   const states = Array.from({ length: claimTotal }, (_, k) => baseStates[(k + Math.floor(k / baseStates.length)) % baseStates.length]!);
