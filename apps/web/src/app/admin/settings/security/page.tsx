@@ -24,6 +24,7 @@ import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-security.bn.json';
 import en from '../../../../../messages/admin-security.en.json';
 import '../settings.css';
+import '../../s28.css';
 import '../../settings-cards.css';
 
 export const dynamic = 'force-dynamic';
