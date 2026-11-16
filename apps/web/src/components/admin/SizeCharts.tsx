@@ -6,7 +6,7 @@
 // screen only shows what the API answers. The demo's "Read from spec sheet photo (AI)" waits for the AI stage.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { SizeChartDetail, SizeChartResolution, SizeChartSettings, SizeChartView } from '@extas/catalogue';
-import { bothUnits, parsePasted, sizeForBody, sortSizes, suggestRow } from '@extas/catalogue/size-chart-math';
+import { bothUnits, CHART_RUNS, parsePasted, sizeForBody, sortSizes, suggestRow, suggestSizeByWeight, type ChartRun } from '@extas/catalogue/size-chart-math';
 import { t, type Dict } from '@/lib/i18n';
 import { call, errorText, type Answer } from './api';
 import { Icon } from './Icon';
@@ -41,6 +41,10 @@ interface Draft {
   rows: { size: string; values: string[] }[];
   easeInch: string;
   diagram: string | null;
+  /** PR 972: the size finder's table (a line per size of the chart, typed as text), how the sizes run and the fit. */
+  finder: { size: string; h1: string; h2: string; w1: string; w2: string }[];
+  run: ChartRun;
+  fitKey: string;
 }
 
 type Modal = { kind: 'paste' } | { kind: 'copy'; fromId: string } | { kind: 'new' } | { kind: 'change' } | null;
@@ -53,6 +57,12 @@ const draftOf = (c: SizeChartDetail): Draft => ({
   rows: c.rows.map((r) => ({ size: r.size, values: r.values.map(String) })),
   easeInch: String(c.easeInch),
   diagram: c.diagram?.key ?? null,
+  finder: c.rows.map((r) => {
+    const f = c.finder.find((x) => x.size === r.size);
+    return { size: r.size, h1: f?.h1 ?? '', h2: f?.h2 ?? '', w1: f ? String(f.w1) : '', w2: f ? String(f.w2) : '' };
+  }),
+  run: c.run,
+  fitKey: c.fitKey ?? '',
 });
 const num = (s: string) => (s.trim() === '' ? NaN : Number(s));
 
@@ -170,6 +180,11 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
       rows,
       ...(ease >= 0 ? { easeInch: ease } : {}),
       ...(draft.diagram ? { diagram: draft.diagram } : {}),
+      finder: draft.finder
+        .filter((f) => rows.some((r) => r.size === f.size) && Number.isFinite(num(f.w1)) && Number.isFinite(num(f.w2)))
+        .map((f) => ({ size: f.size, h1: f.h1.trim(), h2: f.h2.trim(), w1: num(f.w1), w2: num(f.w2) })),
+      run: draft.run,
+      ...(draft.fitKey && draft.fitKey !== cur.fitKey ? { fitKey: draft.fitKey } : {}),
     });
     setBusy(false);
     if (a.status !== 200) return sayError(a);
@@ -439,6 +454,77 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
             {tt('unitIn')}
           </div>
           <div className="sc-xs sc-dim sc-mt8">{tt('easeHelp')}</div>
+        </div>
+
+        <div className="sc-sec" data-testid="sc-finder">
+          <div className="ad-label">
+            {tt('finder.h')} <span className="sc-dim">{tt('finder.sub')}</span>
+          </div>
+          <div className="sc-tblw">
+            <table className="sc-tbl">
+              <thead>
+                <tr>
+                  <th scope="col">{tt('size')}</th>
+                  <th scope="col">{tt('finder.h1')}</th>
+                  <th scope="col">{tt('finder.to')}</th>
+                  <th scope="col">{tt('finder.w1')}</th>
+                  <th scope="col">{tt('finder.to')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {draft.rows.map((r) => {
+                  const f = draft.finder.find((x) => x.size === r.size) ?? { size: r.size, h1: '', h2: '', w1: '', w2: '' };
+                  const put = (patch: Partial<Draft['finder'][number]>) =>
+                    edit((d) => ({ ...d, finder: d.finder.some((x) => x.size === r.size) ? d.finder.map((x) => (x.size === r.size ? { ...x, ...patch } : x)) : [...d.finder, { ...f, ...patch }] }));
+                  return (
+                    <tr key={r.size}>
+                      <td className="sz">{sizeLabel(r.size)}</td>
+                      <td>
+                        <input className="ad-input sc-in" aria-label={tt('finder.cell', { size: sizeLabel(r.size), what: tt('finder.h1') })} maxLength={16} value={f.h1} disabled={!canWrite} onChange={(e) => put({ h1: e.target.value })} />
+                      </td>
+                      <td>
+                        <input className="ad-input sc-in" aria-label={tt('finder.cell', { size: sizeLabel(r.size), what: tt('finder.h2') })} maxLength={16} value={f.h2} disabled={!canWrite} onChange={(e) => put({ h2: e.target.value })} />
+                      </td>
+                      <td>
+                        <input className="ad-input sc-in" type="number" inputMode="decimal" min={0} aria-label={tt('finder.cell', { size: sizeLabel(r.size), what: tt('finder.w1') })} value={f.w1} disabled={!canWrite} onChange={(e) => put({ w1: e.target.value })} />
+                      </td>
+                      <td>
+                        <input className="ad-input sc-in" type="number" inputMode="decimal" min={0} aria-label={tt('finder.cell', { size: sizeLabel(r.size), what: tt('finder.w2') })} value={f.w2} disabled={!canWrite} onChange={(e) => put({ w2: e.target.value })} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="sc-f2 sc-mt8">
+            <div>
+              <label className="ad-label" htmlFor="sc-fit">
+                {tt('fit')}
+              </label>
+              <select id="sc-fit" className="ad-input" value={draft.fitKey} disabled={!canWrite} onChange={(e) => edit((d) => ({ ...d, fitKey: e.target.value }))}>
+                {options.fits.map((f) => (
+                  <option key={f.key} value={f.key}>
+                    {loc(f)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="ad-label" htmlFor="sc-run">
+                {tt('finder.run')}
+              </label>
+              <select id="sc-run" className="ad-input" value={draft.run} disabled={!canWrite} onChange={(e) => edit((d) => ({ ...d, run: e.target.value as ChartRun }))}>
+                {CHART_RUNS.map((k) => (
+                  <option key={k} value={k}>
+                    {tt(`finder.run_${k}`)}
+                  </option>
+                ))}
+              </select>
+              <div className="sc-xs sc-dim">{tt('finder.runHelp')}</div>
+            </div>
+          </div>
+          <FinderTry tt={tt} finder={draft.finder} run={draft.run} label={sizeLabel} />
         </div>
 
         <div className="sc-sec">
@@ -1333,6 +1419,22 @@ function CustomerPreview({
           {found ? tt('preview.suggest', { size: foundLabel ?? '' }) : body.trim() !== '' && bodyNum > 0 ? tt('preview.none') : tt('preview.try')}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** PR 972: "try it" under the size finder — a weight in, the size the table gives out (the same rule the shop uses). */
+function FinderTry({ tt, finder, run, label }: { tt: TT; finder: Draft['finder']; run: ChartRun; label(k: string): string }) {
+  const [kg, setKg] = useState('');
+  const table = finder.flatMap((f) => (Number.isFinite(num(f.w1)) && Number.isFinite(num(f.w2)) ? [{ size: f.size, h1: f.h1, h2: f.h2, w1: num(f.w1), w2: num(f.w2) }] : []));
+  const got = kg.trim() ? suggestSizeByWeight(table, run, num(kg)) : null;
+  return (
+    <div className="sc-row sc-small sc-mt8">
+      <label htmlFor="sc-try">{tt('finder.try')}</label>
+      <input id="sc-try" className="ad-input sc-in" type="number" inputMode="decimal" min={0} value={kg} onChange={(e) => setKg(e.target.value)} />
+      <span aria-live="polite" data-testid="sc-try-out">
+        {got ? tt('finder.suggest', { size: label(got) }) : kg.trim() ? tt('finder.none') : ''}
+      </span>
     </div>
   );
 }
