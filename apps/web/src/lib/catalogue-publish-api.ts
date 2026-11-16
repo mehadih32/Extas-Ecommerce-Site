@@ -4,6 +4,7 @@
 import * as cat from '@extas/catalogue';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
 import { handle } from './catalogue-api';
+import { requireOwnerPin } from './owner-pin';
 
 const notAllowed = () => Promise.resolve(fail(405, 'method-not-allowed'));
 const badId = () => fail(400, 'INVALID_INPUT', ['id']);
@@ -32,7 +33,14 @@ export function productFormHandler(request: Request, deps: AdminDeps | null, id:
   if (!isPost(request)) return notAllowed();
   return handle(request, deps, 'catalogue.write', async (c) => {
     if (!isUuid(id)) return badId();
-    const saved = await cat.saveProductForm(c.deps, c.who, id, (await body(request)) as cat.ProductFormInput);
+    const { pin, ...input } = (await body(request)) as cat.ProductFormInput & { pin?: unknown };
+    // PR 969 (prototype v5, "Confirm price change"): with `catalogue.prices.requirePin` on, a changed selling or "was" price
+    // needs the owner's PIN, checked here (a wrong or missing PIN stops the whole save before anything is written).
+    const touchesPrice = !!input.variants?.some((v) => 'priceMinor' in v.patch || 'compareAtMinor' in v.patch);
+    if (touchesPrice && (await c.deps.settings.value('catalogue.prices.requirePin', { storeId: c.who.storeId })) === true) {
+      await requireOwnerPin(deps!, c.who.actor, c.who.ctx, pin, 'catalogue.prices.change', c.who.storeId);
+    }
+    const saved = await cat.saveProductForm(c.deps, c.who, id, input);
     // The form starts again from what was written: the product, its names and titles, and the checklist.
     return { ...saved, naming: await cat.namingView(c.deps, c.who, id) };
   });
