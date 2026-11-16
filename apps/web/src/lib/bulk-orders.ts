@@ -12,6 +12,7 @@
 //   - Making a quote from an enquiry moves that enquiry to QUOTED; nothing is sent to the company from here.
 // Needs `orders.read` (see) and `orders.notes` (make, move, mark), the same keys the enquiry list uses.
 import { z } from 'zod';
+import { smsLink, whatsAppTextLink } from './admin-orders/incomplete-model';
 import { audit, requirePermission, type Actor, type RequestContext } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import { storeTarget, type BulkOrdersSettings } from '@extas/settings';
@@ -69,12 +70,14 @@ export interface QuoteRow {
   createdAt: string;
   validUntil: string;
   state: QuoteState;
+  /** PR 1062: the last time a staff member pressed Send for it (WhatsApp or SMS) and how many times. */
+  sent: { at: string; channel: string; count: number } | null;
   batches: { id: string; no: number; pieces: number; plannedOn: string; status: BatchStatus; tracking: string | null }[];
 }
 
 type QuoteDb = Awaited<ReturnType<typeof loadQuotes>>[number];
 async function loadQuotes(db: Db, storeId: number, where: Record<string, unknown> = {}) {
-  return db.bulkQuote.findMany({ where: { storeId, ...where }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 200, include: { batches: { orderBy: { no: 'asc' } } } });
+  return db.bulkQuote.findMany({ where: { storeId, ...where }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 200, include: { batches: { orderBy: { no: 'asc' } }, sends: { orderBy: { sentAt: 'desc' } } } });
 }
 const rowOf = (q: QuoteDb, cfg: BulkOrdersSettings): QuoteRow => ({
   id: q.id,
@@ -97,6 +100,7 @@ const rowOf = (q: QuoteDb, cfg: BulkOrdersSettings): QuoteRow => ({
   createdAt: q.createdAt.toISOString(),
   validUntil: new Date(q.createdAt.getTime() + cfg.quoteValidDays * DAY_MS).toISOString().slice(0, 10),
   state: stateOf(q, q.batches),
+  sent: q.sends.length ? { at: q.sends[0]!.sentAt.toISOString(), channel: q.sends[0]!.channel, count: q.sends.length } : null,
   batches: q.batches.map((b) => ({ id: b.id, no: b.no, pieces: b.pieces, plannedOn: b.plannedOn.toISOString().slice(0, 10), status: b.status, tracking: b.tracking })),
 });
 
@@ -135,7 +139,7 @@ export async function bulkView(deps: Pick<AdminDeps, 'db' | 'resolver'>, storeId
 
 type Fail = { ok: false; error: string; details?: string[] };
 
-export async function createQuote(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, raw: unknown): Promise<{ ok: true; id: string } | Fail> {
+export async function createQuote(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, raw: unknown): Promise<{ ok: true; id: string; ref: string; validUntil: string } | Fail> {
   const cfg = await deps.resolver.value('bulk.orders', { storeId });
   if (!cfg.enabled) return { ok: false, error: 'SWITCHED_OFF' };
   await requirePermission(deps.db, actor, 'orders.notes', { storeId });
@@ -183,9 +187,10 @@ export async function createQuote(deps: AdminDeps, actor: Actor, ctx: RequestCon
     for (const b of splitBatches(f.pieces, count, now, cfg.firstBatchAfterDays, cfg.batchGapDays)) await tx.bulkBatch.create({ data: { storeId, quoteId: q.id, no: b.no, pieces: b.pieces, plannedOn: new Date(`${b.plannedOn}T00:00:00.000Z`) } });
     if (d.enquiryId) await tx.bulkEnquiry.update({ where: { id: d.enquiryId }, data: { status: 'QUOTED' } });
     await audit(tx, actor, { action: 'bulkQuote.create', entityType: 'BulkQuote', entityId: q.id, before: null, after: { company: d.company, pieces: f.pieces, totalMinor: f.totalMinor, advancePct, batches: count }, storeId }, ctx);
-    return q.id;
+    return { id: q.id, refNo: q.refNo };
   });
-  return { ok: true, id };
+  // PR 1062: the number and last day, so the screen can word the message of "Save & send quote"
+  return { ok: true, id: id.id, ref: `${cfg.refPrefix}${id.refNo}`, validUntil: new Date(now.getTime() + cfg.quoteValidDays * DAY_MS).toISOString().slice(0, 10) };
 }
 
 export async function moveBatch(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, batchId: string, raw: unknown): Promise<{ ok: true } | Fail> {
@@ -227,6 +232,32 @@ export async function markReceived(deps: AdminDeps, actor: Actor, ctx: RequestCo
   return { ok: true };
 }
 
+/** The longest message a quote send keeps (a short note with the figures). */
+const SEND_TEXT_MAX = 1000; // hardcode-ok: a field-length guard, not a business number
+
+/**
+ * PR 1062: "Save & send quote". A staff member pressed Send on a SAVED quote: the message is logged (who, when, channel, the
+ * exact words) and the link that opens WhatsApp or SMS with it is handed back for that person to press send there.
+ * Nothing goes out by itself, and nothing is sent by this server.
+ */
+export async function sendQuote(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, quoteId: string, raw: unknown): Promise<{ ok: true; link: string } | Fail> {
+  const cfg = await deps.resolver.value('bulk.orders', { storeId });
+  if (!cfg.enabled) return { ok: false, error: 'SWITCHED_OFF' };
+  await requirePermission(deps.db, actor, 'orders.notes', { storeId });
+  const p = z.object({ channel: z.enum(['WHATSAPP', 'SMS']), text: z.string().trim().min(1).max(SEND_TEXT_MAX) }).strict().safeParse(raw);
+  if (!p.success) return { ok: false, error: 'INVALID_INPUT', details: p.error.issues.map((i) => i.path.join('.')) };
+  const q = await deps.db.bulkQuote.findFirst({ where: { id: quoteId, storeId }, select: { id: true, phone: true, company: true } });
+  if (!q) return { ok: false, error: 'NOT_FOUND' };
+  const to = q.phone.replace(/[^\d+]/g, '');
+  if (to.replace(/\D/g, '').length < 7) return { ok: false, error: 'INVALID_INPUT', details: ['phone'] };
+  const link = p.data.channel === 'WHATSAPP' ? whatsAppTextLink(to, p.data.text) : smsLink(to, p.data.text);
+  await deps.db.$transaction(async (tx) => {
+    const row = await tx.bulkQuoteSend.create({ data: { storeId, quoteId: q.id, channel: p.data.channel, toPhone: to, body: p.data.text, sentById: actor.staffUserId ?? null, sentAt: deps.now ? deps.now() : new Date() } });
+    await audit(tx, actor, { action: 'bulkQuote.send', entityType: 'BulkQuote', entityId: q.id, before: null, after: { sendId: row.id, channel: p.data.channel, to }, storeId }, ctx);
+  });
+  return { ok: true, link };
+}
+
 export async function saveBulkSettings(deps: AdminDeps, actor: Actor, ctx: RequestContext, storeId: number, raw: unknown): Promise<{ ok: true } | Fail> {
   await requirePermission(deps.db, actor, 'settings.write', { storeId });
   const p = z.object({ enabled: z.boolean(), defaultAdvancePct: z.number().int().min(0).max(100), quoteValidDays: z.number().int().min(1).max(365), maxBatches: z.number().int().min(1).max(12), batchGapDays: z.number().int().min(1).max(60), firstBatchAfterDays: z.number().int().min(0).max(120), pin: z.string() }).strict().safeParse(raw);
@@ -265,9 +296,13 @@ export async function bulkOrdersRoute(request: Request, deps: AdminDeps | null, 
     if (g instanceof Response) return g;
     if (!a) {
       const r = await createQuote(deps!, g.actor, g.ctx, storeId, await body(request));
-      return r.ok ? json({ ok: true, id: r.id }, { status: 201 }) : fail(STATUS[r.error] ?? 422, r.error, r.details);
+      return r.ok ? json({ ok: true, id: r.id, ref: r.ref, validUntil: r.validUntil }, { status: 201 }) : fail(STATUS[r.error] ?? 422, r.error, r.details);
     }
     if (a === 'settings' && path.length === 1) return answer(await saveBulkSettings(deps!, g.actor, g.ctx, storeId, await body(request)));
+    if (a === 'quotes' && id && isUuid(id) && c === 'send' && path.length === 3) {
+      const r = await sendQuote(deps!, g.actor, g.ctx, storeId, id, await body(request));
+      return r.ok ? json({ ok: true, link: r.link }) : fail(STATUS[r.error] ?? 422, r.error, r.details);
+    }
     if (a === 'quotes' && id && isUuid(id) && c === 'received' && path.length === 3) return answer(await markReceived(deps!, g.actor, g.ctx, storeId, id, await body(request)));
     if (a === 'batches' && id && isUuid(id) && c === 'next' && path.length === 3) return answer(await moveBatch(deps!, g.actor, g.ctx, storeId, id, await body(request)));
     return fail(404, 'not-found');
