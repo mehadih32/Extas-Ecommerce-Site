@@ -48,7 +48,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const v = await activityView(d, access.guard.actor, MOTHER_STORE_ID, filtersOf(sp), tz);
   return (
     <div className="a2-z" data-testid="activity-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.headSub')} />
       <SectionTabs view={view} current={KEY} />
       <ActivityScreen dict={view.dict} view={v} tz={tz} />
     </div>

@@ -610,7 +610,7 @@
           "k": "export erase copy request privacy media import old customers own data"
         },
         "telegram": {
-          "n": "Telegram approvals",
+          "n": "Telegram control",
           "k": "telegram bot daily report pairing alert approve"
         },
         "startFresh": {
@@ -1171,7 +1171,7 @@
     "messagesCostCeilings": "Cost ceilings",
     "websiteAnalytics": "Overview",
     "staffControls": "Staff controls",
-    "telegramApprovals": "Telegram approvals",
+    "telegramApprovals": "Telegram control",
     "people": "People",
     "roles": "Roles",
     "activity": "Activity log",
