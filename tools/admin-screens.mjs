@@ -65,7 +65,7 @@ const D2 = [
   ['s-telegram', '/admin/settings/telegram-approvals', '#settings--telegram'],
   ['s-help', '/admin/help', '#settings--manual'],
 ];
-const PAIRS = arg('set') === 'd2' ? D2 : PAIRS0;
+const PAIRS = (arg('set') === 'd2' ? D2 : PAIRS0).filter(([k]) => !arg('only') || arg('only').split(',').some((p) => k.startsWith(p)));
 const VPS = [['phone', 390, 844], ['desktop', 1366, 900]];
 const MAXH = 2400;
 const browser = await chromium.launch();

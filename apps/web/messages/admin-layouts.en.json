@@ -22,16 +22,16 @@
     "open": "Open the page",
     "seasonal": "While a Seasonal home look is live (Marketing › Seasonal home), that look's own sections show instead of this list.",
     "sec": {
-      "hero": "Hero",
+      "hero": "Hero slider",
       "festive": "Festive line",
       "categories": "Categories",
       "new-in": "New in",
-      "sets": "Sets & combos",
+      "sets": "Combos & sets",
       "size-finder": "Size finder",
       "flash-sale": "Flash sale",
       "shop-the-look": "Shop the look",
-      "reviews": "Reviews",
-      "journal": "Journal",
+      "reviews": "Customer reviews",
+      "journal": "From the blog",
       "head": "Heading",
       "listing": "Products",
       "info": "Your text and questions",
@@ -224,6 +224,11 @@
     },
     "formTitle": "Edit section: {type}",
     "viewOnShop": "View on shop",
-    "tip": "Tip: on phones most visitors never scroll past the 4th block. Keep Best sellers in the top 4."
+    "tip": "Tip: on phones most visitors never scroll past the 4th block. Keep Best sellers in the top 4.",
+    "moreOptions": "More options",
+    "extrasTitle": "More options",
+    "extrasSub": "Other parts of the home page the shop can show. They keep their place in the order and work as before.",
+    "pictures": "{n} pictures",
+    "editHero": "Edit the hero on the shop page"
   }
 }

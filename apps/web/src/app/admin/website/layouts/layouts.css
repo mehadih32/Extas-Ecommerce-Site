@@ -69,3 +69,9 @@
   [data-lm-look] .lyb-split .lyb-frame.dk { width: 273px; height: 180px; }
   [data-lm-look] .lyb-split .lyb-frame.dk iframe { transform: scale(0.2); }
 }
+/* PR 1050 (prototype v5 · Page layouts): a row is number, name, Edit, ▲ ▼ and the switch; the screens choice and the shop's other home sections sit under "More options". */
+[data-lm-look] .lyb-more { flex: 1 0 100%; min-width: 0; }
+[data-lm-look] .lyb-more > summary, [data-lm-look] .lyb-extras > summary { cursor: pointer; color: var(--lm-ink2); font-weight: 600; min-height: var(--lm-tap); display: flex; align-items: center; }
+[data-lm-look] .lyb-more[open] { padding-bottom: 4px; }
+[data-lm-look] .lyb-extras { display: grid; gap: 8px; padding: 4px 0 0; }
+[data-lm-look] .lyb-extras > .lm-hint { margin: 0 0 4px; }

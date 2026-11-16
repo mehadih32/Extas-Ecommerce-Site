@@ -89,6 +89,8 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
   const shopHref = view.lang === 'bn' ? `/bn${path === '/' ? '' : path}` : path;
   const catName = (c: { en: string; bn: string | null }) => (view.lang === 'bn' && c.bn) || c.en;
   const words = ((d.ly as Dict) ?? {}) as Dict;
+  // PR 1050: the hero row says how many pictures slide ("Hero slider"), and its Edit opens the shop's own edit bar
+  const heroSlides = page === 'home' ? ((await access.deps.resolver.value('home.heroSlides', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { count?: number } | null) : null;
 
   return (
     <div className="a2-z lyb-page" data-testid="ly-page" data-lm-ready="">
@@ -168,6 +170,8 @@ export default async function PageLayoutsPage(props: { searchParams: Promise<Rec
           choices={choices}
           lang={view.lang === 'bn' ? 'bn' : 'en'}
           w={words as never}
+          heroCount={heroSlides?.count ?? null}
+          editHref={page === 'home' ? shopHref : undefined}
         />
       </section>
       <section className="lm-card lyb-card" aria-labelledby="ly-ph" data-testid="ly-prevcard">
