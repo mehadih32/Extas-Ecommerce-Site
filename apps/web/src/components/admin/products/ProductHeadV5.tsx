@@ -27,10 +27,15 @@ export function ProductHeadV5(p: ProductHeadV5Props) {
     ? [
         ['sold', p.num(s.sold)],
         ['revenue', p.money(s.revenueMinor)],
-        ['views', p.num(s.views)],
+        ['returns', s.sold > 0 ? `${p.num(Math.round((s.returned / s.sold) * 100))}%` : '—'],
         ['rating', s.rating == null ? '—' : `${s.rating.toFixed(1)}★`],
       ]
     : [];
+  // PR 968: the prototype's funnel (views, added to the bag, sold) and the line of pieces sold each day
+  const funnel: [string, number][] = s ? [['views', s.views], ['carts', s.carts], ['sold', s.sold]] : [];
+  const top = Math.max(1, ...funnel.map(([, v]) => v));
+  const peak = s ? Math.max(1, ...s.daily) : 1;
+  const points = s ? s.daily.map((v, i) => `${(i / Math.max(1, s.daily.length - 1)) * 260},${40 - (v / peak) * 36 - 2}`).join(' ') : '';
   return (
     <>
       <div className="pv5-meta" data-testid="product-meta">
@@ -61,6 +66,19 @@ export function ProductHeadV5(p: ProductHeadV5Props) {
               </div>
             ))}
           </div>
+          <svg className="pv5-spark" viewBox="0 0 260 40" preserveAspectRatio="none" role="img" aria-label={t(d, 'products.v5.sales.daily')} data-testid="product-sales-spark">
+            <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <div className="pv5-funnel" data-testid="product-sales-funnel">
+            {funnel.map(([k, v]) => (
+              <div key={k} className="pv5-fr">
+                <span className="ad-mini">{t(d, `products.v5.sales.f_${k}`)}</span>
+                <span className="pv5-bar" style={{ width: `${Math.max(2, Math.round((v / top) * 100))}%` }} />
+                <b>{p.num(v)}</b>
+              </div>
+            ))}
+          </div>
+          <p className="ad-mini" data-testid="product-sales-conv">{t(d, 'products.v5.sales.conv', { n: s.views > 0 ? ((s.sold / s.views) * 100).toFixed(1) : '0.0' })}</p>
         </section>
       ) : null}
     </>

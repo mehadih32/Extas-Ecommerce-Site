@@ -280,3 +280,12 @@ button.pa-vh { display: none; }
 .pa-hd-btn { white-space: normal; text-align: center; }
 .pa-insight > span { overflow-wrap: anywhere; }
 @media (max-width: 599px) { .pa-hd-actions { flex: 1 1 100%; } .pa-search { flex-basis: 100%; } }
+
+/* PR 968: the product page's Pricing, SEO score, Google ranking and Collections cards */
+.pa-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.pa-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pa-seo { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.pa-seo-h { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.pa-seo-bar { height: 8px; border-radius: 4px; background: var(--ad-line2); overflow: hidden; }
+.pa-seo-bar > span { display: block; height: 100%; background: var(--ad-brand); }
+.pa-seo-tips { margin: 0; padding-left: 18px; }
