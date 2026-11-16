@@ -4,6 +4,10 @@
 name: admin-screens
 on:
   workflow_dispatch:
+    inputs:
+      set:
+        description: 'page set (d2 = website, finance, settings)'
+        default: ''
   # a workflow file that is not on main cannot be dispatched, so a push of this branch that touches it also runs it
   push:
     branches: [claude/admin-screens]
@@ -73,11 +77,13 @@ jobs:
         run: |
           nohup python3 -m http.server 8099 --directory docs/demo/admin-proto-v5 > /tmp/proto.log 2>&1 &
           sleep 2; curl -fs -o /dev/null http://127.0.0.1:8099/index.html
+      - name: Take the screens (page set)
+        run: echo "ADMIN_SCREENS_SET=${{ inputs.set }}" >> "$GITHUB_ENV"
       - name: Take the screens
         env:
           NODE_PATH: ${{ runner.temp }}/qa/node_modules
         run: |
-          node tools/admin-screens.mjs --base=http://127.0.0.1:3000 --proto=http://127.0.0.1:8099 --out=admin-screens \
+          node tools/admin-screens.mjs --base=http://127.0.0.1:3000 --proto=http://127.0.0.1:8099 --out=admin-screens --set="${ADMIN_SCREENS_SET:-}" \
             --email=gate@example.test --password-file="$RUNNER_TEMP/gate-password"
       - name: Server log
         if: failure()
