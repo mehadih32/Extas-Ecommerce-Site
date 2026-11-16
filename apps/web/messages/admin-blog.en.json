@@ -737,6 +737,34 @@
       "noteLast": "Each order goes to the last article read before it, so the articles' rows can be added up.",
       "noteEvery": "Each order goes to every article read before it: an order can be under several articles, so do not add the rows up.",
       "noMoney": "Amounts are shown only with the reports permission; here, pieces only."
-    }
+    },
+    "kpi": {
+      "published": "Published",
+      "readers": "Readers ({n} days)",
+      "orders": "Orders from posts",
+      "seo": "Average SEO score"
+    },
+    "posts": "Posts",
+    "rail": {
+      "posts": "Posts",
+      "all": "All posts",
+      "drafts": "Drafts",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "organise": "Organise",
+      "categories": "Categories",
+      "tags": "Tags",
+      "authors": "Authors",
+      "stage": "By stage"
+    },
+    "tcol": {
+      "title": "Title",
+      "status": "Status",
+      "seo": "SEO",
+      "readers": "Readers",
+      "orders": "Orders",
+      "date": "Date"
+    },
+    "newPost": "New post"
   }
 }

@@ -63,3 +63,5 @@
 
 ### PR 802: প্রোটোটাইপ মেলানো
 পাতার নাম এখন **Blog** (ব্লগ), আর নতুন লেখার বোতাম **New post**।
+
+**Update (PR 912):** the Blog page now opens as a board with figure tiles, a left list and a Posts table (SEO, readers, orders, date).

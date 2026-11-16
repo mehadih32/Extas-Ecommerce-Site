@@ -186,12 +186,34 @@ export interface PostRowView {
   scheduledAt: string | null;
   publishedAt: string | null;
   updatedAt: string;
+  /** 0-100: how complete the article's search basics are (see seoScoreOf). */
+  seo: number;
 }
 
 export interface JournalList {
   rows: PostRowView[];
   counts: Record<BlogColumn, number>;
   card: { key: 'journal'; value: BlogJournalSettings; version: string };
+}
+
+/**
+ * The board's SEO column: how many of an article's search basics are in place, 0-100 (a title of a good length, a meta
+ * description of a good length, a focus keyword that is also in the title, a hero picture, a category, a body long enough
+ * to answer the question). A rule of thumb for the owner's eye, not a Google figure; the lengths are search-page limits.
+ */
+export function seoScoreOf(p: { title: string; metaDescription: string | null; focusKeyword: string | null; heroAssetId: string | null; categoryId: string | null; wordCount: number }): number {
+  const between = (n: number, a: number, b: number) => n >= a && n <= b;
+  let s = 0;
+  if (between(p.title.length, 30, 65)) s += 20; // hardcode-ok: search-page title length
+  if (p.metaDescription && between(p.metaDescription.length, 70, 160)) s += 25; // hardcode-ok: search-page description length
+  if (p.focusKeyword) {
+    s += 10; // hardcode-ok: weights of the rule of thumb
+    if (p.title.toLowerCase().includes(p.focusKeyword.toLowerCase())) s += 10; // hardcode-ok
+  }
+  if (p.heroAssetId) s += 15; // hardcode-ok
+  if (p.categoryId) s += 10; // hardcode-ok
+  if (p.wordCount >= 300) s += 10; // hardcode-ok
+  return s;
 }
 
 /** Every article (newest change first, at most LIST_MAX), the count per board column, and the journal's switch card. */
@@ -204,7 +226,7 @@ export async function journalList(db: Db, resolver: Resolver, now: Date = new Da
   const rows = posts.map((p) => {
     const v = viewOf(p, now);
     counts[v.column] += 1;
-    return { id: v.id, locale: v.locale, title: v.title, slug: v.slug, status: v.status, column: v.column, categoryId: v.categoryId, authorId: v.authorId, readingMinutes: v.readingMinutes, live: v.live, scheduledAt: v.scheduledAt, publishedAt: v.publishedAt, updatedAt: p.updatedAt.toISOString() };
+    return { id: v.id, locale: v.locale, title: v.title, slug: v.slug, status: v.status, column: v.column, categoryId: v.categoryId, authorId: v.authorId, readingMinutes: v.readingMinutes, live: v.live, scheduledAt: v.scheduledAt, publishedAt: v.publishedAt, updatedAt: p.updatedAt.toISOString(), seo: seoScoreOf(p) };
   });
   return { rows, counts, card: { key: 'journal', value, version: versionOf(value) } };
 }
