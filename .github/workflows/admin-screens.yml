@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   # a workflow file that is not on main cannot be dispatched, so a push of this branch that touches it also runs it
   push:
-    branches: [claude/admin-screens]
+    branches: [claude/admin-screens-r4]
     paths: [.github/workflows/admin-screens.yml, tools/admin-screens.mjs]
 permissions:
   contents: read
