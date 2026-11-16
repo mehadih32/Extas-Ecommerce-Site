@@ -24,7 +24,7 @@ export async function loadProductSide(c: Access, productId: string, path: string
   const now = (c.deps.now ?? (() => new Date()))();
   const since = new Date(now.getTime() - 30 * DAY_MS);
   const [variants, floor, metrics, links] = await Promise.all([
-    showsBuying ? db.productVariant.findMany({ where: { storeId: c.storeId, productId, archivedAt: null }, select: { shopPriceMinor: true } }) : Promise.resolve([]),
+    showsBuying ? db.productVariant.findMany({ where: { storeId: c.storeId, productId, archivedAt: null }, select: { shopPriceMinor: true } }) : Promise.resolve([] as { shopPriceMinor: number | null }[]),
     showsBuying ? Promise.resolve(c.deps.settings.value('catalogue.floor.minMarginPercent', { storeId: c.storeId })).then((v): number | null => (typeof v === 'number' ? v : null)) : Promise.resolve(null),
     db.searchConsoleMetric.findMany({ where: { storeId: c.storeId, page: { endsWith: path }, date: { gte: since } }, select: { query: true, impressions: true, position: true }, take: 2000 }),
     db.collectionProduct.findMany({ where: { storeId: c.storeId, productId, archivedAt: null, collection: { archivedAt: null } }, select: { collection: { select: { id: true, nameEn: true, nameBn: true } } }, take: 50 }),
