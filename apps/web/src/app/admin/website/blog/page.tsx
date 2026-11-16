@@ -17,6 +17,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { journalChoices, journalList } from '@/lib/journal/journal';
+import { performanceReport } from '@/lib/journal/performance';
 import { BLOG_COLUMNS, type BlogColumn } from '@/lib/journal/model';
 import bn from '../../../../../messages/admin-blog.bn.json';
 import en from '../../../../../messages/admin-blog.en.json';
@@ -40,6 +41,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type Props = { searchParams: Promise<{ c?: string }> };
 
+/** The prototype's "Drafts": the three stages before an article is scheduled. */
+const DRAFT_COLUMNS: readonly BlogColumn[] = ['ideas', 'writing', 'review'];
+
 export default async function BlogBoardPage(props: Props) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('blog.read', deps, MOTHER_STORE_ID), props.searchParams]);
@@ -58,9 +62,27 @@ export default async function BlogBoardPage(props: Props) {
   const perms = access.guard.permissions;
   const canWrite = perms?.has('blog.write') ?? false;
   const canPublish = perms?.has('blog.publish') ?? false;
+  const drafts = sp.c === 'drafts';
   const col = (BLOG_COLUMNS as readonly string[]).includes(sp.c ?? '') ? (sp.c as BlogColumn) : null;
-  const [l, choices] = await Promise.all([journalList(access.deps.db, access.deps.resolver), journalChoices(access.deps.db)]);
-  const rows = l.rows.filter((r) => (col ? r.column === col : r.column !== 'archived'));
+  const [l, choices, perf, tagCount] = await Promise.all([
+    journalList(access.deps.db, access.deps.resolver),
+    journalChoices(access.deps.db),
+    performanceReport(access.deps.db, access.deps.resolver, new Date()).catch(() => null),
+    access.deps.db.blogTag.count({ where: { storeId: MOTHER_STORE_ID } }).catch(() => 0),
+  ]);
+  const rows = l.rows.filter((r) => (drafts ? DRAFT_COLUMNS.includes(r.column) : col ? r.column === col : r.column !== 'archived'));
+  const perfOf = new Map((perf?.rows ?? []).map((r) => [r.id, r]));
+  const publishedRows = l.rows.filter((r) => r.column === 'published');
+  const avgSeo = publishedRows.length ? Math.round(publishedRows.reduce((n, r) => n + r.seo, 0) / publishedRows.length) : null;
+  const seoTone = (n: number) => (n >= 70 ? 'ok' : n >= 40 ? 'warn' : 'bad'); // hardcode-ok: colour bands of the score
+  const kpis: [string, string][] = [
+    [s('kpi.published'), num(l.counts.published)],
+    [s('kpi.readers', { n: num(perf?.days ?? 0) }), num(perf?.totals.readers ?? 0)],
+    [s('kpi.orders'), num(perf?.fromArticles.ordered.orders ?? 0)],
+    [s('kpi.seo'), avgSeo === null ? '—' : num(avgSeo)],
+  ];
+  const railCount = { all: l.rows.length - l.counts.archived, drafts: DRAFT_COLUMNS.reduce((n, c) => n + l.counts[c], 0), scheduled: l.counts.scheduled, published: l.counts.published };
+  const railOn = (k: string) => (k === 'all' ? !drafts && !col : k === 'drafts' ? drafts : !drafts && col === k);
   const catName = new Map(choices.categories.map((c) => [c.id, view.lang === 'bn' && c.nameBn ? c.nameBn : c.nameEn]));
   const authorName = new Map(choices.authors.map((a) => [a.id, a.displayName]));
   const when = (iso: string) => new Intl.DateTimeFormat(view.locale, { dateStyle: 'medium', timeZone: view.timeZone, numberingSystem: 'latn' }).format(new Date(iso));
@@ -99,11 +121,6 @@ export default async function BlogBoardPage(props: Props) {
                 {s('src.title')}
               </Link>
             ) : null}
-            {canWrite ? (
-              <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="jr-create">
-                {s('create')}
-              </Link>
-            ) : null}
           </div>
         }
       />
@@ -113,60 +130,112 @@ export default async function BlogBoardPage(props: Props) {
           {s('off')}
         </div>
       ) : null}
-      <nav className="a2-views jr-views a2-mt12" aria-label={s('title')} data-testid="jr-views">
-        {views.map((n) => {
-          const on = (col ?? 'all') === n;
-          const count = n === 'all' ? l.rows.length - l.counts.archived : l.counts[n];
-          return (
-            <Link key={n} className={`a2-view${on ? ' on' : ''}`} href={n === 'all' ? HERE : `${HERE}?c=${n}`} aria-current={on ? 'page' : undefined} data-testid={`jr-view-${n}`}>
-              {s(`views.${n}`)} <span className="a2-mute">{num(count)}</span>
+      <div className="jr-kpis a2-mt12" data-testid="jr-kpis">
+        {kpis.map(([label, value]) => (
+          <div key={label} className="a2-card jr-kpi">
+            <span className="a2-xs a2-mute">{label}</span>
+            <b>{value}</b>
+          </div>
+        ))}
+      </div>
+      <div className="jr-board a2-mt12">
+        <aside className="a2-card jr-rail" data-testid="jr-views" aria-label={s('rail.posts')}>
+          {canWrite ? (
+            <Link className="a2-btn pri jr-newside" href={`${HERE}/new`}>
+              + {s('newPost')}
             </Link>
-          );
-        })}
-      </nav>
-      {rows.length ? (
-        <div className="a2-tblw a2-mt12">
-          <table className="a2-tbl" data-testid="jr-table">
-            <thead>
-              <tr>
-                <th>{s('col.article')}</th>
-                <th>{s('col.category')}</th>
-                <th>{s('col.author')}</th>
-                <th>{s('col.state')}</th>
-                <th className="r">{s('col.read')}</th>
-                <th>{s('col.updated')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} data-testid="jr-row">
-                  <td>
-                    <Link className="a2-b jr-name" href={`${HERE}/${r.id}`} lang={r.locale}>
-                      {r.title}
-                    </Link>
-                    <span className="a2-mono a2-xs a2-mute jr-slug">
-                      {r.locale === 'bn' ? '/bn' : ''}/journal/{r.slug} · {s(`lang.${r.locale}`)}
-                    </span>
-                  </td>
-                  <td className="a2-sm">{(r.categoryId && catName.get(r.categoryId)) || s('none')}</td>
-                  <td className="a2-sm">{(r.authorId && authorName.get(r.authorId)) || s('none')}</td>
-                  <td>
-                    <span className={`a2-pill${pill(r.column)}`}>{s(`state.${r.status}`)}</span>
-                    {r.live ? <span className="a2-xs a2-mute jr-live"> {s('live')}</span> : null}
-                  </td>
-                  <td className="r a2-num">{s('min', { n: num(r.readingMinutes) })}</td>
-                  <td className="a2-sm">{when(r.updatedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="a2-card a2-mt12 jr-empty" data-testid="jr-empty">
-          <b>{s('empty')}</b>
-          <p className="a2-sm a2-mute">{s('emptySub')}</p>
-        </div>
-      )}
+          ) : null}
+          <div className="jr-rh">{s('rail.posts')}</div>
+          {(['all', 'drafts', 'scheduled', 'published'] as const).map((k) => (
+            <Link key={k} className={`jr-ri${railOn(k) ? ' on' : ''}`} href={k === 'all' ? HERE : `${HERE}?c=${k}`} aria-current={railOn(k) ? 'page' : undefined} data-testid={`jr-view-${k}`}>
+              <span>{s(`rail.${k}`)}</span>
+              <b>{num(railCount[k])}</b>
+            </Link>
+          ))}
+          <div className="jr-rh">{s('rail.organise')}</div>
+          <Link className="jr-ri" href={`${HERE}/shelves`}>
+            <span>{s('rail.categories')}</span>
+            <b>{num(choices.categories.length)}</b>
+          </Link>
+          <Link className="jr-ri" href={`${HERE}/shelves`}>
+            <span>{s('rail.tags')}</span>
+            <b>{num(tagCount)}</b>
+          </Link>
+          <Link className="jr-ri" href={`${HERE}/shelves`}>
+            <span>{s('rail.authors')}</span>
+            <b>{num(choices.authors.length)}</b>
+          </Link>
+          <details className="jr-stage">
+            <summary className="a2-xs a2-mute">{s('rail.stage')}</summary>
+            {views.filter((n) => n !== 'all').map((n) => (
+              <Link key={n} className={`jr-ri${railOn(n) ? ' on' : ''}`} href={`${HERE}?c=${n}`} data-testid={`jr-view-${n}`}>
+                <span>{s(`views.${n}`)}</span>
+                <b>{num(l.counts[n as BlogColumn])}</b>
+              </Link>
+            ))}
+          </details>
+        </aside>
+        <section className="a2-card jr-main" aria-labelledby="jr-posts-h">
+          <div className="jr-mh">
+            <h2 className="a2-h3" id="jr-posts-h">
+              {s('posts')}
+            </h2>
+            {canWrite ? (
+              <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="jr-create">
+                + {s('newPost')}
+              </Link>
+            ) : null}
+          </div>
+          {rows.length ? (
+            <div className="a2-tblw">
+              <table className="a2-tbl" data-testid="jr-table">
+                <thead>
+                  <tr>
+                    <th>{s('tcol.title')}</th>
+                    <th>{s('tcol.status')}</th>
+                    <th className="r">{s('tcol.seo')}</th>
+                    <th className="r">{s('tcol.readers')}</th>
+                    <th className="r">{s('tcol.orders')}</th>
+                    <th>{s('tcol.date')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const pf = perfOf.get(r.id);
+                    const cat = (r.categoryId && catName.get(r.categoryId)) || '';
+                    const au = (r.authorId && authorName.get(r.authorId)) || '';
+                    return (
+                      <tr key={r.id} data-testid="jr-row">
+                        <td>
+                          <Link className="a2-b jr-name" href={`${HERE}/${r.id}`} lang={r.locale}>
+                            {r.title}
+                          </Link>
+                          <span className="a2-xs a2-mute jr-slug">{[cat, au].filter(Boolean).join(' · ') || s('none')}</span>
+                        </td>
+                        <td>
+                          <span className={`a2-pill${pill(r.column)}`}>{s(`state.${r.status}`)}</span>
+                          {r.live ? <span className="a2-xs a2-mute jr-live"> {s('live')}</span> : null}
+                        </td>
+                        <td className="r a2-num">
+                          <b className={`jr-seo ${seoTone(r.seo)}`}>{num(r.seo)}</b>
+                        </td>
+                        <td className="r a2-num">{num(pf?.readers ?? 0)}</td>
+                        <td className="r a2-num">{num(pf?.ordered.orders ?? 0)}</td>
+                        <td className="a2-sm">{r.publishedAt || r.scheduledAt ? when((r.publishedAt ?? r.scheduledAt)!) : '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="jr-empty" data-testid="jr-empty">
+              <b>{s('empty')}</b>
+              <p className="a2-sm a2-mute">{s('emptySub')}</p>
+            </div>
+          )}
+        </section>
+      </div>
       <div className="a2-mt12">
         <FieldsCard
           url={API}
