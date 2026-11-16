@@ -1,0 +1,38 @@
+/* PR 950-959 (lane D6, final round, owner order: the real admin matches docs/demo/admin-proto-v5 100% on every Orders page).
+   Imported by the Orders pages themselves. Only the theme's own tokens; sizes follow the prototype's m-orders.js `orders2` block. */
+
+/* ---- Batch: the six pipeline cards (Not handed over, Processing, Confirmed, Booked, Packed, Stuck) ---- */
+.adm2 .o6-pipe{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px;padding:0;list-style:none}
+.adm2 .o6-pc{position:relative;display:flex;flex-direction:column;gap:2px;min-width:0;min-height:44px;padding:12px;border:1px solid var(--ln);border-radius:14px;background:var(--sf);color:var(--ink);text-decoration:none}
+.adm2 .o6-pc:hover{border-color:var(--g)}
+.adm2 .o6-pc b{font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.adm2 .o6-pc .o6-l{font-size:13px;font-weight:600}
+.adm2 .o6-pc .o6-s{font-size:12px;color:var(--mute)}
+.adm2 .o6-pc.stuck{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--sf))}
+.adm2 .o6-pc:not(:last-child)::after{content:"\203A";position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--mute);font-size:16px}
+.adm2 .o6-pc.stuck::after{display:none}
+@media (max-width:1100px){.adm2 .o6-pipe{grid-template-columns:repeat(3,minmax(0,1fr))}.adm2 .o6-pc::after{display:none}}
+@media (max-width:560px){.adm2 .o6-pipe{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---- an order line (number, name, what it needs, amount and age on the right) ---- */
+.adm2 .o6-li{display:flex;gap:10px;align-items:center;min-width:0;padding:9px 0;border-bottom:1px solid var(--ln)}
+.adm2 .o6-li:last-child{border-bottom:0}
+.adm2 .o6-li .o6-grow{flex:1;min-width:0}
+.adm2 .o6-li .o6-r{text-align:right;flex:none}
+.adm2 .o6-sub{color:var(--mute);font-size:12px;overflow-wrap:anywhere}
+.adm2 .o6-tag{display:inline-block;padding:1px 6px;border-radius:5px;background:var(--sf2);color:var(--mute);font-size:11px;font-weight:600;white-space:nowrap}
+.adm2 .o6-tag.last{background:color-mix(in srgb,var(--warn) 16%,var(--sf));color:var(--warn)}
+.adm2 .o6-half{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:14px}
+@media (max-width:860px){.adm2 .o6-half{grid-template-columns:minmax(0,1fr)}}
+.adm2 .o6-gap{height:14px}
+.adm2 .o6-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+
+/* ---- a plain row of figures and a table that may scroll sideways on a phone ---- */
+.adm2 .o6-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+@media (max-width:860px){.adm2 .o6-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.adm2 .o6-kpi{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--ln);border-radius:14px;background:var(--sf);min-width:0}
+.adm2 .o6-kpi .o6-kl{color:var(--mute);font-size:12.5px;font-weight:500}
+.adm2 .o6-kpi b{font-size:24px;line-height:1.15;font-variant-numeric:tabular-nums}
+.adm2 .o6-kpi .o6-ks{color:var(--mute);font-size:12px}
+.adm2 .o6-tw{overflow-x:auto}
+.adm2 .o6-note{margin:12px 0 0}
