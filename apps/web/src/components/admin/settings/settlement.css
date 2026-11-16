@@ -12,11 +12,13 @@
 .adm2 .ck-settle-more > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 /* PR 992 — the three method cards (bKash, Nagad, Card) */
 .adm2 .pm-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+@media (max-width: 1100px) { .adm2 .pm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .adm2 .pm-grid { grid-template-columns: minmax(0, 1fr); } }
 .adm2 .pm-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .adm2 .pm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .adm2 .pm-name { font-size: 16px; overflow-wrap: anywhere; }
 .adm2 .pm-acc { overflow-wrap: anywhere; }
+.adm2 .pm-act .a2-btn { max-width: 100%; }
 .adm2 .pm-act { display: flex; align-items: center; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
 .adm2 .pm-callout { margin-top: 12px; }
 .adm2 .pm-top { flex-wrap: wrap; }

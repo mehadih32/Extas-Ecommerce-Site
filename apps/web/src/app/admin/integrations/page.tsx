@@ -54,7 +54,7 @@ export default async function IntegrationsPage() {
       <div className="a2-note a2-mt12" data-testid="integrations-erp-link">
         <div>
           {t(d, 'integrations.erpLinkNote')}{' '}
-          <Link href="/admin/settings/erp-link">{t(d, 'integrations.erpLinkOpen')}</Link>
+          <Link className="ig-tap" href="/admin/settings/erp-link">{t(d, 'integrations.erpLinkOpen')}</Link>
         </div>
       </div>
       <div className="a2-note a2-mt12">
