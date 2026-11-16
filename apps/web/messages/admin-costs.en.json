@@ -207,6 +207,181 @@
       "paidDone": "{total} salary paid for {count} person(s).",
       "paidLocked": "This month is paid: its advance, bonus and deduction are locked.",
       "payNone": "Nobody is left to pay this month."
+    },
+    "fc": {
+      "h1": "1 · Fixed costs & salaries",
+      "h2": "2 · Budgets & other expenses",
+      "tile": {
+        "total": "Fixed costs this month",
+        "totalSub": "Salaries {sal} · Other {oth}",
+        "vsLast": "vs last month",
+        "perOrder": "Per delivered order",
+        "perOrderNone": "No delivered order yet this month.",
+        "perOrderSub": "About {n} deliveries this month at this pace. More orders = smaller share.",
+        "due": "Salaries still to pay",
+        "dueSub": "{n} person(s), {late} late",
+        "dueSubNo": "{n} person(s)",
+        "allPaid": "Everyone is paid",
+        "six": "Last 6 months"
+      },
+      "payAllDue": "Pay all due",
+      "note": "These are the shop's own staff and costs. Every amount goes into the month's fixed costs. An advance, bonus or deduction is always a new row, never an edit; paying and rows need your PIN.",
+      "saved": "Saved. Earlier months keep their old amount.",
+      "rowAdded": "Row added. The net to pay is updated.",
+      "rowCancelled": "Row cancelled with a new row. Nothing was deleted.",
+      "needAmount": "Write an amount.",
+      "dialog": "Salaries and monthly costs",
+      "close": "Close",
+      "cancel": "Cancel",
+      "pin": "Your PIN",
+      "sal": {
+        "title": "Salaries",
+        "sub": "Tap the pencil for an advance, bonus or deduction, a salary change and its history. Paying needs your PIN.",
+        "staff": "Staff",
+        "salary": "Salary",
+        "payDay": "Pay day",
+        "advance": "Advance",
+        "bonus": "Bonus",
+        "deductions": "Deductions",
+        "net": "Net to pay",
+        "thisMonth": "This month",
+        "actions": "Actions",
+        "edit": "Edit this person",
+        "none": "Nobody added yet. Add a person to start the salary list."
+      },
+      "status": {
+        "none": "Not running",
+        "paid": "Paid",
+        "pay": "Pay",
+        "late": "Late {n} day(s)",
+        "due": "Due on {d}",
+        "recorded": "Recorded",
+        "recordsOn": "Records on {d}"
+      },
+      "addStaff": "Add staff",
+      "salCost": "Salary cost this month (with bonus and deductions)",
+      "oth": {
+        "title": "Other fixed costs",
+        "sub": "Rent, utilities and other bills. A change asks \"from which month?\" and keeps the old amount for earlier months.",
+        "head": "Cost head",
+        "perMonth": "Per month",
+        "day": "Day",
+        "thisMonth": "This month",
+        "none": "No monthly cost added yet. Add a cost head (rent, internet)."
+      },
+      "addHead": "Add cost head",
+      "totalPerMonth": "Total per month",
+      "change": "Change",
+      "history": "History",
+      "trend": {
+        "title": "6-month trend",
+        "legend": "Dark = salaries, light = other fixed costs."
+      },
+      "hist": {
+        "title": "Amount history",
+        "start": "Starting amount",
+        "from": "from",
+        "perMonthFrom": "a month from",
+        "coming": "Coming",
+        "changed": "Changed by",
+        "help": "Each month uses the amount that was set for it. Changing today never rewrites a past month."
+      },
+      "kind": {
+        "ADVANCE": "Advance",
+        "BONUS": "Bonus",
+        "DEDUCTION": "Deduction"
+      },
+      "p": {
+        "salary": "Monthly salary",
+        "payDay": "Pay day",
+        "net": "Net to pay now",
+        "cancelling": "cancels an earlier row",
+        "cancelRow": "Cancel this row",
+        "reason": "Reason for cancelling",
+        "cancelGo": "Cancel with a new row",
+        "noRows": "No advance, bonus or deduction this month.",
+        "locked": "Paid {amount} on {date}. This month is locked.",
+        "newRow": "Add a row for this month",
+        "kind": "Kind",
+        "amount": "Amount",
+        "from": "Pay the advance from",
+        "note": "Note (optional)",
+        "advanceHelp": "An advance goes out of the cashbook account at once and comes off the salary. A wrong advance is reversed in Money in & out.",
+        "rowHelp": "A bonus or deduction changes the net to pay. A wrong one is cancelled with a new row, never edited.",
+        "addRow": "Add row",
+        "changeSalary": "Change salary"
+      },
+      "chg": {
+        "title": "Change amount",
+        "now": "Now {amount} a month. Earlier months keep their old amount.",
+        "amount": "New amount per month",
+        "from": "From which month?",
+        "reason": "Reason (for the history)",
+        "help": "The change is saved with your name and today's date.",
+        "save": "Save"
+      },
+      "add": {
+        "person": "Add staff",
+        "head": "Add cost head",
+        "name": "Name",
+        "post": "Post",
+        "category": "Category",
+        "amount": "Amount per month",
+        "payDay": "Day of the month",
+        "from": "From which month?",
+        "save": "Add"
+      },
+      "joined": "Joined",
+      "newHead": "New cost head",
+      "resumed": "Started again",
+      "stopped": "Stopped",
+      "err": {
+        "TOO_BIG": "That is more than this month pays.",
+        "ACCOUNT_NEEDED": "Pick the account the advance comes from.",
+        "ADVANCE_IN_CASHBOOK": "An advance was paid from the cashbook. Reverse it in Money in & out.",
+        "ALREADY_REVERSED": "This row is cancelled already.",
+        "NOT_FOUND": "That person or row was not found."
+      },
+      "more": "More options",
+      "moreSub": "The month's fixed costs form, the list the way it was, the daily cost lines and the costs from statements.",
+      "bud": {
+        "title": "Budgets this month",
+        "sub": "Day {day} of {days}. \"At this pace\" spreads what is spent so far over the whole month.",
+        "none": "No budget set",
+        "noneSet": "No budget set yet. Press \"Edit budgets\" to give each cost a monthly budget.",
+        "over": "Over by {amount}",
+        "pace": "At this pace: {pace}, over by {over}",
+        "left": "{amount} left",
+        "edit": "Edit budgets"
+      },
+      "exp": {
+        "title": "Other expenses",
+        "noReceipt": "{n} expense(s) have no receipt photo.",
+        "date": "Date",
+        "what": "What",
+        "amount": "Amount",
+        "receipt": "Receipt",
+        "photo": "Photo",
+        "addPhoto": "Add photo",
+        "none": "No expense this month or last month."
+      },
+      "ads": {
+        "title": "Ad spend (imported every day)",
+        "platform": "Platform",
+        "thisMonth": "This month",
+        "lastMonth": "Last month",
+        "share": "Share of sales",
+        "none": "No ad spend imported for this month or last month.",
+        "rate": "Paid by card in US dollars. Rate used: 1 USD = {rate} {currency}.",
+        "noRate": "No dollar rate set yet.",
+        "changeRate": "Change rate"
+      },
+      "platform": {
+        "META": "Facebook & Instagram",
+        "GOOGLE": "Google",
+        "YOUTUBE": "YouTube",
+        "TIKTOK": "TikTok"
+      }
     }
   }
 }

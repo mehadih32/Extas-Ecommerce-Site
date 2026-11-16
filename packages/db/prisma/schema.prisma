@@ -289,6 +289,8 @@ model Store {
   cashAccounts            CashAccount[]
   cashEntries             CashEntry[]
   costBudgets             CostBudget[]
+  staffPayRows            StaffPayRow[]
+  fixedCostChanges        FixedCostChange[]
   reportViews             ReportView[]
   erpBooksSends           ErpBooksSend[]
   booksMatchRuns          BooksMatchRun[]
@@ -11540,6 +11542,54 @@ model CostBudget {
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
 
   @@index([storeId, headKey, fromMonth])
+}
+
+/// @stage S28 · PR 1040 (final round D14, Finance > Costs) — one advance, bonus or deduction on a person's pay for a month. A new row each
+/// time, never edited or deleted: a wrong BONUS or DEDUCTION is cancelled by a row that points at it (`reversesId`); an ADVANCE is
+/// money out of a cashbook account (`cashRequestKey`) and is corrected in the cashbook. The person is an id in `books.staffCosts`.
+/// @append-only
+model StaffPayRow {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  storeId        Int
+  store          Store        @relation(fields: [storeId], references: [id])
+  personId       String
+  /// YYYY-MM the row counts in.
+  month          String
+  /// ADVANCE, BONUS or DEDUCTION.
+  kind           String
+  amountMinor    Int
+  note           String?
+  /// ADVANCE only: the cashbook request key and account the money went out of.
+  cashRequestKey String?
+  accountKey     String?
+  reversesId     String?      @unique @db.Uuid
+  reversal       StaffPayRow? @relation("StaffPayRowReversal", fields: [reversesId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reversedBy     StaffPayRow? @relation("StaffPayRowReversal")
+  enteredById    String?      @db.Uuid
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, month, personId])
+}
+
+/// @stage S28 · PR 1040 — the history of a monthly cost head or salary: every change of its amount, who made it and why. Written by the
+/// staff-costs save beside the list itself (which keeps the amounts); never edited or deleted.
+/// @append-only
+model FixedCostChange {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  storeId     Int
+  store       Store    @relation(fields: [storeId], references: [id])
+  headId      String
+  headName    String
+  kind        String
+  /// YYYY-MM the new amount counts from.
+  fromMonth   String
+  oldMinor    Int?
+  newMinor    Int
+  note        String?
+  changedById String?  @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, headId, createdAt])
 }
 
 /// @stage S15 · PR 689 — a saved view of a report (its period, compare switch and filters) under the owner's own name.

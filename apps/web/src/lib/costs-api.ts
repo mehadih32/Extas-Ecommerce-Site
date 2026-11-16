@@ -24,6 +24,7 @@ import * as inv from '@extas/inventory';
 import { registry, salaryPlan, SettingsError, staffCostsSchema, statementCostsSchema, storeTarget, type StaffCostsSettings, type StatementCostsSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
 import { inventoryDeps } from './inventory-api';
+import { addPayRow, costChanges, logCostChanges, payRows, peopleWithRows, reversePayRow, StaffPayError, type AddPayRowInput } from './staff-pay';
 
 type CostsPerm = 'books.read' | 'fixedcosts.write';
 /** Follow-up 567: either of these enters or reverses a day's cost line. */
@@ -174,11 +175,15 @@ export function staffCostsHandler(request: Request, deps: AdminDeps | null): Pro
       // PR 859: the payments are written by the pay route only, and a paid month's advance, bonus and deduction are locked
       if (JSON.stringify(old.paid ?? {}) !== JSON.stringify(next.paid ?? {})) return fail(400, 'INVALID_INPUT', ['paid']);
       for (const m of Object.keys(old.paid ?? {})) if (JSON.stringify(old.adj?.[m] ?? null) !== JSON.stringify(next.adj?.[m] ?? null)) return fail(409, 'MONTH_PAID', [m]);
+      // PR 1040: an advance, bonus or deduction is a new row (POST /staff/rows), never an edit of this list: what an older save held stays as it was
+      if (JSON.stringify(old.adj ?? {}) !== JSON.stringify(next.adj ?? {})) return fail(400, 'INVALID_INPUT', ['adj']);
     }
-    if (parsed.data.people.some((p) => !before.value.people.some((o) => o.id === p.id) && p.paid && Object.keys(p.paid).length)) return fail(400, 'INVALID_INPUT', ['paid']);
+    if (parsed.data.people.some((p) => !before.value.people.some((o) => o.id === p.id) && ((p.paid && Object.keys(p.paid).length) || (p.adj && Object.keys(p.adj).length)))) return fail(400, 'INVALID_INPUT', ['paid']);
     if (JSON.stringify(parsed.data) !== JSON.stringify(before.value)) {
       const key = 'books.staffCosts' as const;
       await c.admin.resolver.set(key, parsed.data, storeTarget(c.who.storeId), { actorId: c.who.actor.staffUserId ?? null, reason: 'Money › Costs: salaries and monthly costs' });
+      // PR 1040: the history of every changed amount (who, when, why), one row each, kept for good
+      await logCostChanges(c.admin, c.who, before.value.people, parsed.data.people, typeof b.note === 'string' ? b.note : null);
       await audit(c.admin.db, c.who.actor, { storeId: c.who.storeId, action: 'books.staffCosts', entityType: 'Setting', entityId: key, before: { people: before.value.people.length }, after: { people: parsed.data.people.length } }, { source: 'admin-api', ...c.who.ctx });
     }
     return { staff: await staffCostsCard(c.admin, c.who.storeId) };
@@ -213,7 +218,8 @@ export function staffPayHandler(request: Request, deps: AdminDeps | null): Promi
     if (!month || !accountKey) return fail(400, 'INVALID_INPUT', [!month ? 'month' : 'accountKey']);
     const ids = Array.isArray(b.ids) ? b.ids.filter((x): x is string => typeof x === 'string') : undefined;
     const card = await staffCostsCard(c.admin, c.who.storeId);
-    const plan = salaryPlan(card.value.people, month, ids);
+    // PR 1040: the advance, bonus and deduction rows of the month count in what is paid
+    const plan = salaryPlan(await peopleWithRows(c.admin.db, c.who.storeId, card.value.people, [month]), month, ids);
     if (!plan.length) return fail(409, 'NOTHING_TO_PAY');
     const day = (c.admin.now ?? (() => new Date()))().toISOString().slice(0, 10); // hardcode-ok: ISO date
     const paid: SalaryPaid[] = [];
@@ -239,4 +245,56 @@ export function staffPayHandler(request: Request, deps: AdminDeps | null): Promi
     if (stopped) return stopped;
     return { paid, staff: await staffCostsCard(c.admin, c.who.storeId) };
   }, 201);
+}
+
+// ---- PR 1040: advance / bonus / deduction as new rows, and the history of the heads ---------------------------------------------
+
+const PAY_ROW_STATUS: Record<StaffPayError['code'], number> = { INVALID_INPUT: 400, NOT_FOUND: 404, MONTH_PAID: 409, TOO_BIG: 422, ADVANCE_IN_CASHBOOK: 409, ALREADY_REVERSED: 409, ACCOUNT_NEEDED: 400 };
+const payErr = (e: unknown): Response | null => (e instanceof StaffPayError ? fail(PAY_ROW_STATUS[e.code], e.code, e.details) : null);
+
+/**
+ * POST {personId, month, kind: ADVANCE|BONUS|DEDUCTION, amountMinor, note?, accountKey? (advance), pin} adds ONE row (never an edit);
+ * GET ?month= lists a month's rows (`books.read`). An advance also needs `cash.record` and goes out of the cashbook account;
+ * every row needs the owner's PIN.
+ */
+export function staffRowsHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  const m = method(request);
+  if (m === 'GET') {
+    return handle(request, deps, 'books.read', async (c) => {
+      const month = c.url.searchParams.get('month');
+      return { rows: await payRows(c.admin.db, c.who.storeId, month && /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? [month] : undefined) };
+    });
+  }
+  if (m !== 'POST') return notAllowed();
+  return handle(request, deps, 'fixedcosts.write', async (c) => {
+    const b = await body(request);
+    const input: AddPayRowInput = { personId: String(b.personId ?? ''), month: String(b.month ?? ''), kind: String(b.kind ?? '') as AddPayRowInput['kind'], amountMinor: Number(b.amountMinor), note: typeof b.note === 'string' ? b.note : undefined, accountKey: typeof b.accountKey === 'string' ? b.accountKey : undefined, pin: typeof b.pin === 'string' ? b.pin : '' };
+    try {
+      const card = await staffCostsCard(c.admin, c.who.storeId);
+      return { ...(await addPayRow(c.admin, c.deps, c.who, card.value.people, input)), rows: await payRows(c.admin.db, c.who.storeId, [input.month]) };
+    } catch (e) {
+      return payErr(e) ?? Promise.reject(e);
+    }
+  }, 201);
+}
+
+/** POST {reason, pin}: cancels a bonus or a deduction with a new row that points at it (`fixedcosts.write`). */
+export function staffRowReverseHandler(request: Request, deps: AdminDeps | null, id: string): Promise<Response> {
+  if (method(request) !== 'POST') return notAllowed();
+  if (!isUuid(id)) return Promise.resolve(fail(400, 'INVALID_INPUT', ['id']));
+  return handle(request, deps, 'fixedcosts.write', async (c) => {
+    const b = await body(request);
+    try {
+      const card = await staffCostsCard(c.admin, c.who.storeId);
+      return await reversePayRow(c.admin, c.deps, c.who, card.value.people, id, { reason: String(b.reason ?? ''), pin: typeof b.pin === 'string' ? b.pin : '' });
+    } catch (e) {
+      return payErr(e) ?? Promise.reject(e);
+    }
+  }, 201);
+}
+
+/** GET ?head=: the history of the changes of one head or salary (all heads without it), newest first (`books.read`). */
+export function staffHistoryHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (method(request) !== 'GET') return notAllowed();
+  return handle(request, deps, 'books.read', async (c) => ({ changes: await costChanges(c.admin, c.who.storeId, c.url.searchParams.get('head') ?? undefined) }));
 }

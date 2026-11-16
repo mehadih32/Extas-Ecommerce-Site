@@ -1,0 +1,41 @@
+/* PR 1040 (S28, final round D14) — Finance › Costs & budgets as one page: "1 · Fixed costs & salaries" and "2 · Budgets & other
+   expenses" (prototype Finance › Costs). Shell tokens only; every grid steps down to one column on a phone and nothing makes
+   the page scroll sideways (tables scroll inside their own wrapper). */
+.adm2 .fc{margin-top:18px}
+.adm2 .fc-h{font-size:15px;font-weight:650;margin:4px 0 10px}
+.adm2 .fc-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+.adm2 .a2-kv.fc-small{font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+.adm2 .fc-late{border-color:var(--lm-bad)}
+.adm2 .fc-in{color:var(--lm-ok)}
+.adm2 .fc-out,.adm2 .fc-bad{color:var(--lm-bad)}
+.adm2 .fc-warn{color:var(--warn)}
+.adm2 .fc-g{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:12px;align-items:start}
+.adm2 .fc-btns{display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px}
+.adm2 .fc-bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;height:170px;margin-top:10px}
+.adm2 .fc-col{display:grid;grid-template-rows:1fr auto auto;justify-items:center;height:100%;min-width:0;gap:2px}
+.adm2 .fc-stack{display:flex;flex-direction:column;width:70%;max-width:44px;align-self:end;min-height:3px;border-radius:3px 3px 0 0;overflow:hidden}
+.adm2 .fc-stack i{display:block;min-height:0}
+.adm2 .fc-sal{background:var(--lm-brand)}
+.adm2 .fc-oth{background:var(--lm-ac)}
+.adm2 .fc-v{overflow-wrap:anywhere;text-align:center}
+.adm2 .fc-chg{padding:4px 0;border-top:1px dashed var(--lm-ln)}
+.adm2 .fc-budgets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
+.adm2 .fc-track{height:8px;border-radius:99px;background:var(--lm-sf2);overflow:hidden;margin:4px 0}
+.adm2 .fc-fill{display:block;height:100%;border-radius:99px}
+.adm2 .fc-fill.ok{background:var(--lm-ok)}
+.adm2 .fc-fill.warn{background:var(--warn)}
+.adm2 .fc-fill.bad{background:var(--lm-bad)}
+.adm2 .fc-box{width:min(520px,100%);max-height:90vh;overflow:auto}
+.adm2 .fc-sum{display:grid;grid-template-columns:auto auto;justify-content:space-between;gap:4px 16px}
+.adm2 .fc-rows,.adm2 .fc-hist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.adm2 .fc-rows li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;justify-content:space-between}
+.adm2 .fc-struck{text-decoration:line-through;opacity:.6}
+.adm2 .fc-hist li{padding:6px 0;border-top:1px solid var(--lm-ln)}
+@media (max-width:1023px){
+  .adm2 .fc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adm2 .fc-g{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:767px){
+  .adm2 .fc-tiles{grid-template-columns:minmax(0,1fr)}
+  .adm2 .fc-budgets{grid-template-columns:minmax(0,1fr)}
+}
