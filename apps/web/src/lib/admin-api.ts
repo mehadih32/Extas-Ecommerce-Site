@@ -258,7 +258,9 @@ export async function staffMemberHandler(request: Request, deps: AdminDeps | nul
   if (isResponse(g)) return g;
   if (!isUuid(id)) return fail(404, 'NOT_FOUND');
   try {
-    const { resetTwoFactor, ...patch } = await body(request);
+    const { resetTwoFactor, pin, ...patch } = await body(request);
+    // PR 1020: the Team & roles drawer sends the owner's PIN with "Turn off access" / "Turn access back on" (prototype: pinAsk); a wrong one is refused, none sent keeps the old behaviour.
+    if (pin !== undefined && patch.status !== undefined) await requireOwnerPin(g.deps, g.actor, g.ctx, pin, 'staff.access.change', MOTHER_STORE_ID);
     if (resetTwoFactor === true) await resetStaffTwoFactor(g.deps.db, g.actor, id, g.ctx);
     const staff = Object.keys(patch).length ? await updateStaff(g.deps.db, g.actor, id, patch as StaffPatch, g.ctx) : undefined;
     return json({ ok: true, ...(staff && { staff }) });
@@ -277,6 +279,8 @@ export async function staffRolesHandler(request: Request, deps: AdminDeps | null
   if (!isUuid(id)) return fail(404, 'NOT_FOUND');
   try {
     const b = await body(request);
+    // PR 1020: a change of someone's role from the Team & roles drawer carries the owner's PIN (prototype: "Change role?"); none sent keeps the old behaviour.
+    if (b.pin !== undefined) await requireOwnerPin(g.deps, g.actor, g.ctx, b.pin, 'staff.role.change', MOTHER_STORE_ID);
     if (b.action === 'assign') {
       const storeId = b.storeId === null || b.storeId === undefined ? null : b.storeId;
       if (!isUuid(b.roleId) || (storeId !== null && (typeof storeId !== 'number' || !Number.isInteger(storeId) || storeId < 1))) {

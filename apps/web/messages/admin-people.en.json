@@ -108,6 +108,17 @@
         "label": "Owner PIN",
         "ok": "Save",
         "working": "Saving…"
+      },
+      "special": {
+        "title": "Special permissions",
+        "cost": "See buying price & profit",
+        "money": "Record money received or paid",
+        "export": "Export customer lists",
+        "refund": "Ask for refunds (owner approves)"
+      },
+      "more": {
+        "title": "More options",
+        "archiveNote": "An archived role grants nothing; its people keep their other roles. Nothing is deleted."
       }
     },
     "activity": {
@@ -152,6 +163,98 @@
       "older": "Older",
       "page": "Page {n}",
       "note": "The log is a record only. A download is written to the log too."
+    },
+    "team": {
+      "staff": {
+        "title": "Staff",
+        "name": "Name",
+        "role": "Role",
+        "twoStep": "2-step login",
+        "lastActive": "Last active",
+        "activity": "Activity",
+        "on": "On",
+        "off": "Off",
+        "accessOff": "Access off",
+        "never": "Never"
+      },
+      "no2fa": "sign in with a password only. Turn on 2-step login in Security.",
+      "open": "Open",
+      "ago": {
+        "now": "just now",
+        "min": "{n} min ago",
+        "h": "{n} h ago",
+        "d": "{n} d ago"
+      },
+      "invite": {
+        "button": "Invite staff",
+        "title": "Invite staff",
+        "close": "Close",
+        "name": "Name",
+        "contact": "Email or phone",
+        "email": "Email (for signing in)",
+        "role": "Role",
+        "hint": "They get a temporary password to set their own password and 2-step login at the first sign-in. Shown once, after you press Send invite.",
+        "send": "Send invite",
+        "cancel": "Cancel",
+        "done": "Done",
+        "doneText": "{name} can sign in now. Give them this email and the temporary password.",
+        "doneNote": "The temporary password is shown only here, once. They must set their own at the first sign-in.",
+        "temp": "Temporary password",
+        "copy": "Copy",
+        "copied": "Copied.",
+        "missing": "Add a name and an email or phone."
+      },
+      "drawer": {
+        "close": "Close",
+        "off": "Turn off access",
+        "on": "Turn access back on",
+        "save": "Save",
+        "recent": "Recent activity",
+        "recentLink": "Open this person's activity log",
+        "note": "Turning off access signs them out everywhere. Their past work stays in the log — nothing is deleted."
+      },
+      "pin": {
+        "roleTitle": "Change role?",
+        "offTitle": "Turn off access?",
+        "onTitle": "Turn access back on?",
+        "roleEffect": "{name}: role becomes {role}.",
+        "roleOk": "Change role",
+        "offOk": "Turn off",
+        "onOk": "Turn on",
+        "working": "Working…",
+        "label": "Owner PIN"
+      },
+      "more": {
+        "title": "More options",
+        "sub": "Give or take several roles, suspend, archive, reset 2-step login, add with a password you choose."
+      },
+      "limits": {
+        "maxDiscount": "Max discount",
+        "undo": "Undo",
+        "moreSub": "Discount in money, the export files in words, the packer role.",
+        "exportNote": "\"Can export\" follows the role's keys in the tree above: change it there.",
+        "pinTitle": "Save staff limits?",
+        "pinText": "Discount limits touch money, so your PIN is needed."
+      },
+      "handover": {
+        "ask": "Ask each desk staff for a handover sheet at {time}",
+        "askSub": "Counter cash and bKash/Nagad advances they took today",
+        "staff": "Staff",
+        "cash": "Cash",
+        "wallet": "bKash/Nagad",
+        "expected": "Expected",
+        "handed": "Handed over",
+        "record": "Record",
+        "short": "handed over less than expected today.",
+        "download": "Download today's sheet",
+        "recordTitle": "Record handover",
+        "cashIn": "Cash handed over",
+        "walletIn": "bKash/Nagad handed over",
+        "save": "Save",
+        "moreSub": "Write a count for any day and money, and every count of the day.",
+        "pinTitle": "Save the handover sheet setting?",
+        "pinText": "This changes how the shop asks for the sheet, so your PIN is needed."
+      }
     }
   }
 }
