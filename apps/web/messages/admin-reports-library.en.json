@@ -38,6 +38,7 @@
       "ads": "How much did ads cost?",
       "toparea": "Where do most orders come from?",
       "badarea": "Which area returns the most?",
+      "geomap": "Show me orders on the map",
       "confirmtime": "How fast do we confirm new orders?"
     },
     "groups": {

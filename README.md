@@ -4218,6 +4218,8 @@ Planned. Parked — register PRs 750–761, built only when the owner says "buil
 
 **16 Nov 2026, local branch `claude/geo-2` (not pushed, not counted):** PR 757 — the courier and coverage lens: per place, how often the courier delivered, how many came late against the band's promise, the best courier there (advice only) and the places with orders but no courier; its numbers are the editable setting `reports.geoMapCourier`.
 
+**16 Nov 2026, local branch `claude/geo-2` (not pushed, not counted):** PR 755 — the Bengali guide of the map (`docs/admin-guide/pages/reports/geo-map.md`), "Open on map" links from Sales by area and Where to advertise, and a Report library card.
+
 ### S28 · Admin v5 (prototype alignment) — Done (191/191)
 
 **Website › Page settings (PR 740–744, 15 Nov 2026).** `/admin/website/page-settings?screen=…` (`website.read` to see, `website.layout.write` to save, audited) holds the inside settings of the home (flash sale), category (filters), product (delivery and return lines), thank-you, bag, account and search (synonyms) pages, plus currency and time, the e-mail look, the cookie banner and the home-screen icon. Every field is a setting with an empty or off default; the shop is unchanged until the owner uses it. Tests beside the code; guide `docs/admin-guide/pages/website/page-settings.md`. বাংলায়: পেজের ভেতরের সেটিং, ইমেইলের চেহারা, কুকি ব্যানার আর হোম স্ক্রিনের আইকন এক জায়গা থেকে।

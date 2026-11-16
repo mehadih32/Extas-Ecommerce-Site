@@ -607,6 +607,8 @@
       "kProfit": "Profit before ads",
       "kAvgOrder": "avg order {v}",
       "mapTitle": "{here}: by {level}",
+      "openMap": "Open on map",
+      "openMapHint": "The Geography map shows these areas on a real map of Bangladesh. This page stays as it is.",
       "level": {
         "division": "Division",
         "district": "District",

@@ -385,6 +385,10 @@ export function ReportAreasProto(p: AreasProtoProps) {
         </div>
       </div>
 
+      <p className="a2-xs a2-mt12" data-testid="ar-open-map">
+        <Link href="/admin/reports/geo-map">{c("openMap")}</Link> <span className="a2-mute">{c("openMapHint")}</span>
+      </p>
+
       <div className="rp-grid3 a2-mt12">
         <section className="a2-card" data-testid="ar-map-card">
           <h2 className="a2-h3">

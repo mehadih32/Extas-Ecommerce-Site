@@ -51950,8 +51950,18 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
-   "mentions": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-2`, NOT pushed, status stays parked until the owner says):** the Bengali guide `docs/admin-guide/pages/reports/geo-map.md` (six parts, every button and field of the panel, Compare, Filters, \"Orders by …\" and the courier lens explained, checked by `tools/admin-guide-check.mjs`'s shape rules), \"Open on map\" links from Sales by area (`ReportAreasProto.tsx`) and Where to advertise (`marketing/geo-guide`) with their guides updated, and a Report library card \"Show me orders on the map\" (`reports-v5/library.ts`, messages en and bn). The guide's page row in `help-pages.json`, the Reports overview line, the smoke and device-gate entries and the screenshots wait for the screen's route (PR 753), which is on another branch."
+    }
+   ],
+   "mentions": [
+    753
+   ],
    "blueprint": [],
    "bn": "জিওগ্রাফি ম্যাপ: বাংলা গাইড, Excel/PDF, লিংক আর শেষ পরীক্ষা। পার্ক করা।",
    "bnAuto": false,
