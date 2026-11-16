@@ -188,8 +188,8 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
             </div>
           ))}
         </div>
-        <p className="a2-xs a2-mt12">{wc('dayend.line', { packed: n(held.dayEnd.packedToday), entered: n(held.dayEnd.enteredToday) })}</p>
-        <p className="a2-xs a2-mute">{held.dayEnd.missing.length ? wc('dayend.missing', { list: held.dayEnd.missing.join(', ') }) : wc('dayend.ok')}</p>
+        {/* PR 954 (prototype v5): the card shows the three figures and one line; "not entered at a courier" only when something is */}
+        {held.dayEnd.missing.length ? <p className="a2-xs a2-mt12">{wc('dayend.missing', { list: held.dayEnd.missing.join(', ') })}</p> : null}
         {notInReport.length ? (
           <div className="a2-stack a2-mt12" style={{ gap: 6 }} data-testid="dayend-notpicked">
             <div className="a2-note bad" style={{ marginTop: 0 }} role="alert">
@@ -210,10 +210,10 @@ export default async function HandoverPage({ searchParams }: { searchParams: Sea
             ))}
           </div>
         ) : dayFig.notHanded ? (
-          <p className="a2-xs a2-mute a2-mt6">{t(d, 'ful.pack.dayEnd.waiting', { n: n(dayFig.notHanded) })}</p>
+          <p className="a2-xs a2-mute a2-mt6">{wc('dayend.waiting', { n: n(dayFig.notHanded) })}</p>
         ) : (
           <p className="a2-xs a2-mt6" style={{ color: 'var(--ok)' }}>
-            {t(d, 'ful.pack.dayEnd.allHanded')}
+            {wc('dayend.allHanded')}
           </p>
         )}
         {cancelledStill.map((r) => (
