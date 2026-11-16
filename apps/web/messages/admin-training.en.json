@@ -2,7 +2,7 @@
   "aiTraining": {
     "metaTitle": "Training",
     "title": "Training",
-    "sub": "Teach the agents how the shop talks and decides, in your own words. Every change is a new version, and you can bring back an older one.",
+    "sub": "Teach the agents how the shop talks and decides. Every change is a new version you can roll back.",
     "needPermission": "You can read this page. Teaching the agents needs the AI control permission.",
     "aiOff": "AI is off. What you write here is saved and kept; the agents use it once AI is turned on.",
     "rules": "Instructions guide how an agent writes and decides. They never override the standing rules: replies to buyers stay on Ask, deletes wait for your approval, and no agent changes permissions.",
@@ -83,7 +83,7 @@
       "h": "Try it safely (sandbox)",
       "d": "Type a sample message and see what the agent would answer with the instructions above. Nothing is sent to anyone and nothing is saved until you press the button below the answer.",
       "agent": "Agent",
-      "sample": "Sample message",
+      "sample": "Customer message",
       "samplePh": "For example: Where is my order?",
       "go": "Test answer",
       "busy": "Thinking…",
@@ -117,7 +117,7 @@
     },
     "doc": {
       "h": "Extra documents",
-      "d": "Reference notes the agent may use, such as a size guide or a returns explanation. Editing saves a new version; older versions are kept.",
+      "d": "Price lists, fabric guides, policies the agents may read. Editing saves a new version; older versions are kept.",
       "agent": "For",
       "title": "Title",
       "titlePh": "For example: Returns explained",
