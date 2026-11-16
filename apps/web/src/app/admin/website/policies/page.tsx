@@ -98,6 +98,8 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
       return one != null ? t(d, 'pw.glance.hours', { n: num(one) }) : undefined;
     };
     const live = bands.filter((b) => b.enabled);
+    // PR 1050 (prototype v5): the delivery cards show before the owner has switched the areas on, each saying it is not set yet
+    if (!live.length && bands.length) glance['delivery'] = bands.map((b) => ({ label: nm(b), value: t(d, 'pw.glance.notSet'), sub: hours(b) }));
     if (live.length) {
       glance['delivery'] = live.map((b) => ({ label: nm(b), value: formatMoney(b.chargeMinor, money), sub: hours(b) }));
       glance['payment'] = live.filter((b) => b.codLimitMinor !== null).map((b) => ({ label: t(d, 'pw.glance.codLimit', { name: nm(b) }), value: formatMoney(b.codLimitMinor!, money) }));
@@ -123,6 +125,7 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
       }
       if (cards.length) glance[slug] = [...(glance[slug] ?? []), ...cards].slice(0, 8);
     }
+    if (glance['delivery'] && !glance['delivery'].some((c) => /free|ফ্রি/i.test(c.label))) glance['delivery'].push({ label: t(d, 'pw.glance.freeOver'), value: t(d, 'pw.glance.notSet') });
   } catch {
     /* the strip stays as it was */
   }
