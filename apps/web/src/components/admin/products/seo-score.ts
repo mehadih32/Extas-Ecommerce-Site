@@ -20,6 +20,9 @@ export interface SeoScore {
 }
 
 /** The cuts of the prototype: 15, 20, 15, 10, 5 and 10 points. */
+/** The words that say the text names the place the shop sells in (the Google checks of the product form and the wizard). */
+export const PLACE_WORDS = /bangladesh|\bbd\b|dhaka|বাংলাদেশ|ঢাকা/i;
+
 const COST: Record<SeoTip, number> = { title: 15, description: 20, keyword: 15, place: 10, slug: 5, photos: 10 };
 const TITLE: [number, number] = [30, 60];
 const DESC: [number, number] = [120, 160];
@@ -37,7 +40,7 @@ export function seoScore(i: SeoInput): SeoScore {
   const kw = (i.keyword ?? '').trim().toLowerCase();
   const first = kw.split(/\s+/)[0] ?? '';
   if (first && !`${title} ${desc}`.toLowerCase().includes(first)) tips.push({ key: 'keyword', keyword: kw });
-  if (!/bangladesh|\bbd\b|dhaka|বাংলাদেশ|ঢাকা/i.test(desc)) tips.push({ key: 'place' });
+  if (!PLACE_WORDS.test(desc)) tips.push({ key: 'place' });
   if (i.slug.length > SLUG_MAX) tips.push({ key: 'slug' });
   if (i.photos < i.colours) tips.push({ key: 'photos' });
   const score = Math.max(FLOOR, 100 - tips.reduce((n, x) => n + COST[x.key], 0));
