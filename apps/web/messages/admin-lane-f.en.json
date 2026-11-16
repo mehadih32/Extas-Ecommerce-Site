@@ -282,7 +282,10 @@
         "vatBtn": "VAT setting",
         "lineHead": "{n} courier lines do not match",
         "lineText": "{amt} less than our books. Claim it before the next statement.",
-        "lineBtn": "Check"
+        "lineBtn": "Check",
+        "erpHead": "Pay the ERP {amt} to stay safe",
+        "erpText": "Owed {owed}. Last payment {d} days ago; orders stop after {left} more days without a payment.",
+        "erpBtn": "Pay"
       }
     },
     "fp": {
@@ -300,7 +303,62 @@
         "profit": "Profit per order",
         "note": "Per delivered order ({n})."
       },
-      "note": "{n} delivered. Fixed costs spread per day. Same maths as Home and Reports."
+      "note": "{n} delivered. Fixed costs spread per day. Same maths as Home and Reports.",
+      "seg": {
+        "today": "Today",
+        "7d": "Last 7 days",
+        "month": "This month",
+        "lastmonth": "Last month",
+        "30d": "30 days"
+      },
+      "st": {
+        "title": "Statement",
+        "line": "Line",
+        "this": "This period",
+        "cmp": "Compared",
+        "chg": "Change",
+        "sales": "Sales",
+        "returns": "Goods that came back",
+        "delivery": "Delivery charges collected",
+        "cost": "Product cost (ERP price)",
+        "courier": "Courier charges",
+        "cod": "COD fee",
+        "pack": "Packaging",
+        "gate": "Payment gateway",
+        "msg": "Messages",
+        "loss": "Return loss",
+        "gross": "Gross profit",
+        "ads": "Ads",
+        "fixed": "Fixed costs (rent, salaries…)",
+        "other": "Other expenses",
+        "net": "Net profit",
+        "margin": "Net margin",
+        "vsSame": "vs the same days before",
+        "vsFull": "vs all of last month"
+      },
+      "close": {
+        "title": "Close the month",
+        "sub": "Locks the month and sends its summary to the ERP.",
+        "closed": "Closed · locked",
+        "ready": "Ready to close",
+        "running": "Running",
+        "open": "Open Closes"
+      },
+      "drill": {
+        "title": "Where the profit comes from",
+        "sub": "Profit after ads, by the channel each order came from.",
+        "all": "All channels",
+        "insight": "{best} brings {pct}% of this profit. Lowest margin: {worst} at {m}%.",
+        "channel": "Channel",
+        "orders": "Orders",
+        "sales": "Sales",
+        "profit": "Profit",
+        "margin": "Margin",
+        "share": "Share",
+        "deeper": "By category or style",
+        "empty": "No delivered order in this period."
+      },
+      "moreLink": "More: lines, day by day, money report"
     },
     "fh": {
       "refunds": {
@@ -312,7 +370,22 @@
       },
       "budgets": {
         "title": "Costs & budgets",
-        "sub": "Fixed costs record themselves; you add the rest with a receipt."
+        "sub": "Fixed costs record themselves; you add the rest with a receipt.",
+        "addHead": "Add cost head",
+        "addExpense": "Add expense"
+      },
+      "wl": {
+        "wallet": "Wallet money we owe",
+        "walletNote": "{n} customers · they spend it on next orders",
+        "waiting": "Refunds waiting",
+        "waitingNote": "{n} · must be paid within 72 hours",
+        "month": "Refunded this month",
+        "monthNote": "Only prepaid orders. No cash refund after delivery.",
+        "bigTitle": "Biggest wallet balances",
+        "all": "All customers",
+        "customer": "Customer",
+        "balance": "Wallet",
+        "none": "No customer holds wallet money now."
       }
     },
     "of": {
