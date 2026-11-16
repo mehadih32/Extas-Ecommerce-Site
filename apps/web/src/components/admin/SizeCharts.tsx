@@ -625,18 +625,7 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
   const fitOptions = options.fits;
   return (
     <>
-      <div className="ad-card sc-how">
-        {(['one', 'two', 'three'] as const).map((k, i) => (
-          <div className="sc-step" key={k}>
-            <span className="sc-num">{i + 1}</span>
-            <div>
-              <div className="sc-small sc-bold">{tt(`steps.${k}`)}</div>
-              <div className="sc-xs sc-text2 sc-mt2">{tt(`steps.${k}Text`)}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* PR 965 (prototype v5): the three-step "how it works" card is gone from this screen (its words stay in the messages) */}
       {view === 'list' ? (
         <div className="sc-cats" data-testid="sizecharts-categories">
           {categories
