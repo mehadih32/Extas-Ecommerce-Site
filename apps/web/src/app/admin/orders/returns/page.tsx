@@ -20,6 +20,7 @@ import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { validDay } from '@/lib/admin-orders/range';
 import { countByTab, inRange, isTab, remindersOf, tabOf } from '@/lib/admin-returns/lens';
 import { returnsHref } from '@/lib/admin-returns/model';
+import { courierReminders } from '@/lib/admin-returns/courier-reminders';
 import { ReturnsLens } from '@/components/admin/orders/ReturnsLens';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
@@ -119,6 +120,8 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
   // PR 828: the date range narrows the board and the chip tabs; the reminders and counts follow it
   const now = new Date();
   const inRows = inRange(data.rows, from, to, view.timeZone);
+  // PR 1063: the courier-side reminders (partial deliveries, short counts, delivered with no money in)
+  const courier = await courierReminders(access.deps.db, await access.deps.resolver.value('delivery.courier.claimTerms', { storeId: MOTHER_STORE_ID }), MOTHER_STORE_ID, now);
   data.rows = inRows;
   const tabRows = tab ? inRows.filter((x) => tabOf(x) === tab) : null;
   // PR 191: the refused parcels and the refused-parcel list beside Receive & QC
@@ -149,7 +152,7 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
     </div>
   );
   const lens = (
-    <ReturnsLens view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
+    <ReturnsLens view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} courier={courier} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
   );
   return <ReturnsBoard view={view} data={data} lens={lens} tabRows={tabRows} tabKey={tab} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }
