@@ -136,8 +136,9 @@ describe.skipIf(!HAS_TEST_DB)('AI Center · Training extras on PostgreSQL (PR 71
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sandbox: "all agents" is billed to the agent that owns the admin area, never left unattributed', () => {
-    expect(sandboxAgentKey('all')).toBe('prohori');
+  it('sandbox: "all agents" is billed to the agent named in the request, never a fixed one', () => {
+    expect(sandboxAgentKey('all')).toBeNull();
+    expect(sandboxAgentKey('all', 'doot')).toBe('doot');
     expect(sandboxAgentKey('doot')).toBe('doot');
   });
 });
