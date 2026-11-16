@@ -457,5 +457,17 @@
       "restore": "Bring back",
       "archived": "Archived"
     }
+  },
+  "notices": {
+    "fields": {
+      "titleEn": "Heading (English)",
+      "titleBn": "Heading (Bengali)",
+      "contentEn": "Text in English",
+      "contentBn": "Text in Bengali",
+      "delay": "Show after (seconds)",
+      "startsAt": "From",
+      "endsAt": "Until"
+    },
+    "customersSee": "Customer sees"
   }
 }
