@@ -101,3 +101,46 @@ export function DecideToday({ cards, texts }: { cards: readonly DecideCard[]; te
     </section>
   );
 }
+
+export interface MonthRow {
+  key: string;
+  label: string;
+  shown: string;
+  /** 0-100, the bar's length against sales. */
+  pct: number;
+  kind: 'in' | 'out' | 'net';
+}
+
+/** Prototype v5 Finance > Overview "This month so far": the month's profit line by line, as bars against sales. */
+export function MonthSoFar({ title, more, moreHref, rows, tiles, foot }: { title: string; more: string; moreHref: string; rows: readonly MonthRow[]; tiles: readonly { key: string; label: string; shown: string }[]; foot: string }) {
+  return (
+    <section className="a2-card" data-testid="fn-month" aria-label={title}>
+      <div className="a2-ch">
+        <h2 className="a2-h3">{title}</h2>
+        <Link className="a2-btn sm ghost" href={moreHref}>
+          {more} →
+        </Link>
+      </div>
+      <div className="lf-ms">
+        {rows.map((r) => (
+          <div key={r.key} className={`lf-msr${r.kind === 'out' ? '' : ' tot'}`}>
+            <span>{r.label}</span>
+            <span className="lf-msb" aria-hidden="true">
+              <i className={r.kind === 'out' ? '' : r.kind} style={{ width: `${Math.max(0, Math.min(100, r.pct))}%` }} />
+            </span>
+            <b>{r.shown}</b>
+          </div>
+        ))}
+      </div>
+      <div className="lf-mst">
+        {tiles.map((x) => (
+          <div key={x.key}>
+            {x.label}
+            <b>{x.shown}</b>
+          </div>
+        ))}
+      </div>
+      <p className="lf-note a2-mt12">{foot}</p>
+    </section>
+  );
+}
