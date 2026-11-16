@@ -203,6 +203,7 @@ model Store {
   pageViewDays            PageViewDay[]
   behaviourDays           BehaviourDay[]
   bulkBatches             BulkBatch[]
+  bulkQuoteSends          BulkQuoteSend[]
   orders                  Order[]
   orderItems              OrderItem[]
   orderEvents             OrderEvent[]
@@ -2846,6 +2847,10 @@ model Cart {
   recoveryCount      Int        @default(0)
   /// PR 276 — the random code of the recovery message's link that puts this bag back in any browser (/api/bag/back/<code>).
   restoreCode        String?
+  /// PR 1061 (admin prototype v5, Orders › Incomplete › Report): the shop page the visitor was on when the bag was made
+  /// (path only, no query) and the kind of device (MOBILE, TABLET, DESKTOP). Filled from now on; older bags stay null.
+  landingPage        String?
+  device             String?
   createdAt          DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt          DateTime   @updatedAt @db.Timestamptz(3)
 
@@ -11766,10 +11771,31 @@ model BulkQuote {
   createdAt         DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime     @updatedAt @db.Timestamptz(3)
   batches           BulkBatch[]
+  sends             BulkQuoteSend[]
 
   @@unique([storeId, refNo])
   @@index([storeId, createdAt])
   @@index([enquiryId])
+}
+
+/// @stage S28 · PR 1062 — one press of "Save & send quote": a staff member sent a saved quote to the buyer by one channel.
+/// Append-only log (a second send is a new row); nothing goes out except on that press.
+/// @append-only
+model BulkQuoteSend {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  storeId   Int
+  store     Store     @relation(fields: [storeId], references: [id])
+  quoteId   String    @db.Uuid
+  quote     BulkQuote @relation(fields: [quoteId], references: [id])
+  /// WHATSAPP or SMS: the link the staff member opened, or a message the messaging service sent.
+  channel   String
+  toPhone   String
+  /// The words that went (so the log shows exactly what the buyer was told).
+  body      String
+  sentById  String?   @db.Uuid
+  sentAt    DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([storeId, quoteId, sentAt])
 }
 
 /// @stage S28 · PR 704 — one delivery batch of a bulk quote: its pieces, the planned day and where it is (waiting, packed,
