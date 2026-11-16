@@ -70,6 +70,7 @@ export function priceAdjustSpec(view: View, o: { id: string; number: string; ver
     url: priceAdjustUrl(o.id),
     version: o.version,
     title: t(d, 'orders.cmd.priceAdjust.title', { n: o.number }),
+    sub: t(d, 'orders.cmd.priceAdjust.sub'),
     effects: [t(d, 'orders.eff.priceDue', { due: m(adj.dueMinor) }), limitText, t(d, 'orders.eff.priceLedger'), t(d, 'orders.eff.priceNoRefund')],
     fields,
     ok: t(d, 'orders.cmd.priceAdjust.ok'),

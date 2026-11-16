@@ -411,23 +411,23 @@
       "propNote": "Why (a short note)",
       "priceKind": "What to take off",
       "priceKinds": {
-        "AMOUNT": "A taka amount",
-        "PERCENT": "A percent of the price",
-        "WALLET": "The customer's wallet",
-        "FREE_DELIVERY": "The delivery charge (free delivery)"
+        "AMOUNT": "Amount off",
+        "PERCENT": "% off",
+        "WALLET": "Use wallet",
+        "FREE_DELIVERY": "Free delivery"
       },
       "priceValue": "Amount in taka, or percent",
       "priceValuePh": "e.g. 50, or 10 for 10%. Empty: all the wallet allows",
       "priceReason": "Reason (required)",
-      "pricePin": "Owner PIN (only needed above your limit)",
+      "pricePin": "Owner PIN",
       "pricePinNeeded": "Owner PIN",
       "mergeOrders": "Orders to fold in",
       "mergeOrderLine": "{number} · {lines} lines · {total}",
       "mergeLeaveOut": "Lines to leave out (they stay on the cancelled order)",
       "mergeLineLabel": "{number} · {name} ({detail}) x {quantity} · {total}",
-      "mergeAddress": "The addresses are different",
-      "mergeAddressStop": "Stop, do not merge",
-      "mergeAddressGo": "Go on with this order's address",
+      "mergeAddress": "The addresses are different. Send together to the main order’s address, or keep them as separate parcels?",
+      "mergeAddressStop": "Keep separate",
+      "mergeAddressGo": "Send together",
       "replaceLine": "Which piece",
       "replaceLineLabel": "{name} ({detail}) x {quantity}",
       "replaceReason": "Why",
@@ -544,9 +544,9 @@
       },
       "cancel": {
         "label": "Cancel (reason)",
-        "title": "Cancel {n}?",
-        "ok": "Cancel the order",
-        "done": "{n} cancelled",
+        "title": "Cancel this order?",
+        "ok": "Cancel order",
+        "done": "Order cancelled · stock released",
         "doneRefund": "Cancelled · {n} refund request(s) for the owner"
       },
       "cancelAfterBooking": {
@@ -648,6 +648,7 @@
       "priceAdjust": {
         "label": "Adjust price",
         "title": "Take money off order {n}",
+        "sub": "Reason required, logged on the timeline. Above your limit needs the owner PIN.",
         "ok": "Adjust price",
         "done": "Saved on order {n}: applied, or sent for approval when it is above your limit"
       },
@@ -665,13 +666,13 @@
       },
       "merge": {
         "label": "Merge",
-        "title": "Merge other orders into {n}",
+        "title": "Merge orders",
         "ok": "Merge",
         "done": "The orders are merged into {n}. Check the lines, then confirm"
       },
       "mergeCall": {
         "label": "Merge + call",
-        "title": "Merge other orders into {n} and call",
+        "title": "Merge orders and call",
         "ok": "Merge and queue a call",
         "done": "The orders are merged into {n} and a call is queued"
       },
@@ -737,7 +738,7 @@
       "mergeMove": "The lines you pick move onto this order at the price they were sold at",
       "mergeCancel": "Each folded order is cancelled as \"duplicate order\", its stock goes free, and this order takes the pieces",
       "mergeCharge": "This order keeps its own delivery charge and address; the folded order's charge goes with it",
-      "mergeAddress": "Different address on {numbers}. Say go on to use this order's address",
+      "mergeAddress": "Different address on {numbers}. Choose Send together to use this order's address",
       "mergeThenEdit": "After this you can take a line out, change a size or add a piece on this order, then confirm it",
       "replaceFree": "The same piece goes again, free: the new parcel costs the customer nothing",
       "replaceNoMoney": "No refund and no wallet credit is made, whatever the piece costs now",
