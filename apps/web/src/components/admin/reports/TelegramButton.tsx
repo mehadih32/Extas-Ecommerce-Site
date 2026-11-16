@@ -16,7 +16,10 @@ export function TelegramButton({
   texts: x,
   disabledReason,
   testId,
+  message,
 }: {
+  /** The message to send (PR 891: the monthly review as the page shows it). */
+  message?: string;
   texts: TelegramTexts;
   disabledReason: string | null;
   testId: string;
@@ -27,13 +30,21 @@ export function TelegramButton({
   const run = async () => {
     setState("busy");
     try {
-      const res = await fetch("/api/admin/reports/analytics/digest", {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind: "monthly" }),
-      });
+      // PR 891: with a `message` the button sends that (the review the page shows); without it, the monthly digest as before.
+      const res = await fetch(
+        message
+          ? "/api/admin/reports/review/telegram"
+          : "/api/admin/reports/analytics/digest",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(
+            message ? { text: message } : { kind: "monthly" },
+          ),
+        },
+      );
       const j = (await res.json().catch(() => null)) as {
         ok?: boolean;
         sent?: { telegram?: string };

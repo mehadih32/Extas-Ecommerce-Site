@@ -481,6 +481,7 @@
       "tgSkipped": "Not sent: Telegram is switched off for digests, or this month's digest already went.",
       "tgFailed": "Could not send. Check the Telegram connection in Keys & connections.",
       "tgNoKey": "You need the right to run analytics digests (reports.analytics.write) to send this.",
+      "tgOpen": "Full review: Reports › Monthly review in your admin.",
       "thisSoFar": "{month} so far",
       "comparedWith": "Compared per day with {month}",
       "pdfShort": "PDF",
