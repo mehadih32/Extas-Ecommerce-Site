@@ -16,7 +16,8 @@
 .st-slotst { color: var(--lm-ink2); font-size: 12px; }
 .st-slotst.on { color: var(--lm-ac-ink); }
 .st-logonote { grid-column: 1 / -1; margin: 0; }
-@media (max-width: 960px) { .st-grid { grid-template-columns: minmax(0, 1fr); } .st-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 960px) { .st-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1279px) { .st-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* PR 991 - Store details: the sticker preview window, the Sales / Profit so far lines and the More options note list. */
 .st-dlg { border: 1px solid var(--lm-ln); border-radius: 14px; background: var(--lm-sf); color: var(--lm-ink); padding: 16px; width: min(92vw, 380px); }
 .st-dlg::backdrop { background: color-mix(in srgb, var(--lm-ink) 35%, transparent); }
