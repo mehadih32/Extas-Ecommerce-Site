@@ -4,6 +4,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { call } from '../api';
+import { showToast } from '../lumen/Toast';
 import { errWords, Msg } from './Parts';
 import { t, type Dict } from '@/lib/i18n';
 
@@ -26,6 +27,7 @@ export function ReplyForm({ dict, edit, maxChars, onDone }: { dict: Dict; edit: 
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const go = async () => {
+    if (!shortcut.trim() || !(en.trim() || bn.trim())) return setMsg({ ok: false, text: c('fillBoth') });
     setBusy(true);
     const a = await call('POST', API, { ...(edit ? { id: edit.id } : {}), shortcut, bodyEn: en, bodyBn: bn });
     setBusy(false);
@@ -41,6 +43,7 @@ export function ReplyForm({ dict, edit, maxChars, onDone }: { dict: Dict; edit: 
   };
   return (
     <div className="a2-stack" style={{ gap: 10 }} data-testid="reply-form">
+      {edit ? <b className="a2-sm">{c('editTitle')}</b> : null}
       <label className="a2-stack" style={{ gap: 4 }}>
         <span className="a2-sm">{c('fShort')}</span>
         <input className="a2-inp" value={shortcut} maxLength={24} placeholder="price" onChange={(e) => setShortcut(e.target.value)} style={{ maxWidth: 220 }} data-testid="reply-short" />
@@ -78,6 +81,7 @@ export function ReplyRowActions({ dict, row, archived, maxChars }: { dict: Dict;
     const a = await call('POST', `${API}/${row.id}/archive`, { archive: !archived });
     setBusy(false);
     if (!a.data.ok) return setMsg({ ok: false, text: errWords(dict, a) });
+    if (!archived) showToast({ text: c('archivedNow'), tone: 'ok' });
     router.refresh();
   };
   return (

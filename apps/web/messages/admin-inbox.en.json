@@ -190,7 +190,7 @@
     },
     "err": {
       "STALE": "Someone changed this conversation in between; it was read again.",
-      "EMPTY": "Write something or add a file.",
+      "EMPTY": "Write something first",
       "TOO_LONG": "The message is too long.",
       "FILES_OFF": "Files are switched off in Support settings.",
       "TOO_MANY_FILES": "Too many files for one message.",
@@ -381,7 +381,7 @@
         "h": "Orders from the chat",
         "d": "A \"Chat bag\" beside each conversation: products from the Products drawer at the shop's own prices and combos, then \"Create order\". The order keeps the chat's channel (WhatsApp, Messenger, Live chat). Your Parameter for Checkout is the fraud gate: when it asks this customer for an advance, no Cash on Delivery order is made — the order waits for the advance and its pay link goes into the chat.",
         "enabled": "Orders from the chat",
-        "enabledHelp": "Uses the Products drawer, so \"Products in the chat\" must be on too. Who may press Create order is the \"Create an order from a chat\" permission.",
+        "enabledHelp": "Uses the Products drawer, so \"Products in the chat\" must be on too. Who may press Create order from chat is the \"Create an order from a chat\" permission.",
         "wordsEn": "Pay link message (English)",
         "wordsBn": "Pay link message (Bengali)",
         "wordsHelp": "What the customer reads with the pay link. Use {number} for the order, {amount} for the advance and {link} for the link ({link} must be there). Never type an amount: it comes from your advance rule."
@@ -671,7 +671,7 @@
       "phoneLink": "Link chat to this customer",
       "phoneSave": "Save as new customer",
       "riskBand": "Risk level",
-      "refusedNote": "Refused parcels before. Ask for the delivery charge in advance.",
+      "refusedNote": "This customer refused parcels before — the order will be marked for a check.",
       "advice": {
         "auto": "Confirms by itself",
         "call": "Call before sending",
@@ -701,7 +701,7 @@
       "ordered": "ordered {number}",
       "add": "Add to bag",
       "added": "Added to the chat bag.",
-      "createOrder": "Create order"
+      "createOrder": "Create order from chat"
     },
     "cart": {
       "h": "Chat bag",
@@ -725,7 +725,7 @@
       "address": "Full address",
       "check": "Check price and stock",
       "checking": "Checking…",
-      "create": "Create order",
+      "create": "Create order from chat",
       "creating": "Creating…",
       "advance": "Take advance",
       "advanceLine": "The shop's rule asks {amount} ahead for this order, so it is not a Cash on Delivery order. Take advance makes the order, it waits for the advance, and the pay link goes into the chat.",
