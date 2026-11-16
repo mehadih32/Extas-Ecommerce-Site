@@ -15,6 +15,10 @@
     "receipts": {
       "label": "Receipt photo on expenses",
       "help": "Lets a photo or PDF of the receipt be added to an expense on Money → Expenses, up to the size set here (1–20 MB). Off until switched on; only pictures and PDFs are taken, checked by their contents."
+    },
+    "adShareTarget": {
+      "label": "Ad spend target (% of sales)",
+      "help": "The share of sales you want ad spend to stay under. Finance Overview shows an \"Ads are X% of sales\" card when ads pass it. Empty = no target."
     }
   }
 }

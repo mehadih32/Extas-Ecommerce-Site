@@ -262,7 +262,9 @@
         "net": "Net profit",
         "pace": "Month-end sales (at this pace)",
         "paceNet": "Month-end net profit",
-        "foot": "{from}–{to} · sales counted on delivery date · same numbers as Home and Reports."
+        "foot": "{from}–{to} · sales counted on delivery date · same numbers as Home and Reports.",
+        "fixedCovered": "Fixed costs covered",
+        "target": "Month target ({target})"
       },
       "dec": {
         "title": "Decide today",
@@ -285,7 +287,10 @@
         "lineBtn": "Check",
         "erpHead": "Pay the ERP {amt} to stay safe",
         "erpText": "Owed {owed}. Last payment {d} days ago; orders stop after {left} more days without a payment.",
-        "erpBtn": "Pay"
+        "erpBtn": "Pay",
+        "adHead": "Ads are {pct}% of sales",
+        "adText": "Your target is {target}%. Ads so far this month: {ads}.",
+        "adBtn": "See ads"
       }
     },
     "fp": {
@@ -385,7 +390,12 @@
         "all": "All customers",
         "customer": "Customer",
         "balance": "Wallet",
-        "none": "No customer holds wallet money now."
+        "none": "No customer holds wallet money now.",
+        "who": "Who approves",
+        "whoOne": "Owner or manager",
+        "whoTwo": "A second person",
+        "exchange": "Exchange credits waiting",
+        "exchangeNote": "{n} · added after the old piece passes the check"
       }
     },
     "of": {
