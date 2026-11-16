@@ -15,6 +15,10 @@
     "trainingOff": {
       "label": "Corrections and documents switched off",
       "help": "Ids of the training corrections and documents the owner stopped using. Nothing is deleted."
+    },
+    "keepOnFeatures": {
+      "label": "Checks that keep running while AI is off",
+      "help": "Which cheap system checks (site health, backup, courier score, stuck parcels, daily digest, reply drafts) keep running while AI is off. They never call an AI model: anything that would stops when AI is off."
     }
   },
   "telegram": {

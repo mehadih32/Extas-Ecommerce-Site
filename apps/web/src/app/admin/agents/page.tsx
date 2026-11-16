@@ -27,6 +27,14 @@ import en from '../../../../messages/admin-agents.en.json';
 import stripBn from '../../../../messages/admin-ai-strip.bn.json';
 import stripEn from '../../../../messages/admin-ai-strip.en.json';
 import { AiStrip } from '@/components/admin/ai/AiStrip';
+import { AgentSwitch } from '@/components/admin/ai/AgentSwitch';
+import { KeepOnFeatures } from '@/components/admin/ai/KeepOnFeatures';
+import { KeepOnSwitch } from '@/components/admin/ai/KeepOnSwitch';
+import { ModelPickSelect, type ModelPickOption } from '@/components/admin/ai/ModelPickSelect';
+import { ScheduleEditor } from '@/components/admin/ai/ScheduleEditor';
+import { AI_KEEP_ON_FEATURES } from '@extas/settings';
+import aiBn from '../../../../messages/admin-ai.bn.json';
+import aiEn from '../../../../messages/admin-ai.en.json';
 import '@/components/admin/ai/ai-strip.css';
 import './agents.css';
 
@@ -36,7 +44,7 @@ const KEY = 'aiAgents';
 const HERE = '/admin/agents';
 
 function withScreen(view: AdminView): AdminView {
-  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? stripBn : stripEn) as unknown as Dict), aiAgents: (view.lang === 'bn' ? bn : en).aiAgents as unknown as Dict } };
+  return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? stripBn : stripEn) as unknown as Dict), aiAgents: (view.lang === 'bn' ? bn : en).aiAgents as unknown as Dict, aiControl: (view.lang === 'bn' ? aiBn : aiEn).aiControl as unknown as Dict } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -58,9 +66,14 @@ export default async function AgentsTeamPage() {
     );
   const d = view.dict;
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `aiAgents.${k}`, vars);
+  const cc = (k: string, vars?: Record<string, string | number>) => t(d, `aiControl.${k}`, vars);
   const canControl = access.guard.permissions?.has('ai.control') ?? false;
 
-  const [aiOn, offText] = await Promise.all([access.deps.resolver.value('ai.enabled'), access.deps.resolver.value('ai.offText', { storeId: MOTHER_STORE_ID })]);
+  const [aiOn, offText, keepOn] = await Promise.all([
+    access.deps.resolver.value('ai.enabled'),
+    access.deps.resolver.value('ai.offText', { storeId: MOTHER_STORE_ID }),
+    access.deps.resolver.value('ai.keepOnFeatures', { storeId: MOTHER_STORE_ID }),
+  ]);
   const [agents, tgEnabled, tgSecret] = await Promise.all([
     agentProfileList({ db: access.deps.db }),
     isTelegramCommandsEnabled(access.deps),
@@ -74,6 +87,18 @@ export default async function AgentsTeamPage() {
   ]);
   const money = moneyOf(room.view.currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
+  // the same controls the Control room draws, one set inside each card (prototype v5 m-ai.js renderAgents): pause, company, when it runs, keep on
+  const providerLabel = (p: string | null) => (p === null ? cc('agents.model.practice') : cc(`agents.model.providers.${p}`));
+  const modelOptions: ModelPickOption[] = room.view.modelOptions.map((opt) => ({
+    value: opt.provider,
+    ready: opt.ready,
+    label: opt.ready ? providerLabel(opt.provider) : cc('agents.model.notReady', { provider: providerLabel(opt.provider) }),
+  }));
+  const dayLabels = [0, 1, 2, 3, 4, 5, 6].map((i) => cc(`agents.schedule.days.${i}`));
+  const modeLabels = { always: cc('agents.schedule.mode.always'), daily: cc('agents.schedule.mode.daily'), weekly: cc('agents.schedule.mode.weekly') };
+  const scheduleText = (sc: { mode: string; time?: string | null; days?: number[] | null }) =>
+    sc.mode === 'always' ? cc('agents.schedule.always') : sc.mode === 'daily' ? cc('agents.schedule.daily', { time: sc.time ?? '' }) : cc('agents.schedule.weekly', { days: (sc.days ?? []).map((x) => dayLabels[x]).join(', '), time: sc.time ?? '' });
+  const features = AI_KEEP_ON_FEATURES.map((k) => ({ key: k, label: c(`keepOn.features.${k}`) }));
 
   return (
     <div className="a2-z agents-page" data-testid="agents-team" data-lm-ready="">
@@ -149,7 +174,8 @@ export default async function AgentsTeamPage() {
           const name = view.lang === 'bn' ? a.nameBn : a.nameEn;
           const live = room.agents.find((r) => r.key === a.key);
           return (
-            <Link key={a.key} href={`/admin/agents/${a.key}`} className="a2-card tight ag-card" data-testid={`agents-card-${a.key}`}>
+            <div key={a.key} className="a2-card tight ag-card" data-testid={`agents-card-${a.key}`}>
+              <Link href={`/admin/agents/${a.key}`} className="ag-link" data-testid={`agents-link-${a.key}`}>
               <div className="ag-ch">
                 <span className="ag-av" aria-hidden="true">
                   {a.photoUrl ? <img src={a.photoUrl} alt="" loading="lazy" /> : a.emoji}
@@ -169,6 +195,7 @@ export default async function AgentsTeamPage() {
                 <span>{c('team.open', { n: a.openCount })}</span>
                 <span>{c('team.done', { n: a.doneCount })}</span>
               </div>
+              </Link>
               <div className="ag-counts a2-xs a2-mute">
                 <span>
                   {c('card.today')}: {amount(live?.todayMinor ?? 0)}
@@ -177,10 +204,65 @@ export default async function AgentsTeamPage() {
                   {c('card.month')}: {amount(live?.monthMinor ?? 0)}
                 </span>
               </div>
-            </Link>
+              {live ? (
+                <div className="ag-ctl" data-testid={`agents-controls-${a.key}`}>
+                  <div className="ag-ctl-row">
+                    <span className="a2-xs a2-mute">{cc('agents.switchLabel', { name })}</span>
+                    {canControl ? (
+                      <AgentSwitch agentKey={a.key} on={live.enabled} label={cc('agents.switchLabel', { name })} pausedText={cc('toast.paused', { name })} resumedText={cc('toast.resumed', { name })} failedText={cc('toast.failed', { name })} />
+                    ) : null}
+                  </div>
+                  <div className="ag-ctl-row">
+                    <span className="a2-xs a2-mute">{cc('agents.model.label')}</span>
+                    {canControl ? (
+                      <ModelPickSelect agentKey={a.key} selected={live.selectedProvider} options={modelOptions} label={cc('agents.model.selectLabel', { name })} changedText={cc('agents.model.toastChanged', { name })} failedText={cc('agents.model.toastFailed', { name })} notReadyText={cc('agents.model.toastNotReady')} />
+                    ) : (
+                      <span className="a2-xs">{providerLabel(live.selectedProvider)}</span>
+                    )}
+                  </div>
+                  <div className="ag-ctl-row">
+                    <span className="a2-xs a2-mute">{cc('agents.schedule.label')}</span>
+                    {canControl ? (
+                      <ScheduleEditor
+                        agentKey={a.key}
+                        value={{ mode: live.schedule.mode, time: live.schedule.time, days: live.schedule.days }}
+                        dayLabels={dayLabels}
+                        modeLabels={modeLabels}
+                        selectLabel={cc('agents.schedule.selectLabel', { name })}
+                        timeLabel={cc('agents.schedule.timeLabel', { name })}
+                        daysLabel={cc('agents.schedule.daysLabel', { name })}
+                        saveLabel={cc('agents.schedule.saveLabel')}
+                        savedText={cc('agents.schedule.toastChanged', { name })}
+                        failedText={cc('agents.schedule.toastFailed', { name })}
+                        invalidText={cc('agents.schedule.toastInvalid')}
+                      />
+                    ) : (
+                      <span className="a2-xs">{scheduleText(live.schedule)}</span>
+                    )}
+                  </div>
+                  <div className="ag-ctl-row">
+                    <span className="a2-xs a2-mute">{cc('agents.keepOn.label')}</span>
+                    {canControl ? (
+                      <KeepOnSwitch agentKey={a.key} on={live.keepOnWhenMasterOff} label={cc('agents.keepOn.switchLabel', { name })} onText={cc('agents.keepOn.toastOn', { name })} offText={cc('agents.keepOn.toastOff', { name })} failedText={cc('agents.keepOn.toastFailed', { name })} />
+                    ) : live.keepOnWhenMasterOff ? (
+                      <span className="a2-pill line">{cc('agents.keepOn.pillOn')}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </div>
+
+      <section className="a2-card a2-mt12" aria-labelledby="ag-kf-h" data-testid="agents-keepon-card">
+        <h2 className="a2-h3" id="ag-kf-h">
+          {c('keepOn.h')}
+        </h2>
+        <p className="a2-xs a2-mute">{c('keepOn.sub')}</p>
+        <KeepOnFeatures value={keepOn as unknown as Record<string, boolean>} features={features} canControl={canControl} texts={{ saved: c('keepOn.saved'), failed: c('keepOn.failed') }} />
+        <p className="a2-xs a2-mute a2-mt12">{c('keepOn.hint')}</p>
+      </section>
     </div>
   );
 }

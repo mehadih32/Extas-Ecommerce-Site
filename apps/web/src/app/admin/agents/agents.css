@@ -25,6 +25,13 @@
   flex-direction: column;
   gap: 8px;
 }
+/* PR 936 — the controls inside each card (pause, company, when it runs, keep on) and the six "keep on when AI is off" switches */
+.adm2 .ag-link { display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; min-width: 0; }
+.adm2 .ag-ctl { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--lm-ln); padding-top: 8px; min-width: 0; }
+.adm2 .ag-ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; min-height: 44px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .ai-kf { display: grid; gap: 8px 24px; grid-template-columns: minmax(0, 1fr); margin-top: 10px; }
+@media (min-width: 700px) { .adm2 .ai-kf { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .ai-kf-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; overflow-wrap: anywhere; }
 .adm2 .ag-ch {
   display: flex;
   align-items: center;

@@ -148,7 +148,22 @@
       "today": "Today",
       "month": "Month"
     },
-    "controlsNote": "Pause, model, schedule, cap and keep-on for each agent are on the",
-    "controlsLink": "Control room"
+    "controlsNote": "Each card holds its own pause, company, schedule and keep-on switch. The monthly cap per agent and the model routing are on the",
+    "controlsLink": "Control room",
+    "keepOn": {
+      "h": "Keep on when AI is off",
+      "sub": "Pick the few things that must never stop",
+      "saved": "Saved",
+      "failed": "That did not save. Please try again.",
+      "hint": "These are cheap checks that protect money and orders. They never call an AI model. Everything else stops when you switch AI off.",
+      "features": {
+        "health": "Site health and nightly page check",
+        "backup": "Backup check and alarm",
+        "score": "Courier score on new orders",
+        "stuck": "Stuck-parcel alert",
+        "digest": "Daily digest",
+        "replies": "Reply drafts in Inbox"
+      }
+    }
   }
 }

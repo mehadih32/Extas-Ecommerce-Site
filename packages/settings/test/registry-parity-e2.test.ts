@@ -1,7 +1,7 @@
 // PR 815-820 — the small settings of Settings and AI Center: off or empty as shipped, strict about what the owner may save.
 import { describe, expect, it } from 'vitest';
 import { registry } from '../src/registry';
-import { AI_DIGEST_DEFAULT, aiDigestSchema, aiTrainingOffSchema, PAYMENTS_SETTLEMENT_DEFAULT, paymentsSettlementSchema, TELEGRAM_CONTROL_DEFAULT, telegramControlSchema } from '../src/registry-parity-e2';
+import { AI_DIGEST_DEFAULT, AI_KEEP_ON_FEATURES, AI_KEEP_ON_FEATURES_DEFAULT, aiDigestSchema, aiKeepOnFeaturesSchema, aiTrainingOffSchema, PAYMENTS_SETTLEMENT_DEFAULT, paymentsSettlementSchema, TELEGRAM_CONTROL_DEFAULT, telegramControlSchema } from '../src/registry-parity-e2';
 
 describe('PR 815-820 · parity E2 settings', () => {
   it('every key is in the registry and ships off or empty', () => {
@@ -14,6 +14,12 @@ describe('PR 815-820 · parity E2 settings', () => {
     expect(PAYMENTS_SETTLEMENT_DEFAULT.accounts).toEqual([]);
     expect(registry['payments.settlement'].isOwnerData).toBe(true);
     expect(registry['payments.settlement'].default).toBeNull();
+  });
+  it('PR 936: the keep-on picks cover the six named checks, start as the prototype and refuse anything else', () => {
+    expect(registry['ai.keepOnFeatures'].default).toEqual(AI_KEEP_ON_FEATURES_DEFAULT);
+    expect(Object.keys(AI_KEEP_ON_FEATURES_DEFAULT).sort()).toEqual([...AI_KEEP_ON_FEATURES].sort());
+    expect(aiKeepOnFeaturesSchema.safeParse({ ...AI_KEEP_ON_FEATURES_DEFAULT, extra: true }).success).toBe(false);
+    expect(aiKeepOnFeaturesSchema.safeParse({ ...AI_KEEP_ON_FEATURES_DEFAULT, health: 'yes' }).success).toBe(false);
   });
   it('refuses a bad time, a bad Telegram number and a settlement longer than a month', () => {
     expect(aiDigestSchema.safeParse({ ...AI_DIGEST_DEFAULT, time: '25:00' }).success).toBe(false);
