@@ -616,14 +616,14 @@
     },
     "sim": {
       "title": "Checkout simulator",
-      "sub": "Pick a customer and a cart: see exactly what they pay with all your live rules working together. Nothing is saved or sent.",
+      "sub": "Pick a customer and cart: see exactly what they pay with all your rules working together.",
       "area": "Delivery area",
       "cart": "Cart value",
       "pieces": "Pieces",
       "category": "Category",
       "anyCategory": "Any category",
-      "pay": "How they pay",
-      "coupon": "Coupon code (optional)",
+      "pay": "Payment",
+      "coupon": "Coupon",
       "newCustomer": "New customer (first order)",
       "products": "Products ({n} pcs)",
       "delivery": "Delivery ({area}, {days} days)",
@@ -632,10 +632,10 @@
       "notSet": "Not set",
       "pays": "Customer pays",
       "deliveryUnknown": "delivery (not set yet)",
-      "codOk": "Cash on delivery is allowed for this cart.",
-      "codNo": "Cash on delivery is not allowed for this cart: the customer must pay another way.",
-      "prepaid": "Paid before delivery.",
-      "toFree": "Add {amount} more for free delivery.",
+      "codOk": "Cash on delivery allowed. No advance needed.",
+      "codNo": "Cash on delivery not offered ({why}). Customer must pay online.",
+      "prepaid": "Paid online — no advance or cash collection needed.",
+      "toFree": "💡 Add {amount} more for free delivery — the shop shows this to the customer.",
       "payWay": {
         "COD": "Cash on delivery",
         "BKASH": "bKash",
@@ -645,18 +645,23 @@
       },
       "offer": {
         "discount": "Offer: {rule}",
-        "setTier": "Buy more, save: {rule}"
+        "setTier": "Buy more, save ({n} pcs)"
       },
       "couponState": {
         "unlocks": "Coupon {code} is on and counted.",
         "unknown": "Coupon {code} was not found.",
-        "off": "Coupon {code} is off, not started, ended or used up."
+        "off": "Coupon is off or ended"
       },
       "waiting": {
         "COUPON": "Rule {rule} waits for a coupon.",
         "MIN_SUBTOTAL": "Rule {rule} waits for a bigger cart.",
         "MIN_QUANTITY": "Rule {rule} needs {n} more piece(s)."
-      }
+      },
+      "noCoupon": "No coupon",
+      "couponOff": " (off)",
+      "codOver": "over {max}",
+      "codOff": "turned off",
+      "eidLast": "Eid: last order day {date}"
     },
     "text": {
       "title": "Edit the customer text",

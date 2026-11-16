@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatValue } from '@extas/rules/pure';
 import type { CheckoutSimChoices, CheckoutSimResult } from '@extas/rules';
 import { call } from '../api';
+import { Icon } from '../Icon';
 import { t, type Dict } from '@/lib/i18n';
 import { moneyFromInput, moneyToInput, rulesRefusal, type Lang, type RulesEnv } from './model';
 
@@ -33,6 +34,7 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
       if (a.status !== 200 || !c) return setProblem(rulesRefusal(d, a.data.error, a.data.details ?? []));
       setChoices(c);
       setBand((x) => x || c.bands.find((b) => b.enabled)?.key || c.bands[0]?.key || '');
+      setCat((x) => x || c.categories[0]?.id || '');
     });
   }, [d]);
 
@@ -61,6 +63,9 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
   const hrs = out?.hours;
   const cp = out?.coupon ?? null;
   const bandName = choices?.bands.find((b) => b.key === band);
+  const day = (iso: string) => new Date(iso).toLocaleDateString(lang === 'bn' ? 'bn-BD-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short' });
+  const cutoff = q?.cutoffs.find((c) => c.bandKey === band) ?? null;
+  const codWhy = q && q.cod.allowed === false ? (q.cod.reason === 'OVER_MAX' && q.cod.maxOrderMinor !== null ? tt('codOver', { max: money(q.cod.maxOrderMinor) }) : tt('codOff')) : '';
   return (
     <section className="rh-card rh-sim" data-testid="rh-sim" aria-labelledby="rh-sim-h">
       <h3 id="rh-sim-h">{tt('title')}</h3>
@@ -119,7 +124,15 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
           <label className="ad-label" htmlFor="rh-sim-cp">
             {tt('coupon')}
           </label>
-          <input id="rh-sim-cp" className="ad-input" maxLength={40} value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+          <select id="rh-sim-cp" className="ad-input" value={coupon} onChange={(e) => setCoupon(e.target.value)}>
+            <option value="">{tt('noCoupon')}</option>
+            {choices?.coupons.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code}
+                {c.on ? '' : tt('couponOff')}
+              </option>
+            ))}
+          </select>
         </div>
         <label className="rh-sw">
           <input type="checkbox" checked={fresh} onChange={(e) => setFresh(e.target.checked)} /> <span>{tt('newCustomer')}</span>
@@ -136,21 +149,46 @@ export function CheckoutSimulator({ dict: d, lang, env }: { dict: Dict; lang: La
             .filter((a) => a.amountMinor && (a.effect === 'discount' || a.effect === 'setTier'))
             .map((a, i) => (
               <div className="rh-sim-ln" key={i}>
-                <span>{tt(`offer.${a.effect}`, { rule: a.rule.key })}</span>
+                <span>{tt(`offer.${a.effect}`, { rule: a.rule.key, n: Number(pieces) })}</span>
                 <b className="good">−{money(a.amountMinor)}</b>
               </div>
             ))}
           <div className="rh-sim-ln">
-            <span>{bandName ? tt('delivery', { area: name(bandName), days: hrs && hrs.min !== null && hrs.max !== null ? `${Math.ceil(hrs.min / 24)}-${Math.ceil(hrs.max / 24)}` : '—' }) : tt('deliveryPlain')}</span>
-            <b>{q.delivery.chargeMinor === null ? tt('notSet') : q.delivery.free ? tt('free') : money(q.delivery.chargeMinor)}</b>
+            <span>{bandName ? tt('delivery', { area: name(bandName), days: hrs && hrs.min !== null && hrs.max !== null ? `${Math.ceil(hrs.min / 24)}–${Math.ceil(hrs.max / 24)}` : '—' }) : tt('deliveryPlain')}</span>
+            <b>
+              {q.delivery.chargeMinor === null ? (
+                tt('notSet')
+              ) : q.delivery.free ? (
+                <>
+                  <span className="good">{tt('free')}</span> {bandName && bandName.chargeMinor > 0 ? <s className="rh-hint">{money(bandName.chargeMinor)}</s> : null}
+                </>
+              ) : (
+                money(q.delivery.chargeMinor)
+              )}
+            </b>
           </div>
           <div className="rh-sim-ln tot">
             <span>{tt('pays')}</span>
             <b data-testid="rh-sim-total">{q.totalKnown ? money(q.totalMinor) : `${money(q.totalMinor)} + ${tt('deliveryUnknown')}`}</b>
           </div>
-          <p className="rh-hint">{q.cod.allowed === false && pay === 'COD' ? tt('codNo') : pay === 'COD' ? tt('codOk') : tt('prepaid')}</p>
-          {q.delivery.remainingMinor ? <p className="rh-hint">{tt('toFree', { amount: money(q.delivery.remainingMinor) })}</p> : null}
-          {cp ? <p className="rh-hint">{tt(`couponState.${cp.state}`, { code: cp.code })}</p> : null}
+          {pay === 'COD' ? (
+            q.cod.allowed === false ? (
+              <div className="rh-call bad">
+                <Icon name="info" size={15} /> <span>{tt('codNo', { why: codWhy })}</span>
+              </div>
+            ) : (
+              <div className="rh-call good">
+                <Icon name="check" size={15} /> <span>{tt('codOk')}</span>
+              </div>
+            )
+          ) : (
+            <div className="rh-call good">
+              <Icon name="check" size={15} /> <span>{tt('prepaid')}</span>
+            </div>
+          )}
+          {q.delivery.remainingMinor ? <p className="rh-note-sm">{tt('toFree', { amount: money(q.delivery.remainingMinor) })}</p> : null}
+          {cp && cp.state !== 'unlocks' ? <p className="rh-note-sm">{tt(`couponState.${cp.state}`, { code: cp.code })}</p> : null}
+          {cutoff ? <p className="rh-note-sm">{tt('eidLast', { date: day(cutoff.at) })}</p> : null}
           {q.waiting.map((w, i) => (
             <p className="rh-hint" key={i}>
               {tt(`waiting.${w.why}`, { rule: w.rule.key, n: w.morePieces ?? 0 })}
