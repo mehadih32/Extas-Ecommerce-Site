@@ -36,3 +36,15 @@
 .adm2 .o6-kpi .o6-ks{color:var(--mute);font-size:12px}
 .adm2 .o6-tw{overflow-x:auto}
 .adm2 .o6-note{margin:12px 0 0}
+
+/* ---- Processing: the card grid with the commands on each card (PR 1064) ---- */
+.adm2 .o6-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
+.adm2 .o6-q{display:flex;flex-direction:column;gap:8px;min-width:0}
+.adm2 .o6-qh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;min-width:0}
+.adm2 .o6-qh .o6-grow{flex:1;min-width:0}
+.adm2 .o6-qn{font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.adm2 .o6-qt{text-align:right;font-size:17px;font-variant-numeric:tabular-nums}
+.adm2 .o6-qb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.adm2 .o6-qb.bad{border-color:var(--bad)}
+.adm2 .o6-qa{display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:900px){.adm2 .o6-cards{grid-template-columns:minmax(0,1fr)}}
