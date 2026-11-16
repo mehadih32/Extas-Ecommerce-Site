@@ -348,3 +348,12 @@
 .s28-mp-acts .a2-btn, .s28-mp-top .a2-btn { min-height: 44px; }
 .s28-mp-step a { display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box; }
 [data-testid='map-erp'] .a2-lnk { white-space: normal; min-height: 44px; }
+
+/* batch 2026-11-17-1: touch sizes the device gate found (every tap target at least 44 px on a phone or a tablet) */
+@media (max-width: 1023px), (pointer: coarse) {
+  summary.a2-h3 { min-height: 44px; align-items: center; cursor: pointer; }
+  .lf-more, .pf-tap { display: inline-flex; align-items: center; min-height: 44px; }
+  .pl-seg a, .pl-seg-sm a { min-height: 44px; }
+}
+/* a section with ten tabs or more (Reports has eleven, as the prototype): tighter tab padding so all of them show on a 1366 laptop, none behind "More" */
+[data-lm-look] .a2-tabs-tight .a2-tab { padding-inline: 8px; }

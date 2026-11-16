@@ -157,7 +157,7 @@ export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string
   const row = tabs.slice(0, shown);
   const more = tabs.slice(shown);
   return (
-    <div className="a2-tabs-fit" ref={nav}>
+    <div className={`a2-tabs-fit${tabs.length >= 10 ? ' a2-tabs-tight' : ''}`} ref={nav}>
       <TabsRow>
         {row.map((x) => (
           <Link key={x.id} className={`a2-tab${x.on ? ' on' : ''}`} href={x.href} aria-current={x.on ? 'page' : undefined}>

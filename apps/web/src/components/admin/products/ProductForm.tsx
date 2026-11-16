@@ -859,7 +859,7 @@ export function ProductForm(props: Props) {
             ) : (
               <p className="ad-mini">{t(d, 'products.v5.google.none')}</p>
             )}
-            <Link className="ad-mini" href="/admin/website/seo">
+            <Link className="ad-mini pf-tap" href="/admin/website/seo">
               {t(d, 'products.v5.google.more')}
             </Link>
           </section>
