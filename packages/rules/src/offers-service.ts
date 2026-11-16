@@ -410,6 +410,13 @@ export interface OfferListRow {
   href: string | null;
   /** PR 823: the offer is for a customer's first order only (the "First order / returning" chip). */
   firstOrderOnly?: boolean;
+  /** PR 943 (prototype table): what the offer gives, who it is for, where it applies, its limits and the margin of the orders that used its code (null while a line has no buying cost). */
+  value?: OfferView['value'];
+  scope?: OfferView['scope'];
+  who?: OfferView['who'];
+  limits?: OfferView['limits'];
+  trigger?: OfferView['trigger'];
+  marginPct?: number | null;
 }
 
 export interface OffersScreen {
@@ -460,6 +467,21 @@ async function marginAfterDiscount(deps: RulesDeps, storeId: number, since: Date
   return marginOf(orders);
 }
 
+/** PR 943: the margin left after the discount and the ERP buying cost, per code, from the last 30 days' orders (null while a line has no cost yet). */
+async function marginsByCode(deps: RulesDeps, storeId: number, codes: string[], since: Date): Promise<Map<string, number | null>> {
+  const out = new Map<string, number | null>();
+  if (!codes.length) return out;
+  const orders = await deps.db.order.findMany({
+    where: { storeId, couponCode: { in: codes }, placedAt: { gte: since }, status: { notIn: ['DRAFT', 'CANCELLED'] } },
+    select: { couponCode: true, subtotalMinor: true, discountMinor: true, items: { where: { status: 'ACTIVE' }, select: { quantity: true, unitCostMinor: true } } },
+    take: 5000, // hardcode-ok: a guard on the 30 days' orders with a code
+  });
+  const by = new Map<string, typeof orders>();
+  for (const o of orders) by.set(o.couponCode!, [...(by.get(o.couponCode!) ?? []), o]);
+  for (const [code, list] of by) out.set(code, marginOf(list)?.pct ?? null);
+  return out;
+}
+
 /** Offers, coupons, built-in price rules, the online-payment reward, points and wallet in one list (`rules.read`). */
 export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScreen> {
   await allow(deps, who, 'rules.read');
@@ -471,6 +493,7 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
   ]);
   const codes = [...new Set([...offers.map((o) => o.code), ...coupons.map((c) => c.code)].filter((c): c is string => !!c))];
   const results = await resultsByCode(deps, who.storeId, codes);
+  const margins = await marginsByCode(deps, who.storeId, codes, new Date(now.getTime() - 30 * 86_400_000)); // hardcode-ok: the 30 days' window of the screen
   const rows: OfferListRow[] = [];
   const linkedCoupons = new Set(offers.map((o) => o.couponId).filter(Boolean));
   const linkedRules = new Set(offers.map((o) => o.ruleId).filter(Boolean));
@@ -490,6 +513,12 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
       results: o.code ? (results.get(o.code) ?? EMPTY_TALLY) : null,
       href: null,
       firstOrderOnly: v.who.firstOrderOnly,
+      value: v.value,
+      scope: v.scope,
+      who: v.who,
+      limits: v.limits,
+      trigger: v.trigger,
+      marginPct: o.code ? (margins.get(o.code) ?? null) : null,
     });
   }
   for (const c of coupons) {
@@ -508,6 +537,7 @@ export async function offersScreen(deps: OfferDeps, who: Who): Promise<OffersScr
       endsAt: c.endsAt?.toISOString() ?? null,
       results: results.get(c.code) ?? EMPTY_TALLY,
       href: '/admin/rules/smart',
+      marginPct: margins.get(c.code) ?? null,
     });
   }
   for (const r of rules) {
