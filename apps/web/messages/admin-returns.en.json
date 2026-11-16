@@ -619,6 +619,9 @@
       "go": "Show"
     },
     "rem": {
+      "partial": "Partial delivery box empty",
+      "short": "Short count — claim from courier today",
+      "money": "Courier says Delivered, money not in",
       "label": "What needs a person today",
       "requests": "Exchange requests waiting",
       "coming": "Old piece clock ending",

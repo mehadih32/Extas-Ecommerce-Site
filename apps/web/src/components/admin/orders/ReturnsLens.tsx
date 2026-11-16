@@ -8,22 +8,31 @@ import type { AdminView } from '@/lib/admin-page';
 import { DATE_PRESETS, dayOf, presetOf, presetRange } from '@/lib/admin-orders/range';
 import { RETURN_TABS, type ReturnTab, type Reminders } from '@/lib/admin-returns/lens';
 import { returnsHref } from '@/lib/admin-returns/model';
+import type { CourierReminders } from '@/lib/admin-returns/courier-reminders';
 import { t } from '@/lib/i18n';
 
 type Counts = Record<Exclude<ReturnTab, 'handed'>, number>;
 
 const lt = (view: AdminView, k: string, vars?: Record<string, string | number>) => t(view.dict, `returns.lens.${k}`, vars);
 
-export function ReturnsLens({ view, tab, from, to, counts, reminders, handbackHref, now }: { view: AdminView; tab: string | null; from: string | undefined; to: string | undefined; counts: Counts; reminders: Reminders; handbackHref: string | null; now: Date }) {
+export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, handbackHref, now }: { view: AdminView; tab: string | null; from: string | undefined; to: string | undefined; counts: Counts; reminders: Reminders; /** PR 973: the courier-side reminders (null: not read). */ courier?: CourierReminders | null; handbackHref: string | null; now: Date }) {
   const n = (x: number) => formatNumber(x, view.locale);
   const today = dayOf(now, view.timeZone);
   const cur = presetOf(from, to, today);
   const custom = !!(from || to) && !cur;
   const href = (over: Record<string, string | null>) => returnsHref({ tab, from: from ?? null, to: to ?? null, ...over });
-  const strip: { key: Exclude<ReturnTab, 'handed'>; count: number; text: string; tone: 'warn' }[] = [
-    { key: 'requests', count: reminders.requests, text: lt(view, 'rem.requests'), tone: 'warn' },
-    { key: 'coming', count: reminders.comingSoon, text: lt(view, 'rem.coming'), tone: 'warn' },
-    { key: 'waiting', count: reminders.waiting, text: lt(view, 'rem.waiting'), tone: 'warn' },
+  const strip: { key: string; count: number; text: string; tone: 'warn' | 'bad'; to: string }[] = [
+    { key: 'requests', count: reminders.requests, text: lt(view, 'rem.requests'), tone: 'warn', to: href({ tab: 'requests' }) },
+    // PR 973 (prototype v5): the courier-side reminders, in the prototype's order, with the places that settle them
+    ...(courier ? [{ key: 'partial', count: courier.partial, text: lt(view, 'rem.partial'), tone: 'warn' as const, to: '/admin/orders?status=PARTIALLY_DELIVERED' }] : []),
+    { key: 'coming', count: reminders.comingSoon, text: lt(view, 'rem.coming'), tone: 'warn', to: href({ tab: 'coming' }) },
+    { key: 'waiting', count: reminders.waiting, text: lt(view, 'rem.waiting'), tone: 'warn', to: href({ tab: 'waiting' }) },
+    ...(courier
+      ? [
+          { key: 'short', count: courier.short, text: lt(view, 'rem.short'), tone: 'bad' as const, to: '/admin/delivery/claims' },
+          { key: 'money', count: courier.money, text: lt(view, 'rem.money'), tone: 'bad' as const, to: '/admin/orders?view=delivered' },
+        ]
+      : []),
   ];
   return (
     <div data-testid="returns-lens">
@@ -59,7 +68,7 @@ export function ReturnsLens({ view, tab, from, to, counts, reminders, handbackHr
       </form>
       <div className="d4-rem a2-mt12" role="list" aria-label={lt(view, 'rem.label')} data-testid="returns-reminders">
         {strip.map((x) => (
-          <Link key={x.key} role="listitem" className={`d4-rem-i ${x.count ? x.tone : 'ok'}`} href={href({ tab: x.key })} scroll={false} data-testid={`returns-rem-${x.key}`}>
+          <Link key={x.key} role="listitem" className={`d4-rem-i ${x.count ? x.tone : 'ok'}`} href={x.to} scroll={false} data-testid={`returns-rem-${x.key}`}>
             <ShellIcon name={x.count ? 'alert' : 'check'} size={15} />
             <span>
               <b>{n(x.count)}</b> · {x.text}

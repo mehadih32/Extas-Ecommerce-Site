@@ -141,3 +141,10 @@
 
 ### PR 955: প্রোটোটাইপ মেলানো (শেষ রাউন্ড)
 প্রতিটা চিপ ট্যাব খালি থাকলে নিজের লাইন দেখায়: যেমন **No exchange requests.**, **Nothing on the way back.**, **Nothing waits for the ERP check.**, **No replacements yet.**, **No approved returns yet.** আর **Nothing declined. Declined pieces stay as our loss.** আগের একই "Nothing here" আর সব ট্যাবে নেই।
+
+### PR 973: কুরিয়ারের দিকের রিমাইন্ডার (শেষ রাউন্ড)
+"What needs a person today" লাইনে তিনটা নতুন ঘর, প্রোটোটাইপের লেখায়:
+- **Partial delivery box empty**: কুরিয়ার আংশিক ডেলিভারি বলেছে আর কেউ মেটায়নি এমন অর্ডার। চাপলে অর্ডার তালিকা খোলে।
+- **Short count — claim from courier today**: ফেরত পার্সেলে পিস কম, ক্লেইম খোলা কিন্তু কুরিয়ারকে এখনো পাঠানো হয়নি। চাপলে ক্লেইমের পাতা খোলে।
+- **Courier says Delivered, money not in**: ক্যাশ অন ডেলিভারি অর্ডার, কুরিয়ার বলছে ডেলিভারি, কিন্তু কুরিয়ারের নিজের টাকা দেওয়ার দিন (ক্লেইমের নিয়মের দিন সংখ্যা) পার হয়ে গেছে, টাকা আসেনি। ওই নিয়ম বন্ধ থাকলে এটা 0 দেখায়।
+- **ERP check due** লাইনে এখনো দিন সংখ্যা বসানো হয়নি (ERP চেকের দিন এই সংস্করণের নিয়মে নেই), তাই লেখা **ERP check waiting**।
