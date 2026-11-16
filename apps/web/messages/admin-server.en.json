@@ -74,6 +74,8 @@
       "courier_track": "Reading parcel updates from the couriers",
       "courier_zones": "Reading and pairing the couriers' area lists",
       "courier_payouts": "Asking couriers to pay what they hold, and reading their answers",
+      "courier_autobook": "Booking the courier by itself once an order is confirmed",
+      "catalogue_wizard_publish": "Publishing the products that were set to go live at a chosen time",
       "packing_photos_expire": "Archiving packing photos past their days to keep",
       "invoices_issue": "Issuing the orders' invoices",
       "money_report_send": "Sending the owner's money report",

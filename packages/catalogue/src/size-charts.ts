@@ -99,7 +99,7 @@ export function readRows(json: Prisma.JsonValue): ChartRow[] {
   return [];
 }
 
-const metaJson = (m: ChartMeta): Prisma.InputJsonValue => ({ fields: m.fields, easeInch: m.easeInch, diagram: m.diagram, copiedFromId: m.copiedFromId, finder: m.finder, run: m.run });
+const metaJson = (m: ChartMeta): Prisma.InputJsonValue => ({ fields: m.fields, easeInch: m.easeInch, diagram: m.diagram, copiedFromId: m.copiedFromId, finder: m.finder as unknown as Prisma.InputJsonValue, run: m.run });
 const rowsJson = (rows: ChartRow[]): Prisma.InputJsonValue => rows.map((r) => ({ size: r.size, values: r.values }));
 
 const entry = (dict: Dictionary, key: string | null) => (key ? (dict.find((d) => d.key === key) ?? null) : null);

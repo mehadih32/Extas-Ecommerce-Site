@@ -76,6 +76,7 @@ export default async function StockPage({ searchParams }: { searchParams: Search
   const overview = await loadStockOverview(s.deps, s.storeId, Number(lowPieces) || 2, s.can('catalogue.prices'));
   const sinceMin = health.stock.lastSuccessAt ? Math.max(0, Math.floor((now.getTime() - new Date(health.stock.lastSuccessAt).getTime()) / 60_000)) : null;
   // PR 967: the "Asked ERP" tags are read from the audit log (the last 14 days), so they stay after a reload
+  // eslint-disable-next-line react-hooks/purity -- server component: the clock is read once per request
   const askedRows = await access.deps.db.auditLog.findMany({ where: { storeId: s.storeId, action: 'inventory.restock.requested', entityType: 'Product', createdAt: { gte: new Date(Date.now() - 14 * 86_400_000) } }, select: { entityId: true }, take: 500 });
   const askedIds = askedRows.flatMap((r) => (r.entityId ? [r.entityId] : []));
   const num = (n: number) => formatNumber(n, view.locale);

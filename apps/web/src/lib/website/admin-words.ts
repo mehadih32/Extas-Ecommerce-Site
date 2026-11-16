@@ -277,6 +277,10 @@ import adminTelegramControlEn from '../../../messages/admin-telegram-control.en.
 import adminTelegramControlBn from '../../../messages/admin-telegram-control.bn.json';
 import adminWebsiteControlEn from '../../../messages/admin-website-control.en.json';
 import adminWebsiteControlBn from '../../../messages/admin-website-control.bn.json';
+import adminCourierSettingsEn from '../../../messages/admin-courier-settings.en.json';
+import adminCourierSettingsBn from '../../../messages/admin-courier-settings.bn.json';
+import adminCustomerMessagesEn from '../../../messages/admin-customer-messages.en.json';
+import adminCustomerMessagesBn from '../../../messages/admin-customer-messages.bn.json';
 
 /** Every admin words file by its name (messages/<name>.<lang>.json). */
 export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknown }>> = {
@@ -416,6 +420,8 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-sysinfo': { en: adminSysinfoEn, bn: adminSysinfoBn },
   'admin-telegram-control': { en: adminTelegramControlEn, bn: adminTelegramControlBn },
   'admin-website-control': { en: adminWebsiteControlEn, bn: adminWebsiteControlBn },
+  'admin-courier-settings': { en: adminCourierSettingsEn, bn: adminCourierSettingsBn },
+  'admin-customer-messages': { en: adminCustomerMessagesEn, bn: adminCustomerMessagesBn },
 };
 
 export interface AdminWordRow {

@@ -118,6 +118,7 @@ export function FieldsCard({ url, screen, fields, texts: x, canEdit, testId, top
 
   // PR 991: a card drawn `bare` has no Save of its own; the page's Save changes button asks every card to save itself
   const latest = useRef({ save, dirty });
+  // eslint-disable-next-line react-hooks/refs -- keeps the latest save for the page-level Save changes listener
   latest.current = { save, dirty };
   useEffect(() => {
     if (!bare) return;
