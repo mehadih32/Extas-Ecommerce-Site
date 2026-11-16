@@ -131,3 +131,9 @@
 .sk-sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid var(--lm-ln)}
 .sk-ht small{display:block;font-size:10px;font-weight:400}
 .sk-h-out{background:var(--lm-badbg)}.sk-h-low{background:var(--lm-warnbg)}.sk-h-mid{background:var(--lm-sf2)}.sk-h-ok{background:var(--lm-okbg)}
+
+/* PR 961: the legend under "Stock by product" and the restock button in "Running out soon" */
+.sk-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: var(--ad-fs-mini); color: var(--ad-muted); }
+.sk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sk-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--ad-line); }
+.sk-soon .st-li { flex-wrap: wrap; }

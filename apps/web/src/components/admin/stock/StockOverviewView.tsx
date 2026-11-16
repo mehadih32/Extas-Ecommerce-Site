@@ -8,7 +8,7 @@ import { formatMoney, formatNumber, moneyOf, nameIn } from '@/components/admin/p
 import { productHref } from '@/lib/admin-products';
 import type { StockOverview, StockProductRow } from '@/lib/admin-stock-overview';
 import { STOCK_HOME } from '@/components/admin/stock/text';
-import { ResyncButtons } from '@/components/admin/stock/StockActions';
+import { AskRestockButton, ResyncButtons } from '@/components/admin/stock/StockActions';
 import { t, type Dict } from '@/lib/i18n';
 
 export interface StockFilter {
@@ -109,6 +109,7 @@ export function StockOverviewView({ d, lang, locale, currency, data, filter, las
         </section>
         <section className="ad-card st-card sk-soon" aria-labelledby="sk-soon">
           <h2 id="sk-soon">{t(d, 'stock.ov.soon')}</h2>
+          <p className="ad-sub">{t(d, 'stock.ov.daysHelp')}</p>
           {lowList.length ? (
             <ul className="st-list">
               {lowList.map((p) => (
@@ -123,6 +124,7 @@ export function StockOverviewView({ d, lang, locale, currency, data, filter, las
                     </span>
                   </span>
                   <span className={`ad-tag${p.days !== null && p.days <= 14 ? ' bad' : ''}`}>{p.days === null ? t(d, 'stock.ov.noSales') : t(d, 'stock.ov.daysLeft', { n: num(p.days) })}</span>
+                  {canSync ? <AskRestockButton dict={d} productId={p.id} /> : null}
                 </li>
               ))}
             </ul>
@@ -223,6 +225,20 @@ export function StockOverviewView({ d, lang, locale, currency, data, filter, las
         ) : (
           <p className="pa-empty">{t(d, 'stock.ov.none')}</p>
         )}
+        <div className="sk-legend" data-testid="stock-legend">
+          <span>
+            <i className="sk-dot sk-h-out" aria-hidden="true" />
+            {t(d, 'stock.ov.legendOut')}
+          </span>
+          <span>
+            <i className="sk-dot sk-h-low" aria-hidden="true" />
+            {t(d, 'stock.ov.legendLow', { n: num(lowPieces) })}
+          </span>
+          <span>
+            <i className="sk-dot sk-h-ok" aria-hidden="true" />
+            {t(d, 'stock.ov.legendOk')}
+          </span>
+        </div>
       </section>
     </>
   );

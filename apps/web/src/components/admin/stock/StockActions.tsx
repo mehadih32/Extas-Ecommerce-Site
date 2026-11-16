@@ -204,3 +204,25 @@ export function NewStylesButton({ dict: d, locale }: Props) {
     </div>
   );
 }
+
+/** PR 961 (prototype v5, Stock › Running out soon): "Ask ERP to restock" for one product; once asked the button turns into the "Asked ERP" tag. */
+export function AskRestockButton({ dict: d, productId }: { dict: Dict; productId: string }) {
+  const [state, setState] = useState<'idle' | 'busy' | 'asked'>('idle');
+  async function ask() {
+    setState('busy');
+    const a = await call('POST', '/api/admin/inventory/restock', { productId });
+    if (a.status >= 200 && a.status < 300 && a.data.ok) {
+      setState('asked');
+      say(t(d, 'stock.ov.restockDone'));
+      return;
+    }
+    setState('idle');
+    sayBad(t(d, 'errors.server-error'));
+  }
+  if (state === 'asked') return <span className="ad-tag">{t(d, 'stock.ov.asked')}</span>;
+  return (
+    <button type="button" className="ad-btn ad-btn-ghost ad-btn-sm" disabled={state === 'busy'} onClick={() => void ask()} data-testid="stock-restock">
+      {t(d, 'stock.ov.restock')}
+    </button>
+  );
+}
