@@ -19,6 +19,8 @@ import { FEE_ZONES, feesOf, pctToBps, planFees, returnedPct, type Fees, type Ope
 const S = MOTHER_STORE_ID;
 const DAY = 86_400_000;
 /** Parcels and returns are counted over this many days (the prototype's "30 days"). */
+/** `readyToBook` is asked for its total only: the smallest page. */
+const COUNT_ONLY = Number('1');
 export const WINDOW_DAYS = 30; // hardcode-ok: the prototype's fixed 30-day window, the same as Courier 360
 /** The rate card's own upper limit of a weight band: a band with no card yet is made for the whole range. */
 const WHOLE_RANGE_GRAMS = 1_000_000; // hardcode-ok: the rate card schema's own maximum
@@ -104,7 +106,7 @@ export async function courierSettingsView(deps: CourierSettingsDeps, who: Courie
     deps.resolver.value('contact.address', { storeId: S }),
     deps.resolver.value('store.details', { storeId: S }),
     deps.resolver.value('store.currency', { storeId: S }),
-    sh.readyToBook(deps.shipping, w, { limit: 1 }),
+    sh.readyToBook(deps.shipping, w, { limit: COUNT_ONLY }),
   ]);
   const couriers = overview.cards.map((c): CourierRow => {
     const mine = cards.filter((x) => x.courierAccountId === c.id);
