@@ -143,6 +143,7 @@
       "sortNew": "নতুন কাস্টমার আগে",
       "sortSpend": "বেশি খরচ আগে",
       "sortOrders": "বেশি অর্ডার আগে",
+      "sortRefused": "বেশি ফেরত আগে",
       "sortName": "নাম A–Z",
       "clear": "মুছুন",
       "cols": {
@@ -166,6 +167,7 @@
       "merged": "+{n} প্রোফাইল",
       "codPolicy": "COD নিয়ম দেওয়া",
       "shown": "{n} জন দেখানো হচ্ছে",
+      "showMore": "আরও দেখুন ({n} জন বাকি)",
       "next": "আরও",
       "first": "প্রথম পাতা",
       "empty": {

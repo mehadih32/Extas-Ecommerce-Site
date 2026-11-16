@@ -40,7 +40,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
 import { withCustomers } from '@/lib/admin-customers/i18n';
-import { customerHref, customersHref, listOf } from '@/lib/admin-customers/model';
+import { customerHref, customersHref, DEFAULT_SORT, listOf } from '@/lib/admin-customers/model';
 import { lookWord } from '@/lib/admin-customers/words';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -184,7 +184,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
     // PR 297: his tags and the team's notes
     cu.tagsAndNotes(cd, who, sv.id),
     // follow-up 702: the list beside him (the same read and masking as All customers)
-    cu.customerList(cd, who, list),
+    cu.customerList(cd, who, { ...list, sort: list.sort ?? DEFAULT_SORT }),
   ]);
   // PR 534: the grade and verified mark his history earns, beside his number (only while the owner's grading is on)
   const mark = cu.customerMark(await cu.customerGrading(cd, MOTHER_STORE_ID), sv.history);

@@ -108,7 +108,7 @@ export function groupPairs(ids: readonly string[], max: number): [string, string
 export const CUSTOMER_VIEWS = ['all', 'new', 'returning', 'vip', 'atrisk', 'refused', 'exchanged', 'nooffers'] as const;
 export type CustomerView = (typeof CUSTOMER_VIEWS)[number];
 
-export const CUSTOMER_SORTS = ['last', 'new', 'spend', 'orders', 'name'] as const;
+export const CUSTOMER_SORTS = ['last', 'new', 'spend', 'orders', 'name', 'refused'] as const;
 export type CustomerSort = (typeof CUSTOMER_SORTS)[number];
 
 /** PR 285 — the digits a number search needs (fewer would match half the shop). */

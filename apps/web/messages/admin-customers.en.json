@@ -143,6 +143,7 @@
       "sortNew": "Newest customer first",
       "sortSpend": "Most spent",
       "sortOrders": "Most orders",
+      "sortRefused": "Most refused",
       "sortName": "Name A–Z",
       "clear": "Clear",
       "cols": {
@@ -166,6 +167,7 @@
       "merged": "+{n} profile",
       "codPolicy": "COD rule set",
       "shown": "{n} shown",
+      "showMore": "Show more ({n} left)",
       "next": "More",
       "first": "First page",
       "empty": {
