@@ -491,7 +491,7 @@ function OptionFacts({ view, o, m }: { view: AdminView; o: ExchangeChoices['opti
   );
 }
 
-export function ReturnsBoard({ view, data, head, tabs, lens, tabRows }: { view: AdminView; data: ReturnsData; head: React.ReactNode; tabs: React.ReactNode; /** PR 828: the date bar, reminder strip and chip tabs. */ lens?: React.ReactNode; /** PR 828: the cases of the chosen chip tab (null: the four-column board). */ tabRows?: ExchangeView[] | null }) {
+export function ReturnsBoard({ view, data, head, tabs, lens, tabRows, tabKey }: { view: AdminView; data: ReturnsData; head: React.ReactNode; tabs: React.ReactNode; /** PR 828: the date bar, reminder strip and chip tabs. */ lens?: React.ReactNode; /** PR 828: the cases of the chosen chip tab (null: the four-column board). */ tabRows?: ExchangeView[] | null; /** PR 955: the chosen chip tab, for its own empty line. */ tabKey?: string | null }) {
   return (
     <div className="a2-z" data-testid="orders-returns" data-lm-ready="">
       {head}
@@ -511,7 +511,7 @@ export function ReturnsBoard({ view, data, head, tabs, lens, tabRows }: { view: 
               ))}
             </div>
           ) : (
-            <div className="a2-xs a2-mute rt-empty">{r(view.dict, 'empty')}</div>
+            <div className="a2-xs a2-mute rt-empty">{tabKey ? r(view.dict, `lens.empty.${tabKey}`) : r(view.dict, 'empty')}</div>
           )}
         </div>
       ) : (

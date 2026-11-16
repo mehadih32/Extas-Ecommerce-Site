@@ -151,5 +151,5 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
   const lens = (
     <ReturnsLens view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
   );
-  return <ReturnsBoard view={view} data={data} lens={lens} tabRows={tabRows} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
+  return <ReturnsBoard view={view} data={data} lens={lens} tabRows={tabRows} tabKey={tab} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }
