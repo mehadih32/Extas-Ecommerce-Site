@@ -140,6 +140,12 @@
         "label": "Lowest selling price: buying price plus (%)",
         "help": "Empty = off. When set, a selling price, combo, coupon or discount below the buying price plus this percentage is refused. Only the owner sets it."
       }
+    },
+    "prices": {
+      "requirePin": {
+        "label": "Ask for the owner PIN when a price changes",
+        "help": "On: saving a changed selling price or crossed-out price on the product page asks for the owner PIN first. Off: it saves without it."
+      }
     }
   }
 }

@@ -321,4 +321,15 @@ export const erpV6Settings = {
     requiresOwnerOk: true,
     sortOrder: 61,
   }),
+  'catalogue.prices.requirePin': setting({
+    ...catalogue,
+    // PR 969: off by default (a new switch). On: saving a changed selling or "was" price on the product page asks for the
+    // owner's PIN first (the "Confirm price change" box); the PIN is checked on the server, not only on the screen.
+    schema: z.boolean(),
+    default: false,
+    valueType: 'BOOLEAN',
+    labelKey: 'catalogue.prices.requirePin.label',
+    helpKey: 'catalogue.prices.requirePin.help',
+    sortOrder: 62,
+  }),
 };
