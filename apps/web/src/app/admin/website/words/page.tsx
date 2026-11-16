@@ -15,6 +15,7 @@
 // PR 78 follow-up (678): "Numbers and dates to check" in Show (the owner's words with a count or a time claim).
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { Fragment } from 'react';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { dateTime } from '@/components/admin/stock/text';
@@ -38,11 +39,19 @@ import './words.css';
 export const dynamic = 'force-dynamic';
 
 const HERE = '/admin/website/words';
+/** PR 1052: the prototype's Invoice, SMS & WhatsApp and Email word groups live on their own pages; their chips open them. */
+const LINKED = [
+  { id: 'invoice', href: '/admin/orders/packing/invoices' },
+  { id: 'sms', href: '/admin/messages/templates' },
+  { id: 'email', href: '/admin/website/page-settings?screen=email' },
+] as const;
 const KEY = 'websiteWords';
 const API = '/api/admin/website/dictionary';
 /** PR 79: the switch for editing on the shop page, and the shop page it opens with the panel. */
 const FRONT_API = '/api/admin/website/front-edit';
 const EDIT_PARAM = 'words=edit';
+
+const adminSet0 = (sp: URLSearchParams) => sp.get('set') === 'admin';
 
 function withScreen(view: AdminView): AdminView {
   return { ...view, dict: { ...view.dict, ...((view.lang === 'bn' ? bn : en) as unknown as Dict) } };
@@ -69,7 +78,9 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
       </div>
     );
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `wd.${k}`, vars);
-  const query = wordQueryOf(sp);
+  // PR 1052 (prototype Shop text): the page opens on Checkout; "Everywhere" is `where=all`; a search looks in every place
+  const raw0 = wordQueryOf(sp);
+  const query = raw0.group === 'all' ? { ...raw0, group: '' } : !sp.has('where') && !raw0.q && !adminSet0(sp) ? { ...raw0, group: 'checkout' } : raw0;
   // PR 78 follow-up (677): the admin's own words, read only
   const adminSet = sp.get('set') === 'admin';
   const wd = { db: access.deps.db, resolver: access.deps.resolver };
@@ -84,8 +95,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
   const chipHref = (grp: string) => {
     const next = new URLSearchParams(sp);
     next.delete('p');
-    if (grp) next.set('where', grp);
-    else next.delete('where');
+    next.delete('q');
+    next.set('where', grp || 'all');
     return next.size ? `${HERE}?${next.toString()}` : HERE;
   };
   const errKeys = ['INVALID_INPUT', 'STALE', 'CSV_SYNTAX', 'CSV_COLUMNS', 'CSV_KEYS', 'forbidden', 'unauthorized', 'network', 'other'];
@@ -120,7 +131,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     else next.delete('p');
     return next.size ? `${HERE}?${next.toString()}` : HERE;
   };
-  const filtered = !!(query.q || query.group || query.show !== 'all');
+  const filtered = !!(query.q || (query.group && !(query.group === 'checkout' && !sp.has('where'))) || query.show !== 'all');
   const feTexts: FieldsCardTexts = {
     h: g('fe.h'),
     d: g('fe.d'),
@@ -159,7 +170,6 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
       ) : (
         <>
         <form className="wdb-search1 a2-mt12" method="get" action={HERE} role="search" data-testid="wd-search">
-          <input type="hidden" name="where" value={query.group} />
           <input type="hidden" name="show" value={query.show} />
           <label className="wdb-sr" htmlFor="wd-q">
             {g('search')}
@@ -179,9 +189,20 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
             {g('everywhere')} <span>{WORD_KEYS.length}</span>
           </a>
           {chipGroups.map((k) => (
-            <a key={k} className={`wdb-chip${query.group === k ? ' on' : ''}`} href={chipHref(k)} aria-current={query.group === k ? 'true' : undefined}>
-              {where[k]} <span>{groupCount[k] ?? 0}</span>
-            </a>
+            <Fragment key={k}>
+              {k === 'footer' ? (
+                <>
+                  {LINKED.map((x) => (
+                    <a key={x.id} className="wdb-chip" href={x.href} data-testid={`wd-chip-${x.id}`}>
+                      {g(`linked.${x.id}`)} <span aria-hidden="true">↗</span>
+                    </a>
+                  ))}
+                </>
+              ) : null}
+              <a className={`wdb-chip${query.group === k ? ' on' : ''}`} href={chipHref(k)} aria-current={query.group === k ? 'true' : undefined}>
+                {where[k]} <span>{groupCount[k] ?? 0}</span>
+              </a>
+            </Fragment>
           ))}
         </nav>
         <nav className="wdb-chips wdb-shows a2-mt6" aria-label={g('show')} data-testid="wd-show">
@@ -201,8 +222,9 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
           head={
             <>
               <h2 className="a2-h3" id="wd-h">
-                {g('found', { n: v.total })}
+                {query.group && where[query.group] ? where[query.group] : g('found', { n: v.total })}
               </h2>
+              <p className="a2-xs a2-mute wdb-mt6">{g('emptyHelp')}</p>
               {!canEdit ? <p className="a2-xs a2-mute wdb-mt6">{g('readOnly')}</p> : null}
               {v.total ? null : (
                 <p className="a2-sm wdb-mt6" data-testid="wd-none">
@@ -216,6 +238,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
           version={v.version}
           canEdit={canEdit}
           where={where}
+          whereLabel={g('whereCol')}
           w={w}
           file={{
             title: g('file'),
