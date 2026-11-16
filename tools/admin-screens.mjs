@@ -12,7 +12,7 @@ const base = arg('base', 'http://127.0.0.1:3000');
 const proto = arg('proto', 'http://127.0.0.1:8099');
 const out = arg('out', 'admin-screens');
 mkdirSync(out, { recursive: true });
-const PAIRS = [
+const PAIRS0 = [
   ['home-A', '/admin?design=A', '#home'],
   ['home-B', '/admin?design=B', '#home'],
   ['home-C', '/admin?design=C', '#home'],
@@ -30,6 +30,42 @@ const PAIRS = [
   ['policies', '/admin/website/policies', '#website--policies'],
   ['practice', '/admin/settings/practice', '#settings--store'],
 ];
+// PR 910: the website, finance and settings pages (`--set=d2`) also write real-/proto-<key>.txt (the words on the page)
+const D2 = [
+  ['w-control', '/admin/website/control', '#website--layout'],
+  ['w-layouts', '/admin/website/layouts', '#website--layout'],
+  ['w-words', '/admin/website/words', '#website--text'],
+  ['w-policies', '/admin/website/policies', '#website--policies'],
+  ['w-blog', '/admin/website/blog', '#website--blog'],
+  ['w-analytics', '/admin/website/analytics', '#website--analytics'],
+  ['w-seo', '/admin/website/seo', '#website--seo'],
+  ['f-overview', '/admin/money', '#finance--overview'],
+  ['f-cash', '/admin/money/cash', '#finance--cash'],
+  ['f-pnl', '/admin/money/profit', '#finance--pnl'],
+  ['f-costs', '/admin/money/budgets', '#finance--costs'],
+  ['f-erp', '/admin/money/books', '#finance--erp'],
+  ['f-couriers', '/admin/money/couriers', '#finance--couriers'],
+  ['f-wallet', '/admin/money/refunds', '#finance--wallet'],
+  ['f-vat', '/admin/money/vat', '#finance--vat'],
+  ['s-store', '/admin/settings/store', '#settings--store'],
+  ['s-erp', '/admin/settings/erp-link', '#settings--erp'],
+  ['s-couriers', '/admin/delivery/settings', '#settings--couriers'],
+  ['s-payments', '/admin/settings/checkout', '#settings--payments'],
+  ['s-messages', '/admin/messages/templates', '#settings--messages'],
+  ['s-team', '/admin/settings/people', '#settings--team'],
+  ['s-demo', '/admin/products/demo', '#settings--demo'],
+  ['s-keys', '/admin/integrations', '#settings--keys'],
+  ['s-backups', '/admin/settings/system/backups', '#settings--backups'],
+  ['s-health', '/admin/settings/system/health', '#settings--health'],
+  ['s-ai', '/admin/ai', '#settings--ai'],
+  ['s-updates', '/admin/settings/system/updates', '#settings--updates'],
+  ['s-security', '/admin/settings/security', '#settings--security'],
+  ['s-activity', '/admin/settings/activity', '#settings--activity'],
+  ['s-privacy', '/admin/settings/privacy', '#settings--privacy'],
+  ['s-telegram', '/admin/settings/telegram-approvals', '#settings--telegram'],
+  ['s-help', '/admin/help', '#settings--manual'],
+];
+const PAIRS = arg('set') === 'd2' ? D2 : PAIRS0;
 const VPS = [['phone', 390, 844], ['desktop', 1366, 900]];
 const MAXH = 2400;
 const browser = await chromium.launch();
@@ -46,6 +82,10 @@ async function shot(ctx, url, file, wait) {
     const h = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
     const w = page.viewportSize().width;
     await page.screenshot({ path: file, type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: w, height: Math.min(h, MAXH) } });
+    if (file.includes('-desktop') && arg('set') === 'd2') {
+      const txt = await page.evaluate(() => (document.querySelector('main') || document.body).innerText);
+      writeFileSync(file.replace(/\.jpg$/, '.txt'), txt);
+    }
     const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     return { status, errors, height: h, overflowPx: over, final: new URL(page.url()).pathname };
   } catch (e) {
