@@ -127,6 +127,9 @@ export default async function ProfitReportPage({
       : categoryTree(access.deps.db, catId),
   ]);
   const f = makeFmt(view.locale, b.currency);
+  // Final round: the channel filter (the prototype's "All channels"): an order source seen in this period or the one before
+  const chKeys = [...new Set([...geoNow, ...geoWas].map((o) => o.source).filter(Boolean))].sort();
+  const chF = typeof sp.ch === "string" && chKeys.includes(sp.ch) ? sp.ch : "all";
   const { q, notes } = b.period;
   const { now, was } = r;
   const cmp = sp.cmp !== "0";
@@ -138,9 +141,9 @@ export default async function ProfitReportPage({
 
   const lineOk = (l: GeoLine) =>
     !catTree || (!!l.catId && catTree.has(l.catId));
-  const filtered = catId !== "all" || divF !== "all";
-  const ordersNow = filterOrders(geoNow, { cat: catId, div: divF }, catTree);
-  const ordersWas = filterOrders(geoWas, { cat: catId, div: divF }, catTree);
+  const filtered = catId !== "all" || divF !== "all" || chF !== "all";
+  const ordersNow = filterOrders(geoNow, { cat: catId, div: divF, ch: chF }, catTree);
+  const ordersWas = filterOrders(geoWas, { cat: catId, div: divF, ch: chF }, catTree);
   // PR 854: with a filter on, the top tiles follow it (the filtered orders' own profit; ads, office and other costs shared by sales)
   const whole = (x: typeof now) => ({
     sales: x.parts.sales,
@@ -514,7 +517,8 @@ export default async function ProfitReportPage({
         }),
       )
     : styleRowsAll;
-  const keep = keepOf(sp, ["cat", "div"]);
+  const keep = keepOf(sp, ["cat", "div", "ch"]);
+  const chOptions = chKeys.map((k) => ({ value: k, label: channelName(k) }));
   const catOptions = categories
     .filter((x) => !x.parentId)
     .map((x) => ({
@@ -565,6 +569,13 @@ export default async function ProfitReportPage({
           applyLabel={cc("apply")}
           clearLabel={cc("clear")}
           fields={[
+            {
+              name: "ch",
+              label: c("fChannel"),
+              all: c("fAllChannels"),
+              options: chOptions,
+              value: chF,
+            },
             {
               name: "cat",
               label: c("fCategory"),

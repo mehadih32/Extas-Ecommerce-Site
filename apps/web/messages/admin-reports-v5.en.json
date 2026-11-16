@@ -162,6 +162,8 @@
       "drawerPieces": "{n} pieces",
       "drawerOrders": "{n} orders",
       "drawerCat": "Products of this category by profit before ads",
+      "fChannel": "Channel",
+      "fAllChannels": "All channels",
       "fCategory": "Category",
       "fAllCategories": "All categories",
       "fArea": "Area",
