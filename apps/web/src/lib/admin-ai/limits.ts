@@ -32,6 +32,15 @@ export function monthEndAtThisPace(spentMinor: number, dayOfMonth: number, daysI
   return Math.round((spentMinor / day) * daysInMonth);
 }
 
+/** The cost-saver's own estimate: about this share of what the rest of the month would cost at today's pace is saved (prototype v5 m-ai.js). */
+export const SAVER_SAVES_PCT = 35; // hardcode-ok: an estimate shown beside the switch, not a rule that changes any money
+
+/** "Saves about …": the part of the rest-of-month spend (at the pace so far) the cost-saver mode is expected to save, whole minor units. */
+export function saverSavesMinor(spentMinor: number, dayOfMonth: number, daysInMonth: number): number {
+  const day = Math.max(1, Math.min(dayOfMonth, daysInMonth));
+  return Math.round(((spentMinor / day) * (daysInMonth - day) * SAVER_SAVES_PCT) / 100);
+}
+
 export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean } | { digest: AiDigestSettings } | { offText: AiOffTextSettings };
 
 /** Reads the one change out of a request body, or throws `INVALID_INPUT` / `INVALID_CAP`. */
