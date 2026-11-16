@@ -237,7 +237,7 @@
 .rh-pv.k-modal{border:1px dashed var(--lm-ln2);background:var(--lm-sf);text-align:center;padding:22px 14px}
 .rh-pv.k-inline,.rh-pv.k-toast{background:var(--lm-infobg);color:var(--lm-info)}
 .rh-sw.is-switch input[type=checkbox]{-webkit-appearance:none;appearance:none;position:relative;flex:none;width:40px;height:22px;margin:0;border-radius:22px;background:var(--lm-ln2);cursor:pointer;transition:background .15s}
-.rh-sw.is-switch input[type=checkbox]::before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:var(--lm-sf);transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.rh-sw.is-switch input[type=checkbox]::before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:var(--lm-sf);transition:transform .15s;box-shadow:var(--lm-sh-sm)}
 .rh-sw.is-switch input[type=checkbox]:checked{background:var(--lm-accent)}
 .rh-sw.is-switch input[type=checkbox]:checked::before{transform:translateX(18px)}
 .rh-sw.is-switch input[type=checkbox]:disabled{opacity:.55;cursor:default}
@@ -260,3 +260,20 @@
 .of-h{margin:12px 0 0;font-size:16px;font-weight:600}
 .of-sub{display:block;color:var(--lm-ink-3,inherit);font-size:12px;margin-top:2px}
 .of-sub .of-code{margin-left:6px}
+
+/* PR 946: the score accuracy card under the Courier score row */
+.rh-acc{margin:8px 0 12px;padding:14px;border:1px solid var(--lm-line,currentColor);border-radius:12px;background:var(--lm-card,transparent)}
+.rh-acc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rh-acc-w{overflow-x:auto}
+.rh-acc-t{width:100%;border-collapse:collapse;font-size:13px}
+.rh-acc-t th,.rh-acc-t td{padding:8px 6px;text-align:left}
+.rh-acc-t .num{text-align:right}
+.rh-acc-s{display:flex;align-items:center;gap:6px;margin:8px 0 0;font-size:13px}
+@media (max-width:640px){.rh-acc-t thead{display:none}.rh-acc-t tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:8px 0;border-bottom:1px solid var(--lm-line,currentColor)}.rh-acc-t td{padding:2px 0}.rh-acc-t td::before{content:attr(data-l) ': ';opacity:.7}.rh-acc-t .num{text-align:left}}
+
+/* PR 948: the Built-in rules card under the Offers table */
+.of-builtin{margin-top:14px}
+.of-bi{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--lm-line,currentColor);flex-wrap:wrap}
+.of-bi:first-of-type{border-top:0}
+.of-bir{display:flex;align-items:center;gap:10px}
+.rh-call.warn{background:var(--lm-warnbg,var(--lm-okbg));color:var(--lm-warn,var(--lm-ok))}

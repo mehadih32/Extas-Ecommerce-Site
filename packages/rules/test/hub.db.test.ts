@@ -13,6 +13,9 @@ import {
   getOffer,
   hubHistory,
   hubScreen,
+  popupHistory,
+  undoPopup,
+  simChoices,
   offersScreen,
   popupsScreen,
   resetHubRow,
@@ -333,5 +336,43 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     const done = await undoHubRow(deps(), as(owner), { id: 'free', changeId: c.id, version: free.version });
     expect(done.value).toBe(90000);
     expect(sets.at(-1)).toEqual({ key: 'delivery.freeOverMinor', ownerApproved: true });
+  });
+
+  it('PR 947: the stock hold row edits the owner\'s own minutes and hours (empty as shipped, so the installation numbers stand)', async () => {
+    const row = (await hubScreen(deps(), as(owner))).rows.find((r) => r.id === 'stockhold');
+    if (row?.type !== 'setting') throw new Error('no stock hold row');
+    expect(row.value).toEqual({ checkoutMinutes: null, placedHours: null });
+    expect(await code(saveHubRow(deps(), as(writer), { id: 'stockhold', version: row.version, values: { checkoutMinutes: 0 } }))).toBe('INVALID_INPUT');
+    const saved = await saveHubRow(deps(), as(writer), { id: 'stockhold', version: row.version, values: { checkoutMinutes: 20, placedHours: 12 } });
+    expect(saved.value).toEqual({ checkoutMinutes: 20, placedHours: 12 });
+  });
+
+  it('PR 949: a pop-up placement has its own History and Undo to this (a new change; no step is deleted)', async () => {
+    const s0 = await popupsScreen(deps(), as(owner));
+    const e1 = { on: true, textEn: 'First words', textBn: '', from: null, to: null, n: null };
+    const e2 = { ...e1, textEn: 'Second words' };
+    const s1 = await savePopup(deps(), as(writer), { key: 'thanks', entry: e1, version: s0.version });
+    await savePopup(deps(), as(writer), { key: 'thanks', entry: e2, version: s1.version });
+    // the settings fake above keeps no history, so the two changes are written the way the real setting does
+    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: {}, newValue: { thanks: e1 } as never, reason: 'Rules', actorId: writer.staffUserId } });
+    await t.prisma.settingChange.create({ data: { storeId: A, key: 'rules.hub.popups', action: 'SET', oldValue: { thanks: e1 } as never, newValue: { thanks: e2 } as never, reason: 'Rules', actorId: writer.staffUserId } });
+    const h = await popupHistory(deps(), as(reader), { key: 'thanks' });
+    expect(h.map((x) => x.entry?.textEn ?? null)).toEqual(['First words', null]);
+    expect(await popupHistory(deps(), as(reader), { key: 'lowstock' })).toEqual([]);
+    expect(await code(undoPopup(deps(), as(reader), { key: 'thanks', changeId: h[0]!.changeId, version: 'x' }))).toBe('FORBIDDEN');
+    const now = await popupsScreen(deps(), as(owner));
+    expect(await code(undoPopup(deps(), as(writer), { key: 'thanks', changeId: h[0]!.changeId, version: 'old' }))).toBe('STALE_DRAFT');
+    const back = await undoPopup(deps(), as(writer), { key: 'thanks', changeId: h[0]!.changeId, version: now.version });
+    expect(back.popups.find((p) => p.key === 'thanks')!.entry.textEn).toBe('First words');
+    const gone = await undoPopup(deps(), as(writer), { key: 'thanks', changeId: h[1]!.changeId, version: back.version });
+    expect(gone.popups.find((p) => p.key === 'thanks')!.entry.textEn).toBe('');
+  });
+
+  it('PR 943, 948, 949: the Offers list carries who, limits and a margin, the built-in rules list their switch, and the simulator knows whether advance mode is on', async () => {
+    const o = await offersScreen(deps(), as(reader));
+    expect(o.builtins?.map((b) => b.id)).toEqual(['free', 'prepaid', 'grades']);
+    for (const r of o.rows.filter((x) => x.source === 'offer')) expect(r.limits).toBeTruthy();
+    const c = await simChoices(deps(), as(reader));
+    expect(typeof c.advanceOn).toBe('boolean');
   });
 });
