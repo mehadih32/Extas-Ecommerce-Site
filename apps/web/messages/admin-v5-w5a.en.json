@@ -309,7 +309,7 @@
       "testHint": "Send one template to your own phone or e-mail before it goes to a group. Nothing reaches a customer.",
       "fTemplate": "Template",
       "fTo": "Your phone number or e-mail",
-      "testGo": "Send a test",
+      "testGo": "Send test to me",
       "testOk": "Sent (practice mode: nothing left the system)",
       "testOkLive": "Sent",
       "noTemplates": "No templates for campaigns yet",

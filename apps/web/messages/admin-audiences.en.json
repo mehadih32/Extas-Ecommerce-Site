@@ -109,7 +109,7 @@
       "seedDays": "the days"
     },
     "lal": {
-      "new": "New lookalike",
+      "new": "Find look-alikes",
       "newTitle": "New lookalike audience",
       "whoSub": "The seed is everyone whose parcel was delivered in the days you choose, each weighed by how much he really bought (delivered sales, not the number of orders). The ad platform then finds people like the ones who spend.",
       "days": "Delivered in the last … days",
