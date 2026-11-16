@@ -67,6 +67,13 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
   ]);
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
+  // PR 985 (prototype): the wallet money we owe, what was refunded this month and the biggest wallet balances
+  const monthFrom = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1));
+  const [walletSum, refundedMonth, biggest] = await Promise.all([
+    access.deps.db.walletAccount.aggregate({ where: { storeId: MOTHER_STORE_ID, balanceMinor: { gt: 0 } }, _sum: { balanceMinor: true }, _count: { _all: true } }),
+    access.deps.db.refund.aggregate({ where: { storeId: MOTHER_STORE_ID, status: 'COMPLETED', completedAt: { gte: monthFrom } }, _sum: { amountMinor: true }, _count: { _all: true } }),
+    access.deps.db.walletAccount.findMany({ where: { storeId: MOTHER_STORE_ID, balanceMinor: { gt: 0 } }, orderBy: { balanceMinor: 'desc' }, take: 8, select: { id: true, balanceMinor: true, customerId: true, customer: { select: { name: true, phone: true } } } }), // hardcode-ok: the card lists the eight biggest balances
+  ]);
   const at = (x: Date | string | null) => (x ? dateTime(new Date(x).toISOString(), view.locale, view.timeZone) : '');
   const w = flat((refundWords(view.lang) as { w: unknown }).w);
   const someone = c('row.someone');
@@ -113,29 +120,27 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
       <SectionTabs view={view} current={KEY} />
 
       <div className="a2-kpis a2-mt12" data-testid="rf-kpis">
-        <div className="a2-card a2-kpi" data-testid="rf-kpi-owed" data-minor={v.owed.totalMinor}>
-          <div className="a2-kl">{c('kpi.owed')}</div>
-          <b className="a2-kv">{amount(v.owed.totalMinor)}</b>
+        <div className="a2-card a2-kpi" data-testid="rf-kpi-wallet" data-minor={walletSum._sum.balanceMinor ?? 0}>
+          <div className="a2-kl">{t(d, 'lf.fh.wl.wallet')}</div>
+          <b className="a2-kv">{amount(walletSum._sum.balanceMinor ?? 0)}</b>
           <div className="a2-kf">
-            <span className="a2-kn">{c('kpi.owedNote', { n: v.owed.count })}</span>
+            <span className="a2-kn">{t(d, 'lf.fh.wl.walletNote', { n: walletSum._count._all })}</span>
           </div>
         </div>
-        <div className="a2-card a2-kpi" data-testid="rf-kpi-approve" data-n={v.counts.approve}>
-          <div className="a2-kl">{c('kpi.approve')}</div>
-          <b className="a2-kv">{v.counts.approve}</b>
+        <div className="a2-card a2-kpi" data-testid="rf-kpi-owed" data-minor={v.owed.totalMinor}>
+          <div className="a2-kl">{t(d, 'lf.fh.wl.waiting')}</div>
+          <b className="a2-kv">{amount(v.owed.totalMinor)}</b>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'lf.fh.wl.waitingNote', { n: v.owed.count })}</span>
+            {v.owed.failedMinor ? <span className="a2-kn bk-warn">{c('kpi.failed', { amount: amount(v.owed.failedMinor) })}</span> : null}
+          </div>
         </div>
-        <div className="a2-card a2-kpi" data-testid="rf-kpi-payout" data-n={v.counts.payout}>
-          <div className="a2-kl">{c('kpi.payout')}</div>
-          <b className="a2-kv">{v.counts.payout}</b>
-          {v.owed.failedMinor ? (
-            <div className="a2-kf">
-              <span className="a2-kn bk-warn">{c('kpi.failed', { amount: amount(v.owed.failedMinor) })}</span>
-            </div>
-          ) : null}
-        </div>
-        <div className="a2-card a2-kpi" data-testid="rf-kpi-done" data-n={v.counts.done}>
-          <div className="a2-kl">{c('kpi.done')}</div>
-          <b className="a2-kv">{v.counts.done}</b>
+        <div className="a2-card a2-kpi" data-testid="rf-kpi-month" data-minor={refundedMonth._sum.amountMinor ?? 0}>
+          <div className="a2-kl">{t(d, 'lf.fh.wl.month')}</div>
+          <b className="a2-kv">{amount(refundedMonth._sum.amountMinor ?? 0)}</b>
+          <div className="a2-kf">
+            <span className="a2-kn">{t(d, 'lf.fh.wl.monthNote')}</span>
+          </div>
         </div>
       </div>
 
@@ -200,6 +205,43 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
           </p>
         )}
         {v.rows.length >= 100 ? <p className="a2-xs a2-mute a2-mt12">{c('list.more', { n: v.rows.length })}</p> : null /* hardcode-ok: the page size of refundsView */}
+      </section>
+
+      <section className="a2-card a2-mt12" aria-labelledby="rf-big-h" data-testid="rf-biggest">
+        <div className="a2-ch">
+          <h2 className="a2-h3" id="rf-big-h">
+            {t(d, 'lf.fh.wl.bigTitle')}
+          </h2>
+          <Link className="lf-more" href="/admin/customers">
+            {t(d, 'lf.fh.wl.all')} →
+          </Link>
+        </div>
+        {biggest.length ? (
+          <div className="a2-tblw">
+            <table className="a2-tbl">
+              <thead>
+                <tr>
+                  <th>{t(d, 'lf.fh.wl.customer')}</th>
+                  <th className="w4-r">{t(d, 'lf.fh.wl.balance')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {biggest.map((x) => (
+                  <tr key={x.id}>
+                    <td>
+                      <Link href={`/admin/customers/${x.customerId}`}>{x.customer.name ?? x.customer.phone ?? someone}</Link>
+                    </td>
+                    <td className="w4-r">
+                      <b>{amount(x.balanceMinor)}</b>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="a2-xs a2-mute">{t(d, 'lf.fh.wl.none')}</p>
+        )}
       </section>
 
       <section className="a2-card a2-mt12" aria-labelledby="rf-apology-h" data-testid="rf-apology" data-on={v.apology.enabled ? 'yes' : 'no'}>
