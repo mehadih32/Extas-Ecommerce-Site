@@ -2,7 +2,7 @@
 
 ## 16 Nov 2026 — Final round lane D7 (branch `claude/final-d7`): Products sub-pages against the prototype, PR 960–966
 
-One commit per PR: 960 Demo products, 961 Stock (Ask ERP to restock, new route `/api/admin/inventory/restock`), 962 Shop ranking, 963 Sets, 964 Reviews, Questions and FAQs, 965 Size charts, 966 Product page. PR 967–969 not used. Not built (needs data or backend that does not exist): the Sets edit modal, the Size chart finder and run table, the Product page Pricing, SEO and Google ranking cards, the New product wizard step bodies. No pull request, no merge.
+One commit per PR: 960 Demo products, 961 Stock (Ask ERP to restock, new route `/api/admin/inventory/restock`), 962 Shop ranking, 963 Sets, 964 Reviews, Questions and FAQs, 965 Size charts, 966 Product page, 967 Stock (Asked ERP tag from the audit log), 968 Product page cards (Sales 30 days, Pricing, SEO score, Google ranking, Collections), 969 price PIN (switch catalogue.prices.requirePin), 970 Ranking Save and pictures, 971 Set modal, 972 Size finder, 973 Courier 360 overview and Claims refresh, 974 AI training words, 975 Focus keyword (migration 0300). Not built: the New product wizard's own step bodies (the wizard keeps the product page as its steps), B-grade listing, scheduled publish, model height and weight, Policies auto-fill switch (the page quotes live Rules numbers instead). No pull request, no merge.
 
 ## 16 Nov 2026 — Batch 2026-11-16-1 (branch `batch-2026-11-16-1`, from `origin/main` f0ae9575): admin parity round 3, PR 765–868 in one, linear history
 
