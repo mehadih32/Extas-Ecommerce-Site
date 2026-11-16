@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round lane D13 (branch `claude/final-d13`, on top of `claude/final-d7`): the New product wizard, PR 1030–1032
+
+1030 backend (table `ProductWizardSpec`, `ProductColour.siteNameEn/Bn`, migration 0400, pure rules, spec and price API), 1031 publish now / at a time and the scheduled-publish job, 1032 the eight steps with the phone preview, Quick import and Start again, words and guide. Not done: a browser comparison with the prototype at 1366 and 390 (the machine had no room to run the app next to the other lanes), a full-app typecheck (out of memory; the wizard files, the API and the pages' imports were checked narrowly, the pages themselves only by reading), the Help-picture retake, PR numbers 1033–1039 not used (steps 4–8 went into 1032 because the shell imports every step).
+
 ## 16 Nov 2026 — Final round lane D7 (branch `claude/final-d7`): Products sub-pages against the prototype, PR 960–966
 
 One commit per PR: 960 Demo products, 961 Stock (Ask ERP to restock, new route `/api/admin/inventory/restock`), 962 Shop ranking, 963 Sets, 964 Reviews, Questions and FAQs, 965 Size charts, 966 Product page, 967 Stock (Asked ERP tag from the audit log), 968 Product page cards (Sales 30 days, Pricing, SEO score, Google ranking, Collections), 969 price PIN (switch catalogue.prices.requirePin), 970 Ranking Save and pictures, 971 Set modal, 972 Size finder, 973 Courier 360 overview and Claims refresh, 974 AI training words, 975 Focus keyword (migration 0300). Not built: the New product wizard's own step bodies (the wizard keeps the product page as its steps), B-grade listing, scheduled publish, model height and weight, Policies auto-fill switch (the page quotes live Rules numbers instead). No pull request, no merge.
