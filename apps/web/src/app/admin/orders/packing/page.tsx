@@ -234,7 +234,8 @@ export default async function PackPage({ searchParams }: Props) {
     { kind: 'switch', path: 'packOnPrint', label: t(d, 'ful.pack.chips.set.packOnPrint'), help: t(d, 'ful.pack.chips.set.packOnPrintHelp') },
   ];
   const n = (x: number) => formatNumber(x, view.locale);
-  const keep = `${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}${docsFilter !== 'all' ? `&docs=${docsFilter}` : ''}`;
+  const protoEmpty = filtered ? null : mode === 'confirmed' ? 'emptyBook' : mode === 'booked' ? 'emptySticker' : step === 'ready' ? 'emptyPacked' : null;
+  const keep =`${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}${docsFilter !== 'all' ? `&docs=${docsFilter}` : ''}`;
   const href = (s: Step, id?: string) => `${HERE}?step=${s}${keep}${id ? `&id=${id}` : ''}`;
   const codeWords = Object.fromEntries(sh.BOOKING_CODES.map((c) => [c, t(d, `courier.booking.code.${c}`)]));
   const lineOf = (orderItemId: string) => order?.lines.find((l) => l.lineId === orderItemId);
@@ -248,7 +249,7 @@ export default async function PackPage({ searchParams }: Props) {
         view={view}
         place={locateKey('packingPack')}
         title={t(d, 'ful.pack.title')}
-        sub={t(d, 'ful.pack.sub')}
+        sub={t(d, 'ful.pack.subProto', { book: n(chips.confirmed), print: n(chips.booked), packed: n(chips.packed) })}
         right={
           <>
             <a className="a2-btn" href="#peak" data-testid="pack-peak">
@@ -463,8 +464,15 @@ export default async function PackPage({ searchParams }: Props) {
               <div className="a2-sti">
                 <ShellIcon name="box" size={26} />
               </div>
-              <h3>{t(d, 'ful.pack.empty')}</h3>
-              <p>{filtered ? t(d, 'ful.pack.filter.empty') : t(d, `ful.pack.emptySub.${step}`)}</p>
+              {/* PR 953 (prototype v5): one plain line per chip: Confirmed, Booked, Packed */}
+              {protoEmpty ? (
+                <p>{t(d, `ful.pack.${protoEmpty}`)}</p>
+              ) : (
+                <>
+                  <h3>{t(d, 'ful.pack.empty')}</h3>
+                  <p>{filtered ? t(d, 'ful.pack.filter.empty') : t(d, `ful.pack.emptySub.${step}`)}</p>
+                </>
+              )}
             </div>
           )}
           {queue.more ? <p className="a2-xs a2-mute">{t(d, 'ful.pack.more', { n: n(queue.more) })}</p> : null}
