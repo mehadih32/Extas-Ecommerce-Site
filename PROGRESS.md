@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 970. Schema for the final parity round: Cart landing page and device (nullable) and the BulkQuoteSend log table (migration 0290). Tests of what it touches ran locally; CI runs the rest.
+
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 959. New bulk order page: empty line and batch words as in prototype v5. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 958. Phone order form: title, subtotal and phone error words as in prototype v5. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
