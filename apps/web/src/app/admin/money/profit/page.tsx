@@ -178,6 +178,8 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="a2-z" data-testid="money-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
+      {/* The prototype shows no Profit by group / channel sub-tabs: they live under "More" (this page only). */}
+      {!more ? <style>{'nav[data-testid="a2-subtabs"]{display:none}'}</style> : null}
       <PageHead view={view} place={locateKey(KEY)} title={c('title')}
         sub={t(d, 'lf.fp.sub')}
         right={
