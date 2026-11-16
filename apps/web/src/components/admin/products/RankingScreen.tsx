@@ -4,7 +4,9 @@
 // to the top or a push to the end, and "Save this order" (the weights tried become the owner's and the order goes on the shop).
 // Words: messages/admin-ranking.*.json (`productRanking.*`). Nothing here moves money or changes a price.
 import { useRouter } from 'next/navigation';
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { ImageSource } from '@extas/media/delivery';
+import { ResponsiveImage, altFor } from '@/components/media/ResponsiveImage';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
@@ -23,11 +25,16 @@ export interface RankingRowView {
 }
 
 /** PR 962: what the two previews under the sliders need about a product (price drawn, is it new, its category). */
+/** The page head's "Save this order" button sends this; the screen below saves. */
+export const RANKING_SAVE_EVENT = 'extas:ranking-save';
+
 export interface RankingExtra {
   productId: string;
   price: string | null;
   fresh: boolean;
   categoryId: string | null;
+  /** PR 970: the product's photo for the preview tiles (null: a letter in a square). */
+  image?: ImageSource | null;
 }
 
 export interface RankingScreenProps {
@@ -78,6 +85,16 @@ export function RankingScreen(p: RankingScreenProps) {
     }
     setSaid({ text: a.status === 403 ? c('err.forbidden') : c('err.other'), bad: true });
   }
+  // PR 970 (prototype v5): "Save this order" also sits in the page head; it calls this same save
+  const saveRef = useRef(save);
+  useEffect(() => {
+    saveRef.current = save;
+  });
+  useEffect(() => {
+    const go = () => void saveRef.current();
+    window.addEventListener(RANKING_SAVE_EVENT, go);
+    return () => window.removeEventListener(RANKING_SAVE_EVENT, go);
+  }, []);
   async function pin(productId: string, to: 'TOP' | 'DOWN', now: 'TOP' | 'DOWN' | null) {
     const a = await call('POST', '/api/admin/catalogue/ranking', { action: 'pin', productId, pin: now === to ? null : to });
     if (a.status === 200) {
@@ -199,13 +216,22 @@ function PreviewTiles({ list, extra }: { list: RankingRowView[]; extra: Map<stri
     <div className="rk-coll">
       {list.map((r) => (
         <div key={r.productId} className="rk-it">
-          <span className="rk-th" aria-hidden="true">
-            {r.name.slice(0, 1)}
+          <span className="rk-th" aria-hidden={extra.get(r.productId)?.image ? undefined : 'true'}>
+            {extra.get(r.productId)?.image ? <ResponsiveImage image={extra.get(r.productId)!.image!} slot="thumb" sizes="64px" alt={altFor(extra.get(r.productId)!.image!, 'en', r.name)} /> : r.name.slice(0, 1)}
           </span>
           <div className="rk-nm">{r.name}</div>
           <b>{extra.get(r.productId)?.price ?? '—'}</b>
         </div>
       ))}
     </div>
+  );
+}
+
+/** PR 970 (prototype v5): "Save this order" in the page head, beside "Google ranking →". It saves what the screen below shows. */
+export function RankingHeadSave({ dict, canEdit }: { dict: Dict; canEdit: boolean }) {
+  return (
+    <button type="button" className="a2-btn pri" disabled={!canEdit} onClick={() => window.dispatchEvent(new Event(RANKING_SAVE_EVENT))} data-testid="rk-save-head">
+      {t(dict, 'productRanking.save')}
+    </button>
   );
 }
