@@ -37,7 +37,7 @@ export interface MapScreenProps {
   erpHref: string;
   text: {
     search: string; hint: string; noMatch: string; tasks: string; pages: string; open: string; who: string;
-    iWant: string; iWantSub: string; journey: string; journeySide: string; erpTitle: string; erpBox: string; erpShop: string; erpShopBox: string;
+    iWant: string; iWantSub: string; journey: string; journeySide: string; erpTitle: string; erpBox: string; erpName: string; erpShop: string; erpShopBox: string;
     erpToShop: string; erpToErp: string; erpLive: string; go: string; guide: string; pdf: string; close: string;
   };
 }
@@ -127,7 +127,7 @@ export function AdminMapScreen({ groups, tasks, journey, erpHref, text }: MapScr
               <h2 className="a2-h3">{text.erpTitle}</h2>
               <div className="s28-mp-erp">
                 <div className="s28-mp-box">
-                  <b>Extas ERP</b>
+                  <b>{text.erpName}</b>
                   <div className="a2-xs a2-mute">{text.erpBox}</div>
                 </div>
                 <div className="s28-mp-mid">

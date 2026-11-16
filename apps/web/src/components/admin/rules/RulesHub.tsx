@@ -134,6 +134,7 @@ export function RulesHub(props: RulesHubProps) {
     [hub.rows],
   );
   const ago = (iso: string): string => {
+    // eslint-disable-next-line react-hooks/purity -- a relative time shown at render, as before
     const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
     if (m < 1) return tt('strip.ago.now');
     if (m < 60) return tt('strip.ago.m', { n: m });
@@ -410,6 +411,7 @@ function HubEditor({ row, tt, d, otherDict, lang, env, roles, canWrite, canAppro
     if (a.status === 200 && Array.isArray(a.data.history)) setHist(a.data.history as { changeId: string; value: unknown; at: string; by: string | null }[]);
   };
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads the history once the row is shown
     void loadHist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row.id, row.version]);

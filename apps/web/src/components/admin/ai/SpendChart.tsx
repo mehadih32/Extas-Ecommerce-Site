@@ -6,7 +6,7 @@ export function SpendChart({ values, title, sub, none, dayLabel, top }: { values
   const max = Math.max(...values, 0);
   const n = values.length;
   const x = (i: number) => (n <= 1 ? W / 2 : (i / (n - 1)) * W);
-  const y = (v: number) => H - (max <= 0 ? 0 : (v / max) * H);
+  const y = (v: number) => H - (max > 0 ? (v / max) * H : 0);
   const points = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
   return (
     <section className="a2-card ai-chart a2-mt12" data-testid="ai-limits-chart" aria-label={title}>

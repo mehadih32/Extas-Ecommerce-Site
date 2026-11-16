@@ -98,7 +98,7 @@ export default async function AdminMapPage() {
         text={{
           search: s('search'), hint: s('searchHint'), noMatch: s('noMatch'), tasks: s('tasks'), pages: s('pages'), open: s('open'), who: s('whoShort'),
           iWant: s('iWant'), iWantSub: s('iWantSub', { n: tasks.length }), journey: s('journey'), journeySide: s('journeySide'), erpTitle: s('erpTitle'),
-          erpBox: s('erpBox'), erpShop: s('erpShop'), erpShopBox: s('erpShopBox'), erpToShop: s('erpToShop'), erpToErp: s('erpToErp'), erpLive: s('erpLive'),
+          erpBox: s('erpBox'), erpName: s('erpName'), erpShop: s('erpShop'), erpShopBox: s('erpShopBox'), erpToShop: s('erpToShop'), erpToErp: s('erpToErp'), erpLive: s('erpLive'),
           go: s('go'), guide: s('guide'), pdf: s('pdf'), close: s('close'),
         }}
       />

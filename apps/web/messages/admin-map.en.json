@@ -270,6 +270,7 @@
     },
     "erpTitle": "Shop ↔ ERP",
     "erpBox": "stock · buying price · bills · return checks",
+    "erpName": "Extas ERP",
     "erpShop": "Shop",
     "erpShopBox": "customers · orders · selling price",
     "erpToShop": "products, stock, prices →",
