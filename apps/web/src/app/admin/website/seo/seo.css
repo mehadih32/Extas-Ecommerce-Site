@@ -12,3 +12,25 @@
    (768 px up) it takes the cell's own padding, so the row keeps its height. */
 .adm2 .seo-cell-link{display:inline-flex;align-items:center;min-height:44px}
 @media (min-width:768px){.adm2 .a2-tbl td>.seo-cell-link{margin:-11px 0}}
+/* PR 1051 (prototype v5 · SEO & Google ranking): the score ring and three figures, the ranking table, the two-column cards, the fold of the settings. */
+.adm2 .seo-ov{display:grid;gap:0}
+.adm2 .seo-fig{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr));gap:16px;margin-top:12px}
+.adm2 .seo-score{display:flex;align-items:center;gap:14px;padding:15px 18px}
+.adm2 .seo-ring{--seo-c:var(--g);width:78px;height:78px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--seo-c) var(--seo-pct),var(--ln) 0)}
+.adm2 .seo-ring.good{--seo-c:var(--good,#1a7f4b)}.adm2 .seo-ring.warn{--seo-c:var(--warn,#b7791f)}.adm2 .seo-ring.bad{--seo-c:var(--bad,#c0392b)}
+.adm2 .seo-ring b{width:58px;height:58px;border-radius:50%;background:var(--sf);display:grid;place-items:center;font-size:20px}
+.adm2 .seo-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.adm2 .seo-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.adm2 .seo-list li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.adm2 .seo-list li>span:nth-child(2),.adm2 .seo-list li>a:first-child{flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.adm2 .seo-weak li{flex-wrap:nowrap}
+.adm2 .seo-bar{flex:0 0 90px;height:6px;border-radius:3px;background:var(--ln);overflow:hidden}
+.adm2 .seo-bar i{display:block;height:100%;background:var(--bad,#c0392b)}
+.adm2 .seo-pos{display:inline-block;min-width:34px;text-align:center;font-weight:700;border-radius:8px;padding:2px 6px;background:var(--sf2,#f4f4f4)}
+.adm2 .seo-pos.t3{background:var(--good-soft,#e3f4ea);color:var(--good,#1a7f4b)}.adm2 .seo-pos.t10{background:var(--info-soft,#e6f0fb);color:var(--info,#1f5fa8)}
+.adm2 .seo-kv{margin:8px 0 0;display:grid;gap:0}
+.adm2 .seo-kv>div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--ln);min-width:0}
+.adm2 .seo-kv dt{color:var(--ink2)}.adm2 .seo-kv dd{margin:0;text-align:end;overflow-wrap:anywhere;min-width:0}
+.adm2 .seo-path{overflow-wrap:anywhere;font-family:ui-monospace,monospace;font-size:12px}
+.adm2 .seo-more>summary{cursor:pointer;display:grid;gap:2px;min-height:44px;align-content:center}
+@media (max-width:900px){.adm2 .seo-fig{grid-template-columns:repeat(2,minmax(0,1fr))}.adm2 .seo-score{grid-column:1/-1}.adm2 .seo-two{grid-template-columns:minmax(0,1fr)}}
