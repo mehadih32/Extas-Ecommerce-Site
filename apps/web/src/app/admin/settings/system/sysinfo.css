@@ -22,3 +22,8 @@
 .sy-dl dd { margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 960px) { .sy-lights { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sy-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) { .sy-lights { grid-template-columns: minmax(0, 1fr); } }
+/* D10 — the prototype's usage bars (Server room): disk and memory, green until the usual warning lines */
+.sy-bar { height: 8px; border-radius: 999px; background: var(--lm-sf2); overflow: hidden; margin-top: 6px; }
+.sy-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--lm-ok); }
+.sy-bar > i.warn { background: var(--lm-warn); }
+.sy-bar > i.bad { background: var(--lm-bad); }
