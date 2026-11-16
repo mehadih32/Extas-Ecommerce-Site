@@ -59,7 +59,8 @@ export default async function WebsitePoliciesPage({ searchParams }: { searchPara
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('website.read', deps, MOTHER_STORE_ID), searchParams]);
   const view = withScreen(plain);
   const d = view.dict;
-  const asked = typeof sp.page === 'string' && isPolicySlug(sp.page) ? sp.page : POLICY_SLUGS[0];
+  // PR 911 (prototype v5): the page opens on Delivery, the policy the numbers of Rules show first
+  const asked = typeof sp.page === 'string' && isPolicySlug(sp.page) ? sp.page : POLICY_SLUGS.includes('delivery' as never) ? 'delivery' : POLICY_SLUGS[0];
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(`${HERE}?page=${asked}`)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(d, 'page.noDb')} />;
   if (access.kind === 'forbidden')
