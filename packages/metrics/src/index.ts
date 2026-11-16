@@ -51,6 +51,8 @@ export * from './geo';
 // S29 · PR 758: the risk lens of Reports › Geography map and the roll-up the lenses share (geo-lens-base.ts, geo-risk.ts).
 export * from './geo-lens-base';
 export * from './geo-risk';
+// S29 · PR 759: the money and stock lens (geo-money.ts).
+export * from './geo-money';
 // S16 · PR 504: `profitByGroup` — the per-order profit (ad share included) split over lines, by category or style (group-profit.ts).
 export * from './group-profit';
 // S16 · PR 355: `profitByChannel` — the period's delivered orders by ad platform / organic / other channel, with returns,

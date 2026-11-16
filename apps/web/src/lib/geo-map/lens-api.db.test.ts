@@ -10,7 +10,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
-import { geoLensRoute, RISK_PART_PERMISSION } from './lens-api';
+import { geoLensRoute, MONEY_PART_PERMISSION, RISK_PART_PERMISSION } from './lens-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -29,6 +29,12 @@ const SETTING = { on: true, minOrders: 1, warnReturnPct: 10, topProducts: 3, len
 describe('the permission of each part of the risk lens (PR 758)', () => {
   it('each part needs the permission of its own source report; returns and cancels need only the page\'s', () => {
     expect(RISK_PART_PERMISSION).toEqual({ returns: 'reports.read', refusals: 'delivery.read', cancels: 'reports.read', risk: 'risk.report', claims: 'delivery.claims', tickets: 'support.read' });
+  });
+});
+
+describe('the permissions of each part of the money and stock lens (PR 759)', () => {
+  it('money needs books.read, the ad part also marketing.campaigns.read, the stock part only the page\'s', () => {
+    expect(MONEY_PART_PERMISSION).toEqual({ delivery: ['books.read'], ads: ['books.read', 'marketing.campaigns.read'], stock: ['reports.read'] });
   });
 });
 
@@ -78,6 +84,16 @@ describe.skipIf(!HAS_TEST_DB)('the Geography map lens route on PostgreSQL (PR 75
     expect((await get(owner, '&lens=nonsense')).status).toBe(400);
     expect((await get(owner, '&lens=courier')).status).toBe(400);
     expect((await get(owner, '&lens=risk&parent=1%27%20OR%201=1')).status).toBe(400);
+  });
+
+  it('the money lens is its own switch, and the owner gets its figures with nothing hidden', async () => {
+    setting = SETTING; // money is off in SETTING
+    expect((await get(owner, '&lens=money')).status).toBe(404);
+    setting = { ...SETTING, lenses: { ...SETTING.lenses, money: true } };
+    const res = await get(owner, '&lens=money&level=district');
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true, lens: 'money', hidden: [] });
+    setting = SETTING;
   });
 
   it('the owner gets the figures, nothing is hidden for the owner, and the answer is never cached', async () => {

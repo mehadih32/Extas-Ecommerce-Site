@@ -11,16 +11,17 @@
 //     A part the viewer may not see is left out (`null`, named in `hidden`) — it is never read from the database;
 //   - the period follows the report rules of Costs and Profit & loss (`costs.report`: never past today, at most
 //     `maxDays`), the level is one of division, district, upazila, area, and `parent` (a place id) is the drill-down.
-// Read-only: nothing here changes a setting, an order, a courier, a COD rule, a price, a charge or an ad.
+// Read-only: nothing here changes a setting, an order, a courier, a COD rule, a price, a charge, an ad or stock.
 import { can, type Actor } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
-import { GEO_LEVELS, geoRisk, RISK_PARTS, ymdIn, type GeoLevel, type LensResult, type RiskPart } from '@extas/metrics';
+import { GEO_LEVELS, geoMoney, geoRisk, MONEY_PARTS, RISK_PARTS, ymdIn, type GeoLevel, type LensResult, type MoneyPart, type RiskPart } from '@extas/metrics';
 import { errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from '../admin-auth';
 import { parseReportQuery } from '../cost-report';
+import { profitInputs } from '../order-profit-view';
 import { readLensSetting, type LensKey } from './setting';
 
 /** The lenses this route serves (the courier lens is served by its own lane). */
-export const SERVED_LENSES = ['risk'] as const satisfies readonly LensKey[];
+export const SERVED_LENSES = ['risk', 'money'] as const satisfies readonly LensKey[];
 export type ServedLens = (typeof SERVED_LENSES)[number];
 
 /** The permission of each part of the risk lens (the returns and cancels parts need only the page's own `reports.read`). */
@@ -31,6 +32,13 @@ export const RISK_PART_PERMISSION: Record<RiskPart, 'reports.read' | 'delivery.r
   risk: 'risk.report',
   claims: 'delivery.claims',
   tickets: 'support.read',
+};
+
+/** The permissions of each part of the money and stock lens: every one listed is needed (the stock part needs only the page's). */
+export const MONEY_PART_PERMISSION: Record<MoneyPart, readonly ('reports.read' | 'books.read' | 'marketing.campaigns.read')[]> = {
+  delivery: ['books.read'],
+  ads: ['books.read', 'marketing.campaigns.read'],
+  stock: ['reports.read'],
 };
 
 export type LensApiResponse =
@@ -49,6 +57,17 @@ export async function topRiskBand(resolver: AdminDeps['resolver'], storeId: numb
 export async function riskParts(db: PrismaClient, actor: Actor, storeId: number): Promise<Set<RiskPart>> {
   const out = new Set<RiskPart>();
   for (const p of RISK_PARTS) if (await can(db, actor, RISK_PART_PERMISSION[p], { storeId })) out.add(p);
+  return out;
+}
+
+/** The money and stock parts the viewer may see. */
+export async function moneyParts(db: PrismaClient, actor: Actor, storeId: number): Promise<Set<MoneyPart>> {
+  const out = new Set<MoneyPart>();
+  for (const p of MONEY_PARTS) {
+    let ok = true;
+    for (const key of MONEY_PART_PERMISSION[p]) ok = ok && (await can(db, actor, key, { storeId }));
+    if (ok) out.add(p);
+  }
   return out;
 }
 
@@ -78,16 +97,27 @@ export async function geoLensRoute(request: Request, deps: AdminDeps | null): Pr
     const { q } = parseReportQuery(Object.fromEntries(url.searchParams), today, limits);
     const days = { from: q.from, to: q.to };
 
-    const parts = await riskParts(d.db, g.actor, storeId);
-    const result = await geoRisk(d.db, storeId, days, {
-      timeZone,
-      level,
-      parentAreaId: parent,
-      minOrders: setting.minOrders,
-      warnReturnPct: setting.warnReturnPct,
-      topBandKey: await topRiskBand(d.resolver, storeId),
-      parts,
-    });
+    let result: LensResult;
+    if (lens === 'risk') {
+      result = await geoRisk(d.db, storeId, days, {
+        timeZone,
+        level,
+        parentAreaId: parent,
+        minOrders: setting.minOrders,
+        warnReturnPct: setting.warnReturnPct,
+        topBandKey: await topRiskBand(d.resolver, storeId),
+        parts: await riskParts(d.db, g.actor, storeId),
+      });
+    } else {
+      result = await geoMoney(d.db, storeId, days, {
+        profit: await profitInputs(d.resolver, storeId),
+        level,
+        parentAreaId: parent,
+        minOrders: setting.minOrders,
+        topProducts: setting.topProducts,
+        parts: await moneyParts(d.db, g.actor, storeId),
+      });
+    }
     return json({ ok: true, lens, ...result } satisfies LensApiResponse, { headers: { 'cache-control': 'no-store' } });
   } catch (e) {
     return errorResponse(e);

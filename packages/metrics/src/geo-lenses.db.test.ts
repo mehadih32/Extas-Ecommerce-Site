@@ -1,14 +1,15 @@
-// S29 · PR 758 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL; written without being run — no database on
-// the machine it was made on): the risk lens (PR 758) of Reports › Geography map reads the
+// S29 · PR 758, 759 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL; written without being run — no database on
+// the machine it was made on): the risk and money-and-stock lenses (PR 758, 759) of Reports › Geography map read the
 // shop's own records, by area, for a period; counts only, store-scoped, archived orders left out. Made-up values only.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
+import { geoMoney, MONEY_PARTS, type MoneyPart } from './geo-money';
 import { geoRisk, RISK_PARTS, type RiskPart } from './geo-risk';
 
 const TZ = 'Asia/Dhaka';
 const DAYS = { from: '2026-10-01', to: '2026-10-31' };
 
-describe.skipIf(!HAS_TEST_DB)('PR 758 · the Geography map lenses on PostgreSQL', () => {
+describe.skipIf(!HAS_TEST_DB)('PR 758, 759 · the Geography map lenses on PostgreSQL', () => {
   let t: TestDatabase;
   let S = 0;
   let O = 0;
@@ -94,6 +95,11 @@ describe.skipIf(!HAS_TEST_DB)('PR 758 · the Geography map lenses on PostgreSQL'
     await t.prisma.returnRecord.create({ data: { storeId: S, orderId: back, kind: 'REFUSED_AT_DOOR', ourFault: true, createdAt: new Date('2026-10-12T09:00:00Z') } });
     await t.prisma.ticket.create({ data: { storeId: S, orderId: back, subject: 'Where is it', status: 'OPEN', createdAt: new Date('2026-10-13T06:00:00Z') } });
     await t.prisma.ticket.create({ data: { storeId: S, subject: 'No order', status: 'OPEN', createdAt: new Date('2026-10-13T06:00:00Z') } });
+
+    // money and stock: delivered orders with a product
+    await order({ area: 'gabtali', product: ids.polo, total: 3000, qty: 3, charge: 60 });
+    await order({ area: 'sherpur', product: ids.polo, total: 1000, qty: 1, charge: 0 });
+    await order({ area: 'sherpur', product: ids.tee, total: 2000, qty: 2, charge: 100 });
   });
   afterAll(async () => t?.drop());
 
@@ -111,5 +117,23 @@ describe.skipIf(!HAS_TEST_DB)('PR 758 · the Geography map lenses on PostgreSQL'
     const r = await geoRisk(t.prisma, S, DAYS, { timeZone: TZ, level: 'district', minOrders: 1, warnReturnPct: 10, topBandKey: 'high', parts: new Set<RiskPart>(['returns']) });
     expect(r.rows[0]!.figures).toMatchObject({ refusedAtDoor: null, tickets: null, highRisk: null });
     expect(r.hidden).toEqual(['refusals', 'cancels', 'risk', 'claims', 'tickets']);
+  });
+
+  it('money and stock: delivery charge collected and the styles that sell in each area; no courier charge is never 0', async () => {
+    const profit = { currency: 'BDT', timeZone: TZ, packagingMinor: null, gatewayFee: () => null, ads: { allocate: false, basis: 'month' as const } };
+    const r = await geoMoney(t.prisma, S, DAYS, { profit, level: 'upazila', minOrders: 1, topProducts: 3, parts: new Set<MoneyPart>(MONEY_PARTS) });
+    const sher = r.rows.find((x) => x.nameEn === 'Sherpur')!;
+    expect(sher.figures).toMatchObject({ deliveryChargeMinor: 100, freeDeliveryOrders: 1, pieces: 3 });
+    expect(sher.figures.courierMinor).toBeNull(); // the parcels have no courier charge yet
+    const stock = r.extras.stock as Record<string, { productId: string; pieces: number; nameEn: string }[]>;
+    expect(stock[sher.areaId]!.map((e) => [e.nameEn, e.pieces])).toEqual([['Tee', 2], ['Polo shirt', 1]]);
+    expect(r.total.salesMinor).toBeGreaterThan(0);
+  });
+
+  it('money: without books.read there is no money in any row', async () => {
+    const profit = { currency: 'BDT', timeZone: TZ, packagingMinor: null, gatewayFee: () => null, ads: { allocate: false, basis: 'month' as const } };
+    const r = await geoMoney(t.prisma, S, DAYS, { profit, level: 'district', minOrders: 1, topProducts: 3, parts: new Set<MoneyPart>(['stock']) });
+    expect(r.rows[0]!.figures).toMatchObject({ salesMinor: null, deliveryChargeMinor: null, adSpendMinor: null });
+    expect(r.hidden).toEqual(['delivery', 'ads']);
   });
 });

@@ -52118,10 +52118,20 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-3`, NOT pushed, status stays parked until the owner says):** `geoMoney` in `@extas/metrics` (`geo-money.ts`, same roll-up and drill-down as the risk lens), per area over the delivered orders: delivery charge collected, the courier's charge on the parcels where it is known (from the order's profit, PR 348; a parcel without its charge is never 0, it is counted apart and left out of the gap), the gap between the two with the flag `deliveryEatsProfit` (at least `minOrders` such parcels and the courier's charge over what was collected), free-delivery orders, profit and margin of the orders whose product cost is known; ad spend by district (and division) from the ad-return figure of PR 269, so the same rule as Where to advertise (PR 569), with the ad-carried sales, the return, the share of the area's Sales and the flag `adsExceedSales` (below the district it is not known: null; a spend with no exchange rate is null, never 0); and the styles that sell in each area (`topProducts` of them, by pieces, then Sales) with the area's share of each style's pieces. Money needs `books.read`, the ad part also `marketing.campaigns.read`, the stock part only `reports.read`; a part left out is `null` and named in `hidden`. `GET /api/admin/reports/geo-map/lens?lens=money` answers `not_on` while `reports.geoMap.on` or `reports.geoMap.lenses.money` is off. Figures only: no delivery charge, free-delivery limit, price, ad budget or stock is changed, reserved or ordered (hard rule 6). Guide: `docs/admin-guide/pages/reports/geo-map-lenses.md`. Tests: pure (gap and flag edges, a parcel without its charge, margin of costed orders, ads by district and division, styles with the area's share, hidden parts; ran) and PostgreSQL (written, not run). No migration."
+    }
+   ],
    "mentions": [
     355,
-    569
+    569,
+    348,
+    269
    ],
    "blueprint": [],
    "bn": "জিওগ্রাফি ম্যাপ: ডেলিভারি চার্জ বনাম মার্জিন, বিজ্ঞাপনের খরচ বনাম বিক্রি, কোন এলাকায় কোন পণ্যের স্টক কাছে রাখবেন। পার্ক করা।",
