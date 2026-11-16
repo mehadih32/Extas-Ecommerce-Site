@@ -4,7 +4,7 @@
     "title": "Admin map",
     "sub": "Where everything is, and how to get there.",
     "search": "Search a page or a task",
-    "searchHint": "Try “delivery charge” or “refund”",
+    "searchHint": "Ask: where do I change the delivery charge?",
     "noMatch": "Nothing matches. Try another word.",
     "tasks": "Tasks",
     "pages": "Pages",
@@ -15,8 +15,8 @@
     "groups": {
       "daily": "Every day",
       "grow": "Selling",
-      "business": "Money and business",
-      "bottom": "Settings and help"
+      "business": "Money",
+      "bottom": "Setup"
     },
     "other": "More pages",
     "noLine": "Open this page.",
@@ -253,6 +253,32 @@
       "activity": "See who changed what",
       "startFresh": "Start fresh on go-live day",
       "telegram": "Approve urgent things on Telegram"
-    }
+    },
+    "iWant": "I want to…",
+    "iWantSub": "{n} common jobs — tap to go straight there",
+    "journey": "Order journey",
+    "journeySide": "Side paths: refused at the door, partial delivery and exchange all go to Orders › Returns & exchanges.",
+    "j": {
+      "new": "New",
+      "processing": "Processing",
+      "confirmed": "Confirmed",
+      "booked": "Booked",
+      "packed": "Packed",
+      "handed": "Handed over",
+      "delivered": "Delivered",
+      "paid": "Paid"
+    },
+    "erpTitle": "Shop ↔ ERP",
+    "erpBox": "stock · buying price · bills · return checks",
+    "erpShop": "Shop",
+    "erpShopBox": "customers · orders · selling price",
+    "erpToShop": "products, stock, prices →",
+    "erpToErp": "← orders, bills, returns, payments",
+    "erpLive": "See it live in Settings › ERP connection",
+    "go": "Go",
+    "guide": "Guide",
+    "pdf": "Download PDF",
+    "close": "Close",
+    "whoShort": "Who"
   }
 }

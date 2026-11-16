@@ -28,3 +28,19 @@
 [data-testid="al-rows"]{overflow-x:auto;max-width:100%;position:relative}
 [data-testid="activity-page"]{max-width:100%}
 [data-testid="activity-page"] :where(div,section,li,p,span,b,a,small,h2,h3):not(:where(td,th,table) *){min-width:0;overflow-wrap:anywhere}
+/* Admin map: the approved prototype's header buttons, task tiles, journey, Shop-ERP box and tab rows (admin-proto-v5 map.js) */
+.s28-mp-top{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.s28-mp-q .a2-inp{width:100%;font-size:16px;padding:14px 16px;border-radius:14px}
+.s28-mp-tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:6px;margin-top:10px}
+.s28-mp-tasks a{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:10px;background:var(--lm-sf2,var(--lm-sf));border:1px solid var(--lm-ln);font-size:13.5px;text-decoration:none;color:inherit;min-height:44px}
+.s28-mp-tasks a span{font-size:12px;opacity:.7}
+.s28-mp-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.s28-mp-step{display:inline-flex;gap:6px;align-items:center}
+.s28-mp-step i{font-style:normal;opacity:.6}
+.s28-mp-step a{padding:8px 12px;border-radius:999px;border:1px solid var(--lm-ln);font-size:13px;font-weight:600;text-decoration:none;color:inherit}
+.s28-mp-erp{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;font-size:13px;margin:10px 0}
+.s28-mp-box{border-radius:12px;padding:12px;border:1px solid var(--lm-ln)}
+.s28-mp-mid{display:flex;flex-direction:column;gap:6px;text-align:center;font-size:12px;opacity:.75}
+.s28-mp-name{min-width:128px;font-weight:600;font-size:13.5px}
+.s28-mp-acts{display:flex;gap:6px;flex:none}
+@media (max-width:640px){.s28-mp-erp{grid-template-columns:1fr}.s28-list li{flex-wrap:wrap}.s28-mp-name{min-width:0;width:100%}}
