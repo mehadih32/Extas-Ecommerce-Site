@@ -28,6 +28,14 @@ export interface NowTile {
   holdBar?: ('u' | 'w' | 'x' | '')[];
 }
 
+/** Small line icons for the four tiles (the prototype puts one before each label). */
+const TILE_ICON: Record<string, string> = {
+  hand: 'M3 7h18v12H3zM3 7l2-3h14l2 3M16 13h2',
+  couriers: 'M2 6h11v9H2zM13 9h4l3 3v3h-7zM6 18a1.5 1.5 0 1 0 0 .01M16 18a1.5 1.5 0 1 0 0 .01',
+  erp: 'M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4',
+  wallets: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+};
+
 export function MoneyTiles({ title, tiles }: { title: string; tiles: readonly NowTile[] }) {
   return (
     <section className="a2-mt12" data-testid="fn-now" aria-label={title}>
@@ -35,7 +43,14 @@ export function MoneyTiles({ title, tiles }: { title: string; tiles: readonly No
       <div className="lf-tiles a2-mt6">
         {tiles.map((x) => (
           <Link key={x.key} href={x.href} className={`lf-tile${x.tone ? ` ${x.tone}` : ''}`} data-testid={`fn-now-${x.key}`}>
-            <div className="lf-tl">{x.label}</div>
+            <div className="lf-tl">
+              {TILE_ICON[x.key] ? (
+                <svg className="lf-ti" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d={TILE_ICON[x.key]} />
+                </svg>
+              ) : null}
+              {x.label}
+            </div>
             <div className="lf-tv">{x.value}</div>
             <div className="lf-ts">{x.sub}</div>
             {x.mini?.length ? (

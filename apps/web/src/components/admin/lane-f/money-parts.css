@@ -19,3 +19,18 @@
 .lf-dh i.ok { background: var(--lm-ok); }
 .lf-dh i.warn { background: var(--lm-warn); }
 .lf-dh i.bad { background: var(--lm-bad); }
+.lf-ms { display: grid; gap: 6px; }
+.lf-msr { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13px; }
+.lf-msr.tot { font-weight: 700; }
+.lf-msr b { font-variant-numeric: tabular-nums; text-align: end; }
+.lf-msb { height: 10px; border-radius: 5px; background: var(--lm-ln); overflow: hidden; }
+.lf-msb i { display: block; height: 100%; border-radius: 5px; background: var(--lm-bad); }
+.lf-msb i.in, .lf-msb i.net { background: var(--lm-brand); }
+.lf-mst { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.lf-mst div { display: grid; gap: 2px; font-size: 12px; color: var(--lm-ink2); }
+.lf-mst b { font-size: 20px; color: var(--lm-ink); }
+.lf-split { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; margin-top: 12px; }
+@media (min-width: 1100px) { .lf-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+.lf-more { color: var(--lm-ac); font-weight: 600; font-size: 13px; text-decoration: none; white-space: nowrap; }
+.lf-more:hover { text-decoration: underline; }

@@ -31,3 +31,9 @@
 .lf-ml { margin-left: 6px; }
 .lf-two2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 1100px) { .lf-two2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.lf-tl { display: flex; align-items: center; gap: 8px; }
+.lf-ti { flex: none; color: var(--lm-ink2); }
+[data-testid='fn-courier-money'] .lf-kpi { background: none; border: 0; box-shadow: none; padding: 0; }
+[data-testid='fn-courier-money'] .lf-kv { font-size: 26px; }
+[data-testid='fn-courier-money'] .lf-acts .a2-btn.ghost { border-color: transparent; background: none; box-shadow: none; }
