@@ -49,6 +49,7 @@
 - **ভাবা যে সেভ মানেই চালু।** চালু হতে মালিকের OK আর PIN লাগে।
 
 > [!TIP]
+- **Built-in rules that also change the price** — তালিকার নিচের কার্ড: **Free delivery rule**, **Online-payment discount (basic setting)** আর **Customer grade discount**, প্রতিটার **On** / **Off** আর **Open** →। এগুলো নিয়মের পাতায় ঠিক হয়; এখানে শুধু অবস্থা দেখা।
 > ফলাফল গোনা হয় কোড লাগা অর্ডার থেকে, তাই কোড ছাড়া অফারের ফলাফলে ড্যাশ দেখায়।
 
 ## এরপর কী হয়
