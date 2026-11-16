@@ -263,6 +263,25 @@
         "conversation": "Conversation",
         "ticket": "Ticket"
       },
+      "openFull": "Open full page",
+      "openPanel": "Open as side panel",
+      "taste": {
+        "title": "Sizes & favourites",
+        "pieces": "Pieces",
+        "mrp": "MRP value",
+        "discount": "Discount received",
+        "favourites": "Favourite categories",
+        "always": "always",
+        "mostly": "mostly",
+        "piecesOf": "{n} pcs",
+        "other": "Other",
+        "none": "No sizes yet."
+      },
+      "influencer": {
+        "title": "Influencer code",
+        "used": "Used {code} ({name}) on order {order}.",
+        "none": "He has not used an influencer code."
+      },
       "birthday": {
         "title": "Birthday",
         "label": "Date",
