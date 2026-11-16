@@ -457,5 +457,17 @@
       "restore": "ফিরিয়ে আনুন",
       "archived": "আর্কাইভ হলো"
     }
+  },
+  "notices": {
+    "fields": {
+      "titleEn": "শিরোনাম (ইংরেজি)",
+      "titleBn": "শিরোনাম (বাংলা)",
+      "contentEn": "ইংরেজিতে লেখা",
+      "contentBn": "বাংলায় লেখা",
+      "delay": "কত সেকেন্ড পর দেখাবে",
+      "startsAt": "শুরু",
+      "endsAt": "শেষ"
+    },
+    "customersSee": "ক্রেতা যা দেখে"
   }
 }
