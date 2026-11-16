@@ -49,9 +49,11 @@ describe('tryIt with AI off', () => {
 });
 
 describe('sandboxAgentKey', () => {
-  it('is the chosen agent, and prohori only for "all"', async () => {
+  it('is the chosen agent; for "all" the named agent, never a fixed one', async () => {
     const { sandboxAgentKey } = await import('./training-extras');
     expect(sandboxAgentKey('doot')).toBe('doot');
-    expect(sandboxAgentKey('all')).toBe('prohori');
+    expect(sandboxAgentKey('all')).toBeNull();
+    expect(sandboxAgentKey('all', 'doot')).toBe('doot');
+    expect(sandboxAgentKey('all', 'nobody')).toBeNull();
   });
 });
