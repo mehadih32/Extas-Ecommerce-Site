@@ -76,7 +76,7 @@ interface Props {
 /** Kinds of photo a person can pick for an extra photo (the media library's kinds; video has its own screen). */
 const EXTRA_KINDS = ['DETAIL', 'ON_MODEL', 'FLAT_LAY', 'FABRIC', 'TRUE_COLOUR', 'SET', 'OTHER', 'BACK', 'FRONT'] as const;
 
-type TextKey = 'nameEn' | 'nameBn' | 'erpStyleCode' | 'descriptionEn' | 'descriptionBn' | 'careEn' | 'careBn' | 'slug' | 'seoTitleEn' | 'seoTitleBn' | 'metaDescriptionEn' | 'metaDescriptionBn' | 'feedTitle';
+type TextKey = 'nameEn' | 'nameBn' | 'erpStyleCode' | 'descriptionEn' | 'descriptionBn' | 'careEn' | 'careBn' | 'focusKeyword' | 'slug' | 'seoTitleEn' | 'seoTitleBn' | 'metaDescriptionEn' | 'metaDescriptionBn' | 'feedTitle';
 
 export function ProductForm(props: Props) {
   const { dict: d, lang, readiness, stock, categories, fabrics, sizes, money, skuTemplate, frontPerColour, gallery, images, can } = props;
@@ -370,7 +370,7 @@ export function ProductForm(props: Props) {
     title: previewTitle || draft.nameEn,
     description: previewDesc,
     slug: draft.slug,
-    keyword: seoCategory ? seoCategory.nameEn : null,
+    keyword: draft.focusKeyword.trim() || (seoCategory ? seoCategory.nameEn : null),
     photos: readiness.photos.count,
     colours: draft.colours.length,
   });
@@ -493,6 +493,9 @@ export function ProductForm(props: Props) {
                 );
               })}
             </div>
+            <Field label={t(d, 'products.fields.focusKeyword')} id="f-kw" help={t(d, 'products.fields.focusKeywordHelp', { word: seoCategory ? seoCategory.nameEn : '' })}>
+              <input id="f-kw" className="ad-input" maxLength={80} {...text('focusKeyword')} />
+            </Field>
             <Field label={t(d, 'products.fields.feedTitle')} id="f-feed" extra={counter(draft.feedTitle, naming.feedTitle.source === 'template' ? naming.feedTitle.value : '', naming.feedTitle.max)}>
               <input id="f-feed" className="ad-input" maxLength={300} placeholder={naming.feedTitle.source === 'template' ? naming.feedTitle.value : ''} {...text('feedTitle')} />
             </Field>

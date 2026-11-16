@@ -112,6 +112,7 @@ describe('the edit form save', () => {
     descriptionBn: null,
     careEn: null,
     careBn: null,
+    focusKeyword: null,
     colours: [
       { colourId: 'navy', archived: false },
       { colourId: 'red', archived: false },
@@ -150,6 +151,14 @@ describe('the edit form save', () => {
     const noPrices = buildSave(base, draft, product, m, false);
     expect(noPrices.input.variants).toBeUndefined();
     expect(noPrices.input.create).toEqual([{ sku: 'PL1-TL-S', colourId: 'teal', sizeId: 's' }]);
+  });
+
+  it('PR 975: the focus keyword is saved as typed and cleared with null', () => {
+    const base = initialState(product, naming, m);
+    expect(base.focusKeyword).toBe('');
+    expect(buildSave(base, { ...base, focusKeyword: 'polo shirt' }, product, m, true).input).toEqual({ product: { focusKeyword: 'polo shirt' } });
+    const had = { ...base, focusKeyword: 'polo shirt' };
+    expect(buildSave(had, { ...had, focusKeyword: '' }, product, m, true).input).toEqual({ product: { focusKeyword: null } });
   });
 
   it('names what cannot be sent: an empty name, a price that is not an amount', () => {
