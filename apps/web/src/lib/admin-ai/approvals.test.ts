@@ -2,7 +2,21 @@
 // `approvalsView`, `decideApproval`, `expireStaleApprovals`) touches Prisma, so it is proven in
 // `approvals-api.db.test.ts` instead, the same split `calculator.ts`/`calculator.test.ts` already use.
 import { describe, expect, it } from "vitest";
-import { KNOWN_KINDS, kindLabelOf } from "./approvals";
+import { approvalExtras, KNOWN_KINDS, kindLabelOf } from "./approvals";
+
+describe("approvalExtras (PR 934)", () => {
+  it("reads the effect line, the open link and the draft from payload.ownerView", () => {
+    const x = approvalExtras({ other: 1, ownerView: { impact: " About +9 orders ", openHref: "/admin/marketing/campaigns", draft: "Hello" } });
+    expect(x).toEqual({ impact: "About +9 orders", openHref: "/admin/marketing/campaigns", draft: "Hello" });
+  });
+  it("is all null for any other payload and refuses a link that leaves the admin", () => {
+    expect(approvalExtras(null)).toEqual({ impact: null, openHref: null, draft: null });
+    expect(approvalExtras([1])).toEqual({ impact: null, openHref: null, draft: null });
+    expect(approvalExtras({ ownerView: { openHref: "https://evil.example/admin/x" } }).openHref).toBeNull();
+    expect(approvalExtras({ ownerView: { openHref: "/admin//evil" } }).openHref).toBeNull();
+    expect(approvalExtras({ ownerView: { openHref: "/orders" } }).openHref).toBeNull();
+  });
+});
 
 describe("kindLabelOf", () => {
   it("returns the known catalogue's own label, in the language asked for", () => {
