@@ -610,7 +610,7 @@
           "k": "export erase copy request privacy media import old customers own data"
         },
         "telegram": {
-          "n": "Telegram অনুমোদন",
+          "n": "Telegram কন্ট্রোল",
           "k": "telegram bot daily report pairing alert approve"
         },
         "startFresh": {
@@ -1171,7 +1171,7 @@
     "messagesCostCeilings": "খরচের সীমা",
     "websiteAnalytics": "সারসংক্ষেপ",
     "staffControls": "স্টাফ কন্ট্রোল",
-    "telegramApprovals": "টেলিগ্রাম অনুমোদন",
+    "telegramApprovals": "Telegram কন্ট্রোল",
     "people": "মানুষজন",
     "roles": "রোল",
     "activity": "কাজের লগ",

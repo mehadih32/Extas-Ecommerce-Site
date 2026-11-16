@@ -113,9 +113,10 @@
     "activity": {
       "metaTitle": "Activity log",
       "title": "Activity log",
+      "headSub": "Who changed what, and who looked at customer data. Nothing here can be edited or removed.",
       "sub": {
-        "changes": "Who changed what, and who looked at customer data. Nothing here can be edited or removed. Newest first; only the names of the fields that changed are shown, never their values.",
-        "views": "Who changed what, and who looked at customer data. Nothing here can be edited or removed. Every phone number or address opened is recorded, newest first."
+        "changes": "Newest first; only the names of the fields that changed are shown, never their values.",
+        "views": "Every phone number or address opened is recorded, newest first."
       },
       "kinds": {
         "changes": "Changes",
