@@ -1,7 +1,7 @@
 {
   "metaTitle": "Size charts",
   "title": "Size charts",
-  "intro": "Sizes (M, L, XL) come from ERP; measurements live here.",
+  "intro": "Charts by category, in inches with cm beside. Each category has one default; a product can also use another saved chart.",
   "sep": " · ",
   "slash": " / ",
   "steps": {
