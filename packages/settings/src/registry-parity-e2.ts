@@ -3,6 +3,7 @@
 // every one ships off or empty and every number is editable on its own page. Registry version 817-820.
 // - `ai.costSaverAuto` (PR 818): turn the cost-saver mode (`ai.costSaver`) on by itself at 80% of the AI ceiling (`ai.monthlyCapMinor`).
 // - `ai.digest` (PR 819): the AI's daily digest of what waits for the owner: on/off, time, Telegram, e-mail.
+// - `ai.keepOnFeatures` (PR 936): which cheap non-AI system checks keep running while AI is off.
 // - `ai.trainingOff` (PR 820): ids of corrections and documents the owner switched off (rows are never edited or deleted).
 // - `telegram.control` (PR 817): daily report time, weekly audit, the alert switches, the big-order line and the allowed accounts.
 // - `payments.settlement` (PR 817): which account each way of paying lands in, and in how many working days.
@@ -17,6 +18,14 @@ const base = { scope: 'installation', valueType: 'JSON', group: 'system', isOwne
 export const aiDigestSchema = z.object({ on: z.boolean(), time: hhmm, telegram: z.boolean(), email: z.boolean() }).strict();
 export type AiDigestSettings = z.output<typeof aiDigestSchema>;
 export const AI_DIGEST_DEFAULT: AiDigestSettings = { on: false, time: '08:00', telegram: true, email: false }; // hardcode-ok: shipped off, editable on the Approvals page
+
+/** PR 936: the cheap system checks that keep running while AI is off (prototype v5 AI agents > "Keep on when AI is off").
+ * These cover non-AI system alerts only: anything that would call an AI model still stops while AI is off. */
+export const AI_KEEP_ON_FEATURES = ['health', 'backup', 'score', 'stuck', 'digest', 'replies'] as const;
+export type AiKeepOnFeature = (typeof AI_KEEP_ON_FEATURES)[number];
+export const aiKeepOnFeaturesSchema = z.object({ health: z.boolean(), backup: z.boolean(), score: z.boolean(), stuck: z.boolean(), digest: z.boolean(), replies: z.boolean() }).strict();
+export type AiKeepOnFeaturesSettings = z.output<typeof aiKeepOnFeaturesSchema>;
+export const AI_KEEP_ON_FEATURES_DEFAULT: AiKeepOnFeaturesSettings = { health: true, backup: true, score: true, stuck: true, digest: false, replies: false }; // hardcode-ok: the prototype's own starting picks; each is a switch on the AI agents page
 
 /** The line staff and the shop see while AI is off, in both languages; empty = the built-in words (PR 819). */
 export const AI_OFF_TEXT_MAX = 300; // hardcode-ok: technical bound
@@ -92,6 +101,16 @@ export const parityE2Settings = {
     helpKey: 'ai.digest.help',
     sortOrder: 819,
     version: 819,
+  }),
+  'ai.keepOnFeatures': setting({
+    ...base,
+    group: 'ai',
+    schema: aiKeepOnFeaturesSchema,
+    default: AI_KEEP_ON_FEATURES_DEFAULT,
+    labelKey: 'ai.keepOnFeatures.label',
+    helpKey: 'ai.keepOnFeatures.help',
+    sortOrder: 936,
+    version: 936,
   }),
   'ai.offText': setting({
     ...base,

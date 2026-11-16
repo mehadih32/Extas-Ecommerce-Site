@@ -5,7 +5,7 @@
 // the value is what it already was. Nothing here runs an agent, moves money or sends anything; the per-agent caps stay in
 // `./spend-cap.ts`. Words: messages/admin-ai-limits.*.json.
 import type { Actor, RequestContext } from '@extas/auth';
-import { aiDigestSchema, aiOffTextSchema, INSTALLATION, type AiDigestSettings, type AiOffTextSettings } from '@extas/settings';
+import { aiDigestSchema, aiKeepOnFeaturesSchema, aiOffTextSchema, INSTALLATION, type AiDigestSettings, type AiKeepOnFeaturesSettings, type AiOffTextSettings } from '@extas/settings';
 import type { AppResolver } from '../settings';
 import { AiError } from './errors';
 import { parseCapInput } from './spend-cap';
@@ -56,7 +56,7 @@ export function cumulativeByDay(rows: readonly { at: Date; minor: number }[], ym
   return perDay.map((v) => (run += v));
 }
 
-export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean } | { digest: AiDigestSettings } | { offText: AiOffTextSettings };
+export type LimitsInput = { aiCapMinor: number | null } | { costSaver: boolean } | { costSaverAuto: boolean } | { digest: AiDigestSettings } | { offText: AiOffTextSettings } | { keepOn: AiKeepOnFeaturesSettings };
 
 /** Reads the one change out of a request body, or throws `INVALID_INPUT` / `INVALID_CAP`. */
 export function parseLimits(input: unknown): LimitsInput {
@@ -75,7 +75,12 @@ export function parseLimits(input: unknown): LimitsInput {
     if (!r.success) throw new AiError(400, 'INVALID_INPUT', ['offText']);
     return { offText: r.data };
   }
-  throw new AiError(400, 'INVALID_INPUT', ['aiCapMinor|costSaver|costSaverAuto|digest|offText']);
+  if ('keepOn' in b) {
+    const r = aiKeepOnFeaturesSchema.safeParse(b.keepOn);
+    if (!r.success) throw new AiError(400, 'INVALID_INPUT', ['keepOn']);
+    return { keepOn: r.data };
+  }
+  throw new AiError(400, 'INVALID_INPUT', ['aiCapMinor|costSaver|costSaverAuto|digest|offText|keepOn']);
 }
 
 /**
@@ -101,6 +106,10 @@ export async function setAiLimits(deps: LimitsDeps, who: LimitsWho, input: unkno
   }
   if ('digest' in change) {
     await deps.resolver.set('ai.digest', change.digest, INSTALLATION, { ...opts, reason: 'AI › Approvals: daily digest' });
+    return;
+  }
+  if ('keepOn' in change) {
+    await deps.resolver.set('ai.keepOnFeatures', change.keepOn, INSTALLATION, { ...opts, reason: 'AI › AI agents: checks that keep running while AI is off' });
     return;
   }
   if ('offText' in change) {
