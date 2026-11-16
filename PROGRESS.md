@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 953. To ship: the page is named To ship with the line of parcels to book, to print and packed, and one plain empty line per chip (Confirmed, Booked, Packed); guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
+
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 952. Processing: the title line says how many need a person and how many the rules already confirmed in the current batch, the Merge looks back line (days and auto-merge on or off from the settings), and the plain empty line Nothing needs a person here; guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 951. All orders: the Not handed over card on Batch opens the current batch with the Showing the current batch only note and Show all orders; one plain No orders match these filters line; Show more button; guide, messages en+bn, test. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
