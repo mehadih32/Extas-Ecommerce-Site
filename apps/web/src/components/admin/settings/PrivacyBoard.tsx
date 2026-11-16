@@ -5,7 +5,7 @@
 // their own routes with their own permissions.
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
 import { buildZip } from '@/lib/zip-store';
@@ -38,6 +38,10 @@ export interface PrivacyBoardProps {
   isOwner: boolean;
   importHref: string;
   freshHref: string | null;
+  /** The customer requests card, drawn first in the grid (prototype v5: requests beside the export card). */
+  lead?: ReactNode;
+  /** The Start fresh card (the same screen as Settings › Start fresh), drawn full width under "My own data". */
+  fresh?: ReactNode;
   /** Date text for the file names (today, in the shop's time zone). */
   today: string;
 }
@@ -121,7 +125,8 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
 
   return (
     <>
-      <div className="s28-grid" data-testid="privacy-board">
+      <div className="s28-grid s28-g2" data-testid="privacy-board">
+        {p.lead}
         <section className="a2-card" data-testid="privacy-export" aria-labelledby="prv-exp-h">
           <h2 className="a2-h3" id="prv-exp-h">{x('export.h')}</h2>
           <ul className="s28-list">
@@ -169,7 +174,7 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
           </div>
         </section>
 
-        {p.freshHref ? (
+        {p.freshHref && !p.fresh ? (
           <section className="a2-card" data-testid="privacy-fresh" aria-labelledby="prv-fresh-h">
             <h2 className="a2-h3" id="prv-fresh-h">{x('fresh.h')}</h2>
             <p className="a2-sm a2-mute">{x('fresh.text')}</p>
@@ -185,6 +190,8 @@ export function PrivacyBoard(p: PrivacyBoardProps) {
         </div>
         <p className="a2-xs a2-mute a2-mt12">{x('own.hint')}</p>
       </section>
+
+      {p.fresh}
 
       {pin ? (
         <ConfirmDialog
