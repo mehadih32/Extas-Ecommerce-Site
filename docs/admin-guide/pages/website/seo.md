@@ -218,3 +218,5 @@ Google আর অন্য সার্চ ইঞ্জিন দোকানে
 পাতার নাম এখন **SEO & Google ranking** (এসইও ও গুগল র‍্যাঙ্কিং)।
 
 **Update (PR 914):** the top of the page has an overview card: the SEO score, the problems to fix and the pages with the weakest SEO.
+
+**Update (PR 915):** the overview also has the Google ranking card and the Redirects table.

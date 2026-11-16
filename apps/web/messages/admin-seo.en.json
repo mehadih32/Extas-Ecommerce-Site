@@ -718,6 +718,19 @@
       "noText": "No page text",
       "noSearchLine": "No search line",
       "noStyles": "No styles"
-    }
+    },
+    "google": "Google ranking",
+    "clicks": "Clicks",
+    "searches": "Searches shown",
+    "position": "Average position",
+    "query": "Search",
+    "noConsole": "Search Console is not connected yet, so there are no ranking figures.",
+    "console": "Open organic report",
+    "redirects": "Redirects",
+    "from": "From",
+    "to": "To",
+    "hits": "Hits",
+    "noRedirects": "No redirects yet.",
+    "addRedirect": "Add redirect"
   }
 }

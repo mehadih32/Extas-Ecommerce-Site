@@ -34,6 +34,8 @@ import { adminView, pageAccess, type AdminView } from "@/lib/admin-page";
 import { locateKey } from "@/lib/admin-shell/sections";
 import { t, type Dict } from "@/lib/i18n";
 import { HEALTH_ISSUES, healthCounts, seoHealth } from "@/lib/seo/health";
+import { organicView } from "@/lib/seo/organic";
+import { redirectsSnapshot } from "@/lib/seo/redirects-admin";
 import { seoSnapshot } from "@/lib/seo/admin-api";
 import { draftState } from "@/lib/seo/drafts";
 import { sitemapsState } from "@/lib/seo/sitemap-admin";
@@ -88,6 +90,8 @@ export default async function SeoPage() {
     );
   const [snap, drafts, sitemaps, altMissing, shopEn, engines] = await Promise.all([seoSnapshot(deps, MOTHER_STORE_ID), draftState(deps, MOTHER_STORE_ID), sitemapsState(MOTHER_STORE_ID), missingAlt(deps.db, MOTHER_STORE_ID), shopContextFor(MOTHER_STORE_ID, "en"), searchEngineState(deps.db)]);
   const health = await seoHealth(deps.db, MOTHER_STORE_ID, snap.values["category.seo"], shopEn.s["naming.productPathPrefix"]);
+  const [organic, reds] = await Promise.all([organicView(deps, MOTHER_STORE_ID).catch(() => null), redirectsSnapshot(deps, MOTHER_STORE_ID).catch(() => null)]);
+  const gsc = organic?.engines.find((e) => e.status === "ok") ?? null;
   const hCounts = healthCounts(health.rows);
   const hTotal = health.products + health.collections;
   const hScore = hTotal > 0 ? Math.round(((hTotal - health.rows.length) / hTotal) * 100) : null; // hardcode-ok: percent
@@ -171,6 +175,47 @@ export default async function SeoPage() {
           ))}
         </ul>
         <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/health">{c("ov.all")}</Link>
+      </div>
+
+      <div className="a2-card a2-mt12" data-testid="seo-ranking">
+        <div className="a2-kl">{c("ov.google")}</div>
+        {gsc && gsc.status === "ok" ? (
+          <>
+            <div className="a2-kpis">
+              <div className="a2-kpi"><div className="a2-kl">{c("ov.clicks")}</div><div className="a2-kv">{formatNumber(gsc.data.clicks, view.locale)}</div></div>
+              <div className="a2-kpi"><div className="a2-kl">{c("ov.searches")}</div><div className="a2-kv">{formatNumber(gsc.data.impressions, view.locale)}</div></div>
+              <div className="a2-kpi"><div className="a2-kl">{c("ov.position")}</div><div className="a2-kv">{gsc.data.position === null ? "—" : formatNumber(Math.round(gsc.data.position * 10) / 10, view.locale)}</div></div>
+            </div>
+            <table className="a2-table">
+              <thead><tr><th>{c("ov.query")}</th><th>{c("ov.clicks")}</th><th>{c("ov.searches")}</th><th>{c("ov.position")}</th></tr></thead>
+              <tbody>
+                {gsc.data.queries.slice(0, 8).map((r) => (
+                  <tr key={r.query}><td>{r.query}</td><td>{formatNumber(r.clicks, view.locale)}</td><td>{formatNumber(r.impressions, view.locale)}</td><td>{formatNumber(Math.round(r.position * 10) / 10, view.locale)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <div className="a2-kn">{c("ov.noConsole")}</div>
+        )}
+        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/organic">{c("ov.console")}</Link>
+      </div>
+
+      <div className="a2-card a2-mt12" data-testid="seo-redirects">
+        <div className="a2-kl">{c("ov.redirects")}</div>
+        {reds && reds.redirects.length > 0 ? (
+          <table className="a2-table">
+            <thead><tr><th>{c("ov.from")}</th><th>{c("ov.to")}</th><th>{c("ov.hits")}</th></tr></thead>
+            <tbody>
+              {reds.redirects.slice(0, 6).map((r) => (
+                <tr key={r.id}><td>{r.fromPath}</td><td>{r.toPath}</td><td>{formatNumber(r.hits, view.locale)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="a2-kn">{c("ov.noRedirects")}</div>
+        )}
+        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/redirects">{c("ov.addRedirect")}</Link>
       </div>
 
       <div className="a2-note a2-mt12">
