@@ -348,25 +348,27 @@ export default async function ProductsReportPage({
         csv={`/api/admin/reports/export/products?from=${q.from}&to=${q.to}`}
         notes={notes}
         limitDays={b.limits.maxDays}
-      />
-      <ReportFilters
-        action={HERE}
-        keep={keepOf(sp, ["cat"])}
-        testId="rp-filters"
-        applyLabel={cc("apply")}
-        clearLabel={cc("clear")}
-        fields={[
-          {
-            name: "cat",
-            label: c("fCategory"),
-            all: c("fAllCategories"),
-            options: categories.map((x) => ({
-              value: x.id,
-              label: view.lang === "bn" && x.nameBn ? x.nameBn : x.nameEn,
-            })),
-            value: catId,
-          },
-        ]}
+        filters={
+        <ReportFilters
+          action={HERE}
+          keep={keepOf(sp, ["cat"])}
+          testId="rp-filters"
+          applyLabel={cc("apply")}
+          clearLabel={cc("clear")}
+          fields={[
+            {
+              name: "cat",
+              label: c("fCategory"),
+              all: c("fAllCategories"),
+              options: categories.map((x) => ({
+                value: x.id,
+                label: view.lang === "bn" && x.nameBn ? x.nameBn : x.nameEn,
+              })),
+              value: catId,
+            },
+          ]}
+        />
+        }
       />
       {scope ? (
         <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">

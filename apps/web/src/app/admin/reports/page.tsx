@@ -259,45 +259,47 @@ export default async function ReportsLibraryPage({
         csv={fileUrl("figures", "xlsx", { from: q.from, to: q.to }, lang)}
         notes={notes}
         limitDays={base.limits.maxDays}
-      />
-      <ReportFilters
-        action={HERE}
-        keep={keepOf(sp, ["ch", "cat", "div"])}
-        testId="rp-filters"
-        applyLabel={t(view.dict, "reportsV5.common.apply")}
-        clearLabel={t(view.dict, "reportsV5.common.clear")}
-        fields={[
-          {
-            name: "ch",
-            label: L("fChannel"),
-            all: L("fAllChannels"),
-            options: SOURCES.map((x) => ({
-              value: x,
-              label: t(view.dict, `reportsV5.orders.src.${x}`),
-            })),
-            value: filter.ch,
-          },
-          {
-            name: "cat",
-            label: L("fCategory"),
-            all: L("fAllCategories"),
-            options: categories.map((x) => ({
-              value: x.id,
-              label: lang === "bn" && x.nameBn ? x.nameBn : x.nameEn,
-            })),
-            value: filter.cat,
-          },
-          {
-            name: "div",
-            label: L("fArea"),
-            all: L("fAllAreas"),
-            options: DIVISIONS.map((x) => ({
-              value: x,
-              label: t(view.dict, "reportsV5.areas.divisionName", { name: x }),
-            })),
-            value: filter.div,
-          },
-        ]}
+        filters={
+        <ReportFilters
+          action={HERE}
+          keep={keepOf(sp, ["ch", "cat", "div"])}
+          testId="rp-filters"
+          applyLabel={t(view.dict, "reportsV5.common.apply")}
+          clearLabel={t(view.dict, "reportsV5.common.clear")}
+          fields={[
+            {
+              name: "ch",
+              label: L("fChannel"),
+              all: L("fAllChannels"),
+              options: SOURCES.map((x) => ({
+                value: x,
+                label: t(view.dict, `reportsV5.orders.src.${x}`),
+              })),
+              value: filter.ch,
+            },
+            {
+              name: "cat",
+              label: L("fCategory"),
+              all: L("fAllCategories"),
+              options: categories.map((x) => ({
+                value: x.id,
+                label: lang === "bn" && x.nameBn ? x.nameBn : x.nameEn,
+              })),
+              value: filter.cat,
+            },
+            {
+              name: "div",
+              label: L("fArea"),
+              all: L("fAllAreas"),
+              options: DIVISIONS.map((x) => ({
+                value: x,
+                label: t(view.dict, "reportsV5.areas.divisionName", { name: x }),
+              })),
+              value: filter.div,
+            },
+          ]}
+        />
+        }
       />
       {libFilterOn(filter) ? (
         <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">

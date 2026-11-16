@@ -95,8 +95,23 @@
   padding-top: 10px;
   border-top: 1px solid var(--lm-ln);
 }
-.adm2 .rpbar-grow {
-  flex: 1 1 0;
+.adm2 .rpbar-3 {
+  display: flex;
+  flex-wrap: wrap;
+}
+.adm2 .rpbar-2 .rpf {
+  display: contents;
+}
+.adm2 .rpbar-2 .rpf select {
+  width: auto;
+  max-width: 100%;
+  min-height: 44px;
+  font-size: 13px;
+}
+.adm2 .rpsel {
+  display: none;
+  min-height: 44px;
+  width: auto;
 }
 .adm2 .rpbar-btns {
   display: inline-flex;
@@ -122,6 +137,20 @@
   min-height: 44px;
 }
 @media (max-width: 560px) {
+  /* phone (prototype v5): the period is one drop-down, the filters sit two to a row, the buttons wrap under them */
+  .adm2 .rpseg {
+    display: none;
+  }
+  .adm2 .rpsel {
+    display: block;
+  }
+  .adm2 .rpbar-2 .rpf label {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+  .adm2 .rpbar-2 .rpf select {
+    width: 100%;
+  }
   .adm2 .rpbar-btns {
     width: 100%;
   }
@@ -130,13 +159,6 @@
   }
   .adm2 .rpbar-2 .rpb2-sel {
     flex: 1 1 140px;
-  }
-  .adm2 .rpseg {
-    width: 100%;
-  }
-  .adm2 .rpseg a {
-    flex: 1 1 auto;
-    justify-content: center;
   }
 }
 
