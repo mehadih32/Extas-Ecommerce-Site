@@ -12,6 +12,7 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { AdminNotice } from '@/components/admin/AdminFrame';
+import { AdjustPoints } from '@/components/admin/customers/AdjustPoints';
 import { CrmSettingCard, type CrmField } from '@/components/admin/customers/CrmSettingCard';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -72,15 +73,20 @@ export default async function LoyaltyPage() {
   const money = (minor: number) => new Intl.NumberFormat(view.locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2, numberingSystem: 'latn' }).format(minor / 100);
   const day = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
   const days = n(s.kpis.days);
+  // PR 905: the prototype's four figures — points held (what they are worth, given and turned in), wallet, money back, members
+  const rate = s.points;
+  const rateOn = rate.redeemPoints > 0 && rate.redeemMinor > 0;
+  const worthMinor = rateOn ? Math.floor(s.pointsHeld / rate.redeemPoints) * rate.redeemMinor : 0;
+  const backPct = rateOn && rate.pointsPer100 > 0 ? (rate.pointsPer100 * (rate.redeemMinor / 100)) / rate.redeemPoints : null;
   const kpis = [
-    { id: 'members', value: n(s.kpis.members), note: t(d, 'cus.loy.kpi.membersNote') },
-    { id: 'given', value: n(s.kpis.given), note: t(d, 'cus.loy.kpi.givenNote', { days }) },
-    { id: 'redeemed', value: n(s.kpis.redeemed), note: t(d, 'cus.loy.kpi.redeemedNote', { days }) },
+    { id: 'held', value: n(s.pointsHeld), note: `${rateOn ? t(d, 'cus.loy.kpi.heldWorth', { amount: money(worthMinor) }) : t(d, 'cus.loy.kpi.heldNoRate')} · ${t(d, 'cus.loy.kpi.heldFlow', { given: n(s.kpis.given), redeemed: n(s.kpis.redeemed), days })}` },
     {
       id: 'wallet',
       value: s.kpis.walletMinor === null ? '—' : money(s.kpis.walletMinor),
       note: s.kpis.walletMinor === null ? t(d, 'cus.loy.kpi.walletHidden') : t(d, 'cus.loy.kpi.walletNote', { lines: n(s.kpis.walletLines ?? 0), days }),
     },
+    { id: 'back', value: backPct === null ? '—' : `${new Intl.NumberFormat(view.locale, { maximumFractionDigits: 2, numberingSystem: 'latn' }).format(backPct)}%`, note: t(d, 'cus.loy.kpi.backNote') },
+    { id: 'members', value: n(s.kpis.members), note: t(d, 'cus.loy.kpi.membersNote') },
   ];
   const pointsOn = cu.earns(s.points);
   const cdict: Dict = { cus: d.cus as Dict };
@@ -168,6 +174,11 @@ export default async function LoyaltyPage() {
           ) : null}
         </div>
         <div className="a2-stack">
+          {rateOn && rate.pointsPer100 > 0 ? (
+            <p className="a2-note" data-testid="loyalty-example">
+              {t(d, 'cus.loy.example', { goods: money(200_000), earned: n(Math.floor((200_000 * rate.pointsPer100) / 10_000) + rate.orderPoints), points: n(rate.redeemPoints), worth: money(rate.redeemMinor), pct: new Intl.NumberFormat(view.locale, { maximumFractionDigits: 2, numberingSystem: 'latn' }).format(backPct ?? 0) })}
+            </p>
+          ) : null}
           <CrmSettingCard dict={cdict} settingKey="customers.points" card="points" fields={FIELDS} value={s.points as unknown as Record<string, unknown>} canWrite={s.canWrite} />
           {s.topEarners.length ? (
             <section className="a2-card" data-testid="loyalty-top">
@@ -201,6 +212,32 @@ export default async function LoyaltyPage() {
               </ul>
             </section>
           ) : null}
+          <section className="a2-card" data-testid="loyalty-adjustments">
+            <div className="a2-between">
+              <h2 className="a2-h3">{t(d, 'cus.loy.adj.title')}</h2>
+              {s.canWrite ? <AdjustPoints dict={{ cus: d.cus as Dict }} /> : null}
+            </div>
+            {s.adjustments.length ? (
+              <ul className="loy-lines">
+                {s.adjustments.map((a) => (
+                  <li key={a.id} className="loy-line">
+                    <span className="loy-who">
+                      <Link href={`/admin/customers/${a.customerId}`}>{a.customerName ?? t(d, 'cus.loy.someone')}</Link>
+                      <span className="a2-xs a2-mute">
+                        {a.note ?? t(d, 'cus.loy.points.other')} · {day.format(a.at)}
+                      </span>
+                    </span>
+                    <span className={`a2-num loy-amt${a.points < 0 ? ' neg' : ''}`}>
+                      {a.points > 0 ? '+' : ''}
+                      {n(a.points)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="a2-sm a2-mute a2-mt12">{t(d, 'cus.loy.adj.none')}</p>
+            )}
+          </section>
           <section className="a2-card" data-testid="loyalty-apology">
             <h2 className="a2-h3">{t(d, 'cus.loy.apology.title')}</h2>
             <p className="a2-xs a2-mute a2-mt6">{t(d, s.apologyOn ? 'cus.loy.apology.on' : 'cus.loy.apology.off')}</p>

@@ -20,7 +20,7 @@
 import { Prisma } from '@extas/db/client';
 import { postWalletEntry } from '@extas/payments';
 import type { PointsSettings } from '@extas/settings';
-import { requirePermission } from '@extas/auth';
+import { audit, requirePermission } from '@extas/auth';
 import { z } from 'zod';
 import { allow, nowOf, parse, setting, TX, type CustomersDeps, type Db, type Tx, type Who } from './context';
 import { CustomersError } from './errors';
@@ -28,7 +28,7 @@ import { CustomersError } from './errors';
 const DAY = 86_400_000;
 
 /** Why a points entry was written (`RewardEntry.reason`). */
-export const POINTS_REASONS = { order: 'ORDER_DELIVERED', redeem: 'REDEEMED' } as const;
+export const POINTS_REASONS = { order: 'ORDER_DELIVERED', redeem: 'REDEEMED', adjust: 'MANUAL_ADJUST' } as const;
 
 /** The wallet reason of a redemption (@extas/payments WALLET_REASONS). */
 export const POINTS_WALLET_REASON = 'POINTS' as const;
@@ -217,6 +217,65 @@ export interface WalletLine {
   at: Date;
 }
 
+const adjustInput = z
+  .object({
+    customerId: z.string().uuid(),
+    /** + to give, − to take away (never 0). */
+    points: z.number().int().min(-1_000_000).max(1_000_000).refine((n) => n !== 0, 'points must not be 0'),
+    note: z.string().trim().min(3).max(200),
+    key: z.string().trim().min(8).max(80),
+  })
+  .strict();
+
+export interface AdjustResult {
+  points: number;
+  balance: number;
+  /** The same key was used before: this is that entry. */
+  replay: boolean;
+}
+
+/**
+ * PR 905 (prototype "Adjust points"): a person with `customers.settings` and `settings.write` gives or takes away
+ * points with a reason — a gift, or a correction. It is one more RewardEntry (the ledger is append-only: a mistake is put
+ * right by another entry the other way, never an edit) and an audit line that names who and why. A balance can never go
+ * below 0. The web route asks for the owner's PIN before this runs (points are money's worth).
+ */
+export async function adjustPoints(deps: CustomersDeps, who: Who, input: unknown): Promise<AdjustResult> {
+  await allow(deps, who, 'customers.settings');
+  await requirePermission(deps.db, who.actor, 'settings.write', { storeId: who.storeId });
+  const d = parse(adjustInput, input, 'adjustment');
+  const key = `adjust:${d.key}`;
+  const at = nowOf(deps);
+  const run = () =>
+    deps.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Customer" WHERE "id" = ${d.customerId}::uuid FOR UPDATE`;
+      const same = await tx.rewardEntry.findUnique({ where: { customerId_idempotencyKey: { customerId: d.customerId, idempotencyKey: key } }, select: { points: true, pointsAfter: true, storeId: true } });
+      if (same && same.storeId === who.storeId) return { points: same.points, balance: same.pointsAfter, replay: true };
+      const c = await tx.customer.findFirst({ where: { id: d.customerId, storeId: who.storeId, erasedAt: null }, select: { id: true } });
+      if (!c) throw new CustomersError('NOT_FOUND', 'no such customer', ['customerId']);
+      const before = await balanceOf(tx, who.storeId, d.customerId);
+      if (before + d.points < 0) throw new CustomersError('NOT_ENOUGH_POINTS', 'the customer does not hold that many points', ['points'], { balance: before });
+      const e = await addEntry(tx, { storeId: who.storeId, customerId: d.customerId, points: d.points, reason: POINTS_REASONS.adjust, key, at });
+      await audit(tx, who.actor, { storeId: who.storeId, action: 'customer.points.adjust', entityType: 'RewardEntry', entityId: e.id, before: { balance: before }, after: { points: d.points, balance: e.pointsAfter, note: d.note, customerId: d.customerId } }, who.ctx);
+      return { points: d.points, balance: e.pointsAfter, replay: false };
+    }, TX);
+  try {
+    return await run();
+  } catch (e) {
+    if (isDuplicate(e)) return run();
+    throw e;
+  }
+}
+
+export interface PointsAdjustment {
+  id: string;
+  customerId: string;
+  customerName: string | null;
+  points: number;
+  note: string | null;
+  at: Date;
+}
+
 export interface LoyaltyScreen {
   points: PointsSettings;
   /** The late-delivery apology credit's switch (Money › Wallet, `payments.wallet.apology`). */
@@ -226,6 +285,10 @@ export interface LoyaltyScreen {
   /** null without `payments.view`. */
   walletLines: WalletLine[] | null;
   /** PR 900: the customers holding the most points now (the prototype's "Top point earners"). */
+  /** PR 905: the newest manual changes of points, with who and why (the prototype's "Adjustment history"). */
+  adjustments: PointsAdjustment[];
+  /** PR 905: all points held now, and what they are worth if turned in at the owner's rate (0 while no rate is set). */
+  pointsHeld: number;
   topEarners: { customerId: string; customerName: string | null; points: number }[];
   /** PR 900: the biggest wallet balances (the prototype's "Wallet balances"); null without `payments.view`. */
   topWallets: { customerId: string; customerName: string | null; balanceMinor: number }[] | null;
@@ -241,7 +304,7 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
   const days = Math.min(Math.max(1, Math.trunc(opts.days ?? 30)), 366);
   const take = Math.min(Math.max(1, Math.trunc(opts.take ?? 20)), 100);
   const since = new Date(nowOf(deps).getTime() - days * DAY);
-  const [points, apology, members, sums, lines, earners] = await Promise.all([
+  const [points, apology, members, sums, lines, earners, held2, adjRows] = await Promise.all([
     setting(deps, S, 'customers.points'),
     setting(deps, S, 'payments.wallet.apology'),
     deps.db.$queryRaw<{ n: number }[]>`
@@ -257,7 +320,14 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
         SELECT DISTINCT ON ("customerId") "customerId", "pointsAfter" FROM "RewardEntry" WHERE "storeId" = ${S}
         ORDER BY "customerId", "createdAt" DESC, "id" DESC) last WHERE last."pointsAfter" > 0
       ORDER BY last."pointsAfter" DESC, last."customerId" LIMIT 8`,
+    deps.db.$queryRaw<{ n: number }[]>`
+      SELECT coalesce(sum("pointsAfter"), 0)::int AS n FROM (
+        SELECT DISTINCT ON ("customerId") "pointsAfter" FROM "RewardEntry" WHERE "storeId" = ${S}
+        ORDER BY "customerId", "createdAt" DESC, "id" DESC) last WHERE last."pointsAfter" > 0`,
+    deps.db.rewardEntry.findMany({ where: { storeId: S, reason: POINTS_REASONS.adjust }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 15, select: { id: true, customerId: true, points: true, createdAt: true } }),
   ]);
+  const adjAudit = adjRows.length ? await deps.db.auditLog.findMany({ where: { entityType: 'RewardEntry', action: 'customer.points.adjust', entityId: { in: adjRows.map((r) => r.id) } }, select: { entityId: true, after: true } }) : [];
+  const noteOf = new Map(adjAudit.map((a) => [a.entityId, typeof (a.after as { note?: unknown } | null)?.note === 'string' ? ((a.after as { note: string }).note) : null]));
   const wallet = held.has('payments.view');
   const [walletSum, walletCount, walletRows, bigWallets] = wallet
     ? await Promise.all([
@@ -267,7 +337,7 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
         deps.db.walletAccount.findMany({ where: { storeId: S, balanceMinor: { gt: 0 } }, orderBy: [{ balanceMinor: 'desc' }, { customerId: 'asc' }], take: 8, select: { customerId: true, balanceMinor: true } }),
       ])
     : [null, null, null, null];
-  const customerIds = [...new Set([...lines.map((l) => l.customerId), ...(walletRows ?? []).map((w) => w.wallet.customerId), ...earners.map((e) => e.customerId), ...(bigWallets ?? []).map((w) => w.customerId)])];
+  const customerIds = [...new Set([...lines.map((l) => l.customerId), ...(walletRows ?? []).map((w) => w.wallet.customerId), ...earners.map((e) => e.customerId), ...adjRows.map((r) => r.customerId), ...(bigWallets ?? []).map((w) => w.customerId)])];
   const names = new Map((customerIds.length ? await deps.db.customer.findMany({ where: { storeId: S, id: { in: customerIds } }, select: { id: true, name: true } }) : []).map((c) => [c.id, c.name]));
   const orderIds = [...new Set((walletRows ?? []).map((w) => w.orderId).filter((x): x is string => !!x))];
   const numbers = new Map((orderIds.length ? await deps.db.order.findMany({ where: { id: { in: orderIds } }, select: { id: true, number: true } }) : []).map((o) => [o.id, o.number]));
@@ -279,6 +349,8 @@ export async function loyaltyScreen(deps: CustomersDeps, who: Who, opts: { days?
     walletLines: walletRows
       ? walletRows.map((w) => ({ id: w.id, customerId: w.wallet.customerId, customerName: names.get(w.wallet.customerId) ?? null, direction: w.direction, amountMinor: w.amountMinor, reason: w.reason, orderNumber: w.orderId ? (numbers.get(w.orderId) ?? null) : null, at: w.createdAt }))
       : null,
+    pointsHeld: held2[0]?.n ?? 0,
+    adjustments: adjRows.map((r) => ({ id: r.id, customerId: r.customerId, customerName: names.get(r.customerId) ?? null, points: r.points, note: noteOf.get(r.id) ?? null, at: r.createdAt })),
     topEarners: earners.map((e) => ({ customerId: e.customerId, customerName: names.get(e.customerId) ?? null, points: e.points })),
     topWallets: bigWallets ? bigWallets.map((w) => ({ customerId: w.customerId, customerName: names.get(w.customerId) ?? null, balanceMinor: w.balanceMinor })) : null,
     canWrite: held.has('customers.settings') && held.has('settings.write'),

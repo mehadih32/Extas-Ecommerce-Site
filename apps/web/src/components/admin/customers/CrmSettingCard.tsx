@@ -132,7 +132,7 @@ export function CrmSettingCard({ dict: d, settingKey, card, fields, value, canWr
         {canWrite ? (
           <span className="a2-gap8">
             <button type="button" className="a2-btn pri" onClick={save} disabled={busy} data-testid={`crm-${card}-save`}>
-              {busy ? t(d, 'cus.set.saving') : t(d, 'cus.set.save')}
+              {busy ? t(d, 'cus.set.saving') : t(d, `cus.set.${card}.save`) === `cus.set.${card}.save` ? t(d, 'cus.set.save') : t(d, `cus.set.${card}.save`)}
             </button>
           </span>
         ) : (
