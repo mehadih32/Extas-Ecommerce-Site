@@ -2,7 +2,7 @@
 // PR 12 — the few buttons a page drawn on the server needs from the shell: open this section's guide, open search,
 // and "More ▾" of the section tabs (a small menu; Esc or a click outside closes it).
 import Link from 'next/link';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { openGuide, openPalette } from './events';
 import { ShellIcon } from './ShellIcon';
 
@@ -87,6 +87,84 @@ export function MoreTabs({ label, links }: { label: string; links: MoreLink[] })
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+export interface FitTab extends MoreLink {
+  id: string;
+}
+
+/** A laptop's width and up (the shell's own break, shell.css): there the tabs stay in one row and "More" appears only when they cannot fit. */
+const LAPTOP = 900;
+
+/**
+ * Final round (prototype v5): every tab of the section sits in the row. Below a laptop's width the row scrolls sideways
+ * (nothing is hidden). On a laptop or larger screen "More" appears only for the tabs that truly do not fit, the last
+ * ones first, and it is measured again when the window or the fonts change.
+ */
+export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string }) {
+  const nav = useRef<HTMLDivElement>(null);
+  const widths = useRef<number[]>([]);
+  const [shown, setShown] = useState(tabs.length);
+  const [measure, setMeasure] = useState(0);
+  const all = shown === tabs.length;
+  // 1. With every tab drawn, take its width, then decide how many fit.
+  useLayoutEffect(() => {
+    const el = nav.current;
+    if (!el) return;
+    const row = el.querySelector<HTMLElement>('.a2-tabs-s');
+    if (all && row) {
+      const items = Array.from(row.children) as HTMLElement[];
+      if (items.length === tabs.length) widths.current = items.map((i) => i.getBoundingClientRect().width);
+    }
+    const w = widths.current;
+    if (w.length !== tabs.length) return;
+    const room = el.clientWidth;
+    if (window.innerWidth < LAPTOP) return void (shown !== tabs.length && setShown(tabs.length));
+    const gap = 2;
+    const total = w.reduce((a, b) => a + b + gap, 0);
+    if (total <= room) return void (shown !== tabs.length && setShown(tabs.length));
+    const moreW = 110;
+    let used = moreW;
+    let n = 0;
+    for (const x of w) {
+      if (used + x + gap > room) break;
+      used += x + gap;
+      n += 1;
+    }
+    n = Math.max(1, n);
+    if (n !== shown) setShown(n);
+  }, [measure, all, shown, tabs.length]);
+  // 2. Measure again when the window or the fonts change: show all once, then fit.
+  useEffect(() => {
+    const again = () => {
+      setShown(tabs.length);
+      setMeasure((m) => m + 1);
+    };
+    let last = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth !== last) {
+        last = window.innerWidth;
+        again();
+      }
+    };
+    window.addEventListener('resize', onResize);
+    void document.fonts?.ready.then(again);
+    return () => window.removeEventListener('resize', onResize);
+  }, [tabs.length]);
+  const row = tabs.slice(0, shown);
+  const more = tabs.slice(shown);
+  return (
+    <div className="a2-tabs-fit" ref={nav}>
+      <TabsRow>
+        {row.map((x) => (
+          <Link key={x.id} className={`a2-tab${x.on ? ' on' : ''}`} href={x.href} aria-current={x.on ? 'page' : undefined}>
+            {x.label}
+          </Link>
+        ))}
+      </TabsRow>
+      {more.length ? <MoreTabs label={moreLabel} links={more} /> : null}
     </div>
   );
 }
