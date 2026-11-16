@@ -27,11 +27,13 @@ interface Props {
   nextSyncMin: number | null;
   recent: string[];
   canSync: boolean;
+  /** PR 967: product ids already asked to restock (read from the audit log) */
+  askedIds?: string[];
 }
 
 const heat = (n: number, low: number) => (n === 0 ? 'out' : n <= low ? 'low' : n <= low * 4 ? 'mid' : 'ok');
 
-export function StockOverviewView({ d, lang, locale, currency, data, filter, lastSyncText, nextSyncMin, recent, canSync, lowPieces }: Props & { lowPieces: number }) {
+export function StockOverviewView({ d, lang, locale, currency, data, filter, lastSyncText, nextSyncMin, recent, canSync, lowPieces, askedIds }: Props & { lowPieces: number }) {
   const num = (n: number) => formatNumber(n, locale);
   const money = (minor: number) => formatMoney(minor, moneyOf(currency, locale));
   const s = filter.q.trim().toLowerCase();
@@ -124,7 +126,7 @@ export function StockOverviewView({ d, lang, locale, currency, data, filter, las
                     </span>
                   </span>
                   <span className={`ad-tag${p.days !== null && p.days <= 14 ? ' bad' : ''}`}>{p.days === null ? t(d, 'stock.ov.noSales') : t(d, 'stock.ov.daysLeft', { n: num(p.days) })}</span>
-                  {canSync ? <AskRestockButton dict={d} productId={p.id} /> : null}
+                  {canSync ? <AskRestockButton dict={d} productId={p.id} asked={askedIds?.includes(p.id) ?? false} /> : null}
                 </li>
               ))}
             </ul>
