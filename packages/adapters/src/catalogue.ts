@@ -67,6 +67,9 @@ export const connectionCatalogue: readonly ConnectionDeclaration[] = [
     targetMode: 'LIVE',
     managedAt: '/admin/settings/system/backups',
   },
+  // PR 1020 (D12): two rows the approved prototype lists whose adapters come later: they show as "Not set up" with no button, nothing pretends to work.
+  { id: 'emailSending', kind: 'EMAIL', provider: 'emailSending', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
+  { id: 'googleMerchantCenter', kind: 'GOOGLE', provider: 'googleMerchantCenter', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
   { id: 'googleDriveAddOnly', kind: 'GOOGLE_DRIVE', provider: 'googleDriveAddOnly', adapter: false, secrets: [], config: [], exclusive: false, targetMode: 'LIVE' },
   // PR 602 — Cloudflare's cache purge: an API token with the zone's "Cache Purge" right, the zone id and the shop's host
   // names. The mock records the purges until the token's test passes.

@@ -1,0 +1,16 @@
+/* PR 1020 (D12) — Settings › Keys & connections: the prototype's key rows (m-settings.js `.set-key`, `.k2`) in the Lumen tokens. */
+[data-testid="integrations-page"] .set-key { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--lm-ln); }
+[data-testid="integrations-page"] .set-key:first-child { border-top: 0; }
+[data-testid="integrations-page"] .set-key .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+[data-testid="integrations-page"] .set-key-acts { display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; justify-content: flex-end; }
+[data-testid="integrations-page"] .set-key-rm { grid-template-columns: minmax(0, 1fr) auto auto; }
+[data-testid="integrations-page"] .a2-note { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: var(--lm-r-ctl); }
+[data-testid="integrations-page"] .a2-kpis.k3 { margin-bottom: 0; }
+[data-testid="integrations-page"] details.a2-more-opts > summary { cursor: pointer; min-height: var(--lm-tap); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+[data-testid="integrations-page"] details.a2-more-opts .a2-card { box-shadow: none; border: 1px solid var(--lm-ln); }
+[data-testid="integrations-page"] .a2-more-opts a.a2-btn { display: inline-flex; align-items: center; }
+@media (max-width: 760px) {
+  [data-testid="integrations-page"] .set-key { grid-template-columns: minmax(0, 1fr) auto; }
+  [data-testid="integrations-page"] .set-key .k2 { display: none; }
+  [data-testid="integrations-page"] .a2-kpis.k3 { grid-template-columns: minmax(0, 1fr); }
+}

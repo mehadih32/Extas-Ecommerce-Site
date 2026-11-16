@@ -1019,6 +1019,8 @@ model Integration {
   lastTestAt      DateTime?       @db.Timestamptz(3)
   lastTestOk      Boolean?
   lastTestMessage String?
+  /// PR 1020: the last 4 characters of the first saved key (only when the key is long enough), for the masked line on Keys & connections.
+  keyHint         String?
   archivedAt      DateTime?       @db.Timestamptz(3)
   createdAt       DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime        @updatedAt @db.Timestamptz(3)

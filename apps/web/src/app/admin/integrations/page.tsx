@@ -3,18 +3,22 @@
 // ~~PR 620: the "The ERP asks the shop" card under the connections (the address for the ERP, the switch, the latest calls).~~
 // CN-029 · PR 619 (Bhandari follow-up 524): that card moved to each store's ERP link page (Settings → ERP link), where
 // the store's own ERP keys are typed too; a note here leads there.
+// PR 1020 (D12, owner order: the real admin equals prototype v5 100%): drawn as the prototype draws it (KeysScreen): the warning,
+// the three status cards, seven groups; the real connections the prototype does not list are under "More options".
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { AdminFrame, AdminNotice, SystemTabs } from '@/components/admin/AdminFrame';
 import Link from 'next/link';
-import { Icon } from '@/components/admin/Icon';
-import { Integrations } from '@/components/admin/Integrations';
+import { redirect } from 'next/navigation';
+import { AdminNotice } from '@/components/admin/AdminFrame';
+import { KeysScreen } from '@/components/admin/KeysScreen';
+import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
+import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 import { listConnections } from '@/lib/integrations';
 import '../settings-cards.css';
+import './keys.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,41 +35,31 @@ export default async function IntegrationsPage() {
   const [view, access] = await Promise.all([adminView(deps), pageAccess('vault.read', deps)]);
   if (access.kind === 'login' || access.kind === 'password') redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);
   if (access.kind === 'unavailable') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noDb')} />;
-  if (access.kind === 'forbidden') return <AdminNotice view={view} current={KEY} text={t(view.dict, 'page.noAccess')} ready />;
+  if (access.kind === 'forbidden')
+    return (
+      <div className="a2-z" data-testid="integrations-page" data-lm-ready="">
+        <ShellState view={view} kind="denied" permission="vault.read" />
+      </div>
+    );
 
   const connections = await listConnections(access.deps.db, access.deps.vault);
   const canWrite = access.guard.permissions?.has('vault.write') ?? false;
   const d = view.dict;
+  const now = (access.deps.now ? access.deps.now() : new Date()).getTime();
   return (
-    <AdminFrame view={view} current={KEY} ready>
-      <div className="ad-hd">
-        <div className="ad-eyebrow">{t(d, 'integrations.eyebrow')}</div>
-        <h1 className="ad-h1">{t(d, 'integrations.title')}</h1>
-        <p className="ad-intro">{t(d, 'integrations.intro')}</p>
-        <p className="ad-intro">
-          <b>{t(d, 'integrations.introType')}</b> {t(d, 'integrations.introNever')}
-        </p>
-      </div>
-      <SystemTabs view={view} current={KEY} />
-      <Integrations
-        dict={d}
-        initial={connections}
-        canWrite={canWrite}
-        vaultReady={Boolean(access.deps.vault)}
-        locale={view.locale}
-        timeZone={view.timeZone}
-      />
-      <div className="ad-note" data-testid="integrations-erp-link">
-        <Icon name="info" size={16} />
+    <div className="a2-z lm-st" data-testid="integrations-page" data-lm-ready="">
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'integrations.keys.title')} sub={t(d, 'integrations.keys.sub')} />
+      <SectionTabs view={view} current={KEY} />
+      <KeysScreen dict={d} initial={connections} canWrite={canWrite} vaultReady={Boolean(access.deps.vault)} now={now} />
+      <div className="a2-note a2-mt12" data-testid="integrations-erp-link">
         <div>
           {t(d, 'integrations.erpLinkNote')}{' '}
           <Link href="/admin/settings/erp-link">{t(d, 'integrations.erpLinkOpen')}</Link>
         </div>
       </div>
-      <div className="ad-note">
-        <Icon name="shield" size={16} />
+      <div className="a2-note a2-mt12">
         <div>{t(d, 'integrations.note')}</div>
       </div>
-    </AdminFrame>
+    </div>
   );
 }

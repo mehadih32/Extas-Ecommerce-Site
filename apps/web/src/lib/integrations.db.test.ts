@@ -145,7 +145,7 @@ describe.skipIf(!HAS_TEST_DB)('Keys & connections API on PostgreSQL (PR 500)', (
   it('save → test → the connection leaves MOCK and is switched on; the Test button runs again', async () => {
     const r = await act('probe', { action: 'save', secrets: { apiKey: GOOD_KEY }, config: { region: 'xx' } });
     expect(r.body.test).toMatchObject({ ok: true, mode: 'LIVE' });
-    expect(r.body.connection).toMatchObject({ keySaved: true, mode: 'LIVE', enabled: true, lastTest: { ok: true }, config: [{ field: 'region', value: 'xx' }] });
+    expect(r.body.connection).toMatchObject({ keySaved: true, mode: 'LIVE', enabled: true, lastTest: { ok: true }, keyHint: GOOD_KEY.slice(-4), config: [{ field: 'region', value: 'xx' }] });
     const row = await t.prisma.integration.findFirstOrThrow({ where: { provider: 'probe' } });
     expect([row.mode, row.enabled, row.storeId, row.secretNames]).toEqual(['LIVE', true, null, ['probe.apiKey']]);
 
@@ -170,7 +170,7 @@ describe.skipIf(!HAS_TEST_DB)('Keys & connections API on PostgreSQL (PR 500)', (
   it('remove revokes the key and returns to MOCK; every row stays (nothing is deleted)', async () => {
     const r = await act('probe', { action: 'remove' });
     expect(r.status).toBe(200);
-    expect(r.body.connection).toMatchObject({ keySaved: false, mode: 'MOCK', enabled: false });
+    expect(r.body.connection).toMatchObject({ keySaved: false, mode: 'MOCK', enabled: false, keyHint: null });
     const secret = await t.prisma.installationSecret.findUniqueOrThrow({ where: { name: 'probe.apiKey' } });
     expect(secret.revokedAt).not.toBeNull();
     expect(await t.prisma.integration.count({ where: { provider: 'probe' } })).toBe(1);

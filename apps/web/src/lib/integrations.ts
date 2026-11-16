@@ -36,6 +36,8 @@ type Db = AdminDeps['db'];
 
 /** The longest key or setting the page accepts (a long JSON service-account key still fits). */
 const MAX_VALUE = 16_384;
+/** A key must be at least this long before its last 4 characters are kept for the masked line. */
+const KEY_HINT_MIN = 12;
 
 export interface FieldState {
   field: string;
@@ -63,6 +65,8 @@ export interface ConnectionView {
   /** For a built-in connection: nothing else of its kind is switched on, so this one is used. */
   inUse: boolean;
   lastTest: { at: string; ok: boolean; message: string | null } | null;
+  /** PR 1020: the last 4 characters of the first saved key (null: none saved, an old key, or one too short to show any). */
+  keyHint: string | null;
 }
 
 const isResponse = (v: unknown): v is Response => v instanceof Response;
@@ -88,6 +92,12 @@ export function storeOfRequest(request: Request): number | null | undefined {
   if (raw == null || raw === '') return null;
   const n = /^\d{1,9}$/.test(raw) ? Number(raw) : NaN;
   return Number.isSafeInteger(n) && n > 0 ? n : undefined;
+}
+
+/** PR 1020: the last 4 characters of a key, only when it is long enough that they give nothing away (at least 12 characters). */
+export function keyHintOf(value: string | undefined): string | null {
+  const v = (value ?? '').trim();
+  return v.length >= KEY_HINT_MIN ? v.slice(-4) : null;
 }
 
 const vaultWho = (actor: Actor) => ({ actorId: actor.staffUserId, service: 'admin:keys', purpose: 'keys & connections' });
@@ -126,6 +136,7 @@ export async function listConnections(db: Db, vault: Pick<Vault, 'list'> | null,
       mode: row?.mode ?? null,
       enabled: row?.enabled ?? false,
       inUse: Boolean(d.builtIn) && !rows.some((r) => r.kind === d.kind && r.provider !== d.provider && r.enabled && r.mode !== 'MOCK'),
+      keyHint: row?.keyHint ?? null,
       lastTest: row?.lastTestAt ? { at: row.lastTestAt.toISOString(), ok: row.lastTestOk === true, message: row.lastTestMessage } : null,
     };
   });
@@ -247,9 +258,11 @@ async function save(c: Ctx, d: ConnectionDeclaration, b: Record<string, unknown>
   }
   const secretNames = d.secrets.map((s) => secretName(d.provider, s.field));
   const existing = rowFor(await rowsOf(db, c.storeId), d);
+  const first = d.secrets[0];
+  const hint = first && parsed.secrets[first.field] ? { keyHint: keyHintOf(parsed.secrets[first.field]) } : {};
   const row = existing
-    ? await db.integration.update({ where: { id: existing.id }, data: { config: toJson(parsed.config), secretNames } })
-    : await db.integration.create({ data: { storeId: c.storeId, kind: d.kind, provider: d.provider, name: d.id, mode: 'MOCK', enabled: false, config: toJson(parsed.config), secretNames } });
+    ? await db.integration.update({ where: { id: existing.id }, data: { config: toJson(parsed.config), secretNames, ...hint } })
+    : await db.integration.create({ data: { storeId: c.storeId, kind: d.kind, provider: d.provider, name: d.id, mode: 'MOCK', enabled: false, config: toJson(parsed.config), secretNames, ...hint } });
   await audit(db, c.actor, {
     ...auditStore(c),
     action: 'integration.save',
@@ -288,7 +301,7 @@ async function remove(c: Ctx, d: ConnectionDeclaration): Promise<Response> {
   if (view?.integrationId) {
     const id = view.integrationId;
     if (view.mode !== 'MOCK') await c.connections.setMode(id, 'MOCK', { actorId: c.actor.staffUserId, ip: c.ctx.ip, userAgent: c.ctx.userAgent });
-    await c.deps.db.integration.update({ where: { id }, data: { enabled: false } });
+    await c.deps.db.integration.update({ where: { id }, data: { enabled: false, keyHint: null } });
     await audit(c.deps.db, c.actor, {
       ...auditStore(c),
       action: 'integration.remove',
