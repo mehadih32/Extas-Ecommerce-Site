@@ -77,13 +77,19 @@ export interface VisitorsView {
   paths: { key: string; views: number; visitors: number }[];
   devices: { key: string; views: number; visitors: number }[];
   regions: { key: string; views: number; visitors: number }[];
+  /** PR 912 (prototype Analytics): the share of the period's visitors who were new (never seen before the period), and the districts the period's orders went to. */
+  newPct: number | null;
+  districts: { name: string; nameBn: string | null; orders: number }[];
+  /** The same span just before this one (null on the one that is itself the "before"). */
+  prev: Pick<VisitorsView, 'days' | 'totals' | 'from' | 'to'> | null;
 }
 
-export async function visitorsView(deps: Pick<AdminDeps, 'db' | 'resolver' | 'now'>, storeId: number, span = 30): Promise<VisitorsView> {
+export async function visitorsView(deps: Pick<AdminDeps, 'db' | 'resolver' | 'now'>, storeId: number, span = 30, endDay: string | null = null, withPrev = true): Promise<VisitorsView> {
   const cfg = await deps.resolver.value('analytics.visitors', { storeId });
   const tz = await deps.resolver.value('store.timeZone', { storeId });
   const now = deps.now ? deps.now() : new Date();
-  const today = ymdIn(now, tz);
+  const realToday = ymdIn(now, tz);
+  const today = endDay && endDay < realToday ? endDay : realToday; // a span that ended earlier (last month, the span before)
   const days = Math.max(1, Math.min(span, cfg.keepDays));
   const from = addDays(today, -(days - 1));
   await ensureRollups(deps.db, storeId, from, today, tz, today, cfg.keepDays);
@@ -98,10 +104,12 @@ export async function visitorsView(deps: Pick<AdminDeps, 'db' | 'resolver' | 'no
   for (let d = from; d <= today; d = nextDay(d)) series.push({ day: d, views: byDay.get(d)?.views ?? 0, visitors: byDay.get(d)?.visitors ?? 0 });
   const start = dayStart(from, tz);
   const end = dayStart(nextDay(today), tz);
-  const [distinct, orders, live] = await Promise.all([
+  const [distinct, orders, live, fresh, dist] = await Promise.all([
     deps.db.$queryRaw<{ n: bigint }[]>`SELECT count(DISTINCT "visitorId") AS n FROM "AnalyticsEvent" WHERE "storeId" = ${storeId} AND "name" = 'page_view' AND "occurredAt" >= ${start} AND "occurredAt" < ${end}`,
     deps.db.order.count({ where: { storeId, createdAt: { gte: start, lt: end }, status: { notIn: ['CANCELLED', 'DRAFT'] } } }),
     deps.db.$queryRaw<{ n: bigint }[]>`SELECT count(DISTINCT "visitorId") AS n FROM "AnalyticsEvent" WHERE "storeId" = ${storeId} AND "occurredAt" >= ${new Date(now.getTime() - cfg.liveWindowMinutes * 60_000)}`,
+    deps.db.$queryRaw<{ n: bigint }[]>`SELECT count(*) AS n FROM (SELECT "visitorId" FROM "AnalyticsEvent" WHERE "storeId" = ${storeId} AND "name" = 'page_view' GROUP BY "visitorId" HAVING min("occurredAt") >= ${start} AND min("occurredAt") < ${end}) x`,
+    deps.db.$queryRaw<{ name: string; nameBn: string | null; n: bigint }[]>`SELECT d."nameEn" AS name, d."nameBn" AS "nameBn", count(*) AS n FROM "Order" o JOIN "GeoArea" a ON a.id = o."areaId" JOIN "GeoArea" d ON (d.id = a.id OR d.id = ANY(a."ancestorIds")) AND d.level = 'DISTRICT' WHERE o."storeId" = ${storeId} AND o."createdAt" >= ${start} AND o."createdAt" < ${end} AND o.status::text NOT IN ('CANCELLED', 'DRAFT') GROUP BY d."nameEn", d."nameBn" ORDER BY count(*) DESC LIMIT ${cfg.topCount}`,
   ]);
   const visitors = Number(distinct[0]?.n ?? 0);
   return {
@@ -116,6 +124,9 @@ export async function visitorsView(deps: Pick<AdminDeps, 'db' | 'resolver' | 'no
     paths: sumDim(rows, 'path', cfg.topCount),
     devices: sumDim(rows, 'device', cfg.topCount),
     regions: sumDim(rows, 'region', cfg.topCount),
+    newPct: visitors > 0 ? Math.min(100, Math.round((Number(fresh[0]?.n ?? 0) / visitors) * 100)) : null, // hardcode-ok: percent
+    districts: dist.map((r) => ({ name: r.name, nameBn: r.nameBn, orders: Number(r.n) })),
+    prev: withPrev ? await visitorsView(deps, storeId, days, addDays(from, -1), false).then((p) => ({ days: p.days, totals: p.totals, from: p.from, to: p.to })) : null,
   };
 }
 

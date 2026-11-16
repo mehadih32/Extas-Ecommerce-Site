@@ -44,3 +44,5 @@
 
 ### PR 802: প্রোটোটাইপ মেলানো
 পাতার নাম এখন **Analytics** (অ্যানালিটিক্স)। নামের নিচে চারটা চিপ: **Overview**, **Search** (সার্চ রিপোর্ট খোলে), **Behaviour** আর **Speed** (SEO পাতার স্পিড কার্ডে যায়)।
+
+**Update (PR 913):** the page has range buttons, five figure tiles with the change against the span before, a chart, source, device and district cards, the top pages and an Export button.

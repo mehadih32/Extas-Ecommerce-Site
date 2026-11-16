@@ -16,9 +16,12 @@ export interface VisitorsScreenProps {
   canEdit: boolean;
   canBehaviour: boolean;
   span: number;
+  /** PR 912: which of the prototype's five ranges is open (today, 7d, 30d, month, last). */
+  range: string;
+  locale: string;
 }
 
-const SPANS = [7, 30, 90]; // hardcode-ok: the choices of the range buttons, not business numbers
+const RANGES = ['today', '7d', '30d', 'month', 'last'] as const;
 
 export function VisitorsScreen(p: VisitorsScreenProps) {
   const id = useId();
@@ -32,7 +35,6 @@ export function VisitorsScreen(p: VisitorsScreenProps) {
   const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<{ text: string; bad: boolean } | null>(null);
-  const max = Math.max(1, ...v.days.map((d) => d.views));
   const label = (dim: 'sources' | 'pages' | 'devices', key: string) => {
     if (dim === 'sources' && key === 'direct') return c('lists.direct');
     if (dim === 'pages') return t(p.dict, `webAnalytics.lists.page.${key}`) === `webAnalytics.lists.page.${key}` ? key : c(`lists.page.${key}`);
@@ -54,63 +56,106 @@ export function VisitorsScreen(p: VisitorsScreenProps) {
       setSaid({ text: m === k ? c('errors.server-error') : m, bad: true });
     }
   }
-  const list = (title: string, dim: 'sources' | 'pages' | 'paths' | 'devices' | 'regions', hint?: string) => {
-    const rows = v[dim];
-    const total = Math.max(1, rows.reduce((n, r) => n + r.views, 0));
-    return (
-      <section className="a2-card" aria-label={title} data-testid={`va-${dim}`}>
-        <h2 className="a2-h3">{title}</h2>
-        {rows.length ? (
-          <div className="s28-list a2-mt6">
-            {rows.map((r) => (
-              <div key={r.key} className="a2-mt6">
-                <div className="s28-row between"><span>{dim === 'paths' || dim === 'regions' ? r.key : label(dim, r.key)}</span><b>{c('lists.views', { n: r.views })}</b></div>
-                <div className="s28-bar"><i style={{ width: `${Math.round((r.views / total) * 100)}%` }} /></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="a2-sm a2-mute a2-mt6">{c('lists.empty')} {hint ?? ''}</p>
-        )}
-      </section>
-    );
-  };
+  const nf = new Intl.NumberFormat(p.locale, { numberingSystem: 'latn' });
+  const pct = (a: number, b: number) => (b > 0 ? ((a - b) / b) * 100 : null);
+  const dv = pct(v.totals.visitors, v.prev?.totals.visitors ?? 0);
+  const ds = pct(v.totals.sessions, v.prev?.totals.sessions ?? 0);
+  const dc = v.totals.conversionPct !== null && v.prev?.totals.conversionPct ? pct(v.totals.conversionPct, v.prev.totals.conversionPct) : null;
+  const delta = (x: number | null) => (x === null ? null : <span className={`va-d ${x >= 0 ? 'up' : 'dn'}`}>{x >= 0 ? '▲' : '▼'} {nf.format(Math.abs(Math.round(x * 10) / 10))}%</span>);
+  const W2 = 1000; // hardcode-ok: the drawing's own coordinate width
+  const H2 = 220; // hardcode-ok: the drawing's own coordinate height
+  const yMax = Math.max(1, ...v.days.map((d) => d.visitors), ...(v.prev?.days ?? []).map((d) => d.visitors));
+  const pt = (i: number, n: number, val: number) => `${n > 1 ? (i / (n - 1)) * W2 : W2 / 2},${H2 - (val / yMax) * (H2 - 10)}`;
+  const line = (arr: { visitors: number }[]) => arr.map((d, i) => pt(i, arr.length, d.visitors)).join(' ');
+  const peak = v.days.reduce((a, d, i) => (d.visitors > (v.days[a]?.visitors ?? -1) ? i : a), 0);
+  const dayName = (ymd: string) => new Intl.DateTimeFormat(p.locale, { day: 'numeric', month: 'short', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${ymd}T00:00:00Z`));
+  const ticks = v.days.length > 1 ? [0, 0.2, 0.4, 0.6, 0.8, 1].map((f) => v.days[Math.round(f * (v.days.length - 1))]!.day) : v.days.map((d) => d.day); // hardcode-ok: label positions
+  const sources = v.sources;
+  const srcTotal = Math.max(1, sources.reduce((n, r) => n + r.views, 0));
+  const devTotal = Math.max(1, v.devices.reduce((n, r) => n + r.views, 0));
+  const devTop = v.devices[0];
+  const topPct = devTop ? Math.round((devTop.views / devTotal) * 100) : 0; // hardcode-ok: percent
+  const tone = ['var(--lm-ac)', 'var(--lm-info, #1F4E79)', 'var(--lm-ok)'];
+  let acc = 0;
+  const donut = v.devices.length
+    ? `conic-gradient(${v.devices.slice(0, 3).map((r, i) => { const a = acc; acc += (r.views / devTotal) * 100; return `${tone[i]} ${a}% ${acc}%`; }).join(', ')}, var(--lm-chip) ${acc}% 100%)`
+    : 'var(--lm-chip)';
+  const dTotal = Math.max(1, v.districts.reduce((n, r) => n + r.orders, 0));
+  const rangeHref = (r: string) => `/admin/website/analytics?range=${r}`;
   return (
     <>
-      <div className="s28-row a2-mt12" role="tablist">
-        <span className="s28-chip" aria-current="page">{c('tabs.overview')}</span>
-        {p.canBehaviour ? <Link className="s28-chip" href="/admin/website/analytics/behaviour">{c('tabs.behaviour')}</Link> : null}
+      <div className="va-bar a2-mt12">
         <span className="a2-xs a2-mute grow" />
-        <span className="a2-xs a2-mute">{c('range.label')}</span>
-        {SPANS.map((n) => (
-          <Link key={n} className="s28-chip" href={`/admin/website/analytics?days=${n}`} aria-current={p.span === n ? 'true' : undefined} style={p.span === n ? { fontWeight: 700 } : undefined}>{c('range.days', { n })}</Link>
-        ))}
+        <nav className="va-seg" aria-label={c('range.label')} data-testid="va-range">
+          {RANGES.map((r) => (
+            <Link key={r} href={rangeHref(r)} aria-current={p.range === r ? 'true' : undefined} className={p.range === r ? 'on' : undefined}>
+              {c(`range.${r}`)}
+            </Link>
+          ))}
+        </nav>
       </div>
       {!v.cfg.collect ? <p className="a2-sm a2-mt12" data-testid="va-off">{c('off')}</p> : null}
-      <div className="s28-grid" data-testid="va-kpi">
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.visitors')}</div><b className="a2-h3">{v.totals.visitors}</b></div>
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.sessions')}</div><b className="a2-h3">{v.totals.sessions}</b></div>
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.views')}</div><b className="a2-h3">{v.totals.views}</b></div>
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.orders')}</div><b className="a2-h3">{v.totals.orders}</b></div>
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.conv')}</div><b className="a2-h3">{v.totals.conversionPct === null ? c('kpi.none') : `${v.totals.conversionPct}%`}</b></div>
-        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.live')}</div><b className="a2-h3" data-testid="va-live">{v.live.now}</b><div className="a2-xs a2-mute">{c('kpi.liveSub', { n: v.live.windowMinutes })}</div></div>
+      <div className="va-ai a2-mt12" role="note" data-testid="va-summary">
+        <b>{c('ai.head')}</b> · {dv === null ? c('ai.none') : c(dv >= 0 ? 'ai.up' : 'ai.down', { n: nf.format(Math.abs(Math.round(dv))) })} {v.totals.conversionPct === null ? '' : c('ai.conv', { n: nf.format(v.totals.conversionPct) })}
+      </div>
+      <div className="va-kpis a2-mt12" data-testid="va-kpi">
+        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.visitors')}</div><b className="va-n">{nf.format(v.totals.visitors)}</b>{delta(dv)}</div>
+        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.sessions')}</div><b className="va-n">{nf.format(v.totals.sessions)}</b>{delta(ds)}</div>
+        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.live')}</div><b className="va-n" data-testid="va-live">{nf.format(v.live.now)}</b><div className="a2-xs a2-mute">{c('kpi.liveSub', { n: v.live.windowMinutes })}</div></div>
+        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.newReturning')}</div><b className="va-n">{v.newPct === null ? c('kpi.none') : `${nf.format(v.newPct)} / ${nf.format(100 - v.newPct)}`}</b><div className="a2-xs a2-mute">{c('kpi.percent')}</div></div>
+        <div className="a2-card"><div className="a2-xs a2-mute">{c('kpi.conv')}</div><b className="va-n">{v.totals.conversionPct === null ? c('kpi.none') : `${nf.format(v.totals.conversionPct)}%`}</b>{delta(dc)}<span className="a2-xs a2-mute"> {c('kpi.ordersSub', { n: nf.format(v.totals.orders) })}</span></div>
       </div>
       <section className="a2-card a2-mt12" aria-labelledby={`${id}-c`} data-testid="va-chart">
-        <h2 className="a2-h3" id={`${id}-c`}>{c('chart.title')}</h2>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 120, marginTop: 8 }} role="img" aria-label={c('chart.title')}>
-          {v.days.map((d) => (
-            <div key={d.day} title={`${d.day}: ${c('chart.views')} ${d.views}, ${c('chart.visitors')} ${d.visitors}`} style={{ flex: 1, minWidth: 2, height: `${Math.max(2, Math.round((d.views / max) * 100))}%`, background: 'var(--lm-chip)', borderTop: '2px solid currentColor' }} />
-          ))}
-        </div>
-        <div className="s28-row between a2-xs a2-mute"><span>{v.from}</span><span>{v.to}</span></div>
+        <h2 className="a2-h3" id={`${id}-c`}>{c('chart.perDay')}</h2>
+        <div className="va-leg a2-xs a2-mute"><span><i className="a" /> {c('chart.thisPeriod')}</span><span><i className="b" /> {c('chart.before')}</span></div>
+        <svg className="va-svg" viewBox={`0 0 ${W2} ${H2}`} preserveAspectRatio="none" role="img" aria-label={c('chart.perDay')}>
+          {v.days.length ? <polygon points={`0,${H2} ${line(v.days)} ${W2},${H2}`} fill="var(--lm-acbg)" /> : null}
+          {v.prev && v.prev.days.length ? <polyline points={line(v.prev.days)} fill="none" stroke="var(--lm-ink2)" strokeWidth="2" strokeDasharray="6 5" vectorEffect="non-scaling-stroke" /> : null}
+          <polyline points={line(v.days)} fill="none" stroke="var(--lm-ac)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <div className="va-x a2-xs a2-mute">{ticks.map((d, i) => <span key={`${d}-${i}`}>{dayName(d)}</span>)}</div>
+        {v.days[peak] && v.days[peak]!.visitors > 0 ? <p className="a2-xs a2-mute">{c('chart.peak', { n: nf.format(v.days[peak]!.visitors), day: dayName(v.days[peak]!.day) })}</p> : null}
       </section>
-      <div className="s28-grid">
-        {list(c('lists.sources'), 'sources')}
-        {list(c('lists.pages'), 'pages')}
-        {list(c('lists.paths'), 'paths')}
-        {list(c('lists.devices'), 'devices')}
-        {list(c('lists.regions'), 'regions', c('lists.regionHint'))}
+      <div className="va-3 a2-mt12">
+        <section className="a2-card" aria-label={c('lists.sources')} data-testid="va-sources">
+          <h2 className="a2-h3">{c('lists.sourcesShort')}</h2>
+          {sources.length ? sources.map((r) => (
+            <div key={r.key} className="a2-mt6">
+              <div className="s28-row between"><span>{label('sources', r.key)}</span><b>{nf.format(r.views)} · {Math.round((r.views / srcTotal) * 100)}%</b></div>
+              <div className="s28-bar" style={{ color: 'var(--lm-ac)' }}><i style={{ width: `${Math.round((r.views / srcTotal) * 100)}%` }} /></div>
+            </div>
+          )) : <p className="a2-sm a2-mute a2-mt6">{c('lists.empty')}</p>}
+        </section>
+        <section className="a2-card" aria-label={c('lists.devices')} data-testid="va-devices">
+          <h2 className="a2-h3">{c('lists.devices')}</h2>
+          {v.devices.length ? (
+            <div className="va-dev">
+              <div className="va-donut" style={{ background: donut }} role="img" aria-label={`${topPct}%`}><span>{topPct}%</span></div>
+              <ul>{v.devices.slice(0, 3).map((r, i) => <li key={r.key}><i style={{ background: tone[i] }} /> {label('devices', r.key)} <b>{Math.round((r.views / devTotal) * 100)}%</b></li>)}</ul>
+            </div>
+          ) : <p className="a2-sm a2-mute a2-mt6">{c('lists.empty')}</p>}
+        </section>
+        <section className="a2-card" aria-label={c('lists.districts')} data-testid="va-districts">
+          <h2 className="a2-h3">{c('lists.districts')}</h2>
+          {v.districts.length ? v.districts.map((r) => (
+            <div key={r.name} className="a2-mt6">
+              <div className="s28-row between"><span>{p.locale.startsWith('bn') && r.nameBn ? r.nameBn : r.name}</span><b>{Math.round((r.orders / dTotal) * 100)}%</b></div>
+              <div className="s28-bar" style={{ color: 'var(--lm-ac)' }}><i style={{ width: `${Math.round((r.orders / dTotal) * 100)}%` }} /></div>
+            </div>
+          )) : <p className="a2-sm a2-mute a2-mt6">{c('lists.empty')}</p>}
+        </section>
       </div>
+      <section className="a2-card a2-mt12" aria-label={c('lists.paths')} data-testid="va-paths">
+        <h2 className="a2-h3">{c('lists.paths')}</h2>
+        {v.paths.length ? (
+          <div className="a2-tblw">
+            <table className="a2-tbl">
+              <thead><tr><th>{c('top.page')}</th><th className="r">{c('top.views')}</th><th className="r">{c('top.avg')}</th><th className="r">{c('top.orders')}</th></tr></thead>
+              <tbody>{v.paths.map((r) => <tr key={r.key}><td><b>{r.key}</b></td><td className="r a2-num">{nf.format(r.views)}</td><td className="r a2-num">—</td><td className="r a2-num">—</td></tr>)}</tbody>
+            </table>
+          </div>
+        ) : <p className="a2-sm a2-mute a2-mt6">{c('lists.empty')}</p>}
+      </section>
       {p.canEdit ? (
         <section className="a2-card a2-mt12" data-testid="va-settings">
           <h2 className="a2-h3">{c('settings.title')}</h2>
