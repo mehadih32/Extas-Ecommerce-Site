@@ -3,7 +3,7 @@
 // selling price for the whole product, an optional crossed-out price, the profit and margin worked out live, and "Confirm price". The
 // confirmation sets the price on every kept variant; with the price PIN setting on, the owner's PIN is asked first.
 import { useState } from 'react';
-import { profitOf } from '@extas/catalogue';
+import { profitOf } from '@extas/catalogue/wizard-model';
 import { t } from '@/lib/i18n';
 import { formatMoney, refusalText, toMajor, toMinor } from '../model';
 import { say, sayBad } from '../useToast';
