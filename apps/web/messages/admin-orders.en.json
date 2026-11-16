@@ -60,7 +60,7 @@
       "any": "{name}: all",
       "clear": "Clear filters",
       "shown": "Showing {n}",
-      "next": "Next page",
+      "next": "Show more",
       "first": "Back to the first page",
       "pc": "{n} pc",
       "pcs": "{n} pcs",
@@ -81,7 +81,7 @@
         "score": "Score"
       },
       "empty": {
-        "title": "Nothing matches",
+        "title": "No orders match these filters.",
         "body": "Try another view or clear the search.",
         "none": "No orders here yet",
         "noneBody": "Orders placed on the shop come in here, newest first.",
@@ -145,7 +145,9 @@
         "days7": "7 days",
         "month": "This month",
         "lastMonth": "Last month"
-      }
+      },
+      "batchNote": "Showing the current batch only (not yet handed to the courier)",
+      "showAll": "Show all orders"
     },
     "kpi": {
       "today": "Orders today",
@@ -182,7 +184,8 @@
       "delivered": "Delivered",
       "paid": "Paid",
       "returned": "Returned",
-      "bulk": "Bulk / corporate"
+      "bulk": "Bulk / corporate",
+      "batch": "Current batch"
     },
     "st": {
       "DRAFT": "Draft",

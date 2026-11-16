@@ -134,7 +134,7 @@ export default async function BatchPage({
       label: g("pipe.all"),
       value: b.total,
       sub: g("pipe.allSub"),
-      href: "/admin/orders",
+      href: "/admin/orders?view=batch",
     },
     {
       key: "toConfirm",
