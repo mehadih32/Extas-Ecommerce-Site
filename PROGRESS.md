@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D, second pass (branch `claude/final-d`): PR 901 Customer groups and Duplicates words, 902 Inbox words and toasts, 903 Marketing words, 904 Customers list default sort and Show more, 905 Loyalty Adjust points (owner PIN) and Adjustment history, 906 Customer 360 sizes, favourites, MRP value, Discount received, Influencer code, Open full page. Still not run locally (no install, no database): CI must run typecheck, the customers tests (rewards.db, taste, model) and the device gate.
+
 ## 16 Nov 2026 — Final round, lane D (branch `claude/final-d`): PR 900 Customers list title "Customers", Loyalty & wallet "Top point earners" and "Biggest wallet balances" cards. Not run locally (no install, no database on this machine): CI must run typecheck, the customers tests and the device gate. Other prototype differences found in Customers, Inbox and Marketing are listed in the lane report.
 
 ## 16 Nov 2026 — Batch 2026-11-16-1 (branch `batch-2026-11-16-1`, from `origin/main` f0ae9575): admin parity round 3, PR 765–868 in one, linear history
