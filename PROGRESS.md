@@ -49,6 +49,9 @@ Round 1: four commits, one per register PR, no install and no test run (the lane
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 951. All orders: the Not handed over card on Batch opens the current batch with the Showing the current batch only note and Show all orders; one plain No orders match these filters line; Show more button; guide, messages en+bn, test. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 950. Orders Batch rebuilt to the prototype: six pipeline cards, the insight note, the Stuck card with its order lines, Your work and Moved on by itself side by side with amount and age, Past batches as a table (Batch, Date & time, Parcels, COD total, Taken / missing); guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
+## 16 Nov 2026 — Final round lane D7 (branch `claude/final-d7`): Products sub-pages against the prototype, PR 960–966
+
+One commit per PR: 960 Demo products, 961 Stock (Ask ERP to restock, new route `/api/admin/inventory/restock`), 962 Shop ranking, 963 Sets, 964 Reviews, Questions and FAQs, 965 Size charts, 966 Product page. PR 967–969 not used. Not built (needs data or backend that does not exist): the Sets edit modal, the Size chart finder and run table, the Product page Pricing, SEO and Google ranking cards, the New product wizard step bodies. No pull request, no merge.
 
 ## 16 Nov 2026 — Batch 2026-11-16-1 (branch `batch-2026-11-16-1`, from `origin/main` f0ae9575): admin parity round 3, PR 765–868 in one, linear history
 
