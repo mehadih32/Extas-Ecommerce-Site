@@ -14,7 +14,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
-import { incompleteHandler, incompleteOpenCount, type IncompleteOverview } from './incomplete';
+import { incompleteHandler, incompleteOpenCount, incompleteOverview, type IncompleteOverview } from './incomplete';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -420,5 +420,24 @@ describe.skipIf(!HAS_TEST_DB)('Orders › Incomplete on PostgreSQL (PR 274, SIM-
     // confirm as order is not wired in this harness: refused plainly, nothing is placed
     const nobag = await t.prisma.checkoutDraft.create({ data: { storeId: S, visitorId: 'visitor-nobag-6683', phone: '+8801711000670', name: 'Sample', lastStep: 'details', lastActivityAt: at } });
     expect((await api('POST', { body: { action: 'confirmOrder', id: nobag.id } })).a.error).toBe('UNAVAILABLE');
+  });
+
+  it('PR 1061: the report groups left checkouts by landing page and device; bags made before the notes show as not recorded', async () => {
+    const mk = async (visitorId: string, note: { landingPage?: string; device?: string }) => {
+      const cart = await t.prisma.cart.create({ data: { storeId: S, visitorId, lastActivityAt: new Date(T0.getTime() - 120 * MIN), ...note } });
+      await t.prisma.checkoutDraft.create({ data: { storeId: S, visitorId, cartId: cart.id, phone: `+88017120${visitorId.slice(-5)}`, name: 'Sample', lastStep: 'payment', lastActivityAt: new Date(T0.getTime() - 120 * MIN) } });
+    };
+    await mk('visitor-rep-00001', { landingPage: '/p/polo-sample', device: 'MOBILE' });
+    await mk('visitor-rep-00002', { landingPage: '/p/polo-sample', device: 'MOBILE' });
+    await mk('visitor-rep-00003', { landingPage: '/', device: 'DESKTOP' });
+    await mk('visitor-rep-00004', {});
+    const o = await incompleteOverview({ db: t.prisma, resolver: admin.resolver, now: () => T0 }, null, 'open', { report: true });
+    const mine = (rows: { key: string | null; bags: number }[], key: string | null) => rows.find((r) => r.key === key)?.bags;
+    expect(mine(o.report!.landing, '/p/polo-sample')).toBe(2);
+    expect(mine(o.report!.landing, '/')).toBe(1);
+    expect(mine(o.report!.device, 'MOBILE')).toBe(2);
+    expect(mine(o.report!.device, 'DESKTOP')).toBe(1);
+    expect(o.report!.landing.at(-1)!.key).toBeNull(); // not recorded goes last
+    expect((await incompleteOverview({ db: t.prisma, resolver: admin.resolver, now: () => T0 }, null, 'open')).report).toBeNull();
   });
 });

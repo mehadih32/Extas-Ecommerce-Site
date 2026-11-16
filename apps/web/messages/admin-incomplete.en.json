@@ -5,6 +5,15 @@
     "sub": "People who started an order and stopped. Start from the top, one by one.",
     "note": "Only what the customer typed on the visible form is kept, and only while the switch below is on. Nothing is sent from here: a ready message only opens WhatsApp or SMS for you to press send. Confirm as order places a Cash on Delivery order the same way the website does; no money is asked or moved. A follow-up message goes only while its own switch below is on, and only to customers who said yes to offers.",
     "off": "Keeping unfinished checkouts is off, so nothing new is kept. Switch it on in the card at the bottom of this page.",
+    "mode": { "aria": "List or report", "list": "List", "report": "Report" },
+    "report": {
+      "landing": "By landing page",
+      "device": "By device",
+      "notRecorded": "Not recorded",
+      "empty": "Nothing left in these days.",
+      "dev": { "MOBILE": "Phone", "TABLET": "Tablet", "DESKTOP": "Computer" },
+      "note": "Bags, and what they hold, grouped by the page the visitor was on when the bag was made and by the kind of device. Older bags were made before this was kept, so they show as Not recorded."
+    },
     "allLink": "All orders",
     "warnNoNumber": "{n} left without a number — we cannot call them. They are kept for the report and for ad audiences.",
     "viewsAria": "Lists",
