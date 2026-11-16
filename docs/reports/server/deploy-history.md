@@ -166,3 +166,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-16 12:24 | `7f8403f3d444` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-16 20:42 | `ad8376121c6f` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-16 23:55 | `1431f241b114` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/settings/couriers: answered 500 (phone); /admin/settings/couriers: request 500: /admin/settings/couriers (phone); /admin/settings/couriers: console error: Failed to load resource: the server responded with a status of 500 () (/admin/settings/couriers) (phone)), so the previous version was put back automatically. The fix comes before any new work. |
+| 2026-11-17 00:49 | `0378e32e1b19` | deploy | OK | ok | OK, smoke OK | — |

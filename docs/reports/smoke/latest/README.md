@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-16 23:41 (Asia/Dhaka)
+# Smoke test · 2026-11-17 00:36 (Asia/Dhaka)
 
-> **বাংলায়:** 2টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `1431f241b114` · after deploy · result **FAIL** (706 page views, 2 failed)
+Site: https://extas.com.bd · commit `0378e32e1b19` · after deploy · result **PASS** (706 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -178,7 +178,7 @@ Site: https://extas.com.bd · commit `1431f241b114` · after deploy · result **
 | `/admin/settings/privacy` | phone | 200 | `/admin/settings/privacy` | ok | — |
 | `/admin/settings/policies` | phone | 200 | `/admin/settings/policies` | ok | — |
 | `/admin/settings/checkout` | phone | 200 | `/admin/settings/checkout` | ok | — |
-| `/admin/settings/couriers` | phone | 500 | `/admin/settings/couriers` | **FAIL**: /admin/settings/couriers: answered 500; /admin/settings/couriers: request 500: /admin/settings/couriers; /admin/settings/couriers: console error: Failed to load resource: the server responded with a status of 500 () (/admin/settings/couriers); /admin/settings/couriers: console error: Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/_next/static/chunks/341zsa8525d5i.js?dpl=1431f241b11430d53b30f21692733e91b03b1b2d) | — |
+| `/admin/settings/couriers` | phone | 200 | `/admin/settings/couriers` | ok | — |
 | `/admin/settings/messages` | phone | 200 | `/admin/settings/messages` | ok | — |
 | `/admin/settings/security/edge` | phone | 200 | `/admin/settings/security/edge` | ok | — |
 | `/admin/reports/health` | phone | 200 | `/admin/reports/health` | ok | — |
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `1431f241b114` · after deploy · result **
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | phone | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | phone | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
-| `/admin/reports/health/history/01a1e4cf-95af-72d2-9b4f-1c2d796bc2c4` | phone | 200 | `/admin/reports/health/history/01a1e4cf-95af-72d2-9b4f-1c2d796bc2c4` | ok | — |
+| `/admin/reports/health/history/01a1e57e-e729-7f61-8a45-ab44f3543b9f` | phone | 200 | `/admin/reports/health/history/01a1e57e-e729-7f61-8a45-ab44f3543b9f` | ok | — |
 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66?tab=wallet` | phone | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -531,7 +531,7 @@ Site: https://extas.com.bd · commit `1431f241b114` · after deploy · result **
 | `/admin/settings/privacy` | desktop | 200 | `/admin/settings/privacy` | ok | — |
 | `/admin/settings/policies` | desktop | 200 | `/admin/settings/policies` | ok | — |
 | `/admin/settings/checkout` | desktop | 200 | `/admin/settings/checkout` | ok | — |
-| `/admin/settings/couriers` | desktop | 500 | `/admin/settings/couriers` | **FAIL**: /admin/settings/couriers: answered 500; /admin/settings/couriers: request 500: /admin/settings/couriers; /admin/settings/couriers: console error: Failed to load resource: the server responded with a status of 500 () (/admin/settings/couriers); /admin/settings/couriers: console error: Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/_next/static/chunks/341zsa8525d5i.js?dpl=1431f241b11430d53b30f21692733e91b03b1b2d) | — |
+| `/admin/settings/couriers` | desktop | 200 | `/admin/settings/couriers` | ok | — |
 | `/admin/settings/messages` | desktop | 200 | `/admin/settings/messages` | ok | — |
 | `/admin/settings/security/edge` | desktop | 200 | `/admin/settings/security/edge` | ok | — |
 | `/admin/reports/health` | desktop | 200 | `/admin/reports/health` | ok | — |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `1431f241b114` · after deploy · result **
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | desktop | 200 | `/admin/orders/518b684e-e974-5cd6-a522-a2520c84534c` | ok | — |
 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | desktop | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
-| `/admin/reports/health/history/01a1e4cf-95af-72d2-9b4f-1c2d796bc2c4` | desktop | 200 | `/admin/reports/health/history/01a1e4cf-95af-72d2-9b4f-1c2d796bc2c4` | ok | — |
+| `/admin/reports/health/history/01a1e57e-e729-7f61-8a45-ab44f3543b9f` | desktop | 200 | `/admin/reports/health/history/01a1e57e-e729-7f61-8a45-ab44f3543b9f` | ok | — |
 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66?tab=wallet` | desktop | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |

@@ -1,22 +1,13 @@
 {
-  "at": "2026-11-16 23:41 (Asia/Dhaka)",
+  "at": "2026-11-17 00:36 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
-  "sha": "1431f241b114",
+  "sha": "0378e32e1b19",
   "kind": "after deploy",
   "rolledBack": true,
-  "ok": false,
+  "ok": true,
   "pages": 706,
-  "failed": 2,
-  "problems": [
-    "/admin/settings/couriers: answered 500 (phone)",
-    "/admin/settings/couriers: request 500: /admin/settings/couriers (phone)",
-    "/admin/settings/couriers: console error: Failed to load resource: the server responded with a status of 500 () (/admin/settings/couriers) (phone)",
-    "/admin/settings/couriers: console error: Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/_next/static/chunks/341zsa8525d5i.js?dpl=1431f241b11430d53b30f21692733e91b03b1b2d) (phone)",
-    "/admin/settings/couriers: answered 500 (desktop)",
-    "/admin/settings/couriers: request 500: /admin/settings/couriers (desktop)",
-    "/admin/settings/couriers: console error: Failed to load resource: the server responded with a status of 500 () (/admin/settings/couriers) (desktop)",
-    "/admin/settings/couriers: console error: Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/_next/static/chunks/341zsa8525d5i.js?dpl=1431f241b11430d53b30f21692733e91b03b1b2d) (desktop)"
-  ],
+  "failed": 0,
+  "problems": [],
   "database": {
     "appendOnly": "ok: 44 tables append-only",
     "appRole": "extas_app"
