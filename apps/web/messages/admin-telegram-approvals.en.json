@@ -16,7 +16,7 @@
       "price": "Price changes",
       "cash": "Cash in and out waiting for an approver",
       "cod": "Big COD orders",
-      "codOver": "Big COD means over (Tk)",
+      "codOver": "Big COD means over (৳)",
       "wait": "If no answer in (minutes)",
       "wait2": "It waits in AI Center › Approvals; nothing happens by itself.",
       "pin": "Owner PIN",

@@ -42,6 +42,9 @@ export default async function IntegrationsPage() {
         <div className="ad-eyebrow">{t(d, 'integrations.eyebrow')}</div>
         <h1 className="ad-h1">{t(d, 'integrations.title')}</h1>
         <p className="ad-intro">{t(d, 'integrations.intro')}</p>
+        <p className="ad-intro">
+          <b>{t(d, 'integrations.introType')}</b> {t(d, 'integrations.introNever')}
+        </p>
       </div>
       <SystemTabs view={view} current={KEY} />
       <Integrations

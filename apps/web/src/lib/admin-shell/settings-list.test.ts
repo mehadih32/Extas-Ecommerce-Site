@@ -49,11 +49,8 @@ describe('Settings list (PR 779)', () => {
       last = at;
       const nameEn = (en.shell.setlist.item as Record<string, { n: string }>)[it.id]!.n;
       const nameBn = (bn.shell.setlist.item as Record<string, { n: string }>)[it.id]!.n;
-      // Telegram control is the real page's own name in the owner's list (Telegram approvals)
-      if (p.id !== 'telegram') {
-        expect(nameEn, p.id).toBe(p.en);
-        expect(nameBn, p.id).toBe(p.bn);
-      }
+      expect(nameEn, p.id).toBe(p.en);
+      expect(nameBn, p.id).toBe(p.bn);
     }
     // every prototype item has a built page (PR 791 built Site health and Updates & versions)
     expect(missing).toEqual([]);
