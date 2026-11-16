@@ -75,6 +75,44 @@ export interface RequestApprovalInput {
   refType?: string | null;
   refId?: string | null;
   expiresAt?: Date | null;
+  /** PR 934: what the idea changes, one plain line ("Effect" on the card); optional, filled when the agent proposes. */
+  impact?: string | null;
+  /** PR 934: an admin page (`/admin/...`) where the owner can look at the thing itself ("Open" on the card). */
+  openHref?: string | null;
+  /** PR 934: the text the agent wants to send, shown read-only under "Read draft" (it is never sent from here). */
+  draft?: string | null;
+}
+
+export interface ApprovalExtras {
+  impact: string | null;
+  openHref: string | null;
+  draft: string | null;
+}
+
+const OWNER_VIEW = 'ownerView';
+
+/** The optional owner-facing lines of a request, read out of its payload (`payload.ownerView`); anything else is null.
+ * An `openHref` counts only when it is an admin page of this site (starts with `/admin/`, no scheme, no `//`). */
+export function approvalExtras(payload: unknown): ApprovalExtras {
+  const none: ApprovalExtras = { impact: null, openHref: null, draft: null };
+  if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return none;
+  const v = (payload as Record<string, unknown>)[OWNER_VIEW];
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return none;
+  const o = v as Record<string, unknown>;
+  const str = (x: unknown) => (typeof x === 'string' && x.trim() ? x.trim() : null);
+  const href = str(o.openHref);
+  return { impact: str(o.impact), openHref: href && /^\/admin\/[^\s]*$/.test(href) && !href.includes('//') ? href : null, draft: str(o.draft) };
+}
+
+/** The payload with the optional owner-facing lines added under `ownerView` (a non-object payload is kept under `detail`). */
+function payloadWithExtras(input: RequestApprovalInput): Prisma.InputJsonValue {
+  const extras: Record<string, string> = {};
+  if (input.impact?.trim()) extras.impact = input.impact.trim();
+  if (input.openHref?.trim()) extras.openHref = input.openHref.trim();
+  if (input.draft?.trim()) extras.draft = input.draft.trim();
+  if (!Object.keys(extras).length) return input.payload as Prisma.InputJsonValue;
+  const base = typeof input.payload === 'object' && input.payload !== null && !Array.isArray(input.payload) ? (input.payload as Record<string, unknown>) : { detail: input.payload ?? null };
+  return { ...base, [OWNER_VIEW]: extras } as Prisma.InputJsonValue;
 }
 
 export interface ApprovalsDeps {
@@ -105,7 +143,7 @@ export async function requestApproval(deps: ApprovalsDeps, input: RequestApprova
       kind: input.kind,
       title: input.title,
       summary: input.summary ?? null,
-      payload: input.payload as Prisma.InputJsonValue,
+      payload: payloadWithExtras(input),
       channel: input.channel ?? null,
       refType: input.refType ?? null,
       refId: input.refId ?? null,

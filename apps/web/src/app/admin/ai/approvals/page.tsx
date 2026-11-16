@@ -13,11 +13,12 @@ import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ApprovalDecideButtons } from '@/components/admin/ai/ApprovalDecideButtons';
+import { ReadDraftButton } from '@/components/admin/ai/ReadDraftButton';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
 import { aiAgentDef, isAiAgentKey } from '@/lib/admin-ai/agents';
-import { approvalsView, kindLabelOf, type ApprovalRow } from '@/lib/admin-ai/approvals';
+import { approvalExtras, approvalsView, kindLabelOf, type ApprovalRow } from '@/lib/admin-ai/approvals';
 import { GATE_KINDS } from '@/lib/admin-health/fixes';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -103,6 +104,7 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
     t(d, 'aiDigest.previewSpend', { amount: formatMoney(room.view.monthMinor, digestMoney) }),
   ].join('\n');
   const at = (iso: Date) => dateTime(iso.toISOString(), view.locale, view.timeZone);
+  const ex = (r: ApprovalRow) => approvalExtras(r.payload);
   const isGate = (r: ApprovalRow) => (GATE_KINDS as readonly string[]).includes(r.kind);
   const canDecide = (r: ApprovalRow) => (isGate(r) ? canApproveFixes : canControl);
   const agentNameOf = (key: string | null) => {
@@ -198,6 +200,23 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
                 {r.summary ? (
                   <div className="a2-sm a2-mute" data-testid="ai-ap-why">
                     <b>{c('pending.why')}:</b> {r.summary}
+                  </div>
+                ) : null}
+                {ex(r).impact ? (
+                  <div className="a2-sm" data-testid="ai-ap-effect">
+                    <b>{c('pending.effect')}:</b> {ex(r).impact}
+                  </div>
+                ) : null}
+                {ex(r).draft || ex(r).openHref ? (
+                  <div className="a2-gap8" style={{ flexWrap: 'wrap' }}>
+                    {ex(r).draft ? (
+                      <ReadDraftButton buttonLabel={c('pending.readDraft')} title={c('pending.draftTitle')} close={t(d, 'aiDigest.close')} who={agentNameOf(r.agentKey)} topic={r.title} body={ex(r).draft ?? ''} note={c('pending.draftNote')} />
+                    ) : null}
+                    {ex(r).openHref ? (
+                      <Link className="a2-btn sm" href={ex(r).openHref ?? '#'} data-testid="ai-ap-open">
+                        {c('pending.open')}
+                      </Link>
+                    ) : null}
                   </div>
                 ) : null}
                 <div className="a2-xs a2-mute">
