@@ -707,5 +707,7 @@
 .adm2 a.cr-link { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
 
 /* gate (batch 2026-11-16): the default Home never makes the page wider than a 320-360 px phone (the no-wrap captions wrap there; anything left over is clipped, not scrolled) */
-.adm2 .a3-dash{max-width:100%;overflow-x:clip}
+/* final round: no clip. The long words wrap and every child of a grid or flex row may shrink, so nothing is wider than the phone */
+.adm2 .a3-dash{max-width:100%}
+.adm2 .a3-dash :where(div,section,article,ul,li,p,span,b,a,small,h2,h3){min-width:0;overflow-wrap:anywhere}
 @media (max-width:599px){.adm2 .a3-dash .a3-cap{white-space:normal}.adm2 .a3-dash .a3-card{min-width:0;max-width:100%}}

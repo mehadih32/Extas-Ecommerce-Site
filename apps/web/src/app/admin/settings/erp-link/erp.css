@@ -14,5 +14,6 @@
 [data-testid="erp-link-page"] a.a2-xs { display: inline-flex; align-items: center; min-height: var(--lm-tap); }
 
 /* gate: the safety card never pushes the page wider on a tablet */
-[data-testid="erp-link-page"]{max-width:100%;overflow-x:clip}
+[data-testid="erp-link-page"]{max-width:100%}
+[data-testid="erp-link-page"] :where(div,section,li,p,span,b,a,small,h2,h3){min-width:0;overflow-wrap:anywhere}
 [data-testid="erp-link-page"] .erp-g3 > *{min-width:0;max-width:100%}
