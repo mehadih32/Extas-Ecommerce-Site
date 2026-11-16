@@ -80,7 +80,7 @@ export function ViewChips({ view, page, query, counts }: { view: AdminView; page
   const proto = 'chips' in LIST_PAGES[page] ? (LIST_PAGES[page] as unknown as { chips: readonly string[]; chips2: readonly string[] }) : null;
   const first: readonly string[] = proto ? proto.chips : LIST_PAGES[page].views;
   const second: readonly string[] = proto ? proto.chips2 : [];
-  const extra = proto && ![...first, ...second].includes(query.view) ? [query.view] : [];
+  const extra = proto && query.view !== 'batch' && ![...first, ...second].includes(query.view) ? [query.view] : [];
   const chip = (v: string) => {
     const on = v === query.view;
     return (
@@ -119,7 +119,7 @@ export function EmptyList({ view, filtered, clear, all }: { view: AdminView; fil
         <ShellIcon name={filtered ? 'search' : 'bag'} size={26} />
       </div>
       <h3>{t(d, `orders.list.empty.${k}`)}</h3>
-      <p>{t(d, `orders.list.empty.${b}`)}</p>
+      {filtered ? null : <p>{t(d, `orders.list.empty.${b}`)}</p>}
       {filtered ? (
         <div className="a2-gap8">
           <Link className="a2-btn" href={clear}>
@@ -228,6 +228,14 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
     <div className="a2-z" data-testid="orders-list" data-lm-ready="">
       <PageHead view={view} place={locateKey('orders')} title={t(d, 'orders.page.all')} sub={sub} right={<><OrderHeaderActions view={view} query={query} perms={a.perms} />{menu ? <LookMenu {...menu} /> : null}</>} />
       <SectionTabs view={view} current="orders" />
+      {query.view === 'batch' ? (
+        <div className="a2-note a2-mt12" role="note" data-testid="orders-batch-note">
+          <span>{t(d, 'orders.list.batchNote')}</span>{' '}
+          <Link className="a2-btn sm" href={listHref(page, { view: 'all' })}>
+            {t(d, 'orders.list.showAll')}
+          </Link>
+        </div>
+      ) : null}
       <ViewChips view={view} page={page} query={query} counts={data.counts} incomplete={incomplete} />
       <DateBar view={view} page={page} query={query} />
       <OrderFilters

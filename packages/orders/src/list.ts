@@ -23,7 +23,9 @@ import { factsOf, machineOf, MACHINE_SELECT, NOT_BOOKED_SHIPMENT } from './servi
 
 export const ORDER_VIEWS = ['all', 'open', 'new', 'processing', 'cancelled', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'readyToBook', 'twoSizes', 'finished',
   // PR 783 (admin prototype v5 parity, m-orders.js CHIPS): the prototype's status chips as views
-  'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned'] as const;
+  'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned',
+  // PR 951 (final round, lane D6): the Batch page's "Not handed over" card opens this view: every order not yet handed to the courier
+  'batch'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
 /** PR 541: every payment method but cash on delivery (paid before the parcel leaves). */
@@ -95,6 +97,9 @@ export function viewWhere(view: OrderView, openReviewOrderIds: string[]): Prisma
       return { status: { in: ['DELIVERED', 'PARTIALLY_DELIVERED'] }, NOT: { AND: [{ OR: [{ paymentMethod: 'COD' }, { paymentMethod: null }] }, { paidMinor: { lt: 1 } }] } };
     case 'returned':
       return { status: 'RETURNED' };
+    case 'batch':
+      // the current batch (Orders › Batch): open and not yet with the courier's rider
+      return { status: { in: ['PLACED', 'AWAITING_ADVANCE', 'ON_HOLD', 'CONFIRMED', 'PROCESSING', 'PACKED'] } };
     default:
       return {};
   }

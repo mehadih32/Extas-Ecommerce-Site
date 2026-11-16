@@ -104,7 +104,7 @@ export const LIST_PAGES = {
   // tab (the address stays /admin/orders/confirm) opens on the Processing view, with the old queues as its chips.
   all: {
     base: '/admin/orders',
-    views: ['all', 'new', 'processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished', 'cancelled', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned'],
+    views: ['all', 'new', 'processing', 'toConfirm', 'prepaid', 'awaitingAdvance', 'onHold', 'cancelRequests', 'cancelPending', 'inReview', 'twoSizes', 'open', 'finished', 'cancelled', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid', 'returned', 'batch'],
     // PR 783 (prototype v5 parity, m-orders.js CHIPS + CHIPS2): the chips drawn on All orders, in the prototype's order and
     // words. The other views above stay valid (the Processing tab, the tiles, the dashboard and old links open them).
     chips: ['all', 'new', 'processing', 'confirmed', 'booked', 'packed', 'handedOver', 'delivered', 'paid'],
