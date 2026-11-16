@@ -240,6 +240,11 @@ export function BulkOrdersScreen(p: BulkOrdersScreenProps) {
         </section>
       ) : null}
 
+      {p.view.quotes.length ? null : (
+        <p className="a2-sm a2-mute a2-mt12" data-testid="bulk-empty">
+          {c('empty')}
+        </p>
+      )}
       <div className="s28-grid a2-mt12" data-testid="bulk-quotes">
         {p.view.quotes.map((q) => (
           <section key={q.id} className="a2-card" data-testid="bulk-quote">
