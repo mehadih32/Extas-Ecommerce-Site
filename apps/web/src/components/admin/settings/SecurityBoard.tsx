@@ -42,7 +42,7 @@ export function SecurityBoard({ view, w, locale, timeZone }: { view: BoardView; 
 
   return (
     <>
-      <div className="s28-grid" data-testid="security-board">
+      <div className="s28-grid s28-g3" data-testid="security-board">
         <section className="a2-card" data-testid="security-2fa-card">
           <div className="s28-row between" style={{ flexWrap: 'nowrap' }}>
             <div className="s28-grow">
@@ -74,7 +74,7 @@ export function SecurityBoard({ view, w, locale, timeZone }: { view: BoardView; 
         </section>
       </div>
 
-      <div className="s28-grid a2-mt12">
+      <div className="s28-grid s28-g2 a2-mt12">
         <section className="a2-card" data-testid="security-history" aria-labelledby="sec-hist-h">
           <h2 className="a2-h3" id="sec-hist-h">{w['board.history.h']}</h2>
           {view.history.length ? (
