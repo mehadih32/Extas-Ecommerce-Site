@@ -101,6 +101,8 @@
 .adm2 .a2-tab .a2-cnt{font-size:11.5px;font-weight:650;background:#EFECE5;color:var(--ink2);border-radius:10px;padding:0 7px;line-height:18px}
 .adm2 .a2-tab.on .a2-cnt{background:var(--g1);color:var(--g)}
 .adm2 .a2-more{position:relative;flex:none}
+.adm2 .a2-tabs-fit{display:flex;align-items:center;gap:2px;flex:1 1 auto;min-width:0}
+.adm2 .a2-tabs-fit .a2-tabs-s{flex:0 1 auto}
 .adm2 .a2-morepop{position:absolute;right:0;top:calc(100% + 6px);z-index:35}
 .adm2 .a2-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 14px;border-radius:9px;background:var(--sf);border:1px solid var(--ln);font-weight:600;font-size:13.5px;box-shadow:var(--sh);white-space:nowrap;color:var(--ink)}
 .adm2 .a2-btn:hover{border-color:#D3CBBB;background:#FDFCFA}
@@ -738,3 +740,10 @@
 .adm2 .po-tot{font-size:16px;padding-top:6px;border-top:1px solid var(--lm-ln)}
 .adm2 .po-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 @media (max-width:599px){.adm2 .po-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* final round: on a phone a pill, a big figure and a code-like value wrap instead of pushing the card wider (this replaces the "clip" on Home, Activity log, ERP connection and Shopping feed) */
+@media (max-width: 599px) {
+  .adm2 .a2-pill { white-space: normal; max-width: 100%; }
+  .adm2 .a2-kv { white-space: normal; overflow-wrap: anywhere; }
+}
+.adm2 .a2-mono { overflow-wrap: anywhere; }

@@ -7,32 +7,20 @@
 import Link from 'next/link';
 import { locate, visiblePages, visibleTabs, type ShellViewer } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { MoreTabs, TabsRow } from './ShellButtons';
+import { FitTabs } from './ShellButtons';
 
 export function ShellTabBar({ dict, pathname, from, viewer }: { dict: Dict; pathname: string; from: string | null; viewer: ShellViewer }) {
   const place = locate(pathname, from);
   if (!place?.tab) return null;
   const { section, tab } = place;
   const tabs = visibleTabs(section, viewer);
-  const main = tabs.filter((x) => !x.more);
-  const more = tabs.filter((x) => x.more);
   const label = (id: string) => t(dict, `shell.tab.${section.id}.${id}`);
   const pages = visiblePages(tab, viewer);
   return (
     <div className="a2-z a2-bar" data-testid="a2-bar" data-section={section.id}>
       {tabs.length > 1 ? (
         <nav className="a2-tabs" aria-label={t(dict, 'shell.tabs.aria', { section: t(dict, `shell.sec.${section.id}`) })} data-testid="a2-tabs">
-          <TabsRow key={`${section.id}-${tab.id}`}>
-            {main.map((x) => {
-              const on = x.id === tab.id;
-              return (
-                <Link key={x.id} className={`a2-tab${on ? ' on' : ''}`} href={visiblePages(x, viewer)[0]!.href} aria-current={on ? 'page' : undefined}>
-                  {label(x.id)}
-                </Link>
-              );
-            })}
-          </TabsRow>
-          {more.length ? <MoreTabs label={t(dict, 'shell.tabs.more')} links={more.map((x) => ({ href: visiblePages(x, viewer)[0]!.href, label: label(x.id), on: x.id === tab.id }))} /> : null}
+          <FitTabs key={`${section.id}-${tab.id}`} moreLabel={t(dict, 'shell.tabs.more')} tabs={tabs.map((x) => ({ id: x.id, href: visiblePages(x, viewer)[0]!.href, label: label(x.id), on: x.id === tab.id }))} />
         </nav>
       ) : null}
       {pages.length > 1 ? (
