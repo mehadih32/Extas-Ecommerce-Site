@@ -154,14 +154,46 @@
       "days": "Working days to arrive",
       "daysCod": "Couriers pay weekly",
       "daysN": "Arrives in {n} working day(s)",
-      "note": "Changing where money lands is for the owner. Finance › Money in & out matches every payment against these accounts.",
+      "note": "Changing where money lands needs your PIN. Finance › Money in & out matches every payment against these accounts.",
       "save": "Save",
       "saved": "Saved. New payments are noted against these accounts.",
       "failed": "That did not save. Try again.",
       "FORBIDDEN": "Only the owner can change where money lands.",
       "ACCOUNT_NOT_LISTED": "Every way of paying must use an account from your list.",
       "INVALID_INPUT": "Some values are not right (days are 0 to 30).",
-      "readOnly": "Only the owner can change this."
+      "readOnly": "Only the owner can change this.",
+      "more": "More options",
+      "pin": "Owner PIN",
+      "PIN_REQUIRED": "Type your PIN.",
+      "WRONG_PIN": "That PIN is not right.",
+      "PIN_NOT_SET": "Set your PIN first.",
+      "PIN_LOCKED": "Too many wrong tries. Wait and try again."
+    },
+    "methods": {
+      "bkash": "bKash",
+      "nagad": "Nagad",
+      "card": "Card (SSLCommerz)",
+      "onAt": "On at checkout",
+      "off": "Off",
+      "notSet": "Not set up yet",
+      "orders": "{n} orders · {money} in 30 days",
+      "test": "Test",
+      "tested": "Nothing was charged. The test runs for real once the gateway keys are in Keys & connections.",
+      "setup": "Set up in Keys",
+      "failed": "That did not save. Try again.",
+      "kind": {
+        "merchant": "merchant",
+        "personal": "personal",
+        "agent": "agent"
+      }
+    },
+    "rulesPre": "Cash on delivery, advance payment and wallet rules live in",
+    "rulesName": "Rules › Payment & COD",
+    "rulesPost": ".",
+    "open": "Open",
+    "more": {
+      "h": "More options",
+      "d": "Payment ways in your order, Cash on Delivery, receiving numbers and bank accounts, the delivery details form and gift orders."
     }
   }
 }
