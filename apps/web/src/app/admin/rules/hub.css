@@ -120,7 +120,7 @@
    Three columns (groups, rules, right-hand editor or simulator); one card per group; pills; tokens only. */
 .rh-l:not(.po-l),.rh-l.has-ed:not(.po-l){grid-template-columns:190px minmax(0,1fr) minmax(320px,400px);gap:14px;align-items:start}
 .rh-nav{background:var(--lm-sf);border:1px solid var(--lm-ln);border-radius:12px;padding:8px;gap:2px;position:sticky;top:70px}
-.rh-nav button{font-size:.84rem;font-weight:500;padding:7px 10px;border-radius:8px;min-height:36px}
+.rh-nav button{font-size:.84rem;font-weight:500;padding:7px 10px;border-radius:8px;min-height:44px}
 .rh-nav button span{font-size:.72rem;color:var(--lm-faint);font-variant-numeric:tabular-nums}
 .rh-nav button.on{background:var(--lm-acbg);color:var(--lm-accent);font-weight:600}
 .rh-main{gap:12px}

@@ -13,7 +13,7 @@
 .lm-shell .lm-brand { display: flex; align-items: center; gap: 8px; padding: 2px 4px 8px; }
 .lm-shell .lm-brl { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--lm-ink); }
 .lm-shell .lm-logo { width: 36px; height: 36px; border-radius: var(--lm-r-ctl); background: var(--lm-logo); color: var(--lm-on-ac); display: grid; place-items: center; font: 800 1.1rem var(--lm-font-disp); box-shadow: var(--lm-pri-sh); flex: none; }
-.lm-shell .lm-bt { font: 800 1.05rem var(--lm-font-disp); letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lm-shell .lm-bt { font: 800 1.05rem var(--lm-font-disp); letter-spacing: 0.08em; white-space: normal; overflow-wrap: anywhere; min-width: 0; }
 .lm-shell .lm-bt[data-script='bn'] { letter-spacing: 0; font-family: var(--lm-font-bn); }
 .lm-shell .lm-iconb { margin-left: auto; width: 32px; height: 32px; border-radius: var(--lm-r-sm); background: var(--lm-sf2); color: var(--lm-ink2); display: grid; place-items: center; flex: none; }
 .lm-shell .lm-iconb:hover { color: var(--lm-ink); }

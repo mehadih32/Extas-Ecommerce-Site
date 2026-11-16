@@ -111,7 +111,7 @@
 .rl-add { border: 1px dashed var(--rl-add-line); background: none; border-radius: var(--rl-chip-radius); padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: var(--ad-brand); cursor: pointer; font-family: inherit; min-height: 34px; }
 .rl-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
 @media (min-width: 640px) { .rl-checks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.rl-check { display: flex; align-items: center; gap: 8px; font-size: 14px; min-height: 36px; cursor: pointer; }
+.rl-check { display: flex; align-items: center; gap: 8px; font-size: 14px; min-height: 44px; cursor: pointer; }
 .rl-check input { width: 18px; height: 18px; accent-color: var(--ad-brand); flex-shrink: 0; }
 .rl-self-end { align-self: end; }
 .rl-does { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
@@ -127,7 +127,7 @@
 .rl-seg button + button { border-left: 1px solid var(--ad-input); }
 .rl-seg button[aria-pressed='true'] { background: var(--ad-brand); color: var(--ad-brand-ink); }
 .rl-seg button:disabled { cursor: not-allowed; }
-.rl-seg-sm button { min-height: 36px; padding: 0 12px; }
+.rl-seg-sm button { min-height: 44px; padding: 0 12px; }
 .rl-switch { position: relative; width: 40px; height: 24px; border-radius: 12px; border: 0; background: var(--ad-dot-off); flex-shrink: 0; padding: 0; }
 .rl-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--ad-surface); }
 .rl-switch[aria-pressed='true'] { background: var(--ad-brand); }

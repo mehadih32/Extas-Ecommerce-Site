@@ -108,7 +108,8 @@
 .ad-side-grp { color: var(--ad-side-dim); padding: 14px 12px 4px; font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
 .ad-side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 4px; padding-top: 12px; }
 
-.ad-logo { font-family: var(--ad-font-display); font-weight: 800; font-size: 24px; letter-spacing: 0.2em; padding-left: 0.2em; color: var(--ad-brand-ink); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ad-logo { font-family: var(--ad-font-display); font-weight: 800; font-size: 24px; letter-spacing: 0.2em; padding-left: 0.2em; color: var(--ad-brand-ink); line-height: 1.2; white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 640px) { .ad-logo { font-size: 20px; letter-spacing: 0.1em; } }
 .ad-tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: var(--ad-pill); font-size: 12.5px; font-weight: 600; background: var(--ad-on-dark); color: var(--ad-brand-ink); white-space: nowrap; flex-shrink: 0; }
 
 .ad-top { background: var(--ad-brand-dark); color: var(--ad-brand-ink); padding: 12px var(--ad-gutter); min-height: var(--ad-top-h); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
