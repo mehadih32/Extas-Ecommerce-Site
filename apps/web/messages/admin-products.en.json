@@ -552,6 +552,11 @@
       }
     },
     "demo": {
+      "moreSub": "Make demo products, add the demo catalogue, the price a demo product shows and the list of demo products made.",
+      "more": "More options",
+      "previewClose": "Close",
+      "previewGo": "See what's available",
+      "see": "See demo products",
       "title": "Demo products",
       "metaTitle": "Demo products · Admin",
       "sub": "Sample products that fill every category, sub-category and sub-sub-category, so the shop never looks empty while real products arrive.",
