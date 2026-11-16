@@ -60,6 +60,7 @@
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
+import { maskForPerson } from './staff-controls';
 
 interface Ctx {
   deps: cu.CustomersDeps;
@@ -90,7 +91,10 @@ async function handle(request: Request, deps: AdminDeps | null, permission: cu.C
   if (g instanceof Response) return g;
   try {
     const key = request.headers.get('idempotency-key')?.trim() || undefined;
-    return json({ ok: true, ...(await fn({ deps: customersDeps(deps!), who: { actor: g.actor, storeId, ctx: g.ctx }, key, url })) }, { status });
+    const out = await fn({ deps: customersDeps(deps!), who: { actor: g.actor, storeId, ctx: g.ctx }, key, url });
+    // PR 892: a role set to hide a customer's phone and address sees them hidden here too (same rule as the order answers)
+    const shown = request.method.toUpperCase() === 'GET' ? await maskForPerson(deps!, g.actor.staffUserId ?? null, storeId, out) : out;
+    return json({ ok: true, ...shown }, { status });
   } catch (e) {
     return customersFail(e);
   }
