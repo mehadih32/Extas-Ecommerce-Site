@@ -3,11 +3,13 @@
 // "Record money" (each needs the owner's PIN), "Reverse" for a wrong entry (a new opposite entry, never an edit) and a read-only
 // forecast. Words: messages/admin-cash.*.json (`moneyCash.*`). Nothing here sends or pays money to anyone.
 import { useRouter } from 'next/navigation';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { CashbookView, CashForecast } from '@extas/inventory';
 import { t, type Dict } from '@/lib/i18n';
 import { call } from '../api';
 import { showToast } from '../lumen/Toast';
+import Link from 'next/link';
+import type { MatchSummary } from '@/lib/lane-f/match-summary';
 import { formatMoney, toMinor, type Lang, type Money } from '../products/model';
 
 export interface CashScreenProps {
@@ -18,6 +20,19 @@ export interface CashScreenProps {
   forecast: CashForecast;
   codHeldMinor: number;
   canRecord: boolean;
+  /** The courier statement lines of this month (PR 981): the "Match courier account" card and the lines to check. */
+  match?: MatchSummary;
+  /** The older "Next 14 days" forecast card: hidden as in the prototype, one click away (?more=1). */
+  showForecast?: boolean;
+}
+
+/** The page head's "Record money" button (prototype: top right). It asks the screen below to open its dialog. */
+export function CashRecordButton({ label, disabled }: { label: string; disabled: boolean }) {
+  return (
+    <button type="button" className="a2-btn pri" disabled={disabled} onClick={() => window.dispatchEvent(new CustomEvent('cash-record'))} data-testid="cash-record">
+      {label}
+    </button>
+  );
 }
 
 /** What "Record money" can record (the prototype's five). */
@@ -27,6 +42,9 @@ const IN_TYPES: readonly string[] = ['CAPITAL', 'OTHER_IN'];
 /** Movements shown at first, and added by each "Show more" (prototype v5 shows 60 and then 100 more). */
 const PAGE = 60; // hardcode-ok: the prototype's page size
 const MORE = 100; // hardcode-ok: as above
+
+const KIND_CHIPS = ['COURIER', 'ONLINE', 'REFUND', 'EXPENSE', 'ADS', 'ERP', 'OWNER_TAKE', 'CAPITAL', 'TRANSFER', 'OTHER'] as const;
+const kindMatches = (chip: string, kind: string) => (chip === 'OTHER' ? kind === 'OTHER_IN' || kind === 'OTHER_OUT' : kind === chip);
 
 const newKey = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `k${Date.now()}${Math.random().toString(16).slice(2)}`);
 
@@ -60,12 +78,13 @@ export function CashScreen(p: CashScreenProps) {
 
   const rows = p.book.entries.filter((e) => {
     if (acc && e.accountKey !== acc) return false;
-    if (kindF && e.kind !== kindF) return false;
+    if (kindF && !kindMatches(kindF, e.kind)) return false;
     const hay = `${kindName(e.kind)} ${accName.get(e.accountKey) ?? e.accountKey} ${e.note ?? ''}`.toLowerCase();
     return !q.trim() || hay.includes(q.trim().toLowerCase());
   });
 
-  const kinds = [...new Set(p.book.entries.map((e) => e.kind))];
+  // PR 981: the prototype's fixed set of kind chips (the two "Other" kinds are one chip)
+  const kinds = KIND_CHIPS;
 
   function close() {
     setOpen(null);
@@ -122,7 +141,17 @@ export function CashScreen(p: CashScreenProps) {
     setSaid(problem(a.status, (a.data as { error?: string }).error));
   }
 
+  useEffect(() => {
+    const on = () => {
+      if (p.canRecord && p.book.enabled) setOpen('record');
+    };
+    window.addEventListener('cash-record', on);
+    return () => window.removeEventListener('cash-record', on);
+  }, [p.canRecord, p.book.enabled]);
   const tight = p.forecast.tightest;
+  const mt = p.match;
+  const money = (x: number) => m(x);
+  const lineText = (l: MatchSummary['lines'][number]) => (l.kind === 'charge' ? c('match.charge', { a: money(l.a), b: money(l.b) }) : l.kind === 'cash' ? c('match.cash', { a: money(l.shortMinor) }) : c('match.other', { a: money(l.a), b: money(l.b) }));
   return (
     <div className="w4-stack" data-testid="cash-screen">
       {!p.book.enabled ? (
@@ -130,67 +159,135 @@ export function CashScreen(p: CashScreenProps) {
           {c('off')}
         </p>
       ) : null}
-      <section className="a2-card" aria-label={c('accounts.title')}>
-        <div className="w4-kpis" data-testid="cash-accounts">
-          <button type="button" className={`w4-kpi cash-acc${acc === '' ? ' on' : ''}`} aria-pressed={acc === ''} onClick={() => setAcc('')} data-testid="cash-total">
-            <span className="a2-xs a2-mute">{c('accounts.total')}</span>
-            <b>{m(p.book.totalMinor)}</b>
+      <div className="w4-kpis cash-accs" data-testid="cash-accounts" aria-label={c('accounts.title')}>
+        <button type="button" className={`w4-kpi cash-acc${acc === '' ? ' on' : ''}`} aria-pressed={acc === ''} onClick={() => setAcc('')} data-testid="cash-total">
+          <span className="a2-xs a2-mute">{c('accounts.total')}</span>
+          <b>{m(p.book.totalMinor)}</b>
+        </button>
+        {live.map((a) => (
+          <button key={a.key} type="button" className={`w4-kpi cash-acc${acc === a.key ? ' on' : ''}`} aria-pressed={acc === a.key} onClick={() => setAcc(a.key)} data-testid={`cash-acc-${a.key}`}>
+            <span className="a2-xs a2-mute">{accName.get(a.key)}</span>
+            <b>{m(a.balanceMinor)}</b>
           </button>
-          {live.map((a) => (
-            <button key={a.key} type="button" className={`w4-kpi cash-acc${acc === a.key ? ' on' : ''}`} aria-pressed={acc === a.key} onClick={() => setAcc(a.key)} data-testid={`cash-acc-${a.key}`}>
-              <span className="a2-xs a2-mute">{accName.get(a.key)}</span>
-              <b>{m(a.balanceMinor)}</b>
-            </button>
-          ))}
-        </div>
-        <div className="w4-kpis a2-mt12">
-          <div className="w4-kpi">
-            <span className="a2-xs a2-mute">{c('month.in')}</span>
-            <b className="w4-pos" data-testid="cash-month-in">
-              {m(p.book.month.inMinor)}
-            </b>
+        ))}
+      </div>
+      {!p.canRecord ? <p className="a2-note">{c('readOnly')}</p> : null}
+      <div className="cash-two">
+        <section className="a2-card" aria-label={c('month.in')}>
+          <div className="w4-kpis">
+            <div className="w4-kpi">
+              <span className="a2-xs a2-mute">{c('month.in')}</span>
+              <b className="w4-pos" data-testid="cash-month-in">
+                {m(p.book.month.inMinor)}
+              </b>
+            </div>
+            <div className="w4-kpi">
+              <span className="a2-xs a2-mute">{c('month.out')}</span>
+              <b className="w4-neg" data-testid="cash-month-out">
+                {m(p.book.month.outMinor)}
+              </b>
+            </div>
           </div>
-          <div className="w4-kpi">
-            <span className="a2-xs a2-mute">{c('month.out')}</span>
-            <b className="w4-neg" data-testid="cash-month-out">
-              {m(p.book.month.outMinor)}
-            </b>
+          <p className="a2-xs a2-mute a2-mt6">{c('month.note')}</p>
+        </section>
+        {mt ? (
+          <section className="a2-card" aria-labelledby={`${id}-mt`} data-testid="cash-match">
+            <h2 className="a2-h3" id={`${id}-mt`}>
+              {c('match.title')}
+            </h2>
+            <p className="a2-cs">{c('match.sub')}</p>
+            <div className="cash-mini a2-mt6">
+              <span>
+                {c('match.matched')} <b>{mt.matched}/{mt.parcels}</b>
+              </span>
+              <span>
+                {c('match.short')} <b className="w4-neg">{m(mt.shortMinor)}</b>
+              </span>
+              <span>
+                {c('match.over')} <b className="w4-neg">{m(mt.overMinor)}</b>
+              </span>
+              <span>
+                {c('match.payout')} <b className="w4-neg">{m(mt.payoutMissingMinor)}</b>
+              </span>
+            </div>
+            <div className="w4-row a2-mt12">
+              <span className={`a2-pill ${mt.open ? 'bad' : 'ok'}`}>{mt.open ? c('match.toCheck', { n: mt.open }) : c('match.allMatched')}</span>
+              <Link className="a2-btn sm pri" href="/admin/money/couriers">
+                {c('match.title')}
+              </Link>
+            </div>
+          </section>
+        ) : null}
+      </div>
+      {mt && mt.lines.length ? (
+        <section className="a2-card" aria-labelledby={`${id}-nm`} data-testid="cash-notmatching">
+          <h2 className="a2-h3" id={`${id}-nm`}>
+            {c('match.not')}
+          </h2>
+          <div className="a2-tblw a2-mt6">
+            <table className="a2-tbl">
+              <thead>
+                <tr>
+                  <th>{c('match.order')}</th>
+                  <th>{c('match.wrong')}</th>
+                  <th className="w4-r">{c('match.shortBy')}</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {mt.lines.map((l) => (
+                  <tr key={l.id}>
+                    <td>
+                      <b>{l.order}</b>
+                      <div className="a2-xs a2-mute">{l.courier}</div>
+                    </td>
+                    <td className="a2-sm">{lineText(l)}</td>
+                    <td className="w4-r w4-neg">
+                      <b>{m(l.shortMinor)}</b>
+                    </td>
+                    <td className="w4-r">
+                      <Link className="a2-btn sm pri" href={`/admin/delivery/couriers/${l.courierId}?s=claims`}>
+                        {c('match.claim')}
+                      </Link>{' '}
+                      <Link className="a2-btn sm ghost" href={`/admin/delivery/couriers/${l.courierId}`}>
+                        {c('match.accept')}
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-        <p className="a2-xs a2-mute a2-mt6">{c('month.note')}</p>
-        <div className="a2-mt12 w4-row">
-          <button type="button" className="a2-btn pri" disabled={!p.canRecord || !p.book.enabled} onClick={() => setOpen('record')} data-testid="cash-record">
-            {c('record')}
-          </button>
-        </div>
-        {!p.canRecord ? <p className="a2-note a2-mt12">{c('readOnly')}</p> : null}
-      </section>
+        </section>
+      ) : null}
 
-      <section className="a2-card" aria-labelledby={`${id}-fc`} data-testid="cash-forecast">
-        <h2 className="a2-h3" id={`${id}-fc`}>
-          {c('forecast.title', { days: p.forecast.days.length })}
-        </h2>
-        <p className="a2-cs">{c('forecast.sub')}</p>
-        <ul className="w4-list a2-mt6">
-          <li className="w4-li">
-            <span className="w4-grow">{c('forecast.cod')}</span>
-            <b>{m(p.codHeldMinor)}</b>
-          </li>
-          <li className="w4-li">
-            <span className="w4-grow">{c('forecast.fixed')}</span>
-            <b>{m(p.forecast.fixedMinor)}</b>
-          </li>
-          {tight ? (
+      {p.showForecast ? (
+        <section className="a2-card" aria-labelledby={`${id}-fc`} data-testid="cash-forecast">
+          <h2 className="a2-h3" id={`${id}-fc`}>
+            {c('forecast.title', { days: p.forecast.days.length })}
+          </h2>
+          <p className="a2-cs">{c('forecast.sub')}</p>
+          <ul className="w4-list a2-mt6">
             <li className="w4-li">
-              <span className="w4-grow">{c('forecast.tightest', { day: tight.day })}</span>
-              <b className={tight.balanceMinor < 0 ? 'w4-neg' : ''}>{m(tight.balanceMinor)}</b>
+              <span className="w4-grow">{c('forecast.cod')}</span>
+              <b>{m(p.codHeldMinor)}</b>
             </li>
-          ) : null}
-        </ul>
-        <p className={`a2-sm a2-mt6 ${p.forecast.fixedCovered ? 'a2-mute' : 'bk-warn'}`} role="status" data-testid="cash-covered">
-          {p.forecast.fixedCovered ? c('forecast.covered') : c('forecast.short')}
-        </p>
-      </section>
+            <li className="w4-li">
+              <span className="w4-grow">{c('forecast.fixed')}</span>
+              <b>{m(p.forecast.fixedMinor)}</b>
+            </li>
+            {tight ? (
+              <li className="w4-li">
+                <span className="w4-grow">{c('forecast.tightest', { day: tight.day })}</span>
+                <b className={tight.balanceMinor < 0 ? 'w4-neg' : ''}>{m(tight.balanceMinor)}</b>
+              </li>
+            ) : null}
+          </ul>
+          <p className={`a2-sm a2-mt6 ${p.forecast.fixedCovered ? 'a2-mute' : 'bk-warn'}`} role="status" data-testid="cash-covered">
+            {p.forecast.fixedCovered ? c('forecast.covered') : c('forecast.short')}
+          </p>
+        </section>
+      ) : null}
 
       <section className="a2-card" aria-labelledby={`${id}-all`}>
         <h2 className="a2-h3" id={`${id}-all`}>
@@ -216,7 +313,6 @@ export function CashScreen(p: CashScreenProps) {
                   <th className="w4-r">{c('col.in')}</th>
                   <th className="w4-r">{c('col.out')}</th>
                   <th className="w4-r">{c('col.balance')}</th>
-                  <th>{c('col.note')}</th>
                   <th />
                 </tr>
               </thead>
@@ -224,12 +320,14 @@ export function CashScreen(p: CashScreenProps) {
                 {rows.slice(0, shown).map((e) => (
                   <tr key={e.id} className={e.reversed ? 'w4-struck' : ''}>
                     <td>{e.day}</td>
-                    <td>{kindName(e.kind)}</td>
+                    <td>
+                      {e.reversed ? c('col.reversed') : (e.reason ?? e.note ?? kindName(e.kind))}
+                      {e.reversed || e.reason || e.note ? <div className="a2-xs a2-mute">{kindName(e.kind)}</div> : null}
+                    </td>
                     <td>{accName.get(e.accountKey) ?? e.accountKey}</td>
                     <td className="w4-r w4-pos">{e.amountMinor > 0 ? m(e.amountMinor) : ''}</td>
                     <td className="w4-r w4-neg">{e.amountMinor < 0 ? m(-e.amountMinor) : ''}</td>
                     <td className="w4-r">{m(e.balanceAfterMinor)}</td>
-                    <td>{e.reversed ? c('col.reversed') : (e.reason ?? e.note ?? '')}</td>
                     <td>
                       {p.canRecord && !e.reversed && !e.reversesId && e.kind !== 'OPENING' && e.source === 'manual' ? (
                         <button
