@@ -302,7 +302,62 @@
       }
     },
     "managedOn": "connected",
-    "managedLink": "set up on the Backups page"
+    "managedLink": "set up on the Backups page",
+    "keys": {
+      "title": "Keys & connections",
+      "sub": "Every outside service the shop talks to, in one locked place.",
+      "warnLead": "Type keys only here.",
+      "warnBody": "Never send a key or password in chat, email, WhatsApp or to a developer. Keys are locked the moment you save them and are never shown again — only the last 4 characters.",
+      "working": "Working",
+      "attention": "Need attention",
+      "notSet": "Not set up",
+      "attentionSub": "replace the key",
+      "notSetSub": "the shop hides these options",
+      "problem": "Problem",
+      "noKey": "No key yet",
+      "used": "used {ago}",
+      "usedNever": "—",
+      "later": "Comes later",
+      "ago": {
+        "now": "just now",
+        "min": "{n} min ago",
+        "h": "{n} h ago",
+        "d": "{n} d ago"
+      },
+      "test": "Test",
+      "replace": "Replace",
+      "addKey": "Add key",
+      "open": "Open",
+      "group": {
+        "pay": "Payments",
+        "cour": "Couriers",
+        "msg": "Messages",
+        "ads": "Ads & Google",
+        "safe": "Backups & alerts",
+        "ai": "AI providers",
+        "erp": "ERP"
+      },
+      "sheet": {
+        "title": "Key for {name}",
+        "hint": "Copy it from the service's own panel. It is checked first, then locked.",
+        "save": "Check & save",
+        "saving": "Checking…",
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "more": {
+        "title": "More options",
+        "sub": "Other services and keys the shop can use, and removing a saved key.",
+        "remove": "Remove a saved key",
+        "removeNone": "No saved key to remove.",
+        "removeHint": "A removed key is switched off, never deleted, and the connection goes back to the pretend service.",
+        "note": "Not listed above: fraud checks, social posting, storage, certificates and other add-ons."
+      },
+      "toastTest": "{name} answered — working",
+      "toastTestFail": "{name}: the key is no longer accepted — press Replace",
+      "toastSaved": "{name} is working",
+      "toastRemoved": "Key removed"
+    }
   },
   "connections": {
     "azureBlob": {
@@ -316,7 +371,7 @@
       }
     },
     "googleDrive": {
-      "name": "Google Drive",
+      "name": "Google Drive (backups)",
       "desc": "Daily encrypted backup copy in your own Google Drive (one-click sign-in on the Backups page)",
       "fields": {
         "clientId": "Client ID (your own Google client, type \"TVs and Limited Input devices\")",
@@ -341,7 +396,7 @@
       }
     },
     "telegram": {
-      "name": "Telegram (AI 360 channel)",
+      "name": "Telegram bot",
       "desc": "Server and backup alerts, and (once the webhook secret is in and the AI 360 team page's switch is on) the agents' identity line and Telegram commands. Until the bot token and the chat are in and the test passes, alerts stay on the server",
       "fields": {
         "chatId": "Chat ID — where the alerts go (a number like -1001234567890, or @channelname)",
@@ -370,7 +425,7 @@
       }
     },
     "extasErp": {
-      "name": "Our ERP",
+      "name": "Extas ERP link",
       "desc": "Stock and variants come from the ERP; orders go to it. Practice mode until the address and keys are in",
       "fields": {
         "baseUrl": "ERP address (https://…)",
@@ -380,7 +435,7 @@
       }
     },
     "bkash": {
-      "name": "bKash payments",
+      "name": "bKash",
       "desc": "Customers pay online with bKash on its own page. Practice mode (no money moves) until the address and the four keys from bKash are in and the test passes",
       "fields": {
         "baseUrl": "bKash address (https://…, the sandbox or live one bKash gave you)",
@@ -391,7 +446,7 @@
       }
     },
     "nagad": {
-      "name": "Nagad payments",
+      "name": "Nagad",
       "desc": "Customers pay online with Nagad on its own page. Practice mode (no money moves) until the address, the merchant id and number and the two keys from Nagad are in and the Test passes.",
       "fields": {
         "baseUrl": "Nagad address (https://…, the sandbox or live one Nagad gave you)",
@@ -403,7 +458,7 @@
       }
     },
     "sslcommerz": {
-      "name": "Card & bank payments (SSLCommerz)",
+      "name": "SSLCommerz (cards)",
       "desc": "Customers pay by Visa, Mastercard, Amex or internet banking on SSLCommerz's own page; also used for \"Pay online\". Practice mode (no money moves) until the address, the store id, a contact e-mail and the store password are in and the Test passes.",
       "fields": {
         "baseUrl": "SSLCommerz address (https://…, the sandbox or live one SSLCommerz gave you)",
@@ -425,7 +480,7 @@
       }
     },
     "steadfast": {
-      "name": "Steadfast Courier",
+      "name": "Steadfast",
       "desc": "Book parcels and read their status. Practice mode until both keys are in and the test passes",
       "fields": {
         "apiKey": "API key (Steadfast merchant panel → API)",
@@ -435,7 +490,7 @@
       }
     },
     "pathao": {
-      "name": "Pathao Courier",
+      "name": "Pathao",
       "desc": "Book parcels and read their status. Practice mode until the four keys and the store are in and the test passes",
       "fields": {
         "clientId": "Client ID (Pathao merchant panel → Developers API)",
@@ -449,7 +504,7 @@
       }
     },
     "redx": {
-      "name": "RedX Courier",
+      "name": "RedX",
       "desc": "Book parcels and read their status. Practice mode until the access token is in and the test passes",
       "fields": {
         "accessToken": "Access token (RedX merchant panel → API)",
@@ -488,7 +543,7 @@
       }
     },
     "bulkSmsBd": {
-      "name": "SMS gateway (BulkSMSBD)",
+      "name": "SMS gateway",
       "desc": "Order SMS and sign-in codes. Mock until the key is in and the test (the balance) passes: nothing is sent before that",
       "fields": {
         "apiKey": "API key (the gateway's panel → API)",
@@ -497,7 +552,7 @@
       }
     },
     "whatsappCloud": {
-      "name": "WhatsApp Business (Meta)",
+      "name": "WhatsApp Business",
       "desc": "Order WhatsApp messages, their delivery receipts and the customer's replies. Mock until the keys are in and the test (reading the phone number) passes: nothing is sent before that. Webhook address: /api/whatsapp/webhook",
       "fields": {
         "accessToken": "Access token (Meta app → WhatsApp → API setup; a permanent system-user token)",
@@ -608,7 +663,7 @@
       }
     },
     "metaAds": {
-      "name": "Meta Marketing API (Facebook and Instagram ad account, read only)",
+      "name": "Meta (Facebook & Instagram ads)",
       "desc": "Reads the ad account, its campaigns and ad sets for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the token is in and the test (reading the account) passes: nothing is read or saved before that.",
       "fields": {
         "accessToken": "Access token with ads_read (Business settings → System users → Generate token → ads_read)",
@@ -618,7 +673,7 @@
       }
     },
     "tiktokAds": {
-      "name": "TikTok Business API (TikTok ad account, read only)",
+      "name": "TikTok Ads",
       "desc": "Reads the advertiser account, its campaigns and ad groups for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the token is in and the test (reading the advertiser) passes: nothing is read or saved before that.",
       "fields": {
         "accessToken": "Long-term access token of your TikTok for Business app with Ad Account Management read (TikTok API for Business → My apps → the app → advertiser authorisation)",
@@ -627,7 +682,7 @@
       }
     },
     "googleAds": {
-      "name": "Google Ads API (Google ad account incl. YouTube, read only)",
+      "name": "Google Ads",
       "desc": "Reads the Google Ads customer account, its campaigns (Search, Shopping, Performance Max, YouTube) and ad groups for Marketing › Ad platforms. Read only: it never pauses a campaign or changes a budget. A practice account until the keys are in and the test (reading the account) passes: nothing is read or saved before that.",
       "fields": {
         "developerToken": "Developer token (Google Ads → Tools → API Center)",
@@ -678,7 +733,7 @@
       }
     },
     "anthropic": {
-      "name": "Anthropic (AI 360)",
+      "name": "Claude",
       "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
       "fields": {
         "model": "Model ID your key may use (from Anthropic's own model list — check it is current)",
@@ -688,7 +743,7 @@
       }
     },
     "openAi": {
-      "name": "OpenAI (AI 360)",
+      "name": "OpenAI",
       "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
       "fields": {
         "model": "Model ID your key may use (from OpenAI's own model list — check it is current)",
@@ -697,7 +752,7 @@
       }
     },
     "googleAi": {
-      "name": "Google AI (AI 360)",
+      "name": "Gemini",
       "desc": "Writes AI 360's drafts — SEO titles and descriptions, offer messages, article first drafts. Practice text only until the key and model are in and the test passes. Several AI providers may be connected at once.",
       "fields": {
         "model": "Model ID your key may use (from Google's own model list — check it is current)",
@@ -732,6 +787,16 @@
         "baseUrl": "Address — only for a test server",
         "apiKey": "API key (Fitroom's developer dashboard)"
       }
+    },
+    "emailSending": {
+      "name": "Email sending",
+      "desc": "Sends the shop's emails. Comes in a later step.",
+      "fields": {}
+    },
+    "googleMerchantCenter": {
+      "name": "Google Merchant Center",
+      "desc": "Lists products on Google Shopping. Comes in a later step.",
+      "fields": {}
     }
   },
   "errors": {
