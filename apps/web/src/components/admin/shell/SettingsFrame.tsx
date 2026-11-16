@@ -26,7 +26,7 @@ export function SettingsFrame({ dict, pathname, viewer, children }: { dict: Dict
     const found = text(it).kw.split(' ').find((k) => k.toLowerCase().includes(w));
     return found && !name.includes(w) ? `${s('has')}: ${found}` : '';
   };
-  const group = (g: 'b' | 's') => {
+  const group = (g: 'b' | 's' | 'm') => {
     const list = shown.filter((it) => it.group === g);
     if (!list.length) return null;
     return (
@@ -62,13 +62,14 @@ export function SettingsFrame({ dict, pathname, viewer, children }: { dict: Dict
         {search('sf-q')}
         {group('b')}
         {group('s')}
+        {group('m')}
         {shown.length === 0 ? <p className="sf-none a2-sub">{s('none')}</p> : null}
       </aside>
       <div className="sf-main">
         <div className="sf-pick">
           <select className="a2-sel" aria-label={s('pick')} value={now?.href ?? ''} onChange={(e) => e.target.value && router.push(e.target.value)} data-testid="sf-select">
             {now ? null : <option value="">{s('pick')}</option>}
-            {(['b', 's'] as const).map((g) => (
+            {(['b', 's', 'm'] as const).map((g) => (
               <optgroup key={g} label={s(`groups.${g}`)}>
                 {items
                   .filter((it) => it.group === g && (shown.includes(it) || it.id === now?.id))
@@ -81,7 +82,7 @@ export function SettingsFrame({ dict, pathname, viewer, children }: { dict: Dict
             ))}
           </select>
         </div>
-        {now?.group === 's' ? (
+        {now?.owner ? (
           <div className="a2-note sf-owner" role="note" data-testid="sf-owner-note">
             <ShellIcon name="lock" size={15} />
             <span>{s('ownerOnly')}</span>

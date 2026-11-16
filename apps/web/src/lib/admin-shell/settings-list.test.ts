@@ -54,7 +54,7 @@ describe('Settings list (PR 779)', () => {
     }
     // every prototype item has a built page (PR 791 built Site health and Updates & versions)
     expect(missing).toEqual([]);
-    expect(en.shell.setlist.groups).toEqual({ b: 'Business', s: 'System' });
+    expect(en.shell.setlist.groups).toEqual({ b: 'Business', s: 'System', m: 'More settings' });
   });
 
   it('has a name and search words in English and Bengali for every item', () => {

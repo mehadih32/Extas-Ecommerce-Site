@@ -11,7 +11,9 @@ import { locateKey, type ShellViewer } from './sections';
 export interface SettingsItemDef {
   /** `shell.setlist.item.<id>` and `.kw` in the shell's words. */
   id: string;
-  group: 'b' | 's';
+  group: 'b' | 's' | 'm';
+  /** Owner only even though it sits in More settings (the System items of the real admin that the prototype has no item for). */
+  owner?: true;
   /** The navigation key of the page it opens (sections.ts `keys`). */
   nav: string;
   icon: ShellIconName;
@@ -26,34 +28,35 @@ export const SETTINGS_ITEMS: readonly SettingsItemDef[] = [
   { id: 'messages', group: 'b', nav: 'messagesTemplates', icon: 'msg' },
   { id: 'team', group: 'b', nav: 'people', icon: 'users' },
   { id: 'demo', group: 'b', nav: 'productDemo', icon: 'box' },
-  // real pages the prototype folds into its items or does not list (kept, after the prototype's items)
-  { id: 'roles', group: 'b', nav: 'roles', icon: 'lock' },
-  { id: 'staffControls', group: 'b', nav: 'staffControls', icon: 'sliders' },
-  { id: 'policies', group: 'b', nav: 'policies', icon: 'file' },
-  { id: 'look', group: 'b', nav: 'adminLook', icon: 'layers' },
-  { id: 'practice', group: 'b', nav: 'practice', icon: 'box' },
-  { id: 'shell', group: 'b', nav: 'settingsShell', icon: 'search' },
-  { id: 'shimmer', group: 'b', nav: 'settingsShimmer', icon: 'spark' },
   // System (owner only; prototype: Keys & connections, Backups & restore, Site health, AI control, Updates & versions, Security, Activity log, Data & privacy, Telegram control, Help & manual)
   { id: 'keys', group: 's', nav: 'integrations', icon: 'check' },
   { id: 'backups', group: 's', nav: 'backups', icon: 'refresh' },
-  { id: 'cache', group: 's', nav: 'cache', icon: 'chart' },
-  { id: 'golive', group: 's', nav: 'golive', icon: 'check' },
   { id: 'health', group: 's', nav: 'siteHealth', icon: 'chart' },
-  { id: 'ai', group: 's', nav: 'aiControl', icon: 'spark' },
+  { id: 'ai', group: 's', nav: 'settingsAi', icon: 'spark' },
   { id: 'updates', group: 's', nav: 'updates', icon: 'refresh' },
   { id: 'security', group: 's', nav: 'security', icon: 'alert' },
-  { id: 'edge', group: 's', nav: 'edge', icon: 'globe' },
   { id: 'activity', group: 's', nav: 'activity', icon: 'menu' },
   { id: 'privacy', group: 's', nav: 'privacy', icon: 'users' },
   { id: 'telegram', group: 's', nav: 'telegramApprovals', icon: 'msg' },
-  { id: 'startFresh', group: 's', nav: 'startFresh', icon: 'refresh' },
   { id: 'help', group: 's', nav: 'help', icon: 'help' },
+  // More settings (D10): the real pages the prototype folds into its items or does not list, kept reachable at the end (nothing dropped)
+  { id: 'roles', group: 'm', nav: 'roles', icon: 'lock' },
+  { id: 'staffControls', group: 'm', nav: 'staffControls', icon: 'sliders' },
+  { id: 'policies', group: 'm', nav: 'policies', icon: 'file' },
+  { id: 'look', group: 'm', nav: 'adminLook', icon: 'layers' },
+  { id: 'practice', group: 'm', nav: 'practice', icon: 'box' },
+  { id: 'shell', group: 'm', nav: 'settingsShell', icon: 'search' },
+  { id: 'shimmer', group: 'm', nav: 'settingsShimmer', icon: 'spark' },
+  { id: 'cache', group: 'm', nav: 'cache', icon: 'chart', owner: true },
+  { id: 'golive', group: 'm', nav: 'golive', icon: 'check', owner: true },
+  { id: 'edge', group: 'm', nav: 'edge', icon: 'globe', owner: true },
+  { id: 'startFresh', group: 'm', nav: 'startFresh', icon: 'refresh', owner: true },
 ];
 
 export interface SettingsItem {
   id: string;
-  group: 'b' | 's';
+  group: 'b' | 's' | 'm';
+  owner: boolean;
   href: string;
   icon: ShellIconName;
   /** The page the item opens lives in the Settings section (the list stays around it). */
@@ -67,7 +70,7 @@ export function settingsItems(viewer: ShellViewer): SettingsItem[] {
     if (!place?.page) return [];
     if (!(viewer.owner || viewer.perms.has(place.page.perm))) return [];
     if (viewer.hidden?.has(place.section.id) || viewer.hidden?.has(`${place.section.id}.${place.tab?.id}`)) return [];
-    return [{ id: it.id, group: it.group, href: place.page.href, icon: it.icon, inside: place.section.id === 'settings' }];
+    return [{ id: it.id, group: it.group, owner: it.group === 's' || Boolean(it.owner), href: place.page.href, icon: it.icon, inside: place.section.id === 'settings' }];
   });
 }
 
