@@ -52070,7 +52070,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-3`, NOT pushed, status stays parked until the owner says):** `geoRisk` in `@extas/metrics` (`geo-risk.ts`) on the roll-up the three lenses share (`geo-lens-base.ts`: an order's area goes to its division, district, upazila/thana or Dhaka-City area, under a drill-down parent, with unknown and outside counted apart, parts adding up to the total); per area: delivered, returned, return rate and the flag `returnHotspot` (at least `minOrders` settled orders and a rate over `warnReturnPct`, both from `reports.geoMap`), refusals at the door as PR 192 counts them (`refusedAtDoor`, the customer's; `refusedOurFault` apart), cancelled orders with their reasons, orders the risk score put in its top band (`risk.bands`, the last band) with the flag `riskArea`, courier claims and support tickets (put in their order's area; a ticket with no order counted apart). Each part is read only when the viewer holds the permission of its own source report (`reports.read`, `delivery.read`, `risk.report`, `delivery.claims`, `support.read`); a part left out is `null` and named in `hidden`. `GET /api/admin/reports/geo-map/lens?lens=risk` (`lib/geo-map/lens-api.ts`) answers `not_on` while `reports.geoMap.on` or `reports.geoMap.lenses.risk` is off (both off as shipped) and reads nothing; `lib/geo-map/setting.ts` reads the setting defensively (missing or odd reads as off). Counts only; nothing blocks, holds or changes an order, a COD rule, a courier or a customer. Guide: `docs/admin-guide/pages/reports/geo-map-lenses.md`. Tests: pure (hotspot edges, refusals, reasons, risk area, hidden parts, drill-down; ran) and PostgreSQL (written, not run: no database on this machine). No migration."
+    }
+   ],
    "mentions": [
     192,
     156,
