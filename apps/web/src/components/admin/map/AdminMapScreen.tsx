@@ -31,6 +31,8 @@ export interface MapScreenTask {
   href: string;
 }
 export interface MapScreenProps {
+  /** PR 1066: set when the map is the overlay on a page; Close then shuts the overlay instead of going to the dashboard. */
+  onClose?: () => void;
   groups: MapScreenGroup[];
   tasks: MapScreenTask[];
   journey: { id: string; name: string; href: string }[];
@@ -42,7 +44,7 @@ export interface MapScreenProps {
   };
 }
 
-export function AdminMapScreen({ groups, tasks, journey, erpHref, text }: MapScreenProps) {
+export function AdminMapScreen({ groups, tasks, journey, erpHref, text, onClose }: MapScreenProps) {
   const id = useId();
   const [q, setQ] = useState('');
   const pages = useMemo(() => groups.flatMap((g) => g.sections.flatMap((s) => s.pages.map((p) => ({ ...p, secName: s.name })))), [groups]);
@@ -57,9 +59,15 @@ export function AdminMapScreen({ groups, tasks, journey, erpHref, text }: MapScr
         <button type="button" className="a2-btn" onClick={() => window.print()} data-testid="map-pdf">
           {text.pdf}
         </button>
-        <a className="a2-btn" href="/admin" data-testid="map-close">
-          {text.close}
-        </a>
+        {onClose ? (
+          <button type="button" className="a2-btn" onClick={onClose} data-testid="map-close">
+            {text.close}
+          </button>
+        ) : (
+          <a className="a2-btn" href="/admin" data-testid="map-close">
+            {text.close}
+          </a>
+        )}
       </div>
       <div className="s28-mp-q a2-mt12">
         <input id={`${id}-q`} className="a2-inp" type="search" value={q} placeholder={text.hint} aria-label={text.search} autoComplete="off" onChange={(e) => setQ(e.target.value)} data-testid="map-search" />
