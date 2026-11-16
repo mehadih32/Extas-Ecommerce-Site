@@ -202,6 +202,11 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
         </button>
       </form>
 
+      {o.noPhone.bags ? (
+        <div className="a2-note inc-mt8" role="note" data-testid="inc-warn-nonum">
+          <span>{g('warnNoNumber', { n: n(o.noPhone.bags) })}</span>
+        </div>
+      ) : null}
       <nav className="a2-views inc-mt8" aria-label={g('viewsAria')} data-testid="inc-views">
         {INCOMPLETE_VIEWS.map((v) => (
           <Link key={v} className={`a2-view${v === current ? ' on' : ''}`} href={qs(v, o.range.range, o.range.from, o.range.to)} aria-current={v === current ? 'page' : undefined} scroll={false} data-view={v}>

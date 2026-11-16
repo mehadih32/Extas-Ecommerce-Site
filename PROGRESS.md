@@ -1,5 +1,7 @@
 # PROGRESS
 
+## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 956. Incomplete orders: date chip and no-number line as in prototype v5. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
+
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 955. Returns and exchanges: each chip tab shows its own empty line, as in prototype v5. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
 
 ## 16 Nov 2026 — Final round, lane D6 (branch `claude/final-d6`): PR 954. With courier: the day-end card shows the three figures and one line (packed parcels wait for the pickup, or all are handed over), the Parcels with courier hint and empty line as the prototype; guide, messages en+bn. Not run locally (no install on this machine): CI must run typecheck, the orders tests and the device gate.
