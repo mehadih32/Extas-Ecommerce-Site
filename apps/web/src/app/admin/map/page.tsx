@@ -74,10 +74,34 @@ export default async function AdminMapPage() {
     })),
   }));
   const tasks = map.tasks.map((x) => ({ id: x.id, name: s(`taskNames.${x.id}`), where: `${t(d, `shell.sec.${x.page.section}`)} › ${t(d, `shell.tab.${x.page.section}.${x.page.tab}`)}`, href: x.page.href }));
+  const href = (key: string, fb: string) => map.pages.find((p) => p.key === key)?.href ?? fb;
+  const journey = (
+    [
+      ['new', 'orders.batch'],
+      ['processing', 'orders.processing'],
+      ['confirmed', 'orders.ship'],
+      ['booked', 'orders.ship'],
+      ['packed', 'orders.ship'],
+      ['handed', 'orders.courier'],
+      ['delivered', 'orders.all'],
+      ['paid', 'finance.cash'],
+    ] as const
+  ).map(([id, key]) => ({ id, name: s(`j.${id}`), href: href(key, '/admin/orders') }));
   return (
     <div className="a2-z" data-testid="admin-map-page" data-lm-ready="">
       <PageHead view={view} place={null} title={s('title')} sub={`${s('sub')} ${s('count', { n: map.pages.length, s: groups.reduce((n, g) => n + g.sections.length, 0) })}`} />
-      <AdminMapScreen groups={groups} tasks={tasks} text={{ search: s('search'), hint: s('searchHint'), noMatch: s('noMatch'), tasks: s('tasks'), pages: s('pages'), open: s('open'), who: s('who') }} />
+      <AdminMapScreen
+        groups={groups}
+        tasks={tasks}
+        journey={journey}
+        erpHref={href('settings.erp', '/admin/settings')}
+        text={{
+          search: s('search'), hint: s('searchHint'), noMatch: s('noMatch'), tasks: s('tasks'), pages: s('pages'), open: s('open'), who: s('whoShort'),
+          iWant: s('iWant'), iWantSub: s('iWantSub', { n: tasks.length }), journey: s('journey'), journeySide: s('journeySide'), erpTitle: s('erpTitle'),
+          erpBox: s('erpBox'), erpShop: s('erpShop'), erpShopBox: s('erpShopBox'), erpToShop: s('erpToShop'), erpToErp: s('erpToErp'), erpLive: s('erpLive'),
+          go: s('go'), guide: s('guide'), pdf: s('pdf'), close: s('close'),
+        }}
+      />
     </div>
   );
 }
