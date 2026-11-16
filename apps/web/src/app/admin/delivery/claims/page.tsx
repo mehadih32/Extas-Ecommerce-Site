@@ -14,7 +14,7 @@ import { daysPeriod } from '@extas/metrics';
 import * as pay from '@extas/payments';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { StepButton } from '@/components/admin/courier-report/Parts';
-import { AskPayout } from '@/components/admin/couriers/PayoutPanel';
+import { AskPayout, RefreshPayouts } from '@/components/admin/couriers/PayoutPanel';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -423,7 +423,10 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
             ) : (
               <p className="a2-sm a2-mute a2-mt6">{co('money.none')}</p>
             )}
-            <h3 className="a2-h3 a2-mt12">{co('money.latest')}</h3>
+            <div className="a2-gap8 a2-mt12" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <h3 className="a2-h3">{co('money.latest')}</h3>
+              {canAsk ? <RefreshPayouts dict={d} ids={o.money.latest.filter((p) => p.state === 'REQUESTED' || p.state === 'PROCESSING').map((p) => p.id)} /> : null}
+            </div>
             {o.money.latest.length ? (
               <div className="a2-tblw a2-mt6" data-testid="claims-payouts">
                 <table className="a2-tbl">

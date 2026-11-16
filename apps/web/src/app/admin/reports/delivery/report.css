@@ -85,3 +85,71 @@
   border-radius: 50%;
   margin-right: 4px;
 }
+
+/* PR 973: Courier 360 overview (What to do now, Last 14 days, Cost of this courier) */
+.c360-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.c360-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.c360-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.c360-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 150px;
+  margin-top: 10px;
+}
+.c360-bar {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  padding-bottom: 16px;
+}
+.c360-bar i {
+  flex: 1 1 0;
+  min-height: 1px;
+  border-radius: 3px 3px 0 0;
+}
+.c360-bar i.d {
+  background: var(--ok);
+}
+.c360-bar i.r {
+  background: var(--bad);
+}
+.c360-bar span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: var(--mute);
+}
+.c360-kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+}
+.c360-kv dd {
+  margin: 0;
+  text-align: right;
+}

@@ -87,7 +87,17 @@
       "weekOf": "Week from {day}",
       "noWeek": "no parcels",
       "exceptions": "{n} parcels with a problem now",
-      "pcsFinished": "{n} finished, {m} delivered"
+      "pcsFinished": "{n} finished, {m} delivered",
+      "todo": "What to do now",
+      "todoNone": "All good. Nothing needs you.",
+      "todoConn": "{name} is not connected. Statuses come from our own entries and payouts cannot be requested.",
+      "todoStuck": "{n} parcel(s) have not moved for a long time.",
+      "days": "Last 14 days",
+      "daysSub": "Delivered (green bars) and returned (red bars) per day",
+      "cost": "Cost of this courier",
+      "costTotal": "Total, last 30 days",
+      "costParcels": "Parcels with a charge",
+      "costPer": "Per parcel"
     },
     "p": {
       "title": "Parcels",
