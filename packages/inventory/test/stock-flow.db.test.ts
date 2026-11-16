@@ -264,6 +264,21 @@ describe.skipIf(!HAS_TEST_DB)('S09 wave 1 on PostgreSQL: holds, documents, alert
     expect(await code(holdCart(deps(), { storeId: store.C, cartId: id, lines: [{ variantId: vid, quantity: 1 }] }))).toBe('CONFLICT');
   });
 
+  it('PR 947: the owner\'s own stock-hold minutes (Rules) win over the installation\'s; empty keeps the installation\'s', async () => {
+    const id = await cart(store.C);
+    const vid = v.C!['TEE-NAVY-L']!;
+    overrides.set(`inventory.stockHold@${store.C}`, { checkoutMinutes: 7, placedHours: null });
+    try {
+      const h = await holdCart(deps(), { storeId: store.C, cartId: id, lines: [{ variantId: vid, quantity: 1 }] });
+      expect(new Date(h.expiresAt!).getTime() - clock.getTime()).toBe(7 * 60_000);
+    } finally {
+      overrides.delete(`inventory.stockHold@${store.C}`);
+    }
+    const again = await holdCart(deps(), { storeId: store.C, cartId: id, lines: [{ variantId: vid, quantity: 1 }] });
+    expect(new Date(again.expiresAt!).getTime() - clock.getTime()).toBe(15 * 60_000);
+    await holdCart(deps(), { storeId: store.C, cartId: id, lines: [] });
+  });
+
   it('PR 197: the abandon timer lets go of idle bags and expired holds (minutes from settings); nothing is deleted', async () => {
     // The race winner's hold from above is still there; a bag idle past `abandonMinutes` goes first.
     const idle = await cart(store.B, new Date(clock.getTime() - 16 * 60_000));
