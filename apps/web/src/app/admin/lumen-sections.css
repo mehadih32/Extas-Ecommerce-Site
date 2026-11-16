@@ -130,7 +130,7 @@
 [data-lm-look] [data-lm-ready] .a2-h4 { font-family: var(--lm-font-disp); color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-kv { font: 800 2rem / 1.1 var(--lm-font-disp); letter-spacing: -0.02em; color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-mute { color: var(--lm-ink2); }
-[data-lm-look] [data-lm-ready] .a2-tabs { border-bottom: 0; gap: 4px; padding: 4px; background: var(--lm-sf); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-sm); width: fit-content; max-width: 100%; }
+[data-lm-look] [data-lm-ready] .a2-tabs { border-bottom: 0; gap: 4px; padding: 4px; background: var(--lm-sf); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh-sm); width: 100%; max-width: 100%; }
 [data-lm-look] [data-lm-ready] .a2-tab { border-bottom: 0; margin: 0; border-radius: var(--lm-r-ctl); color: var(--lm-ink2); font-weight: 600; min-height: 40px; }
 [data-lm-look] [data-lm-ready] .a2-tab:hover { background: var(--lm-hover); color: var(--lm-ink); }
 [data-lm-look] [data-lm-ready] .a2-tab[aria-current], [data-lm-look] [data-lm-ready] .a2-tab.on { background: var(--lm-ink); color: var(--lm-sf); }
