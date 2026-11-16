@@ -51812,7 +51812,15 @@
     "github": []
    },
    "builtFacts": null,
-   "updates": [],
+   "updates": [
+    {
+     "date": "",
+     "sortKey": 9007199254740991,
+     "source": "Register row",
+     "sourceLink": "../MASTER-REGISTER.md#s29--geography-map-reports--pr-750761-parked",
+     "text": "**Updated 16 Nov 2026 (coded, local branch `claude/geo-1`, NOT pushed, status stays parked until the owner says):** `packages/metrics/src/geo.ts` (`geoByArea`, `geoAreaDetail`), `geo-pure.ts` (compare days, difference of two periods), `geo-types.ts` (the shared shapes; also the subpath `@extas/metrics/geo-types` for client code). Levels division, district, upazila/thana and area (Dhaka City); a drill-down by `parentAreaId`; Orders by the placed day, Delivered and Sales by the delivered day, Returned by the returned day, same rules and same numbers as `salesByArea` (a test checks it); top category per area; top products for one area on demand; the second period previous / last year / own days with a missing area counted as zero; Sales is null without `includeMoney` (books.read) and so is its difference; `belowMinOrders` from the `minOrders` setting; unknown and outside counted apart so parts add up. Without a category or product filter the counts are SQL totals by area (fast); with one, per-order shares like `salesByArea`. Tests: `geo-pure.test.ts` (ran), `geo.db.test.ts` (written, NOT run: no PostgreSQL on the build machine; the 100,000-order speed test runs with GEO_PERF=1). The speed is not measured yet: if it is too slow the roll-up table is filed as its own PR."
+    }
+   ],
    "mentions": [
     568
    ],

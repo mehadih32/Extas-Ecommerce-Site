@@ -8,7 +8,9 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./pure": "./src/pure.ts"
+    "./pure": "./src/pure.ts",
+    "./geo-types": "./src/geo-types.ts",
+    "./geo-pure": "./src/geo-pure.ts"
   },
   "scripts": {
     "lint": "eslint .",

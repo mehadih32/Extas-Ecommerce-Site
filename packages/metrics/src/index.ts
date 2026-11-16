@@ -46,6 +46,8 @@ export * from './vat';
 export * from './vat-report';
 // S16 · PR 568: `salesByArea` — Sales, pieces and returns by district, upazila/thana or area inside Dhaka (areas.ts).
 export * from './areas';
+// S29 · PR 751: `geoByArea` and `geoAreaDetail` — the figures of Reports › Geography map (geo.ts, geo-pure.ts, geo-types.ts).
+export * from './geo';
 // S16 · PR 504: `profitByGroup` — the per-order profit (ad share included) split over lines, by category or style (group-profit.ts).
 export * from './group-profit';
 // S16 · PR 355: `profitByChannel` — the period's delivered orders by ad platform / organic / other channel, with returns,
