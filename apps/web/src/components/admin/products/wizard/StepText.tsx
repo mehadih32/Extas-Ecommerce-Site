@@ -4,7 +4,7 @@
 // ranges, and the questions shoppers ask. Every change saves by itself.
 import { useState } from 'react';
 import Link from 'next/link';
-import { finderRows, WIZARD_FITS, WIZARD_RUNS, type WizardFit, type WizardRun } from '@extas/catalogue';
+import { finderRows, WIZARD_FITS, WIZARD_RUNS, type WizardFit, type WizardRun } from '@extas/catalogue/wizard-model';
 import { t } from '@/lib/i18n';
 import { call } from '../../api';
 import { ErpChartPanel } from '../ErpChartPanel';

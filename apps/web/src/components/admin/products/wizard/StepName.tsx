@@ -2,7 +2,7 @@
 // S28 · PR 1031 — wizard step 2, "Name & category" (prototype v5): the ERP's name (read only) and the name on the site, brand, who it is
 // for, category and sub-category, the category's own detail questions and the collections and tags. Every change saves by itself.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { detailKeysFor, suggestName, WIZARD_FOR, type WizardFor } from '@extas/catalogue';
+import { detailKeysFor, suggestName, WIZARD_FOR, type WizardFor } from '@extas/catalogue/wizard-model';
 import { t } from '@/lib/i18n';
 import { nameIn } from '../model';
 import { sayBad } from '../useToast';

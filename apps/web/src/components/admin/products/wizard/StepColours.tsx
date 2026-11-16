@@ -3,7 +3,7 @@
 // size or a colour off the shop, the name each colour has on the site, a set's colour link, and the B-grade ("Outlet") listing.
 // Every change saves by itself; sizes and colours kept off are applied when the product goes live.
 import { useEffect, useState } from 'react';
-import { WIZARD_LINKS, type WizardLink } from '@extas/catalogue';
+import { WIZARD_LINKS, type WizardLink } from '@extas/catalogue/wizard-model';
 import { t } from '@/lib/i18n';
 import { nameIn } from '../model';
 import { Callout, Fld, Seg, Switch, Tag } from '../wizard-ui';

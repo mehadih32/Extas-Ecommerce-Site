@@ -1,7 +1,7 @@
 'use client';
 // S28 · PR 1036 — wizard step 7, "Google & link" (prototype v5): the search word, the title and description Google shows, the page link,
 // a live preview of the Google result and the seven checks with their score. Each field saves by itself; "Suggest" fills what is empty.
-import { slugOf, suggestKeyword, wizardSeo } from '@extas/catalogue';
+import { slugOf, suggestKeyword, wizardSeo } from '@extas/catalogue/wizard-model';
 import { useEffect, useMemo, useState } from 'react';
 import { t } from '@/lib/i18n';
 import { nameIn } from '../model';
