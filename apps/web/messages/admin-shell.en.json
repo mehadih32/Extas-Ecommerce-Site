@@ -102,7 +102,8 @@
         "system": "System",
         "shimmer": "Shimmer",
         "shell": "Start & search",
-        "look": "Admin look"
+        "look": "Admin look",
+        "aiControl": "AI control"
       },
       "help": {
         "manual": "Help & manual",
@@ -505,7 +506,8 @@
       "title": "Settings",
       "groups": {
         "b": "Business",
-        "s": "System"
+        "s": "System",
+        "m": "More settings"
       },
       "owner": "Owner",
       "search": "Search settings… e.g. BIN, bKash, backup",
@@ -709,6 +711,20 @@
     }
   },
   "help": {
+    "moreSub": "Ask for a new feature, and every section as a card with its guide, its manual chapter and a door into it.",
+    "more": "More options",
+    "hint": "Found a problem? Use Help & Build › Reported problems, or tell the AI in AI control — it goes to the right place.",
+    "stagesH": "Work by stage (read only). The full plan and the PR register are under Help & Build › Blueprint & files.",
+    "files": "Project files",
+    "openPage": "Open this section",
+    "nothing": "Nothing found — try fewer words",
+    "count": "{n} of {all} sections",
+    "all": "All",
+    "chips": "Sections",
+    "searchPh": "Search the manual… e.g. exchange, courier score, backup",
+    "pdf": "Download manual",
+    "map": "Admin map",
+    "subProto": "The Site Manual: every page explained — what it is, why it exists, how to use it. It updates itself when a screen changes.",
     "metaTitle": "Help & manual · Admin",
     "title": "Help & manual",
     "sub": "Every section's guide, in Bengali. The same guides open from each page.",
@@ -1176,6 +1192,7 @@
     "roles": "Roles",
     "activity": "Activity log",
     "startFresh": "Start fresh",
+    "settingsAi": "AI control",
     "webAnalytics": {
       "behaviour": "Behaviour"
     },
