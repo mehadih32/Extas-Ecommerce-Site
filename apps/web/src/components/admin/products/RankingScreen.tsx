@@ -22,8 +22,20 @@ export interface RankingRowView {
   moved: number | null;
 }
 
+/** PR 962: what the two previews under the sliders need about a product (price drawn, is it new, its category). */
+export interface RankingExtra {
+  productId: string;
+  price: string | null;
+  fresh: boolean;
+  categoryId: string | null;
+}
+
 export interface RankingScreenProps {
   dict: Dict;
+  /** PR 962: the previews' facts, by product. */
+  extras?: RankingExtra[];
+  /** PR 962: the category whose page the second preview draws. */
+  previewCat?: { id: string; name: string } | null;
   weights: RankWeights;
   defaults: RankWeights;
   rows: RankingRowView[];
@@ -78,14 +90,19 @@ export function RankingScreen(p: RankingScreenProps) {
   const shown = rows.filter((r) => !q.trim() || r.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, q.trim() ? 40 : 25);
   const names: Record<(typeof RANK_KEYS)[number], string> = { sales: c('w.sales'), conv: c('w.conv'), margin: c('w.margin'), stock: c('w.stock'), fresh: c('w.fresh') };
   const same = RANK_KEYS.every((k) => weights[k] === p.weights[k]);
+  // PR 962 (prototype v5): the two previews follow the sliders: "New in" = the new products (or the pinned ones), else the whole order; the category page = that category's products in the same order. Eight at most.
+  const extra = new Map((p.extras ?? []).map((e) => [e.productId, e]));
+  const fresh = rows.filter((r) => extra.get(r.productId)?.fresh || r.pin === 'TOP');
+  const newIn = (fresh.length ? fresh : rows).slice(0, 8);
+  const inCat = p.previewCat ? rows.filter((r) => extra.get(r.productId)?.categoryId === p.previewCat?.id).slice(0, 8) : [];
 
   return (
     <div className="w4-split" data-testid="ranking-screen">
+      <div className="a2-stack">
       <section className="a2-card" aria-labelledby={`${id}-how`}>
         <h2 className="a2-h3" id={`${id}-how`}>
           {c('what.title')}
         </h2>
-        <p className="a2-cs">{c('what.sub')}</p>
         <div className="w4-sliders a2-mt12">
           {RANK_KEYS.map((k) => (
             <div key={k} className="w4-slider">
@@ -122,6 +139,17 @@ export function RankingScreen(p: RankingScreenProps) {
         ) : null}
         {!p.canEdit ? <p className="a2-note a2-mt12">{c('readOnly')}</p> : null}
       </section>
+      <section className="a2-card" aria-label={c('previewNew')} data-testid="rk-preview-new">
+        <h2 className="a2-h3">{c('previewNew')}</h2>
+        <PreviewTiles list={newIn} extra={extra} />
+      </section>
+      {p.previewCat ? (
+        <section className="a2-card" aria-label={c('previewCat', { name: p.previewCat.name })} data-testid="rk-preview-cat">
+          <h2 className="a2-h3">{c('previewCat', { name: p.previewCat.name })}</h2>
+          <PreviewTiles list={inCat} extra={extra} />
+        </section>
+      ) : null}
+      </div>
       <section className="a2-card" aria-labelledby={`${id}-live`}>
         <h2 className="a2-h3" id={`${id}-live`}>
           {c('live.title')}
@@ -145,10 +173,10 @@ export function RankingScreen(p: RankingScreenProps) {
                   <i style={{ width: `${r.score}%` }} />
                 </span>
                 <span className={`w4-delta ${r.moved === null || r.moved === 0 ? 'flat' : r.moved > 0 ? 'up' : 'down'}`}>{r.moved === null || r.moved === 0 ? '—' : r.moved > 0 ? `▲${r.moved}` : `▼${-r.moved}`}</span>
-                <button type="button" className="a2-btn sm" disabled={!p.canEdit} aria-pressed={r.pin === 'TOP'} onClick={() => pin(r.productId, 'TOP', r.pin)} data-testid={`rk-top-${r.rank}`}>
+                <button type="button" className="a2-btn sm" disabled={!p.canEdit} aria-pressed={r.pin === 'TOP'} title={c('pinTitle')} onClick={() => pin(r.productId, 'TOP', r.pin)} data-testid={`rk-top-${r.rank}`}>
                   {c('top')}
                 </button>
-                <button type="button" className="a2-btn sm" disabled={!p.canEdit} aria-pressed={r.pin === 'DOWN'} onClick={() => pin(r.productId, 'DOWN', r.pin)} data-testid={`rk-down-${r.rank}`}>
+                <button type="button" className="a2-btn sm" disabled={!p.canEdit} aria-pressed={r.pin === 'DOWN'} title={c('downTitle')} onClick={() => pin(r.productId, 'DOWN', r.pin)} data-testid={`rk-down-${r.rank}`}>
                   {c('down')}
                 </button>
               </li>
@@ -160,6 +188,24 @@ export function RankingScreen(p: RankingScreenProps) {
           </p>
         )}
       </section>
+    </div>
+  );
+}
+
+/** PR 962: a row of small product tiles (a mark, the name, the price) as a shop page would start. */
+function PreviewTiles({ list, extra }: { list: RankingRowView[]; extra: Map<string, RankingExtra> }) {
+  if (!list.length) return <p className="a2-mute">—</p>;
+  return (
+    <div className="rk-coll">
+      {list.map((r) => (
+        <div key={r.productId} className="rk-it">
+          <span className="rk-th" aria-hidden="true">
+            {r.name.slice(0, 1)}
+          </span>
+          <div className="rk-nm">{r.name}</div>
+          <b>{extra.get(r.productId)?.price ?? '—'}</b>
+        </div>
+      ))}
     </div>
   );
 }

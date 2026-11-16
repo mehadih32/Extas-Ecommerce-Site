@@ -2,7 +2,7 @@
   "productRanking": {
     "metaTitle": "Shop ranking",
     "title": "Shop ranking",
-    "sub": "The order products show in on your own shop: category pages, collections and \"New in\". This is not Google; Google ranking is in Website › SEO.",
+    "sub": "The order products show in on your own shop — collections, category pages and search. Not Google.",
     "what": {
       "title": "What counts, and how much",
       "sub": "Every product gets a score from 0 to 100 from five things. Move the sliders to decide how much each counts; the order on the right follows at once. Nothing goes live until you press \"Save this order\". A sold-out size lowers the score by itself."
@@ -17,22 +17,26 @@
     "reset": "Back to default",
     "save": "Save this order",
     "saving": "Saving…",
-    "saved": "The new order is on the shop",
+    "saved": "New order is live on the shop",
     "savedAt": "Last saved {when}",
     "neverSaved": "No order saved yet: the shop still uses the order it had.",
     "tryNote": "You are trying other weights. Nothing is saved until you press \"Save this order\".",
     "readOnly": "You can see the ranking. Changing it needs the permission to change products.",
     "live": {
-      "title": "Order on the shop",
-      "sub": "▲▼ = places moved since the last saved order. \"Top\" keeps a product above everything (good for a launch); \"Down\" sends it to the end. Pins take effect when you save the order."
+      "title": "Live order on the shop",
+      "sub": "▲▼ = moved since the last saved order"
     },
     "find": "Find a product",
-    "sold": "{n} sold in 30 days",
-    "pinned": "Pinned to the top",
-    "pushed": "Pushed to the end",
+    "sold": "{n} sold",
+    "pinned": "Pinned",
+    "pushed": "Pushed down",
     "score": "Score {n} of 100",
     "top": "Top",
     "down": "Down",
+    "previewNew": "Preview: “New in”",
+    "previewCat": "Preview: {name} page",
+    "pinTitle": "Pin to top",
+    "downTitle": "Push down",
     "pinnedTop": "Pinned to the top",
     "pinnedDown": "Pushed to the end",
     "pinRemoved": "Back to normal",
