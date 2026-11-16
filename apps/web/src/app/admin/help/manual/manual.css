@@ -69,6 +69,11 @@
 .adm2 .a2-man-mkl { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .adm2 .a2-man-mkl span { display: inline-flex; gap: 6px; align-items: center; }
 .adm2 .a2-man-shot small { display: block; margin-top: 4px; color: var(--mute); font-size: 12px; }
+/* PR 933 — Project files under the manual (prototype v5 "Project files"): three small cards that wrap, never cut text. */
+.adm2 .a2-man-files { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 10px; }
+.adm2 .a2-man-file { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 .a2-man-file .a2-btn { min-height: 44px; display: inline-flex; align-items: center; }
+@media print { .adm2 [data-testid='manual-files'], .adm2 [data-testid='manual-map'] { display: none; } }
 @media print {
   .adm2 .a2-man { display: block; }
   .adm2 .a2-man-toc, .adm2 .a2-man-pn, .adm2 .a2-man-top, .adm2 [data-testid='manual-open'] { display: none; }
