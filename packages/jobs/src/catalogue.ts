@@ -32,6 +32,7 @@ import { ORDER_FOLLOW_UPS_JOB, ORDER_FOLLOW_UPS_QUEUE, runOrderFollowUps } from 
 import { GRADES_JOB, GRADES_QUEUE, runGradesJob } from './grades';
 import { REPORT_PACK_JOB, REPORT_PACK_QUEUE, runReportPack, type ReportPackPayload } from './report-packs';
 import { RANKING_JOB, RANKING_QUEUE, runRankingJob } from './shop-ranking';
+import { WIZARD_PUBLISH_JOB, WIZARD_PUBLISH_QUEUE, runWizardPublishJob } from './wizard-publish';
 import { AUDIENCE_REFRESH_JOB, AUDIENCE_REFRESH_QUEUE, runAudienceRefresh, type AudienceRefreshPayload } from './audience-refresh';
 import { AD_SPEND_IMPORT_JOB, AD_SPEND_IMPORT_QUEUE, runAdSpendImport, type AdSpendImportPayload } from './ad-spend-import';
 import { runStartFreshPurge, START_FRESH_PURGE_JOB, START_FRESH_QUEUE } from './start-fresh-purge';
@@ -421,6 +422,22 @@ const rankingJob: JobDefinition<{ storeId: number }> = {
 };
 
 /**
+ * S28 · PR 1037 — one store's scheduled publishes of the add-product wizard (wizard-publish.ts; planned only while a product is due).
+ * Safe to run twice: a product already on the shop is no longer scheduled.
+ */
+const wizardPublishJob: JobDefinition<{ storeId: number }> = {
+  key: WIZARD_PUBLISH_JOB,
+  queue: WIZARD_PUBLISH_QUEUE,
+  parse(payload) {
+    const p = (payload ?? {}) as { storeId?: unknown };
+    if (!Number.isInteger(p.storeId) || (p.storeId as number) < 1) throw new Error(`${WIZARD_PUBLISH_JOB}: storeId must be a positive integer`);
+    return { storeId: p.storeId as number };
+  },
+  storeOf: (p) => p.storeId,
+  run: async (deps, p) => ({ ok: true, stats: compactStats(await runWizardPublishJob(deps, p.storeId)) }),
+};
+
+/**
  * S13 · PR 264 — one store's daily audience refresh for one store day (audience-refresh.ts; planned only while it is due,
  * the day in the run key). Safe to run twice: a run that already succeeded is skipped by the run guard; off = nothing.
  */
@@ -538,6 +555,7 @@ const definitions: JobDefinition<never>[] = [
   pointsJob as unknown as JobDefinition<never>,
   gradesJob as unknown as JobDefinition<never>,
   rankingJob as unknown as JobDefinition<never>,
+  wizardPublishJob as unknown as JobDefinition<never>,
   reportPackJob as unknown as JobDefinition<never>,
   audienceRefreshJob as unknown as JobDefinition<never>,
   supportEscalateJob as unknown as JobDefinition<never>,
