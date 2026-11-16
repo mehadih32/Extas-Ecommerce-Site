@@ -9,6 +9,7 @@ import { messages, prismaBackend, registry, SettingsResolver, syncSettings } fro
 import { createVault } from '@extas/vault';
 import type { AdminDeps } from '../admin-auth';
 import { loginHandler } from '../admin-api';
+import { geoMapShapesHandler } from './shapes';
 import { clearGeoMapCache, geoMapAreaHandler, geoMapCsvHandler, geoMapHandler, geoMapSettingHandler } from './api';
 
 const HOST = 'admin.example.test';
@@ -174,6 +175,24 @@ describe.skipIf(!HAS_TEST_DB)('Reports › Geography map routes on PostgreSQL (P
     expect(r.j.detail.topProducts[0].salesMinor).toBeNull();
     expect((await json(`${BASE}/area?area=nope`, owner, geoMapAreaHandler)).status).toBe(400);
     expect((await json(`${BASE}/area?area=00000000-0000-4000-8000-000000000002`, owner, geoMapAreaHandler)).status).toBe(404);
+  });
+
+  it('the shapes route (PR 753): reports.read only, one level at a time, kept a day by the browser, "not on" when off', async () => {
+    const S1 = `${BASE}/shapes?level=district`;
+    expect((await get(S1, '', geoMapShapesHandler)).status).toBe(401);
+    expect((await get(S1, nobody, geoMapShapesHandler)).status).toBe(403);
+    const ok = await get(S1, reader, geoMapShapesHandler);
+    expect(ok.status).toBe(200);
+    expect(ok.res.headers.get('cache-control')).toMatch(/max-age=\d+/);
+    const pack = JSON.parse(ok.text).pack;
+    expect(pack.level).toBe('district');
+    expect(pack.shapes.length).toBeGreaterThan(60);
+    expect(pack.attribution).toMatch(/geoBoundaries/);
+    expect((await get(`${BASE}/shapes?level=planet`, owner, geoMapShapesHandler)).status).toBe(400);
+    expect((await get(`${BASE}/shapes?level=area`, owner, geoMapShapesHandler)).status).toBe(200);
+    await card('PUT', { on: false });
+    expect((await get(S1, owner, geoMapShapesHandler)).status).toBe(404);
+    await card('PUT', { on: true });
   });
 
   it('switching it off again makes every figure route answer "not on"', async () => {

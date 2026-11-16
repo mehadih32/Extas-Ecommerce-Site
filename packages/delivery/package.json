@@ -13,7 +13,8 @@
     "./phone": "./src/phone.ts",
     "./exempt": "./src/exempt.ts",
     "./promise": "./src/promise.ts",
-    "./geo": "./src/geo.ts"
+    "./geo": "./src/geo.ts",
+    "./geo-pack": "./src/geo-pack.ts"
   },
   "scripts": {
     "gazetteer:import": "tsx src/cli.ts import",

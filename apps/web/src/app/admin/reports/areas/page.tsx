@@ -37,6 +37,8 @@ import "@/components/admin/reports/report-bar.css";
 import { t, type Dict } from "@/lib/i18n";
 import bn from "../../../../../messages/admin-areas.bn.json";
 import en from "../../../../../messages/admin-areas.en.json";
+import geoBn from "../../../../../messages/admin-geo-map.bn.json";
+import geoEn from "../../../../../messages/admin-geo-map.en.json";
 import reportBn from "../../../../../messages/admin-cost-report.bn.json";
 import reportEn from "../../../../../messages/admin-cost-report.en.json";
 import "../../settings-cards.css";
@@ -58,6 +60,9 @@ function withScreen(view: AdminView): AdminView {
       reportsAreas: (b ? bn : en).reportsAreas as unknown as Dict,
       moneyCostReport: (b ? reportBn : reportEn)
         .moneyCostReport as unknown as Dict,
+      reportsGeoMapLink: {
+        openOnMap: (b ? geoBn : geoEn).reportsGeoMap.openOnMap,
+      } as unknown as Dict,
     },
   };
 }
@@ -101,6 +106,8 @@ export default async function AreasPage({
     t(d, `reportsV5.areas.${k}`, v);
   const cr = (k: string) => t(d, `moneyCostReport.${k}`);
   const db = access.deps.db;
+  // S29 · PR 753: the link to the Geography map shows only while that map is on (off as shipped)
+  const geoOn = (await access.deps.resolver.value("reports.geoMap", { storeId: MOTHER_STORE_ID })).on;
   const base = await loadBase(access.deps, sp);
   const { currency, timeZone, limits } = base;
   const findText = typeof sp.find === "string" ? sp.find : "";
@@ -293,6 +300,13 @@ export default async function AreasPage({
         sub={pc("sub")}
       />
       <SectionTabs view={view} current={KEY} />
+      {geoOn ? (
+        <p className="a2-mt12">
+          <Link className="a2-btn cr-tap" href="/admin/reports/geo-map" data-testid="ar-open-map">
+            {t(d, "reportsGeoMapLink.openOnMap")}
+          </Link>
+        </p>
+      ) : null}
 
       <ReportBar
         dict={d}
