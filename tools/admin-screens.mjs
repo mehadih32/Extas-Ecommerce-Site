@@ -65,7 +65,50 @@ const D2 = [
   ['s-telegram', '/admin/settings/telegram-approvals', '#settings--telegram'],
   ['s-help', '/admin/help', '#settings--manual'],
 ];
-const PAIRS = (arg('set') === 'd2' ? D2 : PAIRS0).filter(([k]) => !arg('only') || arg('only').split(',').some((p) => k.startsWith(p)));
+// batch 2026-11-17-1: the prototype's other tabs (orders, couriers, products, customers, inbox, rules, marketing, reports, AI), `--set=d3`
+const D3 = [
+  ['o-batch', '/admin/orders/batch', '#orders--batch'],
+  ['o-processing', '/admin/orders/confirm', '#orders--processing'],
+  ['o-ship', '/admin/orders/packing', '#orders--ship'],
+  ['o-returns', '/admin/orders/returns', '#orders--returns'],
+  ['o-incomplete', '/admin/orders/incomplete', '#orders--incomplete'],
+  ['c-c360', '/admin/delivery/courier-360', '#couriers--c360'],
+  ['p-add', '/admin/products/new', '#products--add'],
+  ['p-stock', '/admin/stock', '#products--stock'],
+  ['p-ranking', '/admin/products/ranking', '#products--ranking'],
+  ['p-combos', '/admin/combos', '#products--combos'],
+  ['p-reviews', '/admin/products/reviews', '#products--reviews'],
+  ['p-sizecharts', '/admin/size-charts', '#products--sizecharts'],
+  ['u-all', '/admin/customers', '#customers--all'],
+  ['u-groups', '/admin/customers/segments', '#customers--groups'],
+  ['u-loyalty', '/admin/customers/loyalty', '#customers--loyalty'],
+  ['u-merge', '/admin/customers/review', '#customers--merge'],
+  ['i-chats', '/admin/support', '#inbox--chats'],
+  ['i-replies', '/admin/support/replies', '#inbox--replies'],
+  ['i-stats', '/admin/support/analytics', '#inbox--stats'],
+  ['r-all', '/admin/rules', '#rules--all'],
+  ['r-coupons', '/admin/rules/offers', '#rules--coupons'],
+  ['r-popups', '/admin/rules/notices', '#rules--popups'],
+  ['m-overview', '/admin/marketing/overview', '#marketing--overview'],
+  ['m-campaigns', '/admin/marketing/campaigns', '#marketing--campaigns'],
+  ['m-messages', '/admin/marketing/message-campaigns', '#marketing--messages'],
+  ['m-audiences', '/admin/marketing/audiences', '#marketing--audiences'],
+  ['m-calendar', '/admin/marketing/calendar', '#marketing--calendar'],
+  ['m-plan', '/admin/marketing/plan', '#marketing--plan'],
+  ['m-tools', '/admin/marketing/ad-platforms', '#marketing--tools'],
+  ['rp-overview', '/admin/reports', '#reports--overview'],
+  ['rp-sales', '/admin/reports/orders', '#reports--sales'],
+  ['rp-customers', '/admin/reports/customers', '#reports--customers'],
+  ['rp-delivery', '/admin/reports/delivery', '#reports--delivery'],
+  ['rp-couriers', '/admin/reports/couriers', '#reports--couriers'],
+  ['rp-areas', '/admin/reports/areas', '#reports--areas'],
+  ['rp-team', '/admin/reports/team', '#reports--team'],
+  ['a-approvals', '/admin/ai/approvals', '#ai--approvals'],
+  ['a-agents', '/admin/agents', '#ai--agents'],
+  ['a-costs', '/admin/ai/cost-book', '#ai--costs'],
+];
+const SETS = { d2: D2, d3: D3, all: [...PAIRS0, ...D2, ...D3] };
+const PAIRS = (SETS[arg('set')] ?? PAIRS0).filter(([k]) => !arg('only') || arg('only').split(',').some((p) => k.startsWith(p)));
 const VPS = [['phone', 390, 844], ['desktop', 1366, 900]];
 const MAXH = 2400;
 const browser = await chromium.launch();
@@ -82,9 +125,28 @@ async function shot(ctx, url, file, wait) {
     const h = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
     const w = page.viewportSize().width;
     await page.screenshot({ path: file, type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: w, height: Math.min(h, MAXH) } });
-    if (file.includes('-desktop') && arg('set') === 'd2') {
+    if (file.includes('-desktop')) {
       const txt = await page.evaluate(() => (document.querySelector('main') || document.body).innerText);
       writeFileSync(file.replace(/\.jpg$/, '.txt'), txt);
+      // the parts a person sees: headings, button words, how many fields / tables, the first filled button's colour
+      const facts = await page.evaluate(() => {
+        const vis = (e) => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; };
+        const root = document.querySelector('main') || document.body;
+        const tx = (e) => (e.innerText || e.getAttribute('aria-label') || e.value || '').replace(/\s+/g, ' ').trim();
+        const uniq = (a) => [...new Set(a.filter(Boolean))];
+        const btns = [...root.querySelectorAll('button, [role=button], a[class*=btn], input[type=submit]')].filter(vis);
+        const filled = btns.find((b) => { const c = getComputedStyle(b).backgroundColor; return c && c !== 'rgba(0, 0, 0, 0)' && c !== 'rgb(255, 255, 255)'; });
+        return {
+          headings: uniq([...root.querySelectorAll('h1, h2, h3')].filter(vis).map(tx)).slice(0, 40),
+          buttons: uniq(btns.map(tx)).slice(0, 60),
+          tabs: uniq([...root.querySelectorAll('[role=tab], nav a')].filter(vis).map(tx)).slice(0, 40),
+          fields: root.querySelectorAll('input:not([type=hidden]), select, textarea').length,
+          tables: root.querySelectorAll('table').length,
+          primary: filled ? getComputedStyle(filled).backgroundColor : null,
+          font: getComputedStyle(document.body).fontFamily.split(',')[0],
+        };
+      });
+      writeFileSync(file.replace(/\.jpg$/, '.json'), JSON.stringify(facts));
     }
     const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     return { status, errors, height: h, overflowPx: over, final: new URL(page.url()).pathname };
