@@ -75,6 +75,9 @@ export default async function StockPage({ searchParams }: { searchParams: Search
   const [lowPieces, currency] = await Promise.all([s.deps.settings.value('catalogue.admin.lowStockPieces', { storeId: s.storeId }), s.deps.settings.value('store.currency', { storeId: s.storeId })]);
   const overview = await loadStockOverview(s.deps, s.storeId, Number(lowPieces) || 2, s.can('catalogue.prices'));
   const sinceMin = health.stock.lastSuccessAt ? Math.max(0, Math.floor((now.getTime() - new Date(health.stock.lastSuccessAt).getTime()) / 60_000)) : null;
+  // PR 967: the "Asked ERP" tags are read from the audit log (the last 14 days), so they stay after a reload
+  const askedRows = await access.deps.db.auditLog.findMany({ where: { storeId: s.storeId, action: 'inventory.restock.requested', entityType: 'Product', createdAt: { gte: new Date(Date.now() - 14 * 86_400_000) } }, select: { entityId: true }, take: 500 });
+  const askedIds = askedRows.flatMap((r) => (r.entityId ? [r.entityId] : []));
   const num = (n: number) => formatNumber(n, view.locale);
   const when = (iso: string) => dateTime(iso, view.locale, view.timeZone);
   const canSync = s.can('inventory.sync');
@@ -120,6 +123,7 @@ export default async function StockPage({ searchParams }: { searchParams: Search
         nextSyncMin={sinceMin === null ? null : Math.max(1, health.stock.pollMinutes - sinceMin)}
         recent={health.recentRuns.slice(0, 3).map((r) => `${when(r.startedAt)} · ${t(d, `stock.runs.kind.${keyOf(r.kind)}`)}`)}
         canSync={canSync}
+        askedIds={askedIds}
       />
 
       <h2 className="sk-sec">{t(d, 'stock.ov.healthH')}</h2>
