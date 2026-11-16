@@ -23,7 +23,7 @@
       "off": "Off",
       "sample": "Sample",
       "from": "From {date}",
-      "page": "Page"
+      "page": "Hub"
     },
     "on": "On",
     "off": "Off",
@@ -33,16 +33,24 @@
     "noMatch": "No rule matches your search.",
     "pickOne": "Pick a rule to change it here.",
     "strip": {
-      "sample": "{n} rules are on with the shop's own starting numbers: check them",
+      "sample": "{n} rules still use sample values",
       "allOwn": "All rules use your own values",
-      "last": "Last change: {rule}, {when}",
+      "last": "Last change: {rule} · {when}",
       "showingSample": "Showing rules with sample values",
-      "showAll": "Show all"
+      "showAll": "Show all",
+      "sched": "{n} change starts on {date}",
+      "ago": {
+        "now": "just now",
+        "m": "{n} min ago",
+        "h": "{n} h ago",
+        "d": "{n} d ago"
+      }
     },
     "rows": {
       "free": {
         "title": "Free delivery",
-        "sentence": "Delivery is free from {value}."
+        "sentence": "On orders over {value}",
+        "sentenceOff": "Off"
       },
       "eid": {
         "title": "Eid last order dates",
@@ -50,7 +58,8 @@
       },
       "peak": {
         "title": "Peak / Eid mode",
-        "sentence": "Mode is {enabled}. Orders a day: {dailyCap}. Stickers in one part: {partSize}. People on the roster: {roster}."
+        "sentence": "On · up to {dailyCap} orders a day · {roster} on the roster",
+        "sentenceOff": "Off · ready: {dailyCap} orders a day"
       },
       "advance": {
         "title": "Advance payment",
@@ -61,12 +70,13 @@
         "sentence": "The biggest cash on delivery order and where it is allowed."
       },
       "prepaid": {
-        "title": "Discount for paying online",
+        "title": "Reward for paying online",
         "sentence": "The reward is now an offer: free delivery, a percent, a flat amount. Open Offers & discounts."
       },
       "autoconfirm": {
         "title": "Auto-confirm",
-        "sentence": "Rules confirm orders by themselves: {enabled}. A customer is trusted after {trustedMinDelivered} delivered parcels and at most {trustedMaxRefused} refusals."
+        "sentence": "Trusted after {trustedMinDelivered} delivered parcels · at most {trustedMaxRefused} refusals",
+        "sentenceOff": "Off"
       },
       "score": {
         "title": "Courier score",
@@ -74,23 +84,26 @@
       },
       "dup": {
         "title": "Duplicate orders",
-        "sentence": "Look back {lookbackDays} days for the same customer's earlier order: {enabled}. Put a clear duplicate on hold by itself: {autoHold}."
+        "sentence": "Look back {lookbackDays} days · put a clear duplicate on hold by itself: {autoHold}",
+        "sentenceOff": "Off"
       },
       "merge": {
         "title": "Merge orders",
-        "sentence": "Merging two open orders of one customer is {enabled}. Look back {lookBackDays} days. Different addresses: {differentAddress}. Merge by itself: {autoMerge}."
+        "sentence": "Look back {lookBackDays} days · merge by itself: {autoMerge} · different address: {differentAddress}",
+        "sentenceOff": "Off"
       },
       "adjust": {
         "title": "Price-adjust limits by role",
-        "sentence": "Taking money off an open order is {enabled}. Roles with their own limit: {roleLimits}. Anyone else asks the owner."
+        "sentence": "Roles with their own limit: {roleLimits} · above the limit the owner approves",
+        "sentenceOff": "Off"
       },
       "advwait": {
         "title": "Advance request reminder",
-        "sentence": "Remind a customer about the advance after {value} hours (0 means no reminder)."
+        "sentence": "Remind after {value} h (0 = no reminder)"
       },
       "courier": {
-        "title": "Default courier",
-        "sentence": "Which courier parcels go to, and whether the shop picks by area."
+        "title": "Courier & batch",
+        "sentence": "Which courier every parcel goes to · new batch after the last pickup"
       },
       "couriermsg": {
         "title": "Courier messages",
@@ -98,14 +111,15 @@
       },
       "erpcheck": {
         "title": "ERP check of returned pieces",
-        "sentence": "A returned piece is checked in the ERP within {value} days."
+        "sentence": "A returned piece is checked in the ERP within {value} days"
       },
       "replace": {
-        "title": "Replacement for a faulty or wrong piece",
-        "sentence": "Replacement is {enabled}. It can be opened for {hours} hours after delivery. The old piece comes back within {oldPieceDays} days."
+        "title": "Defective or wrong item",
+        "sentence": "Tell us within {hours} h · we send the right product again, free · no refund or wallet",
+        "sentenceOff": "Off"
       },
       "grades": {
-        "title": "Customer grades",
+        "title": "Customer priority",
         "sentence": "Customers get a grade from what they spent and how many parcels they took."
       },
       "offers": {
@@ -114,15 +128,17 @@
       },
       "popups": {
         "title": "Pop-ups & notices",
-        "sentence": "The shop's twelve pop-ups and notices: where each shows, who sees it, and your own words."
+        "sentence": "Notice bar, welcome pop-up, holiday banner, checkout and product notices, thank-you"
       },
       "gift": {
         "title": "Gift mode",
-        "sentence": "“This is a gift” at checkout: {enabled}. A gift note of up to {noteMaxChars} letters. Delivery up to {deliverAfterMaxDays} days later. Hide prices on the invoice inside the parcel: {hidePricesDefault}."
+        "sentence": "Gift note up to {noteMaxChars} letters · delivery up to {deliverAfterMaxDays} days later",
+        "sentenceOff": "Off"
       },
       "quiet": {
         "title": "Quiet hours & limits",
-        "sentence": "Quiet hours are {on}, from {fromHour}:00 until {toHour}:00. Messages due in quiet hours wait until the morning. Payment links and OTPs still go at once."
+        "sentence": "No messages {fromHour}:00–{toHour}:00 · they wait until the morning",
+        "sentenceOff": "Off"
       }
     },
     "fields": {
@@ -200,15 +216,16 @@
     "needsOwner": "Only the owner can change this rule.",
     "whatChanges": "What changes",
     "nothingYet": "Nothing yet. Change a value above.",
-    "appliesToNew": "It applies to new orders from the moment you save.",
-    "pin": "Owner's PIN",
+    "appliesToNew": "Applies to new orders from the moment you save.",
+    "pin": "Owner PIN (4 digits)",
     "savePin": "Save · PIN",
     "save": "Save",
     "cancel": "Cancel",
     "more": {
       "title": "More options",
       "back": "Back to default",
-      "fuller": "Open the fuller page for this rule"
+      "fuller": "Open the fuller page for this rule",
+      "summary": "More options · start on a date, try on last month, history ({n})"
     },
     "emptyMeansOff": "Leave empty to switch it off.",
     "roster": {
@@ -588,10 +605,10 @@
     },
     "schedule": {
       "title": "Start on a later date",
-      "help": "Leave empty to change it now. With a date, Save schedules it: nothing changes before that day.",
+      "help": "Leave empty to change it now. With a date, Save schedules it.",
       "go": "Schedule",
       "goPin": "Schedule · PIN",
-      "scheduled": "Scheduled: from {date} this changes. Nothing changes before that day.",
+      "scheduled": "Starts on {date}: {what}.",
       "cancel": "Cancel schedule",
       "done": "Scheduled for {date}.",
       "cancelled": "Schedule cancelled.",
@@ -647,10 +664,10 @@
       "en": "English text",
       "use": "Use my text",
       "auto": "Back to automatic text",
-      "saved": "Your text is saved.",
-      "autoDone": "Back to the automatic text.",
+      "saved": "Your text is saved and shown on the shop",
+      "autoDone": "Back to automatic text",
       "need": "Write the text in both Bengali and English.",
-      "own": "Your own text is used. Numbers above will not change it until you go back to the automatic text.",
+      "own": "Your own text is used. Numbers above will not change it until you go back to automatic text.",
       "note": "Shop pages that print this rule's sentence still use the rule's own wording."
     },
     "history": {
@@ -658,13 +675,14 @@
       "until": "until",
       "undo": "Undo to this",
       "none": "No changes yet.",
-      "confirm": "Go back to this value? It is saved as a new change; the history keeps every step.",
+      "confirm": "Go back to this value?",
       "done": "Went back to the earlier value.",
       "by": "by"
     },
     "footer": {
       "pin": "Needs owner PIN to save",
       "now": "Saves at once"
-    }
+    },
+    "pinHint": "Money and price changes always ask for the owner PIN."
   }
 }
