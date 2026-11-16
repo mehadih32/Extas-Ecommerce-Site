@@ -26,7 +26,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
-import { WORD_GROUPS, WORD_KEYS, WORD_SHOWS } from '@/lib/website/words';
+import { groupOf, WORD_GROUPS, WORD_KEYS, WORD_SHOWS } from '@/lib/website/words';
 import { frontEditCard } from '@/lib/website/front-edit';
 import { adminWordList } from '@/lib/website/admin-words';
 import { WORDS_PAGE_SIZE, wordQueryOf, wordsView } from '@/lib/website/words-admin';
@@ -76,6 +76,18 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
   const [v, fe] = await Promise.all([wordsView(wd, query), frontEditCard(wd)]);
   const canEdit = access.guard.permissions?.has('website.words.write') ?? false;
   const where = Object.fromEntries(WORD_GROUPS.map((k) => [k, t(d, `wd.grp.${k}`) === `wd.grp.${k}` ? k : t(d, `wd.grp.${k}`)]));
+  // PR 911 (prototype Shop text): the groups are chips with their word counts, the prototype's own groups first
+  const protoOrder = ['header', 'announce', 'home', 'pdp', 'bag', 'checkout', 'footer'];
+  const groupCount: Record<string, number> = {};
+  for (const k of WORD_KEYS) groupCount[groupOf(k)] = (groupCount[groupOf(k)] ?? 0) + 1;
+  const chipGroups = [...protoOrder.filter((k) => WORD_GROUPS.includes(k)), ...WORD_GROUPS.filter((k) => !protoOrder.includes(k))];
+  const chipHref = (grp: string) => {
+    const next = new URLSearchParams(sp);
+    next.delete('p');
+    if (grp) next.set('where', grp);
+    else next.delete('where');
+    return next.size ? `${HERE}?${next.toString()}` : HERE;
+  };
   const errKeys = ['INVALID_INPUT', 'STALE', 'CSV_SYNTAX', 'CSV_COLUMNS', 'CSV_KEYS', 'forbidden', 'unauthorized', 'network', 'other'];
   const w: WordsEditorWords = {
     en: g('en'),
@@ -88,6 +100,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     claim: g('claim'),
     claimSaved: g('claimSaved'),
     untr: g('untr'),
+    bnMissing: g('bnMissing'),
+    preview: g('preview'),
     change: g('change'),
     ownEn: g('ownEn'),
     ownBn: g('ownBn'),
@@ -125,21 +139,13 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
     <div className="a2-z" data-testid="wd-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={g('title')} sub={g('sub')} />
       <SectionTabs view={view} current={KEY} />
-      <div className="a2-note a2-mt12" role="note">
-        <span>{g('note')}</span>
-      </div>
-      <p className="a2-xs a2-mute wdb-mt6" data-testid="wd-summary">
-        {g('summary', { total: WORD_KEYS.length, changed: v.changed, untr: v.untranslated })}
-      </p>
-      <div className="a2-mt12" data-testid="wd-front">
-        <FieldsCard url={FRONT_API} screen={fe} fields={[{ kind: 'switch', path: 'enabled', label: g('fe.enabled'), help: g('fe.enabledHelp') }]} texts={feTexts} canEdit={canEdit} testId="wd-front-card" />
-        <div className="wdb-bar">
-          <a className="a2-btn" href={shopHome} target="_blank" rel="noopener noreferrer" data-testid="wd-front-open">
-            {g('fe.open')}
-          </a>
+      {v.untranslated > 0 ? (
+        <div className="a2-note wdb-warn a2-mt12" role="note" data-testid="wd-untr-note">
+          <span>
+            <b>{g('untrHead', { n: v.untranslated })}</b> {g('untrText')}
+          </span>
         </div>
-        <p className="a2-xs a2-mute wdb-mt6">{g('fe.openHelp')}</p>
-      </div>
+      ) : null}
       <nav className="a2-seg a2-mt12 wdb-set" aria-label={g('set.label')} data-testid="wd-set">
         <a href={HERE} className={adminSet ? undefined : 'on'} aria-current={adminSet ? undefined : 'page'} data-testid="wd-set-shop">
           {g('set.shop')}
@@ -152,49 +158,45 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
         <AdminWords q={query.q ?? ''} p={query.p ?? 1} g={g} />
       ) : (
         <>
-        <form className="a2-sc a2-mt12 wdb-search" method="get" action={HERE} role="search" data-testid="wd-search">
-          <div className="a2-fld wdb-q">
-            <label className="a2-lbl" htmlFor="wd-q">
-              {g('search')}
-            </label>
-            <input id="wd-q" className="a2-inp" type="search" name="q" defaultValue={query.q} placeholder={g('searchPh')} maxLength={120} data-testid="wd-q" />
-          </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="wd-where">
-              {g('where')}
-            </label>
-            <select id="wd-where" className="a2-sel" name="where" defaultValue={query.group} data-testid="wd-where">
-              <option value="">{g('everywhere')}</option>
-              {WORD_GROUPS.map((k) => (
-                <option key={k} value={k}>
-                  {where[k]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="a2-fld">
-            <label className="a2-lbl" htmlFor="wd-show">
-              {g('show')}
-            </label>
-            <select id="wd-show" className="a2-sel" name="show" defaultValue={query.show} data-testid="wd-show">
-              {WORD_SHOWS.map((k) => (
-                <option key={k} value={k}>
-                  {g(`showOpt.${k}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="wdb-bar wdb-go">
-            <button type="submit" className="a2-btn pri" data-testid="wd-find">
-              {g('find')}
-            </button>
-            {filtered ? (
-              <a className="a2-btn" href={HERE} data-testid="wd-clear">
-                {g('clear')}
-              </a>
-            ) : null}
-          </div>
+        <form className="wdb-search1 a2-mt12" method="get" action={HERE} role="search" data-testid="wd-search">
+          <input type="hidden" name="where" value={query.group} />
+          <input type="hidden" name="show" value={query.show} />
+          <label className="wdb-sr" htmlFor="wd-q">
+            {g('search')}
+          </label>
+          <input id="wd-q" className="a2-inp wdb-q1" type="search" name="q" defaultValue={query.q} placeholder={g('searchPh')} maxLength={120} data-testid="wd-q" />
+          <button type="submit" className="a2-btn pri" data-testid="wd-find">
+            {g('find')}
+          </button>
+          {filtered ? (
+            <a className="a2-btn" href={HERE} data-testid="wd-clear">
+              {g('clear')}
+            </a>
+          ) : null}
         </form>
+        <nav className="wdb-chips a2-mt12" aria-label={g('where')} data-testid="wd-where">
+          <a className={`wdb-chip${query.group ? '' : ' on'}`} href={chipHref('')} aria-current={query.group ? undefined : 'true'}>
+            {g('everywhere')} <span>{WORD_KEYS.length}</span>
+          </a>
+          {chipGroups.map((k) => (
+            <a key={k} className={`wdb-chip${query.group === k ? ' on' : ''}`} href={chipHref(k)} aria-current={query.group === k ? 'true' : undefined}>
+              {where[k]} <span>{groupCount[k] ?? 0}</span>
+            </a>
+          ))}
+        </nav>
+        <nav className="wdb-chips wdb-shows a2-mt6" aria-label={g('show')} data-testid="wd-show">
+          {WORD_SHOWS.map((k) => {
+            const next = new URLSearchParams(sp);
+            next.delete('p');
+            if (k === 'all') next.delete('show');
+            else next.set('show', k);
+            return (
+              <a key={k} className={`wdb-chip${query.show === k ? ' on' : ''}`} href={next.size ? `${HERE}?${next.toString()}` : HERE} aria-current={query.show === k ? 'true' : undefined}>
+                {g(`showOpt.${k}`)}
+              </a>
+            );
+          })}
+        </nav>
         <WordsEditor
           head={
             <>
@@ -244,6 +246,15 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
             </nav>
           ) : null}
         </WordsEditor>
+        <div className="a2-mt12" data-testid="wd-front">
+          <FieldsCard url={FRONT_API} screen={fe} fields={[{ kind: 'switch', path: 'enabled', label: g('fe.enabled'), help: g('fe.enabledHelp') }]} texts={feTexts} canEdit={canEdit} testId="wd-front-card" />
+          <div className="wdb-bar">
+            <a className="a2-btn" href={shopHome} target="_blank" rel="noopener noreferrer" data-testid="wd-front-open">
+              {g('fe.open')}
+            </a>
+          </div>
+          <p className="a2-xs a2-mute wdb-mt6">{g('fe.openHelp')}</p>
+        </div>
         </>
       )}
     </div>

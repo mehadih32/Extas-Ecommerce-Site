@@ -28,3 +28,22 @@
 .adm2 .wdb-set a{min-height:44px;display:inline-flex;align-items:center}
 .adm2 .wdb-search.wdb-search1{grid-template-columns:minmax(0,1fr) auto}
 @media (max-width:760px){.adm2 .wdb-search.wdb-search1{grid-template-columns:minmax(0,1fr)}}
+
+.wdb-warn { background: var(--lm-warnbg, #fff4e5); }
+.wdb-search1 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wdb-q1 { flex: 1 1 260px; max-width: 420px; }
+.wdb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wdb-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--lm-ln, #ddd); background: var(--lm-sf, #fff); color: inherit; text-decoration: none; font-size: 13px; }
+.wdb-chip span { opacity: 0.6; font-size: 12px; }
+.wdb-chip.on { background: var(--lm-ink, #111); color: var(--lm-sf, #fff); border-color: transparent; }
+.wdb-inline .wdb-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.wdb-inline .wdb-form > p, .wdb-inline .wdb-form > .wdb-bar { grid-column: 1 / -1; }
+@media (max-width: 700px) { .wdb-inline .wdb-form { grid-template-columns: minmax(0, 1fr); } }
+.wdb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wdb-split { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) { .wdb-split { grid-template-columns: minmax(0, 1fr) 280px; } .wdb-prev { position: sticky; top: 76px; } }
+.wdb-prevseg { display: inline-flex; gap: 4px; margin: 8px 0; }
+.wdb-prevseg button { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--lm-ln, #ddd); background: var(--lm-sf, #fff); color: inherit; cursor: pointer; }
+.wdb-prevseg button.on { background: var(--lm-ink, #111); color: var(--lm-sf, #fff); }
+.wdb-phone { border: 6px solid var(--lm-ink, #111); border-radius: 26px; padding: 10px; display: grid; gap: 8px; max-height: 420px; overflow: auto; }
+.wdb-pl { background: var(--lm-sf2, #f4f4f4); border-radius: 10px; padding: 8px 10px; font-size: 12px; overflow-wrap: anywhere; }

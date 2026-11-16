@@ -28,6 +28,8 @@ export interface WordsEditorWords {
   claim: string;
   claimSaved: string;
   untr: string;
+  bnMissing: string;
+  preview: string;
   change: string;
   ownEn: string;
   ownBn: string;
@@ -76,7 +78,8 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
   const [own, setOwn] = useState<Own>(row.own);
   const [lastText, setLastText] = useState(when ? w.when.replace('{at}', when) : '');
   const [claim, setClaim] = useState(row.claim);
-  const [draft, setDraft] = useState<Own>(row.own);
+  const shownNow = (o: Own): Own => ({ en: o.en || row.byDefault.en, bn: o.bn || row.byDefault.bn });
+  const [draft, setDraft] = useState<Own>(shownNow(row.own));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<Msg>(null);
   const changed = !!(own.en || own.bn);
@@ -92,7 +95,7 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
     const s = a.saved?.[row.key] ?? {};
     const saved = { en: s.en ?? '', bn: s.bn ?? '' };
     setOwn(saved);
-    setDraft(saved);
+    setDraft(shownNow(saved));
     if (a.version) setVersion(a.version);
     if (a.changed?.includes(row.key)) setLastText(w.justNow);
     const claimed = !!a.claims?.includes(row.key);
@@ -137,13 +140,14 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
           </span>
         ) : null}
       </div>
-      <div className="wdb-langs">
-        {shown('en')}
-        {shown('bn')}
-      </div>
+      {canEdit ? null : (
+        <div className="wdb-langs">
+          {shown('en')}
+          {shown('bn')}
+        </div>
+      )}
       {canEdit ? (
-        <details className="a2-more-opts wdb-fold" data-testid="wd-fold">
-          <summary className="a2-sm">{w.change}</summary>
+        <div className="wdb-fold wdb-inline" data-testid="wd-fold">
           <div className="wdb-form">
             {(['en', 'bn'] as const).map((lang) => (
               <div className="a2-fld" key={lang}>
@@ -157,7 +161,7 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
                   rows={2}
                   maxLength={300}
                   value={draft[lang]}
-                  placeholder={row.byDefault[lang]}
+                  placeholder={row.untranslated && lang === 'bn' ? w.bnMissing : row.byDefault[lang]}
                   onChange={(e) => setDraft({ ...draft, [lang]: e.target.value })}
                   data-testid={`wd-in-${lang}`}
                 />
@@ -168,7 +172,7 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
               {slots.length ? ` ${w.slotsHelp.replace('{slots}', slots.join(' '))}` : ''}
             </p>
             <div className="wdb-bar">
-              <button type="button" className="a2-btn pri" disabled={busy || (draft.en === own.en && draft.bn === own.bn)} onClick={() => void save(draft, w.saved)} data-testid="wd-save">
+              <button type="button" className="a2-btn pri" disabled={busy || (draft.en === shownNow(own).en && draft.bn === shownNow(own).bn)} onClick={() => void save({ en: draft.en === row.byDefault.en ? '' : draft.en, bn: draft.bn === row.byDefault.bn ? '' : draft.bn }, w.saved)} data-testid="wd-save">
                 {busy ? w.saving : w.save}
               </button>
               <button type="button" className="a2-btn" disabled={busy || !changed} onClick={() => void save({ en: '', bn: '' }, w.backDone)} data-testid="wd-back">
@@ -176,7 +180,7 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
               </button>
             </div>
           </div>
-        </details>
+        </div>
       ) : null}
       {msg ? (
         <p className="a2-xs wdb-msg" role={msg.ok ? 'status' : 'alert'} style={msg.ok ? undefined : { color: 'var(--bad)' }} data-testid="wd-msg">
@@ -184,6 +188,30 @@ function WordItem({ row, where, when, canEdit, version, setVersion, w }: RowProp
         </p>
       ) : null}
     </li>
+  );
+}
+
+/** Prototype Shop text "Preview": the page's words in a phone, in English or Bengali (as saved). */
+function WordsPreview({ rows, w }: { rows: WordRow[]; w: WordsEditorWords }) {
+  const [lang, setLang] = useState<'en' | 'bn'>('en');
+  return (
+    <section className="a2-sc wdb-prev" aria-label={w.preview} data-testid="wd-preview">
+      <h2 className="a2-h3">{w.preview}</h2>
+      <div className="wdb-prevseg" role="group" aria-label={w.preview}>
+        {(['en', 'bn'] as const).map((l) => (
+          <button key={l} type="button" className={lang === l ? 'on' : undefined} aria-pressed={lang === l} onClick={() => setLang(l)}>
+            {l === 'en' ? w.en : w.bn}
+          </button>
+        ))}
+      </div>
+      <div className="wdb-phone" lang={lang}>
+        {rows.slice(0, 8).map((r) => (
+          <div key={r.key} className="wdb-pl">
+            {r.own[lang] || r.byDefault[lang]}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -247,7 +275,8 @@ export function WordsEditor({ rows, when = {}, version: read, canEdit, where, w,
 
   return (
     <>
-      <section className="a2-sc a2-mt12" aria-labelledby="wd-h" data-testid="wd-card">
+      <div className="wdb-split a2-mt12">
+      <section className="a2-sc" aria-labelledby="wd-h" data-testid="wd-card">
         {head}
         <ul className="wdb-list" data-testid="wd-list">
         {rows.map((r) => (
@@ -256,6 +285,8 @@ export function WordsEditor({ rows, when = {}, version: read, canEdit, where, w,
         </ul>
         {children}
       </section>
+      <WordsPreview rows={rows} w={w} />
+      </div>
       <section className="a2-sc a2-mt12" aria-labelledby="wd-file-h" data-testid="wd-file-card">
         <h2 className="a2-h3" id="wd-file-h">
           {file.title}

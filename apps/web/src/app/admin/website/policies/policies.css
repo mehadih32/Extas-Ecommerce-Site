@@ -44,3 +44,5 @@
 .adm2 .polb-sec ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; overflow-wrap: anywhere; }
 .adm2 .polb-det summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--ink2); font-weight: 600; }
 .adm2 .polb-det p { margin: 0 0 8px; overflow-wrap: anywhere; }
+
+@media (min-width: 1100px) and (pointer: fine) { .adm2 .polb-chips .a2-chipt { min-height: 30px; font-size: 13px; padding: 0 12px; } }
