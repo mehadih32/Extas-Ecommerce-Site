@@ -25,6 +25,12 @@ import { t, type Dict } from '@/lib/i18n';
 import { moneyReportView } from '@/lib/money-report-api';
 import { profitReport } from '@/lib/profit-report';
 import { vatReportFor } from '@/lib/vat-report';
+import { Delta, deltaPct } from '@/components/admin/lane-f/Parts';
+import { channelMarginPct, channelProfitView } from '@/lib/channel-profit-view';
+import { monthSheet } from '@/lib/month-sheet';
+import { PERIOD_KEYS, previousPeriod, resolvePeriod, type PeriodKey } from '@/lib/lane-f/period';
+import channelsBn from '../../../../../messages/admin-profit-channels.bn.json';
+import channelsEn from '../../../../../messages/admin-profit-channels.en.json';
 import bn from '../../../../../messages/admin-profit.bn.json';
 import en from '../../../../../messages/admin-profit.en.json';
 import reportBn from '../../../../../messages/admin-cost-report.bn.json';
@@ -39,7 +45,7 @@ const HERE = '/admin/money/profit';
 
 function withScreen(view: AdminView): AdminView {
   const b = view.lang === 'bn';
-  return { ...view, dict: { ...view.dict, moneyProfit: (b ? bn : en).moneyProfit as unknown as Dict, moneyCostReport: (b ? reportBn : reportEn).moneyCostReport as unknown as Dict } };
+  return { ...view, dict: { ...view.dict, moneyProfit: (b ? bn : en).moneyProfit as unknown as Dict, moneyCostReport: (b ? reportBn : reportEn).moneyCostReport as unknown as Dict, moneyProfitChannels: (b ? channelsBn : channelsEn).moneyProfitChannels as unknown as Dict } };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -65,8 +71,23 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   const at = { storeId: MOTHER_STORE_ID };
   const [currency, timeZone, limits] = await Promise.all([access.deps.resolver.value('store.currency', at), access.deps.resolver.value('store.timeZone', at), access.deps.resolver.value('costs.report', at)]);
   const today = ymdIn(new Date(), timeZone);
-  const { q, notes } = parseReportQuery(sp, today, limits);
-  const [r, report, vat] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to), moneyReportView(access.deps, MOTHER_STORE_ID), vatReportFor(access.deps, MOTHER_STORE_ID, q.from, q.to)]);
+  const parsed = parseReportQuery(sp, today, limits);
+  const notes = parsed.notes;
+  // PR 982 (prototype): the page opens on "This month" with the five one-press periods; a typed from/to or an older ?period= still works
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const mine: PeriodKey | null = PERIOD_KEYS.find((k) => k === one(sp.period)) ?? (sp.period || sp.from || sp.to ? null : 'month');
+  const q = mine ? { ...parsed.q, ...resolvePeriod(mine, today) } : parsed.q;
+  const more = sp.more === '1';
+  const prevRange = mine === 'month' && one(sp.cmp) === 'full' ? resolvePeriod('lastmonth', today) : previousPeriod(q.from, q.to);
+  const [r, prev, report, vat] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, q.from, q.to), profitReport(access.deps, MOTHER_STORE_ID, prevRange.from, prevRange.to), moneyReportView(access.deps, MOTHER_STORE_ID), vatReportFor(access.deps, MOTHER_STORE_ID, q.from, q.to)]);
+  const chView = await channelProfitView(access.deps, MOTHER_STORE_ID, { from: q.from, to: q.to }, limits);
+  const lastMonthKey = resolvePeriod('lastmonth', today).from.slice(0, 7);
+  const thisMonthKey = today.slice(0, 7);
+  const prevMonthKey = (() => {
+    const d = new Date(Date.UTC(Number(lastMonthKey.slice(0, 4)), Number(lastMonthKey.slice(5, 7)) - 2, 1));
+    return d.toISOString().slice(0, 7);
+  })();
+  const sheets = await Promise.all([prevMonthKey, lastMonthKey, thisMonthKey].map((mo) => monthSheet(access.deps.db, MOTHER_STORE_ID, mo, timeZone, today)));
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
   const dayText = (day: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T00:00:00Z`));
@@ -123,12 +144,51 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   const ueNet = ue.reduce((sum, x) => sum + x.minor, 0);
   const sm = (x: number) => (x < 0 ? `− ${m(-x)}` : m(x));
 
+  // the prototype's Statement: each line for this period, the period before, and the change
+  type St = { key: string; minor: (x: typeof r) => number | null; out: boolean; kind: 'ind' | 'sum' | 'big' };
+  const ST: St[] = [
+    { key: 'sales', minor: (x) => x.parts.sales, out: false, kind: 'ind' },
+    { key: 'returns', minor: (x) => x.parts.returns, out: true, kind: 'ind' },
+    { key: 'delivery', minor: (x) => x.parts.deliveryCharge, out: false, kind: 'ind' },
+    { key: 'cost', minor: (x) => x.parts.productCost, out: true, kind: 'ind' },
+    { key: 'courier', minor: (x) => x.parts.courier, out: true, kind: 'ind' },
+    { key: 'cod', minor: (x) => x.parts.codFee, out: true, kind: 'ind' },
+    { key: 'pack', minor: (x) => x.parts.packaging, out: true, kind: 'ind' },
+    { key: 'gate', minor: (x) => x.parts.paymentFees, out: true, kind: 'ind' },
+    { key: 'msg', minor: (x) => x.parts.messages, out: true, kind: 'ind' },
+    { key: 'loss', minor: (x) => x.parts.returnLoss, out: true, kind: 'ind' },
+    { key: 'gross', minor: (x) => x.contributionMinor, out: false, kind: 'sum' },
+    { key: 'ads', minor: (x) => x.adsMinor, out: true, kind: 'ind' },
+    { key: 'fixed', minor: (x) => x.fixedMinor ?? 0, out: true, kind: 'ind' },
+    { key: 'other', minor: (x) => x.otherCostsMinor, out: true, kind: 'ind' },
+    { key: 'net', minor: (x) => x.netProfitMinor, out: false, kind: 'big' },
+  ];
+  const stCell = (v: number | null, out: boolean) => (v === null ? '—' : out && v ? `− ${m(Math.abs(v))}` : m(v));
+  const marginOf = (x: typeof r) => (x.netProfitMinor === null || x.parts.sales <= 0 ? null : Math.round((x.netProfitMinor * 1000) / x.parts.sales) / 10);
+  const segs: PeriodKey[] = ['today', '7d', 'month', 'lastmonth', '30d'];
+  const monthName = (mo: string) => new Intl.DateTimeFormat(view.locale, { month: 'long', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${mo}-01T00:00:00Z`));
+  const chRows = chView.report.rows.filter((x) => x.orders > 0);
+  const chTotal = chRows.reduce((n, x) => n + (x.profitMinor ?? 0), 0) || 1; // hardcode-ok: avoids a divide by zero
+  const chName = (key: string) => {
+    const v = t(d, `moneyProfitChannels.channel.${key}`);
+    return v.startsWith('moneyProfitChannels.') ? key : v;
+  };
+  const chBest = [...chRows].sort((a, b) => (b.profitMinor ?? 0) - (a.profitMinor ?? 0))[0];
+  const chWorst = [...chRows].filter((x) => channelMarginPct(x) !== null).sort((a, b) => (channelMarginPct(a) ?? 0) - (channelMarginPct(b) ?? 0))[0];
+
   return (
     <div className="a2-z" data-testid="money-profit" data-lm-ready="" data-from={q.from} data-to={q.to}>
       <PageHead view={view} place={locateKey(KEY)} title={c('title')}
         sub={t(d, 'lf.fp.sub')}
         right={
           <>
+            <div className="pl-seg" role="group" aria-label={t(d, 'lf.fp.seg.month')} data-testid="pl-seg">
+              {segs.map((k) => (
+                <Link key={k} href={`${HERE}?period=${k}`} className={mine === k ? 'on' : ''} aria-current={mine === k ? 'true' : undefined} data-testid={`pl-seg-${k}`}>
+                  {t(d, `lf.fp.seg.${k}`)}
+                </Link>
+              ))}
+            </div>
             <Link className="a2-btn" href="/admin/money/month-end" data-testid="pl-cs">
               {t(d, 'lf.mn.act.close')}
             </Link>
@@ -137,6 +197,173 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
         }
       />
       <SectionTabs view={view} current={KEY} />
+
+      <div className="pl-two">
+        <section className="a2-card" aria-labelledby="pl-st" data-testid="pl-statement">
+          <h2 className="a2-h3" id="pl-st">
+            {t(d, 'lf.fp.st.title')}
+          </h2>
+          {mine === 'month' ? (
+            <div className="pl-seg pl-seg-sm a2-mt6" role="group" data-testid="pl-cmp">
+              <Link href={`${HERE}?period=month`} className={one(sp.cmp) === 'full' ? '' : 'on'}>
+                {t(d, 'lf.fp.st.vsSame')}
+              </Link>
+              <Link href={`${HERE}?period=month&cmp=full`} className={one(sp.cmp) === 'full' ? 'on' : ''}>
+                {t(d, 'lf.fp.st.vsFull')}
+              </Link>
+            </div>
+          ) : null}
+          <div className="a2-tblw a2-mt6">
+            <table className="a2-tbl pl-tbl">
+              <thead>
+                <tr>
+                  <th>{t(d, 'lf.fp.st.line')}</th>
+                  <th className="w4-r">{t(d, 'lf.fp.st.this')}</th>
+                  <th className="w4-r pl-hide">{t(d, 'lf.fp.st.cmp')}</th>
+                  <th className="w4-r">{t(d, 'lf.fp.st.chg')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ST.map((x) => {
+                  const a = x.minor(r);
+                  const b = x.minor(prev);
+                  return (
+                    <tr key={x.key} className={`pl-${x.kind}`} data-testid={`pl-st-${x.key}`}>
+                      <td className={x.kind === 'ind' ? 'pl-ind' : ''}>{t(d, `lf.fp.st.${x.key}`)}</td>
+                      <td className={`w4-r${x.kind === 'big' && (a ?? 0) < 0 ? ' w4-neg' : ''}`}>{stCell(a, x.out)}</td>
+                      <td className="w4-r a2-mute pl-hide">{stCell(b, x.out)}</td>
+                      <td className="w4-r">{b ? <Delta pct={deltaPct(a, b)} inverse={x.out} /> : <span className="a2-mute">—</span>}</td>
+                    </tr>
+                  );
+                })}
+                <tr data-testid="pl-st-margin">
+                  <td>{t(d, 'lf.fp.st.margin')}</td>
+                  <td className="w4-r">
+                    <b>{marginOf(r) === null ? '—' : `${marginOf(r)}%`}</b>
+                  </td>
+                  <td className="w4-r a2-mute pl-hide">{marginOf(prev) === null ? '—' : `${marginOf(prev)}%`}</td>
+                  <td />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="a2-xs a2-mute a2-mt6">{t(d, 'lf.fp.note', { n: r.orders })}</p>
+        </section>
+        <div className="a2-stack">
+          {r.orders > 0 ? (
+            <section className="a2-card" aria-labelledby="pl-ue" data-testid="pl-ue">
+              <h2 className="a2-h3" id="pl-ue">
+                {t(d, 'lf.fp.ue.title')}
+              </h2>
+              {ue.map((x) => (
+                <div key={x.key} className="a2-rule">
+                  <span>{t(d, `lf.fp.ue.${x.key}`)}</span>
+                  <span />
+                  <b className={x.minor < 0 ? 'w4-neg' : ''}>{sm(x.minor)}</b>
+                </div>
+              ))}
+              <div className="a2-rule" data-testid="pl-ue-profit">
+                <span>
+                  <b>{t(d, 'lf.fp.ue.profit')}</b>
+                </span>
+                <span />
+                <b className={ueNet < 0 ? 'w4-neg' : 'w4-pos'}>{sm(ueNet)}</b>
+              </div>
+              <p className="a2-xs a2-mute a2-mt12">{t(d, 'lf.fp.ue.note', { n: r.orders })}</p>
+            </section>
+          ) : null}
+          <section className="a2-card" aria-labelledby="pl-close" data-testid="pl-closecard">
+            <h2 className="a2-h3" id="pl-close">
+              {t(d, 'lf.fp.close.title')}
+            </h2>
+            <p className="a2-cs">{t(d, 'lf.fp.close.sub')}</p>
+            {[prevMonthKey, lastMonthKey, thisMonthKey].map((mo, i) => {
+              const closed = sheets[i]?.close.state === 'CLOSED';
+              const word = closed ? t(d, 'lf.fp.close.closed') : mo === thisMonthKey ? t(d, 'lf.fp.close.running') : t(d, 'lf.fp.close.ready');
+              return (
+                <div key={mo} className="a2-rule">
+                  <span>{monthName(mo)}</span>
+                  <span />
+                  <span className={`a2-pill ${closed ? '' : mo === thisMonthKey ? 'info' : 'warn'}`}>{word}</span>
+                </div>
+              );
+            })}
+            <Link className="a2-btn sm pri a2-mt12" href="/admin/money/books/closes">
+              {t(d, 'lf.fp.close.open')}
+            </Link>
+          </section>
+        </div>
+      </div>
+
+      <section className="a2-card a2-mt12" aria-labelledby="pl-drill" data-testid="pl-drill">
+        <div className="a2-ch">
+          <div>
+            <h2 className="a2-h3" id="pl-drill">
+              {t(d, 'lf.fp.drill.title')}
+            </h2>
+            <div className="a2-cs">{t(d, 'lf.fp.drill.sub')}</div>
+          </div>
+          <Link className="lf-more" href={`/admin/money/profit/groups?from=${q.from}&to=${q.to}`}>
+            {t(d, 'lf.fp.drill.deeper')} →
+          </Link>
+        </div>
+        {chRows.length ? (
+          <>
+            <p className="a2-xs a2-mute">{t(d, 'lf.fp.drill.all')}</p>
+            {chBest && chWorst && chRows.length > 1 ? (
+              <p className="a2-sm">{t(d, 'lf.fp.drill.insight', { best: chName(chBest.key), pct: Math.round(((chBest.profitMinor ?? 0) / chTotal) * 100), worst: chName(chWorst.key), m: channelMarginPct(chWorst) ?? 0 })}</p>
+            ) : null}
+            <div className="a2-tblw">
+              <table className="a2-tbl">
+                <thead>
+                  <tr>
+                    <th>{t(d, 'lf.fp.drill.channel')}</th>
+                    <th className="w4-r pl-hide">{t(d, 'lf.fp.drill.orders')}</th>
+                    <th className="w4-r">{t(d, 'lf.fp.drill.sales')}</th>
+                    <th className="w4-r">{t(d, 'lf.fp.drill.profit')}</th>
+                    <th className="w4-r pl-hide">{t(d, 'lf.fp.drill.margin')}</th>
+                    <th className="pl-hide">{t(d, 'lf.fp.drill.share')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chRows.map((x) => {
+                    const share = Math.max(0, Math.round(((x.profitMinor ?? 0) / chTotal) * 100));
+                    return (
+                      <tr key={x.key}>
+                        <td>
+                          <Link href={`/admin/money/profit/channels?from=${q.from}&to=${q.to}`}>{chName(x.key)}</Link>
+                        </td>
+                        <td className="w4-r pl-hide">{x.orders}</td>
+                        <td className="w4-r">{m(x.salesMinor)}</td>
+                        <td className="w4-r">
+                          <b>{x.profitMinor === null ? '—' : m(x.profitMinor)}</b>
+                        </td>
+                        <td className="w4-r pl-hide">{channelMarginPct(x) === null ? '—' : `${channelMarginPct(x)}%`}</td>
+                        <td className="pl-hide">
+                          <span className="pl-bar">
+                            <i style={{ width: `${Math.min(100, share)}%` }} />
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <p className="a2-xs a2-mute">{t(d, 'lf.fp.drill.empty')}</p>
+        )}
+      </section>
+
+      {!more ? (
+        <p className="a2-mt12">
+          <Link className="lf-more" href={`${HERE}?period=${mine ?? 'month'}&more=1`} data-testid="pl-more">
+            {t(d, 'lf.fp.moreLink')} →
+          </Link>
+        </p>
+      ) : (
+        <>
 
       <nav className="ct-actions a2-mt12" aria-label={cr('quick.label')} data-testid="pl-quick">
         {QUICK_PERIODS.map((p) => (
@@ -243,30 +470,6 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
         ))}
       </section>
 
-      {r.orders > 0 ? (
-        <section className="a2-card a2-mt12" aria-labelledby="pl-ue" data-testid="pl-ue">
-          <h2 className="a2-h3" id="pl-ue">
-            {t(d, 'lf.fp.ue.title')}
-          </h2>
-          {ue.map((x) => (
-            <div key={x.key} className="a2-rule">
-              <span>{t(d, `lf.fp.ue.${x.key}`)}</span>
-              <span />
-              <b>{sm(x.minor)}</b>
-            </div>
-          ))}
-          <div className="a2-rule" data-testid="pl-ue-profit">
-            <span>
-              <b>{t(d, 'lf.fp.ue.profit')}</b>
-            </span>
-            <span />
-            <b>{sm(ueNet)}</b>
-          </div>
-          <p className="a2-xs a2-mute a2-mt12">{t(d, 'lf.fp.ue.note', { n: r.orders })}</p>
-          <p className="a2-xs a2-mute">{t(d, 'lf.fp.note', { n: r.orders })}</p>
-        </section>
-      ) : null}
-
       <section className="a2-card a2-mt12" aria-labelledby="pl-days" data-testid="pl-days">
         <h2 className="a2-h3" id="pl-days">
           {c('byDay.title')}
@@ -291,6 +494,8 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
 
       {/* S16 · PR 351: the money report to the owner — how often, when, in which language; its next day and its words. */}
       <MoneyReportCard key={report.version} dict={d} view={report} canEdit={access.guard.permissions?.has('books.report') ?? false} nextDayText={report.nextDay ? dayText(report.nextDay) : null} />
+        </>
+      )}
     </div>
   );
 }
