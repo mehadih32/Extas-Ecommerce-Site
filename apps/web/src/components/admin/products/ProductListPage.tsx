@@ -128,7 +128,7 @@ export function ProductListBody({ view, query, data, canWrite, canPublish }: { v
             <option value="stock">{t(d, 'products.sort.stock')}</option>
           </select>
         </label>
-        <button type="submit" className="ad-btn ad-btn-ghost ad-btn-sm">
+        <button type="submit" className="ad-btn ad-btn-ghost ad-btn-sm pa-vh">
           {t(d, 'products.search.submit')}
         </button>
       </form>
