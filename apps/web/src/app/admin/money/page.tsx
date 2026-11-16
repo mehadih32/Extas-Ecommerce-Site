@@ -71,6 +71,7 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
   const c = (k: string, vars?: Record<string, string | number>) => t(d, `moneyOverview.${k}`, vars);
   const [o, currency] = await Promise.all([moneyOverview(access.deps.db, MOTHER_STORE_ID, new Date(), view.timeZone), access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID })]);
   const f = (k: string, vars?: Record<string, string | number>) => t(d, `lf.fn.${k}`, vars);
+  const [adTarget, todaySet] = await Promise.all([access.deps.resolver.value('costs.adShareTarget', { storeId: MOTHER_STORE_ID }), access.deps.resolver.value('admin.today', { storeId: MOTHER_STORE_ID })]);
   const money = moneyOf(currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const fmt: CountFormat = { kind: 'money', locale: view.locale, currency, digits: money.digits };
@@ -177,9 +178,16 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
         { key: 'net', label: f('ms.net'), shown: msNet === null ? '—' : `${msNet < 0 ? '−' : ''}${short(Math.abs(msNet))}`, pct: msNet === null ? 0 : msPct(msNet), kind: 'net' },
       ]
     : [];
+  // ads over the owner's own target (empty setting = no card), and how much of this month's fixed costs the sales so far cover
+  const adPct = msSales > 0 ? (msAds / msSales) * 100 : 0; // hardcode-ok: percent of sales
+  if (typeof adTarget === 'number' && msAds > 0 && adPct > adTarget) decide.push({ key: 'adShare', tone: 'warn', head: f('dec.adHead', { pct: adPct.toFixed(1) }), text: f('dec.adText', { target: adTarget, ads: short(msAds) }), action: { label: f('dec.adBtn'), href: '/admin/marketing/ad-platforms' } });
+  const fixedCoverPct = msFixed > 0 && msNet !== null ? Math.max(0, Math.round(((msNet + msFixed) / msFixed) * 100)) : null; // hardcode-ok: percent
+  const goal = (todaySet as { goal?: { on: boolean; amountMinor: number } } | null)?.goal;
+  const goalLine = goal && goal.on && goal.amountMinor > 0 ? f('ms.target', { target: short(goal.amountMinor) }) : ''; // hardcode-ok: percent
+  const goalPct = goal && goal.on && goal.amountMinor > 0 ? Math.round((msSales / goal.amountMinor) * 100) : 0; // hardcode-ok: percent
   const dayNo = Number(today.slice(8, 10)) || 1; // hardcode-ok: day of month read from the date text
   const monthDays = new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0)).getUTCDate(); // hardcode-ok: days in this month
-  const monthTiles = mr ? [{ key: 'pace', label: f('ms.pace'), shown: short(Math.round((msSales / dayNo) * monthDays)) }, ...(msNet === null ? [] : [{ key: 'paceNet', label: f('ms.paceNet'), shown: short(Math.round((msNet / dayNo) * monthDays)) }])] : [];
+  const monthTiles = mr ? [{ key: 'pace', label: f('ms.pace'), shown: short(Math.round((msSales / dayNo) * monthDays)) }, ...(fixedCoverPct === null ? [] : [{ key: 'fixedCovered', label: f('ms.fixedCovered'), shown: `${fixedCoverPct}%` }]), ...(goalLine ? [{ key: 'target', label: goalLine, shown: `${goalPct}%` }] : []), ...(msNet === null ? [] : [{ key: 'paceNet', label: f('ms.paceNet'), shown: short(Math.round((msNet / dayNo) * monthDays)) }])] : [];
   const ranges = heroRanges(o.received.daily ?? [], view.locale, amount, 10 ** money.digits, c);
 
   return (
