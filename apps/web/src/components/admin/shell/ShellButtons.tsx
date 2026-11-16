@@ -121,6 +121,7 @@ export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string
     const w = widths.current;
     if (w.length !== tabs.length) return;
     const room = el.clientWidth;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- measures the tab strip after layout
     if (window.innerWidth < LAPTOP) return void (shown !== tabs.length && setShown(tabs.length));
     const gap = 2;
     const total = w.reduce((a, b) => a + b + gap, 0);

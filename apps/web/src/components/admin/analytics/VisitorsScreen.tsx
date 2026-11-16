@@ -75,7 +75,7 @@ export function VisitorsScreen(p: VisitorsScreenProps) {
   const devTotal = Math.max(1, v.devices.reduce((n, r) => n + r.views, 0));
   const devTop = v.devices[0];
   const topPct = devTop ? Math.round((devTop.views / devTotal) * 100) : 0; // hardcode-ok: percent
-  const tone = ['var(--lm-ac)', 'var(--lm-info, #1F4E79)', 'var(--lm-ok)'];
+  const tone = ['var(--lm-ac)', 'var(--lm-info)', 'var(--lm-ok)'];
   let acc = 0;
   const donut = v.devices.length
     ? `conic-gradient(${v.devices.slice(0, 3).map((r, i) => { const a = acc; acc += (r.views / devTotal) * 100; return `${tone[i]} ${a}% ${acc}%`; }).join(', ')}, var(--lm-chip) ${acc}% 100%)`

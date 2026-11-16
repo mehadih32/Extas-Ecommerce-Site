@@ -17,7 +17,7 @@
 .adm2 .seo-fig{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr));gap:16px;margin-top:12px}
 .adm2 .seo-score{display:flex;align-items:center;gap:14px;padding:15px 18px}
 .adm2 .seo-ring{--seo-c:var(--g);width:78px;height:78px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--seo-c) var(--seo-pct),var(--ln) 0)}
-.adm2 .seo-ring.good{--seo-c:var(--good,#1a7f4b)}.adm2 .seo-ring.warn{--seo-c:var(--warn,#b7791f)}.adm2 .seo-ring.bad{--seo-c:var(--bad,#c0392b)}
+.adm2 .seo-ring.good{--seo-c:var(--lm-ok)}.adm2 .seo-ring.warn{--seo-c:var(--lm-warn)}.adm2 .seo-ring.bad{--seo-c:var(--lm-bad)}
 .adm2 .seo-ring b{width:58px;height:58px;border-radius:50%;background:var(--sf);display:grid;place-items:center;font-size:20px}
 .adm2 .seo-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
 .adm2 .seo-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
@@ -25,9 +25,9 @@
 .adm2 .seo-list li>span:nth-child(2),.adm2 .seo-list li>a:first-child{flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
 .adm2 .seo-weak li{flex-wrap:nowrap}
 .adm2 .seo-bar{flex:0 0 90px;height:6px;border-radius:3px;background:var(--ln);overflow:hidden}
-.adm2 .seo-bar i{display:block;height:100%;background:var(--bad,#c0392b)}
-.adm2 .seo-pos{display:inline-block;min-width:34px;text-align:center;font-weight:700;border-radius:8px;padding:2px 6px;background:var(--sf2,#f4f4f4)}
-.adm2 .seo-pos.t3{background:var(--good-soft,#e3f4ea);color:var(--good,#1a7f4b)}.adm2 .seo-pos.t10{background:var(--info-soft,#e6f0fb);color:var(--info,#1f5fa8)}
+.adm2 .seo-bar i{display:block;height:100%;background:var(--lm-bad)}
+.adm2 .seo-pos{display:inline-block;min-width:34px;text-align:center;font-weight:700;border-radius:8px;padding:2px 6px;background:var(--lm-sf2)}
+.adm2 .seo-pos.t3{background:var(--lm-okbg);color:var(--lm-ok)}.adm2 .seo-pos.t10{background:var(--lm-infobg);color:var(--lm-info)}
 .adm2 .seo-kv{margin:8px 0 0;display:grid;gap:0}
 .adm2 .seo-kv>div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--ln);min-width:0}
 .adm2 .seo-kv dt{color:var(--ink2)}.adm2 .seo-kv dd{margin:0;text-align:end;overflow-wrap:anywhere;min-width:0}

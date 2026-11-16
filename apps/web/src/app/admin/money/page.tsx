@@ -87,6 +87,7 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
       const prev = previousPeriod(cur.from, cur.to);
       const [a, b] = await Promise.all([profitReport(access.deps, MOTHER_STORE_ID, cur.from, cur.to), profitReport(access.deps, MOTHER_STORE_ID, prev.from, prev.to)]);
       if (id === 'month') {
+        // eslint-disable-next-line react-hooks/immutability -- server render: a local result of this one request
         monthRep = a;
         monthFrom = cur.from;
         monthTo = cur.to;
