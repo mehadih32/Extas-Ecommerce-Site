@@ -41,6 +41,9 @@ import { locateKey } from "@/lib/admin-shell/sections";
 import { t } from "@/lib/i18n";
 import { makeFmt } from "@/lib/reports-v5/fmt";
 import { loadMarketing, loadViews, adSpendByDay } from "@/lib/reports-v5/load";
+import { categoryTree, loadGeoOrders } from "@/lib/reports-v5/areas";
+import { DIVISIONS } from "@/lib/reports-v5/geo";
+import { filterOrders } from "@/lib/reports-v5/profit";
 import {
   AD_FILTERS,
   adFilterOf,
@@ -135,7 +138,53 @@ export default async function MarketingReportTab({
     ? await adSpendByDay(access.deps.db, m.now.currency, before.from, before.to)
     : [];
   // PR 854: delivered sales from ads, day by day (the prototype's second line), worked out from the orders by the shop's channel rules
-  const adSalesRows = await adSalesByDay(access.deps, q.from, q.to, adF);
+  // The prototype's toolbar also has Channel, Category and Area (they narrow the orders): they narrow the sales-from-ads line here
+  const catId =
+    typeof sp.cat === "string" && /^[0-9a-f-]{36}$/i.test(sp.cat) ? sp.cat : "all";
+  const divF =
+    typeof sp.div === "string" && DIVISIONS.includes(sp.div) ? sp.div : "all";
+  const wideFrom = new Date(
+    new Date(`${q.from}T00:00:00Z`).getTime() - 60 * 86400000,
+  )
+    .toISOString()
+    .slice(0, 10);
+  const tz = (await access.deps.resolver.value("store.timeZone", {
+    storeId: MOTHER_STORE_ID,
+  })) as string;
+  const [categories, geo, catTree] = await Promise.all([
+    access.deps.db.category.findMany({
+      where: { storeId: MOTHER_STORE_ID, archivedAt: null },
+      select: { id: true, nameEn: true, nameBn: true, parentId: true },
+      orderBy: { nameEn: "asc" },
+    }),
+    loadGeoOrders(access.deps, tz, wideFrom, q.to),
+    catId === "all"
+      ? Promise.resolve(null)
+      : categoryTree(access.deps.db, catId),
+  ]);
+  const chKeys = [...new Set(geo.map((o) => o.source).filter(Boolean))].sort();
+  const chF = typeof sp.ch === "string" && chKeys.includes(sp.ch) ? sp.ch : "all";
+  const orderFiltered = catId !== "all" || divF !== "all" || chF !== "all";
+  const orderIds = orderFiltered
+    ? new Set(
+        filterOrders(geo, { cat: catId, div: divF, ch: chF }, catTree).map(
+          (o) => o.id,
+        ),
+      )
+    : null;
+  const adSalesRows = await adSalesByDay(
+    access.deps,
+    q.from,
+    q.to,
+    adF,
+    orderIds,
+  );
+  const bnLang = view.lang === "bn";
+  const channelName = (k: string) => {
+    const w = t(d, `reportsV5.channel.${k}`);
+    return w === `reportsV5.channel.${k}` ? k.replace(/^source:/, "") : w;
+  };
+  const cp = (k: string) => t(d, `reportsV5.profit.${k}`);
 
   const header = (
     <>
@@ -491,7 +540,7 @@ export default async function MarketingReportTab({
       ),
     },
   }));
-  const keep = keepOf(sp, ["adch"]);
+  const keep = keepOf(sp, ["adch", "ch", "cat", "div"]);
 
   return (
     <div
@@ -527,6 +576,35 @@ export default async function MarketingReportTab({
           clearLabel={cc("clear")}
           fields={[
             {
+              name: "ch",
+              label: cp("fChannel"),
+              all: cp("fAllChannels"),
+              options: chKeys.map((k) => ({ value: k, label: channelName(k) })),
+              value: chF,
+            },
+            {
+              name: "cat",
+              label: cp("fCategory"),
+              all: cp("fAllCategories"),
+              options: categories
+                .filter((x) => !x.parentId)
+                .map((x) => ({
+                  value: x.id,
+                  label: bnLang && x.nameBn ? x.nameBn : x.nameEn,
+                })),
+              value: catId,
+            },
+            {
+              name: "div",
+              label: cp("fArea"),
+              all: cp("fAllAreas"),
+              options: DIVISIONS.map((x) => ({
+                value: x,
+                label: t(d, "reportsV5.areas.divisionName", { name: x }),
+              })),
+              value: divF,
+            },
+            {
               name: "adch",
               label: c("fAdChannel"),
               all: c("fAllAdChannels"),
@@ -543,6 +621,11 @@ export default async function MarketingReportTab({
       {adF !== "all" ? (
         <p className="a2-xs a2-mute a2-mt6" data-testid="rp-filter-note">
           {c("filterNote")}
+        </p>
+      ) : null}
+      {orderFiltered ? (
+        <p className="a2-xs a2-mute a2-mt6" data-testid="rp-order-filter-note">
+          {c("orderFilterNote")}
         </p>
       ) : null}
       <ReportAnswers

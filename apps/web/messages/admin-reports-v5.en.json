@@ -390,6 +390,7 @@
       "fAdChannel": "Ad channel",
       "fAllAdChannels": "All ad channels",
       "filterNote": "Ad channel filter on: the figures, charts and the campaign table show only that platform. The paid share and coupon chips stay for the whole shop.",
+      "orderFilterNote": "Order filters on: the line of sales from ads counts only the delivered orders that match the channel, category and area you picked (orders placed in the 60 days before the period are included). Ad spend stays whole.",
       "heroPrevSeries": "Ad spend (before)",
       "clicksN": "{n} clicks",
       "dSpent": "spent",

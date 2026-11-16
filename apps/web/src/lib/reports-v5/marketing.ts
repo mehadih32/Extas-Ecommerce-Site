@@ -179,7 +179,10 @@ export async function adSalesByDay(
   from: string,
   to: string,
   f: AdFilter | "all",
+  /** Only these orders count (the channel, category and area filters of the report); null keeps every order. */
+  orderIds: ReadonlySet<string> | null = null,
 ): Promise<{ day: string; salesMinor: number }[]> {
+  if (orderIds && orderIds.size === 0) return [];
   const at = { storeId: S };
   const [tz, rules] = await Promise.all([
     deps.resolver.value("store.timeZone", at) as Promise<string>,
@@ -202,7 +205,7 @@ export async function adSalesByDay(
       FROM "Order" o
       LEFT JOIN "AdCampaign" c ON c."id" = o."adCampaignId" AND c."storeId" = o."storeId"
       LEFT JOIN "AdAccount" a ON a."id" = c."adAccountId" AND a."storeId" = o."storeId"
-     WHERE ${basisWhere("sales", S, period)}
+     WHERE ${basisWhere("sales", S, period)}${orderIds ? Prisma.sql` AND o."id" IN (${Prisma.join([...orderIds])})` : Prisma.empty}
      GROUP BY 1, 2, 3, 4, 5, 6`);
   return adSalesDaily(
     rows.map((r) => ({
