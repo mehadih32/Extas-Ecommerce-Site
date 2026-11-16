@@ -1,6 +1,7 @@
 // S28 · PR 684 — Products › Demo products: sample products that fill the categories while real products arrive (see
 // components/admin/products/DemoManager). Reading needs `catalogue.read`, changing `catalogue.write`.
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cat from '@extas/catalogue';
@@ -58,7 +59,7 @@ export default async function DemoProductsPage() {
 
   return (
     <div className="a2-z" data-testid="demo-products" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.demo.title')} sub={t(d, 'products.demo.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.demo.title')} sub={t(d, 'products.demo.sub')} right={<Link className="a2-btn" href="/admin/products" data-testid="demo-see">{t(d, 'products.demo.see')}</Link>} />
       <SectionTabs view={view} current={KEY} />
       <DemoManager
         dict={d}
