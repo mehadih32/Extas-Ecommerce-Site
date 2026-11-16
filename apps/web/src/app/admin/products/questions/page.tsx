@@ -19,7 +19,9 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { catalogueAccess, one, productHref } from '@/lib/admin-products';
 import { ReviewChips } from '@/components/admin/reviews/ReviewChips';
+import { ReviewTop } from '@/components/admin/reviews/ReviewTop';
 import { withReviews } from '@/lib/admin-reviews/i18n';
+import { loadReviewTop } from '@/lib/admin-reviews/top';
 import { reviewSettingCards } from '@/lib/review-settings-api';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
@@ -91,34 +93,21 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Se
   const productName = new Map(products.map((p) => [p.id, nameIn(view.lang, p)]));
   const n = (x: number) => formatNumber(x, view.locale);
   const day = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
-  const kpis = [
-    { id: 'unanswered', value: n(list.counts.unanswered) },
-    { id: 'open', value: n(list.counts.open) },
-    { id: 'published', value: n(list.counts.published) },
-  ];
+  const top = await loadReviewTop(c);
 
   return (
     <div className="a2-z" data-testid="product-questions" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'revq.title')} sub={t(d, 'revq.sub')} />
+      {/* PR 964 (prototype v5): the heading, figures and rule line are the same on all four tabs; the chips come under them */}
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'rev.title')} sub={t(d, 'rev.sub')} />
       <SectionTabs view={view} current={KEY} />
+      {top ? <ReviewTop d={d} f={top} n={n} /> : null}
       <ReviewChips
         current="questions"
         aria={t(d, 'rev.chip.aria')}
         labels={{ questions: t(d, 'rev.chip.questions'), reviews: t(d, 'rev.chip.reviews'), hidden: t(d, 'rev.chip.hidden'), faqs: t(d, 'rev.chip.faqs') }}
-        counts={{ questions: n(list.counts.open) }}
+        counts={{ questions: n(list.counts.unanswered), ...(top ? { reviews: n(top.pending) } : {}) }}
       />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'revq.readOnly')}</p> : null}
-      <div className="a2-kpis a2-mt12" data-testid="question-kpis">
-        {kpis.map((k) => (
-          <div key={k.id} className="a2-card a2-kpi" data-testid={`question-kpi-${k.id}`}>
-            <div className="a2-kl">{t(d, `revq.kpi.${k.id}`)}</div>
-            <div className="a2-kv">{k.value}</div>
-            <div className="a2-kf">
-              <span className="a2-kn">{t(d, `revq.kpi.${k.id}Note`)}</span>
-            </div>
-          </div>
-        ))}
-      </div>
       <nav className="a2-views a2-mt12" aria-label={t(d, 'revq.views')} data-testid="question-views">
         {cat.QUESTION_VIEWS.map((v) => (
           <Link key={v} className={`a2-view${v === tab ? ' on' : ''}`} href={hrefOf(v)} aria-current={v === tab ? 'page' : undefined} scroll={false} data-view={v}>

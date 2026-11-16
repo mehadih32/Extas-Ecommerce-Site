@@ -20,6 +20,7 @@ import { formatNumber, nameIn } from '@/components/admin/products/model';
 import { ReviewActions } from '@/components/admin/reviews/ReviewActions';
 import { ReviewChips } from '@/components/admin/reviews/ReviewChips';
 import { ReviewImport } from '@/components/admin/reviews/ReviewImport';
+import { ReviewTop } from '@/components/admin/reviews/ReviewTop';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ResponsiveImage } from '@/components/media/ResponsiveImage';
@@ -75,9 +76,10 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
   const rawCursor = one(sp.cursor);
   const cursor = rawCursor && UUID.test(rawCursor) ? rawCursor : undefined;
   const canModerate = c.can('reviews.moderate');
-  const [list, desk, currency, cards] = await Promise.all([
+  const [list, desk, openQuestions, currency, cards] = await Promise.all([
     cat.listReviews(c.deps, c.who, { ...(tab === 'photo' ? { withPhoto: true } : { status: tab }), ...(cursor ? { cursor } : {}) }),
     cat.reviewDesk(c.deps, c.who),
+    cat.listQuestions(c.deps, c.who, { view: 'open' }),
     c.deps.settings.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
     reviewSettingCards(access.deps, { actor: access.guard.actor, ctx: access.guard.ctx }),
   ]);
@@ -116,41 +118,21 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Sear
   const money = (minor: number) => new Intl.NumberFormat(view.locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 2, numberingSystem: 'latn' }).format(minor / 100);
   const counts: Record<View, number | null> = { PENDING: list.counts.PENDING, APPROVED: list.counts.APPROVED, HIDDEN: list.counts.HIDDEN, REJECTED: list.counts.REJECTED, photo: null };
   const rq = desk.requests;
-  const kpis = [
-    { id: 'pending', value: n(list.counts.PENDING), note: t(d, 'rev.kpi.pendingNote') },
-    { id: 'published', value: n(desk.published), note: t(d, 'rev.kpi.publishedNote') },
-    { id: 'average', value: desk.average === null ? t(d, 'rev.kpi.averageNone') : desk.average.toFixed(1), note: t(d, 'rev.kpi.averageNote') },
-    // PR 806 (prototype v5): the fifth figure, published 1-2 star reviews the shop has not answered
-    { id: 'unreplied', value: n(desk.unreplied), note: t(d, 'rev.kpi.unrepliedNote') },
-    { id: 'asked', value: n(rq.asked), note: t(d, 'rev.kpi.askedNote', { answered: n(rq.answered), pct: pct(rq.answered, rq.asked), days: n(rq.days) }) },
-  ];
+  // PR 964 (prototype v5): the five figures in the prototype's order and words, the same on all four tabs (ReviewTop); "Asked after delivery" stays in the Review requests card below
+  const top = { average: desk.average, published: desk.published, pending: list.counts.PENDING, questions: openQuestions.counts.unanswered, unreplied: desk.unreplied };
 
   return (
     <div className="a2-z" data-testid="product-reviews" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'rev.title')} sub={t(d, 'rev.sub')} />
       <SectionTabs view={view} current={KEY} />
+      <ReviewTop d={d} f={top} n={n} />
       <ReviewChips
         current={tab === 'HIDDEN' ? 'hidden' : 'reviews'}
         aria={t(d, 'rev.chip.aria')}
         labels={{ questions: t(d, 'rev.chip.questions'), reviews: t(d, 'rev.chip.reviews'), hidden: t(d, 'rev.chip.hidden'), faqs: t(d, 'rev.chip.faqs') }}
-        counts={{ reviews: n(desk.published), hidden: n(list.counts.HIDDEN) }}
+        counts={{ reviews: n(list.counts.PENDING), hidden: n(list.counts.HIDDEN), questions: n(openQuestions.counts.unanswered) }}
       />
       {!canModerate ? <p className="a2-xs a2-mute a2-mt12">{t(d, 'rev.readOnly')}</p> : null}
-      <div className="a2-kpis k5 a2-mt12" data-testid="review-kpis">
-        {kpis.map((k) => (
-          <div key={k.id} className="a2-card a2-kpi" data-testid={`review-kpi-${k.id}`}>
-            <div className="a2-kl">{t(d, `rev.kpi.${k.id}`)}</div>
-            <div className="a2-kv">{k.value}</div>
-            <div className="a2-kf">
-              <span className="a2-kn">{k.note}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      {/* PR 788 (prototype v5 parity): the rule the prototype states under the figures */}
-      <div className="a2-note" role="note" data-testid="review-callout">
-        {t(d, 'rev.callout')}
-      </div>
       <section className="a2-card a2-mt12" data-testid="review-requests">
         <h2 className="a2-h3">{t(d, 'rev.req.title')}</h2>
         <p className="a2-sm">{rq.asked ? t(d, 'rev.req.line', { days: n(rq.days), asked: n(rq.asked), answered: n(rq.answered), pct: pct(rq.answered, rq.asked), photo: n(rq.withPhoto) }) : t(d, 'rev.req.none', { days: n(rq.days) })}</p>
