@@ -17,3 +17,21 @@
 .st-slotst.on { color: var(--lm-ac-ink); }
 .st-logonote { grid-column: 1 / -1; margin: 0; }
 @media (max-width: 960px) { .st-grid { grid-template-columns: minmax(0, 1fr); } .st-logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* PR 991 - Store details: the sticker preview window, the Sales / Profit so far lines and the More options note list. */
+.st-dlg { border: 1px solid var(--lm-ln); border-radius: 14px; background: var(--lm-sf); color: var(--lm-ink); padding: 16px; width: min(92vw, 380px); }
+.st-dlg::backdrop { background: rgb(0 0 0 / 0.35); }
+.st-sticker { margin: 12px 0; padding: 14px; border: 2px dashed var(--lm-ln); border-radius: 12px; display: flex; flex-direction: column; gap: 8px; overflow-wrap: anywhere; }
+.st-sthead { font-size: 18px; }
+.st-stline { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.st-prog { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; font-size: 13px; }
+.st-bar { height: 8px; border-radius: 999px; background: var(--lm-ln); overflow: hidden; }
+.st-bar > i { display: block; height: 100%; background: var(--lm-ac-ink); }
+.st-more { margin-top: 12px; }
+.st-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.st-notes { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--lm-ink2); display: flex; flex-direction: column; gap: 6px; }
+/* PR 991 - the prototype's form grid: three columns in the wide first card, one column in the half-width cards. */
+.st-grid > .a2-sc:not(.st-span2) .a2-fg { grid-template-columns: minmax(0, 1fr); }
+.st-grid > .st-span2 .a2-fg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.st-grid > .a2-sc .a2-fg .a2-fld.full { grid-column: 1 / -1; }
+.st-grid > .a2-sc { height: 100%; }
+@media (max-width: 960px) { .st-grid > .st-span2 .a2-fg { grid-template-columns: minmax(0, 1fr); } }
