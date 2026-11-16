@@ -27,7 +27,10 @@ import {
   TrainingAddForm,
   TrainingRemoveButton,
 } from "@/components/admin/ai/TrainingControls";
-import { MasterSwitch } from "@/components/admin/ai/MasterSwitch";
+import { AiStrip } from "@/components/admin/ai/AiStrip";
+import stripBn from "../../../../../messages/admin-ai-strip.bn.json";
+import stripEn from "../../../../../messages/admin-ai-strip.en.json";
+import "@/components/admin/ai/ai-strip.css";
 import {
   DocAddDialog,
   DocRow,
@@ -72,6 +75,7 @@ function withScreen(view: AdminView): AdminView {
     ...view,
     dict: {
       ...view.dict,
+      ...((view.lang === "bn" ? stripBn : stripEn) as unknown as Dict),
       aiTraining: (view.lang === "bn" ? bn : en).aiTraining as unknown as Dict,
     },
   };
@@ -107,9 +111,11 @@ export default async function AiTrainingPage() {
   const c = (k: string, vars?: Record<string, string | number>) =>
     t(view.dict, `aiTraining.${k}`, vars);
   const canControl = access.guard.permissions?.has("ai.control") ?? false;
-  const [screen, aiOn, extras, off] = await Promise.all([
+  const stripDict = view.dict;
+  const [screen, aiOn, offText, extras, off] = await Promise.all([
     instructionsScreen(access.deps),
     access.deps.resolver.value("ai.enabled"),
+    access.deps.resolver.value("ai.offText", { storeId: MOTHER_STORE_ID }),
     extrasState(access.deps.db),
     trainingOffIds(access.deps.resolver), // PR 820: corrections and documents the owner switched off
   ]);
@@ -203,36 +209,15 @@ export default async function AiTrainingPage() {
         place={locateKey(KEY)}
         title={c("title")}
         sub={c("sub")}
+        right={
+          <span className="a2-sm a2-mute" data-testid="training-version">
+            {c("strip.version", { n: versions.rows.find((v) => v.current)?.no ?? state.version })}
+          </span>
+        }
       />
       <SectionTabs view={view} current={KEY} />
 
-      <section
-        className="a2-card tr-strip"
-        data-testid="training-ai-strip"
-        data-on={aiOn ? "yes" : "no"}
-      >
-        <span className={`tr-dot${aiOn ? "" : " off"}`} aria-hidden="true" />
-        <div className="tr-strip-t">
-          <b className="tr-strip-b">{aiOn ? c("strip.on") : c("strip.off")}</b>
-          <span className="a2-xs a2-mute a2-blk">
-            {c("strip.version", {
-              n: versions.rows.find((v) => v.current)?.no ?? state.version,
-            })}
-          </span>
-        </div>
-        <span className="a2-sm a2-mute tr-strip-h">
-          {aiOn ? c("strip.onHint") : c("strip.offHint")}
-        </span>
-        {canControl ? (
-          <MasterSwitch
-            on={Boolean(aiOn)}
-            label={c("strip.switchLabel")}
-            onText={c("strip.toastOn")}
-            offText={c("strip.toastOff")}
-            failedText={c("strip.toastFailed")}
-          />
-        ) : null}
-      </section>
+      <AiStrip dict={stripDict} on={Boolean(aiOn)} canControl={canControl} offText={offText} lang={view.lang} />
       {!canControl ? (
         <div
           className="a2-note a2-mt12"
