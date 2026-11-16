@@ -81,10 +81,11 @@ export default async function VatPage({ searchParams }: { searchParams: Promise<
   };
   return (
     <div className="a2-z" data-testid="vat-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyVat.title')} sub={t(view.dict, 'lf.fh.vat.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'moneyVat.title')} sub={v.system.value.enabled || sp.more === '1' ? t(view.dict, 'lf.fh.vat.sub') : ''} />
       <SectionTabs view={view} current={KEY} />
       {/* Keyed by the saved versions, so the fields start again from what was saved after each save. */}
-      <VatScreen key={`${v.system.version}-${v.rates.version}`} dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} view={v} canEdit={canEdit} example={example} />
+      <VatScreen more={sp.more === '1'} key={`${v.system.version}-${v.rates.version}`} dict={view.dict} lang={view.lang === 'bn' ? 'bn' : 'en'} view={v} canEdit={canEdit} example={example} />
+      {v.system.value.enabled || sp.more === '1' ? (
       <VatReportSection
         dict={view.dict}
         here={HERE}
@@ -99,6 +100,7 @@ export default async function VatPage({ searchParams }: { searchParams: Promise<
         dayText={dayText}
         categoryName={categoryName}
       />
+      ) : null}
     </div>
   );
 }
