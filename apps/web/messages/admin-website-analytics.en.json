@@ -10,7 +10,12 @@
     "off": "The visitors view is switched off, so only each page's type is counted. Switch it on below to also see sources, devices and regions.",
     "range": {
       "label": "Show the last",
-      "days": "{n} days"
+      "days": "{n} days",
+      "today": "Today",
+      "7d": "7 days",
+      "30d": "30 days",
+      "month": "This month",
+      "last": "Last month"
     },
     "kpi": {
       "visitors": "Visitors",
@@ -20,12 +25,19 @@
       "conv": "Visit to order",
       "live": "Live now",
       "liveSub": "in the last {n} minutes",
-      "none": "-"
+      "none": "-",
+      "newReturning": "New / returning",
+      "percent": "percent",
+      "ordersSub": "{n} orders"
     },
     "chart": {
       "title": "Visitors and page views by day",
       "visitors": "Visitors",
-      "views": "Page views"
+      "views": "Page views",
+      "perDay": "Visitors per day",
+      "thisPeriod": "This period",
+      "before": "Period before",
+      "peak": "Highest: {n} on {day}"
     },
     "lists": {
       "sources": "Where they come from",
@@ -51,7 +63,9 @@
         "mobile": "Phone",
         "tablet": "Tablet",
         "desktop": "Computer"
-      }
+      },
+      "sourcesShort": "Traffic sources",
+      "districts": "Top districts (orders)"
     },
     "settings": {
       "title": "Visitors settings",
@@ -143,6 +157,20 @@
       "search": "Search",
       "behaviour": "Behaviour",
       "speed": "Speed"
-    }
+    },
+    "ai": {
+      "head": "Summary",
+      "up": "Visitors up {n}% vs the period before.",
+      "down": "Visitors down {n}% vs the period before.",
+      "none": "No visitors in the period before to compare with.",
+      "conv": "Visit → order is {n}%."
+    },
+    "top": {
+      "page": "Page",
+      "views": "Views",
+      "avg": "Avg time",
+      "orders": "Orders"
+    },
+    "export": "Export"
   }
 }

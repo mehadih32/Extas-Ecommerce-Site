@@ -6,6 +6,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { requirePermission } from '@extas/auth';
 import { MOTHER_STORE_ID } from '@extas/db/client';
+import { ymdIn } from '@extas/metrics';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { AnalyticsSub } from '@/components/admin/analytics/AnalyticsSub';
 import { VisitorsScreen } from '@/components/admin/analytics/VisitorsScreen';
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'webAnalytics.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function WebsiteAnalyticsPage({ searchParams }: { searchParams: Promise<{ days?: string }> }) {
+export default async function WebsiteAnalyticsPage({ searchParams }: { searchParams: Promise<{ days?: string; range?: string }> }) {
   const deps = adminDeps();
   const [plain, access, sp] = await Promise.all([adminView(deps), pageAccess('reports.read', deps, MOTHER_STORE_ID), searchParams]);
   const view = withScreen(plain);
@@ -54,14 +55,21 @@ export default async function WebsiteAnalyticsPage({ searchParams }: { searchPar
       return false;
     }
   };
-  const span = [7, 30, 90].includes(Number(sp.days)) ? Number(sp.days) : 30; // hardcode-ok: the range buttons' choices and their default
-  const [v, canEdit] = await Promise.all([visitorsView(d, MOTHER_STORE_ID, span), can()]);
+  // PR 912 (prototype Analytics): Today, 7 days, 30 days, This month, Last month (the old ?days=7|30|90 still works)
+  const tz = String(await d.resolver.value('store.timeZone', { storeId: MOTHER_STORE_ID }));
+  const todayYmd = ymdIn(new Date(), tz);
+  const range = ['today', '7d', '30d', 'month', 'last'].includes(sp.range ?? '') ? (sp.range as string) : [7, 90].includes(Number(sp.days)) ? `${Number(sp.days)}d` : '30d'; // hardcode-ok: the range buttons' choices and their default
+  const dayNo = Number(todayYmd.slice(8, 10));
+  const lastEnd = new Date(Date.UTC(Number(todayYmd.slice(0, 4)), Number(todayYmd.slice(5, 7)) - 1, 0));
+  const lastEndYmd = lastEnd.toISOString().slice(0, 10);
+  const span = range === 'today' ? 1 : range === 'month' ? dayNo : range === 'last' ? lastEnd.getUTCDate() : Number.parseInt(range, 10); // hardcode-ok: the range buttons' lengths
+  const [v, canEdit] = await Promise.all([visitorsView(d, MOTHER_STORE_ID, span, range === 'last' ? lastEndYmd : null), can()]);
   return (
     <div className="a2-z" data-testid="web-analytics-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'webAnalytics.title')} sub={t(view.dict, 'webAnalytics.sub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'webAnalytics.title')} sub={t(view.dict, 'webAnalytics.sub')} right={<a className="a2-btn" download="visitors.csv" href={`data:text/csv;charset=utf-8,${encodeURIComponent(['day,visitors,views', ...v.days.map((x) => `${x.day},${x.visitors},${x.views}`)].join('\n'))}`} data-testid="va-export">{t(view.dict, 'webAnalytics.export')}</a>} />
       <SectionTabs view={view} current={KEY} />
       <AnalyticsSub dict={view.dict} current="overview" />
-      <VisitorsScreen dict={view.dict} view={v} canEdit={canEdit} canBehaviour span={span} />
+      <VisitorsScreen dict={view.dict} view={v} canEdit={canEdit} canBehaviour span={span} range={range} locale={view.locale} />
     </div>
   );
 }
