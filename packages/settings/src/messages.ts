@@ -208,6 +208,8 @@ import blogPipelineBn from '../messages/blog-pipeline.bn.json';
 import blogPipelineEn from '../messages/blog-pipeline.en.json';
 import geoGuideBn from '../messages/geo-guide.bn.json';
 import geoGuideEn from '../messages/geo-guide.en.json';
+import geoMapBn from '../messages/geo-map.bn.json';
+import geoMapEn from '../messages/geo-map.en.json';
 // S13 · PR 548 (registry v291): Marketing › Market & competitors' change-alerts card.
 import adsIntelBn from '../messages/ads-intel.bn.json';
 import adsIntelEn from '../messages/ads-intel.en.json';
@@ -396,6 +398,9 @@ messages.bn = mergeMessages(messages.bn, blogPipelineBn);
 // S13 · PR 569 (registry v255): geography-led ad guidance.
 messages.en = mergeMessages(messages.en, geoGuideEn);
 messages.bn = mergeMessages(messages.bn, geoGuideBn);
+// S29 · PR 752 (registry v868): Reports › Geography map.
+messages.en = mergeMessages(messages.en, geoMapEn);
+messages.bn = mergeMessages(messages.bn, geoMapBn);
 messages.en = mergeMessages(messages.en, adsIntelEn);
 messages.bn = mergeMessages(messages.bn, adsIntelBn);
 // S13 · PR 589 (registry v256): the Merchant Center feed.
