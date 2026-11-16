@@ -7,4 +7,8 @@
 .adm2 .ai-lim-bar > div { height: 100%; }
 .adm2 .ai-lim-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 .adm2 .ai-lim-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 44px; }
+/* PR 935 — the running-total line: scales to the card, never overflows */
+.adm2 .ai-chart-svg { display: block; width: 100%; height: 160px; margin-top: 8px; border-bottom: 1px solid var(--lm-ln); }
+.adm2 .ai-chart-line { stroke: var(--lm-ac); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.adm2 .ai-chart-ax { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 @media (max-width: 900px) { .adm2 .ai-lim-grid { grid-template-columns: minmax(0, 1fr); } }
