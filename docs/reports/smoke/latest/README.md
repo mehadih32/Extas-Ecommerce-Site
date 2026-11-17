@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-17 05:48 (Asia/Dhaka)
+# Smoke test · 2026-11-17 08:06 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (708টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **PASS** (708 page views, 0 failed)
+Site: https://extas.com.bd · commit `1db44d2b159b` · after deploy · result **PASS** (708 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -83,14 +83,13 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/marketing/overview` | phone | 200 | `/admin/marketing/overview` | ok | — |
 | `/admin/money` | phone | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | — |
-| `/admin/orders/1af8f6bd-b986-59e5-a890-f04c5b230ad4` | phone | 200 | `/admin/orders/1af8f6bd-b986-59e5-a890-f04c5b230ad4` | ok | — |
-| `/admin/orders/3142afa4-26fa-58f8-aceb-3230f313d4e5` | phone | 200 | `/admin/orders/3142afa4-26fa-58f8-aceb-3230f313d4e5` | ok | — |
-| `/admin/orders/68d7116b-3802-5f3e-a910-debdae030346` | phone | 200 | `/admin/orders/68d7116b-3802-5f3e-a910-debdae030346` | ok | — |
-| `/admin/orders/79984aef-e745-53f4-a964-f76eecc99bdf` | phone | 200 | `/admin/orders/79984aef-e745-53f4-a964-f76eecc99bdf` | ok | — |
-| `/admin/orders/a15e33b8-5191-5bd7-a90c-5b75a4c204a1` | phone | 200 | `/admin/orders/a15e33b8-5191-5bd7-a90c-5b75a4c204a1` | ok | — |
-| `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | phone | 200 | `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | ok | — |
+| `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | phone | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
+| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | phone | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/8e4cc732-4ef6-5943-a5fb-666a3b970d1f` | phone | 200 | `/admin/orders/8e4cc732-4ef6-5943-a5fb-666a3b970d1f` | ok | — |
+| `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | phone | 200 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | phone | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/orders/batch` | phone | 200 | `/admin/orders/batch` | ok | — |
-| `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | — |
+| `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | phone | 200 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | ok | — |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | — |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/ranking` | phone | 200 | `/admin/products/ranking` | ok | — |
@@ -121,6 +120,7 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/settings/look` | phone | 200 | `/admin/settings/look` | ok | — |
 | `/admin/orders?design=B` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/orders?design=C` | phone | 200 | `/admin/orders` | ok | — |
+| `/admin/orders/confirm` | phone | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/orders/digest` | phone | 200 | `/admin/orders/digest` | ok | — |
 | `/admin/orders/incomplete` | phone | 200 | `/admin/orders/incomplete` | ok | — |
 | `/admin/orders/confirm/calls` | phone | 200 | `/admin/orders/confirm/calls` | ok | — |
@@ -353,11 +353,11 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/reports/marketing` | phone | 200 | `/admin/reports/marketing` | ok | — |
 | `/admin/reports/review` | phone | 200 | `/admin/reports/review` | ok | — |
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
-| `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | phone | 200 | `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | ok | — |
-| `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | phone | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | phone | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
+| `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/reports/health/problems/01a1ddc7-b825-7b13-98a5-44fa2f439c9f` | phone | 200 | `/admin/reports/health/problems/01a1ddc7-b825-7b13-98a5-44fa2f439c9f` | ok | — |
-| `/admin/reports/health/history/01a1e65a-ac7c-7131-8ae3-bc1d1a428afd` | phone | 200 | `/admin/reports/health/history/01a1e65a-ac7c-7131-8ae3-bc1d1a428afd` | ok | — |
-| `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66?tab=wallet` | phone | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
+| `/admin/reports/health/history/01a1e6cf-208c-7c33-b961-87ab26c0cc6a` | phone | 200 | `/admin/reports/health/history/01a1e6cf-208c-7c33-b961-87ab26c0cc6a` | ok | — |
+| `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
 | `/` | desktop | 200 | `/` | ok | [picture](home-desktop.jpg) |
@@ -437,14 +437,13 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/marketing/overview` | desktop | 200 | `/admin/marketing/overview` | ok | — |
 | `/admin/money` | desktop | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | — |
-| `/admin/orders/1af8f6bd-b986-59e5-a890-f04c5b230ad4` | desktop | 200 | `/admin/orders/1af8f6bd-b986-59e5-a890-f04c5b230ad4` | ok | — |
-| `/admin/orders/3142afa4-26fa-58f8-aceb-3230f313d4e5` | desktop | 200 | `/admin/orders/3142afa4-26fa-58f8-aceb-3230f313d4e5` | ok | — |
-| `/admin/orders/68d7116b-3802-5f3e-a910-debdae030346` | desktop | 200 | `/admin/orders/68d7116b-3802-5f3e-a910-debdae030346` | ok | — |
-| `/admin/orders/79984aef-e745-53f4-a964-f76eecc99bdf` | desktop | 200 | `/admin/orders/79984aef-e745-53f4-a964-f76eecc99bdf` | ok | — |
-| `/admin/orders/a15e33b8-5191-5bd7-a90c-5b75a4c204a1` | desktop | 200 | `/admin/orders/a15e33b8-5191-5bd7-a90c-5b75a4c204a1` | ok | — |
-| `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | desktop | 200 | `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | ok | — |
+| `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | desktop | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
+| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | desktop | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/8e4cc732-4ef6-5943-a5fb-666a3b970d1f` | desktop | 200 | `/admin/orders/8e4cc732-4ef6-5943-a5fb-666a3b970d1f` | ok | — |
+| `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | desktop | 200 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | desktop | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/orders/batch` | desktop | 200 | `/admin/orders/batch` | ok | — |
-| `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | — |
+| `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | desktop | 200 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | ok | — |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | — |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
 | `/admin/products/ranking` | desktop | 200 | `/admin/products/ranking` | ok | — |
@@ -475,6 +474,7 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/settings/look` | desktop | 200 | `/admin/settings/look` | ok | — |
 | `/admin/orders?design=B` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/orders?design=C` | desktop | 200 | `/admin/orders` | ok | — |
+| `/admin/orders/confirm` | desktop | 200 | `/admin/orders/confirm` | ok | — |
 | `/admin/orders/digest` | desktop | 200 | `/admin/orders/digest` | ok | — |
 | `/admin/orders/incomplete` | desktop | 200 | `/admin/orders/incomplete` | ok | — |
 | `/admin/orders/confirm/calls` | desktop | 200 | `/admin/orders/confirm/calls` | ok | — |
@@ -707,11 +707,11 @@ Site: https://extas.com.bd · commit `250e77177ae7` · after deploy · result **
 | `/admin/reports/marketing` | desktop | 200 | `/admin/reports/marketing` | ok | — |
 | `/admin/reports/review` | desktop | 200 | `/admin/reports/review` | ok | — |
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
-| `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | desktop | 200 | `/admin/orders/aedf757e-35cc-5281-aecc-65fb04630163` | ok | — |
-| `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | desktop | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | desktop | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
+| `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/reports/health/problems/01a1ddc7-b825-7b13-98a5-44fa2f439c9f` | desktop | 200 | `/admin/reports/health/problems/01a1ddc7-b825-7b13-98a5-44fa2f439c9f` | ok | — |
-| `/admin/reports/health/history/01a1e65a-ac7c-7131-8ae3-bc1d1a428afd` | desktop | 200 | `/admin/reports/health/history/01a1e65a-ac7c-7131-8ae3-bc1d1a428afd` | ok | — |
-| `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66?tab=wallet` | desktop | 200 | `/admin/customers/adbf8a41-602a-51c9-ab71-a506c696ec66` | ok | — |
+| `/admin/reports/health/history/01a1e6cf-208c-7c33-b961-87ab26c0cc6a` | desktop | 200 | `/admin/reports/health/history/01a1e6cf-208c-7c33-b961-87ab26c0cc6a` | ok | — |
+| `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
 

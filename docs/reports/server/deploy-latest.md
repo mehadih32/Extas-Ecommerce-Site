@@ -4,13 +4,13 @@ Written by `deploy.yml` after every deploy (`infra/deploy/deploy-report.sh`). Hi
 
 | | |
 |---|---|
-| Commit | `250e77177ae7` |
-| Time (Asia/Dhaka) | 2026-11-17 06:01 |
+| Commit | `1db44d2b159b` |
+| Time (Asia/Dhaka) | 2026-11-17 08:19 |
 | Result | **OK** |
 | Database migration | ok |
 | Health check on extas.com.bd | OK — HTTP 200 from https://extas.com.bd/api/health |
 | Smoke test (every page) | OK — 708 page views, signed out and as the admin, phone and desktop (storefront pictures: `docs/reports/smoke/latest/`; the admin pictures stay on the server) |
-| Docs on the server | `250e77177ae7` — README.md + docs/ (2618 files) |
+| Docs on the server | `1db44d2b159b` — README.md + docs/ (2618 files) |
 | Main disk (/) | 118 GB free after the clean-up (was 118 GB), at least 15 GB needed |
-| Live colour | blue |
-| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43981669892 |
+| Live colour | green |
+| Run log | https://github.com/mehadih32/Extas-Ecommerce-Site/actions/runs/43999752165 |
