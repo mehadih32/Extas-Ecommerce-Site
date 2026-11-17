@@ -133,7 +133,7 @@
         "changes": "Changes",
         "views": "Customer data viewed"
       },
-      "download": "Download CSV",
+      "download": "Download",
       "filters": {
         "who": "Person",
         "anyone": "Anyone",

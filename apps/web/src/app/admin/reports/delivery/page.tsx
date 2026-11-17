@@ -32,6 +32,7 @@ import {
 import { adminDeps } from "@/lib/admin-auth";
 import { figureTiles, type ReportFigure } from "@/lib/admin-lumen/figures";
 import { withCourierReport } from "@/lib/admin-courier-report";
+import { withReportsV5 } from "@/lib/reports-v5/words";
 import { practiceScope } from "@/lib/reports-v5/practice";
 import { ADMIN_LOGIN } from "@/lib/admin-nav";
 import { orderHref } from "@/lib/admin-orders/model";
@@ -51,7 +52,7 @@ const MISMATCH_MONTHS = 6;
 const MISMATCH_SHOWN = 10;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const view = withCourierReport(await adminView());
+  const view = withReportsV5(withCourierReport(await adminView()));
   return {
     title: `${t(view.dict, "courierReport.metaTitle")} · ${t(view.dict, "shell.admin")}`,
     robots: { index: false, follow: false },
@@ -69,7 +70,7 @@ export default async function DeliveryReportPage({
     pageAccess("reports.read", deps, MOTHER_STORE_ID),
     searchParams,
   ]);
-  const view = withCourierReport(plain);
+  const view = withReportsV5(withCourierReport(plain));
   const d = view.dict;
   if (access.kind === "login" || access.kind === "password")
     redirect(`${ADMIN_LOGIN}?next=${encodeURIComponent(HERE)}`);

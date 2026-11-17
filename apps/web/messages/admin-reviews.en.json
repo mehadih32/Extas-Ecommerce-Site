@@ -15,7 +15,9 @@
       "unreplied": "1–2 star without reply",
       "unrepliedNote": "published, not answered",
       "asked": "Asked after delivery",
-      "askedNote": "{answered} answered ({pct}%) · last {days} days"
+      "askedNote": "{answered} answered ({pct}%) · last {days} days",
+      "lowStar": "1-2 stars, no reply",
+      "lowStarNote": "unhappy buyers nobody has answered yet"
     },
     "views": "Which reviews",
     "view": {
@@ -141,7 +143,14 @@
       },
       "cols": "product, rating, name, title, body, written, size, colour"
     },
-    "callout": "Bad reviews are never deleted. You can only hide spam or abuse, with a reason. A short, kind reply works better than hiding."
+    "callout": "Bad reviews are never deleted. You can only hide spam or abuse, with a reason. A short, kind reply works better than hiding.",
+    "chip": {
+      "aria": "Reviews, questions and FAQs",
+      "questions": "Questions",
+      "reviews": "Reviews",
+      "hidden": "Hidden",
+      "faqs": "FAQs"
+    }
   },
   "revq": {
     "title": "Questions",
@@ -216,12 +225,5 @@
       "made": "FAQ added",
       "already": "Already an FAQ there."
     }
-  },
-  "rev.chip.aria": "Reviews, questions and FAQs",
-  "rev.chip.questions": "Questions",
-  "rev.chip.reviews": "Reviews",
-  "rev.chip.hidden": "Hidden",
-  "rev.chip.faqs": "FAQs",
-  "rev.kpi.lowStar": "1-2 stars, no reply",
-  "rev.kpi.lowStarNote": "unhappy buyers nobody has answered yet"
+  }
 }
