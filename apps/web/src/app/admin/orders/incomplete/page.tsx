@@ -219,7 +219,11 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
 
       {!reportMode && o.noPhone.bags ? (
         <div className="a2-note inc-mt8" role="note" data-testid="inc-warn-nonum">
-          <span>{g('warnNoNumber', { n: n(o.noPhone.bags) })}</span>
+          <span className="d4-grow">{g('warnNoNumber', { n: n(o.noPhone.bags) })}</span>
+          {/* PR 1120 (prototype v5): "Open the report" opens the Report side of the page for the same range */}
+          <Link className="a2-btn sm" href={`${HERE}?${new URLSearchParams({ ...(one(sp.range) ? { range: String(one(sp.range)) } : {}), ...(one(sp.from) ? { from: String(one(sp.from)) } : {}), ...(one(sp.to) ? { to: String(one(sp.to)) } : {}), mode: 'report' })}`} data-testid="inc-open-report">
+            {g('openReport')}
+          </Link>
         </div>
       ) : null}
       {!reportMode ? (

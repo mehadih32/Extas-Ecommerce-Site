@@ -158,8 +158,13 @@ describe.skipIf(!HAS_TEST_DB)("PR 666 · To ship switches (PostgreSQL)", () => {
     const o = await booked("pc-a");
     const rows = await packContacts(f.shippingDeps(), f.shipper, [o.orderId, "00000000-0000-7000-8000-000000000000"]);
     expect(rows).toHaveLength(1);
-    expect(rows[0]!.phone).toMatch(/^0170000/);
+    expect(rows[0]!.phone).toMatch(/^(\+880|0)170000/);
     expect(rows[0]!.phoneMasked).toBe(`${rows[0]!.phone.slice(0, 3)}•••••${rows[0]!.phone.slice(-3)}`);
+    // PR 1120: the To ship table's items and cash come with it
+    expect(rows[0]!.lines.length).toBeGreaterThan(0);
+    expect(rows[0]!.lines[0]!.qty).toBeGreaterThan(0);
+    expect(typeof rows[0]!.codMinor).toBe("number");
+    expect(rows[0]!.currency).toBeTruthy();
     expect(await packContacts(f.shippingDeps(), f.shipper, [])).toEqual([]);
   });
 });

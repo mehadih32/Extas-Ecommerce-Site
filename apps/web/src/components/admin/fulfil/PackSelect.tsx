@@ -40,18 +40,33 @@ interface Props {
   couriers: { id: string; name: string }[];
   codeWords: Record<string, string>;
   /** PR 814 (prototype v5): which To ship chip the list sits on: the bar then shows that chip's own buttons at all times. */
-  mode?: 'confirmed' | 'booked' | 'plain';
+  mode?: 'confirmed' | 'booked' | 'packed' | 'plain';
   /** PR 814: the courier the shop uses by default (marked "default" in the bar's courier list). */
   defaultCourierId?: string;
   /** PR 814: where "Print all" goes (the print run: summary, picking list and stickers). */
   printAllHref?: string;
   /** PR 814: a line under each row (the Owner / Packer view's phone and delivery place). */
   extra?: Record<string, string>;
+  /** PR 1120 (prototype v5): on a chip (Confirmed, Booked, Packed) the list is a table: Order, Items, Deliver to, Cash. */
+  table?: Record<string, PackTableCells>;
+}
+
+export interface PackTableCells {
+  name: string;
+  items: string[];
+  /** Phone (or its masked form) and the place. */
+  phone: string;
+  place: string;
+  /** The cash to collect, or null when paid in full. */
+  cash: string | null;
+  /** The Packed chip's Courier column: the courier and its consignment id. */
+  courier?: string;
+  tracking?: string;
 }
 
 type Msg = { ok: boolean; text: string } | null;
 
-export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers, codeWords, mode = 'plain', defaultCourierId, printAllHref, extra }: Props) {
+export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers, codeWords, mode = 'plain', defaultCourierId, printAllHref, extra, table }: Props) {
   const router = useRouter();
   const id = useId();
   const [ticked, setTicked] = useState<Set<string>>(new Set());
@@ -91,7 +106,7 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
   };
   return (
     <div className="a2-stack" style={{ gap: 8 }}>
-      {selectable && rows.length && mode !== 'plain' ? (
+      {selectable && rows.length && mode !== 'plain' && mode !== 'packed' ? (
         <div className="d4-bulk" data-testid="pack-select-bar" data-mode={mode}>
           <label className="ps-tick d4-bulk-all">
             <input type="checkbox" checked={all} onChange={() => setTicked(all ? new Set() : new Set(rows.map((r) => r.orderId)))} data-testid="pack-select-all" />
@@ -211,7 +226,66 @@ export function PackSelect({ dict, rows, selectable, canBook, canPrint, couriers
           </p>
         </div>
       ) : null}
-      {rows.map((r) => (
+      {table ? (
+        <div className="a2-tblw" data-testid="pack-table">
+          <table className="a2-tbl">
+            <thead>
+              <tr>
+                {selectable ? (
+                  <th>
+                    <span className="a2-sr">{t(dict, 'ful.pack.sel.all')}</span>
+                  </th>
+                ) : null}
+                <th>{t(dict, 'ful.pack.tbl.order')}</th>
+                <th>{t(dict, 'ful.pack.tbl.items')}</th>
+                <th>{t(dict, mode === 'packed' ? 'ful.pack.tbl.courier' : 'ful.pack.tbl.deliverTo')}</th>
+                <th className="r">{t(dict, 'ful.pack.tbl.cash')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const c = table[r.orderId];
+                return (
+                  <tr key={r.orderId} data-testid="pack-row">
+                    {selectable ? (
+                      <td>
+                        <label className="ps-tick ps-one">
+                          <input type="checkbox" checked={ticked.has(r.orderId)} onChange={() => flip(r.orderId)} data-testid="pack-select-one" />
+                          <span className="a2-sr">{t(dict, 'ful.pack.sel.one', { n: r.orderNumber })}</span>
+                        </label>
+                      </td>
+                    ) : null}
+                    <td>
+                      <Link className="a2-lnk a2-b a2-mono" href={r.href}>
+                        {r.orderNumber}
+                      </Link>
+                      <div className="a2-xs a2-mute">{c?.name ?? ''}</div>
+                    </td>
+                    <td className="a2-sm">
+                      {(c?.items ?? []).map((x, i) => (
+                        <div key={i}>{x}</div>
+                      ))}
+                    </td>
+                    {mode === 'packed' ? (
+                      <td>
+                        <div className="a2-xs">{c?.courier || '—'}</div>
+                        <div className="a2-xs a2-mute a2-mono">{c?.tracking ?? ''}</div>
+                      </td>
+                    ) : (
+                      <td>
+                        <div className="a2-mono a2-xs">{c?.phone ?? ''}</div>
+                        <div className="a2-xs a2-mute">{c?.place ?? ''}</div>
+                      </td>
+                    )}
+                    <td className="r">{c?.cash ? <b>{c.cash}</b> : <span className="a2-pill good">{t(dict, 'ful.pack.tbl.paid')}</span>}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      {(table ? [] : rows).map((r) => (
         <div key={r.orderId} className="ps-row">
           {selectable ? (
             <label className="ps-tick ps-one">

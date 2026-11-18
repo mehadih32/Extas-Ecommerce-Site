@@ -205,3 +205,4 @@
 .adm2 .pk-partbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .adm2 .pk-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 @media (max-width:1023px){.adm2 .pk-grid{grid-template-columns:minmax(0,1fr)}}
+.adm2 [data-testid=pack-table] .r{text-align:right}
