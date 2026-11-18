@@ -638,5 +638,17 @@
       "declined": "ডিক্লাইন (আমাদের লস)",
       "cancelled": "বাতিল"
     }
+  },
+  "summary": {
+    "parcels": "ফেরত পার্সেল",
+    "value": "অর্ডারের দাম",
+    "buying": "কেনা দাম {amount}",
+    "common": "সবচেয়ে বেশি কারণ",
+    "commonNone": "এখনো কোনো কারণ নেই",
+    "commonN": "{n}টি পার্সেল",
+    "reasonsH": "ফেরতের কারণ",
+    "reasonsNone": "এই সময়ে কোনো ফেরত পার্সেলের কারণ নেই।",
+    "excel": "Excel",
+    "pdf": "PDF"
   }
 }
