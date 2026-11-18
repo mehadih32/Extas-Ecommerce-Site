@@ -884,72 +884,6 @@
     ]
    },
    {
-    "id": "studio",
-    "more": true,
-    "pages": [
-     {
-      "href": "/admin/marketing/studio",
-      "keys": [
-       "marketingStudio"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/motion",
-      "keys": [
-       "marketingStudioMotion"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/models",
-      "keys": [
-       "marketingStudioModels"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/videos",
-      "keys": [
-       "marketingStudioVideos"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/reels",
-      "keys": [
-       "marketingStudioReels"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/export",
-      "keys": [
-       "marketingStudioExport"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/briefs",
-      "keys": [
-       "marketingStudioBriefs"
-      ]
-     },
-     {
-      "href": "/admin/marketing/studio/overlay",
-      "keys": [
-       "marketingStudioOverlay"
-      ]
-     }
-    ]
-   },
-   {
-    "id": "youtube",
-    "more": true,
-    "pages": [
-     {
-      "href": "/admin/marketing/youtube",
-      "keys": [
-       "marketingYoutube"
-      ]
-     }
-    ]
-   },
-   {
     "id": "outreach",
     "more": true,
     "pages": [
@@ -1017,6 +951,97 @@
       "href": "/admin/marketing/intel",
       "keys": [
        "marketingIntel"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "id": "studio",
+  "base": "/admin/marketing/studio",
+  "tabs": [
+   {
+    "id": "social",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/studio",
+      "keys": [
+       "marketingStudio"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "photoshoot",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/studio/models",
+      "keys": [
+       "marketingStudioModels"
+      ]
+     },
+     {
+      "href": "/admin/marketing/photoshoot/review",
+      "keys": [
+       "marketingPhotoshootReview",
+       "marketingPhotoshootEditor"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "video",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/studio/motion",
+      "keys": [
+       "marketingStudioMotion"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/videos",
+      "keys": [
+       "marketingStudioVideos"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/reels",
+      "keys": [
+       "marketingStudioReels"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/export",
+      "keys": [
+       "marketingStudioExport"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/briefs",
+      "keys": [
+       "marketingStudioBriefs"
+      ]
+     },
+     {
+      "href": "/admin/marketing/studio/overlay",
+      "keys": [
+       "marketingStudioOverlay"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "youtube",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/marketing/youtube",
+      "keys": [
+       "marketingYoutube"
       ]
      }
     ]
@@ -1744,7 +1769,7 @@
  },
  {
   "id": "ai",
-  "base": "/admin/ai",
+  "base": "/admin/ai/approvals",
   "tabs": [
    {
     "id": "approvals",
@@ -1793,10 +1818,16 @@
       ]
      }
     ]
-   },
+   }
+  ]
+ },
+ {
+  "id": "ai360",
+  "base": "/admin/ai",
+  "tabs": [
    {
     "id": "control",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/ai",
@@ -1808,7 +1839,7 @@
    },
    {
     "id": "models",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/ai/models",
@@ -1820,7 +1851,7 @@
    },
    {
     "id": "agentsChief",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/agents/chief",
@@ -1831,32 +1862,8 @@
     ]
    },
    {
-    "id": "audit",
-    "more": true,
-    "pages": [
-     {
-      "href": "/admin/ai/audit",
-      "keys": [
-       "aiAudit"
-      ]
-     }
-    ]
-   },
-   {
-    "id": "permissions",
-    "more": true,
-    "pages": [
-     {
-      "href": "/admin/ai/permissions",
-      "keys": [
-       "aiPermissions"
-      ]
-     }
-    ]
-   },
-   {
     "id": "diary",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/ai/diary",
@@ -1868,7 +1875,7 @@
    },
    {
     "id": "skills",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/ai/skills",
@@ -1885,25 +1892,49 @@
     ]
    },
    {
-    "id": "reports",
-    "more": true,
-    "pages": [
-     {
-      "href": "/admin/ai/reports",
-      "keys": [
-       "aiReports"
-      ]
-     }
-    ]
-   },
-   {
     "id": "learning",
-    "more": true,
+    "more": false,
     "pages": [
      {
       "href": "/admin/ai/learning",
       "keys": [
        "aiLearning"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "permissions",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/permissions",
+      "keys": [
+       "aiPermissions"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "audit",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/audit",
+      "keys": [
+       "aiAudit"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "reports",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/ai/reports",
+      "keys": [
+       "aiReports"
       ]
      }
     ]

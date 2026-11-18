@@ -37,11 +37,13 @@ export interface StageParts {
 const NONE: StageParts = { sections: [], tabs: [], widgets: [], shop: [] };
 
 export const CLOSED_STAGE_PARTS: Readonly<Record<ClosedStage, StageParts>> = {
-  S15: { ...NONE, sections: ['ai'], widgets: ['assistant'] },
+  // PR 1100 (owner, 18 Nov 2026): the AI Center, AI 360 Control and Creative Studio are menu items that always show, so the
+  // switches no longer hide them; S15 still hides the round assistant button. (Before: S15 hid `ai`, S23-S25 `marketing.studio`.)
+  S15: { ...NONE, widgets: ['assistant'] },
   S17: NONE,
-  S23: { ...NONE, tabs: ['marketing.studio'] },
-  S24: { ...NONE, tabs: ['marketing.studio'] },
-  S25: { ...NONE, tabs: ['marketing.studio'] },
+  S23: NONE,
+  S24: NONE,
+  S25: NONE,
   S26: NONE,
   S27: NONE,
 };
