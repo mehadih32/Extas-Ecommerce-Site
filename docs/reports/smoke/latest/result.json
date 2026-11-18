@@ -1,8 +1,8 @@
 {
-  "at": "2026-11-18 04:38 (Asia/Dhaka)",
+  "at": "2026-11-18 08:59 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
   "sha": "1db44d2b159b",
-  "kind": "first-week",
+  "kind": "nightly",
   "rolledBack": false,
   "ok": true,
   "pages": 706,
