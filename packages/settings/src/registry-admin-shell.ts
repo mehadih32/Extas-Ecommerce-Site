@@ -16,6 +16,7 @@ import { setting } from './define';
 
 const V = 33;
 const V209 = 263;
+const V1101 = 1101;
 
 /** The sidebar entries of the new admin (decision D8; PR 659 adds Rules as its own section; PR 1100 Creative Studio and AI 360 Control), in the order of the sections table. */
 export const ADMIN_SECTIONS = [
@@ -70,10 +71,14 @@ export const adminDashboardSchema = z
     eveningHour: z.int().min(0).max(23),
     /** How many days the small line in each money tile shows (oldest first, ending today). */
     sparkDays: z.int().min(2).max(90),
+    /** PR 1101 (owner, 19 Nov 2026; prototype v5 opens on "30 days"): the date choice the Home opens on, one of `ranges`
+     *  (missing: the first). */
+    start: z.int().min(1).max(366).optional(),
   })
   .strict()
   .refine((v) => v.afternoonHour < v.eveningHour, { message: 'the afternoon starts before the evening' })
-  .refine((v) => new Set(v.ranges).size === v.ranges.length, { message: 'each date choice once' });
+  .refine((v) => new Set(v.ranges).size === v.ranges.length, { message: 'each date choice once' })
+  .refine((v) => v.start === undefined || v.ranges.includes(v.start), { message: 'the opening choice is one of the date choices' });
 
 const json = { scope: 'store', valueType: 'JSON', group: 'admin', isOwnerData: false, isPublic: false, version: V } as const;
 
@@ -122,9 +127,12 @@ export const adminShellSettings = {
   'admin.dashboard': setting({
     ...json,
     schema: adminDashboardSchema,
-    default: { ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14 },
+    default: { ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14, start: 30 },
     labelKey: 'admin.dashboard.label',
     helpKey: 'admin.dashboard.help',
     sortOrder: 30,
+    // PR 1101: `start` (the Home opens on 30 days, as the prototype does)
+    version: V1101,
+    since: V,
   }),
 };

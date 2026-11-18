@@ -61,17 +61,25 @@
 .lm-shell.lm-col .lm-it .lm-bd { position: absolute; top: 0; right: 0; padding: 0 5px; min-width: 18px; }
 .lm-shell.lm-col .lm-me { justify-content: center; padding: 6px 0; }
 .lm-shell.lm-col .lm-mepop { right: auto; width: 240px; }
-@media (max-width: 899px) {
-  .lm-shell .lm-side { width: var(--lm-side-w-icons); }
-  .lm-shell .lm-brand { flex-direction: column; }
-  .lm-shell :is(.lm-nl, .lm-bt, .lm-gl, .lm-search span, .lm-search kbd, .lm-mt, .lm-subs, .lm-chv, .lm-colb) { display: none; }
-  .lm-shell .lm-gw + .lm-gw { border-top: 1px solid var(--lm-ln); margin-top: 6px; padding-top: 6px; }
-  .lm-shell .lm-search { justify-content: center; padding: 8px 0; min-height: 44px; }
-  .lm-shell .lm-it { justify-content: center; padding: 8px 0; min-height: 44px; }
-  .lm-shell .lm-it .lm-bd { position: absolute; top: 0; right: 0; padding: 0 5px; min-width: 18px; }
-  .lm-shell .lm-me { justify-content: center; padding: 4px 0; min-height: 44px; }
-  .lm-shell .lm-mepop { right: auto; width: 240px; }
+/* PR 1101 (prototype v5, app.css @media (max-width: 960px)): below 961 px the icons-only rail of PR 626 gave way to the
+   prototype's drawer: the whole sidebar slides in from the left (the top bar's menu button), over a dimmed page. */
+@media (max-width: 960px) {
+  .adm2.lm-shell .lm-side { position: fixed; left: 0; top: 0; bottom: 0; height: 100vh; height: 100dvh; width: 280px; max-width: 86vw; margin: 0; border-radius: 0; z-index: 90; transform: translateX(-105%); transition: transform var(--lm-t) ease; box-shadow: var(--lm-sh-drawer); padding-top: calc(14px + env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); visibility: hidden; }
+  .adm2.lm-shell .lm-side.open { transform: none; visibility: visible; }
+  .lm-shell .lm-scrim { position: fixed; inset: 0; background: var(--lm-scrim); z-index: 85; }
+  .lm-shell .lm-colb { display: none; }
+  .lm-shell.lm-col .lm-side { width: 280px; }
+  .lm-shell.lm-col .lm-brand { flex-direction: row; }
+  .lm-shell.lm-col :is(.lm-nl, .lm-mt) { display: block; }
+  .lm-shell.lm-col .lm-bt { display: flex; }
+  .lm-shell.lm-col :is(.lm-search span, .lm-search kbd) { display: inline; }
+  .lm-shell.lm-col .lm-subs { display: flex; }
+  .lm-shell.lm-col .lm-chv { display: grid; }
+  .lm-shell.lm-col :is(.lm-it, .lm-search) { justify-content: flex-start; padding: 8px 10px; }
+  .lm-shell.lm-col .lm-it .lm-bd { position: static; }
+  .lm-shell.lm-col .lm-me { justify-content: flex-start; padding: 6px; }
 }
+.adm2.lm-shell .lm-menub { display: none; }
 
 /* ---- the main column and the slim top bar ---- */
 .lm-shell .lm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -91,7 +99,7 @@
 .lm-shell :is(.lm-tsearch, .lm-phav) { display: none; }
 .lm-shell .lm-toppop { position: absolute; top: calc(100% + 2px); right: 24px; z-index: 60; }
 .lm-shell .lm-ct { flex: 1; min-width: 0; width: 100%; max-width: 1680px; padding: 6px 24px 48px; }
-@media (max-width: 1099px) { .lm-shell .lm-shop { display: none; } }
+/* PR 1101: the shop link stays on every computer width (the prototype hides it only below 961 px) */
 @media (max-width: 899px) { .lm-shell .lm-top { padding: 10px 18px 8px; } .lm-shell .lm-ct { padding: 6px 18px 40px; } }
 
 /* ---- the bell's panel ---- */
@@ -139,31 +147,30 @@
 }
 
 .lm-shell .lm-bar { display: none; }
-@media (max-width: 759px) {
-  .lm-shell .lm-side { display: none; }
-  .lm-shell .lm-top { padding: 10px 14px 8px; gap: 4px; min-height: 60px; }
-  .lm-shell .lm-tbr { gap: 4px; }
+/* PR 1101 (prototype v5, app.css @media (max-width: 960px)): below 961 px the menu button opens the drawer (above), the top
+   bar keeps menu, help, bell and EN | বাং (the shop link, To do, the moon and the account go, as the prototype's `hide-sm`;
+   the account menu sits at the drawer's foot), and the bottom bar is the prototype's flat bar of five places. */
+@media (max-width: 960px) {
+  .adm2.lm-shell .lm-menub { display: grid; }
+  .lm-shell .lm-top { padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); gap: 8px; min-height: 56px; }
+  .lm-shell .lm-tbr { gap: 6px; }
   .lm-shell .lm-tb { width: 44px; height: 44px; }
-  .lm-shell :is(.lm-tsearch, .lm-phav) { display: grid; }
-  .lm-shell .lm-tbr > .lm-lang { display: none; }
-  .lm-shell .lm-menu-lang { margin-top: 6px; background: var(--lm-sf); border-radius: var(--lm-r-box); box-shadow: var(--lm-sh2); padding: 6px; }
-  .lm-shell .lm-menu-lang .lm-lang { display: flex; box-shadow: none; border: 0; }
-  .lm-shell .lm-menu-lang .lm-lang button { flex: 1; min-height: 44px; }
+  .adm2.lm-shell .lm-top :is(.lm-shop, .lm-tsearch, .lm-phav, [data-testid='a3-todo'], [data-testid='lm-moon']) { display: none; }
   .lm-shell .lm-toppop { left: 14px; right: 14px; }
   .lm-shell .lm-toppop .a2-menu { min-width: 0; }
   .lm-shell .lm-notif { left: 14px; right: 14px; width: auto; }
-  .lm-shell .lm-ct { padding: 6px 16px 112px; }
+  .lm-shell .lm-ct { padding: 4px 16px calc(84px + env(safe-area-inset-bottom, 0px)); }
   .adm2.lm-shell :is(.a2-h1, .a3-ph2 h1) { font-size: var(--lm-fs-h1-phone); }
   .adm2.lm-shell .a2-tabs { margin: 0 0 14px; padding: 4px; }
-  /* PR 626 follow-up (7 Nov): the bar is a sealed box. Its sections scroll inside it and everything it holds (icons,
-     words, the waiting badges) is clipped to it (contain: layout paint), so nothing in it can widen the page: the device
-     gate saw it 11 px past a 320 px phone with the Orders badge showing. Its PHONE-BAR-OUTSIDE check holds it there. */
-  .lm-shell .lm-bar { display: flex; position: fixed; left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 50; background: var(--lm-sf); border-radius: var(--lm-r-panel); box-shadow: var(--lm-sh2); padding: 6px; gap: 2px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; contain: layout paint; max-width: calc(100vw - 20px); box-sizing: border-box; }
-  .lm-shell .lm-bar::-webkit-scrollbar { display: none; }
-  .lm-shell .lm-bar a, .lm-shell .lm-bar .lm-bar-menu { flex: 1 1 0; min-width: 52px; border: 0; background: none; font-family: inherit; cursor: pointer; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; border-radius: var(--lm-r-box); color: var(--lm-ink2); font-size: 0.75rem; font-weight: 700; position: relative; white-space: nowrap; }
-  .lm-shell .lm-bar a.on { background: var(--lm-acbg); color: var(--lm-ac-ink); }
-  .lm-shell .lm-bar .lm-bd { position: absolute; top: 2px; right: 6px; margin: 0; padding: 0 5px; min-width: 18px; }
+  /* PR 626 follow-up (7 Nov): the bar is a sealed box (contain: layout paint), so nothing in it can widen the page; the
+     device gate's PHONE-BAR-OUTSIDE check holds it there. */
+  .lm-shell .lm-bar { display: flex; justify-content: space-around; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--lm-sf); border-top: 1px solid var(--lm-ln); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); gap: 2px; overflow: hidden; contain: layout paint; max-width: 100vw; box-sizing: border-box; }
+  .lm-shell .lm-bar a { flex: 1 1 0; min-width: 0; min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; border-radius: var(--lm-r-ctl); color: var(--lm-muted); font-size: 0.75rem; font-weight: 500; position: relative; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lm-shell .lm-bar a span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .lm-shell .lm-bar a.on { color: var(--lm-ac-ink); }
+  .lm-shell .lm-bar .lm-bd { position: absolute; top: 0; right: 4px; margin: 0; padding: 0 5px; min-width: 18px; font-size: 0.65rem; line-height: 1.5; }
 }
+@media (max-width: 560px) { .lm-shell .lm-crumb { display: none; } }
 
 /* ---- the guide's side panel beside the page ---- */
 @media (min-width: 1280px) { .adm2.lm-shell.a2-gopen .lm-wrap { margin-right: var(--a2-gw); min-width: 0; } }

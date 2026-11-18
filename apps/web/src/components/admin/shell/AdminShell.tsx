@@ -43,7 +43,6 @@ import { LUMEN_DEFAULTS, LumenProvider } from '../lumen/context';
 import { ToastHost } from '../lumen/Toast';
 import { GUIDE_EVENT, PALETTE_EVENT, TODO_EVENT, openMap, type GuideRequest } from './events';
 import { MapOverlay } from '@/components/admin/map/MapOverlay';
-import { Drawer } from './Drawer';
 import { GuidePanel } from './GuidePanel';
 import { NotificationsPanel, noteUnread, type ShellNote } from './NotificationsPanel';
 import { Palette } from './Palette';
@@ -51,6 +50,7 @@ import { ShellIcon } from './ShellIcon';
 import { SettingsFrame } from './SettingsFrame';
 import './shell-v5.css';
 import { ShellTabBar } from './ShellTabBar';
+import { ShellTabsContext } from './HeadTabs';
 import { readLater, TodoDrawer } from './TodoDrawer';
 
 type Pop = 'me' | 'me2' | null;
@@ -88,7 +88,14 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const [notes, setNotes] = useState<ShellNote[] | null>(null);
   const [seen, setSeen] = useState<string | null>(model.notesSeenAt ?? null);
   const [pal, setPal] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  // PR 1101 (prototype v5): below 961 px the sidebar is a drawer opened by the menu button in the top bar (core.js `menu-open`)
+  const [menuOpen, setMenuOpen] = useState(false);
+  // PR 1101: how many page heads draw the section's tab bar under themselves (HeadTabs)
+  const [headTabs, setHeadTabs] = useState(0);
+  const claimTabs = useCallback(() => {
+    setHeadTabs((n) => n + 1);
+    return () => setHeadTabs((n) => Math.max(0, n - 1));
+  }, []);
   const [todoAt, setTodoAt] = useState<number | null>(null);
   const [later, setLater] = useState<Record<string, number>>({});
   const [guide, setGuide] = useState<GuideRequest | null>(null);
@@ -121,6 +128,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
     setFly(null);
     setNtf(false);
     setOpenSec(null);
+    setMenuOpen(false);
     // The side panel stays open and turns to the new page's guide (the person follows the steps across pages).
     if (guide?.path) setGuide({ ...guide, path: pathname });
   }
@@ -226,6 +234,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
         ev.preventDefault();
         openTodoNow();
       } else if (ev.key === 'Escape' && !overlay) {
+        setMenuOpen(false);
         setPop(null);
         setFly(null);
       }
@@ -275,6 +284,9 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const badge = (s: ShellSection) => model.badges?.[s.id] ?? 0;
   const unread = (notes ?? []).filter((n) => noteUnread(n, seen)).length;
   const inSettings = active === 'settings' && !!here?.tab;
+  // PR 762: the bar is built once, from the address; PR 1101: a page head draws it under the title (HeadTabs)
+  const tabBar = inSettings ? null : <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />;
+  const tabsCtx = { bar: tabBar, claim: claimTabs };
   // PR 780: the top bar's crumb as the prototype draws it: "Section › Tab"; Settings names the open setting (settings-list.ts)
   const crumb: string[] | null = (() => {
     if (!here) return null;
@@ -461,7 +473,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
         {tt('nav.skip')}
       </a>
       <div className="lm-wrap">
-        <aside className="lm-side a2-z" aria-label={tt('nav.aria')} data-testid="a2-sidebar">
+        <aside className={`lm-side a2-z${menuOpen ? ' open' : ''}`} id="lm-side" aria-label={tt('nav.aria')} data-testid="a2-sidebar">
           <div className="lm-brand">
             <Link className="lm-brl" href={homeHref} aria-label={tt('top.home')}>
               <span className="lm-logo" aria-hidden="true">
@@ -510,8 +522,13 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             ) : null}
           </div>
         </aside>
+        {menuOpen ? <div className="lm-scrim" aria-hidden="true" onClick={() => setMenuOpen(false)} data-testid="lm-scrim" /> : null}
         <div className="lm-main">
           <header className="lm-top a2-z">
+            {/* PR 1101 (prototype v5 `#menu-btn`): opens the whole menu as a drawer on a phone or tablet */}
+            <button type="button" className="lm-tb lm-menub" aria-label={menuOpen ? tt('nav.close') : tt('nav.open')} aria-expanded={menuOpen} aria-controls="lm-side" onClick={() => setMenuOpen((o) => !o)} data-testid="lm-menu-btn">
+              <ShellIcon name="menu" size={19} />
+            </button>
             <button type="button" className="lm-tb lm-tsearch" aria-label={tt('top.searchAria')} onClick={openPal}>
               <ShellIcon name="search" size={19} />
             </button>
@@ -527,9 +544,9 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
               </div>
             ) : null}
             <div className="lm-tbr">
-              <a className="lm-shop" href="/" target="_blank" rel="noopener" title={tt('top.shopTitle')}>
-                <ShellIcon name="ext" size={15} />
-                <span>{tt('top.shop')}</span>
+              {/* PR 1101 (prototype v5 `#view-shop`): an icon button, its name in the tooltip and for screen readers */}
+              <a className="lm-tb lm-shop" href="/" target="_blank" rel="noopener" title={tt('top.shopTitle')} aria-label={tt('top.shop')}>
+                <ShellIcon name="ext" size={18} />
               </a>
               <button type="button" className={`lm-tb${todoAt !== null ? ' on' : ''}`} aria-label={waiting ? tt('top.todoWaiting', { n: waiting }) : tt('top.todo')} title={tt('top.todoTitle')} onClick={openTodoNow} data-testid="a3-todo">
                 <ShellIcon name="inbox" size={19} />
@@ -576,10 +593,12 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             ) : null}
             {ntf ? <NotificationsPanel dict={d} items={notes} seen={seen} onMarkAll={markAll} onClose={closeNtf} /> : null}
           </header>
+          <ShellTabsContext.Provider value={tabsCtx}>
           <main className="a2-ct a3-ct lm-ct" id="main" tabIndex={-1}>
             {/* PR 762: the section's tab bar is drawn here, once, so it stays in the same place on every page */}
             {/* PR 779 (prototype v5): Settings is one page with a searchable list on the left (two groups) instead of tabs */}
-            {inSettings ? null : <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />}
+            {/* PR 1101: drawn here only while no page head holds it (the head draws it under the title, HeadTabs) */}
+            {inSettings || headTabs > 0 ? null : tabBar}
             {inSettings ? (
               <SettingsFrame dict={d} pathname={pathname} viewer={viewer}>
                 {children}
@@ -588,6 +607,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
               children
             )}
           </main>
+          </ShellTabsContext.Provider>
           {/* CN-053: which build this browser really runs, readable without clearing anything */}
           <small className="a2-buildid" data-testid="build-id" translate="no" style={{ display: 'block', padding: '4px 16px 12px', opacity: 0.55, fontSize: 11 }}>
             #{model.buildId}
@@ -610,29 +630,9 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             </Link>
           );
         })}
-        <button type="button" className="lm-bar-menu" aria-haspopup="dialog" aria-expanded={moreOpen} data-testid="lm-bar-menu" onClick={() => setMoreOpen(true)}>
-          <ShellIcon name="menu" size={20} />
-          <span>{tt('nav.more')}</span>
-        </button>
+        {/* PR 1101 (prototype v5): the bar holds the five places only; every other section is in the menu drawer (the top
+            bar's menu button). PR 794's "More" sheet gave way to that drawer. */}
       </nav>
-      {moreOpen ? (
-        <Drawer title={tt('nav.more')} closeLabel={tt("nav.close")} onClose={() => setMoreOpen(false)} testId="lm-bar-sheet">
-          <ul className="lm-bar-list">
-            {all.map((s) => {
-              const n = badge(s);
-              return (
-                <li key={s.id}>
-                  <Link href={sectionHome(s, viewer)} className={active === s.id ? 'on' : ''} onClick={() => setMoreOpen(false)}>
-                    <ShellIcon name={s.icon} size={18} />
-                    <span>{label(s)}</span>
-                    {n ? <i className="lm-bd">{n > 99 ? '99+' : n}</i> : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </Drawer>
-      ) : null}
       {todoAt !== null ? (
         <TodoDrawer
           dict={d}

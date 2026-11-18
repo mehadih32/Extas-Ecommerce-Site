@@ -63,6 +63,10 @@ describe('the date choice', () => {
   it('takes a preset, else the first', () => {
     expect(rangeFrom({ range: '7' }, ranges, '2026-10-24', 366)).toEqual({ kind: 'preset', days: 7, from: '2026-10-18', to: '2026-10-24', prev: { from: '2026-10-11', to: '2026-10-17' } });
     expect(rangeFrom({ range: '9' }, ranges, '2026-10-24', 366).days).toBe(1);
+    // PR 1101: with no choice in the address the Home opens on the setting's `start` (30 days as shipped)
+    expect(rangeFrom({}, ranges, '2026-10-24', 366, 30).days).toBe(30);
+    expect(rangeFrom({ range: '7' }, ranges, '2026-10-24', 366, 30).days).toBe(7);
+    expect(rangeFrom({}, ranges, '2026-10-24', 366, 45).days).toBe(1);
     expect(rangeFrom({}, ranges, '2026-10-24', 366)).toMatchObject({ kind: 'preset', days: 1, from: '2026-10-24', prev: { from: '2026-10-23', to: '2026-10-23' } });
   });
   it('takes two good dates of the person’s own: not after today, at most the setting’s days', () => {

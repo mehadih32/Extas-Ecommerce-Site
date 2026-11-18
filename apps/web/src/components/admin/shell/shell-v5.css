@@ -6,7 +6,7 @@
 .lm-shell .lm-mapbtn:focus-visible { outline: 2px solid var(--lm-focus); outline-offset: -2px; }
 .lm-shell .lm-crumb { flex: 1 1 auto; min-width: 0; margin-inline: 4px; font-weight: 600; font-size: 0.95rem; color: var(--lm-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lm-shell .lm-crumb-now { color: var(--lm-ink); }
-@media (max-width: 899px) { .lm-shell .lm-bsub { display: none; } }
+/* PR 1101: the "Admin" line stays in the phone drawer too (it hid in the icons-only rail, which is gone) */
 /* PR 1066 — the Admin map overlay (prototype v5 `#map-ov`): full screen over the page, the page behind stays where it was. */
 .lm-shell .lm-mapov { position: fixed; inset: 0; z-index: 9000; background: var(--lm-bg); overflow: auto; -webkit-overflow-scrolling: touch; outline: none; }
 .lm-shell .lm-mapov-in { max-width: 1180px; margin: 0 auto; padding: 16px; }

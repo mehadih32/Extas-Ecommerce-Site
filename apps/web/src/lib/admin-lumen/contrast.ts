@@ -15,8 +15,8 @@ const DARK_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'] {";
 const ISLAND_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'] :is(";
 const SHARED_HEAD = ':root,\n[data-lm-look] {';
 /** PR 1067: the blocks that apply only where the person chose another accent (the shell's style then carries --lm-accent). */
-const CHOSEN_HEAD = "[data-lm-look='lumen'][style*='--lm-accent'] {";
-const CHOSEN_ISLAND_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent'] :is(";
+const CHOSEN_HEAD = "[data-lm-look='lumen'][style*='--lm-accent']:not([style*='#c2410c' i]) {";
+const CHOSEN_ISLAND_HEAD = "[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent']:not([style*='#c2410c' i]) :is(";
 /** The shipped accent (burnt orange): it keeps the prototype's own colours; any other accent reads the chosen blocks. */
 const SHIPPED_ACCENT = '#c2410c';
 

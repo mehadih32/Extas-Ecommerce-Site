@@ -1,0 +1,119 @@
+/* PR 1101 (owner, 18 Nov 2026: "the real admin looks exactly like the approved prototype") — the prototype's own
+   look (docs/demo/admin-proto-v5/css/app.css) laid over the Lumen shell and the shared patterns, loaded last. Only theme
+   tokens (theme/lumen.css), no literal colour or font (the hardcode guard's admin rule). Text never goes under the
+   theme's 14 px minimum (the one accepted difference: the prototype's 11-13 px labels draw at 14 px here). Touch
+   screens keep their 44 px targets (lumen-shell.css, lumen-patterns.css). */
+
+/* ---- the page itself: the admin's ground, ink and type even outside the shell's box (body is the shop's) ---- */
+html:has(.adm2.lm-shell), body:has(.adm2.lm-shell) { background: var(--lm-bg); color: var(--lm-ink); font-family: var(--lm-font); font-size: var(--lm-fs-body); }
+.adm2.lm-shell { line-height: 1.45; -webkit-font-smoothing: antialiased; font-feature-settings: 'cv11', 'ss03'; }
+.adm2.lm-shell :is(h1, h2, h3, h4) { letter-spacing: -0.015em; }
+
+/* ---- the sidebar: flush to the left edge, full height, a line on its right (app.css .side) ---- */
+@media (min-width: 961px) {
+  .adm2.lm-shell .lm-side { top: 0; height: 100vh; margin: 0; border-radius: 0; box-shadow: none; border-right: 1px solid var(--lm-ln); padding: 14px 12px; gap: 8px; }
+}
+.adm2.lm-shell .lm-brand { padding: 4px 6px 8px; gap: 10px; }
+.adm2.lm-shell .lm-logo { width: 34px; height: 34px; border-radius: 10px; font: 750 15px var(--lm-font-disp); box-shadow: none; }
+.adm2.lm-shell .lm-bt { font: 750 15px var(--lm-font-disp); letter-spacing: 0.1em; }
+.adm2.lm-shell .lm-bsub { color: var(--lm-muted); letter-spacing: 0; }
+.adm2.lm-shell .lm-iconb { background: transparent; color: var(--lm-muted); }
+.adm2.lm-shell .lm-search { gap: 8px; padding: 8px 10px; border-radius: 10px; color: var(--lm-muted); font-size: var(--lm-fs-body); align-items: center; }
+.adm2.lm-shell .lm-search span { white-space: normal; line-height: 1.3; }
+.adm2.lm-shell .lm-search kbd { margin-left: auto; font: 500 var(--lm-fs-body) var(--lm-font); border-color: var(--lm-ln-strong); border-radius: 5px; padding: 0 5px; color: var(--lm-muted); }
+.adm2.lm-shell .lm-nav { gap: 2px; margin-top: 4px; }
+.adm2.lm-shell .lm-it { gap: 10px; padding: 8px 10px; min-height: 36px; border-radius: 10px; color: var(--lm-ink-soft); font-weight: 500; font-size: var(--lm-fs-body); }
+.adm2.lm-shell .lm-it:hover { background: var(--lm-sf2); color: var(--lm-ink); }
+.adm2.lm-shell .lm-it.on { background: var(--lm-acbg); color: var(--lm-ac-ink); font-weight: 600; }
+.adm2.lm-shell .lm-it svg { width: 18px; height: 18px; }
+.adm2.lm-shell .lm-bd { background: var(--lm-ac); color: var(--lm-on-ac); min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; display: inline-grid; place-items: center; font-size: 0.75rem; font-weight: 700; line-height: 1; }
+.adm2.lm-shell .lm-chv { color: var(--lm-muted); border-radius: 6px; width: 24px; }
+.adm2.lm-shell .lm-it.on + .lm-chv, .adm2.lm-shell .lm-nw.on .lm-chv { color: var(--lm-ac-ink); }
+.adm2.lm-shell .lm-subs { gap: 1px; margin: 2px 0 6px 19px; padding-left: 10px; border-left: 1.5px solid var(--lm-ln); }
+.adm2.lm-shell .lm-si { padding: 5px 8px; min-height: 30px; border-radius: 8px; color: var(--lm-muted); font-weight: 400; font-size: var(--lm-fs-body); }
+.adm2.lm-shell .lm-si:hover { color: var(--lm-ink); background: var(--lm-sf2); }
+.adm2.lm-shell .lm-si.on { color: var(--lm-ac-ink); background: var(--lm-acbg); font-weight: 600; }
+.adm2.lm-shell .lm-mapbtn { color: var(--lm-muted); }
+.adm2.lm-shell .lm-foot { padding: 10px 6px 4px; }
+.adm2.lm-shell .lm-av { width: 32px; height: 32px; background: var(--lm-navy); color: var(--lm-on-hero); font-weight: 700; }
+.adm2.lm-shell .lm-mt small { color: var(--lm-muted); }
+
+/* ---- the top bar (app.css .top): the crumb in the quiet ink, square icon buttons with a line, EN | বাং in navy ---- */
+.adm2.lm-shell .lm-top { padding: 10px 16px; min-height: 56px; gap: 8px; }
+.adm2.lm-shell .lm-crumb { color: var(--lm-muted); font-weight: 400; font-size: var(--lm-fs-body); margin-inline: 0; }
+.adm2.lm-shell .lm-crumb-now { color: var(--lm-muted); }
+.adm2.lm-shell .lm-tb { width: 36px; height: 36px; border-radius: 10px; background: var(--lm-sf); border: 1px solid var(--lm-ln); color: var(--lm-ink-soft); box-shadow: none; }
+.adm2.lm-shell .lm-tb:hover { transform: none; color: var(--lm-ink); border-color: var(--lm-ln-strong); }
+.adm2.lm-shell .lm-tb svg { width: 18px; height: 18px; }
+.adm2.lm-shell .lm-shop { padding: 0; display: grid; }
+.adm2.lm-shell .lm-dot { top: 6px; right: 7px; width: 7px; height: 7px; background: var(--lm-accent); box-shadow: none; }
+.adm2.lm-shell .lm-lang { padding: 0; gap: 0; border-radius: 10px; overflow: hidden; box-shadow: none; }
+.adm2.lm-shell .lm-lang button { min-height: 34px; padding: 0 10px; border-radius: 0; font-weight: 600; font-size: var(--lm-fs-body); color: var(--lm-muted); }
+.adm2.lm-shell .lm-lang button.on { background: var(--lm-navy); color: var(--lm-on-hero); }
+@media (max-width: 1023px), (hover: none), (pointer: coarse), (any-pointer: coarse) {
+  .adm2.lm-shell .lm-tb { width: var(--lm-tap); height: var(--lm-tap); }
+  .adm2.lm-shell .lm-lang button { min-height: var(--lm-tap); min-width: var(--lm-tap); }
+  .adm2.lm-shell :is(.lm-it, .lm-si) { min-height: var(--lm-tap); }
+  .adm2.lm-shell .lm-chv { width: var(--lm-tap); height: var(--lm-tap); }
+}
+
+/* ---- the content column (app.css .content) ---- */
+@media (min-width: 961px) { .adm2.lm-shell .lm-ct { padding: 4px 16px 40px; } }
+.adm2.lm-shell :is(.a2-h1, .a3-ph2 h1) { font-family: var(--lm-font-disp); font-weight: 650; letter-spacing: -0.015em; }
+
+/* ---- the section tabs (app.css .tabs): a white bar with a line, the open tab in navy ---- */
+.adm2.lm-shell .a2-tabs { background: var(--lm-sf); border: 1px solid var(--lm-ln); border-radius: 12px; box-shadow: none; padding: 4px; gap: 4px; }
+.adm2.lm-shell .a2-tab { border-radius: 9px; padding: 7px 12px; font-weight: 500; font-size: var(--lm-fs-body); color: var(--lm-ink-soft); }
+.adm2.lm-shell .a2-tab:hover { background: var(--lm-sf2); color: var(--lm-ink); }
+.adm2.lm-shell .a2-tab.on { background: var(--lm-navy); color: var(--lm-on-hero); }
+.adm2.lm-shell .a2-tab.on .a2-cnt { background: var(--lm-on-hero-soft); color: var(--lm-on-hero); }
+
+/* ---- cards, buttons, chips and badges (app.css .card, .btn, .chip, .badge) ---- */
+[data-lm-look] .lm-card,
+[data-lm-look] [data-lm-ready] .a2-card { border: 1px solid var(--lm-ln); border-radius: var(--lm-r-card); box-shadow: var(--lm-sh); }
+[data-lm-look] .lm-card { padding: 16px; }
+[data-lm-look] .lm-btn,
+[data-lm-look] [data-lm-ready] .a2-btn { border: 1px solid var(--lm-ln-strong); border-radius: 10px; background: var(--lm-sf); color: var(--lm-ink); font-weight: 600; box-shadow: none; padding-inline: 14px; }
+[data-lm-look] .lm-btn:hover,
+[data-lm-look] [data-lm-ready] .a2-btn:hover { background: var(--lm-sf); border-color: var(--lm-ink-soft); }
+[data-lm-look] .lm-btn.pri,
+[data-lm-look] [data-lm-ready] .a2-btn.pri { background: var(--lm-pri); border-color: var(--lm-pri-line); color: var(--lm-on-ac); box-shadow: var(--lm-pri-sh); }
+[data-lm-look] .lm-btn.pri:hover,
+[data-lm-look] [data-lm-ready] .a2-btn.pri:hover { filter: brightness(1.06); border-color: var(--lm-pri-line); }
+[data-lm-look] .lm-btn.gh { border-color: transparent; background: transparent; }
+[data-lm-look] .lm-chip { border: 1px solid var(--lm-ln); background: var(--lm-sf); color: var(--lm-ink-soft); box-shadow: none; }
+[data-lm-look] .lm-chip.on { background: var(--lm-ink); border-color: var(--lm-ink); color: var(--lm-sf); }
+
+/* ---- Home (PR 1101, prototype m-home.js): the design switcher row, the six figures three to a row with the small line at
+   the bottom right, the profit snapshot's bar orange for what it cost and green for what you keep, and the changes as
+   small tinted badges ---- */
+.adm2 .a3-dsw { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 14px 0 0; }
+.adm2 .a3-dsw-l { display: flex; align-items: center; gap: 8px; }
+.adm2 .a3-dsw-l > span, .adm2 .a3-dsw-n { color: var(--lm-muted); font-size: var(--lm-fs-body); }
+.adm2 .a3-dsw .a3-seg { display: inline-flex; border: 1px solid var(--lm-ln); border-radius: 10px; overflow: hidden; background: var(--lm-sf); padding: 0; gap: 0; }
+.adm2 .a3-dsw .a3-seg :is(a, button) { border: 0; border-radius: 0; background: none; padding: 6px 11px; min-height: 34px; font: 600 var(--lm-fs-body) var(--lm-font); color: var(--lm-muted); cursor: pointer; white-space: nowrap; }
+.adm2 .a3-dsw .a3-seg :is(a, button).on { background: var(--lm-ink); color: var(--lm-sf); }
+@media (max-width: 1023px), (pointer: coarse) { .adm2 .a3-dsw .a3-seg :is(a, button) { min-height: var(--lm-tap); } }
+.adm2 .a3-dlt { padding: 1px 6px; border-radius: 6px; }
+.adm2 .a3-dlt.g { background: var(--lm-okbg); }
+.adm2 .a3-dlt.b { background: var(--lm-badbg); }
+.adm2 .a3-snapc .a3-bar { direction: rtl; height: 8px; background: var(--lm-accent); }
+.adm2 .a3-snapc .a3-bar i { background: var(--lm-ok); }
+.adm2 .a3-six { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.adm2 .a3-six .a3-kpi { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'h h' 'v v' 's k'; align-items: end; gap: 6px 8px; padding: 15px 16px 13px; }
+.adm2 .a3-six .a3-six-h { grid-area: h; display: flex; align-items: center; gap: 9px; color: var(--lm-muted); font-weight: 500; }
+.adm2 .a3-six .a3-six-i { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--lm-acbg); color: var(--lm-ac-ink); flex: none; }
+.adm2 .a3-six .a3-six-v { grid-area: v; font: 650 27px/1.1 var(--lm-font-disp); letter-spacing: -0.03em; }
+.adm2 .a3-six .a3-kpi > .a3-cap.c { grid-area: s; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; text-align: left; color: var(--lm-muted); }
+.adm2 .a3-six .a3-kpi > .a3-spark { grid-area: k; width: 90px; height: 28px; }
+@media (max-width: 1180px) { .adm2 .a3-six { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .adm2 .a3-six { gap: 10px; } .adm2 .a3-six .a3-kpi { padding: 12px; } .adm2 .a3-six .a3-six-v { font-size: 21px; } .adm2 .a3-six .a3-kpi > .a3-spark { display: none; } }
+.adm2 .a3-hero-card .a3-empty.sm { display: block; padding: 6px 0; }
+.adm2 .a3-hero-card .a3-empty.sm svg { display: none; }
+.adm2 .a3-hero-card .a3-empty.sm b { display: block; margin-bottom: 4px; }
+
+/* ---- PR 1101: the section's tab bar under the page title (HeadTabs), as the prototype draws it; the shell's own copy at
+   the top of the page stays hidden while a head holds the bar (no jump before the page is live) ---- */
+.adm2.lm-shell .lm-ct:has(.a2-bar-in) > .a2-bar { display: none; }
+.adm2.lm-shell .a2-bar-in { margin: 0 0 16px; }
+.adm2 .a3-dsw-l { flex-wrap: wrap; }

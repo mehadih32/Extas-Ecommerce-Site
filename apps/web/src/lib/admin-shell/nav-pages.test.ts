@@ -60,11 +60,17 @@ function tabKeys(src: string): string[] {
 const get = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((a, k) => (a && typeof a === 'object' ? (a as Record<string, unknown>)[k] : undefined), o);
 
 describe('the section tab bar is drawn once by the shell, in the same place on every page (PR 727, PR 762)', () => {
-  it('the shell draws it at the top of <main>, above the page', () => {
+  // ~~the shell draws it at the top of <main>, above the page~~ — PR 1101 (owner, 19 Nov 2026: the prototype's place): the
+  // shell still builds the one bar from the address, and a page head draws it under the title (HeadTabs); a page with an
+  // older head of its own gets it at the top of <main>, before {children}.
+  it('the shell builds the bar once; a page head draws it under the title, else it sits at the top of <main>', () => {
     const shell = file(join(SRC, 'components/admin/shell/AdminShell.tsx'));
+    expect(shell, 'the shell builds the bar from the address').toMatch(/const tabBar = [^\n]*<ShellTabBar /);
     const main = /<main [^>]*id="main"[^>]*>([\s\S]*?)<\/main>/.exec(shell)?.[1] ?? '';
-    expect(main, 'the shell must mount <ShellTabBar …/> inside <main>').toContain('<ShellTabBar');
-    expect(main.indexOf('<ShellTabBar'), 'the bar comes before {children}').toBeLessThan(main.indexOf('{children}'));
+    expect(main.indexOf('tabBar}'), 'the fallback bar comes before {children}').toBeGreaterThan(-1);
+    expect(main.indexOf('tabBar}')).toBeLessThan(main.indexOf('{children}'));
+    expect(shell).toContain('<ShellTabsContext.Provider value={tabsCtx}>');
+    expect(file(join(SRC, 'components/admin/shell/ShellHead.tsx')), 'the page head draws the bar under itself').toContain('<HeadTabs />');
     expect(file(join(SRC, 'app/admin/layout.tsx')), "the shell's dictionary carries the page names (nav.*)").toContain('nav: view.dict.nav');
   });
 

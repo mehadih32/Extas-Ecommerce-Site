@@ -25,7 +25,10 @@ describe('Start & search page (follow-up 205)', () => {
   it('carries the Dashboard date choices as rows and back', () => {
     const card = dashCardOf({ ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14 });
     expect(card.ranges).toEqual([{ days: 1 }, { days: 7 }, { days: 30 }]);
-    expect(dashFrom(card)).toEqual({ ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14 });
+    // PR 1101: a value saved before `start` reads as the shipped 30 days (when 30 is one of its choices)
+    expect(dashFrom(card)).toEqual({ ranges: [1, 7, 30], start: 30, afternoonHour: 12, eveningHour: 17, sparkDays: 14 });
+    expect(dashFrom(dashCardOf({ ranges: [1, 7, 30], afternoonHour: 12, eveningHour: 17, sparkDays: 14, start: 7 }))).toMatchObject({ start: 7 });
+    expect(dashCardOf({ ranges: [1, 7], afternoonHour: 12, eveningHour: 17, sparkDays: 14 }).start).toBe(1);
   });
 
   it('the search card holds the three numbers only', () => {

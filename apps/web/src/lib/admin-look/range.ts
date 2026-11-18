@@ -29,13 +29,14 @@ export interface DashRange {
 }
 
 /** The window the address asks for: two good dates (not after today, at most `maxDays`), else a preset, else the first. */
-export function rangeFrom(q: { range?: string; from?: string; to?: string }, ranges: readonly number[], today: string, maxDays: number): DashRange {
+export function rangeFrom(q: { range?: string; from?: string; to?: string }, ranges: readonly number[], today: string, maxDays: number, start?: number): DashRange {
   if (realDay(q.from) && realDay(q.to) && q.from <= q.to && q.to <= today && spanDays(q.from, q.to) <= maxDays) {
     const days = spanDays(q.from, q.to);
     return { kind: 'custom', days, from: q.from, to: q.to, prev: { from: shiftDay(q.from, -days), to: shiftDay(q.from, -1) } };
   }
   const n = Number(q.range);
-  const days = ranges.includes(n) ? n : ranges[0]!;
+  // PR 1101: with no choice in the address the Home opens on `admin.dashboard.start` (30 days as shipped), else the first
+  const days = ranges.includes(n) ? n : start !== undefined && ranges.includes(start) ? start : ranges[0]!;
   const from = shiftDay(today, -(days - 1));
   return { kind: 'preset', days, from, to: today, prev: { from: shiftDay(from, -days), to: shiftDay(from, -1) } };
 }
