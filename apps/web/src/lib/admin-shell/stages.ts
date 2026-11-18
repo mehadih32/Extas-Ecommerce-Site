@@ -9,5 +9,6 @@
  * Send acts only on a person's press.
  */
 export function aiCenterShown(hidden: ReadonlySet<string>, aiEnabled: boolean): boolean {
-  return !hidden.has('ai') && aiEnabled;
+  // PR 1100: S15's hidden part is now only the assistant button (the AI Center section always shows)
+  return !hidden.has('assistant') && aiEnabled;
 }
