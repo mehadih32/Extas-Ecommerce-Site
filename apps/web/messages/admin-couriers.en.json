@@ -65,7 +65,8 @@
       "defaultDone": "Default courier changed.",
       "defaultFailed": "Could not change the default courier. Reload and try again.",
       "insightOne": "{best} has a success rate of {rate} over the last 30 days. Add another courier to compare.",
-      "insightNone": "The best and the slowest courier show here once parcels have been delivered."
+      "insightNone": "The best and the slowest courier show here once parcels have been delivered.",
+      "makeDefaultOff": "Switch this courier on in Setup first."
     },
     "c": {
       "back": "All couriers",
