@@ -638,5 +638,17 @@
       "declined": "Declined (our loss)",
       "cancelled": "Cancelled"
     }
+  },
+  "summary": {
+    "parcels": "Returned parcels",
+    "value": "Order value",
+    "buying": "buying price {amount}",
+    "common": "Most common reason",
+    "commonNone": "No reason yet",
+    "commonN": "{n} parcels",
+    "reasonsH": "Return reasons",
+    "reasonsNone": "No returned parcel has a reason in this range.",
+    "excel": "Excel",
+    "pdf": "PDF"
   }
 }
