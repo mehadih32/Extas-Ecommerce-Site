@@ -148,7 +148,8 @@
         "lastMonth": "Last month"
       },
       "batchNote": "Showing the current batch only (not yet handed to the courier)",
-      "showAll": "Show all orders"
+      "showAll": "Show all orders",
+      "anyPayment": "Any payment"
     },
     "kpi": {
       "today": "Orders today",
@@ -2241,6 +2242,18 @@
       "open": "Open",
       "returned": "Returns",
       "cancelled": "Cancelled"
+    },
+    "proc": {
+      "approve": "Approve",
+      "askAdvance": "Ask for advance",
+      "noAnswer": "No answer",
+      "noAnswerTitle": "No answer from {name}?",
+      "noAnswerEff": "The call stays in the queue and comes back at its next try.",
+      "noAnswerOk": "Save no answer",
+      "noAnswerDone": "No answer saved for {n}",
+      "cancel": "Cancel",
+      "more": "More",
+      "pay": "{pay} · {units}"
     }
   }
 }

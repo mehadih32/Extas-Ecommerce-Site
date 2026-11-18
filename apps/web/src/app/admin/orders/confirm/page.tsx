@@ -15,11 +15,15 @@ import { ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { approvalCard } from '@/lib/admin-orders/approval';
+import { CALLS_API } from '@/lib/admin-orders/calls-view';
+import type { CommandSpec } from '@/lib/admin-orders/spec';
 import { DO_PERM, commandTexts, loadOrderDetail } from '@/lib/admin-orders/detail';
 import { ageText, loadOrderList, parseListQuery } from '@/lib/admin-orders/list';
 import { listHref } from '@/lib/admin-orders/model';
 import { adminView, pageAccess } from '@/lib/admin-page';
-import { t } from '@/lib/i18n';
+import { t, type Dict } from '@/lib/i18n';
+import callsBn from '../../../../../messages/admin-calls.bn.json';
+import callsEn from '../../../../../messages/admin-calls.en.json';
 import '../../parity-d6.css';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +32,11 @@ type Search = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 /** PR 1064: how many cards the Processing grid draws at once (each is the order's own read; "Show more" goes on). */
 const CARDS_SHOWN = 12; // hardcode-ok: a page size, not a business number
+
+/** PR 1120: the call desk's words (`cl.desk.*`, the Calls to make page's own). */
+function deskWords(view: { lang: string; dict: Dict }): Dict {
+  return { ...view.dict, ...((view.lang === 'bn' ? callsBn : callsEn) as unknown as Dict) };
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const view = await adminView();
@@ -65,11 +74,40 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
   const batch = perms.has('orders.read') ? await od.batchOverview(rd, who, now).catch(() => null) : null;
   const merge = (await access.deps.resolver.value('orders.mergeOrders', { storeId: MOTHER_STORE_ID }).catch(() => null)) as { lookBackDays: number; autoMerge: boolean } | null;
   const mergeLine = merge ? t(view.dict, 'orders.confirm.mergeLine', { days: String(merge.lookBackDays), state: t(view.dict, merge.autoMerge ? 'orders.confirm.on' : 'orders.confirm.off') }) : null;
+  // PR 1120 (prototype v5): the call desk on top of the Processing grid, and "No answer" on each card that has an open call
+  const desk = grid && perms.has('orders.read') ? await od.callDesk(rd, who).catch(() => null) : null;
+  const noAnswer: Record<string, CommandSpec> = {};
+  if (cards?.length && perms.has('orders.confirm')) {
+    const [calls, outcomes, hist] = await Promise.all([
+      od.openCallsOf(rd, MOTHER_STORE_ID, cards.map((c) => c.id)),
+      access.deps.resolver.value('orders.callOutcomes', { storeId: MOTHER_STORE_ID }).catch(() => []),
+      access.deps.resolver.value('risk.history', { storeId: MOTHER_STORE_ID }).catch(() => null),
+    ]);
+    const key = (hist?.noAnswerOutcomes ?? []).find((k) => outcomes.some((o) => o.key === k && !o.done));
+    if (key)
+      for (const c of cards) {
+        const task = calls.get(c.id);
+        if (!task) continue;
+        noAnswer[c.id] = {
+          id: `noanswer-${task}`,
+          label: t(view.dict, 'orders.proc.noAnswer'),
+          url: `${CALLS_API}/${task}`,
+          version: null,
+          fixed: { outcome: key },
+          title: t(view.dict, 'orders.proc.noAnswerTitle', { name: c.name }),
+          effects: [t(view.dict, 'orders.proc.noAnswerEff')],
+          fields: [{ name: 'note', kind: 'textarea', label: t(view.dict, 'orders.call.record.note'), placeholder: t(view.dict, 'orders.call.record.notePh'), maxLength: 500 }],
+          ok: t(view.dict, 'orders.proc.noAnswerOk'),
+          okTone: 'pri',
+          done: t(view.dict, 'orders.proc.noAnswerDone', { n: c.number }),
+        };
+      }
+  }
   const wantDo = one(sp.do) ?? null;
   const open = wantDo && DO_PERM[wantDo] && perms.has(DO_PERM[wantDo]) ? wantDo : null;
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} cards={cards} />
+      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} cards={cards} desk={desk} deskWords={desk ? deskWords(view) : null} noAnswer={noAnswer} />
     </CommandsProvider>
   );
 }

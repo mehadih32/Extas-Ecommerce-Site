@@ -723,7 +723,8 @@
           "reprintPinHelp": "Off: a reprint needs only its reason. On: it also needs the PIN, and the print log marks it.",
           "packOnPrint": "A printed sticker means packed",
           "packOnPrintHelp": "Off: packing is its own step. On: printing a confirmed order's sticker marks it Packed (no piece scan)."
-        }
+        },
+        "pickPack": "Pick & pack"
       },
       "peak": "Peak / Eid mode",
       "peakCard": {
@@ -803,6 +804,14 @@
         "first": "First print",
         "again": "Printed again",
         "none": "No print yet."
+      },
+      "tbl": {
+        "order": "Order",
+        "items": "Items",
+        "deliverTo": "Deliver to",
+        "cash": "Cash",
+        "paid": "Paid",
+        "courier": "Courier"
       }
     },
     "printRun": {

@@ -151,6 +151,18 @@ export async function callReasonCounts(deps: OrdersDeps, who: Who): Promise<Reco
   return Object.fromEntries(rows.map((r) => [r.reason, r._count._all]));
 }
 
+/**
+ * PR 1120 (prototype v5, Processing cards): each listed order's newest open call, whatever its reason, so a card can offer
+ * "No answer" (it records that outcome on this call; nothing else changes). Orders with no open call are left out.
+ */
+export async function openCallsOf(deps: OrdersDeps, storeId: number, orderIds: readonly string[]): Promise<Map<string, string>> {
+  if (!orderIds.length) return new Map();
+  const rows = await deps.db.callTask.findMany({ where: { storeId, orderId: { in: [...orderIds] }, status: { in: [...OPEN] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true, orderId: true } });
+  const out = new Map<string, string>();
+  for (const r of rows) if (r.orderId && !out.has(r.orderId)) out.set(r.orderId, r.id);
+  return out;
+}
+
 /** The order's open call for one reason, if any (the order page's band offers "Record call" on it). */
 export async function openCallOf(deps: OrdersDeps, storeId: number, orderId: string, reason: string): Promise<{ taskId: string } | null> {
   const t = await deps.db.callTask.findFirst({ where: { storeId, orderId, reason, status: { in: [...OPEN] } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true } });

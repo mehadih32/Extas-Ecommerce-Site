@@ -48,3 +48,4 @@
 .adm2 .o6-qb.bad{border-color:var(--bad)}
 .adm2 .o6-qa{display:flex;flex-wrap:wrap;gap:6px}
 @media (max-width:900px){.adm2 .o6-cards{grid-template-columns:minmax(0,1fr)}}
+.adm2 .d4-desk + .a2-views{margin-top:12px}

@@ -139,7 +139,7 @@ export function filterSelects(view: AdminView, q: ListQuery, bands: readonly Fie
   const d = view.dict;
   const sel = (name: 'status' | 'payment' | 'source' | 'section', values: readonly string[], key: string): FilterSelect => {
     const label = t(d, `orders.list.${name}`);
-    return { name, label, any: t(d, 'orders.list.any', { name: label }), value: q[name] ?? '', options: values.map((v) => ({ value: v, label: t(d, `orders.${key}.${v}`) })) };
+    return { name, label, any: name === 'payment' ? t(d, 'orders.list.anyPayment') : t(d, 'orders.list.any', { name: label }), value: q[name] ?? '', options: values.map((v) => ({ value: v, label: t(d, `orders.${key}.${v}`) })) };
   };
   const risk = t(d, 'orders.list.risk');
   // PR 660: the date bar — Today, Yesterday, Last 7 days, This month, Last month (the preset picked when the days match one),
