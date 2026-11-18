@@ -303,36 +303,10 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/marketing/landing/seasonal/yearly', perm: 'marketing.landing.read', keys: ['marketingSeasonalYearly'] },
         ],
       },
-      // S23 · PR 437, 438: the social & content studio — accounts, the brand asset library and templates.
-      // S25 · PR 481 (Blueprint C8.1) adds the motion library sub-page (image-to-video jobs, reels, exports and the
-      // creative brief join as the rest of PR 482–490 build).
-      // S24 · PR 445 (Blueprint C7.21 "share … the model library") adds the model library sub-page (model profiles,
-      // their own reference photos per angle, and their rights/consent records); one shared Studio tab, hidden while
-      // any of `stages.closedShown.S23`, `.S24` or `.S25` is still off.
-      // S25 · PR 489 (Blueprint C8.3) adds campaign overlays: a page-level, time-bound decoration on the product
-      // card, listing and product page — never stored on the photo, never touching a price.
-      {
-        id: 'studio',
-        pages: [
-          { href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] },
-          { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
-          { href: '/admin/marketing/studio/models', perm: 'photoshoot.read', keys: ['marketingStudioModels'] },
-          { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
-          // S25 · PR 485/486: reel assembly — builds a reel's own recipe from approved clips, then assembles it
-          // (the honest-preview compositor, one output per chosen shape).
-          { href: '/admin/marketing/studio/reels', perm: 'marketing.studio.read', keys: ['marketingStudioReels'] },
-          // S25 · PR 487: campaign creative export, part 1 — requests an export from a real product, SKU or
-          // category that already has an approved image/video; producing the sized files is PR 488.
-          { href: '/admin/marketing/studio/export', perm: 'marketing.studio.read', keys: ['marketingStudioExport'] },
-          // S25 · PR 490: the creative brief — a few short questions, then three proposed directions to pick from.
-          { href: '/admin/marketing/studio/briefs', perm: 'marketing.studio.read', keys: ['marketingStudioBriefs'] },
-          { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
-        ],
-      },
+      // PR 1100 (owner, 18 Nov 2026): the Studio tab (S23, S24, S25) and YouTube left Marketing for their own menu item,
+      // Creative Studio (the section `studio` below). Their addresses are unchanged, so every old link still opens them.
       // S13 · PR 273: referrals — the programme, friends' orders with their invite codes and the sharers' rewards.
       { id: 'referrals', pages: [{ href: '/admin/marketing/referrals', perm: 'marketing.campaigns.read', keys: ['marketingReferrals'] }] },
-      // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.
-      { id: 'youtube', pages: [{ href: '/admin/marketing/youtube', perm: 'marketing.campaigns.read', keys: ['marketingYoutube'] }] },
       // S13 · PR 279: SEO outreach — the websites asked for a link, along the pipeline, with follow-up days and live links.
       { id: 'outreach', pages: [{ href: '/admin/marketing/outreach', perm: 'marketing.campaigns.read', keys: ['marketingOutreach'] }] },
       // S13 · PR 280: Seasonal home — saved home-page looks and the windows they show in (the home page switches by itself).
@@ -349,6 +323,45 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'merchantFeed', more: true, pages: [{ href: '/admin/marketing/merchant-feed', perm: 'marketing.campaigns.read', keys: ['marketingMerchantFeed'] }] },
       // S13 · PR 548: Market & competitors — the owner's own followed shops, the price table against ours, change alerts (More options).
       { id: 'intel', more: true, pages: [{ href: '/admin/marketing/intel', perm: 'marketing.campaigns.read', keys: ['marketingIntel'] }] },
+    ],
+  },
+  // PR 1100 (owner, 18 Nov 2026): Creative Studio, its own menu item (taken out of Marketing): the social content studio
+  // (S23, PR 437, 438), the virtual photoshoot studio (S24: the model library, the photoshoot reviews, each job's page and
+  // the photo editor) and the video campaign & creative studio (S25, PR 481-490: motion, videos, reels, export, briefs,
+  // overlays), with YouTube (PR 278). The pages keep their addresses and their own design; only the menu moved.
+  {
+    id: 'studio',
+    icon: 'palette',
+    group: 'grow',
+    base: '/admin/marketing/studio',
+    guide: 'studio',
+    tabs: [
+      { id: 'social', pages: [{ href: '/admin/marketing/studio', perm: 'studio.read', keys: ['marketingStudio'] }] },
+      {
+        id: 'photoshoot',
+        pages: [
+          { href: '/admin/marketing/studio/models', perm: 'photoshoot.read', keys: ['marketingStudioModels'] },
+          // PR 451-457: the photoshoot reviews (each job's page sits under it); the photo editor is a record page (RECORD_PAGES)
+          { href: '/admin/marketing/photoshoot/review', perm: 'photoshoot.read', keys: ['marketingPhotoshootReview', 'marketingPhotoshootEditor'] },
+        ],
+      },
+      {
+        id: 'video',
+        pages: [
+          { href: '/admin/marketing/studio/motion', perm: 'marketing.studio.read', keys: ['marketingStudioMotion'] },
+          { href: '/admin/marketing/studio/videos', perm: 'marketing.studio.read', keys: ['marketingStudioVideos'] },
+          // S25 · PR 485/486: reel assembly (the honest-preview compositor, one output per chosen shape)
+          { href: '/admin/marketing/studio/reels', perm: 'marketing.studio.read', keys: ['marketingStudioReels'] },
+          // S25 · PR 487: campaign creative export
+          { href: '/admin/marketing/studio/export', perm: 'marketing.studio.read', keys: ['marketingStudioExport'] },
+          // S25 · PR 490: the creative brief
+          { href: '/admin/marketing/studio/briefs', perm: 'marketing.studio.read', keys: ['marketingStudioBriefs'] },
+          // S25 · PR 489: campaign overlays (never stored on the photo, never touching a price)
+          { href: '/admin/marketing/studio/overlay', perm: 'marketing.studio.read', keys: ['marketingStudioOverlay'] },
+        ],
+      },
+      // S13 · PR 278: YouTube — the channel, the videos with their products and tracked links, the orders they brought.
+      { id: 'youtube', pages: [{ href: '/admin/marketing/youtube', perm: 'marketing.campaigns.read', keys: ['marketingYoutube'] }] },
     ],
   },
   // S11 · PR 220–222: Website → SEO (search engines, titles and descriptions, the structured data). The site builder,
@@ -569,9 +582,31 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'funnels', more: true, guide: 'analytics', pages: [{ href: '/admin/reports/funnels', perm: 'reports.read', keys: ['reportsFunnels'] }] },
     ],
   },
+  // PR 1100 (owner, 18 Nov 2026): the AI Center is the prototype's four tabs (Approvals, AI agents, Costs & limits,
+  // Training) and always shows (no stage switch hides it); the control room's own pages are the next menu item, AI 360 Control.
   {
     id: 'ai',
     icon: 'spark',
+    group: 'business',
+    base: '/admin/ai/approvals',
+    tabs: [
+      // S15 · PR 317 (C3.2) — Approvals: the single queue for everything an agent wants to do but may not do alone.
+      { id: 'approvals', guide: 'ai', pages: [{ href: '/admin/ai/approvals', perm: 'ai.read', keys: ['aiApprovals'] }] },
+      // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
+      { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
+      // S15 · PR 312 (C2.1, C2.2) — Cost Book ("Costs & limits"): every AI job, its model, its estimated cost (owner only).
+      { id: 'costBook', guide: 'ai', pages: [{ href: '/admin/ai/cost-book', perm: 'ai.read', keys: ['aiCostBook'] }] },
+      // S28 · PR 713 (CN-048): Training — the owner's written instructions per agent, forbidden topics, versions and restore.
+      { id: 'train', guide: 'ai', pages: [{ href: '/admin/ai/training', perm: 'ai.read', keys: ['aiTraining'] }] },
+    ],
+    ownerOnly: true,
+    guide: 'ai',
+  },
+  // PR 1100 (owner, 18 Nov 2026): AI 360 Control, its own menu item: the AI control room's pages, as they were under the
+  // AI Center (addresses unchanged).
+  {
+    id: 'ai360',
+    icon: 'pulse',
     group: 'business',
     base: '/admin/ai',
     tabs: [
@@ -581,22 +616,9 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       // S15 · PR 580 (C2.4) — Model picks: a suggested model per job, free models qualified like paid ones, with
       // their own quality score, cost and a "Re-test now" (owner only; off by default behind its own switch).
       { id: 'models', guide: 'ai', pages: [{ href: '/admin/ai/models', perm: 'ai.read', keys: ['aiModels'] }] },
-      // S15 · PR 577 (C10.4) — Agents: the team grid and each fixed agent's own 360° profile.
-      { id: 'agents', guide: 'ai', pages: [{ href: '/admin/agents', perm: 'ai.read', keys: ['aiAgents'] }] },
       // S15 · PR 583 (C10.2) — Ask the chief: the chain of command, the chief's own investigations and the chief's
       // own row of the PR 318 permission matrix (owner reads it here; changes any cell through Permissions too).
       { id: 'agentsChief', guide: 'ai', pages: [{ href: '/admin/agents/chief', perm: 'ai.read', keys: ['aiAgentsChief'] }] },
-      // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
-      { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
-      // S15 · PR 312 (C2.1, C2.2) — Cost Book: every AI job, its recommended model and why, its estimated cost, and
-      // a model selector right in the row (owner only).
-      { id: 'costBook', guide: 'ai', pages: [{ href: '/admin/ai/cost-book', perm: 'ai.read', keys: ['aiCostBook'] }] },
-      // S15 · PR 317 (C3.2) — Approvals: the single queue for everything an agent wants to do but may not do alone
-      // (money, refunds, COD, prices, discounts, ad budget, blocking, deletion, skills, fixes), cleared in one pass.
-      { id: 'approvals', guide: 'ai', pages: [{ href: '/admin/ai/approvals', perm: 'ai.read', keys: ['aiApprovals'] }] },
-      // S15 · PR 318 (C3.2) — Permissions: the permission matrix — per agent, what it may decide alone, must only
-      // propose, or may not touch at all, over orders/stock/prices/courier/money/customer data/code (owner only).
-      { id: 'permissions', guide: 'ai', pages: [{ href: '/admin/ai/permissions', perm: 'ai.read', keys: ['aiPermissions'] }] },
       // S15 · PR 319 (C1.7) — AI diary: a plain-Bengali line per agent per action, what it did, why, and what it
       // changed — not a technical log (owner only).
       { id: 'diary', guide: 'ai', pages: [{ href: '/admin/ai/diary', perm: 'ai.read', keys: ['aiDiary'] }] },
@@ -612,13 +634,16 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
           { href: '/admin/ai/skills/sandbox', perm: 'ai.read', keys: ['aiSkillsSandbox'] },
         ],
       },
-      // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
-      { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
       // S15 · PR 585 — Learning engine: Tirondaj/Doot's own research → quality gate → skill basket loop, practice
       // tasks and paid-tool proposals (owner only).
       { id: 'learning', guide: 'ai', pages: [{ href: '/admin/ai/learning', perm: 'ai.read', keys: ['aiLearning'] }] },
-      // S28 · PR 713 (CN-048): Training — the owner's written instructions per agent, forbidden topics, versions and restore.
-      { id: 'train', guide: 'ai', pages: [{ href: '/admin/ai/training', perm: 'ai.read', keys: ['aiTraining'] }] },
+      // S15 · PR 318 (C3.2) — Permissions: the permission matrix — per agent, what it may decide alone, must only
+      // propose, or may not touch at all, over orders/stock/prices/courier/money/customer data/code (owner only).
+      { id: 'permissions', guide: 'ai', pages: [{ href: '/admin/ai/permissions', perm: 'ai.read', keys: ['aiPermissions'] }] },
+      // S21 · PR 570 — B7.3 / AIC-05 Checklist audit: the e-commerce checklist in the backend and its runner (owner only).
+      { id: 'audit', guide: 'ai', pages: [{ href: '/admin/ai/audit', perm: 'health.read', keys: ['aiAudit'] }] },
+      // S15 · PR 578 (C10.4) — Agent reports: daily/weekly/monthly/yearly reports per agent, on demand.
+      { id: 'reports', guide: 'ai', pages: [{ href: '/admin/ai/reports', perm: 'ai.read', keys: ['aiReports'] }] },
     ],
     ownerOnly: true,
     guide: 'ai',
@@ -747,6 +772,8 @@ const owns = (href: string, path: string) => path === href || path.startsWith(`$
 const RECORD_PAGES: readonly { re: RegExp; key: string }[] = [
   { re: /^\/admin\/delivery\/couriers\/[^/]+$/, key: 'courier' },
   { re: /^\/admin\/delivery\/couriers\/[^/]+\/statement$/, key: 'courierStatement' },
+  // PR 1100: the photo editor (no list page of its own) belongs to Creative Studio › Virtual photoshoot studio
+  { re: /^\/admin\/marketing\/photoshoot\/editor\/[^/]+$/, key: 'marketingPhotoshootEditor' },
 ];
 
 /** `?from=` of a page opened from another section's tab (Finance › Couriers, Reports › Couriers open Courier 360). */

@@ -219,7 +219,20 @@
       "website.policies": "Policy pages with \"at a glance\" boxes; numbers come from Rules.",
       "website.seo": "Google ranking of your keywords, SEO problems to fix.",
       "website.text": "Every word customers see, English and Bengali, searchable by page.",
-      "website.words": "Every word customers read, English and Bengali."
+      "website.words": "Every word customers read, English and Bengali.",
+      "studio.social": "Social posts: your accounts, the brand picture library and templates.",
+      "studio.photoshoot": "Virtual photoshoot: the model library, the photoshoot reviews and the photo editor.",
+      "studio.video": "Videos for campaigns: motion, videos, reels, export in every size, briefs and overlays.",
+      "studio.youtube": "YouTube videos shown on the shop.",
+      "ai360.control": "AI switches, limits and what it may do.",
+      "ai360.models": "Which AI model does which job.",
+      "ai360.agentsChief": "Ask the chief: Gyani finds who is responsible for a \"why\", with evidence, and assigns the fix.",
+      "ai360.diary": "What the agents did, day by day.",
+      "ai360.skills": "The skills each agent has.",
+      "ai360.learning": "What the AI agents are learning, checked against real sources before it's trusted.",
+      "ai360.permissions": "What the AI is allowed to touch.",
+      "ai360.audit": "The checklist the shop is checked against.",
+      "ai360.reports": "Daily and weekly reports by agent."
     },
     "taskNames": {
       "deliveryCharge": "Change the delivery charge",

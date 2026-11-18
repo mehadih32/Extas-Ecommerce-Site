@@ -27,16 +27,15 @@ describe('closed stages hidden by a switch (PR 652)', () => {
     }
   });
 
-  it('with S15 closed the AI Center is in no menu, not even the owner\'s, and back when its switch is on', () => {
+  // ~~with S15 closed the AI Center is in no menu~~ — PR 1100 (owner, 18 Nov 2026): the AI Center, AI 360 Control and
+  // Creative Studio always show; with S15 closed only the round assistant button stays hidden.
+  it('PR 1100: with the switches as shipped every section shows, and S15 still hides the assistant button', () => {
     const hidden = hiddenAdminParts(CLOSED_STAGES_SHOWN_DEFAULT);
-    expect(hidden.has('ai')).toBe(true);
+    expect(hidden.has('ai')).toBe(false);
     expect(hidden.has('assistant')).toBe(true);
-    const ai = sectionById('ai')!;
-    expect(sectionVisible(ai, OWNER(hidden))).toBe(false);
-    expect(sectionVisible(ai, OWNER(hiddenAdminParts(ALL_SHOWN)))).toBe(true);
-    // every other section is untouched
-    const open = SHELL_SECTIONS.filter((s) => s.id !== 'ai' && !s.folded); // PR 659: a folded section has no menu entry
+    const open = SHELL_SECTIONS.filter((s) => !s.folded); // PR 659: a folded section has no menu entry
     expect(open.every((s) => sectionVisible(s, OWNER(hidden)))).toBe(true);
+    expect(sectionVisible(sectionById('ai')!, OWNER(hidden))).toBe(true);
   });
 
   it('no hidden section or tab is in the menu or the admin search', async () => {
@@ -48,14 +47,9 @@ describe('closed stages hidden by a switch (PR 652)', () => {
     }
     const search = async (viewer: ShellViewer, q: string) =>
       (await adminSearch({ db: null as never, storeId: 1, lang: 'en', viewer, limits: { perGroup: 50, minChars: 2 } }, q)).flatMap((g) => g.items.map((i) => i.href));
-    const aiHrefs = sectionById('ai')!.tabs.flatMap((t) => t.pages.map((p) => p.href));
-    for (const q of ['', 'audit', 'checklist', '?ai', '?checklist']) {
-      const hrefs = await search(v, q);
-      for (const href of aiHrefs) expect(hrefs, `${q} ${href}`).not.toContain(href);
-      expect(hrefs, q).not.toContain('/admin/ai');
-    }
-    // the switch on brings it back into the search
-    const auditHref = aiHrefs.find((h) => h.endsWith('/audit'))!;
+    // PR 1100: the AI pages are no longer hidden, so the search finds them with the switches as shipped
+    const auditHref = sectionById('ai360')!.tabs.flatMap((t) => t.pages.map((p) => p.href)).find((h) => h.endsWith('/audit'))!;
+    expect(await search(v, 'audit')).toContain(auditHref);
     expect(await search(OWNER(hiddenAdminParts(ALL_SHOWN)), 'audit')).toContain(auditHref);
   });
 
@@ -76,7 +70,7 @@ describe('closed stages hidden by a switch (PR 652)', () => {
   });
 
   it('names the closed stage of a hidden part, for its "closed by the owner" state (669)', () => {
-    expect(closedStageOfPart('ai')).toBe('S15');
+    expect(closedStageOfPart('ai')).toBeNull(); // PR 1100: the AI Center is no longer a closed part
     expect(closedStageOfPart('assistant')).toBe('S15');
     expect(closedStageOfPart('orders')).toBeNull();
     // A part shared by two stages (the Studio tab under Marketing, built by S23's PR 437/438 and extended by

@@ -17,7 +17,7 @@ import { setting } from './define';
 const V = 33;
 const V209 = 263;
 
-/** The sidebar entries of the new admin (decision D8; PR 659 adds Rules as its own section), in the order of the sections table. */
+/** The sidebar entries of the new admin (decision D8; PR 659 adds Rules as its own section; PR 1100 Creative Studio and AI 360 Control), in the order of the sections table. */
 export const ADMIN_SECTIONS = [
   'dashboard',
   'orders',
@@ -28,10 +28,12 @@ export const ADMIN_SECTIONS = [
   'support',
   'rules',
   'marketing',
+  'studio',
   'website',
   'money',
   'reports',
   'ai',
+  'ai360',
   'settings',
   'help',
 ] as const;

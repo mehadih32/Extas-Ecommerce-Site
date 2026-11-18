@@ -11,10 +11,12 @@
       "support": "Inbox",
       "rules": "Rules",
       "marketing": "Marketing",
+      "studio": "Creative Studio",
       "website": "Website",
       "money": "Finance",
       "reports": "Reports",
       "ai": "AI Center",
+      "ai360": "AI 360 Control",
       "settings": "Settings",
       "help": "Help & Build"
     },
@@ -67,6 +69,12 @@
         "intel": "Market & competitors",
         "overview": "Overview",
         "plan": "Plan & ideas"
+      },
+      "studio": {
+        "social": "Social content studio",
+        "photoshoot": "Virtual photoshoot studio",
+        "video": "Video campaign & creative studio",
+        "youtube": "YouTube"
       },
       "reports": {
         "library": "Report library",
@@ -207,6 +215,17 @@
         "reports": "Agent reports",
         "learning": "Learning",
         "train": "Training"
+      },
+      "ai360": {
+        "control": "Control room",
+        "models": "Model picks",
+        "agentsChief": "Ask the chief",
+        "diary": "Diary",
+        "skills": "Skills",
+        "learning": "Learning",
+        "permissions": "Permissions",
+        "audit": "Checklist audit",
+        "reports": "Agent reports"
       }
     },
     "purpose": {
@@ -219,10 +238,12 @@
       "support": "Answer every customer on every channel (the Inbox); money complaints with proof.",
       "rules": "Your shop rules in one place: what the shop does by itself, what customers are told, and the Eid dates.",
       "marketing": "Ads, campaigns, message campaigns, audiences, landing pages and where to advertise; budget raises need the owner.",
+      "studio": "Social posts, the virtual photoshoot and video creatives for your campaigns, and YouTube. Nothing is posted without a person.",
       "website": "Menus, pages, blog and how the shop looks.",
       "money": "Profit and loss, COD, payments, refunds and the month-end close.",
       "reports": "Sales, delivery, product and customer reports from the same definitions, and the site's health.",
       "ai": "What the AI may do, its approvals and its costs. AI is off until the owner turns it on.",
+      "ai360": "The AI control room: every agent, its models, diary, skills, permissions, audit and reports.",
       "settings": "Store-wide things only; everything else sits in its own section.",
       "help": "The Bengali guide for every section, and the build progress."
     },
@@ -236,10 +257,12 @@
       "support": "Inbox · Rider issues · Claims & credits · Saved replies · Support settings",
       "rules": "All rules · Offers & discounts · Pop-ups & notices · Eid dates",
       "marketing": "Ad campaigns · Message campaigns · Audiences · Landing pages · Creative studio · More: Market intel, YouTube",
+      "studio": "Social content studio · Virtual photoshoot studio · Video campaign & creative studio · YouTube",
       "website": "Site builder · Page layouts · Blog · Words · More: Eye toggles, Launch default, Effects",
       "money": "Profit & loss · COD reconciliation · Payments & refunds · Expenses & salaries · Month-end close · Costs & fees",
       "reports": "Overview · Sales · Products · Customers · Delivery · More: Marketing, Experiments, Scheduled reports, Funnels",
       "ai": "Control room · Approvals · Agents · Skills · Audit · Agent reports · Costs · More: Models, Routing, Diary, Media, Memory",
+      "ai360": "Control room · Model picks · Ask the chief · Diary · Skills · Learning · Permissions · Checklist audit · Agent reports",
       "settings": "Settings home · Store details · Checkout & payments · Policies & texts · Team & roles · More: ERP connection, Stores, System",
       "help": "What's new · Build progress · Reported problems · Blueprint & files · More: Smoke runs"
     },
@@ -253,10 +276,12 @@
       "support": "chat inbox complaint help desk",
       "rules": "rule rules smart notice popup eid auto confirm",
       "marketing": "ads campaign audience landing sms whatsapp email message template",
+      "studio": "studio creative social post photoshoot photo model video reel export brief overlay youtube",
       "website": "site page menu blog seo theme",
       "money": "finance money profit cod refund payment",
       "reports": "report analytics health server worker jobs delivery rto courier late",
       "ai": "ai agent automation",
+      "ai360": "ai 360 control room agent model diary skill learning permission audit report",
       "settings": "setting keys connections integrations vault api erp link switch-over",
       "help": "guide manual help how"
     },
@@ -282,9 +307,9 @@
     },
     "top": {
       "search": "Search pages, settings, orders, products, customers…",
-      "searchShort": "Search…",
+      "searchShort": "Search orders, products…",
       "searchAria": "Search pages, settings, orders, products, customers",
-      "kbd": "Ctrl K",
+      "kbd": "/",
       "bell": "Notifications",
       "bellUnread": "Notifications, {n} unread",
       "guide": "Guide for this page",
@@ -652,7 +677,8 @@
       "todayWord": "today",
       "daysWord": "{n} days",
       "vsYesterday": "vs yesterday",
-      "vsDays": "vs previous {n} days"
+      "vsDays": "vs previous {n} days",
+      "month": "This month"
     },
     "tile": {
       "sales": "Delivered sales · {range}",
@@ -1015,7 +1041,7 @@
       "tParcels": "{n} parcels",
       "tReturn": "Return rate",
       "tOfFinished": "of {n} finished parcels",
-      "tAds": "Ad spend",
+      "tAds": "Ad spend · sales per {one}",
       "trendTitle": "Sales trend",
       "trendSub": "Delivered sales against the period before; hover or tap the chart to see each day",
       "adsSub": "Delivered sales from each ad channel ÷ ad spend",
@@ -1081,6 +1107,13 @@
       "targetFailed": "The target could not be saved. Try again.",
       "calmNet": "Net profit this month",
       "calmFrom": "from {v} delivered sales · margin {margin}"
+    },
+    "dsw": {
+      "design": "Design",
+      "A": "A · Command",
+      "B": "B · Calm",
+      "C": "C · Classic",
+      "note": "Pick one design — the final admin keeps only your choice."
     }
   },
   "look": {

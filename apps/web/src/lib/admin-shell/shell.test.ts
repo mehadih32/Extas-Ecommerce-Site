@@ -55,7 +55,7 @@ describe('shell words (Bengali and English side by side)', () => {
 describe('the sections (14 before PR 659; Rules is the 15th, Messages is folded into Marketing)', () => {
   it('match the settings list of sections, in order, in 3 groups plus the bottom', () => {
     expect(SHELL_SECTIONS.map((s) => s.id)).toEqual([...ADMIN_SECTIONS]);
-    expect(SHELL_SECTIONS).toHaveLength(15);
+    expect(SHELL_SECTIONS).toHaveLength(17); // PR 1100: Creative Studio and AI 360 Control
     expect(new Set(SHELL_SECTIONS.map((s) => s.group))).toEqual(new Set(['daily', 'grow', 'business', 'bottom']));
   });
 

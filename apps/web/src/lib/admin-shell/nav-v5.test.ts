@@ -128,9 +128,11 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     expect(costs.pages.map((p) => p.href)).toEqual(['/admin/money/costs', '/admin/money/expenses', '/admin/money/fees', '/admin/money/cost-ledger', '/admin/money/cost-ledger/report', '/admin/money/budgets']);
     const erp = money.tabs.find((x) => x.id === 'erp')!;
     expect(erp.pages.map((p) => p.keys[0])).toEqual(['booksAccount', 'booksMatch', 'booksDifferences', 'booksCloses', 'booksDaily', 'moneyMonthEnd']);
-    const studio = SHELL_SECTIONS.find((x) => x.id === 'marketing')!.tabs.find((x) => x.id === 'studio')!;
-    expect(studio.more).toBe(true);
-    expect(studio.pages.length).toBeGreaterThan(1);
+    // PR 1100: the Studio left Marketing for its own menu item, Creative Studio (its pages in three tabs, plus YouTube)
+    expect(SHELL_SECTIONS.find((x) => x.id === 'marketing')!.tabs.some((x) => x.id === 'studio' || x.id === 'youtube')).toBe(false);
+    const video = SHELL_SECTIONS.find((x) => x.id === 'studio')!.tabs.find((x) => x.id === 'video')!;
+    expect(video.more).toBeUndefined();
+    expect(video.pages.length).toBeGreaterThan(1);
   });
 
   it('Settings is the prototype two tabs: Business settings and System (owner only), their pages as chips in the prototype order', () => {

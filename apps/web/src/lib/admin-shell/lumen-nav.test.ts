@@ -19,9 +19,9 @@ describe('Lumen sidebar (PR 626)', () => {
     expect(nav.map((g) => g.group)).toEqual(['daily', 'grow', 'business', 'system']);
     expect(nav.map((g) => g.sections.map((s) => s.id))).toEqual([
       ['dashboard', 'orders', 'delivery', 'products', 'customers', 'support', 'rules'],
-      ['marketing', 'website'],
+      ['marketing', 'studio', 'website'],
       ['money', 'reports'],
-      ['ai', 'settings', 'help'],
+      ['ai', 'ai360', 'settings', 'help'],
     ]);
     const ids = nav.flatMap((g) => g.sections.map((s) => s.id));
     expect(new Set(ids).size).toBe(ids.length);
@@ -47,14 +47,29 @@ describe('Lumen sidebar (PR 626)', () => {
     expect(sectionVisible(sectionById('messages')!, owner)).toBe(false);
   });
 
-  it('hides the AI Center while it is not shown; S15 closed (PR 652 switch off, as shipped), whatever ai.enabled says', () => {
-    expect(lumenNav(owner, { aiShown: false }).flatMap((g) => g.sections.map((s) => s.id))).not.toContain('ai');
+  // ~~hides the AI Center while it is not shown (PR 626, 652)~~ — PR 1100 (owner, 18 Nov 2026): the AI Center, AI 360 Control
+  // and Creative Studio always show to the owner, AI on or off, S15/S23-S25 switches on or off; the round assistant button
+  // still waits for S15 and AI on (aiCenterShown).
+  it('PR 1100: shows the AI Center, AI 360 Control and Creative Studio whatever the stage switches and the AI switch say', () => {
     const shipped = hiddenAdminParts(null);
+    const ids = lumenNav({ ...owner, hidden: shipped }, { aiShown: false }).flatMap((g) => g.sections.map((s) => s.id));
+    expect(ids).toEqual(expect.arrayContaining(['ai', 'ai360', 'studio']));
+    expect(t(en as Dict, 'shell.sec.studio')).toBe('Creative Studio');
+    expect(t(en as Dict, 'shell.sec.ai360')).toBe('AI 360 Control');
+    expect(sectionById('ai')!.tabs.map((x) => x.id)).toEqual(['approvals', 'agents', 'costBook', 'train']);
+    expect(sectionById('studio')!.tabs.map((x) => x.id)).toEqual(['social', 'photoshoot', 'video', 'youtube']);
+    // old addresses keep working: the same pages, now found under their new menu item
+    expect(locate('/admin/marketing/studio/reels')?.section.id).toBe('studio');
+    expect(locate('/admin/marketing/youtube')?.section.id).toBe('studio');
+    expect(locate('/admin/marketing/photoshoot/review/abc')?.tab?.id).toBe('photoshoot');
+    expect(locate('/admin/marketing/photoshoot/editor/abc')?.tab?.id).toBe('photoshoot');
+    expect(locate('/admin/ai')?.section.id).toBe('ai360');
+    expect(locate('/admin/ai/diary')?.section.id).toBe('ai360');
+    expect(locate('/admin/ai/approvals')?.section.id).toBe('ai');
+    expect(sectionHome(sectionById('ai')!, owner)).toBe('/admin/ai/approvals');
+    // the assistant button keeps its rule
     expect(aiCenterShown(shipped, true)).toBe(false);
-    expect(aiCenterShown(shipped, false)).toBe(false);
-    const open = hiddenAdminParts({ S15: true });
-    expect(aiCenterShown(open, true)).toBe(true);
-    expect(aiCenterShown(open, false)).toBe(false);
+    expect(aiCenterShown(hiddenAdminParts({ S15: true }), true)).toBe(true);
   });
 
   it('shows a person only the sections they may open, and leaves empty groups out', () => {
