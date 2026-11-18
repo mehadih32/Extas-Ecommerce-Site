@@ -216,6 +216,11 @@ export default async function CouriersOverviewPage() {
                     {/* PR 787 (prototype parity): "Make default" is on every courier that is not the default (the setting itself still checks the choice) */}
                     {!c.isDefault && c.enabled && canSetDefault && defCard0 ? (
                       <MakeDefaultButton courierId={c.id} version={defCard0.version} value={defCard0.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} />
+                    ) : !c.isDefault && !c.enabled && canSetDefault ? (
+                      // PR 1122 (prototype v5): the button is there on every other courier; a switched-off one cannot be the default, so it says why
+                      <button type="button" className="a2-btn sm" disabled title={cr('ov.makeDefaultOff')} data-testid="courier-make-default-off">
+                        {cr('ov.makeDefault')}
+                      </button>
                     ) : null}
                   </div>
                   {c.practiceParcels ? <p className="a2-xs a2-mute a2-mt6">{cr('ov.practice', { n: n(c.practiceParcels) })}</p> : null}
