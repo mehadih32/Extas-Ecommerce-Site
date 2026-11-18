@@ -5,7 +5,7 @@
 // for the ▲/▼, and how old a waiting item is.
 import type { PrismaClient } from '@extas/db/client';
 import { dayStart, kpi, kpiByDay, lastDays, type Kpi } from '@extas/metrics';
-import type { AdminSectionId } from '@extas/settings';
+import { adminShellSettings, type AdminSectionId } from '@extas/settings';
 import type { ShellRole } from './session';
 import { sectionById, sectionHome, sectionVisible, type ShellViewer } from './sections';
 
@@ -14,6 +14,8 @@ export interface DashboardSettings {
   afternoonHour: number;
   eveningHour: number;
   sparkDays: number;
+  /** PR 1101: the date choice the Home opens on (one of `ranges`; missing: the first). */
+  start?: number;
 }
 
 /** The first of the person's roles that has a start page (`admin.startPages`), or null (the Dashboard). */
@@ -80,4 +82,15 @@ export function ageOf(iso: string | null, now: Date): Age | null {
   if (min < 60) return { unit: 'm', n: min };
   const h = Math.floor(min / 60);
   return h < 48 ? { unit: 'h', n: h } : { unit: 'd', n: Math.floor(h / 24) };
+}
+
+/**
+ * PR 1101: the date choice the Home opens on. A value saved before `start` existed (the live shop's) reads as the shipped
+ * default (`admin.dashboard`'s default, 30 days like the prototype) when that is one of its choices, else its first; a
+ * value the owner saved wins.
+ */
+export function startDays(s: Pick<DashboardSettings, 'ranges' | 'start'>): number | undefined {
+  if (s.start !== undefined && s.ranges.includes(s.start)) return s.start;
+  const shipped = adminShellSettings['admin.dashboard'].default.start;
+  return shipped !== undefined && s.ranges.includes(shipped) ? shipped : s.ranges[0];
 }

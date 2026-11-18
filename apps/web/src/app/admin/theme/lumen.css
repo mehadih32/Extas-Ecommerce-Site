@@ -125,11 +125,18 @@
   --lm-sh-toast: 0 16px 40px rgba(8, 13, 31, 0.4);
   --lm-scrim: rgba(12, 16, 32, 0.45);
   --lm-glass: rgba(238, 240, 246, 0.88);
+  /* PR 1101 (owner, 18 Nov 2026: "the prototype's look 100%"): the prototype's own names that Lumen had folded into one
+     (css/app.css --ink2, --muted, --line2, --navy, --navy2), for the shell, the tabs, the buttons and the chips */
+  --lm-ink-soft: #3b4258;
+  --lm-muted: #6b7289;
+  --lm-ln-strong: #d3d8e4;
+  --lm-navy: #1b2453;
+  --lm-navy2: #2b3a80;
   color-scheme: light;
 }
 
 /* ---- a chosen accent (Settings > Admin look): the darker mixes that keep every pair AA for every swatch (PR 625, 1067) ---- */
-[data-lm-look='lumen'][style*='--lm-accent'] {
+[data-lm-look='lumen'][style*='--lm-accent']:not([style*='#c2410c' i]) {
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
   --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
   --lm-brand: color-mix(in srgb, var(--lm-accent) 66%, #000000);
@@ -179,6 +186,11 @@
   --lm-sh: 0 1px 2px rgba(0, 0, 0, 0.3);
   --lm-sh-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --lm-glass: rgba(15, 18, 32, 0.88);
+  --lm-ink-soft: #c7cbe0;
+  --lm-muted: #949ab5;
+  --lm-ln-strong: #323a57;
+  --lm-navy: #222c63;
+  --lm-navy2: #3546a0;
   color-scheme: dark;
 }
 
@@ -195,6 +207,11 @@
   --lm-inp: #ffffff;
   --lm-chip: #e6e9f2;
   --lm-hover: #f7f8fb;
+  --lm-ink-soft: #3b4258;
+  --lm-muted: #6b7289;
+  --lm-ln-strong: #d3d8e4;
+  --lm-navy: #1b2453;
+  --lm-navy2: #2b3a80;
   --lm-ac: var(--lm-accent);
   --lm-acbg: #fdeee6;
   --lm-ac-ink: var(--lm-accent);
@@ -224,7 +241,7 @@
 }
 
 /* the same for the light island in the dark look */
-[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent'] :is(.ad:not([data-lm-ready]), .lm-ct:not(:has(> [data-lm-ready])), .lm-island) {
+[data-lm-look='lumen'][data-lm-mode='dark'][style*='--lm-accent']:not([style*='#c2410c' i]) :is(.ad:not([data-lm-ready]), .lm-ct:not(:has(> [data-lm-ready])), .lm-island) {
   --lm-acbg: color-mix(in srgb, var(--lm-accent) 13%, #ffffff);
   --lm-ac-ink: color-mix(in srgb, var(--lm-accent) 66%, #000000);
   --lm-focus: color-mix(in srgb, var(--lm-accent) 72%, #000000);

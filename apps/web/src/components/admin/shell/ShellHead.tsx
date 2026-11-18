@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { guideOf, type ShellPlace } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { GuideButton } from './ShellButtons';
+import { HeadTabs } from './HeadTabs';
 
 /** What the head needs of the admin view: its words. */
 export interface HeadView {
@@ -22,7 +23,9 @@ export function PlaceGuide({ view, place, overview }: { view: HeadView; place: S
 }
 
 export function PageHead({ view, place, title, sub, right, crumb }: { view: HeadView; place: ShellPlace | null; title: string; sub?: ReactNode; right?: ReactNode; crumb?: ReactNode }) {
+  // PR 1101: the section's tab bar right under the head, as the prototype draws it (HeadTabs; the shell builds the bar)
   return (
+    <>
     <div className="a2-ph">
       <div>
         {crumb ? <div className="a2-crumb">{crumb}</div> : null}
@@ -34,5 +37,7 @@ export function PageHead({ view, place, title, sub, right, crumb }: { view: Head
         {right}
       </div>
     </div>
+    {place ? <HeadTabs /> : null}
+    </>
   );
 }

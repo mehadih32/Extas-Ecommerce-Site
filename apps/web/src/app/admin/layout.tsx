@@ -42,6 +42,8 @@ import './parity-b.css';
 import './parity-d1.css';
 // PR 814, 827-831 (lane D4, prototype v5 parity): To ship bar and day-end check, With courier, Returns, call desk, Combos, new product, product page, size charts.
 import './parity-d4.css';
+// PR 1101 (owner, 18 Nov 2026): the prototype v5 look over the shell and the shared patterns, loaded last.
+import './proto-look.css';
 import { cookies } from 'next/headers';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { adminLookSettings, adminPatternsSettings, BUILT_ADMIN_LOOKS } from '@extas/settings';

@@ -95,6 +95,8 @@ export default async function ShellSettingsPage() {
       empty: s('dash.empty'),
       columns: [{ kind: 'number', key: 'days', label: s('dash.days'), min: 1, max: 366 }],
     },
+    // PR 1101: the choice the Home opens on (30 days as shipped, like the prototype)
+    { kind: 'number', path: 'start', label: s('dash.start'), help: s('dash.startHelp'), min: 1, max: 366 },
     { kind: 'number', path: 'afternoonHour', label: s('dash.afternoonHour'), min: 0, max: 23 },
     { kind: 'number', path: 'eveningHour', label: s('dash.eveningHour'), help: s('dash.eveningHourHelp'), min: 0, max: 23 },
     { kind: 'number', path: 'sparkDays', label: s('dash.sparkDays'), help: s('dash.sparkDaysHelp'), min: 2, max: 90 },

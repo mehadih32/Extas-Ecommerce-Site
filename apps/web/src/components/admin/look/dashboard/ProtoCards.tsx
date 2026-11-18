@@ -817,7 +817,7 @@ export function SixTiles({
       key: "ads",
       href: "/admin/marketing",
       icon: "mega",
-      label: f.t("dsh.proto.tAds"),
+      label: f.t("dsh.proto.tAds", { one: f.per100(0.01) }),
       value: pf.cur.adsMinor === null ? "—" : f.money(pf.cur.adsMinor),
       sub: per === null ? undefined : `${per.toFixed(1)}x`,
       color: "var(--a3-c1)",

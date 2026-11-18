@@ -21,11 +21,13 @@ import { RangeSeg } from '../RangeSeg';
 import { MoneyView } from './A';
 import { AdsPaying, CalmHero, CodStrip, DoNow, ProductsToDo, ProfitSnap, SixTiles, TrendCard } from './ProtoCards';
 import { can, type DashProps } from './common';
+import { DesignSwitch } from './DesignSwitch';
 
 function Head({ p, views }: { p: DashProps; views: ReactNode }) {
   const { f, head } = p;
   const waiting = (p.data.queues ?? []).reduce((s, q) => s + q.n, 0) + (p.data.stages?.toBook ?? 0);
   return (
+    <>
     <header className="lm-ph" data-testid="dash-head">
       <div className="lm-ph-t">
         <h1>{head.title}</h1>
@@ -36,12 +38,14 @@ function Head({ p, views }: { p: DashProps; views: ReactNode }) {
       </div>
       <div className="lm-ph-a">
         <PlaceGuide view={p.view} place={head.place} />
-        {views}
+        {head.switcher ? null : views}
         {head.range ? <RangeSeg {...head.range} /> : null}
         {head.csv ? <CsvButton csv={head.csv} label={f.t('dsh.download')} /> : null}
         <LookMenu {...head.menu} />
       </div>
     </header>
+    {head.switcher ? <DesignSwitch {...head.switcher}>{views}</DesignSwitch> : null}
+    </>
   );
 }
 

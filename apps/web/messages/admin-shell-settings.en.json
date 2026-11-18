@@ -42,7 +42,9 @@
       "eveningHour": "\"Good evening\" from (hour, 0–23)",
       "eveningHourHelp": "Must be later than the afternoon hour. The store's own time zone.",
       "sparkDays": "Days in each tile's small line",
-      "sparkDaysHelp": "From 2 to 90, ending today."
+      "sparkDaysHelp": "From 2 to 90, ending today.",
+      "start": "Home opens on (days)",
+      "startHelp": "One of the date choices above; the Home opens on it when no date is picked (30 as shipped)."
     },
     "on": "On",
     "off": "Off",
