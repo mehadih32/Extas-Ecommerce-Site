@@ -11,7 +11,9 @@ import * as od from '@extas/orders';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { readDeps } from '@/components/admin/orders/OrderListPage';
 import { ReturnsBoard, type ReturnsData, type StartStep } from '@/components/admin/orders/ReturnsBoard';
-import { moneyOf } from '@/components/admin/products/model';
+import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { ReturnsSummaryCards, type ReturnsSummaryWords } from '@/components/admin/orders/ReturnsSummaryCards';
+import { plainReason, returnsSummary } from '@/lib/admin-returns/summary';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
@@ -151,8 +153,19 @@ export default async function ReturnsPage({ searchParams }: { searchParams: Sear
       ) : null}
     </div>
   );
+  // PR 1121 (prototype v5): the head row and the return reasons for the same date range
+  const tz = view.timeZone;
+  const sum = await returnsSummary(access.deps.db, MOTHER_STORE_ID, from, to, tz, currency);
+  const reasonName = new Map((await od.reasonLists(rd, MOTHER_STORE_ID)).refusal.map((r) => [r.key, view.lang === 'bn' ? r.bn || r.en : r.en]));
+  const labelOf = (c: string) => reasonName.get(c) ?? plainReason(c);
+  const sw = (k: keyof ReturnsSummaryWords) => t(d, `returns.summary.${k}`);
+  const words = Object.fromEntries((['parcels', 'value', 'buying', 'common', 'commonNone', 'commonN', 'reasonsH', 'reasonsNone', 'excel', 'pdf'] as const).map((k) => [k, sw(k)])) as unknown as ReturnsSummaryWords;
+  const csvQ = new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString();
+  const summary = (
+    <ReturnsSummaryCards s={sum} w={words} money={(m) => formatMoney(m, data.money)} num={(x) => formatNumber(x, view.locale)} labelOf={labelOf} csvHref={`/api/admin/returns/summary${csvQ ? `?${csvQ}` : ''}`} />
+  );
   const lens = (
-    <ReturnsLens view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} courier={courier} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
+    <ReturnsLens head={summary} view={view} tab={tab} from={from} to={to} counts={countByTab(inRows)} reminders={remindersOf(inRows, now)} courier={courier} handbackHref={paths.model === 'v6' && perms.has('returns.handback') ? `${returnsHref()}/handback` : null} now={now} />
   );
   return <ReturnsBoard view={view} data={data} lens={lens} tabRows={tabRows} tabKey={tab} head={<PageHead view={view} place={locateKey(KEY)} title={t(d, 'returns.title')} sub={t(d, 'returns.sub')} right={right} />} tabs={<SectionTabs view={view} current={KEY} />} />;
 }

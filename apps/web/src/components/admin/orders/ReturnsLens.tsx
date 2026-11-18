@@ -1,6 +1,7 @@
 // PR 828 (prototype v5, Orders › Returns & exchanges): above the board, the date bar (Any date, Today, Yesterday, 7 days,
 // This month, Last month, Custom), the reminder strip (what needs a person today) and the chip tabs with their counts.
 // Drawn on the server; every chip is a link, so the page opens the same from a shared address. Nothing here changes a case.
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { formatNumber } from '@/components/admin/products/model';
@@ -15,7 +16,7 @@ type Counts = Record<Exclude<ReturnTab, 'handed'>, number>;
 
 const lt = (view: AdminView, k: string, vars?: Record<string, string | number>) => t(view.dict, `returns.lens.${k}`, vars);
 
-export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, handbackHref, now }: { view: AdminView; tab: string | null; from: string | undefined; to: string | undefined; counts: Counts; reminders: Reminders; /** PR 1063: the courier-side reminders (null: not read). */ courier?: CourierReminders | null; handbackHref: string | null; now: Date }) {
+export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, handbackHref, now, head = null }: { view: AdminView; /** PR 1121: the head row and return reasons, under the date bar as in the prototype. */ head?: ReactNode; tab: string | null; from: string | undefined; to: string | undefined; counts: Counts; reminders: Reminders; /** PR 1063: the courier-side reminders (null: not read). */ courier?: CourierReminders | null; handbackHref: string | null; now: Date }) {
   const n = (x: number) => formatNumber(x, view.locale);
   const today = dayOf(now, view.timeZone);
   const cur = presetOf(from, to, today);
@@ -66,6 +67,7 @@ export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, h
           {lt(view, 'date.go')}
         </button>
       </form>
+      {head}
       <div className="d4-rem a2-mt12" role="list" aria-label={lt(view, 'rem.label')} data-testid="returns-reminders">
         {strip.map((x) => (
           <Link key={x.key} role="listitem" className={`d4-rem-i ${x.count ? x.tone : 'ok'}`} href={x.to} scroll={false} data-testid={`returns-rem-${x.key}`}>
