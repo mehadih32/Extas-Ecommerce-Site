@@ -5,16 +5,19 @@
 // as the order page. A phone shows the queue, then the card. Self-confirm by WhatsApp, voice orders and the call log
 // come with their PRs (148 and the call-task screens); nothing here is a sample.
 import Link from 'next/link';
+import type * as od from '@extas/orders';
 import type { AdminView } from '@/lib/admin-page';
 import type { ApprovalCard } from '@/lib/admin-orders/approval';
 import type { OrderDetailView } from '@/lib/admin-orders/detail';
 import type { OrderListData } from '@/lib/admin-orders/list';
 import { listHref, type ListQuery } from '@/lib/admin-orders/model';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { t } from '@/lib/i18n';
+import type { CommandSpec } from '@/lib/admin-orders/spec';
+import { t, type Dict } from '@/lib/i18n';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
 import { ShellIcon } from '../shell/ShellIcon';
+import { CallDeskCards } from './CallDeskCards';
 import { CommandButton } from './OrderCommands';
 import { EmptyList, ViewChips } from './OrderListPage';
 import { Chips } from './OrderTable';
@@ -86,7 +89,7 @@ function HistoryCard({ h }: { h: ApprovalCard }) {
   );
 }
 
-export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null, cards = null }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null; /** PR 1064: the Processing view's card grid (the orders' own detail reads); null: the queue and call card. */ cards?: OrderDetailView[] | null }) {
+export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null, cards = null, desk = null, deskWords = null, noAnswer = {} }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null; /** PR 1064: the Processing view's card grid (the orders' own detail reads); null: the queue and call card. */ cards?: OrderDetailView[] | null; /** PR 1120: the call desk over the grid (prototype v5) and its words. */ desk?: od.CallDesk | null; deskWords?: Dict | null; noAnswer?: Record<string, CommandSpec> }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const toConfirm = list.counts.toConfirm ?? 0;
@@ -163,12 +166,15 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
           <Link className="a2-btn" href="/admin/rules" data-testid="orders-auto-rules">
             {t(d, 'orders.confirm.autoRules')}
           </Link>
-          <Link className="a2-btn" href="/admin/orders/confirm/calls" data-testid="orders-call-desk">
-            {t(d, 'orders.confirm.callDesk')}
-          </Link>
+          {desk ? null : (
+            <Link className="a2-btn" href="/admin/orders/confirm/calls" data-testid="orders-call-desk">
+              {t(d, 'orders.confirm.callDesk')}
+            </Link>
+          )}
         </span>
       } />
       <SectionTabs view={view} current="ordersConfirm" />
+      {desk && deskWords ? <CallDeskCards d={deskWords} desk={desk} w={(k, v) => t(deskWords, `cl.${k}`, v)} n={n} /> : null}
       <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
       {mergeLine ? (
         <p className="a2-sm a2-mute a2-mt12" data-testid="orders-merge-line">
@@ -177,7 +183,7 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
       ) : null}
       {list.rows.length && cards ? (
         <>
-          <ProcessingCards view={view} cards={cards} />
+          <ProcessingCards view={view} cards={cards} noAnswer={noAnswer} />
           {list.next ? (
             <Link className="a2-btn sm a2-mt12" href={listHref('confirm', query, { cursor: list.next })}>
               {t(d, 'orders.list.next')}

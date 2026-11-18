@@ -45,6 +45,12 @@ export interface PackContact {
   address: string;
   /** The area's name (the Packer view shows only this). */
   area: string;
+  /** PR 1120 (prototype v5 To ship table): the customer's name, the pieces and the cash the courier collects. */
+  name: string;
+  lines: { name: string; colour: string | null; size: string | null; qty: number }[];
+  /** What the courier still collects (0: paid in full) and in which currency. */
+  codMinor: number;
+  currency: string;
 }
 
 /** The phone and delivery place of listed orders (at most 500). The page asks only when the person may read orders. */
@@ -53,7 +59,17 @@ export async function packContacts(deps: ShippingDeps, who: Who, orderIds: strin
   if (!orderIds.length) return [];
   const rows = await deps.db.order.findMany({
     where: { storeId: who.storeId, id: { in: orderIds.slice(0, 500) } },
-    select: { id: true, phone: true, shippingAddressText: true, backfilledAddress: true, area: { select: { nameEn: true } } },
+    select: {
+      id: true,
+      phone: true,
+      shippingAddressText: true,
+      backfilledAddress: true,
+      area: { select: { nameEn: true } },
+      customerName: true,
+      codAmountMinor: true,
+      currency: true,
+      items: { where: { status: 'ACTIVE' }, orderBy: { createdAt: 'asc' }, select: { productName: true, colourName: true, sizeLabel: true, quantity: true } },
+    },
   });
   return rows.map((r) => {
     const phone = r.phone ?? '';
@@ -63,6 +79,10 @@ export async function packContacts(deps: ShippingDeps, who: Who, orderIds: strin
       phoneMasked: phone ? `${phone.slice(0, 3)}•••••${phone.slice(-3)}` : '',
       address: r.shippingAddressText ?? r.backfilledAddress ?? '',
       area: r.area?.nameEn ?? '',
+      name: r.customerName ?? '',
+      lines: r.items.map((i) => ({ name: i.productName, colour: i.colourName, size: i.sizeLabel, qty: i.quantity })),
+      codMinor: r.codAmountMinor,
+      currency: r.currency,
     };
   });
 }

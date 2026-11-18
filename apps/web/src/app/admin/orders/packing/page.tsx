@@ -72,14 +72,19 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 
 export default async function PackPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const step: Step = (STEPS as readonly string[]).includes(one(sp.step)) ? (one(sp.step) as Step) : 'pick';
+  // PR 1120: the Packed chip (`?chip=packed`) is the Ready for courier list drawn as the prototype's table with the day-end check
+  const chipPacked = one(sp.chip) === 'packed';
+  const step: Step = chipPacked ? 'ready' : (STEPS as readonly string[]).includes(one(sp.step)) ? (one(sp.step) as Step) : 'pick';
+  // PR 1120 (prototype v5): the tab opens on its first chip, Confirmed (orders to book); "Pick & pack" opens the steps
+  const bare = !chipPacked && !one(sp.step) && !one(sp.docs) && !one(sp.from) && !one(sp.to) && !one(sp.id);
   const wanted = UUID.test(one(sp.id)) ? one(sp.id) : null;
   // PR 411: the date and document filter (a day typed wrong is left out; a span turned round is read the right way)
   let from = DAY.test(one(sp.from)) ? one(sp.from) : '';
   let to = DAY.test(one(sp.to)) ? one(sp.to) : '';
   if (from && to && from > to) [from, to] = [to, from];
-  const docsFilter: sh.PackDocFilter = (sh.PACK_DOC_FILTERS as readonly string[]).includes(one(sp.docs)) ? (one(sp.docs) as sh.PackDocFilter) : 'all';
-  const filtered = !!from || !!to || docsFilter !== 'all';
+  const docsFilter: sh.PackDocFilter = bare ? 'notBooked' : chipPacked ? 'all' : (sh.PACK_DOC_FILTERS as readonly string[]).includes(one(sp.docs)) ? (one(sp.docs) as sh.PackDocFilter) : 'all';
+  // a chip's own document filter (Confirmed = not booked, Booked = no sticker) is the chip, not a filter the person set
+  const filtered = !!from || !!to || (docsFilter !== 'all' && !(step === 'pick' && (docsFilter === 'notBooked' || docsFilter === 'noSticker')));
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess('fulfilment.read', deps, MOTHER_STORE_ID)]);
   const view = withFulfil(plain);
@@ -151,7 +156,7 @@ export default async function PackPage({ searchParams }: Props) {
     }
   }
   // PR 411: the courier accounts for "Book selected" (only when a listed order is not booked yet)
-  const selectable = step !== 'done';
+  const selectable = step !== 'done' && !chipPacked;
   let bulkCouriers: { id: string; name: string }[] = [];
   if (selectable && can('delivery.book') && queue.rows.some((r) => !r.shipmentId)) {
     try {
@@ -162,8 +167,9 @@ export default async function PackPage({ searchParams }: Props) {
     }
   }
   // PR 814 (prototype v5): which chip the list sits on, the default courier, the Owner / Packer view, the day-end check
-  const mode: 'confirmed' | 'booked' | 'plain' = step === 'pick' && docsFilter === 'notBooked' ? 'confirmed' : step === 'pick' && docsFilter === 'noSticker' ? 'booked' : 'plain';
-  const onPacked = step === 'ready' && docsFilter === 'all';
+  const mode: 'confirmed' | 'booked' | 'packed' | 'plain' = chipPacked ? 'packed' : step === 'pick' && docsFilter === 'notBooked' ? 'confirmed' : step === 'pick' && docsFilter === 'noSticker' ? 'booked' : 'plain';
+  const chip = mode !== 'plain';
+  const onPacked = chipPacked;
   let defaultCourierId = '';
   if (bulkCouriers.length) {
     const setup = await sd.settings.value('delivery.couriers', at);
@@ -174,6 +180,22 @@ export default async function PackPage({ searchParams }: Props) {
   const contacts = mode !== 'plain' && queue.rows.length ? await sh.packContacts(sd, who, queue.rows.map((r) => r.orderId)) : [];
   const deliverTo: Record<string, string> = Object.fromEntries(
     contacts.map((c) => [c.orderId, asPacker ? [c.phoneMasked, c.area].filter(Boolean).join(' · ') : [c.phone, c.address || c.area].filter(Boolean).join(' · ')]),
+  );
+  // PR 1120: the chips' table cells (Order, Items, Deliver to, Cash); the Packer view keeps the masked phone and the area
+  const money = (minor: number, cur: string) => moneyText(minor, view.locale, cur);
+  const table = Object.fromEntries(
+    contacts.map((c) => [
+      c.orderId,
+      {
+        name: c.name,
+        items: c.lines.map((l) => `${[l.name, l.colour, l.size].filter(Boolean).join(' · ')} ×${formatNumber(l.qty, view.locale)}`),
+        phone: asPacker ? c.phoneMasked : c.phone,
+        place: c.area || (asPacker ? '' : c.address),
+        cash: c.codMinor > 0 ? money(c.codMinor, c.currency) : null,
+        courier: queue.rows.find((r) => r.orderId === c.orderId)?.courierName ?? '',
+        tracking: queue.rows.find((r) => r.orderId === c.orderId)?.consignmentId ?? '',
+      },
+    ]),
   );
   const dayEnd = onPacked ? await sh.dayEndFigures(sd, who) : null;
   const printLog = onPacked
@@ -234,7 +256,7 @@ export default async function PackPage({ searchParams }: Props) {
     { kind: 'switch', path: 'packOnPrint', label: t(d, 'ful.pack.chips.set.packOnPrint'), help: t(d, 'ful.pack.chips.set.packOnPrintHelp') },
   ];
   const n = (x: number) => formatNumber(x, view.locale);
-  const protoEmpty = filtered ? null : mode === 'confirmed' ? 'emptyBook' : mode === 'booked' ? 'emptySticker' : step === 'ready' ? 'emptyPacked' : null;
+  const protoEmpty = filtered ? null : mode === 'confirmed' ? 'emptyBook' : mode === 'booked' ? 'emptySticker' : mode === 'packed' ? 'emptyPacked' : null;
   const keep =`${from ? `&from=${from}` : ''}${to ? `&to=${to}` : ''}${docsFilter !== 'all' ? `&docs=${docsFilter}` : ''}`;
   const href = (s: Step, id?: string) => `${HERE}?step=${s}${keep}${id ? `&id=${id}` : ''}`;
   const codeWords = Object.fromEntries(sh.BOOKING_CODES.map((c) => [c, t(d, `courier.booking.code.${c}`)]));
@@ -268,11 +290,13 @@ export default async function PackPage({ searchParams }: Props) {
         }
       />
       <SectionTabs view={view} current="packingPack" />
-      <PeakCard screen={peakCard} texts={peakTexts} canEdit={canSettings} today={peakToday} ready={peakReady} printHref="/admin/orders/packing/print" />
+      {chip ? null : <PeakCard screen={peakCard} texts={peakTexts} canEdit={canSettings} today={peakToday} ready={peakReady} printHref="/admin/orders/packing/print" />}
+      {chip ? null : (
       <p className="a2-xs a2-mt12" data-testid="pack-summary">
         <b>{t(d, 'ful.pack.summary')}</b> {t(d, 'ful.picking.sheet.counts', { orders: n(picking.summary.orders), pieces: n(picking.summary.pieces), lines: n(picking.summary.lineItems) })} ·{' '}
         {t(d, 'ful.picking.sheet.categories', { list: picking.summary.categories.map((c) => `${c.name ? (view.lang === 'bn' && c.nameBn) || c.name : t(d, 'ful.picking.sheet.noCategory')} ${n(c.pieces)}`).join(' · ') || '—' })}
       </p>
+      )}
       {booked ? (
         <div className="a2-kpis a2-mt12" data-testid="ship-booked-kpis">
           {(
@@ -356,6 +380,7 @@ export default async function PackPage({ searchParams }: Props) {
           </p>
         </section>
       ) : null}
+ {chip ? null : (
       <form className="a2-card tight pf-form a2-mt12" method="get" action={HERE} role="search" aria-label={t(d, 'ful.pack.filter.title')} data-testid="pack-filter">
         <input type="hidden" name="step" value={step} />
         <label className="a2-xs">
@@ -385,12 +410,13 @@ export default async function PackPage({ searchParams }: Props) {
           </Link>
         ) : null}
       </form>
+      )}
       <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.chips.label')} data-testid="ship-chips">
         {(
           [
             ['confirmed', `${HERE}?step=pick&docs=notBooked`, step === 'pick' && docsFilter === 'notBooked', chips.confirmed],
             ['booked', `${HERE}?step=pick&docs=noSticker`, step === 'pick' && docsFilter === 'noSticker', chips.booked],
-            ['packed', `${HERE}?step=ready`, step === 'ready' && docsFilter === 'all', chips.packed],
+            ['packed', `${HERE}?chip=packed`, chipPacked, chips.packed],
           ] as const
         ).map(([k, to_, on, count]) => (
           <Link key={k} className={`a2-view${on ? ' on' : ''}`} href={to_} aria-current={on ? 'page' : undefined} data-testid={`ship-chip-${k}`} title={t(d, `ful.pack.chips.${k}Help`)}>
@@ -401,7 +427,12 @@ export default async function PackPage({ searchParams }: Props) {
         <Link className="a2-btn ghost sm" href="/admin/orders/packing/print" data-testid="ship-log-link">
           {t(d, 'ful.pack.chips.log')}
         </Link>
+        <Link className={`a2-btn ${chip ? 'ghost' : 'pri'} sm`} href={`${HERE}?step=pick&docs=all`} aria-current={chip ? undefined : 'page'} data-testid="ship-pick-pack">
+          {t(d, 'ful.pack.chips.pickPack')}
+        </Link>
       </div>
+      {chip ? null : (
+      <>
       <div className="a2-views a2-mt12" role="navigation" aria-label={t(d, 'ful.pack.stepsLabel')} data-testid="pack-steps">
         {STEPS.map((s, i) => (
           <Link key={s} className={`a2-view${s === step ? ' on' : ''}`} href={href(s)} aria-current={s === step ? 'page' : undefined} data-testid={`pack-step-${s}`}>
@@ -431,7 +462,9 @@ export default async function PackPage({ searchParams }: Props) {
           ) : null}
         </p>
       </section>
-      <div className="a2-row a2-r12" style={{ alignItems: 'start' }}>
+      </>
+      )}
+      <div className={chip ? 'a2-mt12' : 'a2-row a2-r12'} style={{ alignItems: 'start' }}>
         <div className="a2-q" data-testid="pack-queue">
           {queue.rows.length ? (
             <PackSelect
@@ -458,6 +491,7 @@ export default async function PackPage({ searchParams }: Props) {
               defaultCourierId={defaultCourierId}
               printAllHref="/admin/orders/packing/print"
               extra={mode === 'plain' ? undefined : deliverTo}
+              table={chip ? table : undefined}
             />
           ) : (
             <div className="a2-state" data-testid="pack-empty">
@@ -477,6 +511,7 @@ export default async function PackPage({ searchParams }: Props) {
           )}
           {queue.more ? <p className="a2-xs a2-mute">{t(d, 'ful.pack.more', { n: n(queue.more) })}</p> : null}
         </div>
+        {chip ? null : (
         <div className="a2-stack" key={order?.orderId ?? 'none'}>
           {order ? (
             <>
@@ -679,6 +714,7 @@ export default async function PackPage({ searchParams }: Props) {
             </div>
           )}
         </div>
+        )}
       </div>
       {onPacked ? (
         <section className="a2-card a2-mt12" aria-label={t(d, 'ful.pack.log.title')} data-testid="ship-print-log">
