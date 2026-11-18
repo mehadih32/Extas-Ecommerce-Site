@@ -33,7 +33,7 @@ import { lookState } from '@/lib/admin-look/prefs';
 import { rangeFrom, rangeHref } from '@/lib/admin-look/range';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
-import { hourIn, partOfDay, startHref, startSection, type DashboardSettings } from '@/lib/admin-shell/dashboard';
+import { hourIn, partOfDay, startDays, startHref, startSection, type DashboardSettings } from '@/lib/admin-shell/dashboard';
 import { cachedQueues, visibleQueues } from '@/lib/admin-shell/queues';
 import { SHELL_SECTIONS, sectionById, sectionHome, sectionVisible, visibleTabs, type ShellViewer } from '@/lib/admin-shell/sections';
 import { shellSession } from '@/lib/admin-shell/session';
@@ -114,7 +114,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
 
   const now = (access.deps.now ?? (() => new Date()))();
   const today = ymdIn(now, view.timeZone);
-  const range = rangeFrom({ range: one(sp.range), from: one(sp.from), to: one(sp.to) }, settings.ranges, today, designs.customMaxDays);
+  const range = rangeFrom({ range: one(sp.range), from: one(sp.from), to: one(sp.to) }, settings.ranges, today, designs.customMaxDays, startDays(settings));
   const data = await loadDashboard(
     {
       db,
@@ -149,6 +149,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
         })),
         custom: { on: range.kind === 'custom', label: f.t('dsh.range.custom'), from: range.from, to: range.to, today, min: '', maxDays: designs.customMaxDays },
         design: previewKey,
+        // PR 1101 (prototype v5 "This month"): the 1st of this month to today, as a from-to window
+        month: {
+          label: f.t('dash.range.month'),
+          href: rangeHref({ kind: 'custom', from: `${today.slice(0, 8)}01`, to: today }, previewKey),
+          on: range.kind === 'custom' && range.from === `${today.slice(0, 8)}01` && range.to === today,
+        },
         labels: {
           aria: f.t('dash.range.aria'),
           pick: f.t('dsh.range.pick'),
@@ -180,13 +186,23 @@ export default async function Dashboard({ searchParams }: { searchParams: Search
       failed: f.t('look.menu.failed'),
     },
   };
+  // PR 1101 (prototype v5 m-home.js): the design switcher under the greeting, the prototype's three designs in its order
+  // (A · Command = the Command center D, B · Calm, C · Classic); a design not built here is left out.
+  const switcher = {
+    page: page.id,
+    current: picked.key,
+    perPerson: look.team.perPerson,
+    // the prototype's A · Command is the Command center (D, the standard); its B and C are the same letters here
+    options: ([['D', 'A'], ['B', 'B'], ['C', 'C']] as const).filter(([k]) => keys.includes(k)).map(([k, proto]) => ({ key: k, label: f.t(`dsh.dsw.${proto}`) })),
+    labels: { design: f.t('dsh.dsw.design'), note: f.t('dsh.dsw.note'), saved: f.t('look.menu.saved'), failed: f.t('look.menu.failed') },
+  };
   const props: DashProps = {
     f,
     view,
     data,
     s: designs,
     viewer,
-    head: { title, date, time, place, range: rangeSeg, menu, csv },
+    head: { title, date, time, place, range: rangeSeg, menu, csv, switcher: switcher.options.length > 1 ? switcher : null },
     sparkDays: settings.sparkDays,
     q: { view: one(sp.view), design: previewKey ?? undefined },
     design: picked.key,

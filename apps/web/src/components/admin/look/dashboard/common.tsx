@@ -11,6 +11,7 @@ import { PlaceGuide } from '@/components/admin/shell/ShellParts';
 import type { Fmt } from '../fmt';
 import { CsvButton, LookMenu, type Csv, type LookMenuProps } from '../LookMenu';
 import { RangeSeg, type RangeSegProps } from '../RangeSeg';
+import { DesignSwitch, type DesignSwitchProps } from './DesignSwitch';
 
 export interface DashHeadInfo {
   /** The greeting with the person's first name. */
@@ -21,6 +22,8 @@ export interface DashHeadInfo {
   range: RangeSegProps | null;
   menu: LookMenuProps;
   csv: Csv | null;
+  /** PR 1101: the prototype's design switcher under the greeting (null for one who may not choose). */
+  switcher?: DesignSwitchProps | null;
 }
 
 export interface DashProps {
@@ -78,6 +81,7 @@ export function csvOf(f: Fmt, d: DashboardData, today: string): Csv | null {
 export function DashHead({ p, title, sub, views }: { p: DashProps; title?: string; sub?: ReactNode; views?: ReactNode }) {
   const { f, head } = p;
   return (
+    <>
     <div className="a3-ph2" data-testid="dash-head">
       <div>
         <h1>{title ?? head.title}</h1>
@@ -90,12 +94,14 @@ export function DashHead({ p, title, sub, views }: { p: DashProps; title?: strin
       </div>
       <div className="a3-phr">
         <PlaceGuide view={p.view} place={head.place} />
-        {views}
+        {head.switcher ? null : views}
         {head.range ? <RangeSeg {...head.range} /> : null}
         {head.csv ? <CsvButton csv={head.csv} label={f.t('dsh.download')} /> : null}
         <LookMenu {...head.menu} />
       </div>
     </div>
+    {head.switcher ? <DesignSwitch {...head.switcher}>{views}</DesignSwitch> : null}
+    </>
   );
 }
 

@@ -18,6 +18,7 @@ import { audit, requirePermission, type Actor, type RequestContext } from '@exta
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { ADMIN_SECTIONS, adminDashboardSchema, adminShellSchema, adminStartPagesSchema, storeTarget, type AdminSectionId } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
+import { startDays } from './dashboard';
 import { RECENT_KEPT } from './shortcuts';
 
 const S = MOTHER_STORE_ID;
@@ -33,7 +34,7 @@ export type ShellSwitchKey = (typeof SHELL_SWITCH_KEYS)[number];
 export const START_SECTIONS: readonly AdminSectionId[] = ADMIN_SECTIONS.filter((s) => s !== 'ai');
 
 type ShellValue = { badgeCacheSeconds: number; searchPerGroup: number; searchMinChars: number; recentPages: number; keyJumps: boolean };
-type DashValue = { ranges: number[]; afternoonHour: number; eveningHour: number; sparkDays: number };
+type DashValue = { ranges: number[]; afternoonHour: number; eveningHour: number; sparkDays: number; start?: number };
 type Json = Record<string, unknown>;
 
 export interface ShellRoleOption {
@@ -97,7 +98,8 @@ export function searchCardOf(v: ShellValue): Json {
 
 /** The Dashboard card: the date choices as rows (one number each) for the FieldsCard's list. */
 export function dashCardOf(v: DashValue): Json {
-  return { ranges: v.ranges.map((days) => ({ days })), afternoonHour: v.afternoonHour, eveningHour: v.eveningHour, sparkDays: v.sparkDays };
+  // PR 1101: `start` (the choice the Home opens on); a value saved before it reads as the shipped 30 days (startDays)
+  return { ranges: v.ranges.map((days) => ({ days })), start: startDays(v) ?? 1, afternoonHour: v.afternoonHour, eveningHour: v.eveningHour, sparkDays: v.sparkDays };
 }
 
 export function dashFrom(card: Json): Json {

@@ -11,6 +11,8 @@ export interface RangeSegProps {
   options: { days: number; label: string; href: string; on: boolean }[];
   custom: { on: boolean; label: string; from: string; to: string; today: string; min: string; maxDays: number };
   design: string | null;
+  /** PR 1101 (prototype v5 "This month"): the month so far, as a from-to window (the 1st of the month to today). */
+  month?: { label: string; href: string; on: boolean } | null;
   labels: { aria: string; pick: string; from: string; to: string; show: string; cancel: string; bad: string };
 }
 
@@ -57,7 +59,12 @@ export function RangeSeg(p: RangeSegProps) {
             <span>{o.label}</span>
           </Link>
         ))}
-        <button type="button" className={p.custom.on ? 'on' : ''} aria-pressed={p.custom.on} aria-expanded={open} onClick={() => setOpen(!open)} data-testid="dash-range-custom">
+        {p.month ? (
+          <Link className={p.month.on ? 'on' : ''} href={p.month.href} aria-current={p.month.on ? 'true' : undefined} scroll={false} data-testid="dash-range-month">
+            <span>{p.month.label}</span>
+          </Link>
+        ) : null}
+        <button type="button" className={p.custom.on && !p.month?.on ? 'on' : ''} aria-pressed={p.custom.on && !p.month?.on} aria-expanded={open} onClick={() => setOpen(!open)} data-testid="dash-range-custom">
           <ShellIcon name="cal" size={15} />
           <span>{p.custom.label}</span>
         </button>
