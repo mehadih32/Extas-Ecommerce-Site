@@ -65,7 +65,7 @@
         "calendar": "ক্যালেন্ডার",
         "report": "রিপোর্ট",
         "geoGuide": "কোথায় বিজ্ঞাপন দেবেন",
-        "merchantFeed": "মার্চেন্ট ফিড",
+        "merchantFeed": "শপিং ফিড",
         "intel": "বাজার আর প্রতিযোগী",
         "overview": "সারসংক্ষেপ",
         "plan": "পরিকল্পনা ও আইডিয়া"
@@ -1242,6 +1242,6 @@
     "policies": "নীতি ও লেখা",
     "adminLook": "অ্যাডমিনের চেহারা",
     "privacy": "প্রাইভেসি ও তথ্য",
-    "marketingMerchantFeed": "গুগল ফিড"
+    "marketingMerchantFeed": "শপিং ফিড"
   }
 }

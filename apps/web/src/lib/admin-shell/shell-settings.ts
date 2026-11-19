@@ -104,7 +104,13 @@ export function dashCardOf(v: DashValue): Json {
 
 export function dashFrom(card: Json): Json {
   const rows = Array.isArray(card.ranges) ? (card.ranges as unknown[]) : [];
-  return { ...card, ranges: rows.map((r) => (isObj(r) ? r.days : r)) };
+  const ranges = rows.map((r) => (isObj(r) ? r.days : r));
+  // PR 1101: an opening choice that is no longer one of the date choices is dropped (the Home then opens on the first)
+  if (card.start !== undefined && !ranges.includes(card.start)) {
+    const { start: _gone, ...rest } = card;
+    return { ...rest, ranges };
+  }
+  return { ...card, ranges };
 }
 
 /** A switch card's next `admin.shell`: recent pages on = the count (1–10), off = 0; key jumps on or off. */

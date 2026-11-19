@@ -1,7 +1,7 @@
 {
   "ref": {
-    "metaTitle": "Referrals",
-    "title": "Referrals",
+    "metaTitle": "Refer a friend",
+    "title": "Refer a friend",
     "sub": "Happy customers share a link; the friend gets a discount on the first order and the sharer gets a reward after delivery.",
     "note": "Off as it ships. The friend's amount is the Smart Rule you pick (an offer that asks for a code); the reward is the amount you set below. Nothing is paid until a person with the wallet permission gives it after a confirm.",
     "rulesLink": "Make or change the friend offer in Smart Rules",

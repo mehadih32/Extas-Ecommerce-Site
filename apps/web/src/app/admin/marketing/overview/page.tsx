@@ -157,7 +157,7 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
             </div>
           </div>
           {/* PR 1125 (prototype v5): the card's own way to the message campaigns */}
-          <Link className="a2-btn sm a2-mt12" href="/admin/marketing/message-campaigns" data-testid="mkt-messages-open">
+          <Link className="a2-btn sm a2-mt12" href="/admin/marketing/message-campaigns" data-testid="mkt-messages-open" style={{ maxWidth: '100%', whiteSpace: 'normal', textAlign: 'center' }}>
             {f('ov.msgOpen')}
           </Link>
         </section>

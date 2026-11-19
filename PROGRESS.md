@@ -2,7 +2,7 @@
 
 ## 19 Nov 2026 - Batch 2026-11-19-1 (branch `batch-2026-11-19-1`, from `origin/main` f8f7eaff): the three prototype-parity lanes joined
 
-Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). Next: PR 1158 (sub-tab words), local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
+Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). **1158**: the Accounts & tools sub-tabs read Ad accounts, Refer a friend, Shopping feed (nav labels, shell tab labels, page titles, the Meta feed back link, Bengali guides). Next: local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
 
 ## 18-19 Nov 2026 - Prototype 100% push, lane L1 (branch `claude/p100-l1`, from `origin/main` 8ca37aa4): PR 1100, 1101 (CN-055)
 

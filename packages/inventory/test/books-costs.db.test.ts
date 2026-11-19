@@ -174,7 +174,8 @@ describe.skipIf(!HAS_TEST_DB)('CN-028 · PR 618 on PostgreSQL: fixed costs and t
     // Follow-up 569: a month not taken a day after it was saved is "waited long" (the nightly smoke reads it); the
     // accepted November is not. (Rows carry the database's own time, so "not yet a day" is the pure test's.)
     const saved = clock;
-    clock = new Date(saved.getTime() + 25 * 3_600_000);
+    // the row carries the database's own time (real now, which can be later than the test clock): a day after whichever is later
+    clock = new Date(Math.max(saved.getTime(), Date.now()) + 25 * 3_600_000);
     const late = await booksSummaryStatus(deps(), sys(A));
     expect(late.waitedLong.months).toEqual(['2026-12']);
     expect(late.card.needs.find((x) => x.kind === 'WAITED_LONG')?.vars).toMatchObject({ months: 1 });

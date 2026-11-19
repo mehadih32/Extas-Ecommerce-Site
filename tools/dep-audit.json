@@ -13,6 +13,13 @@
       "until": "2027-01-29"
     },
     {
+      "ghsa": "GHSA-7589-6fvf-x4pw",
+      "package": "effect",
+      "why": "Published 19-20 Nov 2026. Only the Prisma CLI's config loader uses it (packages/db > @prisma/client > prisma > @prisma/config > effect 3.21.0), to read our own prisma.config file when migrations run; Schema.TemplateLiteral never sees a visitor's input. The fix (3.22.1) comes with a Prisma update.",
+      "since": "2026-11-20",
+      "until": "2027-02-17"
+    },
+    {
       "ghsa": "GHSA-5gmw-xhrv-c9v3",
       "package": "tinypool",
       "why": "Only the test runner (vitest 3 > tinypool 1.1.1) uses it, on CI and developer machines, with our own test files; it is never in the app image and never sees a visitor's input. The fix needs vitest 4 across every package (a follow-up of PR 381).",

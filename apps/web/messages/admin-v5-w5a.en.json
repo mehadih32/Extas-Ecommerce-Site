@@ -242,8 +242,8 @@
     "meta": {
       "metaTitle": "Meta catalogue feed",
       "title": "Meta catalogue feed",
-      "sub": "The product feed for the Facebook and Instagram catalogue, beside the Google feed.",
-      "back": "Google feed",
+      "sub": "The product feed for the Facebook and Instagram catalogue, beside the Shopping feed.",
+      "back": "Shopping feed",
       "off": "The Meta feed is switched off. Switch it on under More options.",
       "address": "Feed address",
       "noAddress": "No shop address is known yet.",
@@ -266,7 +266,7 @@
       "i_descriptionTooLong": "Description is too long; it is cut",
       "i_descriptionShort": "Description is very short",
       "i_noBrand": "No brand",
-      "note": "The photos, prices, sizes and colours are the Google feed's, and follow its choices. Change them on the Google feed page.",
+      "note": "The photos, prices, sizes and colours are the Shopping feed's, and follow its choices. Change them on the Shopping feed page.",
       "switchOn": "Switch on",
       "switchOff": "Switch off",
       "shown": "The first {n} products with something to fix are shown."

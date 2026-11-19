@@ -83,9 +83,9 @@ describe.skipIf(!HAS_TEST_DB)('admin shell API on PostgreSQL (PR 12)', () => {
   it('search: an empty box lists the sections the person may open; words find pages and settings', async () => {
     const groups = async (cookie: string, q: string) => ((await (await searchHandler(call('GET', `/api/admin/search?q=${encodeURIComponent(q)}`, { cookie }), deps)).json()) as { groups: SearchGroup[] }).groups;
     const ownerJump = (await groups(owner, '')).find((g) => g.id === 'jump')!;
-    // 15 sections less the folded Messages (PR 659) and the AI Center, hidden while S15 is closed (PR 652, `stages.closedShown` off as shipped)
-    expect(ownerJump.items).toHaveLength(13);
-    expect(ownerJump.items.map((i) => i.href)).not.toContain('/admin/ai');
+    // 17 sections less the folded Messages (PR 659); the AI Center, Creative Studio and AI 360 Control always show (PR 1100)
+    expect(ownerJump.items).toHaveLength(16);
+    expect(ownerJump.items.map((i) => i.href)).toContain('/admin/ai');
     const staffJump = (await groups(staff, '')).find((g) => g.id === 'jump')!;
     expect(staffJump.items.map((i) => i.href)).toEqual(['/admin/products', '/admin/products/demo']);
 

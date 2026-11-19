@@ -57,7 +57,7 @@
         "tracking": "Tracking",
         "landing": "Landing pages",
         "studio": "Studio",
-        "referrals": "Referrals",
+        "referrals": "Refer a friend",
         "youtube": "YouTube",
         "outreach": "SEO outreach",
         "seasonal": "Seasonal home",
@@ -65,7 +65,7 @@
         "calendar": "Calendar",
         "report": "Report",
         "geoGuide": "Where to advertise",
-        "merchantFeed": "Merchant feed",
+        "merchantFeed": "Shopping feed",
         "intel": "Market & competitors",
         "overview": "Overview",
         "plan": "Plan & ideas"
@@ -1233,7 +1233,7 @@
       "behaviour": "Behaviour"
     },
     "couriers": "Couriers",
-    "marketingReferrals": "Referrals",
+    "marketingReferrals": "Refer a friend",
     "booksAccount": "Books",
     "booksMatch": "Match",
     "booksDifferences": "Differences",
@@ -1242,6 +1242,6 @@
     "policies": "Policies & texts",
     "adminLook": "Admin look",
     "privacy": "Privacy & data",
-    "marketingMerchantFeed": "Google feed"
+    "marketingMerchantFeed": "Shopping feed"
   }
 }

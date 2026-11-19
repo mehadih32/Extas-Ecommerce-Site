@@ -746,3 +746,6 @@
   .adm2 .a2-kv { white-space: normal; overflow-wrap: anywhere; }
 }
 .adm2 .a2-mono { overflow-wrap: anywhere; }
+/* Batch 2026-11-19-1 (PR 1127, 1131, 1151): the small fold heads (Other lists, Campaigns and settings, More filters)
+   are one tap target, 44 px tall (device gate); the words keep their small size. */
+.adm2 summary.a2-sm, .adm2 summary.a2-xs { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
