@@ -163,7 +163,7 @@
       },
       "single": {
         "title": "Single reports",
-        "sub": "They use the period you picked at the top.",
+        "sub": "Uses the period you last picked",
         "figures": "Sales and profit",
         "products": "Products and stock",
         "timing": "When orders come in",
@@ -176,7 +176,7 @@
       "printFail": "The print window did not open. The PDF is open in a new tab; print it from there.",
       "daily": {
         "title": "Daily business report",
-        "note": "Every night: sales, profit, restock and what waits for tomorrow, sent to you only (never to a buyer or a supplier).",
+        "note": "Every night: orders, delivered sales, profit, returns, stock to restock and what is waiting for tomorrow. Sent to you only (never to a buyer or a supplier).",
         "on": "Send every night at",
         "telegram": "Telegram",
         "email": "Email",

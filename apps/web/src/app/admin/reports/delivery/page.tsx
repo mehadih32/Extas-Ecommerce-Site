@@ -216,8 +216,8 @@ export default async function DeliveryReportPage({
       <PageHead
         view={view}
         place={locateKey(KEY)}
-        title={c("title")}
-        sub={c("sub")}
+        title={c("headTitle")}
+        sub={c("headSub")}
       />
       <SectionTabs view={view} current={KEY} />
       <ReportBar
