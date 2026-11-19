@@ -155,7 +155,7 @@
       "eventsText": "{failed} could not be read or applied · {changed} came again with different content. Nothing was applied from them."
     },
     "resync": {
-      "all": "Re-sync all stock now",
+      "all": "Sync now",
       "one": "Re-sync this SKU",
       "running": "Working…",
       "skuLabel": "SKU of one product to re-sync",
