@@ -285,6 +285,8 @@
       "less": "Show fewer",
       "close": "Close",
       "colReturnCost": "Return cost"
-    }
+    },
+    "headTitle": "Reports",
+    "headSub": "Which courier and which area deliver best, and what returns cost"
   }
 }

@@ -30,6 +30,7 @@
    কুরিয়ারের রেট কার্ড লাগবে ([একটা কুরিয়ার](../delivery/courier.md) পাতায়)। এরপর কুরিয়ারের চার্জ আসলেই মিলিয়ে দেখা হয়।
 
 ## প্রতিটা বোতাম আর ঘরের মানে
+- **পাতার মাথা** — বাকি রিপোর্টের মতো শিরোনাম "Reports", নিচে "Which courier and which area deliver best, and what returns cost"; সংখ্যার টাইলের নাম আগের মতোই "Delivery & RTO"
 - **This report answers** (PR 797, প্রোটোটাইপের মতো সবার ওপরে) — নীল কার্ডে সোজা লাইন: কত ভাগ ডেলিভারড, কোন কুরিয়ার সবচেয়ে দুর্বল (**Courier 360**), ফেরতের সবচেয়ে বড় কারণ (**Open returns**), আর 7 দিনের বেশি কুরিয়ারের কাছে পড়ে থাকা COD (**COD money**)।
 - **Delivery success**, **Average days to deliver**, **Returned parcels**, **COD with couriers**, **Still on the way** — পাঁচটা বড় ঘর, সব দোকানের নিজের পার্সেল থেকে গোনা।
 - **Success by courier**, **Average days by zone** (জোনের কথার দিনসহ), **COD money with couriers** (0–3, 4–7, 8+ দিন) — তিনটা বার-কার্ড।
