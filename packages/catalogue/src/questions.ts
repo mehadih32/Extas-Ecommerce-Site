@@ -9,7 +9,7 @@
 // "bring back" clears it and puts the question back in the queue to be checked again. Every change is audited.
 import { z } from 'zod';
 import { CatalogueError } from './errors';
-import { allow, found, logChange, parse, type CatalogueDeps, type Who } from './context';
+import { allow, found, logChange, parse, setting, type CatalogueDeps, type Who } from './context';
 
 /** The four lists of the questions screen. */
 export const QUESTION_VIEWS = ['open', 'published', 'hidden', 'archived'] as const;
@@ -101,15 +101,20 @@ export async function listQuestions(deps: CatalogueDeps, who: Who, query: unknow
   await allow(deps, who, 'reviews.read');
   const q = parse(questionListSchema, query, 'question list query');
   const take = q.limit ?? PAGE;
-  const where = { ...whereOfView(who.storeId, q.view), ...(q.productId ? { productId: q.productId } : {}) };
-  const count = (v: QuestionView) => deps.db.productQuestion.count({ where: whereOfView(who.storeId, v) });
+  // PR 1155: with practice mode off, the questions on practice products are in no list and no count (kept, not deleted),
+  // as practice products themselves (products.ts). A question has no link to its product, so the practice products are read once.
+  const practiceOn = (await setting(deps, who, 'practice.enabled')).on;
+  const practiceIds = practiceOn ? [] : (await deps.db.product.findMany({ where: { storeId: who.storeId, isPractice: true }, select: { id: true } })).map((p) => p.id);
+  const hide = practiceIds.length ? { AND: [{ productId: { notIn: practiceIds } }] } : {};
+  const where = { ...whereOfView(who.storeId, q.view), ...(q.productId ? { productId: q.productId } : {}), ...hide };
+  const count = (v: QuestionView) => deps.db.productQuestion.count({ where: { ...whereOfView(who.storeId, v), ...hide } });
   const [rows, open, published, hidden, archived, unanswered] = await Promise.all([
     deps.db.productQuestion.findMany({ where, select: SELECT, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: take + 1, ...(q.cursor ? { cursor: { id: q.cursor }, skip: 1 } : {}) }),
     count('open'),
     count('published'),
     count('hidden'),
     count('archived'),
-    deps.db.productQuestion.count({ where: { ...whereOfView(who.storeId, 'open'), answer: null } }),
+    deps.db.productQuestion.count({ where: { ...whereOfView(who.storeId, 'open'), answer: null, ...hide } }),
   ]);
   const page = rows.slice(0, take) as Row[];
   return { questions: page.map(view), nextCursor: rows.length > take ? (page[page.length - 1]?.id ?? null) : null, counts: { open, published, hidden, archived, unanswered } };

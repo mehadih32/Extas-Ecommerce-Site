@@ -120,6 +120,9 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
       if (cl.count) removed.set('CollectionProduct', cl.count);
       const tl = await tx.productTag.deleteMany({ where: { storeId, productId: { in: practiceProducts } } });
       if (tl.count) removed.set('ProductTag', tl.count);
+      // PR 1156: the questions on practice products (the sample ones and any asked on them) go with their product (no foreign key)
+      const pq = await tx.productQuestion.deleteMany({ where: { storeId, productId: { in: practiceProducts } } });
+      if (pq.count) removed.set('ProductQuestion', pq.count);
       const links = await tx.sizeChartAssignment.deleteMany({
         where: { storeId, productId: { in: practiceProducts } },
       });

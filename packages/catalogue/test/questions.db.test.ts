@@ -96,4 +96,19 @@ describe.skipIf(!HAS_TEST_DB)('product questions on PostgreSQL (follow-up 184)',
     const log = await t.prisma.auditLog.findMany({ where: { storeId: A, entityType: 'ProductQuestion' }, select: { action: true }, orderBy: { createdAt: 'asc' } });
     expect(log.map((x) => x.action)).toEqual(['questions.answer', 'questions.answer', 'questions.publish', 'questions.hide', 'questions.archive', 'questions.unarchive']);
   });
+
+  it('PR 1155: a question on a practice product shows (and counts) only while practice mode is on', async () => {
+    const pid = (await t.prisma.product.create({ data: { storeId: A, slug: 'practice-q-polo', nameEn: 'Practice polo', isPractice: true }, select: { id: true } })).id;
+    const id = (await t.prisma.productQuestion.create({ data: { storeId: A, productId: pid, question: 'Practice question?' }, select: { id: true } })).id;
+    const off = await listQuestions(deps(), as(viewer));
+    expect(off.questions.map((x) => x.id)).not.toContain(id);
+    const onSettings: SettingsReader = {
+      async value<K extends Key>(key: K): Promise<Value<K>> {
+        return (key === 'practice.enabled' ? { on: true } : registry[key].default) as Value<K>;
+      },
+    };
+    const on = await listQuestions({ db: t.prisma, settings: onSettings, now: () => clock }, as(viewer));
+    expect(on.questions.map((x) => x.id)).toContain(id);
+    expect(on.counts.open).toBe(off.counts.open + 1);
+  });
 });

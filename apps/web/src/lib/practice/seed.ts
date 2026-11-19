@@ -13,6 +13,7 @@
 // Tables that are not on `main` yet are skipped (see docs/demo/admin-proto-v5/gap/PRACTICE-TODO.md).
 import { createHash } from 'node:crypto';
 import { completeExtras } from './demo-extras';
+import { seedSampleBooks, seedSampleExtras } from './sample-books';
 import { pickGrade, practiceLevels } from './grades';
 import { practiceId } from './ids';
 import { PRACTICE_PHONE_PREFIX, type Prisma, type PrismaClient } from '@extas/db/client';
@@ -367,6 +368,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   if (existingOrders > 0 && !topUp) {
     // an older run: bring the catalogue to the demo's (adds only what is missing, nothing else is touched)
     const done = await ensureCatalogue(db, storeId, planProducts(makeRng(SEED), storeId, minor), minor, now);
+    // PR 1155: the sample store's money world (cashbook, staff pay, cost heads) when it is not there yet; never on a working shop
+    if (rich) Object.assign(done, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
     return { seeded: false, reason: 'already', counts: done };
   }
 
@@ -928,6 +931,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   counts.incomplete = drafts.length;
 
   if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now, !opts.richAnywhere));
+  // PR 1155: the sample store's money world (cashbook, staff pay, cost heads); sample-books.ts does nothing on a working shop
+  if (rich) Object.assign(counts, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
 
   return { seeded: true, counts };
 }
