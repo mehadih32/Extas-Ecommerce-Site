@@ -25,7 +25,7 @@ const order = (n: string, over: Partial<OrderDetailView> = {}) =>
     more: [spec('hold', 'Hold'), spec('cancel', 'Cancel')],
     ...over,
   }) as unknown as OrderDetailView;
-const view = { dict: { orders: { detail: { call: 'Call' }, proc: { approve: 'Approve', askAdvance: 'Ask for advance', cancel: 'Cancel', more: 'More', pay: '{pay} · {units}' } } }, lang: 'en', locale: 'en-IN' } as unknown as AdminView;
+const view = { dict: { orders: { detail: { call: 'Call' }, proc: { tag: { merge: 'Merge needed', stock: 'No stock' }, score: 'Courier score', approve: 'Approve', askAdvance: 'Ask for advance', cancel: 'Cancel', more: 'More', pay: '{pay} · {units}' } } }, lang: 'en', locale: 'en-IN' } as unknown as AdminView;
 
 describe('Processing cards (PR 1064)', () => {
   it('draws a card per order with its own commands, the call link, the flags and the pieces', () => {
@@ -62,5 +62,15 @@ describe('Processing cards (PR 1064)', () => {
   it('writes no colour of its own', () => {
     const html = renderToStaticMarkup(<ProcessingCards view={view} cards={[order('E-1')]} />);
     expect(html).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(/i);
+  });
+
+  it('PR 1127: the card shows its reasons and its courier score', () => {
+    const score = { title: 'Courier score', pill: { text: '8.6/10 · Good', tone: 'ok' as const }, reason: 'Takes almost every parcel.', rows: [{ key: 'success', label: 'Success rate', value: '100%', points: '', source: '' }], note: '' };
+    const html = renderToStaticMarkup(<ProcessingCards view={view} cards={[order('E-9')]} tags={{ 'id-E-9': ['stock', 'merge'] }} scores={{ 'id-E-9': score }} />);
+    expect(html).toContain('No stock');
+    expect(html).toContain('Merge needed');
+    expect(html).toContain('8.6/10');
+    expect(html).toContain('Success rate');
+    expect(html).toContain('Takes almost every parcel.');
   });
 });

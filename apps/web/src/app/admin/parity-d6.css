@@ -49,3 +49,11 @@
 .adm2 .o6-qa{display:flex;flex-wrap:wrap;gap:6px}
 @media (max-width:900px){.adm2 .o6-cards{grid-template-columns:minmax(0,1fr)}}
 .adm2 .d4-desk + .a2-views{margin-top:12px}
+/* PR 1127 (prototype v5): the Processing reasons bar and the courier score on each card */
+.adm2 .o6-tagbar{flex-wrap:wrap;gap:8px}
+.adm2 .o6-cs{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;align-items:start;padding:8px 0;border-top:1px solid var(--ln)}
+.adm2 .o6-csn{display:flex;flex-direction:column;gap:2px}
+.adm2 .o6-csn b{font-size:1.6em;line-height:1.1}
+.adm2 .o6-csg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px}
+.adm2 .o6-csr{grid-column:1/-1;margin:0}
+@media (max-width:520px){.adm2 .o6-csg{grid-template-columns:minmax(0,1fr)}}
