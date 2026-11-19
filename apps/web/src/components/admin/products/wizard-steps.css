@@ -139,3 +139,6 @@
 .wzp-pill.bad{background:var(--lm-badbg);color:var(--lm-bad)}
 .wzp-swrow{display:flex;align-items:center;gap:10px;min-height:44px}
 .wzp-swtxt{font-size:13.5px;font-weight:600}
+/* PR 1132 (prototype v5): Quick import and Start again sit at the right; the phone card has its heading */
+.wzp-actions-r { margin-left: auto; }
+.wzp-phh { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }

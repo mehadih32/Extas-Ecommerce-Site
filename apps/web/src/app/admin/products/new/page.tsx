@@ -1,13 +1,11 @@
 // PR 21 — "New product" (demo #/admin/products/new). Needs `catalogue.write`; the product starts as a draft and the
 // edit page opens next for colours, sizes, SKUs, prices and photos.
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminFrame, AdminNotice } from '@/components/admin/AdminFrame';
 import { PageHead } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
-import { Icon } from '@/components/admin/Icon';
 import { ProductWizard } from '@/components/admin/products/wizard/ProductWizard';
 import { wizardProps } from '@/lib/admin-wizard-page';
 import { adminDeps } from '@/lib/admin-auth';
@@ -42,11 +40,8 @@ export default async function NewProductPage() {
   const props = await wizardProps({ c, access, d, lang: view.lang, locale: view.locale, id: null, step: 1 });
   return (
     <AdminFrame view={view} current={KEY} ready crumb={false}>
-      <Link className="pa-back" href={PRODUCTS_HOME}>
-        <Icon name="back" size={14} />
-        {t(d, 'products.back')}
-      </Link>
-      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.new.title')} sub={t(d, 'products.new.intro')} />
+      {/* PR 1132 (prototype v5): the page is "Add product" with the 8-step line under it; the tabs lead back to All products */}
+      <PageHead view={view} place={locateKey(KEY)} title={t(d, 'products.wiz.head.title')} sub={t(d, 'products.wiz.head.sub')} />
       <ProductWizard {...props} />
     </AdminFrame>
   );

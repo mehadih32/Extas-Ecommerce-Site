@@ -27,6 +27,10 @@ export function WizardPhone({ c }: { c: Ctx }) {
 
   return (
     <aside className="wzp-side" aria-label={t(d, 'products.wiz.preview')} data-testid="wizard-preview">
+      <div className="wzp-phh">
+        <b>{t(d, 'products.wiz.phH')}</b>
+        <span className="ad-mini">{t(d, 'products.wiz.phSub')}</span>
+      </div>
       <div className="wzp-ph">
         <div className="wzp-phbar">
           <span>{t(d, 'products.wiz.ph.time')}</span>
