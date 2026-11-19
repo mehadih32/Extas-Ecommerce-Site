@@ -2253,7 +2253,19 @@
       "noAnswerDone": "No answer saved for {n}",
       "cancel": "Cancel",
       "more": "More",
-      "pay": "{pay} · {units}"
+      "pay": "{pay} · {units}",
+      "tagAll": "All",
+      "tag": {
+        "stock": "No stock",
+        "noanswer": "No answer",
+        "suspicious": "Suspicious",
+        "merge": "Merge needed",
+        "advance": "Advance asked"
+      },
+      "views": "Other lists",
+      "score": "Courier score",
+      "noRecord": "No record",
+      "tagNone": "No order here has this reason."
     }
   }
 }

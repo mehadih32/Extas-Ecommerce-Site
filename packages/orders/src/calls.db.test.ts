@@ -69,7 +69,8 @@ describe.skipIf(!HAS_TEST_DB)('PR 563 · no order is ever held over an address (
     await f.t.prisma.callTask.update({ where: { id: task.id }, data: { dueAt: new Date(Date.now() + 3_600_000) } });
     const later = await callDesk(f.ordersDeps(), f.reader);
     expect(later.due.some((x) => x.taskId === task.id)).toBe(false);
-    await f.t.prisma.callTask.update({ where: { id: task.id }, data: { dueAt: new Date(Date.now() - 3_600_000) } });
+    // the list shows the longest overdue first (a few): put this one far in the past so earlier tests' calls cannot push it out
+    await f.t.prisma.callTask.update({ where: { id: task.id }, data: { dueAt: new Date(Date.now() - 400 * 86_400_000) } });
     const now = await callDesk(f.ordersDeps(), f.reader);
     expect(now.due.some((x) => x.taskId === task.id)).toBe(true);
     expect(now.dueTotal).toBeGreaterThanOrEqual(1);
