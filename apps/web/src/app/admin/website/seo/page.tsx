@@ -117,7 +117,7 @@ export default async function SeoPage() {
 
   return (
     <div className="a2-z" data-testid="seo-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub")} right={<a className="a2-btn" href={HERE} data-testid="seo-check-again">{c("checkAgain")}</a>} />
+      <PageHead view={view} place={locateKey(KEY)} title={c("title")} sub={c("sub", { store: view.storeName ?? c("theShop") })} right={<a className="a2-btn" href={HERE} data-testid="seo-check-again">{c("checkAgain")}</a>} />
       <SectionTabs view={view} current={KEY} />
 
       <SeoOverview

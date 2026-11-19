@@ -1,7 +1,7 @@
 {
   "metaTitle": "SEO · Admin",
   "title": "SEO & Google ranking",
-  "sub": "How easily people find the shop on Google, and what to fix to show up higher.",
+  "sub": "How easily people find {store} on Google, and what to fix to show up higher.",
   "kpi": {
     "engines": "Search engines",
     "open": "Open",
@@ -769,5 +769,6 @@
   },
   "checkAgain": "Check again",
   "moreTitle": "More options",
-  "moreSub": "Search engines, titles and descriptions, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console and photo descriptions."
+  "moreSub": "Search engines, titles and descriptions, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console and photo descriptions.",
+  "theShop": "the shop"
 }
