@@ -444,3 +444,89 @@ export const DRAW_KIND_OF_CATEGORY: Record<string, 'polo' | 'tee' | 'shirt' | 'p
   sweaters: 'hoodie',
   extras: 'tee',
 };
+
+/**
+ * PR 1155: the prototype v5's money world, written on the SAMPLE store only (sample-books.ts): the four accounts with the
+ * prototype's names and opening balances, the movements' shape (courier payouts, online payments, expenses, the weekly ERP
+ * payment and ad bill, the owner taking money once a month), the six staff of Finance › Costs (with this month's bonus,
+ * deduction, advance and who is paid) and the nine monthly cost heads. Sample figures only; the pages work every total out.
+ */
+export const SAMPLE_BOOKS = {
+  seed: 20_261_113,
+  days: 60,
+  accounts: [
+    { key: 'cash', nameEn: 'Cash box', nameBn: 'ক্যাশ বাক্স', kind: 'CASH', opening: 15_000 },
+    { key: 'bank', nameEn: 'Bank (DBBL)', nameBn: 'ব্যাংক (DBBL)', kind: 'BANK', opening: 420_000 },
+    { key: 'bkash', nameEn: 'bKash merchant', nameBn: 'বিকাশ মার্চেন্ট', kind: 'MOBILE', opening: 40_000 },
+    { key: 'nagad', nameEn: 'Nagad merchant', nameBn: 'নগদ মার্চেন্ট', kind: 'MOBILE', opening: 30_000 },
+  ],
+  couriers: [
+    { name: 'Pathao', share: 0.8, perParcel: [1_500, 2_100] },
+    { name: 'Steadfast', share: 0.7, perParcel: [1_400, 2_000] },
+    { name: 'RedX', share: 0.45, perParcel: [1_300, 1_900] },
+  ],
+  expenses: [
+    { note: 'Packaging (practice)', taka: [600, 2_400] },
+    { note: 'Transport (practice)', taka: [200, 900] },
+    { note: 'Office supplies (practice)', taka: [150, 700] },
+  ],
+  /** The day of the week (0 = Sunday) the ERP is paid and the ad bill is charged. */
+  weekday: 4,
+  erpPayment: 70_000,
+  adBill: [9_000, 14_000],
+  ownerTakeDay: 1,
+  ownerTake: 25_000,
+  staff: [
+    { id: 'practice-arif', name: 'Arif Hossain', post: 'Manager', salary: 26_000, payDay: 7, paid: true },
+    { id: 'practice-rafi', name: 'Rafi Ahmed', post: 'Order confirmation caller', salary: 13_000, payDay: 7, paid: true, bonus: 1_000 },
+    { id: 'practice-nusrat', name: 'Nusrat Jahan', post: 'Customer support', salary: 13_000, payDay: 7, paid: true, ded: 500 },
+    { id: 'practice-sohel', name: 'Sohel Rana', post: 'Packer', salary: 11_000, payDay: 10, paid: false, adv: 3_000 },
+    { id: 'practice-jahid', name: 'Jahid Hasan', post: 'Content & photo', salary: 16_000, payDay: 15, paid: false },
+    { id: 'practice-tania', name: 'Tania Akter', post: 'Ads manager', salary: 22_000, payDay: 15, paid: false },
+  ] as { id: string; name: string; post: string; salary: number; payDay: number; paid: boolean; bonus?: number; ded?: number; adv?: number }[],
+  heads: [
+    { id: 'practice-rent', name: 'Office & warehouse rent', kind: 'rent', taka: 30_000, payDay: 5 },
+    { id: 'practice-power', name: 'Electricity', kind: 'utilities', taka: 6_500, payDay: 10 },
+    { id: 'practice-net', name: 'Internet', kind: 'utilities', taka: 3_000, payDay: 10 },
+    { id: 'practice-mobile', name: 'Mobile bills', kind: 'utilities', taka: 2_500, payDay: 10 },
+    { id: 'practice-soft', name: 'Software & subscriptions', kind: 'other', taka: 9_000, payDay: 3, note: 'Software' },
+    { id: 'practice-acct', name: 'Accountant fee', kind: 'other', taka: 5_000, payDay: 25 },
+    { id: 'practice-transport', name: 'Transport & conveyance', kind: 'other', taka: 4_000, payDay: 28 },
+    { id: 'practice-clean', name: 'Cleaning & maintenance', kind: 'other', taka: 2_500, payDay: 20 },
+    { id: 'practice-eid', name: 'Eid bonus provision', kind: 'other', taka: 8_400, payDay: 28 },
+  ] as { id: string; name: string; kind: 'rent' | 'utilities' | 'other'; taka: number; payDay: number; note?: string }[],
+};
+
+/**
+ * PR 1156: the prototype v5's customer questions (on practice products; `product` is the index in the practice products,
+ * `hoursAgo` how long ago it was asked) and its marketing calendar lines (days from today, so the sample store always has a
+ * past, a current and a coming month; sample store only).
+ */
+export const SAMPLE_EXTRAS = {
+  questions: [
+    { product: 0, hoursAgo: 5, text: 'Is this available in XXL in navy?' },
+    { product: 3, hoursAgo: 26, text: 'Will the colour fade after washing?' },
+    { product: 30, hoursAgo: 50, text: 'What is the chest size of L?', answer: 'L chest is 42 inches. Size chart is on the page.' },
+    { product: 71, hoursAgo: 3, text: 'Can I get this before Friday in Sylhet?' },
+  ] as { product: number; hoursAgo: number; text: string; answer?: string }[],
+  calendar: [
+    { title: 'Durga Puja', from: -27, to: -23, type: 'holiday' },
+    { title: 'Puja offer · PUJA15', from: -34, to: -19, type: 'offer' },
+    { title: 'Winter Polo Launch ads', from: -12, to: 17, type: 'ad' },
+    { title: 'Winter polo week (12% off)', from: -5, to: 2, type: 'offer' },
+    { title: '11.11 shopping day', from: -2, to: -2, type: 'day' },
+    { title: 'SMS: Free delivery weekend', from: 1, to: 1, type: 'msg' },
+    { title: 'Blog: Cotton vs linen', from: 5, to: 5, type: 'post' },
+    { title: 'Panjabi pre-order offer', from: 7, to: 27, type: 'offer' },
+    { title: 'Black Friday', from: 14, to: 14, type: 'day' },
+    { title: 'Victory Day collection ads', from: 25, to: 33, type: 'ad' },
+    { title: 'Victory Day', from: 33, to: 33, type: 'holiday' },
+    { title: 'Christmas', from: 42, to: 42, type: 'day' },
+    { title: 'Year-end sale', from: 43, to: 48, type: 'offer' },
+    { title: 'Ramadan starts (expected)', from: 88, to: 88, type: 'holiday' },
+    { title: 'Pohela Falgun & Valentine’s', from: 93, to: 93, type: 'day' },
+    { title: 'Language Day', from: 100, to: 100, type: 'holiday' },
+    { title: 'Eid panjabi ads', from: 94, to: 114, type: 'ad' },
+    { title: 'Eid ul-Fitr (expected)', from: 117, to: 117, type: 'holiday' },
+  ] as { title: string; from: number; to: number; type: string }[],
+};
