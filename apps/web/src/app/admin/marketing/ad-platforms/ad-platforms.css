@@ -41,3 +41,10 @@
 .adm2 .adp-rule-limit input[type='datetime-local']{max-width:none}
 /* PR 531 — New campaigns' "Set aside" fold: a 44 px tap target. */
 .adm2 details.adc-fold>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--ink2)}
+/* PR 1131 (prototype v5): one card per ad account */
+.adm2 .adp-cards { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 900px) { .adm2 .adp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.adm2 .adp-card { display: flex; flex-direction: column; gap: 8px; }
+.adm2 .adp-card-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+.adm2 .adp-card-a { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.adm2 .adp-card-a .a2-btn { min-height: 44px; }
