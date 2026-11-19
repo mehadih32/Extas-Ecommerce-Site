@@ -51,6 +51,7 @@ const SPEND_API = '/api/admin/marketing/ad-platforms/spend';
 const ALERTS_API = '/api/admin/marketing/ad-platforms/alerts';
 const CONTROL_API = '/api/admin/marketing/ad-platforms/control';
 const KEYS_PAGE = '/admin/integrations';
+const TRACKING_PAGE = '/admin/marketing/tracking';
 const FEES_PAGE = '/admin/money/fees';
 const GROWTH_PAGE = '/admin/marketing/ad-platforms/growth';
 const BRIEFS_PAGE = '/admin/marketing/ad-platforms/briefs';
@@ -219,6 +220,40 @@ export default async function AdPlatformsPage() {
     <div className="a2-z" data-testid="adp-page" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={t(d, 'lf.tl.title')} sub={t(d, 'lf.tl.sub')} />
       <SectionTabs view={view} current={KEY} />
+      {/* PR 1131 (prototype v5): one card per ad account — linked or not, the account, Import now, Fix tracking and
+          Disconnect (the key lives in Keys & connections); the campaigns, alerts and settings sit under "Campaigns and settings" */}
+      <div className="adp-cards a2-mt12" data-testid="adp-cards">
+        {o.platforms.map((p) => {
+          const live = p.mode !== 'MOCK';
+          const acct = p.accounts[0] ?? (p.practice ? { name: p.practice.account.name, externalId: p.practice.account.externalId, currency: p.practice.account.currency } : null);
+          return (
+            <section key={p.platform} className="a2-card adp-card" data-testid={`adp-card-${p.platform}`}>
+              <div className="adp-card-h">
+                <div>
+                  <h2 className="a2-h4">{s(`platform.${p.platform}`)}</h2>
+                  <p className="a2-xs a2-mute">{s(`cardSub.${p.platform}`)}</p>
+                </div>
+                <span className={`a2-pill ${live ? 'g' : 'bad'}`} title={s(`mode.${p.mode}`)}>
+                  {s(live ? 'cardOn' : 'cardOff')}
+                </span>
+              </div>
+              <p className="a2-xs a2-mute">{acct ? s('accountLine', { name: acct.name, id: acct.externalId, currency: acct.currency }) : s('noAccount')}</p>
+              <p className="a2-sm">{p.lastTest ? s('lastTest', { when: when(p.lastTest.at), result: s(p.lastTest.ok ? 'testOk' : 'testBad') }) : s('noTest')}</p>
+              <div className="adp-card-a">
+                {canWrite ? <AdSpendImport url={SPEND_API} platform={p.platform} texts={{ ...spendTexts, label: s('cardImport') }} /> : null}
+                <Link className="a2-btn sm" href={TRACKING_PAGE} data-testid={`adp-fix-${p.platform}`}>
+                  {s('cardFix')}
+                </Link>
+                <Link className={`a2-btn sm ${live ? 'ghost' : ''}`} href={KEYS_PAGE} data-testid={`adp-key-${p.platform}`}>
+                  {s(live ? 'cardDisconnect' : 'cardConnect')}
+                </Link>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      <details className="a2-mt12 a2-more-opts" data-testid="adp-more">
+        <summary className="a2-sm a2-b">{s('cardMore')}</summary>
       <div className="a2-note" role="note">
         <span>{s('readOnlyNote')}</span>
       </div>
@@ -500,6 +535,7 @@ export default async function AdPlatformsPage() {
       <div id="adp-spend-card" className="a2-mt12">
         <FieldsCard url={SPEND_API} screen={{ key: card.key, value: card.value, version: card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="adp-spend-card" />
       </div>
+      </details>
     </div>
   );
 }
