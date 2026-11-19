@@ -34,20 +34,26 @@ export function ActivityScreen(p: ActivityScreenProps) {
         <a className="a2-btn" href={`/api/admin/activity-log?${qs({ page: 1 })}&format=csv`} data-testid="al-csv">{c('download')}</a>
       </div>
       <p className="a2-xs a2-mute a2-mt6">{c(`sub.${f.kind}`)}</p>
-      <form method="get" action={HERE} className="s28-row a2-mt6" data-testid="al-filters">
-        <input type="hidden" name="kind" value={f.kind} />
-        <label>{c('filters.who')}
-          <select className="a2-inp" name="who" defaultValue={f.who ?? ''}>
-            <option value="">{c('filters.anyone')}</option>
-            {v.people.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
-          </select>
-        </label>
-        <label>{c('filters.text')}<input className="a2-inp" name="text" defaultValue={f.text} maxLength={60} /></label>
-        <label>{c('filters.from')}<input className="a2-inp" type="date" name="from" defaultValue={f.from ?? ''} /></label>
-        <label>{c('filters.to')}<input className="a2-inp" type="date" name="to" defaultValue={f.to ?? ''} /></label>
-        <button type="submit" className="a2-btn">{c('filters.apply')}</button>
-        <Link className="a2-btn" href={`${HERE}?kind=${f.kind}`}>{c('filters.clear')}</Link>
-      </form>
+      {/* prototype v5 (m-settings.js renderActivity): one chip per person, "Everyone" first */}
+      <div className="s28-row a2-mt6" role="group" aria-label={c('filters.who')} data-testid="al-people">
+        {[{ id: '', name: c('filters.anyone') }, ...v.people].map((x) => (
+          <Link key={x.id || 'all'} className="s28-chip" href={`${HERE}?${qs({ who: x.id || null, page: 1 })}`} aria-current={(f.who ?? '') === x.id ? 'page' : undefined} style={(f.who ?? '') === x.id ? { fontWeight: 700 } : undefined}>
+            {x.name}
+          </Link>
+        ))}
+      </div>
+      <details className="a2-mt6" open={Boolean(f.text || f.from || f.to)}>
+        <summary className="a2-xs">{c('filters.more')}</summary>
+        <form method="get" action={HERE} className="s28-row a2-mt6" data-testid="al-filters">
+          <input type="hidden" name="kind" value={f.kind} />
+          {f.who ? <input type="hidden" name="who" value={f.who} /> : null}
+          <label>{c('filters.text')}<input className="a2-inp" name="text" defaultValue={f.text} maxLength={60} /></label>
+          <label>{c('filters.from')}<input className="a2-inp" type="date" name="from" defaultValue={f.from ?? ''} /></label>
+          <label>{c('filters.to')}<input className="a2-inp" type="date" name="to" defaultValue={f.to ?? ''} /></label>
+          <button type="submit" className="a2-btn">{c('filters.apply')}</button>
+          <Link className="a2-btn" href={`${HERE}?kind=${f.kind}`}>{c('filters.clear')}</Link>
+        </form>
+      </details>
       {v.rows.length ? (
         <div className="tbl-wrap a2-mt12" data-testid="al-rows">
           <table className="a2-tbl">
@@ -56,7 +62,6 @@ export function ActivityScreen(p: ActivityScreenProps) {
                 <th>{c('cols.when')}</th>
                 <th>{c('cols.who')}</th>
                 <th>{c('cols.what')}</th>
-                <th>{c('cols.record')}</th>
               </tr>
             </thead>
             <tbody>
@@ -67,8 +72,8 @@ export function ActivityScreen(p: ActivityScreenProps) {
                   <td>
                     {r.action}
                     {r.fields.length ? <div className="a2-xs a2-mute">{c('fields', { list: r.fields.join(', ') })}</div> : null}
+                    {r.entity ? <div className="a2-xs a2-mute">{c('cols.record')}: {r.entity}{r.entityId ? ` ${r.entityId.slice(0, 8)}` : ''}</div> : null}
                   </td>
-                  <td className="a2-xs">{r.entity}{r.entityId ? ` ${r.entityId.slice(0, 8)}` : ''}</td>
                 </tr>
               ))}
             </tbody>
