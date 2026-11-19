@@ -13,6 +13,7 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AUDIENCE_FLOOR_MAX, HOUR_MAX, REFUSED_DAYS_MAX } from '@extas/settings';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { RefreshAds } from '@/components/admin/lane-f/AdCampaignActions';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { formatNumber } from '@/components/admin/products/model';
 import { adminDeps } from '@/lib/admin-auth';
@@ -131,6 +132,8 @@ export default async function AudiencesPage(props: Props) {
         right={
           canWrite ? (
             <>
+              {/* PR 1125 (prototype v5): "Update now" counts every live audience again (the daily refresh, on a press) */}
+              <RefreshAds url="/api/admin/marketing/audiences/recount" label={t(d, 'lf.au.updateNow')} working={t(d, 'lf.au.updating')} done={t(d, 'lf.au.updated')} failed={t(d, 'lf.au.updateFailed')} />
               <Link className="a2-btn" href={`${HERE}/new?kind=lookalike`} data-testid="au-create-lal">
                 {s('lal.new')}
               </Link>
@@ -158,6 +161,8 @@ export default async function AudiencesPage(props: Props) {
         ))}
       </nav>
       {rows.length ? (
+        <section className="a2-card a2-mt12" aria-label={t(d, 'lf.au.yours')}>
+        <h2 className="a2-h3">{t(d, 'lf.au.yours')}</h2>
         <div className="a2-tblw a2-mt12">
           <table className="a2-tbl" data-testid="au-table">
             <thead>
@@ -195,6 +200,7 @@ export default async function AudiencesPage(props: Props) {
             </tbody>
           </table>
         </div>
+        </section>
       ) : (
         <div className="a2-card a2-mt12 lp-empty" data-testid="au-empty">
           <b>{s('empty')}</b>

@@ -486,3 +486,21 @@ export async function audienceCountHandler(request: Request, deps: AdminDeps | n
     return answer(e);
   }
 }
+
+/**
+ * PR 1125 (prototype v5, Marketing › Audiences "Update now"): POST /api/admin/marketing/audiences/recount counts every live
+ * audience again now, as the daily refresh does (`marketing.audiences.write`), and logs who asked. Nothing is sent to an
+ * ad platform and nothing is deleted.
+ */
+export async function recountAllHandler(request: Request, deps: AdminDeps | null): Promise<Response> {
+  if (request.method.toUpperCase() !== 'POST') return fail(405, 'method-not-allowed');
+  const g = await guardAdmin(request, deps, { permission: 'marketing.audiences.write', storeId: S });
+  if (g instanceof Response) return g;
+  try {
+    const n = await recountAudiences(deps!.db, deps!.resolver, deps!.now ? deps!.now() : new Date());
+    await audit(deps!.db, g.actor, { storeId: S, action: 'marketing.audience.recountAll', entityType: 'Audience', entityId: 'all', after: { counted: n } }, g.ctx);
+    return json({ ok: true, counted: n });
+  } catch (e) {
+    return answer(e);
+  }
+}
