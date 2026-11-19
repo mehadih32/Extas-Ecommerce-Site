@@ -195,7 +195,10 @@ export default async function BatchPage({
       {g(`stage.${r.stage}`)}
     </>
   );
-  const OrderLine = ({ r, extra }: { r: Row; extra: ReactNode }) => (
+  // PR 1128 (prototype v5): "Merge" sits right on the stuck rows that need it; it opens the order's own merge dialog
+  // (`?do=merge` on the order page: the same checks and `orders.merge` as there)
+  const canMerge = perms.has("orders.merge");
+  const OrderLine = ({ r, extra, merge = false }: { r: Row; extra: ReactNode; merge?: boolean }) => (
     <div className="o6-li" data-testid="batch-row">
       <div className="o6-grow">
         <p>
@@ -211,6 +214,11 @@ export default async function BatchPage({
         </p>
         <p className="o6-sub">{extra}</p>
       </div>
+      {merge && canMerge && r.stuck.includes("merge") ? (
+        <Link className="a2-btn sm" href={`${orderHref(r.id)}?do=merge`} data-testid="batch-merge">
+          {g("merge")}
+        </Link>
+      ) : null}
       <div className="o6-r">
         <b>
           {formatMoney(
@@ -409,7 +417,7 @@ export default async function BatchPage({
                 ))}
               </div>
               {stuckRows.map((r) => (
-                <OrderLine key={r.id} r={r} extra={stuckExtra(r)} />
+                <OrderLine key={r.id} r={r} extra={stuckExtra(r)} merge />
               ))}
             </section>
           ) : null}

@@ -2078,7 +2078,8 @@
       },
       "yoursT": "Your work ({n})",
       "movedT": "Moved on by itself ({n})",
-      "rulesTag": "Rules"
+      "rulesTag": "Rules",
+      "merge": "Merge"
     },
     "cs": {
       "title": "Courier score",
