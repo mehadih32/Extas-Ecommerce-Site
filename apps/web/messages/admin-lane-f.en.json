@@ -344,8 +344,8 @@
         "other": "Other expenses",
         "net": "Net profit",
         "margin": "Net margin",
-        "vsSame": "vs the same days before",
-        "vsFull": "vs all of last month"
+        "vsSame": "vs {range}",
+        "vsFull": "vs all of {month}"
       },
       "close": {
         "title": "Close the month",
