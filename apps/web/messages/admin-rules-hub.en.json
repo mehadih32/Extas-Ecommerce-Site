@@ -779,7 +779,7 @@
       "delivered": "Delivered",
       "refused": "Refused",
       "cancelled": "Cancelled",
-      "rate": "Came back",
+      "rate": "Refusal rate",
       "none": "No scored orders in this period yet.",
       "sugg": "Green orders came back {pct}% of the time. Consider moving the green limit up.",
       "ok": "Limits look right.",
