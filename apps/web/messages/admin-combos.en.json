@@ -139,7 +139,8 @@
       "edit": "Edit combo rule",
       "archive": "Archive",
       "fixed": "Fixed combos & customer sets",
-      "report": "Report"
+      "report": "Report",
+      "list": "Combos"
     },
     "how": {
       "s1t": "Upload a product",
@@ -457,6 +458,44 @@
     "head": {
       "auto": "Auto-generate",
       "build": "Build a combo"
+    },
+    "ledger": {
+      "search": "Search combos",
+      "chipsLabel": "Combo status",
+      "chip": {
+        "active": "Active",
+        "paused": "Paused",
+        "scheduled": "Scheduled or ended",
+        "off": "Off",
+        "archived": "Archived"
+      },
+      "state": {
+        "active": "On the shop",
+        "paused": "Paused · sold out",
+        "scheduled": "Scheduled or ended",
+        "off": "Off",
+        "archived": "Archived"
+      },
+      "col": {
+        "combo": "Combo",
+        "price": "Price",
+        "sold": "Sold 30d",
+        "dates": "Dates",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "kind": {
+        "fixed": "Fixed price",
+        "rule": "Colour-pair rule"
+      },
+      "percent": "{n}% off",
+      "always": "Always",
+      "turnOff": "Turn off",
+      "turnOn": "Turn on",
+      "price": "Price",
+      "archive": "Archive",
+      "archiveYes": "Yes, archive",
+      "empty": "No combo here."
     }
   }
 }

@@ -68,7 +68,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
   const split = tab === 'fixed' ? await cb.splitOptions(a.deps, a.who) : null;
   const report = tab === 'report' ? await cb.comboReport(a.deps, a.who, { days: daysOf(one(sp.days)) }) : null;
   // PR 829 (prototype v5): the four figures and the note above the lists (30 days when the setting's limits allow it)
-  const summaryReport = tab === 'auto' || tab === 'fixed' || tab === 'archive' ? await cb.comboReport(a.deps, a.who, { days: daysOf('30') }) : null;
+  const summaryReport = tab === 'list' || tab === 'auto' || tab === 'fixed' || tab === 'archive' ? await cb.comboReport(a.deps, a.who, { days: daysOf('30') }) : null;
   const photos = await setPhotoUrls(a, combos);
   const editRule = ruleId ? (rules.find((r) => r.id === ruleId && !r.upsellOf) ?? null) : null;
   const upsellRule = editRule?.upsell ? (rules.find((r) => r.id === editRule.upsell!.id) ?? null) : null;
@@ -95,6 +95,7 @@ export default async function CombosPage({ searchParams }: { searchParams: Searc
         perms={a.perms}
         split={split}
         openNew={one(sp.make) === '1'}
+        sold={summaryReport ? Object.fromEntries(summaryReport.top.map((r) => [r.comboId, r.setsOrdered])) : {}}
         summary={
           summaryReport ? (
             <ComboSummary
