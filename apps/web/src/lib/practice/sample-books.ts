@@ -139,7 +139,7 @@ export async function seedSampleBooks(db: Db, storeId: number, minor: (taka: num
  * from `now`, never fixed dates. Each part runs once (nothing is added when its rows are there).
  */
 export async function seedSampleExtras(db: Db, storeId: number, now: Date): Promise<Record<string, number>> {
-  const counts: Record<string, number> = { questions: 0, calendar: 0 };
+  const counts: Record<string, number> = { questions: 0, calendar: 0, returns: 0 };
   const products = await db.product.findMany({ where: { storeId, isPractice: true }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { id: true } });
   const qIds = SAMPLE_EXTRAS.questions.map((_, i) => practiceId(`question:${storeId}:${i}`));
   if (products.length && (await db.productQuestion.count({ where: { id: { in: qIds } } })) === 0) {
@@ -167,6 +167,23 @@ export async function seedSampleExtras(db: Db, storeId: number, now: Date): Prom
       await db.calendarEntry.createMany({ data: rows, skipDuplicates: true });
       counts.calendar = rows.length;
     }
+    // PR 1156: the reason on every returned practice parcel (prototype Reports › Delivery & returns "Why do parcels come
+    // back"): one closed return per returned practice order that has none. Sample store only: the Returns lists have no
+    // practice switch. A reset removes them with the practice orders (reset.ts).
+    const returned = await db.order.findMany({ where: { storeId, isPractice: true, status: 'RETURNED' }, orderBy: { id: 'asc' }, select: { id: true, customerId: true, updatedAt: true } });
+    const have = new Set((await db.returnRecord.findMany({ where: { storeId, orderId: { in: returned.map((o) => o.id) } }, select: { orderId: true } })).map((r) => r.orderId));
+    const R = SAMPLE_EXTRAS.returns;
+    const total = R.reduce((n, r) => n + r.share, 0);
+    const recs: Prisma.ReturnRecordCreateManyInput[] = returned
+      .filter((o) => !have.has(o.id))
+      .map((o, i) => {
+        // spread the reasons over the parcels by their shares, in a fixed order (the same orders always get the same reason)
+        let pos = ((i * 7919) % total) + 0.5; // hardcode-ok: a prime stride, so neighbouring orders get different reasons
+        const r = R.find((x) => (pos -= x.share) < 0) ?? R[0]!;
+        return { id: practiceId(`return:${storeId}:${o.id}`), storeId, orderId: o.id, customerId: o.customerId, kind: r.kind, reasonCode: r.code, status: 'CLOSED', receivedAt: o.updatedAt, closedAt: o.updatedAt, createdAt: o.updatedAt, updatedAt: o.updatedAt };
+      });
+    await db.returnRecord.createMany({ data: recs, skipDuplicates: true });
+    counts.returns = recs.length;
   }
   return counts;
 }

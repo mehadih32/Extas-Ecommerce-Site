@@ -65,13 +65,13 @@ describe.skipIf(!HAS_TEST_DB)('the sample store money world (PR 1155)', () => {
     expect((await seedSampleExtras(db, other!, NOW)).questions).toBe(0);
     for (const storeId of [sample, other!]) await db.product.create({ data: { storeId, slug: `practice-q-${storeId}`, nameEn: 'Practice polo', isPractice: true } });
     const a = await seedSampleExtras(db, sample, NOW);
-    expect(a).toEqual({ questions: SAMPLE_EXTRAS.questions.length, calendar: SAMPLE_EXTRAS.calendar.length });
+    expect(a).toMatchObject({ questions: SAMPLE_EXTRAS.questions.length, calendar: SAMPLE_EXTRAS.calendar.length });
     const b = await seedSampleExtras(db, other!, NOW);
-    expect(b).toEqual({ questions: SAMPLE_EXTRAS.questions.length, calendar: 0 });
+    expect(b).toMatchObject({ questions: SAMPLE_EXTRAS.questions.length, calendar: 0, returns: 0 });
     expect(await db.calendarEntry.count({ where: { storeId: other! } })).toBe(0);
     const qs = await db.productQuestion.findMany({ where: { storeId: sample }, select: { productId: true } });
     const practice = await db.product.findMany({ where: { storeId: sample, isPractice: true }, select: { id: true } });
     expect(qs.every((q) => practice.some((x) => x.id === q.productId))).toBe(true);
-    expect(await seedSampleExtras(db, sample, NOW)).toEqual({ questions: 0, calendar: 0 });
+    expect(await seedSampleExtras(db, sample, NOW)).toEqual({ questions: 0, calendar: 0, returns: 0 });
   });
 });

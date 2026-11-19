@@ -92,6 +92,13 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
       if (history) removed.set('OrderEvent+ShipmentEvent', history);
       // 2. the practice records and what hangs on them. Children are removed through the foreign keys.
       const where = `"storeId" = ${Math.trunc(storeId)} AND "isPractice" = true`;
+      // PR 1156: the returns of practice orders (the sample store's return reasons) have no foreign key to the order: by hand, first
+      const practiceOrders = (await tx.order.findMany({ where: { storeId, isPractice: true }, select: { id: true } })).map((o) => o.id);
+      const rr = await tx.returnRecord.findMany({ where: { storeId, orderId: { in: practiceOrders } }, select: { id: true } });
+      if (rr.length) {
+        await tx.returnItem.deleteMany({ where: { returnId: { in: rr.map((r) => r.id) } } });
+        removed.set('ReturnRecord', (await tx.returnRecord.deleteMany({ where: { id: { in: rr.map((r) => r.id) } } })).count);
+      }
       // order of the roots: money and parcels before orders before people before products and couriers
       for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer', 'CourierAccount'] as const) {
         await removeRows(tx, fks, t, where, 0, removed);
@@ -209,6 +216,13 @@ export async function resetPracticeSales(db: Db, storeId: number): Promise<Reset
       const history = Number((await tx.$queryRaw<{ n: number }[]>`SELECT extas_purge_practice_history(${storeId}::integer) AS n`)[0]?.n ?? 0);
       if (history) removed.set('OrderEvent+ShipmentEvent', history);
       const where = `"storeId" = ${Math.trunc(storeId)} AND "isPractice" = true`;
+      // PR 1156: the returns of practice orders (the sample store's return reasons) have no foreign key to the order: by hand, first
+      const practiceOrders = (await tx.order.findMany({ where: { storeId, isPractice: true }, select: { id: true } })).map((o) => o.id);
+      const rr = await tx.returnRecord.findMany({ where: { storeId, orderId: { in: practiceOrders } }, select: { id: true } });
+      if (rr.length) {
+        await tx.returnItem.deleteMany({ where: { returnId: { in: rr.map((r) => r.id) } } });
+        removed.set('ReturnRecord', (await tx.returnRecord.deleteMany({ where: { id: { in: rr.map((r) => r.id) } } })).count);
+      }
       for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer'] as const) {
         await removeRows(tx, fks, t, where, 0, removed);
       }
