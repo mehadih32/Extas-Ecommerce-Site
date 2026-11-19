@@ -208,7 +208,7 @@ export default async function AiTrainingPage() {
         view={view}
         place={locateKey(KEY)}
         title={c("title")}
-        sub={c("sub")}
+        sub={c("sub", { store: view.storeName ?? c("theShop") })}
         right={
           <span className="a2-sm a2-mute" data-testid="training-version">
             {c("strip.version", { n: versions.rows.find((v) => v.current)?.no ?? state.version })}

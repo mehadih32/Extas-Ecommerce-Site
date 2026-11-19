@@ -2,7 +2,7 @@
   "aiTraining": {
     "metaTitle": "Training",
     "title": "AI Center",
-    "sub": "Teach the agents how the shop talks and decides. Every change is a new version you can roll back.",
+    "sub": "Teach the agents how {store} talks and decides. Every change is a new version you can roll back.",
     "needPermission": "You can read this page. Teaching the agents needs the AI control permission.",
     "aiOff": "AI is off. What you write here is saved and kept; the agents use it once AI is turned on.",
     "rules": "Instructions guide how an agent writes and decides. They never override the standing rules: replies to buyers stay on Ask, deletes wait for your approval, and no agent changes permissions.",
@@ -165,6 +165,7 @@
     "docDialog": {
       "title": "Add document",
       "close": "Close"
-    }
+    },
+    "theShop": "the shop"
   }
 }
