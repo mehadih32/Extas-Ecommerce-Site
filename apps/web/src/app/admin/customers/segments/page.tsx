@@ -13,6 +13,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CustomerAct } from '@/components/admin/customers/CustomerAct';
 import { SegmentSettings } from '@/components/admin/customers/SegmentSettings';
 import { formatNumber } from '@/components/admin/products/model';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { customersHref } from '@/lib/admin-customers/model';
@@ -58,6 +59,31 @@ export default async function SegmentsPage() {
   const otherViews = s.builtIn.filter((b) => !(READY as readonly string[]).includes(b.id));
   const sub = (r: cu.SegmentRow) => [r.readable ? t(d, 'cus.seg.conds', { n: formatNumber(r.conditions, view.locale) }) : t(d, 'cus.seg.unreadable'), t(d, 'cus.seg.changed', { at: when.format(r.updatedAt) })].join(' · ');
 
+  // PR 1123 (prototype v5): the ready-made groups are list views that work whether or not saved groups are on
+  const readyCards = (
+    <>
+            {readyMade.map((b) => (
+        <section key={b.id} className="a2-card seg-card" data-testid="seg-builtin-row">
+          <div className="a2-between">
+            <b>{t(d, `cus.list.view.${b.id}`)}</b>
+            <span className="a2-pill line">{t(d, 'cus.seg.readyMade')}</span>
+          </div>
+          <div>
+            <span className="seg-big">{n(b.count)}</span> <span className="a2-sm a2-mute">{t(d, 'cus.seg.customersWord')}</span>
+          </div>
+          <p className="a2-xs a2-mute">{t(d, 'cus.seg.live')}</p>
+          <div className="a2-gap8 seg-acts">
+            <Link className="a2-btn sm pri" href="/admin/messages/campaigns" data-testid="seg-camp">
+              {t(d, 'cus.seg.campaignBtn')}
+            </Link>
+            <Link className="a2-btn sm" href={customersHref({}, { view: b.id })}>
+              {t(d, 'cus.seg.export')}
+            </Link>
+          </div>
+        </section>
+      ))}
+    </>
+  );
   return (
     <div className="a2-z" data-testid="customers-segments" data-lm-ready="">
       <PageHead
@@ -66,8 +92,10 @@ export default async function SegmentsPage() {
         title={t(d, 'cus.seg.title')}
         sub={t(d, 'cus.seg.sub')}
         right={
-          s.enabled && canWrite ? (
-            <Link className="a2-btn pri" href={`${HERE}/new`} data-testid="seg-new">
+          canWrite ? (
+            // PR 1123 (prototype v5): "Create group" is always in the head; while groups are off it opens the switch under More options
+            <Link className="a2-btn pri" href={s.enabled ? `${HERE}/new` : '#seg-more'} data-testid="seg-new">
+              <ShellIcon name="plus" size={15} />
               {t(d, 'cus.seg.new')}
             </Link>
           ) : null
@@ -75,34 +103,20 @@ export default async function SegmentsPage() {
       />
       <SectionTabs view={view} current="customersSegments" />
       {!s.enabled ? (
+        <>
         <section className="a2-card a2-mt12" data-testid="seg-off">
           <h2 className="a2-h3">{t(d, 'cus.seg.offTitle')}</h2>
           <p className="a2-sm a2-mute a2-mt6">{t(d, canWrite ? 'cus.seg.offBody' : 'cus.seg.offAsk')}</p>
         </section>
+        <div className="a2-row a2-r3 a2-mt12 seg-cards" data-testid="seg-ready-off">
+          {readyCards}
+        </div>
+        </>
       ) : (
         <>
           {/* PR 801: the prototype's group cards — ready-made first, then the owner's own; each with its count, a Send campaign link, Export and Remove */}
           <div className="a2-row a2-r3 a2-mt12 seg-cards" data-testid="seg-own">
-            {readyMade.map((b) => (
-              <section key={b.id} className="a2-card seg-card" data-testid="seg-builtin-row">
-                <div className="a2-between">
-                  <b>{t(d, `cus.list.view.${b.id}`)}</b>
-                  <span className="a2-pill line">{t(d, 'cus.seg.readyMade')}</span>
-                </div>
-                <div>
-                  <span className="seg-big">{n(b.count)}</span> <span className="a2-sm a2-mute">{t(d, 'cus.seg.customersWord')}</span>
-                </div>
-                <p className="a2-xs a2-mute">{t(d, 'cus.seg.live')}</p>
-                <div className="a2-gap8 seg-acts">
-                  <Link className="a2-btn sm pri" href="/admin/messages/campaigns" data-testid="seg-camp">
-                    {t(d, 'cus.seg.campaignBtn')}
-                  </Link>
-                  <Link className="a2-btn sm" href={customersHref({}, { view: b.id })}>
-                    {t(d, 'cus.seg.export')}
-                  </Link>
-                </div>
-              </section>
-            ))}
+            {readyCards}
             {s.segments.map((r) => (
               <section key={r.id} className="a2-card seg-card" data-testid="seg-row">
                 <div className="a2-between">
@@ -158,7 +172,7 @@ export default async function SegmentsPage() {
           ) : null}
         </>
       )}
-      <details className="a2-mt12 a2-more-opts" data-testid="seg-more">
+      <details id="seg-more" className="a2-mt12 a2-more-opts" open={!s.enabled && canWrite} data-testid="seg-more">
         <summary className="a2-sm a2-b">{t(d, 'cus.seg.more', { n: formatNumber(s.archived.length, view.locale) })}</summary>
         <div className="a2-row a2-r2 a2-mt12">
           <section className="a2-card">

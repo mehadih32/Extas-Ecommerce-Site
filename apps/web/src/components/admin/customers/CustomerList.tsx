@@ -208,7 +208,7 @@ function CustomerTable({ view, rows, money, when, hrefOf, settings, nowMs = 0 }:
 }
 
 /** `exportLimits` (PR 299): the reason's limits when this person may export the list (switched on and the key held); null hides Export. */
-export function CustomerListPage({ view, data, query, settings, money, hrefOf, exportLimits = null }: { view: AdminView; data: ListData; query: CustomerQuery; settings: ListSettings; money: Money; hrefOf?: (id: string) => string; exportLimits?: { min: number; max: number } | null }) {
+export function CustomerListPage({ view, data, query, settings, money, hrefOf, exportLimits = null, exportOff = false }: { view: AdminView; data: ListData; query: CustomerQuery; settings: ListSettings; money: Money; hrefOf?: (id: string) => string; exportLimits?: { min: number; max: number } | null; /** PR 1123: the person holds `customers.export` but the owner's export switch is off: the head shows Export, greyed, saying why. */ exportOff?: boolean }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -229,7 +229,20 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
   const all = current === 'all' && !filtered;
   return (
     <div className="a2-z" data-testid="customers-list" data-lm-ready="">
-      <PageHead view={view} place={locateKey('customers')} title={t(d, 'cus.list.title')} sub={t(d, 'cus.list.sub')} />
+      <PageHead
+        view={view}
+        place={locateKey('customers')}
+        title={t(d, 'cus.list.title')}
+        sub={t(d, 'cus.list.sub')}
+        right={
+          exportOff ? (
+            <button type="button" className="a2-btn" disabled title={t(d, 'cus.exp.off')} data-testid="cus-export-off">
+              <ShellIcon name="dl" size={15} />
+              {t(d, 'cus.exp.open')}
+            </button>
+          ) : null
+        }
+      />
       <SectionTabs view={view} current="customers" />
       {query.segment ? (
         <section className="a2-card tight a2-mt12" data-testid="cus-segment">

@@ -50,5 +50,5 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
     cu.canExport(cd, who),
   ]);
-  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => customerHref(id, query)} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} />;
+  return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => customerHref(id, query)} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} exportOff={!exportOk && (access.guard.permissions?.has('customers.export') ?? false)} />;
 }
