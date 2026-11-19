@@ -225,7 +225,7 @@
         "six": "Last 6 months"
       },
       "payAllDue": "Pay all due",
-      "note": "These are the shop's own staff and costs. Every amount goes into the month's fixed costs. An advance, bonus or deduction is always a new row, never an edit; paying and rows need your PIN.",
+      "note": "These are the shop's own staff and costs. ERP staff are paid by the ERP payroll and never appear here. Every amount goes into Profit & loss (fixed costs) and the Overview forecast.",
       "saved": "Saved. Earlier months keep their old amount.",
       "rowAdded": "Row added. The net to pay is updated.",
       "rowCancelled": "Row cancelled with a new row. Nothing was deleted.",
@@ -236,7 +236,7 @@
       "pin": "Your PIN",
       "sal": {
         "title": "Salaries",
-        "sub": "Tap the pencil for an advance, bonus or deduction, a salary change and its history. Paying needs your PIN.",
+        "sub": "Tap ✎ for advance, bonus, deductions, a salary change and its history. Paying needs your PIN.",
         "staff": "Staff",
         "salary": "Salary",
         "payDay": "Pay day",
@@ -262,7 +262,7 @@
       "salCost": "Salary cost this month (with bonus and deductions)",
       "oth": {
         "title": "Other fixed costs",
-        "sub": "Rent, utilities and other bills. A change asks \"from which month?\" and keeps the old amount for earlier months.",
+        "sub": "They record themselves on their day. A change asks \"from which month?\" and keeps the old amount for past months.",
         "head": "Cost head",
         "perMonth": "Per month",
         "day": "Day",
