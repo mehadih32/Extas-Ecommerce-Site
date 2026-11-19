@@ -503,6 +503,14 @@ export const SAMPLE_BOOKS = {
  * past, a current and a coming month; sample store only).
  */
 export const SAMPLE_EXTRAS = {
+  /** PR 1156: why practice parcels came back (the reason code's words show as "Wrong size refused", "Address not found" …). */
+  returns: [
+    { code: 'WRONG_SIZE_REFUSED', kind: 'REFUSED_AT_DOOR', share: 30 },
+    { code: 'CUSTOMER_REFUSED_AT_DOOR', kind: 'REFUSED_AT_DOOR', share: 25 },
+    { code: 'CUSTOMER_NOT_REACHABLE', kind: 'RETURNED', share: 20 },
+    { code: 'CHANGED_MIND', kind: 'REFUSED_AT_DOOR', share: 15 },
+    { code: 'ADDRESS_NOT_FOUND', kind: 'RETURNED', share: 10 },
+  ] as { code: string; kind: 'REFUSED_AT_DOOR' | 'RETURNED'; share: number }[],
   questions: [
     { product: 0, hoursAgo: 5, text: 'Is this available in XXL in navy?' },
     { product: 3, hoursAgo: 26, text: 'Will the colour fade after washing?' },
