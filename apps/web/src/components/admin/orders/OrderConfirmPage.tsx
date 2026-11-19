@@ -13,6 +13,8 @@ import type { OrderListData } from '@/lib/admin-orders/list';
 import { listHref, type ListQuery } from '@/lib/admin-orders/model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import type { CommandSpec } from '@/lib/admin-orders/spec';
+import type { CourierScoreCardView } from '@/lib/admin-orders/courier-score';
+import { PROCESSING_TAGS, type ProcessingTag } from '@/lib/admin-orders/processing-tags';
 import { t, type Dict } from '@/lib/i18n';
 import { formatNumber } from '@/components/admin/products/model';
 import { PageHead, SectionTabs } from '../shell/ShellParts';
@@ -89,7 +91,7 @@ function HistoryCard({ h }: { h: ApprovalCard }) {
   );
 }
 
-export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null, cards = null, desk = null, deskWords = null, noAnswer = {} }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null; /** PR 1064: the Processing view's card grid (the orders' own detail reads); null: the queue and call card. */ cards?: OrderDetailView[] | null; /** PR 1120: the call desk over the grid (prototype v5) and its words. */ desk?: od.CallDesk | null; deskWords?: Dict | null; noAnswer?: Record<string, CommandSpec> }) {
+export function OrderConfirmPage({ view, query, list, chosen, oldest, open, history = null, rulesConfirmed = null, mergeLine = null, cards = null, desk = null, deskWords = null, noAnswer = {}, tags = {}, tag = null, scores = {} }: { view: AdminView; query: ListQuery; list: OrderListData; chosen: OrderDetailView | null; oldest: string | null; open: string | null; history?: ApprovalCard | null; rulesConfirmed?: number | null; mergeLine?: string | null; /** PR 1064: the Processing view's card grid (the orders' own detail reads); null: the queue and call card. */ cards?: OrderDetailView[] | null; /** PR 1120: the call desk over the grid (prototype v5) and its words. */ desk?: od.CallDesk | null; deskWords?: Dict | null; noAnswer?: Record<string, CommandSpec>; /** PR 1127: each card's reasons (prototype chips), the chosen chip (?tag=) and each card's courier score. */ tags?: Record<string, ProcessingTag[]>; tag?: ProcessingTag | null; scores?: Record<string, CourierScoreCardView> }) {
   const d = view.dict;
   const n = (x: number) => formatNumber(x, view.locale);
   const toConfirm = list.counts.toConfirm ?? 0;
@@ -175,15 +177,45 @@ export function OrderConfirmPage({ view, query, list, chosen, oldest, open, hist
       } />
       <SectionTabs view={view} current="ordersConfirm" />
       {desk && deskWords ? <CallDeskCards d={deskWords} desk={desk} w={(k, v) => t(deskWords, `cl.${k}`, v)} n={n} /> : null}
-      <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
-      {mergeLine ? (
+      {cards ? (
+        <>
+          {/* PR 1127 (prototype v5): the reasons as chips (All, No stock, No answer, Suspicious, Merge needed, Advance asked) beside the merge line; the other lists stay one press away */}
+          <div className="a2-between o6-tagbar a2-mt12">
+            <nav className="a2-views" aria-label={t(d, 'orders.proc.tagAll')} data-testid="processing-tags">
+              <Link className={`a2-view${tag ? '' : ' on'}`} href={listHref('confirm', query)} aria-current={tag ? undefined : 'page'} scroll={false}>
+                {t(d, 'orders.proc.tagAll')}
+                <span className="a2-cnt">{n(cards.length)}</span>
+              </Link>
+              {PROCESSING_TAGS.map((k) => (
+                <Link key={k} className={`a2-view${tag === k ? ' on' : ''}`} href={`${listHref('confirm', query)}${listHref('confirm', query).includes('?') ? '&' : '?'}tag=${k}`} aria-current={tag === k ? 'page' : undefined} scroll={false} data-tag={k}>
+                  {t(d, `orders.proc.tag.${k}`)}
+                  <span className="a2-cnt">{n(cards.filter((c) => (tags[c.id] ?? []).includes(k)).length)}</span>
+                </Link>
+              ))}
+            </nav>
+            {mergeLine ? (
+              <span className="a2-xs a2-mute" data-testid="orders-merge-line">
+                {mergeLine}
+              </span>
+            ) : null}
+          </div>
+          <details className="a2-more-opts a2-mt6" data-testid="processing-views">
+            <summary className="a2-sm">{t(d, 'orders.proc.views')}</summary>
+            <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
+          </details>
+        </>
+      ) : (
+        <ViewChips view={view} page="confirm" query={query} counts={list.counts} />
+      )}
+      {mergeLine && !cards ? (
         <p className="a2-sm a2-mute a2-mt12" data-testid="orders-merge-line">
           {mergeLine}
         </p>
       ) : null}
       {list.rows.length && cards ? (
         <>
-          <ProcessingCards view={view} cards={cards} noAnswer={noAnswer} />
+          {tag && !cards.some((c) => (tags[c.id] ?? []).includes(tag)) ? <p className="a2-sm a2-mute a2-mt12">{t(d, 'orders.proc.tagNone')}</p> : null}
+          <ProcessingCards view={view} cards={tag ? cards.filter((c) => (tags[c.id] ?? []).includes(tag)) : cards} noAnswer={noAnswer} tags={tags} scores={scores} />
           {list.next ? (
             <Link className="a2-btn sm a2-mt12" href={listHref('confirm', query, { cursor: list.next })}>
               {t(d, 'orders.list.next')}

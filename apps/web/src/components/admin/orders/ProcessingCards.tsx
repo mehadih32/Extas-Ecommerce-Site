@@ -8,12 +8,15 @@ import type { OrderDetailView } from '@/lib/admin-orders/detail';
 import { t } from '@/lib/i18n';
 import { ShellIcon } from '../shell/ShellIcon';
 import type { CommandSpec } from '@/lib/admin-orders/spec';
+import type { CourierScoreCardView } from '@/lib/admin-orders/courier-score';
+import type { ProcessingTag } from '@/lib/admin-orders/processing-tags';
 import { CommandButton, MoreMenu } from './OrderCommands';
 import { Chips } from './OrderTable';
 
 // PR 1120 (prototype v5): the card's own row is Approve, Ask for advance, No answer, Call and Cancel in this order; every
 // other command of the order stays one press away under "More" (nothing is lost, the dialogs and checks are the same).
 const ROW = ['confirm', 'advanceRequest', 'cancel'] as const;
+const TAG_TONE: Record<ProcessingTag, string> = { stock: 'bad', noanswer: 'warn', suspicious: 'bad', merge: 'info', advance: 'info' };
 const RENAME: Record<string, string> = { confirm: 'orders.proc.approve', advanceRequest: 'orders.proc.askAdvance', cancel: 'orders.proc.cancel' };
 
 /** The prototype's Cancel on a card is a quiet button: the same command without its red tone and icon. */
@@ -24,7 +27,7 @@ function plain(s: CommandSpec): CommandSpec {
   return c;
 }
 
-export function ProcessingCards({ view, cards, noAnswer = {} }: { view: AdminView; cards: OrderDetailView[]; /** PR 1120: order id → the "No answer" dialog on its open call (none: no button). */ noAnswer?: Record<string, CommandSpec> }) {
+export function ProcessingCards({ view, cards, noAnswer = {}, tags = {}, scores = {} }: { view: AdminView; cards: OrderDetailView[]; /** PR 1120: order id → the "No answer" dialog on its open call (none: no button). */ noAnswer?: Record<string, CommandSpec>; /** PR 1127: order id → its reasons (prototype chips) and its courier score card. */ tags?: Record<string, ProcessingTag[]>; scores?: Record<string, CourierScoreCardView> }) {
   const d = view.dict;
   const named = (s: CommandSpec): CommandSpec => (RENAME[s.id] ? { ...s, label: t(d, RENAME[s.id]!) } : s);
   return (
@@ -44,8 +47,13 @@ export function ProcessingCards({ view, cards, noAnswer = {} }: { view: AdminVie
               <div className="a2-xs a2-mute">{t(d, 'orders.proc.pay', { pay: o.money.chip.label, units: o.units })}</div>
             </div>
           </div>
-          {o.flags.length ? (
+          {o.flags.length || (tags[o.id] ?? []).length ? (
             <div className="o6-qf">
+              {(tags[o.id] ?? []).map((k) => (
+                <span key={k} className={`a2-pill ${TAG_TONE[k]}`} data-tag={k}>
+                  {t(d, `orders.proc.tag.${k}`)}
+                </span>
+              ))}
               <Chips chips={o.flags} />
             </div>
           ) : null}
@@ -70,6 +78,24 @@ export function ProcessingCards({ view, cards, noAnswer = {} }: { view: AdminVie
                 ) : null}
               </div>
             ))}
+          {/* PR 1127 (prototype v5): the courier score on the card — the score out of 10 and each figure behind it */}
+          {scores[o.id] ? (
+            <div className="o6-cs" data-testid="processing-score">
+              <div className="o6-csn">
+                <b>{scores[o.id]!.pill.text.split(' · ')[0]}</b>
+                <span className="a2-xs a2-mute">{t(d, 'orders.proc.score')}</span>
+              </div>
+              <div className="o6-csg">
+                {scores[o.id]!.rows.map((r) => (
+                  <div key={r.key} className="a2-between a2-xs">
+                    <span>{r.label}</span>
+                    <b>{r.value}</b>
+                  </div>
+                ))}
+              </div>
+              <p className="a2-xs o6-csr">{scores[o.id]!.reason}</p>
+            </div>
+          ) : null}
           <div className="a2-cmds o6-qa">
             {(() => {
               const all = [...o.primary, ...o.more];

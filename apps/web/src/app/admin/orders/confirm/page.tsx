@@ -16,6 +16,8 @@ import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { approvalCard } from '@/lib/admin-orders/approval';
 import { CALLS_API } from '@/lib/admin-orders/calls-view';
+import { courierScoreCardView, type CourierScoreCardView } from '@/lib/admin-orders/courier-score';
+import { PROCESSING_TAGS, processingTags, type ProcessingTag } from '@/lib/admin-orders/processing-tags';
 import type { CommandSpec } from '@/lib/admin-orders/spec';
 import { DO_PERM, commandTexts, loadOrderDetail } from '@/lib/admin-orders/detail';
 import { ageText, loadOrderList, parseListQuery } from '@/lib/admin-orders/list';
@@ -103,11 +105,25 @@ export default async function ConfirmQueuePage({ searchParams }: { searchParams:
         };
       }
   }
+  // PR 1127 (prototype v5): each card's reasons as the prototype's chips (?tag=), and its courier score on the card
+  const histSetting = cards?.length ? await access.deps.resolver.value('risk.history', { storeId: MOTHER_STORE_ID }).catch(() => null) : null;
+  const cardIds = (cards ?? []).map((c) => c.id);
+  const tags: Map<string, ProcessingTag[]> = cardIds.length ? await processingTags(access.deps.db, MOTHER_STORE_ID, cardIds, histSetting?.noAnswerOutcomes ?? []) : new Map();
+  const tagAsked = one(sp.tag);
+  const tag = (PROCESSING_TAGS as readonly string[]).includes(tagAsked ?? '') ? (tagAsked as ProcessingTag) : null;
+  const scores: Record<string, CourierScoreCardView> = {};
+  if (cards?.length && perms.has('orders.risk.read'))
+    await Promise.all(
+      cards.map(async (c) => {
+        const r = await od.orderCourierScore(rd, who, c.id).catch(() => null);
+        if (r?.enabled && r.result) scores[c.id] = courierScoreCardView(view, r.result);
+      }),
+    );
   const wantDo = one(sp.do) ?? null;
   const open = wantDo && DO_PERM[wantDo] && perms.has(DO_PERM[wantDo]) ? wantDo : null;
   return (
     <CommandsProvider texts={commandTexts(view)}>
-      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} cards={cards} desk={desk} deskWords={desk ? deskWords(view) : null} noAnswer={noAnswer} />
+      <OrderConfirmPage view={view} query={q} list={list} chosen={chosen} oldest={oldest ? ageText(view, oldest, now) : null} open={open} history={history} rulesConfirmed={batch ? batch.moved.length : null} mergeLine={mergeLine} cards={cards} desk={desk} deskWords={desk ? deskWords(view) : null} noAnswer={noAnswer} tags={Object.fromEntries(tags)} tag={tag} scores={scores} />
     </CommandsProvider>
   );
 }
