@@ -188,8 +188,12 @@ export default async function AgentsTeamPage() {
                       {live?.workingNow ? c('state.running') : c('state.paused')}
                     </span>
                   </b>
-                  <span className="a2-xs a2-mute">{a.role}</span>
+                  {/* prototype v5 (m-ai.js renderAgents): one short line of what the agent does; the full role stays on its profile */}
+                  <span className="a2-xs a2-mute">{c(`job.${a.key}`)}</span>
                 </div>
+              </div>
+              <div className="a2-xs ag-now" data-testid={`agents-now-${a.key}`}>
+                {live?.workingNow ? c('now.working') : live?.enabled && !aiOn ? c('now.waiting') : c('now.paused')}
               </div>
               <div className="ag-counts a2-xs a2-mute">
                 <span>{c('team.open', { n: a.openCount })}</span>
@@ -207,13 +211,13 @@ export default async function AgentsTeamPage() {
               {live ? (
                 <div className="ag-ctl" data-testid={`agents-controls-${a.key}`}>
                   <div className="ag-ctl-row">
-                    <span className="a2-xs a2-mute">{cc('agents.switchLabel', { name })}</span>
+                    <span className="a2-xs a2-mute">{c('now.pause')}</span>
                     {canControl ? (
                       <AgentSwitch agentKey={a.key} on={live.enabled} label={cc('agents.switchLabel', { name })} pausedText={cc('toast.paused', { name })} resumedText={cc('toast.resumed', { name })} failedText={cc('toast.failed', { name })} />
                     ) : null}
                   </div>
                   <div className="ag-ctl-row">
-                    <span className="a2-xs a2-mute">{cc('agents.model.label')}</span>
+                    <span className="a2-xs a2-mute">{c('now.company')}</span>
                     {canControl ? (
                       <ModelPickSelect agentKey={a.key} selected={live.selectedProvider} options={modelOptions} label={cc('agents.model.selectLabel', { name })} changedText={cc('agents.model.toastChanged', { name })} failedText={cc('agents.model.toastFailed', { name })} notReadyText={cc('agents.model.toastNotReady')} />
                     ) : (
@@ -221,7 +225,7 @@ export default async function AgentsTeamPage() {
                     )}
                   </div>
                   <div className="ag-ctl-row">
-                    <span className="a2-xs a2-mute">{cc('agents.schedule.label')}</span>
+                    <span className="a2-xs a2-mute">{c('now.when')}</span>
                     {canControl ? (
                       <ScheduleEditor
                         agentKey={a.key}
@@ -241,7 +245,7 @@ export default async function AgentsTeamPage() {
                     )}
                   </div>
                   <div className="ag-ctl-row">
-                    <span className="a2-xs a2-mute">{cc('agents.keepOn.label')}</span>
+                    <span className="a2-xs a2-mute">{c('now.keep')}</span>
                     {canControl ? (
                       <KeepOnSwitch agentKey={a.key} on={live.keepOnWhenMasterOff} label={cc('agents.keepOn.switchLabel', { name })} onText={cc('agents.keepOn.toastOn', { name })} offText={cc('agents.keepOn.toastOff', { name })} failedText={cc('agents.keepOn.toastFailed', { name })} />
                     ) : live.keepOnWhenMasterOff ? (
