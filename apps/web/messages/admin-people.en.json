@@ -127,21 +127,22 @@
       "headSub": "Who changed what, and who looked at customer data. Nothing here can be edited or removed.",
       "sub": {
         "changes": "Newest first; only the names of the fields that changed are shown, never their values.",
-        "views": "Every phone number or address opened is recorded, newest first."
+        "views": "Every phone number or address opened is recorded"
       },
       "kinds": {
         "changes": "Changes",
-        "views": "Customer data viewed"
+        "views": "Who viewed customer data"
       },
       "download": "Download",
       "filters": {
         "who": "Person",
-        "anyone": "Anyone",
+        "anyone": "Everyone",
         "text": "Words in the action",
         "from": "From",
         "to": "To",
         "apply": "Apply filters",
-        "clear": "Clear"
+        "clear": "Clear",
+        "more": "More filters"
       },
       "cols": {
         "when": "When",
