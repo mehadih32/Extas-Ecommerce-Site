@@ -159,7 +159,7 @@
       },
       "schedule": {
         "label": "Schedule",
-        "mode": { "always": "Always", "daily": "Daily", "weekly": "Weekly" },
+        "mode": { "always": "All the time", "daily": "Once a day", "weekly": "Once a week" },
         "selectLabel": "{name}: when its time-based work runs",
         "timeLabel": "{name}: clock time",
         "daysLabel": "{name}: which weekdays",

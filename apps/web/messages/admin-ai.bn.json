@@ -160,9 +160,9 @@
       "schedule": {
         "label": "সময়সূচি",
         "mode": {
-          "always": "সব সময়",
-          "daily": "প্রতিদিন",
-          "weekly": "সপ্তাহে"
+          "always": "সবসময়",
+          "daily": "দিনে একবার",
+          "weekly": "সপ্তাহে একবার"
         },
         "selectLabel": "{name}: সময়ভিত্তিক কাজ কখন হবে",
         "timeLabel": "{name}: কাঁটার সময়",

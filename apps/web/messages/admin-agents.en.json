@@ -164,6 +164,24 @@
         "digest": "Daily digest",
         "replies": "Reply drafts in Inbox"
       }
+    },
+    "job": {
+      "gyani": "Chief: finds out \"why\", assigns work, daily report",
+      "prohori": "Site health, security, backups",
+      "bhandari": "Products, photos, couriers, returns, ERP link",
+      "sawdagor": "Orders, checkout, combos, payments",
+      "shilpi": "Page design and photo checks",
+      "doot": "Blog, SEO, messages to customers (drafts)",
+      "tirondaj": "Paid ads only — never raises a budget without you"
+    },
+    "now": {
+      "working": "Working now",
+      "waiting": "Waiting — AI is off",
+      "paused": "Paused",
+      "company": "Company",
+      "when": "When it runs",
+      "pause": "Pause or run",
+      "keep": "Keep on when AI is off"
     }
   }
 }
