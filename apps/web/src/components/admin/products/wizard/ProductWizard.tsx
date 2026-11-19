@@ -166,8 +166,7 @@ export function ProductWizard(p: ProductWizardProps) {
   return (
     <div className="wzp" data-testid="wizard-bar" data-step={step}>
       <div className="wzp-top" data-testid="wizard-head">
-        <p className="ad-sub" style={{ margin: 0 }}>{t(d, 'products.wiz.head.sub')}</p>
-        <div className="wzp-actions" style={{ marginTop: 0 }}>
+        <div className="wzp-actions wzp-actions-r" style={{ marginTop: 0 }}>
           <button type="button" className="ad-btn" onClick={() => setQuick(true)} disabled={!p.can.write} data-testid="wizard-quick">
             {t(d, 'products.wiz.head.quick')}
           </button>
@@ -255,6 +254,7 @@ export function ProductWizard(p: ProductWizardProps) {
           <WizardPhone c={ctx} />
         ) : (
           <aside className="wzp-side" aria-label={t(d, 'products.wiz.preview')} data-testid="wizard-preview">
+            <PhoneHead d={d} />
             <div className="wzp-ph">
               <div className="wzp-phimg" style={{ background: 'var(--lm-sf2)' }}>
                 <span className="no">{t(d, 'products.wiz.noPhoto')}</span>
@@ -286,6 +286,16 @@ export function ProductWizard(p: ProductWizardProps) {
         </Modal>
       ) : null}
       {quick ? <QuickImport d={d} money={p.money} onClose={() => setQuick(false)} /> : null}
+    </div>
+  );
+}
+
+/** PR 1132 (prototype v5): the preview card's heading, "Phone preview · Changes as you type". */
+export function PhoneHead({ d }: { d: Dict }) {
+  return (
+    <div className="wzp-phh">
+      <b>{t(d, 'products.wiz.phH')}</b>
+      <span className="ad-mini">{t(d, 'products.wiz.phSub')}</span>
     </div>
   );
 }
