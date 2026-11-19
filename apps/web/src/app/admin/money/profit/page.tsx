@@ -90,6 +90,14 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
   const sheets = await Promise.all([prevMonthKey, lastMonthKey, thisMonthKey].map((mo) => monthSheet(access.deps.db, MOTHER_STORE_ID, mo, timeZone, today)));
   const money = moneyOf(currency, view.locale);
   const m = (minor: number) => formatMoney(minor, money);
+  // prototype v5 (Finance › Profit & loss): the two compare buttons name their own days ("vs 1–12 Oct", "vs all of October")
+  const ymd = (s: string) => new Date(`${s}T12:00:00Z`);
+  const dm = (s: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(view.locale, { timeZone: 'UTC', numberingSystem: 'latn', ...o }).format(ymd(s));
+  const sameRange = previousPeriod(q.from, q.to);
+  const dd = (s: string) => dm(s, { day: 'numeric' });
+  const mo = (s: string) => dm(s, { month: 'short' });
+  const sameLabel = sameRange.from.slice(0, 7) === sameRange.to.slice(0, 7) ? `${dd(sameRange.from)}–${dd(sameRange.to)} ${mo(sameRange.to)}` : `${dd(sameRange.from)} ${mo(sameRange.from)}–${dd(sameRange.to)} ${mo(sameRange.to)}`;
+  const fullLabel = dm(resolvePeriod('lastmonth', today).from, { month: 'long' });
   const dayText = (day: string) => new Intl.DateTimeFormat(view.locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn' }).format(new Date(`${day}T00:00:00Z`));
   const asked = QUICK_PERIODS.find((p) => p === sp.period);
   const current =
@@ -208,10 +216,10 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
           {mine === 'month' ? (
             <div className="pl-seg pl-seg-sm a2-mt6" role="group" data-testid="pl-cmp">
               <Link href={`${HERE}?period=month`} className={one(sp.cmp) === 'full' ? '' : 'on'}>
-                {t(d, 'lf.fp.st.vsSame')}
+                {t(d, 'lf.fp.st.vsSame', { range: sameLabel })}
               </Link>
               <Link href={`${HERE}?period=month&cmp=full`} className={one(sp.cmp) === 'full' ? 'on' : ''}>
-                {t(d, 'lf.fp.st.vsFull')}
+                {t(d, 'lf.fp.st.vsFull', { month: fullLabel })}
               </Link>
             </div>
           ) : null}
