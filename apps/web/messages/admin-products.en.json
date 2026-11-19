@@ -968,7 +968,9 @@
         "liveDone": "The product is live on the shop.",
         "scheduledDone": "Scheduled. The shop puts it live at that time.",
         "draftKept": "The draft is saved."
-      }
+      },
+      "phH": "Phone preview",
+      "phSub": "Changes as you type"
     },
     "cols": {
       "product": "Product",
