@@ -173,6 +173,16 @@ describe('pages built in the lanes that could not edit the shared files (PR 682-
     expect(reports.tabs.find((x) => x.id === 'packs')!.more).toBe(true);
   });
 
+  it("PR 1158: the Accounts & tools sub-tabs read as prototype v5 (Ad accounts, Refer a friend, Shopping feed)", () => {
+    const tools = landed.find((x) => x.id === 'marketing')!.tabs.find((x) => x.pages.some((p) => p.href === '/admin/marketing/referrals'))!;
+    const keyOf = (href: string) => tools.pages.find((p) => p.href === href)!.keys[0]!;
+    expect(label('en', `nav.${keyOf('/admin/marketing/ad-platforms')}`)).toBe('Ad accounts');
+    expect(label('en', `nav.${keyOf('/admin/marketing/referrals')}`)).toBe('Refer a friend');
+    expect(label('en', `nav.${keyOf('/admin/marketing/merchant-feed')}`)).toBe('Shopping feed');
+    expect(label('bn', `nav.${keyOf('/admin/marketing/ad-platforms')}`)).toBe('অ্যাড অ্যাকাউন্ট');
+    expect(label('bn', `nav.${keyOf('/admin/marketing/merchant-feed')}`)).toBe('শপিং ফিড');
+  });
+
   it('every pending page has a key, a permission and words in both languages (tab words when it shows as a tab)', () => {
     for (const p of PENDING) {
       expect(p.page.href.startsWith('/admin/'), p.key).toBe(true);

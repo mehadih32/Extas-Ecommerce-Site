@@ -9,7 +9,7 @@ describe('admin shell settings (v33)', () => {
     for (const [key, spec] of Object.entries(adminShellSettings)) {
       expect(registry[key as keyof typeof registry]).toBe(spec);
       // PR 12 follow-up 209 moved admin.shell to v263 (recent pages, key jumps); the others stay at 33.
-      expect(spec.version, key).toBe(key === 'admin.shell' ? 263 : key === 'admin.loginPath' ? 708 : 33);
+      expect(spec.version, key).toBe(key === 'admin.shell' ? 263 : key === 'admin.loginPath' ? 708 : key === 'admin.dashboard' ? 1101 : 33);
       expect(spec.isOwnerData, key).toBe(false);
       expect(spec.isPublic, key).toBe(false);
       expect(spec.schema.safeParse(spec.default).success, key).toBe(true);

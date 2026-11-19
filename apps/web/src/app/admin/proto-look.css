@@ -117,3 +117,8 @@ html:has(.adm2.lm-shell), body:has(.adm2.lm-shell) { background: var(--lm-bg); c
 .adm2.lm-shell .lm-ct:has(.a2-bar-in) > .a2-bar { display: none; }
 .adm2.lm-shell .a2-bar-in { margin: 0 0 16px; }
 .adm2 .a3-dsw-l { flex-wrap: wrap; }
+/* Batch 2026-11-19-1 (device gate): on the smallest phones (320 px) the Home design switch wraps instead of sticking
+   out, and every design button is at least one tap wide. */
+.adm2 .a3-dsw-l { min-width: 0; max-width: 100%; }
+.adm2 .a3-dsw .a3-seg { max-width: 100%; min-width: 0; flex-wrap: wrap; }
+@media (max-width: 1023px), (pointer: coarse) { .adm2 :is(.a3-dsw, .a3-rng) .a3-seg :is(a, button) { min-width: var(--lm-tap); justify-content: center; } }
