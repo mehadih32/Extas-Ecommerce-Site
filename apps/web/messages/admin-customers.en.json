@@ -1096,8 +1096,13 @@
       },
       "tiers": "Customer grades (New, Verified, Gold) come with their own switch later; points do not change a grade.",
       "someone": "A customer",
-      "top": { "title": "Top point earners", "pts": "{n} pts" },
-      "bigWallets": { "title": "Biggest wallet balances" }
+      "top": {
+        "title": "Top point earners",
+        "pts": "{n} pts"
+      },
+      "bigWallets": {
+        "title": "Biggest wallet balances"
+      }
     },
     "notes": {
       "title": "Tags & notes",
@@ -1125,7 +1130,8 @@
       "busy": "Preparing…",
       "cancel": "Cancel",
       "done": "Customers in the file: {n}. It is in the log with your reason.",
-      "tooMany": "{n} customers are more than one file holds ({max}). Narrow the list first."
+      "tooMany": "{n} customers are more than one file holds ({max}). Narrow the list first.",
+      "off": "Export is off. The owner turns it on in Customers › Settings."
     },
     "wb": {
       "title": "Campaigns",
