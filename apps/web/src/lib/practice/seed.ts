@@ -13,7 +13,7 @@
 // Tables that are not on `main` yet are skipped (see docs/demo/admin-proto-v5/gap/PRACTICE-TODO.md).
 import { createHash } from 'node:crypto';
 import { completeExtras } from './demo-extras';
-import { seedSampleBooks, seedSampleExtras } from './sample-books';
+import { isSampleStore, seedSampleBooks, seedSampleExtras } from './sample-books';
 import { pickGrade, practiceLevels } from './grades';
 import { practiceId } from './ids';
 import { PRACTICE_PHONE_PREFIX, type Prisma, type PrismaClient } from '@extas/db/client';
@@ -370,6 +370,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     const done = await ensureCatalogue(db, storeId, planProducts(makeRng(SEED), storeId, minor), minor, now);
     // PR 1155: the sample store's money world (cashbook, staff pay, cost heads) when it is not there yet; never on a working shop
     if (rich) Object.assign(done, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
+    // PR 1156: the sample store seeded by the live command (no ads then) gets the practice ads once
+    if (rich && (await isSampleStore(db, storeId)) && (await db.adSpendDaily.count({ where: { storeId } })) === 0) Object.assign(done, await seedPracticeAds(db, storeId, store.currency, minor, makeRng(SEED), now));
     return { seeded: false, reason: 'already', counts: done };
   }
 
@@ -930,7 +932,7 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   await db.checkoutDraft.createMany({ data: drafts, skipDuplicates: true });
   counts.incomplete = drafts.length;
 
-  if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now, !opts.richAnywhere));
+  if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now, !opts.richAnywhere || (await isSampleStore(db, storeId))));
   // PR 1155: the sample store's money world (cashbook, staff pay, cost heads); sample-books.ts does nothing on a working shop
   if (rich) Object.assign(counts, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
 
@@ -942,16 +944,11 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
  * reviews on the sample products (Reports › Products, the product pages). Every id comes from the row's own key, so a
  * second run adds nothing. Ad accounts are never enabled or connected; nothing leaves the system.
  */
-async function seedRichExtras(
-  db: Db,
-  storeId: number,
-  currency: string,
-  minor: (taka: number) => number,
-  rng: ReturnType<typeof makeRng>,
-  plan: ProductPlan,
-  now: Date,
-  withAds: boolean,
-): Promise<Record<string, number>> {
+/**
+ * PR 724 / 880, split out by PR 1156: the practice ad accounts, campaigns and daily spend. Ad spend is read straight by the profit
+ * and cost reports (no practice switch there), so this runs on the sample store only (`isSampleStore`), never on a working shop.
+ */
+export async function seedPracticeAds(db: Db, storeId: number, currency: string, minor: (taka: number) => number, rng: ReturnType<typeof makeRng>, now: Date): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const accounts: Prisma.AdAccountCreateManyInput[] = [];
@@ -959,7 +956,7 @@ async function seedRichExtras(
   const spend: Prisma.AdSpendDailyCreateManyInput[] = [];
   // PR 880: the ad accounts and their spend are made on the sample store only. Ad spend is read straight by the profit and
   // cost reports (no practice switch there), so on the owner's own store it would mix with real ad money.
-  for (const a of withAds ? RICH_ADS : []) {
+  for (const a of RICH_ADS) {
     const accountId = practiceId(`adaccount:${a.platform}`);
     accounts.push({ id: accountId, storeId, platform: a.platform, externalId: `practice-${a.platform.toLowerCase()}`, name: a.account, currency, enabled: false });
     for (const [ci, name] of a.campaigns.entries()) {
@@ -995,6 +992,20 @@ async function seedRichExtras(
   await db.adSpendDaily.createMany({ data: spend, skipDuplicates: true });
   counts.adAccounts = accounts.length;
   counts.adSpendRows = spend.length;
+  return counts;
+}
+
+async function seedRichExtras(
+  db: Db,
+  storeId: number,
+  currency: string,
+  minor: (taka: number) => number,
+  rng: ReturnType<typeof makeRng>,
+  plan: ProductPlan,
+  now: Date,
+  withAds: boolean,
+): Promise<Record<string, number>> {
+  const counts: Record<string, number> = withAds ? await seedPracticeAds(db, storeId, currency, minor, rng, now) : { adAccounts: 0, adSpendRows: 0 };
 
   const colourName = new Map(DEMO_PACK.colours.map((c) => [c.key, c.nameEn]));
   const sizeLabel = new Map(DEMO_PACK.sizes.map((z) => [z.key, z.label]));

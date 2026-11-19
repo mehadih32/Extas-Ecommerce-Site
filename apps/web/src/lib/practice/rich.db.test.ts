@@ -52,6 +52,9 @@ describe.skipIf(!HAS_TEST_DB)('rich sample data on PostgreSQL (PR 724)', () => {
     expect(await db.adSpendDaily.count({ where: { storeId: sample } })).toBe(r.counts.adSpendRows);
     expect(r.counts.adSpendRows).toBeGreaterThan(RICH.adDays * 4); // 6 campaigns over RICH.adDays days (the prototype's 336 rows)
     expect(await db.review.count({ where: { storeId: sample, status: 'APPROVED' } })).toBeGreaterThan(40);
+    // PR 1156: every returned practice parcel has its reason, on the sample store
+    const returnedIds = (await db.order.findMany({ where: { storeId: sample, isPractice: true, status: 'RETURNED' }, select: { id: true } })).map((o) => o.id);
+    expect(await db.returnRecord.count({ where: { storeId: sample, orderId: { in: returnedIds }, reasonCode: { not: null } } })).toBe(returnedIds.length);
     // every status of the plan is there
     const statuses = await db.order.groupBy({ by: ['status'], where: { storeId: sample, isPractice: true } });
     expect(statuses.length).toBeGreaterThanOrEqual(8);
