@@ -615,6 +615,18 @@
         "killSwitch": "Kill switch",
         "killSwitchHelp": "On: every increase is refused and every active campaign is paused at once. Always live, even with the ceilings above off."
       }
-    }
+    },
+    "cardSub": {
+      "meta": "Ads, catalog, Messenger orders",
+      "google": "Search and Shopping ads",
+      "tiktok": "Video ads"
+    },
+    "cardOn": "Connected",
+    "cardOff": "Not connected",
+    "cardFix": "Fix tracking",
+    "cardDisconnect": "Disconnect",
+    "cardConnect": "Connect",
+    "cardMore": "Campaigns and settings",
+    "cardImport": "Import now"
   }
 }
