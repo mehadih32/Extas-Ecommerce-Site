@@ -36,7 +36,8 @@
       "aiBest": "{name} brings the most profit after ads ({profit}).",
       "aiBestCh": "{name} brings the most for every {cur}1 ({per}).",
       "aiWeak": "{name} is the weakest ({per} per {cur}1) — change the audience or photos, or cut the budget.",
-      "aiNone": "No ad spend in this period yet."
+      "aiNone": "No ad spend in this period yet.",
+      "msgOpen": "Open message campaigns"
     },
     "ac": {
       "title": "Ad campaigns",
@@ -95,7 +96,7 @@
     "mc": {
       "title": "Message campaigns",
       "sub": "SMS and WhatsApp offers to your own customers — the cheapest sales you can get.",
-      "new": "New message campaign",
+      "new": "New campaign",
       "kSent": "Messages sent",
       "kSentSub": "{n} campaigns",
       "kOrders": "Orders from messages",
@@ -103,7 +104,7 @@
       "kPer": "Sales per {cur}1 spent",
       "kPerSub": "Message cost {x}",
       "risk": "{n} customers have not ordered in {days}+ days. A \"we miss you\" message to them is the cheapest sale you can make.",
-      "riskGo": "Write it now",
+      "riskGo": "Write to them",
       "campaigns": "Campaigns",
       "col": {
         "campaign": "Campaign",
@@ -144,7 +145,12 @@
       "made": "Made by you",
       "ready": "Ready-made",
       "msg": "Message",
-      "guide": "Only customers who agreed to messages get them. Phone numbers are sent to Meta and Google in locked (hashed) form; they never see the numbers themselves."
+      "guide": "Only customers who agreed to messages get them. Phone numbers are sent to Meta and Google in locked (hashed) form; they never see the numbers themselves.",
+      "updateNow": "Update now",
+      "updating": "Updating…",
+      "updated": "Audiences counted again",
+      "updateFailed": "Could not update. Try again.",
+      "yours": "Your audiences"
     },
     "cal": {
       "title": "Marketing calendar",

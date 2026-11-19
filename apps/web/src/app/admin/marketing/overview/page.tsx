@@ -156,6 +156,10 @@ export default async function MarketingOverviewPage({ searchParams }: { searchPa
               <b>{money(o.messages.costMinor)}</b>
             </div>
           </div>
+          {/* PR 1125 (prototype v5): the card's own way to the message campaigns */}
+          <Link className="a2-btn sm a2-mt12" href="/admin/marketing/message-campaigns" data-testid="mkt-messages-open">
+            {f('ov.msgOpen')}
+          </Link>
         </section>
       </div>
       <section className="a2-card a2-mt12" data-testid="mkt-daily">

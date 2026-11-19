@@ -12,7 +12,9 @@ import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { TestSend } from '@/components/admin/v5/CampaignParts';
-import { Chips, GuideNote, Kpi, KpiGrid } from '@/components/admin/lane-f/Parts';
+import { Chips, GuideNote, Kpi, KpiGrid, PeriodBar } from '@/components/admin/lane-f/Parts';
+import { DEFAULT_PERIOD, PERIOD_KEYS, periodKey, resolvePeriod } from '@/lib/lane-f/period';
+import { dayOf } from '@/lib/admin-orders/range';
 import { withLaneF } from '@/lib/admin-lane-f';
 import { moneyOf, numOf, perOf, symbolOf } from '@/lib/lane-f/format';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
@@ -43,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t(view.dict, 'w5a.camp.metaTitle')} · ${t(view.dict, 'shell.admin')}`, robots: { index: false, follow: false } };
 }
 
-export default async function MessageCampaignsPage({ searchParams }: { searchParams: Promise<{ channel?: string }> }) {
+export default async function MessageCampaignsPage({ searchParams }: { searchParams: Promise<{ channel?: string; period?: string }> }) {
   const deps = adminDeps();
   const [plain, access, q] = await Promise.all([adminView(deps), pageAccess('messages.journey.read', deps, MOTHER_STORE_ID), searchParams]);
   const view = withLaneF(withW5a(plain));
@@ -59,7 +61,29 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
   const c = (k: string, v?: Record<string, string | number>) => t(d, `w5a.camp.${k}`, v);
   const channel = FILTERS.some(([v]) => v && v === q.channel) ? q.channel : undefined;
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const o = await cu.campaignOverview(customersDeps(access.deps), who, channel);
+  const all = await cu.campaignOverview(customersDeps(access.deps), who, channel);
+  // PR 1125 (prototype v5): the five one-press periods; a campaign counts in the period it was sent (or made) in
+  const period = periodKey(q.period);
+  const span = resolvePeriod(period, dayOf(new Date(), view.timeZone));
+  const inSpan = (r: cu.OverviewRow) => {
+    const day = dayOf(r.scheduledAt ?? r.createdAt, view.timeZone);
+    return day >= span.from && day <= span.to;
+  };
+  const rowsIn = all.rows.filter(inSpan);
+  const sum = (k: 'sent' | 'costMinor' | 'deliveredOrders' | 'deliveredValueMinor') => rowsIn.reduce((a, r) => a + r[k], 0);
+  const o = {
+    ...all,
+    rows: rowsIn,
+    totals: { ...all.totals, sent: sum('sent'), costMinor: sum('costMinor'), deliveredOrders: sum('deliveredOrders'), deliveredValueMinor: sum('deliveredValueMinor') },
+    salesPerCost: sum('costMinor') ? sum('deliveredValueMinor') / sum('costMinor') : null,
+  };
+  const link = (over: { period?: string; channel?: string }) => {
+    const ch = over.channel ?? channel ?? '';
+    const pe = over.period ?? period;
+    const u = new URLSearchParams({ ...(ch ? { channel: ch } : {}), ...(pe !== DEFAULT_PERIOD ? { period: pe } : {}) });
+    const qs = u.toString();
+    return qs ? `${HERE}?${qs}` : HERE;
+  };
   const canTest = access.guard.permissions?.has('messages.campaigns.write') ?? false;
   const templates = canTest
     ? (await access.deps.db.notificationTemplate.findMany({ where: { storeId: MOTHER_STORE_ID, archivedAt: null, channel: { in: ['SMS', 'WHATSAPP', 'EMAIL'] } }, orderBy: [{ name: 'asc' }, { channel: 'asc' }], take: 300, select: { id: true, key: true, name: true, channel: true, locale: true } }))
@@ -78,7 +102,7 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
   const sentRows = o.rows.filter((r) => r.sent > 0);
   const stateOf = (r: cu.OverviewRow) => (r.sent > 0 ? 'sentState' : r.scheduledAt ? 'schedState' : 'otherState');
   const stateTone = (r: cu.OverviewRow) => (r.sent > 0 ? 'ok' : r.scheduledAt ? 'info' : '');
-  const chips = FILTERS.map(([v, k]) => ({ key: v, label: c(k), href: v ? `${HERE}?channel=${v}` : HERE }));
+  const chips = FILTERS.map(([v, k]) => ({ key: v, label: c(k), href: link({ channel: v }) }));
   const autos = (journeys?.journeys ?? []).slice(0, 6); // hardcode-ok: a short list on this page; the rest is on its own page
 
   return (
@@ -95,6 +119,7 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
         }
       />
       <SectionTabs view={view} current={KEY} />
+      <PeriodBar current={period} note={t(d, 'lf.per.vs')} items={PERIOD_KEYS.map((k) => ({ key: k, label: t(d, `lf.per.${k}`), href: link({ period: k }) }))} testId="camp-period" />
       <KpiGrid cols={4}>
         <Kpi testId="camp-k-sent" label={f('kSent')} value={n(o.totals.sent)} sub={f('kSentSub', { n: sentRows.length })} />
         <Kpi testId="camp-k-orders" label={f('kOrders')} value={n(o.totals.deliveredOrders)} />
@@ -104,8 +129,8 @@ export default async function MessageCampaignsPage({ searchParams }: { searchPar
       {atRisk > 0 ? (
         <div className="a2-note warn a2-mt12" data-testid="camp-risk">
           <span>{f('risk', { n: n(atRisk), days: RISK_DAYS })}</span>{' '}
-          <Link className="a2-lnk" href="/admin/messages/campaigns/new">
-            {f('riskGo')} →
+          <Link className="a2-btn sm" href="/admin/messages/campaigns/new" data-testid="camp-risk-go">
+            {f('riskGo')}
           </Link>
         </div>
       ) : null}

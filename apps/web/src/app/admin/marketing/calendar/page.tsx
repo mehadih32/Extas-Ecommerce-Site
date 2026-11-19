@@ -16,6 +16,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { CalendarAct, PlanForm, type CalendarFormTexts, type PlanFormWords } from '@/components/admin/marketing/CalendarForms';
 import { CalendarBars, CalendarMonth, calendarWords, itemTitle } from '@/components/admin/marketing/CalendarView';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
@@ -171,8 +172,10 @@ export default async function MarketingCalendarPage(props: Props) {
         title={t(d, 'lf.cal.title')}
         sub={t(d, 'lf.cal.sub')}
         right={
-          canWrite && on ? (
-            <a className="a2-btn pri" href="#mc-plan" data-testid="mc-add-top">
+          canWrite ? (
+            // PR 1125 (prototype v5): "Add to calendar" is always in the head; while the calendar is off it opens its switch
+            <a className="a2-btn pri" href={on ? '#mc-plan' : '#mc-card'} data-testid="mc-add-top">
+              <ShellIcon name="plus" size={15} />
               {t(d, 'lf.cal.add')}
             </a>
           ) : undefined
@@ -206,14 +209,14 @@ export default async function MarketingCalendarPage(props: Props) {
             ))}
           </nav>
           <div className="mc-nav a2-mt12" data-testid="mc-nav">
-            <Link className="a2-btn" href={href({ from: month ? monthStep(o.range, -1) : addDays(o.range.from, -o.range.days) })} data-testid="mc-earlier">
-              {month ? g('month.earlier') : g('earlier')}
+            <Link className="a2-btn" href={href({ from: month ? monthStep(o.range, -1) : addDays(o.range.from, -o.range.days) })} aria-label={month ? g('month.earlier') : undefined} title={month ? g('month.earlier') : undefined} data-testid="mc-earlier">
+              {month ? '‹' : g('earlier')}
             </Link>
             <Link className="a2-btn" href={href({ from: null })} data-testid="mc-today">
               {month ? g('month.this') : g('today')}
             </Link>
-            <Link className="a2-btn" href={href({ from: month ? monthStep(o.range, 1) : addDays(o.range.from, o.range.days) })} data-testid="mc-later">
-              {month ? g('month.later') : g('later')}
+            <Link className="a2-btn" href={href({ from: month ? monthStep(o.range, 1) : addDays(o.range.from, o.range.days) })} aria-label={month ? g('month.later') : undefined} title={month ? g('month.later') : undefined} data-testid="mc-later">
+              {month ? '›' : g('later')}
             </Link>
             <span className="a2-sm a2-mute" data-testid="mc-range">
               {month ? g('month.range', { month: monthName(o.range.from) }) : g('range', { from: long(o.range.from), to: long(o.range.to), days: o.range.days })}
@@ -287,7 +290,7 @@ export default async function MarketingCalendarPage(props: Props) {
         </>
       )}
 
-      <div className="a2-mt12">
+      <div id="mc-card" className="a2-mt12">
         <FieldsCard url={API} screen={{ key: o.card.key, value: o.card.value, version: o.card.version }} fields={cardFields} texts={cardTexts} canEdit={canWrite} testId="mc-card" />
       </div>
     </div>
