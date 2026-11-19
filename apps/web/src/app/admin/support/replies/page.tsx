@@ -11,6 +11,7 @@ import * as sp from '@extas/support';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ReplyForm, ReplyRowActions } from '@/components/admin/v5/ReplyManager';
 import { V5Number, V5Switch } from '@/components/admin/v5/Parts';
+import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { adminDeps } from '@/lib/admin-auth';
 import { withW5a } from '@/lib/admin-v5-w5a';
@@ -58,12 +59,26 @@ export default async function RepliesPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="a2-z" data-testid="quick-replies" data-lm-ready="" data-on={list.enabled ? 'yes' : 'no'}>
-      <PageHead view={view} place={locateKey(KEY)} title={c('title')} sub={c('sub')} />
+      {/* PR 1124 (prototype v5): "Add quick reply" in the head; it opens the add box (or, while replies are off, the switch under More) */}
+      <PageHead
+        view={view}
+        place={locateKey(KEY)}
+        title={c('title')}
+        sub={c('sub')}
+        right={
+          canEdit ? (
+            <a className="a2-btn pri" href={list.enabled ? '#reply-add' : '#replies-more'} data-testid="reply-add-head">
+              <ShellIcon name="plus" size={15} />
+              {c('add')}
+            </a>
+          ) : null
+        }
+      />
       <SectionTabs view={view} current={KEY} />
       {!list.enabled ? <div className="a2-note a2-mt12">{c('off')}</div> : null}
       {list.enabled && list.top ? <div className="a2-note a2-mt12">{c('top', { name: list.top.shortcut, n: list.top.usedCount })}</div> : null}
       {list.enabled && canEdit ? (
-        <section className="a2-card a2-mt12" aria-label={c('add')}>
+        <section id="reply-add" className="a2-card a2-mt12" aria-label={c('add')}>
           <h2 className="a2-h3" style={{ marginBottom: 10 }}>
             {c('add')}
           </h2>
@@ -84,24 +99,43 @@ export default async function RepliesPage({ searchParams }: { searchParams: Prom
           </nav>
           <section className="a2-card" data-testid="reply-list">
             {shown.length ? (
-              <ul className="cr-rows" style={{ marginTop: 0 }}>
-                {shown.map((r) => (
-                  <li key={r.id} data-testid="reply-row" data-short={r.shortcut}>
-                    <div>
-                      <div className="a2-gap8" style={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                        <b className="a2-mono">/{r.shortcut}</b>
-                        <span className="a2-xs a2-mute">
-                          {c('colUsed')}: {r.usedCount}
-                        </span>
-                      </div>
-                      <div className="a2-sm a2-mt6" style={{ whiteSpace: 'pre-wrap' }}>
-                        {lang === 'bn' ? sp.replyBody(r, 'bn') : sp.replyBody(r, 'en')}
-                      </div>
-                    </div>
-                    {canEdit ? <ReplyRowActions dict={d} row={r} archived={showArchived} maxChars={list.maxChars} /> : null}
-                  </li>
-                ))}
-              </ul>
+              // PR 1124 (prototype v5): a table, Short name · Message · Used, with Edit and Archive (or Restore) on each row
+              <div className="a2-tblw">
+                <table className="a2-tbl" data-testid="reply-table">
+                  <thead>
+                    <tr>
+                      <th>{c('colShort')}</th>
+                      <th>{c('colText')}</th>
+                      <th className="r">{c('colUsed')}</th>
+                      {canEdit ? (
+                        <th>
+                          <span className="a2-sr">{c('edit')}</span>
+                        </th>
+                      ) : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map((r) => (
+                      <tr key={r.id} data-testid="reply-row" data-short={r.shortcut}>
+                        <td data-l={c('colShort')}>
+                          <b className="a2-mono">/{r.shortcut}</b>
+                        </td>
+                        <td data-l={c('colText')} className="a2-sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {lang === 'bn' ? sp.replyBody(r, 'bn') : sp.replyBody(r, 'en')}
+                        </td>
+                        <td data-l={c('colUsed')} className="r">
+                          {r.usedCount}
+                        </td>
+                        {canEdit ? (
+                          <td className="r">
+                            <ReplyRowActions dict={d} row={r} archived={showArchived} maxChars={list.maxChars} />
+                          </td>
+                        ) : null}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p className="a2-sm a2-mute">{showArchived ? c('noneArchived') : c('none')}</p>
             )}
@@ -110,7 +144,7 @@ export default async function RepliesPage({ searchParams }: { searchParams: Prom
         </>
       ) : null}
       {canEdit ? (
-        <details className="a2-card a2-mt12" data-testid="replies-more">
+        <details id="replies-more" className="a2-card a2-mt12" open={!list.enabled} data-testid="replies-more">
           <summary className="a2-h4">{t(d, 'w5a.more')}</summary>
           <div className="a2-stack a2-mt12" style={{ gap: 12 }}>
             <V5Switch dict={d} url={`${API}/settings`} before={switchValue} label={switchValue.enabled ? t(d, 'w5a.turnOff') : t(d, 'w5a.turnOn')} tone={switchValue.enabled ? '' : 'pri'} testId="replies-switch" />
