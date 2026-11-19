@@ -141,7 +141,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           ) : null}
         </form>
       </div>
-      {kinds.length > 1 ? (
+      {kinds.length > 0 ? (
         <Chips
           label={t(d, 'sup.channelLabel')}
           current={channel ?? ''}
