@@ -12,6 +12,7 @@ import { isArchivedState } from '@extas/combos/pure';
 import { t, type Dict } from '@/lib/i18n';
 import { ComboEditor } from './ComboEditor';
 import { FixedTab } from './FixedTab';
+import { ComboLedger, ledgerRows } from './ComboLedger';
 import { COMBOS_TABS, currencySymbol, money, nameIn, type CombosTab, type Lang } from './model';
 import { RulesTab } from './RulesTab';
 import { RuleWizard } from './RuleWizard';
@@ -46,6 +47,8 @@ export interface CombosScreenProps {
   report?: ReactNode;
   /** PR 829 (prototype v5): the four figures and the note above the lists (drawn by the server). */
   summary?: ReactNode;
+  /** PR 1129: sets sold in the last 30 days, by combo (the report's rows). */
+  sold?: Record<string, number>;
   /** PR 829: open "Build a combo" at once (`?make=1`). */
   openNew?: boolean;
   /** PR 762: the page's head (the shell's PageHead, drawn by the server: title, lines, guide button); the section's tab bar is the shell's. */
@@ -77,7 +80,7 @@ export function CombosScreen(props: CombosScreenProps) {
   const upsertRule = (r: AutoRuleView) => setRules((list) => (list.some((x) => x.id === r.id) ? list.map((x) => (x.id === r.id ? r : x)) : [r, ...list]));
   const hrefOf = (to: string, rule?: string) => {
     const q = new URLSearchParams();
-    if (to !== 'auto') q.set('tab', to);
+    if (to !== 'list') q.set('tab', to);
     if (rule) q.set('rule', rule);
     const s = q.toString();
     return s ? `${props.here}?${s}` : props.here;
@@ -114,6 +117,23 @@ export function CombosScreen(props: CombosScreenProps) {
       />
     );
   else if (tab === 'report') body = props.report ?? null;
+  else if (tab === 'list')
+    body = (
+      <ComboLedger
+        dict={d}
+        lang={lang}
+        fmt={fmt}
+        num={(n) => n.toLocaleString(locale)}
+        rows={ledgerRows(lang, combos, rules, props.sold ?? {})}
+        canPublish={props.perms.publish}
+        canWrite={props.perms.write}
+        onPrice={(id) => {
+          const c = combos.find((x) => x.id === id);
+          if (c) setEditing({ combo: c });
+        }}
+        ruleHref={(id) => hrefOf('new', id)}
+      />
+    );
   else if (tab === 'fixed')
     body = <FixedTab dict={d} lang={lang} fmt={fmt} symbol={symbol} combos={combos} hexes={hexes} photos={props.photos} perms={props.perms} onChange={upsert} onEdit={(c) => setEditing({ combo: c })} say={say} tiers={props.tiers} split={props.split ?? null} />;
   else
@@ -146,7 +166,7 @@ export function CombosScreen(props: CombosScreenProps) {
           </Link>
         ))}
       </nav>
-      {tab === 'auto' || tab === 'fixed' || tab === 'archive' ? props.summary : null}
+      {tab === 'list' || tab === 'auto' || tab === 'fixed' || tab === 'archive' ? props.summary : null}
       {body}
       {editing ? (
         <ComboEditor

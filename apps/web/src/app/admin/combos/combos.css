@@ -341,3 +341,25 @@
 .cb-more > summary { display: flex; align-items: center; min-height: var(--ad-tap); cursor: pointer; font-weight: 600; font-size: var(--ad-fs-small); }
 .cb-split { padding: 14px 16px; display: grid; gap: 4px; }
 .cb-split-sel { width: auto; max-width: 62%; min-height: var(--ad-tap); }
+/* PR 1129 (prototype v5): every combo in one table */
+.cb-ledger { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.cb-ledger-q { max-width: 320px; }
+.cb-ledger-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cb-ledger-chips .ad-chip.on { font-weight: 700; }
+.cb-ledger-tw { overflow-x: auto; }
+.cb-ledger-t { width: 100%; border-collapse: collapse; }
+.cb-ledger-t th { text-align: left; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px; border-bottom: 1px solid var(--ln, currentColor); }
+.cb-ledger-t td { padding: 10px 8px; border-bottom: 1px solid var(--ln, currentColor); vertical-align: middle; }
+.cb-ledger-t .r { text-align: right; }
+.cb-ledger-acts { display: inline-flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.cb-ledger-acts .ad-btn { min-height: 44px; }
+.cb-block { display: block; }
+.cb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.cb-state { font-size: 0.85em; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+@media (max-width: 720px) {
+  .cb-ledger-t thead { display: none; }
+  .cb-ledger-t, .cb-ledger-t tbody, .cb-ledger-t tr, .cb-ledger-t td { display: block; width: 100%; }
+  .cb-ledger-t td.r { text-align: left; }
+  .cb-ledger-t tr { padding: 8px 0; border-bottom: 1px solid var(--ln, currentColor); }
+  .cb-ledger-t td { border: 0; padding: 4px 0; }
+}

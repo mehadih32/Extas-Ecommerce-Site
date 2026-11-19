@@ -138,8 +138,8 @@ describe('PR 571 — the rule wizard form', () => {
   it('the tab comes from the address; anything else is the auto tab', () => {
     expect(combosTab('archive')).toBe('archive');
     expect(combosTab('fixed')).toBe('fixed');
-    expect(combosTab(undefined)).toBe('auto');
-    expect(combosTab('nope')).toBe('auto');
+    expect(combosTab(undefined)).toBe('list');
+    expect(combosTab('nope')).toBe('list');
   });
 
   it('a percentage is a whole number (Bengali digits too); empty is null; junk is NaN', () => {
