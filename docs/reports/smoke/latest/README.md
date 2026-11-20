@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-20 08:27 (Asia/Dhaka)
+# Smoke test · 2026-11-20 23:19 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `f84d76683053` · after deploy · result **PASS** (706 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -81,6 +81,7 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/marketing` | phone | 200 | `/admin/marketing` | ok | — |
 | `/admin/marketing/campaigns` | phone | 200 | `/admin/marketing/campaigns` | ok | — |
 | `/admin/marketing/overview` | phone | 200 | `/admin/marketing/overview` | ok | — |
+| `/admin/marketing/studio` | phone | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/money` | phone | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | phone | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
@@ -244,7 +245,6 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/marketing/ad-platforms/growth` | phone | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
 | `/admin/marketing/ad-platforms/briefs` | phone | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
 | `/admin/marketing/ad-platforms/campaigns` | phone | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
-| `/admin/marketing/studio` | phone | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/marketing/studio/motion` | phone | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/marketing/studio/models` | phone | 200 | `/admin/marketing/studio/models` | ok | — |
 | `/admin/marketing/studio/videos` | phone | 200 | `/admin/marketing/studio/videos` | ok | — |
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | phone | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1f1ba-7834-7ba3-95f1-dc2c9b357159` | phone | 200 | `/admin/reports/health/history/01a1f1ba-7834-7ba3-95f1-dc2c9b357159` | ok | — |
+| `/admin/reports/health/history/01a1f6d4-69ed-7b21-8337-353c81a5c2a0` | phone | 200 | `/admin/reports/health/history/01a1f6d4-69ed-7b21-8337-353c81a5c2a0` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -434,6 +434,7 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/marketing` | desktop | 200 | `/admin/marketing` | ok | — |
 | `/admin/marketing/campaigns` | desktop | 200 | `/admin/marketing/campaigns` | ok | — |
 | `/admin/marketing/overview` | desktop | 200 | `/admin/marketing/overview` | ok | — |
+| `/admin/marketing/studio` | desktop | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/money` | desktop | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | desktop | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
@@ -597,7 +598,6 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/marketing/ad-platforms/growth` | desktop | 200 | `/admin/marketing/ad-platforms/growth` | ok | — |
 | `/admin/marketing/ad-platforms/briefs` | desktop | 200 | `/admin/marketing/ad-platforms/briefs` | ok | — |
 | `/admin/marketing/ad-platforms/campaigns` | desktop | 200 | `/admin/marketing/ad-platforms/campaigns` | ok | — |
-| `/admin/marketing/studio` | desktop | 200 | `/admin/marketing/studio` | ok | — |
 | `/admin/marketing/studio/motion` | desktop | 200 | `/admin/marketing/studio/motion` | ok | — |
 | `/admin/marketing/studio/models` | desktop | 200 | `/admin/marketing/studio/models` | ok | — |
 | `/admin/marketing/studio/videos` | desktop | 200 | `/admin/marketing/studio/videos` | ok | — |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `1db44d2b159b` · nightly · result **PASS*
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | desktop | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1f1ba-7834-7ba3-95f1-dc2c9b357159` | desktop | 200 | `/admin/reports/health/history/01a1f1ba-7834-7ba3-95f1-dc2c9b357159` | ok | — |
+| `/admin/reports/health/history/01a1f6d4-69ed-7b21-8337-353c81a5c2a0` | desktop | 200 | `/admin/reports/health/history/01a1f6d4-69ed-7b21-8337-353c81a5c2a0` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
