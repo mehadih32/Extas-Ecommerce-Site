@@ -10,6 +10,7 @@ import { createVault } from '@extas/vault';
 import { loginHandler, sessionsHandler, totpHandler } from './admin-api';
 import { SESSION_COOKIE, type AdminDeps } from './admin-auth';
 import { fixesHandler } from './admin-health/fixes-api';
+import { customersRoute } from './customers-api';
 
 const HOST = 'admin.example.test';
 const OWNER_PW = 'a long sentence for the tests';
@@ -82,5 +83,12 @@ describe.skipIf(!HAS_TEST_DB)("the site auditor's sandbox on PostgreSQL (PR 421,
   it("the owner's writes go on as before", async () => {
     const res = await fixesHandler(call('POST', '/api/admin/health/fixes', owner, { action: 'approve', id: '00000000-0000-0000-0000-000000000000' }), deps);
     expect(res.status).toBe(404);
+  });
+
+  it('PR 1208: may call a POST that only reads (the Customer groups preview), never one that saves', async () => {
+    const pv = await customersRoute(call('POST', '/api/admin/customers/segments/preview', check, { definition: { v: 1, all: [] } }), deps, ['segments', 'preview']);
+    expect(((await pv.json()) as { error?: string }).error).not.toBe('READ_ONLY_ACCOUNT');
+    const made = await customersRoute(call('POST', '/api/admin/customers/segments', check, { name: 'Check', definition: { v: 1, all: [] } }), deps, ['segments']);
+    expect({ status: made.status, error: ((await made.json()) as { error?: string }).error }).toEqual({ status: 403, error: 'READ_ONLY_ACCOUNT' });
   });
 });

@@ -30,6 +30,19 @@ export async function practiceOn(resolver: AppResolver, storeId: number | undefi
   }
 }
 
+/**
+ * PR 1208: is this feature shown as on ONLY because practice mode is on (its stored switch is off)? A page then says so
+ * beside it, because every save through its API still follows the stored switch and refuses while it is off.
+ */
+export async function shownOnlyByPractice(resolver: AppResolver, key: PracticeShownKey, storeId: number | undefined): Promise<boolean> {
+  try {
+    const v = (await resolver.value(key, storeId === undefined ? {} : { storeId })) as { enabled?: boolean } | null;
+    return v?.enabled !== true && (await practiceOn(resolver, storeId));
+  } catch {
+    return false;
+  }
+}
+
 /** A read-only view of the resolver for one page: `value` and `get` of the listed keys follow practice mode; everything else is the resolver itself. */
 export function practiceShownResolver(resolver: AppResolver): AppResolver {
   return new Proxy(resolver, {

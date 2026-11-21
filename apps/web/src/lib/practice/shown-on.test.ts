@@ -1,7 +1,7 @@
 // PR 1180 — practice mode shows Calendar, Customer groups, Quick replies and Export as on, for reads only.
 import { describe, expect, it } from 'vitest';
 import type { AppResolver } from '../settings';
-import { PRACTICE_SHOWN_ON, practiceOn, practiceShownDeps, practiceShownResolver, shownValue } from './shown-on';
+import { PRACTICE_SHOWN_ON, practiceOn, practiceShownDeps, practiceShownResolver, shownOnlyByPractice, shownValue } from './shown-on';
 
 function fake(values: Record<string, unknown>): AppResolver & { writes: number } {
   const r = {
@@ -49,5 +49,13 @@ describe('practice shows the off-by-default features as on', () => {
     const deps = practiceShownDeps({ resolver: raw });
     expect(await deps.resolver.value('customers.segments' as never, { storeId: 1 })).toEqual({ enabled: false, maxSegments: 50 });
     expect(await practiceOn(fake({}), 1)).toBe(false);
+  });
+});
+
+describe('PR 1208: a page says when a feature shows as on only because of practice mode', () => {
+  it('is true only while practice is on and the stored switch is off', async () => {
+    expect(await shownOnlyByPractice(fake({ 'practice.enabled': { on: true }, 'customers.segments': { enabled: false } }), 'customers.segments', 1)).toBe(true);
+    expect(await shownOnlyByPractice(fake({ 'practice.enabled': { on: true }, 'customers.segments': { enabled: true } }), 'customers.segments', 1)).toBe(false);
+    expect(await shownOnlyByPractice(fake({ 'practice.enabled': { on: false }, 'customers.segments': { enabled: false } }), 'customers.segments', 1)).toBe(false);
   });
 });
