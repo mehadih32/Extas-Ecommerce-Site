@@ -101,10 +101,13 @@ export function ProcessingCards({ view, cards, noAnswer = {}, tags = {}, scores 
               const all = [...o.primary, ...o.more];
               const pick = (id: string) => all.find((s) => s.id === id);
               const [approve, advance, cancel] = ROW.map(pick);
-              const rest = all.filter((s) => !(ROW as readonly string[]).includes(s.id));
+              // PR 1188 (prototype v5): a card that needs a merge shows "Merge" first (the order's own merge dialog and checks)
+              const merge = (tags[o.id] ?? []).includes('merge') ? pick('merge') : undefined;
+              const rest = all.filter((s) => !(ROW as readonly string[]).includes(s.id) && s !== merge);
               const na = noAnswer[o.id];
               return (
                 <>
+                  {merge ? <CommandButton spec={merge} size="sm" /> : null}
                   {approve ? <CommandButton spec={named(approve)} size="sm" /> : null}
                   {advance ? <CommandButton spec={named(advance)} size="sm" /> : null}
                   {na ? <CommandButton spec={na} size="sm" /> : null}
