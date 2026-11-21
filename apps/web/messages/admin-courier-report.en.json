@@ -229,14 +229,15 @@
       "ansNone": "No finished parcels in this period yet.",
       "tilesLabel": "Delivery figures",
       "ans": {
-        "q": "Are parcels reaching customers, and where do they fail?",
+        "q": "Why do parcels come back, and from where?",
         "success": "{pct} delivered ({n} of {of} finished parcels).",
         "worst": "Weakest courier: {name} at {pct} delivered.",
-        "courier": "Courier 360",
+        "courier": "Courier rules",
         "reason": "Most common return reason: {reason} ({n} parcels).",
-        "returns": "Open returns",
+        "returns": "Returns",
         "cod": "{n} COD parcels have been with couriers over 7 days ({v}).",
-        "codAct": "COD money"
+        "codAct": "COD money",
+        "advance": "Ask advance"
       },
       "kSuccess": "Delivery success",
       "kDays": "Average days to deliver",
@@ -284,7 +285,10 @@
       "more": "Show all {n}",
       "less": "Show fewer",
       "close": "Close",
-      "colReturnCost": "Return cost"
+      "colReturnCost": "Return cost",
+      "open360": "Open Courier 360 · {name}",
+      "openFinance": "Open Finance",
+      "fixSize": "Fix size charts"
     },
     "headTitle": "Reports",
     "headSub": "Which courier and which area deliver best, and what returns cost"

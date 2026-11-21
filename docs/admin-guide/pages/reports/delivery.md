@@ -31,7 +31,10 @@
 
 ## প্রতিটা বোতাম আর ঘরের মানে
 - **পাতার মাথা** — বাকি রিপোর্টের মতো শিরোনাম "Reports", নিচে "Which courier and which area deliver best, and what returns cost"; সংখ্যার টাইলের নাম আগের মতোই "Delivery & RTO"
-- **This report answers** (PR 797, প্রোটোটাইপের মতো সবার ওপরে) — নীল কার্ডে সোজা লাইন: কত ভাগ ডেলিভারড, কোন কুরিয়ার সবচেয়ে দুর্বল (**Courier 360**), ফেরতের সবচেয়ে বড় কারণ (**Open returns**), আর 7 দিনের বেশি কুরিয়ারের কাছে পড়ে থাকা COD (**COD money**)।
+- **This report answers** (PR 797, প্রোটোটাইপের মতো সবার ওপরে; প্রশ্ন **Why do parcels come back, and from where?**) — নীল কার্ডে সোজা লাইন: কত ভাগ ডেলিভারড (**Returns →**), কোন কুরিয়ার সবচেয়ে দুর্বল (**Courier rules →**, নিয়মের পাতা খোলে), ফেরতের সবচেয়ে বড় কারণ (**Ask advance →**, আগে চার্জ নেওয়ার নিয়ম খোলে), আর 7 দিনের বেশি কুরিয়ারের কাছে পড়ে থাকা COD (**COD money**)।
+- **Open Courier 360 · (কুরিয়ারের নাম)** — **Success by courier** কার্ডের নিচে প্রতিটা কুরিয়ারের বোতাম; চাপলে সেই কুরিয়ারের Courier 360 পাতা খোলে (PR 1205)।
+- **Open Finance** — **COD money with couriers** কার্ডের নিচে; হিসাবের পাতা খোলে।
+- **Fix size charts →** — **Size problems by style** কার্ডের নিচে; সাইজ চার্টের পাতা খোলে, যেখানে "এক সাইজ বড় নিন" ধরনের নোট লেখা যায়।
 - **Delivery success**, **Average days to deliver**, **Returned parcels**, **COD with couriers**, **Still on the way** — পাঁচটা বড় ঘর, সব দোকানের নিজের পার্সেল থেকে গোনা।
 - **Success by courier**, **Average days by zone** (জোনের কথার দিনসহ), **COD money with couriers** (0–3, 4–7, 8+ দিন) — তিনটা বার-কার্ড।
 - **Why parcels came back**, **Returns by size**, **Returns by product** — ফেরতের কারণ, সাইজ আর প্রোডাক্ট ধরে; তিনটার কম পার্সেলের সাইজ বা প্রোডাক্ট দেখানো হয় না।
