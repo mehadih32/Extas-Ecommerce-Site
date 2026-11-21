@@ -202,8 +202,12 @@ export default async function IncompletePage({ searchParams }: { searchParams: S
             {g(`filter.${x}`)}
           </Link>
         ))}
+        {/* PR 1189 (prototype v5): Custom is a chip that takes you to the two day boxes below */}
+        <a className={`a2-view${o.range.range === 'custom' ? ' on' : ''}`} href="#inc-custom" aria-current={o.range.range === 'custom' ? 'page' : undefined} data-testid="inc-range-custom">
+          {g('filter.custom')}
+        </a>
       </nav>
-      <form className="inc-row inc-mt8" method="get" action={HERE} data-testid="inc-custom">
+      <form id="inc-custom" className="inc-row inc-mt8" method="get" action={HERE} data-testid="inc-custom">
         {current !== 'open' ? <input type="hidden" name="view" value={current} /> : null}
         <input type="hidden" name="range" value="custom" />
         <label className="a2-lbl">

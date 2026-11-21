@@ -636,7 +636,8 @@
       "replace": "Replacements",
       "approved": "Approved",
       "declined": "Declined (our loss)",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "partial": "Partial deliveries"
     }
   },
   "summary": {
