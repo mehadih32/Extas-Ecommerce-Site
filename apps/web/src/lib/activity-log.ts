@@ -30,6 +30,8 @@ export interface ActivityRow {
   entity: string;
   entityId: string | null;
   fields: string[];
+  /** PR 1162: a customer-data view names the customer it opened ("Saw the details of …"); null elsewhere or when gone. */
+  customer?: string | null;
 }
 export interface ActivityView {
   kind: ActivityKind;
@@ -38,6 +40,8 @@ export interface ActivityView {
   more: boolean;
   pageSize: number;
   people: { id: string; name: string }[];
+  /** PR 1162 (prototype v5 renderActivity): under the changes, the newest customer-data views (same person filter). */
+  views: ActivityRow[];
 }
 
 const ymd = (v: string | null | undefined): string | null => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) ? v : null);
@@ -81,19 +85,29 @@ export async function activityView(deps: Pick<AdminDeps, 'db' | 'resolver'>, act
     const names = await nameMap(db, found.map((r) => r.actorId));
     rows = found.slice(0, size).map((r) => ({ id: r.id, at: r.createdAt.toISOString(), who: r.actorId ? (names.get(r.actorId) ?? '') : '', whoType: r.actorType, action: r.action, entity: r.entityType, entityId: r.entityId, fields: changedKeys(r.before, r.after) }));
   } else {
-    const found = await db.customerAccessLog.findMany({
-      where: { storeId, ...when, ...(f.who ? { staffUserId: f.who } : {}), ...(f.text ? { action: { contains: f.text, mode: 'insensitive' } } : {}) },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      skip,
-      take: size + 1,
-      select: { id: true, createdAt: true, staffUserId: true, action: true, customerId: true },
-    });
-    more = found.length > size;
-    const names = await nameMap(db, found.map((r) => r.staffUserId));
-    rows = found.slice(0, size).map((r) => ({ id: r.id, at: r.createdAt.toISOString(), who: r.staffUserId ? (names.get(r.staffUserId) ?? '') : '', whoType: r.staffUserId ? 'STAFF' : 'SYSTEM', action: r.action, entity: 'Customer', entityId: r.customerId, fields: [] }));
+    const v = await viewRows(db, storeId, f, when, skip, size);
+    rows = v.rows;
+    more = v.more;
   }
+  const views = f.kind === 'changes' && !opts.all ? (await viewRows(db, storeId, { ...f, text: '' }, when, 0, cfg.pageSize)).rows : [];
   const people = (await db.staffUser.findMany({ orderBy: { displayName: 'asc' }, select: { id: true, displayName: true } })).map((p) => ({ id: p.id, name: p.displayName }));
-  return { kind: f.kind, filters: f, rows, more, pageSize: cfg.pageSize, people };
+  return { kind: f.kind, filters: f, rows, more, pageSize: cfg.pageSize, people, views };
+}
+
+/** Customer-data views (`CustomerAccessLog`), newest first, each with the staff member's and the customer's name. */
+async function viewRows(db: Db, storeId: number, f: ActivityFilters, when: { createdAt?: Prisma.DateTimeFilter }, skip: number, size: number): Promise<{ rows: ActivityRow[]; more: boolean }> {
+  const found = await db.customerAccessLog.findMany({
+    where: { storeId, ...when, ...(f.who ? { staffUserId: f.who } : {}), ...(f.text ? { action: { contains: f.text, mode: 'insensitive' } } : {}) },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    skip,
+    take: size + 1,
+    select: { id: true, createdAt: true, staffUserId: true, action: true, customerId: true },
+  });
+  const names = await nameMap(db, found.map((r) => r.staffUserId));
+  const ids = [...new Set(found.map((r) => r.customerId).filter((i) => isUuid(i)))];
+  const customers = ids.length ? new Map((await db.customer.findMany({ where: { id: { in: ids }, storeId }, select: { id: true, name: true } })).map((c) => [c.id, c.name])) : new Map<string, string | null>();
+  const rows = found.slice(0, size).map((r) => ({ id: r.id, at: r.createdAt.toISOString(), who: r.staffUserId ? (names.get(r.staffUserId) ?? '') : '', whoType: r.staffUserId ? 'STAFF' : 'SYSTEM', action: r.action, entity: 'Customer', entityId: r.customerId, fields: [], customer: customers.get(r.customerId) ?? null }));
+  return { rows, more: found.length > size };
 }
 
 async function nameMap(db: Db, ids: (string | null)[]): Promise<Map<string, string>> {
