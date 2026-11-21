@@ -1099,10 +1099,12 @@
       "someone": "A customer",
       "top": {
         "title": "Top point earners",
-        "pts": "{n} pts"
+        "pts": "{n} pts",
+        "none": "Nobody holds points yet."
       },
       "bigWallets": {
-        "title": "Biggest wallet balances"
+        "title": "Wallet balances",
+        "none": "Nobody has wallet money."
       }
     },
     "notes": {
