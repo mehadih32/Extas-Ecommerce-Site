@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 21 Nov 2026 - p101 parity round, lane L2 (branch `claude/p101-l2`, from `origin/main` bfd57d99): PR 1180-1191
+
+1180 practice mode shows Calendar, Customer groups, Quick replies and Export as on (one list, `lib/practice/shown-on.ts`, reads only); 1181 VIP chip; 1182 Courier 360 / Finance couriers; 1183 Wallet & refunds; 1184 ERP account; 1185 Finance overview (and f-costs measured on /admin/money/costs); 1186 Profit & loss; 1187 All orders; 1188 Processing Merge; 1189 Returns and Incomplete Custom / Partial deliveries / Handed back; 1190 Inbox channel chips; 1191 Audiences Message. Not done on purpose: Facebook / Instagram split chips (campaigns store Meta as one channel), Studio sub-tab (menu grouping stays), row buttons that need rows (Claim, Accept, Approve & pay, Details, Disconnect, Approve / No). Next: the integrator joins the lanes into a batch branch.
+
 ## 19 Nov 2026 - Batch 2026-11-19-1 (branch `batch-2026-11-19-1`, from `origin/main` f8f7eaff): the three prototype-parity lanes joined
 
 Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). **1158**: the Accounts & tools sub-tabs read Ad accounts, Refer a friend, Shopping feed (nav labels, shell tab labels, page titles, the Meta feed back link, Bengali guides). Next: local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
