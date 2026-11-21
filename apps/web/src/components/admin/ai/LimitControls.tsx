@@ -24,11 +24,14 @@ export interface CeilingPinTexts {
 }
 
 /** The monthly AI ceiling is a money limit: saving it asks the owner's PIN (the server checks it again). No Undo toast: an undo would need the PIN too. */
-export function CeilingInput({ capMinor, money, label, saveLabel, savedText, failedText, invalidText, pin }: { capMinor: number | null; money: Money; label: string; saveLabel: string; savedText: string; failedText: string; invalidText: string; pin: CeilingPinTexts }) {
+/** PR 1165 (prototype v5 m-ai.js renderCosts): the amount box opens from a "Change ceiling" button, as the prototype's meter
+ * card draws it; Cancel closes it again without saving. */
+export function CeilingInput({ capMinor, money, label, saveLabel, savedText, failedText, invalidText, pin, changeLabel, cancelLabel }: { capMinor: number | null; money: Money; label: string; saveLabel: string; savedText: string; failedText: string; invalidText: string; pin: CeilingPinTexts; changeLabel: string; cancelLabel: string }) {
   const router = useRouter();
   const [saved, setSaved] = useState(toMajor(capMinor, money));
   const [text, setText] = useState(saved);
   const [ask, setAsk] = useState(false);
+  const [editing, setEditing] = useState(false);
   const dirty = text !== saved;
 
   const open = () => {
@@ -46,11 +49,20 @@ export function CeilingInput({ capMinor, money, label, saveLabel, savedText, fai
     if (!r.data.ok) return r.status === 0 ? failedText : (pin.err[String(r.data.error)] ?? pin.err.other ?? failedText);
     setSaved(text);
     setAsk(false);
+    setEditing(false);
     router.refresh();
     showToast({ text: savedText, tone: 'ok' });
     return null;
   };
 
+  if (!editing)
+    return (
+      <div className="ai-cap" data-testid="ai-ceiling">
+        <button type="button" className="a2-btn sm" onClick={() => setEditing(true)} data-testid="ai-ceiling-change">
+          {changeLabel}
+        </button>
+      </div>
+    );
   return (
     <div className="ai-cap" data-testid="ai-ceiling">
       <input type="text" inputMode="decimal" aria-label={label} className="a2-sel ai-capin" data-testid="ai-ceiling-input" value={text} onChange={(e) => setText(e.target.value)} />
@@ -59,6 +71,17 @@ export function CeilingInput({ capMinor, money, label, saveLabel, savedText, fai
           {saveLabel}
         </button>
       ) : null}
+      <button
+        type="button"
+        className="a2-btn sm"
+        onClick={() => {
+          setText(saved);
+          setEditing(false);
+        }}
+        data-testid="ai-ceiling-cancel"
+      >
+        {cancelLabel}
+      </button>
       {ask ? <ConfirmDialog testId="ai-ceiling-pin" tone="pri" texts={{ title: pin.title, effects: [pin.text], reason: null, cancel: pin.cancel, ok: pin.ok, working: '…', close: pin.cancel, pin: pin.label }} onClose={() => setAsk(false)} onConfirm={(_r, pinText) => save(pinText)} /> : null}
     </div>
   );
