@@ -751,7 +751,7 @@
     "all": "All",
     "chips": "Sections",
     "searchPh": "Search the manual… e.g. exchange, courier score, backup",
-    "pdf": "Download manual",
+    "pdf": "Download PDF",
     "map": "Admin map",
     "subProto": "The Site Manual: every page explained — what it is, why it exists, how to use it. It updates itself when a screen changes.",
     "metaTitle": "Help & manual · Admin",
@@ -762,7 +762,15 @@
     "open": "Open the section",
     "read": "Read in the manual",
     "askLine": "Something the shop cannot do yet? Most changes need only a switch, a Smart Rule or a key; for a truly new function, ask for it here. The build team puts it in the PR register and builds it.",
-    "ask": "Ask for a new feature"
+    "ask": "Ask for a new feature",
+    "mdDownload": "Download the manual (.md)",
+    "fileRead": "Read",
+    "fileBlueprint": "Blueprint V2.1",
+    "fileBlueprintD": "The full plan of the shop",
+    "fileRegister": "PR register",
+    "fileRegisterD": "Every planned piece of work and its status",
+    "fileAll": "All project files",
+    "fileAllD": "Every document of the project, read only"
   },
   "dsh": {
     "soon": "{what} comes with {stage}. Until then this card stays empty — no number is made up.",

@@ -74,10 +74,11 @@ export default async function HelpPage(props: Props) {
               <ShellIcon name="grid" size={14} />
               {h('map')}
             </OpenMapButton>
-            <a className="a2-btn" href="/api/admin/help/manual-md" download data-testid="help-pdf">
+            {/* PR 1163: "Download PDF" as prototype v5 — the whole manual as a print page (Save as PDF); the .md file is under More options */}
+            <Link className="a2-btn" href="/admin/help/manual?print=1" target="_blank" data-testid="help-pdf">
               <ShellIcon name="dl" size={14} />
               {h('pdf')}
-            </a>
+            </Link>
           </>
         }
       />
@@ -127,7 +128,27 @@ export default async function HelpPage(props: Props) {
 
       <section className="a2-card a2-mt12" data-testid="help-files">
         <h2 className="a2-h3">{h('files')}</h2>
-        <p className="a2-xs a2-mute a2-mt6">{h('stagesH')}</p>
+        {/* PR 1163: the prototype's file cards (Blueprint, PR register, all files), each with Read — for those who may open Help & Build */}
+        {viewer.owner || viewer.perms.has('build.read') ? (
+          <div className="a2-man-files a2-mt12" data-testid="help-file-cards">
+            {(
+              [
+                ['Blueprint', '/admin/build/files/read?path=BLUEPRINT.md'],
+                ['Register', '/admin/build/files/read?path=MASTER-REGISTER.md'],
+                ['All', '/admin/build/files'],
+              ] as const
+            ).map(([k, href]) => (
+              <div key={k} className="a2-card tight a2-man-file">
+                <b>{h(`file${k}`)}</b>
+                <span className="a2-xs a2-mute">{h(`file${k}D`)}</span>
+                <Link className="a2-btn sm" href={href}>
+                  {h('fileRead')}
+                </Link>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <p className="a2-xs a2-mute a2-mt12">{h('stagesH')}</p>
         <div className="bd-rows a2-mt12">
           {stages.map((x) => (
             <div key={x.id} data-testid="help-stage" style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 36 }}>
@@ -155,6 +176,10 @@ export default async function HelpPage(props: Props) {
           {h('more')}
         </summary>
         <div className="a2-cs">{h('moreSub')}</div>
+        <a className="a2-btn a2-mt12" href="/api/admin/help/manual-md" download data-testid="help-md">
+          <ShellIcon name="dl" size={14} />
+          {h('mdDownload')}
+        </a>
       {viewer.owner || viewer.perms.has('build.read') ? (
         <section className="a2-card a2-helpask" data-testid="help-ask">
           <span className="a2-sm">{t(d, 'help.askLine')}</span>
