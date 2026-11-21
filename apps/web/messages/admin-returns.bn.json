@@ -636,7 +636,8 @@
       "replace": "রিপ্লেসমেন্ট",
       "approved": "অ্যাপ্রুভড",
       "declined": "ডিক্লাইন (আমাদের লস)",
-      "cancelled": "বাতিল"
+      "cancelled": "বাতিল",
+      "partial": "আংশিক ডেলিভারি"
     }
   },
   "summary": {
