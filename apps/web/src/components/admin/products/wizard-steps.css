@@ -142,3 +142,4 @@
 /* PR 1132 (prototype v5): Quick import and Start again sit at the right; the phone card has its heading */
 .wzp-actions-r { margin-left: auto; }
 .wzp-phh { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.wzp-phh .wzp-phht { margin: 0; font-size: inherit; font-weight: 700; line-height: inherit; }

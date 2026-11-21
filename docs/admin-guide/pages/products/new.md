@@ -14,7 +14,7 @@ ERP-র স্টক আর কেনা দাম থেকে শুরু ক
 
 ## কীভাবে করবেন
 1. [সব প্রোডাক্ট](all.md)-এ **নতুন প্রোডাক্ট** চাপুন।
-2. ধাপ 1 **Pick from ERP**: **Single product** বা **Set (top + bottom)** বাছুন, **Search style code or name**-এ খুঁজে ERP-র স্টাইল টিক দিন, সেট হলে **Bottom piece (from the ERP)** বাছুন, **Next** চাপুন। স্টাইল খসড়া হিসেবে আসে। ERP ছাড়া করতে **Without ERP (rare)**।
+2. ধাপ 1 **Pick from ERP**: **Single product** বা **Set (top + bottom)** বাছুন, **Search style code or name**-এ খুঁজে ERP-র স্টাইল টিক দিন, সেট হলে **Bottom piece (from the ERP)** বাছুন, **Next →** চাপুন। স্টাইল খসড়া হিসেবে আসে। ERP ছাড়া করতে **Without ERP (rare)**।
 3. ধাপ 2 **Name & category**: **Name on site**, **Brand**, **For**, **Category**, **Sub-category** আর ক্যাটাগরির প্রশ্নগুলো ভরুন; **Collections & tags** বাছুন।
 4. ধাপ 3 **Colours & sizes**: যে সাইজ বা কালার দোকানে দেখাবেন না তার টিক তুলুন; **Colour name on site** দিন; সেট হলে **Colour link** বাছুন; B-গ্রেড পিস থাকলে **B-grade pieces** চালু করুন।
 5. ধাপ 4 **Photos & video**: প্রতিটা কালারের সামনের ছবি দিন; চাইলে ভিডিও।
@@ -28,9 +28,9 @@ ERP-র স্টক আর কেনা দাম থেকে শুরু ক
 - **Start again** — এই খসড়া সরিয়ে রাখে (মোছে না; তালিকা থেকে ফেরানো যায়) আর নতুন শুরু।
 - **n of 8 steps done** / **Left** — কয়টা ধাপ শেষ আর কোনগুলো বাকি; নিচে বার।
 - **Saves by itself** / **Saved just now** — প্রতিটা বদল নিজে সেভ হয়।
-- **Next** / **Back** — পরের ও আগের ধাপে যায়; ধাপের জরুরি ঘর খালি থাকলে **Next** থামায় ও কারণ বলে।
+- **Next →** / **Back** — পরের ও আগের ধাপে যায়; ধাপের জরুরি ঘর খালি থাকলে **Next →** থামায় ও কারণ বলে।
 - **Continue where I stopped** — ধাপ 1-এ, যে খসড়া যে ধাপে থেমেছিল।
-- **Back to products** — তালিকায় ফেরে।
+- **Back** (ধাপ 1-এ) — প্রোডাক্টের তালিকায় ফেরে।
 - ধাপ 1: **What are you adding?**, **In the ERP, not on the shop**, **Brought in from the ERP**।
 - ধাপ 2: **ERP name** (শুধু দেখা), **Brand**, **For** (ছেলেদের, বাচ্চা ছেলেদের, সবার)।
 - ধাপ 3: **ERP stock** (শুধু দেখা), **Total**, **Show**।
