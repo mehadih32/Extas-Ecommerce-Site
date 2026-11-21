@@ -610,7 +610,7 @@
       "steps": "Add-product steps",
       "of": "Step {n} of {total}",
       "back": "Back",
-      "next": "Next",
+      "next": "Next →",
       "full": "Open the full product screen",
       "saveNote": "Every step saves by itself into the draft. Nothing is on the shop until you publish in step 8.",
       "preview": "How it looks on a phone",
@@ -689,7 +689,7 @@
       },
       "savedNone": "Saves by itself",
       "cancel": "Cancel",
-      "toList": "Back to products",
+      "toList": "Back",
       "pickFirst": "Pick a style from the ERP first.",
       "noWrite": "You can look at this draft but not change it.",
       "again": {
