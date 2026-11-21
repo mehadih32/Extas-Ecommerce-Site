@@ -51,7 +51,7 @@ describe('Team & roles (PR 1020)', () => {
     const view = { roles: [{ id: 'r2', key: 'care', nameEn: 'Customer care', nameBn: 'Customer care', people: 1, limit: { maxDiscountMinor: null, maxDiscountPct: 5, hideContact: false }, exports: { 'orders.export': true, 'orders.exportPersonal': false, 'catalogue.export': false, 'customers.export': false } }], handover: { enabled: true, time: '21:30' }, packerPreset: [], hasPackerRole: false };
     const desk = [{ id: 'u2', name: 'Nusrat', roleName: 'Customer care', expectedCash: 130000, expectedWallet: 100, got: { CASH: null, WALLET: null } }];
     const html = renderToStaticMarkup(<StaffControlsScreen dict={dict('en')} money={{ code: 'BDT', digits: 2, symbol: '৳', locale: 'en' } as never} view={view as never} canEdit canMakeRole canManage day="2026-11-16" today="2026-11-16" sheet={{ rows: [], names: {} }} desk={desk} exportKeys={['orders.export', 'orders.exportPersonal', 'catalogue.export', 'customers.export']} />);
-    for (const w of ['Staff limits', 'Max discount', 'Can export', 'Hide phone &amp; address', 'Save limits', 'End-of-day cash &amp; bKash handover', 'Ask each desk staff for a handover sheet at 21:30', 'Expected', 'Handed over', 'Record', 'Download today&#x27;s sheet', 'More options']) expect(html, w).toContain(w);
+    for (const w of ['Staff limits', 'Max discount', 'Can export', 'Hide phone &amp; address', 'Save limits', 'End-of-day cash &amp; bKash handover', 'Ask each desk staff for a handover sheet at 21:30', 'Expected', 'Handed over', 'Record', 'Download today’s sheet', 'More options']) expect(html, w).toContain(w);
     expect(html).toContain('data-testid="handover-rec-u2"');
     expect(html).toContain('data-testid="packer-card"');
   });
