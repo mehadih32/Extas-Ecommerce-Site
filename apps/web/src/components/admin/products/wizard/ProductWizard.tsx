@@ -294,7 +294,8 @@ export function ProductWizard(p: ProductWizardProps) {
 export function PhoneHead({ d }: { d: Dict }) {
   return (
     <div className="wzp-phh">
-      <b>{t(d, 'products.wiz.phH')}</b>
+      {/* PR 1204: a heading, as the prototype's card title */}
+      <h3 className="wzp-phht">{t(d, 'products.wiz.phH')}</h3>
       <span className="ad-mini">{t(d, 'products.wiz.phSub')}</span>
     </div>
   );
