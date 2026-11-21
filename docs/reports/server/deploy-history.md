@@ -171,3 +171,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-17 06:01 | `250e77177ae7` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-17 08:19 | `1db44d2b159b` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-20 23:33 | `f84d76683053` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-21 19:05 | `d796a8c0a3f5` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (/admin/customers/segments/new: request 403: /api/admin/customers/segments/preview (phone); /admin/customers/segments/new: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/customers/segments/preview) (phone); /admin/customers/segments/new: request 403: ), so the previous version was put back automatically. The fix comes before any new work. |

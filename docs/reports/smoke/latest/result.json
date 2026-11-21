@@ -1,13 +1,18 @@
 {
-  "at": "2026-11-21 08:37 (Asia/Dhaka)",
+  "at": "2026-11-21 18:48 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
-  "sha": "f84d76683053",
-  "kind": "nightly",
-  "rolledBack": false,
-  "ok": true,
+  "sha": "d796a8c0a3f5",
+  "kind": "after deploy",
+  "rolledBack": true,
+  "ok": false,
   "pages": 706,
-  "failed": 0,
-  "problems": [],
+  "failed": 2,
+  "problems": [
+    "/admin/customers/segments/new: request 403: /api/admin/customers/segments/preview (phone)",
+    "/admin/customers/segments/new: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/customers/segments/preview) (phone)",
+    "/admin/customers/segments/new: request 403: /api/admin/customers/segments/preview (desktop)",
+    "/admin/customers/segments/new: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/customers/segments/preview) (desktop)"
+  ],
   "database": {
     "appendOnly": "ok: 44 tables append-only",
     "appRole": "extas_app"

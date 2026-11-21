@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-21 08:37 (Asia/Dhaka)
+# Smoke test · 2026-11-21 18:48 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 2টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://extas.com.bd · commit `f84d76683053` · nightly · result **PASS** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `d796a8c0a3f5` · after deploy · result **FAIL** (706 page views, 2 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -212,7 +212,7 @@ Site: https://extas.com.bd · commit `f84d76683053` · nightly · result **PASS*
 | `/admin/delivery/settings` | phone | 200 | `/admin/delivery/settings` | ok | — |
 | `/admin/reports/flags` | phone | 200 | `/admin/reports/flags` | ok | — |
 | `/admin/customers/segments` | phone | 200 | `/admin/customers/segments` | ok | — |
-| `/admin/customers/segments/new` | phone | 200 | `/admin/customers/segments/new` | ok | — |
+| `/admin/customers/segments/new` | phone | 200 | `/admin/customers/segments/new` | **FAIL**: /admin/customers/segments/new: request 403: /api/admin/customers/segments/preview; /admin/customers/segments/new: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/customers/segments/preview) | — |
 | `/admin/customers/settings` | phone | 200 | `/admin/customers/settings` | ok | — |
 | `/admin/messages/automations` | phone | 200 | `/admin/messages/automations` | ok | — |
 | `/admin/messages/automations/new` | phone | 200 | `/admin/messages/automations/new` | ok | — |
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `f84d76683053` · nightly · result **PASS*
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | phone | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1fa05-8921-7ca1-91d5-49654e51b68e` | phone | 200 | `/admin/reports/health/history/01a1fa05-8921-7ca1-91d5-49654e51b68e` | ok | — |
+| `/admin/reports/health/history/01a1fc04-2a13-76a3-aef6-b507a57a81a2` | phone | 200 | `/admin/reports/health/history/01a1fc04-2a13-76a3-aef6-b507a57a81a2` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -565,7 +565,7 @@ Site: https://extas.com.bd · commit `f84d76683053` · nightly · result **PASS*
 | `/admin/delivery/settings` | desktop | 200 | `/admin/delivery/settings` | ok | — |
 | `/admin/reports/flags` | desktop | 200 | `/admin/reports/flags` | ok | — |
 | `/admin/customers/segments` | desktop | 200 | `/admin/customers/segments` | ok | — |
-| `/admin/customers/segments/new` | desktop | 200 | `/admin/customers/segments/new` | ok | — |
+| `/admin/customers/segments/new` | desktop | 200 | `/admin/customers/segments/new` | **FAIL**: /admin/customers/segments/new: request 403: /api/admin/customers/segments/preview; /admin/customers/segments/new: console error: Failed to load resource: the server responded with a status of 403 () (/api/admin/customers/segments/preview) | — |
 | `/admin/customers/settings` | desktop | 200 | `/admin/customers/settings` | ok | — |
 | `/admin/messages/automations` | desktop | 200 | `/admin/messages/automations` | ok | — |
 | `/admin/messages/automations/new` | desktop | 200 | `/admin/messages/automations/new` | ok | — |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `f84d76683053` · nightly · result **PASS*
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | desktop | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1fa05-8921-7ca1-91d5-49654e51b68e` | desktop | 200 | `/admin/reports/health/history/01a1fa05-8921-7ca1-91d5-49654e51b68e` | ok | — |
+| `/admin/reports/health/history/01a1fc04-2a13-76a3-aef6-b507a57a81a2` | desktop | 200 | `/admin/reports/health/history/01a1fc04-2a13-76a3-aef6-b507a57a81a2` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
