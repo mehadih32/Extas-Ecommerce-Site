@@ -298,8 +298,9 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
                 </div>
               );
             })}
-            <Link className="a2-btn sm pri a2-mt12" href="/admin/money/books/closes">
-              {t(d, 'lf.fp.close.open')}
+            {/* PR 1186 (prototype v5): "Close October" while last month waits; the close itself (with the PIN) is on Closes */}
+            <Link className="a2-btn sm pri a2-mt12" href="/admin/money/books/closes" data-testid="pl-close">
+              {sheets[1]?.close.state === 'CLOSED' ? t(d, 'lf.fp.close.open') : t(d, 'lf.fp.close.closeMonth', { month: new Intl.DateTimeFormat(view.locale, { month: 'long', timeZone: 'UTC' }).format(new Date(`${lastMonthKey}-01T00:00:00Z`)) })}
             </Link>
           </section>
         </div>
@@ -319,7 +320,11 @@ export default async function ProfitPage({ searchParams }: { searchParams: Promi
         </div>
         {chRows.length ? (
           <>
-            <p className="a2-xs a2-mute">{t(d, 'lf.fp.drill.all')}</p>
+            <nav className="pl-crumb" aria-label={t(d, 'lf.fp.drill.title')}>
+              <Link className="a2-btn sm ghost" href={`/admin/money/profit/channels?from=${q.from}&to=${q.to}`} data-testid="pl-all-channels">
+                {t(d, 'lf.fp.drill.all')}
+              </Link>
+            </nav>
             {chBest && chWorst && chRows.length > 1 ? (
               <p className="a2-sm">{t(d, 'lf.fp.drill.insight', { best: chName(chBest.key), pct: Math.round(((chBest.profitMinor ?? 0) / chTotal) * 100), worst: chName(chWorst.key), m: channelMarginPct(chWorst) ?? 0 })}</p>
             ) : null}
