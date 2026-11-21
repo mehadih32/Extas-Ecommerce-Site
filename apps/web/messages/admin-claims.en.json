@@ -122,6 +122,7 @@
       "title": "Parcels still to claim",
       "sub": "Lost or damaged parcels with no claim yet. Raise one with one tap.",
       "none": "No parcel is waiting for a claim."
-    }
+    },
+    "practiceStep": "Practice claim: its steps stay greyed, nothing is sent to a courier"
   }
 }
