@@ -1,5 +1,21 @@
 # PROGRESS
 
+## 21 Nov 2026 - Batch 2026-11-21-1 (branch `batch-2026-11-21-1`, from `origin/main` 92e9ec26): the three p101 parity lanes joined
+
+Lanes l1 (PR 1160-1167), L2 (PR 1180-1191) and l3 (PR 1200-1207) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1031 PRs, 1009 active, S28 361/361). The two lanes that changed `tools/admin-screens.mjs` (l1: s-couriers, s-messages, s-ai routes, link buttons, the Home design press; L2: f-costs on Costs) and the two that changed `admin-customers` messages (L2 VIP note, l3 loyalty empty lines) merged without overlap. Next: CI on the batch PR, merge, deploy, practice seed rebuild, re-measure.
+
+## 21 Nov 2026 - p101 parity round, lane l1 (branch `claude/p101-l1`, from `origin/main` bfd57d99): PR 1160-1167
+
+Admin font family named Inter / Inter Tight / Hind Siliguri (1160); the screens tool opens Settings › Couriers, Customer messages and AI control at their real pages, counts link buttons (1161) and measures each Home design against its own prototype design (1166); Activity log in plain words with the Changes and Who viewed customer data cards (1162); Help & manual Download PDF and project-file cards (1163); AI approvals' six kind chips (1164); the AI ceiling's Change ceiling button (1165); Team's "Download today’s sheet" apostrophe (1167). Waiting for the integrator to join the lanes; nothing merged or deployed from this lane.
+
+## 21 Nov 2026 - p101 parity round, lane L2 (branch `claude/p101-l2`, from `origin/main` bfd57d99): PR 1180-1191
+
+1180 practice mode shows Calendar, Customer groups, Quick replies and Export as on (one list, `lib/practice/shown-on.ts`, reads only); 1181 VIP chip; 1182 Courier 360 / Finance couriers; 1183 Wallet & refunds; 1184 ERP account; 1185 Finance overview (and f-costs measured on /admin/money/costs); 1186 Profit & loss; 1187 All orders; 1188 Processing Merge; 1189 Returns and Incomplete Custom / Partial deliveries / Handed back; 1190 Inbox channel chips; 1191 Audiences Message. Not done on purpose: Facebook / Instagram split chips (campaigns store Meta as one channel), Studio sub-tab (menu grouping stays), row buttons that need rows (Claim, Accept, Approve & pay, Details, Disconnect, Approve / No). Next: the integrator joins the lanes into a batch branch.
+
+## 21 Nov 2026 - p101 parity round, lane L3 (branch `claude/p101-l3`, from `origin/main` bfd57d99): PR 1200-1207
+
+1200 Rules › Pop-ups rows (whole row is the button; Managed in for stock hold, demo products, delivery days); 1201 Website words (Blog rail chips, Product page, Shop text Home / Save changes / বাংলা); 1202 Loyalty cards always shown (Top point earners, Wallet balances); 1203 Claims: greyed Mark sent on practice claims; 1204 Add product Back / Next → / Phone preview heading; 1205 Delivery & returns report actions; 1206 Team and Products report words; 1207 Reports title, courier comparison card names, Sales Show all. Not matched (data, shared nav or another lane): r-all row values, r-coupons AI approvals, w-control/w-seo, product categories, sets, size charts, Monthly review tab overflow, Reviews opening on Questions, Areas division tiles. Next: the integrator joins the lanes.
+
 ## 19 Nov 2026 - Batch 2026-11-19-1 (branch `batch-2026-11-19-1`, from `origin/main` f8f7eaff): the three prototype-parity lanes joined
 
 Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). **1158**: the Accounts & tools sub-tabs read Ad accounts, Refer a friend, Shopping feed (nav labels, shell tab labels, page titles, the Meta feed back link, Bengali guides). Next: local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
