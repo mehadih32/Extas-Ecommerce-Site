@@ -98,7 +98,13 @@
       "cost": "Cost of this courier",
       "costTotal": "Total, last 30 days",
       "costParcels": "Parcels with a charge",
-      "costPer": "Per parcel"
+      "costPer": "Per parcel",
+      "title360": "Courier 360",
+      "sub360": "Everything about one courier in one place.",
+      "finTitle": "Finance",
+      "finSub": "Cash couriers hold, payouts, statements and claims.",
+      "payout": "Payout",
+      "payoutReady": "Ready to request"
     },
     "p": {
       "title": "Parcels",
@@ -165,7 +171,18 @@
         "NOT_COLLECTED": "paid for a parcel we have as not delivered",
         "LATE_SETTLEMENT": "paid late",
         "MISSING": "delivered but on no statement"
-      }
+      },
+      "stmtTitle": "Monthly statement",
+      "thisMonth": "This month ({m})",
+      "lastMonth": "Last month ({m})",
+      "download": "Download statement",
+      "heldPer": "Cash held per courier",
+      "heldPerSub": "Delivered cash not paid out yet",
+      "timeline": "Payouts timeline",
+      "timelineSub": "Request payouts in Courier 360 › Payouts",
+      "timelineNone": "No payouts yet",
+      "paidOn": "Paid {d}",
+      "requestedOn": "Requested {d}"
     },
     "f": {
       "title": "Performance",

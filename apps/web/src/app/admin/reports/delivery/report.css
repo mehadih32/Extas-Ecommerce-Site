@@ -153,3 +153,28 @@
   margin: 0;
   text-align: right;
 }
+/* PR 1182 (prototype v5 Finance › Couriers): cash held per courier, one bar each, the open courier in the accent colour */
+.c360-held {
+  display: grid;
+  grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.c360-held > span:first-child {
+  overflow-wrap: anywhere;
+}
+.c360-track {
+  display: block;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--ad-line);
+  overflow: hidden;
+}
+.c360-track > i {
+  display: block;
+  height: 100%;
+  background: var(--ad-ink);
+}
+.c360-track > i.on {
+  background: var(--ad-brand);
+}
