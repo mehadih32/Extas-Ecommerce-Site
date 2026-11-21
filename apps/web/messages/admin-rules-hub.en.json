@@ -362,7 +362,8 @@
           "name": "Stock-hold notice",
           "where": "Checkout, at the top while the customer fills the form",
           "who": "Customers whose size is on hold",
-          "builtin": "We keep your size for {minutes} minutes"
+          "builtin": "We keep your size for {minutes} minutes",
+          "managed": "Stock hold (Order flow)"
         },
         "oos": {
           "name": "Out-of-stock size notice",
@@ -374,7 +375,8 @@
           "name": "Demo-product \"coming soon\" pop-up",
           "where": "Product page, when Add to bag or Order now is tapped on a demo design",
           "who": "Visitors who tap a demo product",
-          "builtin": "This design is coming soon"
+          "builtin": "This design is coming soon",
+          "managed": "Settings › Demo products"
         },
         "lowstock": {
           "name": "Low-stock notice",
@@ -392,7 +394,8 @@
           "name": "Delivery promise",
           "where": "Order done page (also under Order now on product pages)",
           "who": "Every customer",
-          "builtin": "Delivery in {days} days"
+          "builtin": "Delivery in {days} days",
+          "managed": "Delivery days (Delivery charges)"
         }
       },
       "pictureSub": "Tap a number to open that item. The same number is on its row below.",
