@@ -13,6 +13,7 @@ import { ERP_ACCOUNT_ENTRY_KINDS, ERP_PIECE_STATES } from '@extas/inventory';
 import { AdminNotice } from '@/components/admin/AdminFrame';
 import { BooksForm } from '@/components/admin/books/BooksForm';
 import { formatMoney, formatNumber, moneyOf } from '@/components/admin/products/model';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { ShellIcon } from '@/components/admin/shell/ShellIcon';
 import { adminDeps } from '@/lib/admin-auth';
@@ -92,14 +93,37 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
         title={t(d, 'bk.title.account')}
         sub={t(d, 'bk.sub.account')}
         right={
-          ov.link && ov.model !== 'v5' ? (
-            <Link className="a2-btn pri" href={go(`${HERE}?view=payments#books-pay-record`)} data-testid="er-pay">
-              {t(d, 'bk.payErp')}
-            </Link>
-          ) : undefined
+          <>
+            <PrintButton label={t(d, 'bk.dl')} testId="er-dl" />
+            {ov.link && ov.model !== 'v5' ? (
+              <Link className="a2-btn pri" href={go(`${HERE}?view=payments#books-pay-record`)} data-testid="er-pay">
+                {t(d, 'bk.payErp')}
+              </Link>
+            ) : (
+              <button type="button" className="a2-btn pri" disabled title={t(d, ov.model === 'v5' ? 'bk.v5' : 'bk.noLink')} data-testid="er-pay">
+                {t(d, 'bk.payErp')}
+              </button>
+            )}
+          </>
         }
       />
       <SectionTabs view={view} current="booksAccount" />
+      {/* PR 1184 (prototype v5): the one-click monthly statement card on top */}
+      <section className="a2-card a2-mt12 bk-stmt" data-testid="er-stmt-card">
+        <div>
+          <b>{t(d, 'bk.st.title')}</b>
+          <p className="a2-xs a2-mute">{t(d, 'bk.st.cardSub')}</p>
+        </div>
+        {ov.link && ov.model !== 'v5' ? (
+          <Link className="a2-btn pri" href={go(`${HERE}?view=statement`)} data-testid="er-stmt">
+            {t(d, 'bk.st.title')}
+          </Link>
+        ) : (
+          <button type="button" className="a2-btn pri" disabled data-testid="er-stmt">
+            {t(d, 'bk.st.title')}
+          </button>
+        )}
+      </section>
     </>
   );
   if (ov.model === 'v5' || !ov.link)
@@ -109,6 +133,15 @@ export default async function BooksAccountPage({ searchParams }: { searchParams:
         <section className="a2-card a2-mt12" data-testid="books-off">
           <p className="a2-sm a2-mute">{t(d, ov.model === 'v5' ? 'bk.v5' : 'bk.noLink')}</p>
         </section>
+        {/* PR 1184 (prototype v5): the account's cards, each saying what it will show once the books open */}
+        <div className="bk-two a2-mt12" data-testid="books-off-cards">
+          {(['age', 'match', 'daily', 'payments'] as const).map((k) => (
+            <section key={k} className="a2-card" data-testid={`books-off-${k}`}>
+              <h2 className="a2-h3">{t(d, `bk.off.${k}`)}</h2>
+              <p className="a2-xs a2-mute a2-mt6">{t(d, `bk.off.${k}Sub`)}</p>
+            </section>
+          ))}
+        </div>
       </div>
     );
 

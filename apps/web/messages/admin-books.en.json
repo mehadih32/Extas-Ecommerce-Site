@@ -389,7 +389,19 @@
       "daily": "Day by day",
       "day": "Day",
       "bal": "Owed at day end",
-      "none": "Nothing happened in this month."
+      "none": "Nothing happened in this month.",
+      "cardSub": "One click: opening, bills, approved returns, exchanges, payments and closing — our books next to the ERP, line by line, with what to fix."
+    },
+    "dl": "Download / Print",
+    "off": {
+      "age": "How old is the balance",
+      "ageSub": "Payments and credits clear the oldest bills first. The bands show here once the books open.",
+      "match": "Books match",
+      "matchSub": "Our books next to what the ERP says, and each line to fix. Shows here once the books open.",
+      "daily": "Daily summary to the ERP",
+      "dailySub": "Each day's pieces, bills and credits sent to the ERP at night, and whether it confirmed them.",
+      "payments": "Payments",
+      "paymentsSub": "The payments made to the ERP, newest first, with their reference."
     }
   }
 }
