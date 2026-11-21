@@ -354,7 +354,8 @@
         "closed": "Closed · locked",
         "ready": "Ready to close",
         "running": "Running",
-        "open": "Open Closes"
+        "open": "Open Closes",
+        "closeMonth": "Close {month}"
       },
       "drill": {
         "title": "Where the profit comes from",
