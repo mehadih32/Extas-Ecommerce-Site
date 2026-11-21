@@ -149,7 +149,8 @@
       },
       "batchNote": "Showing the current batch only (not yet handed to the courier)",
       "showAll": "Show all orders",
-      "anyPayment": "Any payment"
+      "anyPayment": "Any payment",
+      "nextLeft": "Show more ({n} left)"
     },
     "kpi": {
       "today": "Orders today",
