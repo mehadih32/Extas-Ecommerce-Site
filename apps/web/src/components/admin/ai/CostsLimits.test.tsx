@@ -18,12 +18,14 @@ describe('CostsLimits (PR 818)', () => {
     expect(html).toContain('data-testid="ai-limits-warn"');
     expect(html).toContain('Will cross');
     expect(html).toContain('Cost-saver mode');
-    expect(html).toContain('data-testid="ai-ceiling-input"');
+    // PR 1165: the amount box opens from the prototype's "Change ceiling" button
+    expect(html).toContain('data-testid="ai-ceiling-change"');
+    expect(html).toContain('Change ceiling');
   });
   it('shows no warning and no controls when under 80% and the person may not control AI', () => {
     const html = renderToStaticMarkup(<CostsLimits dict={bn as unknown as Dict} canControl={false} {...base} spentMinor={1000} />);
     expect(html).not.toContain('ai-limits-warn');
-    expect(html).not.toContain('ai-ceiling-input');
+    expect(html).not.toContain('ai-ceiling-change');
     expect(html).not.toContain('role="switch"');
     expect(html).toContain('সীমার মধ্যে');
   });

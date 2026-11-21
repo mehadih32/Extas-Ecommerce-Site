@@ -61,7 +61,7 @@ export function CostsLimits(p: CostsLimitsProps) {
         <div className="ai-lim-top">
           <b>{c('ceiling.name')}</b>
           {p.canControl ? (
-            <CeilingInput capMinor={p.capMinor} money={p.money} label={c('ceiling.label')} saveLabel={c('ceiling.save')} savedText={tx.saved} failedText={tx.failed} invalidText={tx.invalid} pin={{ title: c('ceiling.pin.title'), text: c('ceiling.pin.text'), label: c('ceiling.pin.label'), ok: c('ceiling.pin.ok'), cancel: c('ceiling.pin.cancel'), err: Object.fromEntries(['PIN_REQUIRED', 'PIN_NOT_SET', 'PIN_LOCKED', 'WRONG_PIN', 'other'].map((k) => [k, c(`ceiling.pin.${k}`)])) }} />
+            <CeilingInput capMinor={p.capMinor} money={p.money} label={c('ceiling.label')} changeLabel={c('ceiling.change')} cancelLabel={c('ceiling.pin.cancel')} saveLabel={c('ceiling.save')} savedText={tx.saved} failedText={tx.failed} invalidText={tx.invalid} pin={{ title: c('ceiling.pin.title'), text: c('ceiling.pin.text'), label: c('ceiling.pin.label'), ok: c('ceiling.pin.ok'), cancel: c('ceiling.pin.cancel'), err: Object.fromEntries(['PIN_REQUIRED', 'PIN_NOT_SET', 'PIN_LOCKED', 'WRONG_PIN', 'other'].map((k) => [k, c(`ceiling.pin.${k}`)])) }} />
           ) : null}
         </div>
         <div className="a2-kv ai-lim-v">
