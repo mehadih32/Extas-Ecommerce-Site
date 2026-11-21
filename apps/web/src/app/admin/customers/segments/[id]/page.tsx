@@ -20,6 +20,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { customersDeps } from '@/lib/customers-api';
+import { practiceShownDeps } from '@/lib/practice/shown-on';
 import { t, type Dict } from '@/lib/i18n';
 import '../segments.css';
 
@@ -51,7 +52,7 @@ export default async function SegmentPage({ params, searchParams }: { params: Pa
       </div>
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const cd = customersDeps(access.deps);
+  const cd = customersDeps(practiceShownDeps(access.deps)); // PR 1180: practice mode shows Customer groups as on
   const isNew = id === 'new';
   const from = isNew ? one(sp.from) : '';
   const [page, source, settings, options, currency] = await Promise.all([

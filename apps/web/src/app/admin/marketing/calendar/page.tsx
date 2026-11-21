@@ -26,6 +26,7 @@ import { overlaps } from '@/lib/marketing/overview-model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { calendarOverview } from '@/lib/marketing/calendar';
+import { practiceOn } from '@/lib/practice/shown-on';
 import { addDays, CALENDAR_LANES, monthStep, monthWeeks, PLAN_NOTE_MAX, PLAN_TITLE_MAX, type CalendarItem } from '@/lib/marketing/calendar-model';
 import bn from '../../../../../messages/admin-calendar.bn.json';
 import en from '../../../../../messages/admin-calendar.en.json';
@@ -77,11 +78,13 @@ export default async function MarketingCalendarPage(props: Props) {
         <ShellState view={view} kind="denied" permission="marketing.campaigns.read" />
       </div>
     );
-  const o = await calendarOverview({ db: access.deps.db, resolver: access.deps.resolver }, { from: sp.from, view: sp.view === 'bars' ? 'bars' : 'month' });
+  // PR 1180 (owner's decision 2): while practice mode is on the calendar shows as on; the switch card keeps the stored value
+  const practice = await practiceOn(access.deps.resolver, MOTHER_STORE_ID);
+  const o = await calendarOverview({ db: access.deps.db, resolver: access.deps.resolver }, { from: sp.from, view: sp.view === 'bars' ? 'bars' : 'month', always: practice });
   const month = o.view === 'month';
   const storeLocale = (await access.deps.resolver.value('store.locale', { storeId: MOTHER_STORE_ID }).catch(() => null)) as string | null;
   const canWrite = access.guard.permissions?.has('marketing.campaigns.write') ?? false;
-  const on = o.settings.enabled;
+  const on = o.settings.enabled || practice;
   const g = (k: string, vars?: Record<string, string | number>) => t(d, `mc.${k}`, vars);
   const isBn = view.lang === 'bn';
   const lane = (CALENDAR_LANES as readonly string[]).includes(sp.lane ?? '') ? sp.lane! : null;
