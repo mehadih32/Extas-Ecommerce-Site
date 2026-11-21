@@ -296,7 +296,8 @@
         "erpBtn": "Pay",
         "adHead": "Ads are {pct}% of sales",
         "adText": "Your target is {target}%. Ads so far this month: {ads}.",
-        "adBtn": "See ads"
+        "adBtn": "Open Marketing",
+        "adGood": "Inside your {target}% target. Room to spend {room} more this month."
       }
     },
     "fp": {
