@@ -84,7 +84,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     for (const [k, val] of Object.entries(v)) if (val) p.set(k, String(val));
     return `${HERE}?${p.toString()}`;
   };
-  const kinds = [...new Set(box.channels.map((c) => c.kind))];
+  // PR 1190 (prototype v5): the channel chips are always Messenger, WhatsApp, Instagram and Website chat (then any other channel in use)
+  const kinds = [...new Set<string>(['messenger', 'whatsapp', 'instagram', 'livechat', ...box.channels.map((c) => c.kind)])];
   const me = who.actor.staffUserId;
   const longest = box.rows.reduce((m, r) => (r.waitingSince && r.status !== 'SOLVED' ? Math.max(m, (now.getTime() - new Date(r.waitingSince).getTime()) / 60_000) : m), 0); // hardcode-ok: ms per minute
   const mins = (x: number | null) => (x === null || x <= 0 ? '—' : span(d, view.locale, x));
@@ -146,7 +147,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
           label={t(d, 'sup.channelLabel')}
           current={channel ?? ''}
           testId="support-channels"
-          items={[{ key: '', label: t(d, 'lf.ib.channels'), href: link({ channel: undefined, page: undefined }) }, ...kinds.map((k) => ({ key: k, label: kindName(d, k), href: link({ channel: k, page: undefined }) }))]}
+          items={[{ key: '', label: t(d, 'lf.ib.channels'), href: link({ channel: undefined, page: undefined }) }, ...kinds.map((k) => ({ key: k, label: t(d, `sup.chip.${k}`) === `sup.chip.${k}` ? kindName(d, k) : t(d, `sup.chip.${k}`), href: link({ channel: k, page: undefined }) }))]}
         />
       ) : null}
       {box.rows.length ? (
