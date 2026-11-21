@@ -42,7 +42,7 @@ const D2 = [
   ['f-overview', '/admin/money', '#finance--overview'],
   ['f-cash', '/admin/money/cash', '#finance--cash'],
   ['f-pnl', '/admin/money/profit', '#finance--pnl'],
-  ['f-costs', '/admin/money/budgets', '#finance--costs'],
+  ['f-costs', '/admin/money/costs', '#finance--costs'], // PR 1185: the Costs & budgets tab opens Costs first (nav-v5)
   ['f-erp', '/admin/money/books', '#finance--erp'],
   ['f-couriers', '/admin/money/couriers', '#finance--couriers'],
   ['f-wallet', '/admin/money/refunds', '#finance--wallet'],
