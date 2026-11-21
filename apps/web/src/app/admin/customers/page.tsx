@@ -17,6 +17,7 @@ import { withCustomers } from '@/lib/admin-customers/i18n';
 import { customerHref, customersHref, DEFAULT_SORT, parseCustomerQuery } from '@/lib/admin-customers/model';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
+import { practiceShownDeps } from '@/lib/practice/shown-on';
 import { customersDeps } from '@/lib/customers-api';
 import { t } from '@/lib/i18n';
 
@@ -48,7 +49,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Se
     cu.customerList(cd, who, { ...query, sort: query.sort ?? DEFAULT_SORT }),
     cd.settings.value('customers.list', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
-    cu.canExport(cd, who),
+    cu.canExport(customersDeps(practiceShownDeps(access.deps)), who), // PR 1180: practice mode shows Export as on
   ]);
   return <CustomerListPage view={view} data={data} query={query} settings={settings} money={moneyOf(currency, view.locale)} hrefOf={(id) => customerHref(id, query)} exportLimits={exportOk ? { ...cu.EXPORT_REASON } : null} exportOff={!exportOk && (access.guard.permissions?.has('customers.export') ?? false)} />;
 }

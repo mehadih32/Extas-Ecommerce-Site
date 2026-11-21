@@ -59,6 +59,7 @@
 //   POST  /api/admin/customers/import                 the same with {confirm: true}: the import, history only (customers.import;
 //                                                     audited)
 //   POST  /api/admin/customers/import/:id/undo        {reason?} archived, never deleted (customers.import; audited)
+import { practiceShownDeps } from './practice/shown-on';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import * as cu from '@extas/customers';
 import { body, errorResponse, fail, guardAdmin, isUuid, json, type AdminDeps } from './admin-auth';
@@ -111,7 +112,7 @@ async function exportCsv(request: Request, deps: AdminDeps | null): Promise<Resp
   const g = await guardAdmin(request, deps, { permission: 'customers.export', storeId });
   if (g instanceof Response) return g;
   try {
-    const x = await cu.exportCustomers(customersDeps(deps!), { actor: g.actor, storeId, ctx: g.ctx }, await body(request));
+    const x = await cu.exportCustomers(customersDeps(practiceShownDeps(deps!)), { actor: g.actor, storeId, ctx: g.ctx }, await body(request));
     return new Response(x.csv, {
       status: 200,
       headers: {
@@ -298,7 +299,9 @@ function gradesRoute(request: Request, deps: AdminDeps | null, m: string, path: 
 }
 
 /** PR 287 — the segments' routes (`path` after /segments). */
-function segmentsRoute(request: Request, deps: AdminDeps | null, m: string, path: string[]): Promise<Response> {
+function segmentsRoute(request: Request, raw: AdminDeps | null, m: string, path: string[]): Promise<Response> {
+  // PR 1180: while practice mode is on, Customer groups count as on for everything but their settings card
+  const deps = raw ? practiceShownDeps(raw) : raw;
   const [id, sub] = path;
   if (!id) {
     if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.segmentsScreen(x.deps, x.who) }));
@@ -306,7 +309,7 @@ function segmentsRoute(request: Request, deps: AdminDeps | null, m: string, path
     return notAllowed();
   }
   if (path.length > 2) return notFound();
-  if (id === 'settings' && !sub) return m === 'PUT' ? handle(request, deps, 'customers.segments.write', async (x) => ({ screen: await cu.saveSegmentSettings(x.deps, x.who, await body(request)) })) : notAllowed();
+  if (id === 'settings' && !sub) return m === 'PUT' ? handle(request, raw, 'customers.segments.write', async (x) => ({ screen: await cu.saveSegmentSettings(x.deps, x.who, await body(request)) })) : notAllowed();
   if (id === 'options' && !sub) return m === 'GET' ? handle(request, deps, 'customers.read', async (x) => ({ options: await cu.segmentOptions(x.deps, x.who) })) : notAllowed();
   if (id === 'preview' && !sub) return m === 'POST' ? handle(request, deps, 'customers.read', async (x) => ({ preview: await cu.previewSegment(x.deps, x.who, await body(request)) })) : notAllowed();
   if (!isUuid(id)) return badId('segmentId');

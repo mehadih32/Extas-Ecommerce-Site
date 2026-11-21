@@ -52,6 +52,7 @@ import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { chatOrderDeps, supportDeps } from '@/lib/support-api';
+import { practiceShownDeps } from '@/lib/practice/shown-on';
 import { withW5a } from '@/lib/admin-v5-w5a';
 import { withLaneF } from '@/lib/admin-lane-f';
 import { InboxRows } from '@/components/admin/lane-f/InboxRows';
@@ -126,7 +127,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
     // PR 433: the follow-up waiting on this chat (only for someone who may reply; off as it ships)
     th.you.reply ? sp.chatFollowUp(sd, who, th.id) : Promise.resolve(null),
     // S28 · PR 692: the quick replies for the reply box (empty while `support.savedReplies` is off)
-    th.you.reply ? sp.listSavedReplies(sd, who) : Promise.resolve(null),
+    th.you.reply ? sp.listSavedReplies(supportDeps(practiceShownDeps(access.deps)), who) : Promise.resolve(null),
   ]);
   const n = (x: number) => formatNumber(x, view.locale);
   const at = (x: Date | null) => (x ? printedAt(x.toISOString(), view.timeZone) : t(d, 'sup.side.none'));

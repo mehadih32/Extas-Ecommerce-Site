@@ -6,6 +6,7 @@
 //   POST  /settings         {value, before} the switch `support.savedReplies` (support.settings)
 import * as sp from '@extas/support';
 import { body, fail, isUuid, type AdminDeps } from './admin-auth';
+import { practiceShownDeps } from './practice/shown-on';
 import { notAllowed, notFound, saveV5Switch, v5Handle } from './admin-v5-api';
 
 export async function savedRepliesRoute(request: Request, deps: AdminDeps | null, path: string[]): Promise<Response> {
@@ -15,19 +16,21 @@ export async function savedRepliesRoute(request: Request, deps: AdminDeps | null
     if (m !== 'POST') return notAllowed();
     return v5Handle(request, deps, 'support.settings', (x) => saveV5Switch(request, x, ['support.savedReplies']));
   }
+  // PR 1180: while practice mode is on, quick replies count as on for everything but the switch itself
+  const rd = deps ? practiceShownDeps(deps) : deps;
   if (id === undefined) {
-    if (m === 'GET') return v5Handle(request, deps, 'support.reply', async (x) => ({ ...(await sp.listSavedReplies(x.sd, x.who)) }));
+    if (m === 'GET') return v5Handle(request, rd, 'support.reply', async (x) => ({ ...(await sp.listSavedReplies(x.sd, x.who)) }));
     if (m !== 'POST') return notAllowed();
-    return v5Handle(request, deps, 'support.settings', async (x) => ({ reply: await sp.saveSavedReply(x.sd, x.who, await body(request)) }), 201);
+    return v5Handle(request, rd, 'support.settings', async (x) => ({ reply: await sp.saveSavedReply(x.sd, x.who, await body(request)) }), 201);
   }
   if (!isUuid(id)) return fail(404, 'NOT_FOUND', ['id']);
   if (path.length !== 2 || m !== 'POST') return path.length === 2 ? notAllowed() : notFound();
   if (action === 'archive') {
-    return v5Handle(request, deps, 'support.settings', async (x) => {
+    return v5Handle(request, rd, 'support.settings', async (x) => {
       const b = (await body(request)) as { archive?: unknown };
       return { reply: await sp.archiveSavedReply(x.sd, x.who, id, b.archive !== false) };
     });
   }
-  if (action === 'use') return v5Handle(request, deps, 'support.reply', async (x) => ({ counted: await sp.useSavedReply(x.sd, x.who, id) }));
+  if (action === 'use') return v5Handle(request, rd, 'support.reply', async (x) => ({ counted: await sp.useSavedReply(x.sd, x.who, id) }));
   return notFound();
 }
