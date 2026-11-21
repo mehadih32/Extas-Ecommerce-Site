@@ -27,7 +27,8 @@
         "PIN_LOCKED": "Too many wrong tries. Wait a while.",
         "WRONG_PIN": "That PIN is not right.",
         "other": "That did not save. Please try again."
-      }
+      },
+      "change": "Change ceiling"
     },
     "agents": {
       "h": "Cap per agent",
