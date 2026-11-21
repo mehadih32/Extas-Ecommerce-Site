@@ -95,6 +95,11 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
   const pct = (x: number | null) => (x === null ? '—' : `${n(x)}%`);
   const day = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', numberingSystem: 'latn' });
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, dateStyle: 'medium', timeStyle: 'short', numberingSystem: 'latn' });
+  // PR 1182 (prototype v5): every courier as a chip, the default first with its small "Default" tag; a chip opens the same section
+  const overview360 = await sh.couriersOverview(sd, who);
+  const chips = sh.defaultFirst(overview360.cards, overview360.defaultCourierId ?? '');
+  const canMoney = access.guard.permissions?.has('payments.view') ?? false;
+  const fin = menuKey === 'moneyCouriers';
   const href = (s: Section, extra: Record<string, string | number> = {}) => {
     const q = new URLSearchParams();
     if (s !== 'overview') q.set('s', s);
@@ -103,10 +108,12 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
     const qs = q.toString();
     return `/admin/delivery/couriers/${id}${qs ? `?${qs}` : ''}`;
   };
+  const chipHref = (cid: string) => href(section).replace(`/admin/delivery/couriers/${id}`, `/admin/delivery/couriers/${cid}`);
 
   let body: React.ReactNode;
   if (section === 'overview') {
     const f = c.last30;
+    const payout = canMoney ? await pay.payoutView(await paymentsDeps(access.deps), who, id).catch(() => null) : null;
     // PR 973 (prototype v5 "What to do now"): what needs a person on this courier, each with the section that deals with it.
     const todo: { key: string; text: string; to: Section; extra?: Record<string, string | number> }[] = [];
     if (!(c.enabled && c.mode === 'LIVE')) todo.push({ key: 'conn', text: cr('c.todoConn', { name: c.name }), to: 'setup' });
@@ -155,7 +162,10 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
               <ul className="c360-list">
                 {todo.map((x) => (
                   <li key={x.key}>
-                    <span>{x.text}</span> <Link href={href(x.to, x.extra)}>{cr('ov.view')}</Link>
+                    <span>{x.text}</span>{' '}
+                    <Link className="a2-btn sm ghost" href={href(x.to, x.extra)}>
+                      {cr('ov.view')}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -177,6 +187,26 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
             </div>
           </section>
         </div>
+        {payout ? (
+          <section className="a2-card a2-mt12" data-testid="c360-payout">
+            <div className="a2-between" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <h2 className="a2-h3">{cr('c.payout')}</h2>
+              <Link className="a2-sm" href={href('payouts')}>
+                {cr('c.sec.payouts')} →
+              </Link>
+            </div>
+            {payout.open ? (
+              <p className="a2-sm a2-mt6">
+                <b>{m(payout.open.amountMinor)}</b> <span className={`a2-pill ${payout.open.state === 'PAID' ? 'ok' : payout.open.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${payout.open.state}`)}</span>
+              </p>
+            ) : (
+              <dl className="c360-kv a2-mt6">
+                <dt>{cr('c.payoutReady')}</dt>
+                <dd>{m(payout.holds.netMinor)}</dd>
+              </dl>
+            )}
+          </section>
+        ) : null}
         <section className="a2-card a2-mt12" data-testid="c360-cost">
           <h2 className="a2-h3">{cr('c.cost')}</h2>
           <dl className="c360-kv">
@@ -306,7 +336,27 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
         </section>
       );
     } else {
-      const mo = await pay.courierMoney(await paymentsDeps(access.deps), who, id, { month: one(sp.month) });
+      const pdeps = await paymentsDeps(access.deps);
+      const mo = await pay.courierMoney(pdeps, who, id, { month: one(sp.month) });
+      // PR 1182 (prototype v5 Finance › Couriers): this month and last month as chips, the download, and on the Finance page the
+      // cash each courier holds and the payouts timeline across couriers
+      const nowYm = new Date().toISOString().slice(0, 7);
+      const lastYm = new Date(Date.UTC(Number(nowYm.slice(0, 4)), Number(nowYm.slice(5, 7)) - 2, 1)).toISOString().slice(0, 7);
+      const monName = (ym: string) => new Intl.DateTimeFormat(view.locale, { month: 'short', timeZone: 'UTC' }).format(new Date(`${ym}-01T00:00:00Z`));
+      const across = fin
+        ? await Promise.all(
+            chips.map(async (x) => ({
+              c: x,
+              held: x.id === id ? (mo.position?.withCourierMinor ?? 0) : ((await pay.courierMoney(pdeps, who, x.id).catch(() => null))?.position?.withCourierMinor ?? 0),
+              rows: (await pay.payoutView(pdeps, who, x.id).catch(() => null))?.rows ?? [],
+            })),
+          )
+        : [];
+      const maxHeld = Math.max(1, ...across.map((x) => x.held));
+      const timeline = across
+        .flatMap((x) => x.rows.map((r) => ({ r, name: x.c.name })))
+        .sort((a, b) => b.r.requestedAt.getTime() - a.r.requestedAt.getTime())
+        .slice(0, 8); // hardcode-ok: the prototype's timeline shows the newest 8
       const p = mo.position;
       const moreLines = Math.max(0, mo.openCount - mo.open.length);
       body = (
@@ -336,8 +386,63 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
               </div>
             </dl>
           ) : null}
+          {fin ? (
+            <div className="c360-two a2-mt12">
+              <section className="a2-card" data-testid="fin-held">
+                <h2 className="a2-h3">{cr('m.heldPer')}</h2>
+                <p className="a2-xs a2-mute">{cr('m.heldPerSub')}</p>
+                {across.map((x) => (
+                  <div key={x.c.id} className="c360-held a2-sm a2-mt6">
+                    <span>{x.c.name}</span>
+                    <span className="c360-track" aria-hidden>
+                      <i className={x.c.id === id ? 'on' : ''} style={{ width: `${Math.round((x.held / maxHeld) * 100)}%` }} />
+                    </span>
+                    <b>{m(x.held)}</b>
+                  </div>
+                ))}
+              </section>
+              <section className="a2-card" data-testid="fin-timeline">
+                <h2 className="a2-h3">{cr('m.timeline')}</h2>
+                <p className="a2-xs a2-mute">{cr('m.timelineSub')}</p>
+                {timeline.length ? (
+                  <ul className="c360-list">
+                    {timeline.map(({ r, name }) => (
+                      <li key={r.id}>
+                        <b>
+                          {name} · {m(r.amountMinor)}
+                        </b>{' '}
+                        <span className={`a2-pill ${r.state === 'PAID' ? 'ok' : r.state === 'REJECTED' ? 'bad' : 'info'}`}>{cr(`y.state.${r.state}`)}</span>
+                        <span className="a2-xs a2-mute a2-blk">{r.paidAt ? cr('m.paidOn', { d: day.format(r.paidAt) }) + (r.paymentRef ? ` · ${r.paymentRef}` : '') : cr('m.requestedOn', { d: when.format(r.requestedAt) })}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="a2-sm a2-mute a2-mt6">{cr('m.timelineNone')}</p>
+                )}
+              </section>
+            </div>
+          ) : null}
           <section className="a2-card a2-mt12" data-testid="c360-statements">
-            <h2 className="a2-h3">{cr('m.statements')}</h2>
+            <h2 className="a2-h3">{cr('m.stmtTitle')}</h2>
+            <p className="a2-xs a2-mute">{c.name}</p>
+            <div className="a2-between a2-mt6" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <nav className="a2-views" aria-label={cr('m.stmtTitle')} data-testid="c360-months">
+                {[
+                  [nowYm, cr('m.thisMonth', { m: monName(nowYm) })],
+                  [lastYm, cr('m.lastMonth', { m: monName(lastYm) })],
+                ].map(([ym, label]) => (
+                  <Link key={ym} className={`a2-view${mo.month.ym === ym ? ' on' : ''}`} href={href('money', { month: ym! })} aria-current={mo.month.ym === ym ? 'page' : undefined} scroll={false}>
+                    {label}
+                  </Link>
+                ))}
+              </nav>
+              <Link className="a2-btn sm" href={`/admin/delivery/couriers/${id}/statement?month=${mo.month.ym}`} data-testid="cr-dl">
+                {cr('m.download')}
+              </Link>
+            </div>
+            <h3 className="a2-sm a2-mt12">
+              <b>{cr('m.statements')}</b>
+            </h3>
             {mo.statements.length ? (
               <div className="a2-tblw a2-mt12">
                 <table className="a2-tbl">
@@ -731,17 +836,36 @@ export default async function CourierPage({ params, searchParams }: { params: Pr
             {cr('c.back')}
           </Link>
         }
-        title={c.name}
-        right={defCard ? <MakeDefaultButton courierId={c.id} version={defCard.version} value={defCard.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} /> : undefined}
-        sub={
-          <>
-            {t(d, `courier.providers.${c.providerKey}`)} · {t(d, `ful.couriers.mode.${c.mode}`)}
-            {c.isDefault ? ` · ${cr('ov.default')}` : ''}
-            {c.isBackup ? ` · ${cr('ov.backup')}` : ''}
-          </>
+        title={fin ? cr('c.finTitle') : cr('c.title360')}
+        right={
+          fin || defCard ? (
+            <>
+              {fin ? (
+                <Link className="a2-btn" href={`/admin/delivery/couriers/${id}`} data-testid="c360-open">
+                  {cr('ov.open360')}
+                </Link>
+              ) : null}
+              {defCard ? <MakeDefaultButton courierId={c.id} version={defCard.version} value={defCard.value} label={cr('ov.makeDefault')} done={cr('ov.defaultDone')} failed={cr('ov.defaultFailed')} /> : null}
+            </>
+          ) : undefined
         }
+        sub={fin ? cr('c.finSub') : cr('c.sub360')}
       />
       <SectionTabs view={view} current={menuKey} />
+      {/* PR 1182 (prototype v5): the courier chips, default first, then the courier's own line */}
+      <nav className="a2-views a2-mt12" aria-label={cr('c.pick')} data-testid="c360-couriers">
+        {chips.map((x) => (
+          <Link key={x.id} className={`a2-view${x.id === id ? ' on' : ''}`} href={chipHref(x.id)} aria-current={x.id === id ? 'page' : undefined} data-courier={x.id}>
+            {x.name}
+            {x.isDefault ? <small className="a2-cnt">{cr('ov.default')}</small> : null}
+          </Link>
+        ))}
+      </nav>
+      <p className="a2-xs a2-mute a2-mt6" data-testid="c360-line">
+        <b>{c.name}</b> · {t(d, `courier.providers.${c.providerKey}`)} · {t(d, `ful.couriers.mode.${c.mode}`)}
+        {c.isDefault ? ` · ${cr('ov.default')}` : ''}
+        {c.isBackup ? ` · ${cr('ov.backup')}` : ''}
+      </p>
       <nav className="a2-views a2-mt12" aria-label={cr('c.sections')} data-testid="c360-sections">
         {COURIER_SECTIONS.map((x) => (
           <Link key={x} className={`a2-view${x === section ? ' on' : ''}`} href={href(x)} aria-current={x === section ? 'page' : undefined}>
