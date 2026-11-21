@@ -39,10 +39,15 @@ export const KNOWN_KINDS = [
   { key: 'money', nameEn: 'Money movement', nameBn: 'টাকা স্থানান্তর' },
   { key: 'refund', nameEn: 'Refund', nameBn: 'রিফান্ড' },
   { key: 'cod', nameEn: 'COD change', nameBn: 'ক্যাশ অন ডেলিভারি বদল' },
-  { key: 'price', nameEn: 'Price change', nameBn: 'দামের পরিবর্তন' },
+  // PR 1164: the prototype v5 names (m-ai.js KIND) for its six kinds of idea: Ad budget, Order decline, Customer limit,
+  // Reply to customer, Price / offer idea, Blog draft.
+  { key: 'price', nameEn: 'Price / offer idea', nameBn: 'দাম / অফার আইডিয়া' },
   { key: 'discount', nameEn: 'Discount', nameBn: 'ছাড়' },
-  { key: 'adBudget', nameEn: 'Ad budget increase', nameBn: 'বিজ্ঞাপনের বাজেট বাড়ানো' },
-  { key: 'block', nameEn: 'Blocking', nameBn: 'ব্লক করা' },
+  { key: 'adBudget', nameEn: 'Ad budget', nameBn: 'বিজ্ঞাপন বাজেট' },
+  { key: 'block', nameEn: 'Customer limit', nameBn: 'কাস্টমার সীমা' },
+  { key: 'orderDecline', nameEn: 'Order decline', nameBn: 'অর্ডার বাতিল' },
+  { key: 'reply', nameEn: 'Reply to customer', nameBn: 'কাস্টমারকে উত্তর' },
+  { key: 'blog', nameEn: 'Blog draft', nameBn: 'ব্লগ খসড়া' },
   { key: 'delete', nameEn: 'Deletion', nameBn: 'মুছে ফেলা' },
   // PR 585: Tirondaj/Doot's own learning-engine proposal to buy a paid data tool (cost + reason) — decided the
   // same way as every other non-GATE_KINDS request, here only for a proper label (`../admin-ai/learning-engine.ts`).
@@ -52,6 +57,15 @@ export const KNOWN_KINDS = [
   { key: FIX_KIND, nameEn: 'Site-health fix', nameBn: 'সাইট স্বাস্থ্যের সমাধান' },
   { key: SKILL_KIND, nameEn: 'New AI skill', nameBn: 'নতুন AI স্কিল' },
 ] as const;
+
+/** PR 1164: the kinds the approvals page always shows as chips, in the prototype's order (m-ai.js KIND), each with its
+ * count even when it is 0; any other kind waiting joins after them. */
+export const CHIP_KINDS = ['adBudget', 'orderDecline', 'block', 'reply', 'price', 'blog'] as const;
+
+/** The chips for a list of approvals: the six above first, then any other kind present, in first-seen order. */
+export function chipKinds(present: readonly string[]): string[] {
+  return [...CHIP_KINDS, ...Array.from(new Set(present)).filter((k) => !(CHIP_KINDS as readonly string[]).includes(k))];
+}
 
 /** The display label for a kind, in the given language — the known catalogue's own name, or the raw kind string
  * itself when it is not one of them (never a guessed translation). */
