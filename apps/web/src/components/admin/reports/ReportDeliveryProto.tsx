@@ -47,12 +47,14 @@ export function ReportDeliveryProto({
         of: num(f.finished),
       }),
       tone: (f.success ?? 0) >= 85 ? "good" : "bad",
+      // PR 1205 (prototype v5): each line's action, in the prototype's order (Returns, Courier rules, Ask advance)
+      act: { label: c("proto.ans.returns"), href: "/admin/orders/returns" },
     });
   if (worst && f.byCourier.length > 1)
     lines.push({
       text: c("proto.ans.worst", { name: worst.name, pct: pc(worst.success) }),
       tone: worst.success < 85 ? "bad" : undefined,
-      act: { label: c("proto.ans.courier"), href: "/admin/couriers" },
+      act: { label: c("proto.ans.courier"), href: "/admin/rules" },
     });
   if (topReason)
     lines.push({
@@ -60,7 +62,7 @@ export function ReportDeliveryProto({
         reason: nice(topReason.code),
         n: num(topReason.n),
       }),
-      act: { label: c("proto.ans.returns"), href: "/admin/orders/returns" },
+      act: { label: c("proto.ans.advance"), href: "/admin/orders/risk-rules/checkout" },
     });
   if (f.cod.ages[2]!.parcels)
     lines.push({
@@ -186,7 +188,17 @@ export function ReportDeliveryProto({
           c("proto.cCourier"),
           c("proto.cCourierSub"),
           courierItems.length ? (
-            <BarList items={courierItems} testId="dp-courier-bars" />
+            <>
+              <BarList items={courierItems} testId="dp-courier-bars" />
+              {/* PR 1205 (prototype v5): one "Open Courier 360" button per courier under the bars */}
+              <div className="a2-gap8 a2-mt12" style={{ flexWrap: "wrap" }}>
+                {f.byCourier.map((x) => (
+                  <Link key={x.id} className="a2-btn ghost" href={`/admin/delivery/couriers/${x.id}`}>
+                    {c("proto.open360", { name: x.name })}
+                  </Link>
+                ))}
+              </div>
+            </>
           ) : (
             none
           ),
@@ -205,11 +217,12 @@ export function ReportDeliveryProto({
           "dp-cod",
           c("proto.cCod"),
           c("proto.cCodSub"),
-          f.cod.parcels ? (
-            <BarList items={codItems} testId="dp-cod-bars" />
-          ) : (
-            none
-          ),
+          <>
+            {f.cod.parcels ? <BarList items={codItems} testId="dp-cod-bars" /> : none}
+            <Link className="a2-btn a2-mt12" href="/admin/money">
+              {c("proto.openFinance")}
+            </Link>
+          </>,
         )}
       </div>
       <div className="rp-grid3e a2-mt12">
@@ -280,17 +293,22 @@ export function ReportDeliveryProto({
           "dp-exprod",
           c("proto.cExProd"),
           c("proto.cExProdSub"),
-          f.exchangeByProduct.length ? (
-            <ul className="cr-rows">
-              {f.exchangeByProduct.slice(0, 8).map((r) => (
-                <li key={r.name}>
-                  {r.name} · {num(r.n)} · {nice(r.top)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            none
-          ),
+          <>
+            {f.exchangeByProduct.length ? (
+              <ul className="cr-rows">
+                {f.exchangeByProduct.slice(0, 8).map((r) => (
+                  <li key={r.name}>
+                    {r.name} · {num(r.n)} · {nice(r.top)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              none
+            )}
+            <Link className="a2-btn a2-mt12" href="/admin/size-charts">
+              {c("proto.fixSize")} →
+            </Link>
+          </>,
         )}
       </div>
       <section className="a2-card a2-mt12" data-testid="dp-grid">
