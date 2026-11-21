@@ -13,9 +13,9 @@
     },
     "views": "Refund views",
     "view": {
-      "approve": "To approve",
+      "approve": "Waiting",
       "payout": "To pay out",
-      "done": "Paid out",
+      "done": "Paid",
       "rejected": "Rejected",
       "all": "All"
     },
@@ -267,6 +267,15 @@
         "title": "His late orders: apology credit",
         "off": "The apology credit is off. The owner can switch it on under Money › Refunds & wallet › More options."
       }
+    },
+    "credits": {
+      "title": "Credits from exchanges",
+      "credit": "Credit",
+      "state": "Where it stands",
+      "lower": "lower-priced new piece",
+      "inWallet": "In wallet",
+      "add": "Old piece passed · add",
+      "none": "No exchange credit yet. A cheaper swap's credit shows here until the old piece passes the check."
     }
   }
 }
