@@ -87,7 +87,7 @@ export function OrderFilters({ action, view, defaultView, q, search, go, aria, s
           </details>
           {selects.filter((s) => s.custom).map((s) => (
             <details key={`c-${s.name}`} className="a2-fmore" open={!!(s.custom!.from || s.custom!.to) && !s.value}>
-              <summary className="a2-btn ghost">{proto.custom}</summary>
+              <summary className="a2-btn ghost" role="button">{proto.custom}</summary>
               <div className="a2-fmore-b">{renderCustom(s)}</div>
             </details>
           ))}
