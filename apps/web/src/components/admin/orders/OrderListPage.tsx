@@ -266,7 +266,8 @@ export async function OrderListPage({ view, a, query, now, menu }: { view: Admin
               ) : null}
               {data.next ? (
                 <Link className="a2-btn sm" href={listHref(page, query, { cursor: data.next })} data-testid="orders-next">
-                  {t(d, 'orders.list.next')}
+                  {/* PR 1187 (prototype v5): "Show more (N left)" on the first page of a view with no search or date */}
+                  {!filtered && !query.cursor && (data.counts[query.view] ?? 0) > data.rows.length ? t(d, 'orders.list.nextLeft', { n: formatNumber((data.counts[query.view] ?? 0) - data.rows.length, view.locale) }) : t(d, 'orders.list.next')}
                 </Link>
               ) : null}
             </span>
