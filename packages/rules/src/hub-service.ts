@@ -298,7 +298,10 @@ export interface PopupView {
   shape: PopupSpec['shape'];
   tokens: readonly string[];
   hasN: boolean;
-  managed: { href: string } | null;
+  /** Where its numbers are set; `engine` when that engine's own switch decides whether it shows (the row has no switch of its own). */
+  managed: { href: string; engine: boolean } | null;
+  /** PR 1200: set wholly in the engine it is managed in (Demo products): no switch and no editor here, "See" instead. */
+  readOnly: boolean;
   /** The notice engine carries it (the owner's notices below); its words are written there. */
   notice: 'bar' | 'popup' | null;
   /** The other feature it needs, and whether that is on. */
@@ -356,7 +359,8 @@ export async function popupsScreen(deps: HubDeps, who: Who): Promise<PopupsScree
       shape: p.shape,
       tokens: p.tokens,
       hasN: p.hasN === true,
-      managed: p.managed ? { href: p.managed.href } : null,
+      managed: p.managed ? { href: p.managed.href, engine: !!p.managed.onKey } : null,
+      readOnly: p.readOnly === true,
       notice: p.notice ?? null,
       needs,
       state,
@@ -372,7 +376,7 @@ export async function savePopup(deps: HubDeps, who: Who, input: { key: string; e
     POPUPS.find((p) => p.key === input.key),
     'pop-up',
   );
-  if (spec.waiting || spec.notice) throw new RulesError('INVALID_INPUT', 'this placement is written elsewhere', [spec.key]);
+  if (spec.waiting || spec.readOnly || spec.notice) throw new RulesError('INVALID_INPUT', 'this placement is written elsewhere', [spec.key]);
   if (!(POPUP_KEYS as readonly string[]).includes(spec.key)) throw new RulesError('NOT_FOUND', 'no such placement');
   const entry = popupEntrySchema.safeParse(input.entry);
   if (!entry.success)
@@ -429,7 +433,7 @@ export async function undoPopup(deps: HubDeps, who: Who, input: { key: string; c
     POPUPS.find((p) => p.key === input.key),
     'pop-up',
   );
-  if (spec.waiting || spec.notice) throw new RulesError('INVALID_INPUT', 'this placement is written elsewhere', [spec.key]);
+  if (spec.waiting || spec.readOnly || spec.notice) throw new RulesError('INVALID_INPUT', 'this placement is written elsewhere', [spec.key]);
   const st = anySettings(deps);
   const before = ((await st.value('rules.hub.popups', { storeId: who.storeId })) ?? {}) as Record<string, PopupEntry>;
   if (versionOf(before) !== input.version) throw new RulesError('STALE_DRAFT', 'someone changed the pop-ups since you opened them');

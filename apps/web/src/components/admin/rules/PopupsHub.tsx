@@ -5,7 +5,7 @@
 // in …") follows that rule's switch; the owner's own notices (the bar and the welcome pop-up) are written below, on the same page.
 // Nothing here opens by itself on the first page a visitor sees (the notices engine's own limits stay, PR 216).
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import { POPUP_GROUPS, POPUPS, type PopupGroupId, type PopupPage } from '@extas/rules/pure';
 import type { PopupView, PopupsScreen } from '@extas/rules';
 import { call } from '../api';
@@ -178,22 +178,25 @@ export function PopupsHub(props: PopupsHubProps) {
                   <Icon name={GROUP_ICON[g]} size={15} /> {tt(`groups.${g}`)} <small>{tt('groupCount', { on: items.filter((p) => p.state === 'on').length, n: items.length })}</small>
                 </h2>
                 {items.map((p) => {
-                  const own = !p.notice && p.state !== 'waiting';
+                  const own = !p.notice && !p.readOnly && p.state !== 'waiting';
+                  // PR 1200 (prototype v5): the whole row is the button (number, picture, where, who, status); the switch and the links stop the click
+                  const toggle = () => open(sel === p.key ? null : p.key);
                   return (
-                    <div key={p.key} className={`po-row ${sel === p.key ? 'sel' : ''}`}>
-                      <div
-                        className="po-main"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => open(sel === p.key ? null : p.key)}
-                        onKeyDown={(e) => {
-                          if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
-                            e.preventDefault();
-                            open(sel === p.key ? null : p.key);
-                          }
-                        }}
-                        aria-expanded={sel === p.key}
-                      >
+                    <Fragment key={p.key}>
+                    <div
+                      className={`po-row ${sel === p.key ? 'sel' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={toggle}
+                      onKeyDown={(e) => {
+                        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+                          e.preventDefault();
+                          toggle();
+                        }
+                      }}
+                      aria-expanded={sel === p.key}
+                    >
+                      <div className="po-main">
                         <span className="po-n">{p.n}</span>
                         <span className={`po-th pg-${p.page}`} aria-hidden="true">
                           <i className="hd" />
@@ -229,11 +232,11 @@ export function PopupsHub(props: PopupsHubProps) {
                       <div className="po-st">
                         <span className={`rh-pl ${p.state}`}>{stateText(p)}</span>
                         {own ? (
-                          <label className="rh-sw is-switch">
+                          <label className="rh-sw is-switch" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={p.entry.on}
-                              disabled={busy || !perms.write || !!p.managed}
+                              disabled={busy || !perms.write || !!p.managed?.engine}
                               onChange={(e) => void save(p, { ...p.entry, on: e.target.checked }, e.target.checked ? 'switchedOn' : 'switchedOff')}
                               aria-label={`${nameOf(p.key)}: ${tt('showThis')}`}
                             />
@@ -242,8 +245,9 @@ export function PopupsHub(props: PopupsHubProps) {
                           <span className="rh-go">{tt('see')}</span>
                         )}
                       </div>
-                      {sel === p.key && narrow ? <div className="rh-inline">{editor(p)}</div> : null}
                     </div>
+                    {sel === p.key && narrow ? <div className="rh-inline">{editor(p)}</div> : null}
+                    </Fragment>
                   );
                 })}
               </section>
@@ -327,7 +331,7 @@ function PopupEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.key, version]);
   const spec = POPUPS.find((x) => x.key === p.key)!;
-  const locked = p.notice !== null || p.state === 'waiting';
+  const locked = p.notice !== null || p.readOnly || p.state === 'waiting';
   const dirty = JSON.stringify(e) !== JSON.stringify(p.entry);
   const put = (patch: Partial<typeof e>) => setE((x) => ({ ...x, ...patch }));
   const insert = (token: string) => put({ textEn: `${e.textEn}{${token}}` });
@@ -363,7 +367,7 @@ function PopupEditor({
       ) : null}
       {locked ? null : (
         <>
-          {!p.managed ? (
+          {!p.managed?.engine ? (
             <label className="rh-sw is-switch">
               <input type="checkbox" checked={e.on} onChange={(x) => put({ on: x.target.checked })} disabled={!canWrite} /> <span>{tt('showThis')}</span>
             </label>
