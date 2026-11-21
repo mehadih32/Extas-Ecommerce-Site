@@ -150,7 +150,8 @@
       "updating": "Updating…",
       "updated": "Audiences counted again",
       "updateFailed": "Could not update. Try again.",
-      "yours": "Your audiences"
+      "yours": "Your audiences",
+      "message": "Message"
     },
     "cal": {
       "title": "Marketing calendar",

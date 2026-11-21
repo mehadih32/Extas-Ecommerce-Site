@@ -172,6 +172,9 @@ export default async function AudiencesPage(props: Props) {
                 <th>{s('col.counted')}</th>
                 <th className="r">{s('col.campaigns')}</th>
                 <th>{s('col.state')}</th>
+                <th>
+                  <span className="a2-sr">{t(d, 'lf.au.message')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -194,6 +197,14 @@ export default async function AudiencesPage(props: Props) {
                   <td className="r a2-num">{num(r.campaigns)}</td>
                   <td>
                     <span className={`a2-pill${r.state === 'ACTIVE' ? ' ok' : ''}`}>{s(`state.${r.state}`)}</span>
+                  </td>
+                  <td className="r">
+                    {/* PR 1191 (prototype v5): "Message" opens a new message campaign, where the group is picked and the send needs its own OK */}
+                    {r.kind !== AUDIENCE_KIND_EXCLUSION && r.state !== 'ARCHIVED' ? (
+                      <Link className="a2-btn sm" href="/admin/messages/campaigns/new?kind=blast" data-testid="au-message">
+                        {t(d, 'lf.au.message')}
+                      </Link>
+                    ) : null}
                   </td>
                 </tr>
               ))}
