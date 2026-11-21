@@ -49,11 +49,12 @@ export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, h
             </Link>
           );
         })}
-        <span className={`a2-view${custom ? ' on' : ''}`} aria-hidden="true">
+        {/* PR 1189 (prototype v5): Custom is a chip that takes you to the two day boxes below */}
+        <a className={`a2-view${custom ? ' on' : ''}`} href="#returns-range" aria-current={custom ? 'page' : undefined} data-testid="returns-date-custom">
           {lt(view, 'date.custom')}
-        </span>
+        </a>
       </nav>
-      <form className="a2-gap8 a2-mt6 d4-range" method="get" action={returnsHref()} data-testid="returns-range">
+      <form id="returns-range" className="a2-gap8 a2-mt6 d4-range" method="get" action={returnsHref()} data-testid="returns-range">
         {tab ? <input type="hidden" name="tab" value={tab} /> : null}
         <label className="a2-xs">
           {lt(view, 'date.from')}
@@ -81,11 +82,22 @@ export function ReturnsLens({ view, tab, from, to, counts, reminders, courier, h
       <nav className="a2-views a2-mt12" aria-label={lt(view, 'tabs')} data-testid="returns-tabs">
         {RETURN_TABS.map((k) =>
           k === 'handed' ? (
-            handbackHref ? (
-              <Link key={k} className="a2-view" href={handbackHref} data-testid="returns-tab-handed">
-                {lt(view, 'tab.handed')}
-              </Link>
-            ) : null
+            // PR 1189 (prototype v5): Handed back is always a tab: the hand-back desk on ERP contract v6, Receive & QC before it
+            <Link key={k} className="a2-view" href={handbackHref ?? `${returnsHref()}/qc`} data-testid="returns-tab-handed">
+              {lt(view, 'tab.handed')}
+            </Link>
+          ) : k === 'requests' ? (
+            [
+              <Link key={k} className={`a2-view${tab === k ? ' on' : ''}`} href={href({ tab: tab === k ? null : k })} scroll={false} aria-current={tab === k ? 'page' : undefined} data-testid={`returns-tab-${k}`}>
+                {lt(view, `tab.${k}`)}
+                <span className="a2-cnt">{n(counts[k])}</span>
+              </Link>,
+              // PR 1189 (prototype v5): Partial deliveries beside Exchange requests; the box is filled on the order itself
+              <Link key="partial" className="a2-view" href="/admin/orders?status=PARTIALLY_DELIVERED" data-testid="returns-tab-partial">
+                {lt(view, 'tab.partial')}
+                {courier ? <span className="a2-cnt">{n(courier.partial)}</span> : null}
+              </Link>,
+            ]
           ) : (
             <Link key={k} className={`a2-view${tab === k ? ' on' : ''}`} href={href({ tab: tab === k ? null : k })} scroll={false} aria-current={tab === k ? 'page' : undefined} data-testid={`returns-tab-${k}`}>
               {lt(view, `tab.${k}`)}
