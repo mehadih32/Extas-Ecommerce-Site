@@ -239,8 +239,10 @@ export interface PopupSpec {
   notice?: 'bar' | 'popup';
   /** Shown only while this other feature is on (a note says which, and links to it). */
   needs?: { href: string; onKey: string; onField?: string };
-  /** The placement waits for a later S28 PR (demo products, PR 684). */
+  /** The placement waits for a later S28 PR. */
   waiting?: boolean;
+  /** PR 1200: its switch and words live in the engine it is managed in (no switch on this row, "See" instead). */
+  readOnly?: boolean;
 }
 
 export const POPUPS: readonly PopupSpec[] = [
@@ -258,10 +260,11 @@ export const POPUPS: readonly PopupSpec[] = [
     tokens: ['amount'],
     needs: { href: '/admin/orders/risk-rules/checkout', onKey: 'checkout.advance', onField: 'enabled' },
   },
-  { n: 7, key: 'stockhold', group: 'checkout', page: 'checkout', shape: 'inline', tokens: ['minutes'] },
+  // PR 1200 (prototype v5): the stock-hold minutes, the demo products and the delivery days are set in their own place ("Managed in")
+  { n: 7, key: 'stockhold', group: 'checkout', page: 'checkout', shape: 'inline', tokens: ['minutes'], managed: { href: '/admin/rules?rule=stockhold' } },
   { n: 8, key: 'oos', group: 'checkout', page: 'checkout', shape: 'inline', tokens: ['size'] },
-  { n: 9, key: 'demo', group: 'product', page: 'product', shape: 'modal', tokens: [], waiting: true },
+  { n: 9, key: 'demo', group: 'product', page: 'product', shape: 'modal', tokens: [], managed: { href: '/admin/products/demo', onKey: 'catalogue.demo', onField: 'on' }, readOnly: true },
   { n: 10, key: 'lowstock', group: 'product', page: 'product', shape: 'inline', tokens: ['n'], hasN: true },
   { n: 11, key: 'thanks', group: 'after', page: 'thanks', shape: 'inline', tokens: ['name', 'order'] },
-  { n: 12, key: 'promise', group: 'after', page: 'thanks', shape: 'inline', tokens: ['date', 'days'] },
+  { n: 12, key: 'promise', group: 'after', page: 'thanks', shape: 'inline', tokens: ['date', 'days'], managed: { href: '/admin/delivery/zones' } },
 ];

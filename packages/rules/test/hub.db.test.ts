@@ -135,7 +135,9 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     const s = await popupsScreen(deps(), as(reader));
     expect(s.popups).toHaveLength(12);
     expect(new Set(s.popups.map((p) => p.group)).size).toBe(4);
-    expect(s.popups.find((p) => p.key === 'demo')!.state).toBe('waiting');
+    // PR 1200: the demo pop-up follows Settings › Demo products (off as shipped) and is read-only here
+    expect(s.popups.find((p) => p.key === 'demo')).toMatchObject({ state: 'off', readOnly: true, managed: { href: '/admin/products/demo', engine: true } });
+    expect(s.popups.find((p) => p.key === 'stockhold')!.managed).toEqual({ href: '/admin/rules?rule=stockhold', engine: false });
     expect(s.popups.find((p) => p.key === 'thanks')!.state).toBe('off');
     const entry = { on: true, textEn: 'Thank you {name}', textBn: '', from: null, to: null, n: null };
     expect(await code(savePopup(deps(), as(reader), { key: 'thanks', entry, version: s.version }))).toBe('FORBIDDEN');
