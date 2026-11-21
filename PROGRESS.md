@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 21 Nov 2026 - p101 parity round, lane L3 (branch `claude/p101-l3`, from `origin/main` bfd57d99): PR 1200-1207
+
+1200 Rules › Pop-ups rows (whole row is the button; Managed in for stock hold, demo products, delivery days); 1201 Website words (Blog rail chips, Product page, Shop text Home / Save changes / বাংলা); 1202 Loyalty cards always shown (Top point earners, Wallet balances); 1203 Claims: greyed Mark sent on practice claims; 1204 Add product Back / Next → / Phone preview heading; 1205 Delivery & returns report actions; 1206 Team and Products report words; 1207 Reports title, courier comparison card names, Sales Show all. Not matched (data, shared nav or another lane): r-all row values, r-coupons AI approvals, w-control/w-seo, product categories, sets, size charts, Monthly review tab overflow, Reviews opening on Questions, Areas division tiles. Next: the integrator joins the lanes.
+
 ## 19 Nov 2026 - Batch 2026-11-19-1 (branch `batch-2026-11-19-1`, from `origin/main` f8f7eaff): the three prototype-parity lanes joined
 
 Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). **1158**: the Accounts & tools sub-tabs read Ad accounts, Refer a friend, Shopping feed (nav labels, shell tab labels, page titles, the Meta feed back link, Bengali guides). Next: local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
