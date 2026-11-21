@@ -114,7 +114,7 @@ const PAIRS = (SETS[arg('set')] ?? PAIRS0).filter(([k]) => !arg('only') || arg('
 const VPS = [['phone', 390, 844], ['desktop', 1366, 900]];
 const MAXH = 2400;
 const browser = await chromium.launch();
-async function shot(ctx, url, file, wait) {
+async function shot(ctx, url, file, wait, prep = null) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)));
@@ -124,6 +124,10 @@ async function shot(ctx, url, file, wait) {
     status = r ? r.status() : 0;
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     await page.waitForTimeout(wait);
+    if (prep) {
+      await page.evaluate(prep).catch(() => {});
+      await page.waitForTimeout(wait);
+    }
     const h = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
     const w = page.viewportSize().width;
     await page.screenshot({ path: file, type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: w, height: Math.min(h, MAXH) } });
@@ -175,7 +179,11 @@ for (const [vn, w, h] of VPS) {
   const pc = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: vn === 'phone' });
   for (const [key, real, pr] of PAIRS) {
     const r = await shot(rc, base + real, `${out}/real-${key}-${vn}.jpg`, 2500);
-    const p = await shot(pc, `${proto}/index.html${pr}`, `${out}/proto-${key}-${vn}.jpg`, 900);
+    // PR 1166: the prototype's Home shows the design it last kept (A by default): press that key's design (home-B → "B · Calm"),
+    // and hide its "How to try this prototype" card, which is a note about the prototype itself, not part of the admin
+    const design = /^home-([A-D])$/.exec(key)?.[1];
+    const prep = design ? `(() => { try { localStorage.setItem('extas-proto-tour', 'off'); } catch (e) {} const b = document.querySelector('#hm-design button[data-v="${design}"]'); if (b) b.click(); const x = document.querySelector('#hm-tour-x'); if (x) x.click(); })()` : null;
+    const p = await shot(pc, `${proto}/index.html${pr}`, `${out}/proto-${key}-${vn}.jpg`, 900, prep);
     // side by side
     const b64 = (f) => readFileSync(f).toString('base64');
     try {
