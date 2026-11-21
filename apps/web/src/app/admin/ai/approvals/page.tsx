@@ -18,7 +18,7 @@ import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/Shel
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
 import { aiAgentDef, isAiAgentKey } from '@/lib/admin-ai/agents';
-import { approvalExtras, approvalsView, kindLabelOf, type ApprovalRow } from '@/lib/admin-ai/approvals';
+import { approvalExtras, approvalsView, chipKinds, kindLabelOf, type ApprovalRow } from '@/lib/admin-ai/approvals';
 import { GATE_KINDS } from '@/lib/admin-health/fixes';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess, type AdminView } from '@/lib/admin-page';
@@ -81,7 +81,8 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
   // PR 819 (prototype v5 m-ai.js renderApprovals): "Waiting / Decided" and one chip per kind of idea, with its count
   const viewNow: 'open' | 'done' = sp.view === 'done' ? 'done' : 'open';
   const inView = viewNow === 'open' ? o.pending : o.decided;
-  const kinds = Array.from(new Set(inView.map((r) => r.kind)));
+  // PR 1164: the prototype's six kinds always show, with 0 when none waits; any other kind present joins after them
+  const kinds = chipKinds(inView.map((r) => r.kind));
   const kindNow = sp.kind && kinds.includes(sp.kind) ? sp.kind : 'all';
   const shownPending = viewNow === 'open' ? o.pending.filter((r) => kindNow === 'all' || r.kind === kindNow) : [];
   const shownDecided = viewNow === 'done' ? o.decided.filter((r) => kindNow === 'all' || r.kind === kindNow) : [];

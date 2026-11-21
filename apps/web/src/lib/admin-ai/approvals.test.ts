@@ -2,7 +2,7 @@
 // `approvalsView`, `decideApproval`, `expireStaleApprovals`) touches Prisma, so it is proven in
 // `approvals-api.db.test.ts` instead, the same split `calculator.ts`/`calculator.test.ts` already use.
 import { describe, expect, it } from "vitest";
-import { approvalExtras, KNOWN_KINDS, kindLabelOf } from "./approvals";
+import { approvalExtras, chipKinds, KNOWN_KINDS, kindLabelOf } from "./approvals";
 
 describe("approvalExtras (PR 934)", () => {
   it("reads the effect line, the open link and the draft from payload.ownerView", () => {
@@ -22,8 +22,10 @@ describe("kindLabelOf", () => {
   it("returns the known catalogue's own label, in the language asked for", () => {
     expect(kindLabelOf("refund", "en")).toBe("Refund");
     expect(kindLabelOf("refund", "bn")).toBe("রিফান্ড");
-    expect(kindLabelOf("adBudget", "en")).toBe("Ad budget increase");
-    expect(kindLabelOf("adBudget", "bn")).toBe("বিজ্ঞাপনের বাজেট বাড়ানো");
+    expect(kindLabelOf("adBudget", "en")).toBe("Ad budget");
+    expect(kindLabelOf("adBudget", "bn")).toBe("বিজ্ঞাপন বাজেট");
+    expect(kindLabelOf("block", "en")).toBe("Customer limit");
+    expect(kindLabelOf("orderDecline", "en")).toBe("Order decline");
   });
 
   it("falls back to the raw kind string for anything not in the catalogue — never a guessed translation", () => {
@@ -37,5 +39,12 @@ describe("kindLabelOf", () => {
       expect(k.nameBn.length).toBeGreaterThan(0);
     }
     expect(new Set(KNOWN_KINDS.map((k) => k.key)).size).toBe(KNOWN_KINDS.length);
+  });
+});
+
+describe("chipKinds (PR 1164)", () => {
+  it("always lists the prototype's six kinds first, then any other kind present, once", () => {
+    expect(chipKinds([])).toEqual(["adBudget", "orderDecline", "block", "reply", "price", "blog"]);
+    expect(chipKinds(["refund", "price", "refund"])).toEqual(["adBudget", "orderDecline", "block", "reply", "price", "blog", "refund"]);
   });
 });
