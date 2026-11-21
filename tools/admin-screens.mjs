@@ -49,15 +49,17 @@ const D2 = [
   ['f-vat', '/admin/money/vat', '#finance--vat'],
   ['s-store', '/admin/settings/store', '#settings--store'],
   ['s-erp', '/admin/settings/erp-link', '#settings--erp'],
-  ['s-couriers', '/admin/delivery/settings', '#settings--couriers'],
+  // PR 1161: Settings › Couriers, Customer messages and AI control are their own pages (the Settings menu opens them), not
+  // Couriers › Delivery settings, Marketing › Templates or the AI Center
+  ['s-couriers', '/admin/settings/couriers', '#settings--couriers'],
   ['s-payments', '/admin/settings/checkout', '#settings--payments'],
-  ['s-messages', '/admin/messages/templates', '#settings--messages'],
+  ['s-messages', '/admin/settings/messages', '#settings--messages'],
   ['s-team', '/admin/settings/people', '#settings--team'],
   ['s-demo', '/admin/products/demo', '#settings--demo'],
   ['s-keys', '/admin/integrations', '#settings--keys'],
   ['s-backups', '/admin/settings/system/backups', '#settings--backups'],
   ['s-health', '/admin/settings/system/health', '#settings--health'],
-  ['s-ai', '/admin/ai', '#settings--ai'],
+  ['s-ai', '/admin/settings/ai', '#settings--ai'],
   ['s-updates', '/admin/settings/system/updates', '#settings--updates'],
   ['s-security', '/admin/settings/security', '#settings--security'],
   ['s-activity', '/admin/settings/activity', '#settings--activity'],
@@ -135,8 +137,9 @@ async function shot(ctx, url, file, wait) {
         // a leading icon glyph (arrow, star, printer) is not part of the name: the prototype draws those as pictures
         const tx = (e) => (e.innerText || e.getAttribute('aria-label') || e.value || '').replace(/\s+/g, ' ').replace(/^[\u2190-\u21FF\u2300-\u23FF\u2600-\u27BF+]\s*/u, '').trim();
         const uniq = (a) => [...new Set(a.filter(Boolean))];
+        // PR 1161: a link drawn as a text button (a2-lnk, "Open →") counts too, as the prototype's `linkbtn` does
         // PR 1069: a filter chip or a period button drawn as a link (a2-view, cl-chip, rpseg a ...) counts as a button, as the prototype's chips do
-        const btns = [...root.querySelectorAll('button, [role=button], [role=tab], a[class*=btn], a[class*=chip], a[class*=a2-view], .rpseg a, [class*=seg] a, [class*=pill] a, input[type=submit]')].filter(vis);
+        const btns = [...root.querySelectorAll('button, [role=button], [role=tab], a[class*=btn], a[class*=chip], a[class*=a2-view], .rpseg a, [class*=seg] a, [class*=pill] a, a.a2-lnk, input[type=submit]')].filter(vis);
         const filled = btns.find((b) => { const c = getComputedStyle(b).backgroundColor; return c && c !== 'rgba(0, 0, 0, 0)' && c !== 'rgb(255, 255, 255)'; });
         return {
           headings: uniq([...root.querySelectorAll('h1, h2, h3')].filter(vis).map(tx)).slice(0, 40),
