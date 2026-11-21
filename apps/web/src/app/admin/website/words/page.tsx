@@ -103,6 +103,7 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
   const w: WordsEditorWords = {
     en: g('en'),
     bn: g('bn'),
+    bnShort: g('bnShort'),
     shopWord: g('shopWord'),
     yours: g('yours'),
     changed: g('changed'),
@@ -193,8 +194,8 @@ export default async function WordsPage(props: { searchParams: Promise<Record<st
               {k === 'footer' ? (
                 <>
                   {LINKED.map((x) => (
-                    <a key={x.id} className="wdb-chip" href={x.href} data-testid={`wd-chip-${x.id}`}>
-                      {g(`linked.${x.id}`)} <span aria-hidden="true">↗</span>
+                    <a key={x.id} className="wdb-chip wdb-ext" href={x.href} data-testid={`wd-chip-${x.id}`}>
+                      {g(`linked.${x.id}`)}
                     </a>
                   ))}
                 </>

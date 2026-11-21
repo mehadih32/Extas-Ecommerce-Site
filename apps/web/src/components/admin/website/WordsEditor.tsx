@@ -18,6 +18,8 @@ const API = '/api/admin/website/dictionary';
 export interface WordsEditorWords {
   en: string;
   bn: string;
+  /** PR 1201: the preview's language button, in its own script as in the prototype (বাংলা) */
+  bnShort: string;
   shopWord: string;
   yours: string;
   changed: string;
@@ -200,7 +202,7 @@ function WordsPreview({ rows, w }: { rows: WordRow[]; w: WordsEditorWords }) {
       <div className="wdb-prevseg" role="group" aria-label={w.preview}>
         {(['en', 'bn'] as const).map((l) => (
           <button key={l} type="button" className={lang === l ? 'on' : undefined} aria-pressed={lang === l} onClick={() => setLang(l)}>
-            {l === 'en' ? w.en : w.bn}
+            {l === 'en' ? w.en : w.bnShort}
           </button>
         ))}
       </div>

@@ -35,6 +35,8 @@
 .wdb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .wdb-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--lm-ln); background: var(--lm-sf); color: inherit; text-decoration: none; font-size: 13px; }
 .wdb-chip span { opacity: 0.6; font-size: 12px; }
+/* PR 1201: a chip that opens another page marks it with an arrow drawn by CSS (not part of its name, as in the prototype) */
+.wdb-chip.wdb-ext::after { content: '\2197'; opacity: 0.6; font-size: 12px; }
 .wdb-chip.on { background: var(--lm-ink); color: var(--lm-sf); border-color: transparent; }
 .wdb-inline .wdb-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .wdb-inline .wdb-form > p, .wdb-inline .wdb-form > .wdb-bar { grid-column: 1 / -1; }
