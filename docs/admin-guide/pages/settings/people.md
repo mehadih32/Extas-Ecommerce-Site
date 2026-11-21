@@ -16,7 +16,7 @@
 3. কারও রোল বদলাতে **Staff** তালিকায় তাঁর সারিতে চাপুন, রোল বেছে **Save** দিন, PIN দিন।
 4. কোন রোল কী খুলতে পারে দেখতে **What each role can open**-এ রোলের নামে চাপুন। পুরো সেকশন দিতে বাক্সে টিক দিন; অর্ধেক বাক্স মানে কিছু পেজ। **Special permissions**-এ চারটা সহজ অনুমতি আছে। বদল করে **Save changes** দিন, PIN দিন।
 5. **Staff limits**-এ প্রতিটা রোলের সর্বোচ্চ ছাড় (%), আর ফোন-ঠিকানা লুকানো ঠিক করে **Save limits** দিন, PIN দিন।
-6. **End-of-day cash & bKash handover**-এ সুইচ চালু করলে প্রতিদিন ডেস্ক স্টাফের কাছে হিসাব চাওয়া হয়। সারির **Record** চেপে কত বুঝিয়ে দিয়েছেন লিখুন। **Download today's sheet** আজকের শিট নামায়।
+6. **End-of-day cash & bKash handover**-এ সুইচ চালু করলে প্রতিদিন ডেস্ক স্টাফের কাছে হিসাব চাওয়া হয়। সারির **Record** চেপে কত বুঝিয়ে দিয়েছেন লিখুন। **Download today’s sheet** আজকের শিট নামায়।
 7. বাকি সব (একাধিক রোল, সাসপেন্ড, আর্কাইভ, 2-ধাপ রিসেট, টাকায় ছাড়, প্যাকার রোল, যেকোনো দিনের গোনা) প্রতিটা অংশের নিচে **More options**-এ।
 
 ## প্রতিটা বোতাম আর ঘরের মানে
@@ -26,7 +26,7 @@
 - **What each role can open** — রোলের চিপ, টিক-গাছ, **New role** (নতুন রোল), **Back to default** (ডিফল্টে ফেরান), **Undo**, **Save changes**
 - **Special permissions** — **See buying price & profit**, **Record money received or paid**, **Export customer lists**, **Ask for refunds (owner approves)**; এগুলো ওপরের গাছের আসল অনুমতিগুলোকেই টিক দেয়, আলাদা কিছু না
 - **Staff limits** — **Max discount**, **Can export** (রোলের অনুমতি অনুযায়ী চলে, এখানে বদলায় না), **Hide phone & address**, **Undo**, **Save limits**
-- **End-of-day cash & bKash handover** — সুইচ ও সময়, **Cash**, **bKash/Nagad**, **Expected**, **Handed over**, **Record**, **Download today's sheet**
+- **End-of-day cash & bKash handover** — সুইচ ও সময়, **Cash**, **bKash/Nagad**, **Expected**, **Handed over**, **Record**, **Download today’s sheet**
 - **More options** — পাতার আসল কাজগুলো যেগুলো প্রোটোটাইপে নেই; ভেতরে আগের সব বোতাম আছে
 
 ## সাধারণ ভুল
