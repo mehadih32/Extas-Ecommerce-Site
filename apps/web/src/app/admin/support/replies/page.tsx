@@ -18,6 +18,7 @@ import { withW5a } from '@/lib/admin-v5-w5a';
 import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { supportDeps } from '@/lib/support-api';
+import { practiceShownDeps } from '@/lib/practice/shown-on';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t } from '@/lib/i18n';
 
@@ -49,7 +50,7 @@ export default async function RepliesPage({ searchParams }: { searchParams: Prom
     );
   const c = (k: string, v?: Record<string, string | number>) => t(d, `w5a.replies.${k}`, v);
   const who: sp.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const list = await sp.listSavedReplies(supportDeps(access.deps), who);
+  const list = await sp.listSavedReplies(supportDeps(practiceShownDeps(access.deps)), who);
   const perms = access.guard.permissions;
   const canEdit = perms?.has('support.settings') ?? false;
   const showArchived = sp0.view === 'archived';

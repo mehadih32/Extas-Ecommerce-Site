@@ -22,6 +22,7 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { customersDeps } from '@/lib/customers-api';
+import { practiceShownDeps } from '@/lib/practice/shown-on';
 import { t, type Dict } from '@/lib/i18n';
 import './segments.css';
 
@@ -48,7 +49,8 @@ export default async function SegmentsPage() {
       </div>
     );
   const who: cu.Who = { actor: access.guard.actor, storeId: MOTHER_STORE_ID, ctx: access.guard.ctx };
-  const s = await cu.segmentsScreen(customersDeps(access.deps), who);
+  // PR 1180: while practice mode is on, Customer groups show as on; the settings card keeps the stored switch
+  const [s, stored] = await Promise.all([cu.segmentsScreen(customersDeps(practiceShownDeps(access.deps)), who), access.deps.resolver.value('customers.segments', { storeId: MOTHER_STORE_ID })]);
   const canWrite = s.viewer.segments;
   const n = (x: number | null) => (x === null ? '—' : formatNumber(x, view.locale));
   const when = new Intl.DateTimeFormat(view.locale, { timeZone: view.timeZone, numberingSystem: 'latn', dateStyle: 'medium' });
@@ -172,13 +174,13 @@ export default async function SegmentsPage() {
           ) : null}
         </>
       )}
-      <details id="seg-more" className="a2-mt12 a2-more-opts" open={!s.enabled && canWrite} data-testid="seg-more">
+      <details id="seg-more" className="a2-mt12 a2-more-opts" open={!stored.enabled && !s.enabled && canWrite} data-testid="seg-more">
         <summary className="a2-sm a2-b">{t(d, 'cus.seg.more', { n: formatNumber(s.archived.length, view.locale) })}</summary>
         <div className="a2-row a2-r2 a2-mt12">
           <section className="a2-card">
             <h2 className="a2-h3">{t(d, 'cus.seg.settings')}</h2>
             <div className="a2-mt12">
-              <SegmentSettings dict={cdict} value={{ enabled: s.enabled, ...s.settings }} canWrite={canWrite} />
+              <SegmentSettings dict={cdict} value={{ ...s.settings, enabled: stored.enabled }} canWrite={canWrite} />
             </div>
           </section>
           <section className="a2-card seg-list" data-testid="seg-archived">
