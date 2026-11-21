@@ -28,9 +28,10 @@
   --lm-r-sm: 8px;
   --lm-r-pill: 999px;
   /* type */
-  --lm-font: 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --lm-font-disp: 'EXTAS Admin Display', 'EXTAS Admin Sans', 'EXTAS Admin Bangla', system-ui, sans-serif;
-  --lm-font-bn: 'EXTAS Admin Bangla', 'EXTAS Admin Sans', system-ui, sans-serif;
+  /* PR 1160: the prototype's own family names (admin-proto-v5 css/app.css --f-body, --f-head, --f-bn); fonts/admin-ui.css. */
+  --lm-font: 'Inter', 'Hind Siliguri', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --lm-font-disp: 'Inter Tight', 'Inter', 'Hind Siliguri', system-ui, sans-serif;
+  --lm-font-bn: 'Hind Siliguri', 'Inter', system-ui, sans-serif;
   --lm-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --lm-fs-body: 14px;
   --lm-fs-card: 14px;
