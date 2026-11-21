@@ -27,3 +27,8 @@
 .lm-bk .st-fill.ok { background: var(--lm-ok); }
 .lm-bk .st-fill.warn { background: var(--lm-warn); }
 .lm-bk .st-fill.bad { background: var(--lm-bad); }
+/* PR 1184 (prototype v5 ERP account): the monthly statement card on top, and the account's cards two by two (one on a phone) */
+.lm-bk .bk-stmt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.lm-bk .bk-stmt > div { min-width: 0; flex: 1 1 260px; }
+.lm-bk .bk-stmt .a2-btn { min-height: 44px; }
+.lm-bk .bk-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; align-items: start; }
