@@ -27,3 +27,7 @@
 .sy-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--lm-ok); }
 .sy-bar > i.warn { background: var(--lm-warn); }
 .sy-bar > i.bad { background: var(--lm-bad); }
+/* PR 1163: Help & manual's project-file cards (the same look as the manual page's, app/admin/help/manual/manual.css) */
+.adm2 [data-testid="help-file-cards"] { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.adm2 [data-testid="help-file-cards"] .a2-man-file { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.adm2 [data-testid="help-file-cards"] .a2-btn { min-height: 44px; display: inline-flex; align-items: center; }
