@@ -958,6 +958,9 @@
       "savedSubject": "Subject saved.",
       "savedOrder": "Order linked.",
       "savedUnlink": "Order unlinked."
+    },
+    "chip": {
+      "livechat": "Website chat"
     }
   }
 }
