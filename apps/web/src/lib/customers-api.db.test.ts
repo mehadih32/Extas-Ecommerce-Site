@@ -7,7 +7,7 @@ import { createFirstOwner, defaultSecurityPolicy, hashPassword } from '@extas/au
 import { HAS_TEST_DB } from '@extas/auth/testing';
 import { setUpCustomers, type CustomersFixture } from '@extas/customers/testing';
 import { sampleCatalogue } from '@extas/seed';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import type { AdminDeps } from './admin-auth';
 import { loginHandler } from './admin-api';
 import { automationsRoute } from './automations-api';
@@ -288,5 +288,25 @@ describe.skipIf(!HAS_TEST_DB)('customers admin API on PostgreSQL (PR 284)', () =
     expect(saved.status).toBe(200);
     expect(saved.body.screen.values['account.history']).toEqual({ filters: true, timeline: false });
     expect(await f.t.prisma.auditLog.count({ where: { action: 'customer.settings.save', entityId: 'account.history' } })).toBe(1);
+  });
+
+  it('PR 1208: while practice mode shows Customer groups as on, the pages read and preview, and every save keeps the stored switch', async () => {
+    const meta = { actorId: null, reason: 'test' };
+    const groups = await deps.resolver.value('customers.segments', { storeId: 1 });
+    await deps.resolver.set('customers.segments', { ...groups, enabled: false }, storeTarget(1), meta);
+    await deps.resolver.set('practice.enabled', { on: true }, storeTarget(1), meta);
+    try {
+      expect((await api('GET', 'segments', { cookie: reader })).body).toMatchObject({ ok: true, screen: { enabled: true } });
+      const pv = await api('POST', 'segments/preview', { cookie: reader, body: { definition: { v: 1, all: [{ field: 'ordersMax', value: 0 }] } } });
+      expect(pv.status).toBe(200);
+      const before = await f.t.prisma.segment.count();
+      const made = await api('POST', 'segments', { body: { name: 'Practice try', definition: { v: 1, all: [{ field: 'ordersMax', value: 0 }] } } });
+      expect(made.status).toBe(403);
+      expect(made.body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+      expect(await f.t.prisma.segment.count()).toBe(before);
+    } finally {
+      await deps.resolver.set('practice.enabled', { on: false }, storeTarget(1), meta);
+    }
+    expect((await api('POST', 'segments/preview', { cookie: reader, body: { definition: { v: 1, all: [] } } })).body).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
   });
 });

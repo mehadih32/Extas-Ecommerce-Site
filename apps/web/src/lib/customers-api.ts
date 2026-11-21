@@ -87,11 +87,11 @@ function customersFail(e: unknown): Response {
   return errorResponse(e);
 }
 
-async function handle(request: Request, deps: AdminDeps | null, permission: cu.CustomersPermission, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200): Promise<Response> {
+async function handle(request: Request, deps: AdminDeps | null, permission: cu.CustomersPermission, fn: (c: Ctx) => Promise<Record<string, unknown>>, status = 200, opts: { readsOnly?: boolean } = {}): Promise<Response> {
   const url = new URL(request.url);
   const storeId = storeIdOf(url);
   if (storeId === null) return fail(400, 'invalid-store-id');
-  const g = await guardAdmin(request, deps, { permission, storeId });
+  const g = await guardAdmin(request, deps, { permission, storeId, readsOnly: opts.readsOnly === true });
   if (g instanceof Response) return g;
   try {
     const key = request.headers.get('idempotency-key')?.trim() || undefined;
@@ -300,18 +300,21 @@ function gradesRoute(request: Request, deps: AdminDeps | null, m: string, path: 
 
 /** PR 287 — the segments' routes (`path` after /segments). */
 function segmentsRoute(request: Request, raw: AdminDeps | null, m: string, path: string[]): Promise<Response> {
-  // PR 1180: while practice mode is on, Customer groups count as on for everything but their settings card
+  // PR 1180: while practice mode is on, Customer groups count as on for what the pages READ (the list, one group, the
+  // options and the live preview). PR 1208: every save (add, change, archive, the settings card) keeps the stored switch,
+  // so nothing is saved while the owner's switch is off; the pages say so beside the builder.
   const deps = raw ? practiceShownDeps(raw) : raw;
   const [id, sub] = path;
   if (!id) {
     if (m === 'GET') return handle(request, deps, 'customers.read', async (x) => ({ screen: await cu.segmentsScreen(x.deps, x.who) }));
-    if (m === 'POST') return handle(request, deps, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, null, await body(request)) }), 201);
+    if (m === 'POST') return handle(request, raw, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, null, await body(request)) }), 201);
     return notAllowed();
   }
   if (path.length > 2) return notFound();
   if (id === 'settings' && !sub) return m === 'PUT' ? handle(request, raw, 'customers.segments.write', async (x) => ({ screen: await cu.saveSegmentSettings(x.deps, x.who, await body(request)) })) : notAllowed();
   if (id === 'options' && !sub) return m === 'GET' ? handle(request, deps, 'customers.read', async (x) => ({ options: await cu.segmentOptions(x.deps, x.who) })) : notAllowed();
-  if (id === 'preview' && !sub) return m === 'POST' ? handle(request, deps, 'customers.read', async (x) => ({ preview: await cu.previewSegment(x.deps, x.who, await body(request)) })) : notAllowed();
+  // PR 1208: the preview only counts (a POST because the unsaved definition is the body), so the read-only check account may call it
+  if (id === 'preview' && !sub) return m === 'POST' ? handle(request, deps, 'customers.read', async (x) => ({ preview: await cu.previewSegment(x.deps, x.who, await body(request)) }), 200, { readsOnly: true }) : notAllowed();
   if (!isUuid(id)) return badId('segmentId');
   if (!sub) {
     if (m === 'GET')
@@ -320,9 +323,9 @@ function segmentsRoute(request: Request, raw: AdminDeps | null, m: string, path:
         if (!page) throw new cu.CustomersError('NOT_FOUND', 'no such segment', ['segmentId']);
         return { segment: page };
       });
-    if (m === 'POST') return handle(request, deps, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, id, await body(request)) }));
+    if (m === 'POST') return handle(request, raw, 'customers.segments.write', async (x) => ({ segment: await cu.saveSegment(x.deps, x.who, id, await body(request)) }));
     return notAllowed();
   }
-  if (sub === 'archive') return m === 'POST' ? handle(request, deps, 'customers.segments.write', async (x) => ({ result: await cu.archiveSegment(x.deps, x.who, id, await body(request)) })) : notAllowed();
+  if (sub === 'archive') return m === 'POST' ? handle(request, raw, 'customers.segments.write', async (x) => ({ result: await cu.archiveSegment(x.deps, x.who, id, await body(request)) })) : notAllowed();
   return notFound();
 }

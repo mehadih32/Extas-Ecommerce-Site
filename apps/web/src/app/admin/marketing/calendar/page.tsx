@@ -26,6 +26,7 @@ import { overlaps } from '@/lib/marketing/overview-model';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import { calendarOverview } from '@/lib/marketing/calendar';
+import { PracticeShownNote } from '@/components/admin/practice/PracticeShownNote';
 import { practiceOn } from '@/lib/practice/shown-on';
 import { addDays, CALENDAR_LANES, monthStep, monthWeeks, PLAN_NOTE_MAX, PLAN_TITLE_MAX, type CalendarItem } from '@/lib/marketing/calendar-model';
 import bn from '../../../../../messages/admin-calendar.bn.json';
@@ -185,6 +186,8 @@ export default async function MarketingCalendarPage(props: Props) {
         }
       />
       <SectionTabs view={view} current={KEY} />
+      {/* PR 1208: shown as on only by practice mode: a plan line is saved only while the stored switch is on */}
+      <PracticeShownNote lang={view.lang} show={practice && !o.settings.enabled} />
       <div className="a2-note a2-mt12" role="note">
         <span>{g('note')}</span>
       </div>

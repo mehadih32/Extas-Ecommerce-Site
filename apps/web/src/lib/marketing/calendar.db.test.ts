@@ -9,7 +9,7 @@ import { createFirstOwner, defaultSecurityPolicy, syncAuth } from '@extas/auth';
 import { createTestDatabase, HAS_TEST_DB, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import { disconnectPrisma, MOTHER_STORE_ID } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { messages, prismaBackend, registry, SettingsResolver, syncSettings } from '@extas/settings';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { loginHandler, passwordHandler, rolesHandler, staffHandler, staffRolesHandler } from '../admin-api';
 import type { AdminDeps } from '../admin-auth';
 import { calendarHandler, type CalendarOverview } from './calendar';
@@ -79,6 +79,17 @@ describe.skipIf(!HAS_TEST_DB)('Marketing › Calendar on PostgreSQL (PR 282)', (
     expect(g.a).toMatchObject({ settings: { enabled: false, days: 60 }, timeZone: 'Asia/Dhaka', today: '2027-03-01', range: { from: '2027-03-01', to: '2027-04-29', days: 60 }, items: [], plans: [] });
     expect((await api('PUT', { key: 'calendar', value: { enabled: true, days: 60 }, version: g.a.card.version }, { cookie: desk })).status).toBe(403);
     expect((await api('POST', { action: 'plan.add', title: 'Eid', starts: '2027-03-08' })).a).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+  });
+
+  it('PR 1208: practice mode only shows the calendar; a plan line still waits for the stored switch', async () => {
+    const meta = { actorId: null, reason: 'test' };
+    await admin.resolver.set('practice.enabled', { on: true }, storeTarget(MOTHER_STORE_ID), meta);
+    try {
+      expect((await api('POST', { action: 'plan.add', title: 'Eid', starts: '2027-03-08' })).a).toMatchObject({ ok: false, error: 'SWITCHED_OFF' });
+      expect(await t.prisma.calendarEntry.count()).toBe(0);
+    } finally {
+      await admin.resolver.set('practice.enabled', { on: false }, storeTarget(MOTHER_STORE_ID), meta);
+    }
   });
 
   it('checks and saves the card, audited', async () => {

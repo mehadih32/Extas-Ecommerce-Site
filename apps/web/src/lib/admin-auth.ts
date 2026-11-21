@@ -146,6 +146,11 @@ export interface GuardOptions {
   storeId?: number | null;
   /** The person's own password change and 2FA set-up work before those are done. */
   selfService?: boolean;
+  /**
+   * PR 1208: a POST that only reads and never writes (a live count for an unsaved form, such as the Customer groups
+   * preview): the site auditor's check account may call it like a GET. Never set it on a route that saves anything.
+   */
+  readsOnly?: boolean;
 }
 
 /** The methods that only read (the site auditor's account may use only these, PR 421). */
@@ -165,7 +170,7 @@ export async function guardAdmin(request: Request, deps: AdminDeps | null, opts:
     if (!opts.selfService && auth.mustSetUpTwoFactor) return fail(403, 'TWO_FACTOR_SETUP_REQUIRED');
     // PR 421 (B6.6): the site auditor (the smoke test's and the journeys' check account) only reads: every admin write
     // from its sessions is refused here, before any permission check, so no permission added to its role can change it
-    if (!READ_METHODS.has(request.method.toUpperCase()) && (await isCheckAccount(deps.db, auth.staff.id))) return fail(403, 'READ_ONLY_ACCOUNT');
+    if (!READ_METHODS.has(request.method.toUpperCase()) && !opts.readsOnly && (await isCheckAccount(deps.db, auth.staff.id))) return fail(403, 'READ_ONLY_ACCOUNT');
     const actor: Actor = { staffUserId: auth.staff.id };
     const permissions = opts.permission ? await requirePermission(deps.db, actor, opts.permission, { storeId: opts.storeId }) : undefined;
     return { auth, actor, deps: sd, ctx: requestContext(request), permissions };

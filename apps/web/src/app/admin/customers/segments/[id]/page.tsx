@@ -20,7 +20,8 @@ import { ADMIN_LOGIN } from '@/lib/admin-nav';
 import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { customersDeps } from '@/lib/customers-api';
-import { practiceShownDeps } from '@/lib/practice/shown-on';
+import { practiceShownDeps, shownOnlyByPractice } from '@/lib/practice/shown-on';
+import { PracticeShownNote } from '@/components/admin/practice/PracticeShownNote';
 import { t, type Dict } from '@/lib/i18n';
 import '../segments.css';
 
@@ -55,12 +56,13 @@ export default async function SegmentPage({ params, searchParams }: { params: Pa
   const cd = customersDeps(practiceShownDeps(access.deps)); // PR 1180: practice mode shows Customer groups as on
   const isNew = id === 'new';
   const from = isNew ? one(sp.from) : '';
-  const [page, source, settings, options, currency] = await Promise.all([
+  const [page, source, settings, options, currency, practiceOnly] = await Promise.all([
     isNew ? Promise.resolve(null) : cu.segmentPage(cd, who, id),
     from ? cu.segmentPage(cd, who, from) : Promise.resolve(null),
     cd.settings.value('customers.segments', { storeId: MOTHER_STORE_ID }),
     cu.segmentOptions(cd, who),
     access.deps.resolver.value('store.currency', { storeId: MOTHER_STORE_ID }) as Promise<string>,
+    shownOnlyByPractice(access.deps.resolver, 'customers.segments', MOTHER_STORE_ID), // PR 1208
   ]);
   if (!isNew && !page)
     return (
@@ -110,6 +112,7 @@ export default async function SegmentPage({ params, searchParams }: { params: Pa
         }
       />
       <SectionTabs view={view} current="customersSegments" />
+      <PracticeShownNote lang={view.lang} show={practiceOnly} />
       {!settings.enabled ? (
         <section className="a2-card a2-mt12" data-testid="seg-off">
           <h2 className="a2-h3">{t(d, 'cus.seg.offTitle')}</h2>

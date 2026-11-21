@@ -85,6 +85,7 @@
       "title": "Preview — nothing has changed",
       "lead": "{n} records would be cleared:",
       "kept": "Kept: settings, rules, policies, shop text, staff, keys and the {n} products you uploaded."
-    }
+    },
+    "shownNote": "Practice mode shows this so you can look around. Saving here still follows its own switch: turn it on in its settings to save."
   }
 }

@@ -23,7 +23,6 @@ import { createHash } from 'node:crypto';
 import { audit } from '@extas/auth';
 import { MOTHER_STORE_ID, type PrismaClient } from '@extas/db/client';
 import * as rl from '@extas/rules';
-import { practiceShownResolver } from '../practice/shown-on';
 import { marketingCalendarSettingsSchema, storeTarget, type MarketingCalendarSettings } from '@extas/settings';
 import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../admin-auth';
 import { wallToUtc, windowState } from '../shop/seasonal-home-model';
@@ -294,8 +293,9 @@ export async function saveCalendarCard(deps: CalendarDeps, who: AdPlatformsWho, 
 export async function calendarAction(deps: CalendarDeps, who: AdPlatformsWho, b: Record<string, unknown>): Promise<{ id: string }> {
   const action = typeof b.action === 'string' ? b.action : '';
   if (!['plan.add', 'plan.update', 'plan.archive', 'plan.restore'].includes(action)) throw new CalendarError('INVALID_INPUT', 400, ['action']);
-  // PR 1180: while practice mode is on the calendar counts as on (the stored switch is left as it is)
-  const settings = await settingsOf({ ...deps, resolver: practiceShownResolver(deps.resolver) });
+  // PR 1208: a plan line is saved only while the owner's own switch is on, practice mode or not (practice mode only
+  // shows the calendar, PR 1180; the page says so beside it)
+  const settings = await settingsOf(deps);
   if (!settings.enabled && action !== 'plan.archive') throw new CalendarError('SWITCHED_OFF', 409, ['marketing.calendar']);
   const log = (id: string, after: Record<string, unknown>, before?: Record<string, unknown>) => audit(deps.db, who.actor, { storeId: S, action: `marketingCalendar.${action}`, entityType: 'CalendarEntry', entityId: id, ...(before ? { before } : {}), after }, who.ctx);
   type Line = { title: string; titleBn: string | null; starts: string; ends: string | null; note: string | null; campaignId: string | null };

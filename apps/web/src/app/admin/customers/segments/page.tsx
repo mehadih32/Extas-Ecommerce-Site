@@ -23,6 +23,7 @@ import { adminView, pageAccess } from '@/lib/admin-page';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { customersDeps } from '@/lib/customers-api';
 import { practiceShownDeps } from '@/lib/practice/shown-on';
+import { PracticeShownNote } from '@/components/admin/practice/PracticeShownNote';
 import { t, type Dict } from '@/lib/i18n';
 import './segments.css';
 
@@ -104,6 +105,8 @@ export default async function SegmentsPage() {
         }
       />
       <SectionTabs view={view} current="customersSegments" />
+      {/* PR 1208: shown as on only by practice mode: saving still follows the stored switch */}
+      <PracticeShownNote lang={view.lang} show={s.enabled && !stored.enabled} />
       {!s.enabled ? (
         <>
         <section className="a2-card a2-mt12" data-testid="seg-off">

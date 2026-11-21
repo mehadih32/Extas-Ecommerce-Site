@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 22 Nov 2026 - PR 1208 (branch `pr-1208-practice-shown-saves`, from `origin/main` d59eb0cc): the fix for the rolled-back deploy
+
+The batch-2026-11-21-1 deploy (d796a8c0) went live and was rolled back by itself: the smoke test saw a 403 on /admin/customers/segments/new from POST /api/admin/customers/segments/preview. With practice mode on, PR 1180 shows Customer groups as on, so the builder fires its live count, a POST, and the read-only site check account is refused every POST (READ_ONLY_ACCOUNT). **1208**: `guardAdmin` takes `readsOnly` for a POST that only reads (only the preview uses it); every save of Customer groups, the calendar plan lines and the quick reply use count goes back to the stored switch (practice mode only shows them); the segments, segment and calendar pages say so in one line (`PracticeShownNote`) while practice is the only reason they show; the customer Export stays as PR 1180 has it (a read, already practice-aware on page and API). DB tests: the check account previews but may not save; practice on + stored off previews, refuses a save, saves nothing; the calendar refuses a plan line. Next: CI, merge, deploy, practice seed rebuild, re-measure.
+
 ## 21 Nov 2026 - Batch 2026-11-21-1 (branch `batch-2026-11-21-1`, from `origin/main` 92e9ec26): the three p101 parity lanes joined
 
 Lanes l1 (PR 1160-1167), L2 (PR 1180-1191) and l3 (PR 1200-1207) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1031 PRs, 1009 active, S28 361/361). The two lanes that changed `tools/admin-screens.mjs` (l1: s-couriers, s-messages, s-ai routes, link buttons, the Home design press; L2: f-costs on Costs) and the two that changed `admin-customers` messages (L2 VIP note, l3 loyalty empty lines) merged without overlap. Next: CI on the batch PR, merge, deploy, practice seed rebuild, re-measure.
