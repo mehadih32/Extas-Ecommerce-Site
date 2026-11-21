@@ -149,7 +149,8 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
     { key: 'wallets', label: m('wallets'), value: short(now.walletsMinor), sub: m('walletsSub', { n: now.walletHolders }), href: '/admin/money/refunds' },
   ];
   // PR 980 (prototype): "Pay the ERP … to stay safe" when the shop owes the ERP and the payment gap is not green
-  if (now.erp && now.erp.owedMinor > 0 && now.erp.tone !== 'good' && holdDays !== null && holdLeft !== null) decide.push({ key: 'erpPay', tone: now.erp.tone === 'bad' ? 'bad' : 'warn', head: f('dec.erpHead', { amt: short(now.erp.owedMinor) }), text: f('dec.erpText', { owed: short(now.erp.owedMinor), d: holdDays, left: holdLeft }), action: { label: f('dec.erpBtn'), href: '/admin/money/books' } });
+  // PR 1185 (prototype v5): the card shows whenever the shop owes the ERP, green while the payment gap is safe
+  if (now.erp && now.erp.owedMinor > 0 && holdDays !== null && holdLeft !== null) decide.push({ key: 'erpPay', tone: now.erp.tone === 'bad' ? 'bad' : now.erp.tone === 'good' ? 'ok' : 'warn', head: f('dec.erpHead', { amt: short(now.erp.owedMinor) }), text: f('dec.erpText', { owed: short(now.erp.owedMinor), d: holdDays, left: holdLeft }), action: { label: f('dec.erpBtn'), href: '/admin/money/books' } });
   const claimsMinor = o.claims?.minor ?? 0;
   const payoutRows = now.payouts.map((p) => ({ id: p.id, label: `${p.courier} · ${m(`cm.st.${p.state}`)} · ${short(p.minor)}`, tone: 'info' as const }));
   const topCourier = o.claims?.byCourier[0]?.courierId ?? null;
@@ -181,7 +182,12 @@ export default async function MoneyOverviewPage(props: { searchParams: Promise<R
     : [];
   // ads over the owner's own target (empty setting = no card), and how much of this month's fixed costs the sales so far cover
   const adPct = msSales > 0 ? (msAds / msSales) * 100 : 0; // hardcode-ok: percent of sales
-  if (typeof adTarget === 'number' && msAds > 0 && adPct > adTarget) decide.push({ key: 'adShare', tone: 'warn', head: f('dec.adHead', { pct: adPct.toFixed(1) }), text: f('dec.adText', { target: adTarget, ads: short(msAds) }), action: { label: f('dec.adBtn'), href: '/admin/marketing/ad-platforms' } });
+  // PR 1185 (prototype v5): the ads card shows on both sides of the owner's target (over: orange, inside: green with the room left)
+  if (typeof adTarget === 'number' && msSales > 0) {
+    const over = adPct > adTarget;
+    const room = Math.max(0, Math.round((msSales * adTarget) / 100 - msAds)); // hardcode-ok: percent of sales
+    decide.push({ key: 'adShare', tone: over ? 'warn' : 'ok', head: f('dec.adHead', { pct: adPct.toFixed(1) }), text: over ? f('dec.adText', { target: adTarget, ads: short(msAds) }) : f('dec.adGood', { target: adTarget, room: short(room) }), action: { label: f('dec.adBtn'), href: '/admin/marketing' } });
+  }
   const fixedCoverPct = msFixed > 0 && msNet !== null ? Math.max(0, Math.round(((msNet + msFixed) / msFixed) * 100)) : null; // hardcode-ok: percent
   const goal = (todaySet as { goal?: { on: boolean; amountMinor: number } } | null)?.goal;
   const goalLine = goal && goal.on && goal.amountMinor > 0 ? f('ms.target', { target: short(goal.amountMinor) }) : ''; // hardcode-ok: percent
