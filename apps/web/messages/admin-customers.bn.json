@@ -190,7 +190,8 @@
         "repeat": "নিয়মিত",
         "new": "নতুন"
       },
-      "refusedN": "{n} ফেরত"
+      "refusedN": "{n} ফেরত",
+      "vipUnset": "VIP কাস্টমার দেখতে Customer settings-এ VIP হওয়ার খরচ ঠিক করুন।"
     },
     "profile": {
       "crumb": "সব কাস্টমার",

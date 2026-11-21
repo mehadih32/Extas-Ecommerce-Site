@@ -190,7 +190,8 @@
         "repeat": "Repeat",
         "new": "New"
       },
-      "refusedN": "Refused {n}"
+      "refusedN": "Refused {n}",
+      "vipUnset": "Set the VIP spend in Customer settings to see your VIP customers."
     },
     "profile": {
       "crumb": "All customers",

@@ -265,14 +265,22 @@ export function CustomerListPage({ view, data, query, settings, money, hrefOf, e
       <CustomerNote view={view} data={data} s={settings} />
       <nav className="a2-views" aria-label={t(d, 'cus.list.viewsAria')} data-testid="cus-views">
         {/* PR 801: the prototype's chip order — All, VIP, At risk, Repeat, New, Refuser — the extra views after them */}
-        {[...data.views].sort((a, b) => VIEW_ORDER.indexOf(a) - VIEW_ORDER.indexOf(b)).map((v) => {
+        {[...data.views].sort((a, b) => VIEW_ORDER.indexOf(a) - VIEW_ORDER.indexOf(b)).flatMap((v) => {
           const on = v === current;
-          return (
+          // PR 1181 (prototype v5): the VIP chip is always after All; until the owner sets the VIP spend it opens Customer settings
+          const vipChip =
+            v === 'all' && !data.views.includes('vip') ? (
+              <Link key="vip-unset" className="a2-view" href="/admin/customers/settings" title={t(d, 'cus.list.vipUnset')} data-view="vip" data-testid="cus-vip-unset">
+                {t(d, 'cus.list.view.vip')}
+                <span className="a2-cnt">—</span>
+              </Link>
+            ) : null;
+          return [(
             <Link key={v} className={`a2-view${on ? ' on' : ''}`} href={customersHref({ q: query.q, source: query.source, district: query.district, sort: query.sort, segment: query.segment }, { view: v })} aria-current={on ? 'page' : undefined} scroll={false} data-view={v}>
               {t(d, `cus.list.view.${v}`)}
               <span className="a2-cnt">{n(data.counts[v] ?? 0)}</span>
             </Link>
-          );
+          ), vipChip].filter(Boolean);
         })}
       </nav>
       {current === 'refused' ? (
