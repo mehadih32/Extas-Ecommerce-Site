@@ -100,3 +100,5 @@
 **Update (PR 911):** the groups are chips with a count; a word is edited in place in the list; the preview shows the page's words in a phone, in English or Bengali.
 
 **Update (PR 1052):** the page opens on **Checkout**; the groups are chips in the prototype's order (Header, Announcement bar, Home, Product page, Bag, Checkout, Invoice, SMS & WhatsApp, Email, Footer, then the other places); **Invoice**, **SMS & WhatsApp** and **Email** open the pages where those words live. Each word is one row: **Where** (the group and the word's name), **English** and **বাংলা** side by side with its own **Save**. **Everywhere** shows every word; a search looks in every place.
+
+**আপডেট (PR 1201):** হোম পেজের গ্রুপের চিপের নাম এখন **Home**। প্রতিটা লেখার সারির সেভ বোতাম এখন **Save changes**। **Invoice**, **SMS & WhatsApp** আর **Email** চিপের পাশের তীরটা শুধু বোঝায় যে চাপলে অন্য পাতা খোলে। **Preview**-এর ভাষার বোতাম **English** আর **বাংলা**: বাংলা চাপলে ফোনে লেখাগুলো বাংলায় দেখায়।

@@ -147,21 +147,21 @@ export default async function BlogBoardPage(props: Props) {
           ) : null}
           <div className="jr-rh">{s('rail.posts')}</div>
           {(['all', 'drafts', 'scheduled', 'published'] as const).map((k) => (
-            <Link key={k} className={`jr-ri${railOn(k) ? ' on' : ''}`} href={k === 'all' ? HERE : `${HERE}?c=${k}`} aria-current={railOn(k) ? 'page' : undefined} data-testid={`jr-view-${k}`}>
+            <Link key={k} className={`jr-ri jr-chip${railOn(k) ? ' on' : ''}`} href={k === 'all' ? HERE : `${HERE}?c=${k}`} aria-current={railOn(k) ? 'page' : undefined} data-testid={`jr-view-${k}`}>
               <span>{s(`rail.${k}`)}</span>
               <b>{num(railCount[k])}</b>
             </Link>
           ))}
           <div className="jr-rh">{s('rail.organise')}</div>
-          <Link className="jr-ri" href={`${HERE}/shelves`}>
+          <Link className="jr-ri jr-chip" href={`${HERE}/shelves`}>
             <span>{s('rail.categories')}</span>
             <b>{num(choices.categories.length)}</b>
           </Link>
-          <Link className="jr-ri" href={`${HERE}/shelves`}>
+          <Link className="jr-ri jr-chip" href={`${HERE}/shelves`}>
             <span>{s('rail.tags')}</span>
             <b>{num(tagCount)}</b>
           </Link>
-          <Link className="jr-ri" href={`${HERE}/shelves`}>
+          <Link className="jr-ri jr-chip" href={`${HERE}/shelves`}>
             <span>{s('rail.authors')}</span>
             <b>{num(choices.authors.length)}</b>
           </Link>

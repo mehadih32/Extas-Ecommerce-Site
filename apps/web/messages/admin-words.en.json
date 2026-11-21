@@ -38,7 +38,7 @@
     "ownBn": "Your Bengali",
     "emptyHelp": "Leave empty for the shop's word.",
     "slotsHelp": "Keep these parts: {slots}",
-    "save": "Save",
+    "save": "Save changes",
     "saving": "Saving…",
     "saved": "Saved. The shop shows it now.",
     "back": "Back to the shop's word",
@@ -108,7 +108,7 @@
       "checkout": "Checkout",
       "notFound": "Page not found",
       "soon": "Coming soon page",
-      "home": "Home page",
+      "home": "Home",
       "fab": "WhatsApp button",
       "card": "Product card",
       "pdp": "Product page",
@@ -153,6 +153,7 @@
       "sms": "SMS & WhatsApp",
       "email": "Email"
     },
-    "whereCol": "Where"
+    "whereCol": "Where",
+    "bnShort": "বাংলা"
   }
 }
