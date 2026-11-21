@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { MOTHER_STORE_ID } from '@extas/db/client';
 import { AdminNotice } from '@/components/admin/AdminFrame';
-import { ActivityScreen } from '@/components/admin/people/ActivityScreen';
+import { ActivityDownload, ActivityScreen } from '@/components/admin/people/ActivityScreen';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { locateKey } from '@/lib/admin-shell/sections';
 import { adminDeps } from '@/lib/admin-auth';
@@ -48,7 +48,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const v = await activityView(d, access.guard.actor, MOTHER_STORE_ID, filtersOf(sp), tz);
   return (
     <div className="a2-z" data-testid="activity-page" data-lm-ready="">
-      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.headSub')} />
+      <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'people.activity.title')} sub={t(view.dict, 'people.activity.headSub')} right={<ActivityDownload dict={view.dict} view={v} />} />
       <SectionTabs view={view} current={KEY} />
       <ActivityScreen dict={view.dict} view={v} tz={tz} />
     </div>
