@@ -59,6 +59,9 @@
 .adm2 .rf-form .a2-chkl{min-height:44px}
 /* PR 642: flex none, so on a phone the views row scrolls sideways instead of squeezing a chip under its own words */
 .adm2 .rf-views .a2-view{min-width:44px;flex:none;justify-content:center}
+/* PR 1183 (prototype v5): Credits from exchanges beside Biggest wallet balances, one column on a phone */
+.adm2 .rf-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;align-items:start}
+.adm2 .rf-two .a2-btn{min-height:44px}
 .adm2 .rf-pick{border:0;padding:0;margin:0;min-width:0;display:flex;flex-wrap:wrap;gap:0 16px}
 .adm2 .rf-pick legend{padding:0;margin-bottom:4px;width:100%}
 .adm2 .rf-row > .a2-pill{justify-self:start}

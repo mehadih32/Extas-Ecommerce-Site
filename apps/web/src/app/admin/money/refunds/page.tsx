@@ -13,6 +13,7 @@ import { AdminNotice } from '@/components/admin/AdminFrame';
 import { ApologyGive, RefundActions } from '@/components/admin/money/RefundActions';
 import { formatMoney, moneyOf } from '@/components/admin/products/model';
 import { FieldsCard, type FieldsCardField, type FieldsCardTexts } from '@/components/admin/settings/FieldsCard';
+import { PrintButton } from '@/components/admin/reports/PrintButton';
 import { PageHead, SectionTabs, ShellState } from '@/components/admin/shell/ShellParts';
 import { dateTime } from '@/components/admin/stock/text';
 import { adminDeps } from '@/lib/admin-auth';
@@ -76,6 +77,14 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
     // exchange credits still to come: a cheaper swap's credit is added after the old piece passes the check
     access.deps.db.exchange.aggregate({ where: { storeId: MOTHER_STORE_ID, walletCreditMinor: { gt: 0 }, status: { in: ['REQUESTED', 'APPROVED', 'PICKUP_BOOKED', 'RECEIVED'] } }, _sum: { walletCreditMinor: true }, _count: { _all: true } }),
   ]);
+  // PR 1183 (prototype v5 "Credits from exchanges"): the newest swaps with a credit, waiting for the old piece or already in the wallet
+  const credits = await access.deps.db.exchange.findMany({ where: { storeId: MOTHER_STORE_ID, walletCreditMinor: { gt: 0 }, status: { in: ['REQUESTED', 'APPROVED', 'PICKUP_BOOKED', 'RECEIVED', 'QC_PASSED', 'COMPLETED'] } }, orderBy: { createdAt: 'desc' }, take: 8, select: { id: true, orderId: true, customerId: true, status: true, walletCreditMinor: true } }); // hardcode-ok: the card lists the newest eight
+  const [creditOrders, creditPeople] = await Promise.all([
+    credits.length ? access.deps.db.order.findMany({ where: { id: { in: credits.map((x) => x.orderId) } }, select: { id: true, number: true } }) : Promise.resolve([]),
+    credits.some((x) => x.customerId) ? access.deps.db.customer.findMany({ where: { id: { in: credits.flatMap((x) => (x.customerId ? [x.customerId] : [])) } }, select: { id: true, name: true, phone: true } }) : Promise.resolve([]),
+  ]);
+  const orderNo = new Map(creditOrders.map((o) => [o.id, o.number]));
+  const personOf = new Map(creditPeople.map((x) => [x.id, x.name ?? x.phone]));
   const at = (x: Date | string | null) => (x ? dateTime(new Date(x).toISOString(), view.locale, view.timeZone) : '');
   const w = flat((refundWords(view.lang) as { w: unknown }).w);
   const someone = c('row.someone');
@@ -120,9 +129,12 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
     <div className="a2-z" data-testid="refunds-page" data-lm-ready="" data-view={v.view}>
       <PageHead view={view} place={locateKey(KEY)} title={t(view.dict, 'lf.fh.refunds.title')} sub={t(view.dict, 'lf.fh.refunds.sub')}
         right={
-          <Link className="a2-btn" href={`${HERE}?rules=1#rf-more`} data-testid="rf-who">
-            {t(view.dict, 'lf.fh.wl.who')}: {t(view.dict, v.rules.fourEyes ? 'lf.fh.wl.whoTwo' : 'lf.fh.wl.whoOne')}
-          </Link>
+          <>
+            <PrintButton label={t(view.dict, 'lf.mn.act.dl')} testId="wl-dl" />
+            <Link className="a2-btn" href={`${HERE}?rules=1#rf-more`} data-testid="rf-who">
+              {t(view.dict, 'lf.fh.wl.who')}: {t(view.dict, v.rules.fourEyes ? 'lf.fh.wl.whoTwo' : 'lf.fh.wl.whoOne')}
+            </Link>
+          </>
         }
       />
       <SectionTabs view={view} current={KEY} />
@@ -170,7 +182,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
 
       <section className="a2-card a2-mt12" aria-labelledby="rf-list-h" data-testid="rf-list">
         <h2 className="a2-h3" id="rf-list-h">
-          {c('list.title')} · {c(`view.${v.view}`)}
+          {c('list.title')}
         </h2>
         {v.rows.length ? (
           <ul className="rf-rows">
@@ -222,7 +234,52 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
         {v.rows.length >= 100 ? <p className="a2-xs a2-mute a2-mt12">{c('list.more', { n: v.rows.length })}</p> : null /* hardcode-ok: the page size of refundsView */}
       </section>
 
-      <section className="a2-card a2-mt12" aria-labelledby="rf-big-h" data-testid="rf-biggest">
+      <div className="rf-two a2-mt12">
+      <section className="a2-card" aria-labelledby="rf-ex-h" data-testid="rf-credits">
+        <h2 className="a2-h3" id="rf-ex-h">
+          {c('credits.title')}
+        </h2>
+        {credits.length ? (
+          <div className="a2-tblw">
+            <table className="a2-tbl">
+              <thead>
+                <tr>
+                  <th>{t(d, 'lf.fh.wl.customer')}</th>
+                  <th className="w4-r">{c('credits.credit')}</th>
+                  <th className="w4-r">
+                    <span className="a2-sr">{c('credits.state')}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {credits.map((x) => (
+                  <tr key={x.id} data-testid="rf-credit">
+                    <td>
+                      {(x.customerId && personOf.get(x.customerId)) || someone}
+                      <div className="a2-xs a2-mute">
+                        <Link href={`/admin/orders/${x.orderId}`}>{orderNo.get(x.orderId) ?? ''}</Link> · {c('credits.lower')}
+                      </div>
+                    </td>
+                    <td className="w4-r">{amount(x.walletCreditMinor)}</td>
+                    <td className="w4-r">
+                      {x.status === 'COMPLETED' || x.status === 'QC_PASSED' ? (
+                        <span className="a2-pill ok">{c('credits.inWallet')}</span>
+                      ) : (
+                        <Link className="a2-btn sm" href="/admin/orders/returns/qc">
+                          {c('credits.add')}
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="a2-xs a2-mute">{c('credits.none')}</p>
+        )}
+      </section>
+      <section className="a2-card" aria-labelledby="rf-big-h" data-testid="rf-biggest">
         <div className="a2-ch">
           <h2 className="a2-h3" id="rf-big-h">
             {t(d, 'lf.fh.wl.bigTitle')}
@@ -258,6 +315,7 @@ export default async function RefundsPage({ searchParams }: { searchParams: Sear
           <p className="a2-xs a2-mute">{t(d, 'lf.fh.wl.none')}</p>
         )}
       </section>
+      </div>
 
       <section className="a2-card a2-mt12" aria-labelledby="rf-apology-h" data-testid="rf-apology" data-on={v.apology.enabled ? 'yes' : 'no'}>
         <h2 className="a2-h3" id="rf-apology-h">
