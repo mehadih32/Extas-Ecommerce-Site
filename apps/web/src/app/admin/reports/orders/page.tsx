@@ -637,7 +637,7 @@ export default async function SalesReportTab({
           rowId="rp-day-row"
           texts={tx}
           sortCol={0}
-          limit={maxRows}
+          // PR 1207 (prototype v5): 12 rows first, then "Show all N" (every day up to the period's own cap)
           cols={[
             { h: c("colPeriod") },
             { h: c("sOrders"), right: true },
