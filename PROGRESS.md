@@ -1,5 +1,9 @@
 # PROGRESS
 
+## 21 Nov 2026 - p101 parity round, lane l1 (branch `claude/p101-l1`, from `origin/main` bfd57d99): PR 1160-1167
+
+Admin font family named Inter / Inter Tight / Hind Siliguri (1160); the screens tool opens Settings › Couriers, Customer messages and AI control at their real pages, counts link buttons (1161) and measures each Home design against its own prototype design (1166); Activity log in plain words with the Changes and Who viewed customer data cards (1162); Help & manual Download PDF and project-file cards (1163); AI approvals' six kind chips (1164); the AI ceiling's Change ceiling button (1165); Team's "Download today’s sheet" apostrophe (1167). Waiting for the integrator to join the lanes; nothing merged or deployed from this lane.
+
 ## 19 Nov 2026 - Batch 2026-11-19-1 (branch `batch-2026-11-19-1`, from `origin/main` f8f7eaff): the three prototype-parity lanes joined
 
 Lanes L1 (PR 1100-1101), L2 (PR 1120-1132) and L3 (PR 1150-1157) cherry-picked in order, one commit per register PR, their Status commits folded into one; register, README, stage pages and Bengali lines merged and recounted (1002 PRs, 980 active, S28 332/332). **1158**: the Accounts & tools sub-tabs read Ad accounts, Refer a friend, Shopping feed (nav labels, shell tab labels, page titles, the Meta feed back link, Bengali guides). Next: local gates, one push, merge, deploy, practice-seed rebuild, fresh admin measurement.
