@@ -1,6 +1,8 @@
 {
   "gg": {
     "meta": "Where to advertise · Marketing",
+    "openMap": "Open on map",
+    "openMapHint": "See the same districts on the Geography map, with orders, returns and couriers.",
     "title": "Where to advertise",
     "sub": "District by district: where parcels are delivered and paid for, and where they come back. Advice only — nothing here changes a budget or a campaign.",
     "off": "Advice is off: below are the figures only. Switch it on in its card to give each district a word and get the lists to copy.",

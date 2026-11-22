@@ -618,6 +618,8 @@
       "kProfit": "বিজ্ঞাপনের আগে লাভ",
       "kAvgOrder": "গড় অর্ডার {v}",
       "mapTitle": "{here}: {level} অনুযায়ী",
+      "openMap": "ম্যাপে খুলুন",
+      "openMapHint": "Geography map-এ এই এলাকাগুলো বাংলাদেশের আসল ম্যাপে দেখায়। এই পাতা যেমন আছে তেমনই থাকে।",
       "level": {
         "division": "বিভাগ",
         "district": "জেলা",
