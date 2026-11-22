@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-22 04:29 (Asia/Dhaka)
+# Smoke test · 2026-11-22 07:28 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `962aa6daa0e0` · after deploy · result **PASS** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS** (706 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · after deploy · result **
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | phone | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1fe35-2430-7b03-9c00-6e204be93310` | phone | 200 | `/admin/reports/health/history/01a1fe35-2430-7b03-9c00-6e204be93310` | ok | — |
+| `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | phone | 200 | `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · after deploy · result **
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | desktop | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a1fe35-2430-7b03-9c00-6e204be93310` | desktop | 200 | `/admin/reports/health/history/01a1fe35-2430-7b03-9c00-6e204be93310` | ok | — |
+| `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | desktop | 200 | `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
