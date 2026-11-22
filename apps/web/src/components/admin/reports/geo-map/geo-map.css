@@ -1,0 +1,294 @@
+/* S29 · PR 753 — Reports › Geography map. Shell tokens only (the ramp is one hue mixed toward the card colour, so it follows
+   light and dark). Phone (390 px): the map over the list, 44 px tap targets, text never under 14 px, the table scrolls inside
+   its own frame, the panel is a sheet from the bottom. Desktop: the map beside the list. */
+.gm {
+  --gm-hue: var(--lm-hero-solid);
+  --gm-base: var(--lm-sf);
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  min-width: 0;
+}
+.gm button,
+.gm select {
+  font: inherit;
+  min-height: 44px;
+}
+.gm-bar,
+.gm-filters,
+.gm-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.gm-chip {
+  padding: 0 14px;
+  border: 1px solid var(--lm-ln);
+  border-radius: 999px;
+  background: var(--lm-sf);
+  color: var(--lm-ink2, inherit);
+  cursor: pointer;
+}
+.gm-chip.on {
+  background: var(--gm-hue);
+  border-color: var(--gm-hue);
+  color: var(--lm-on-hero);
+}
+.gm-check {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 44px;
+}
+.gm-fld {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.gm-fld select {
+  max-width: 100%;
+  padding: 0 10px;
+}
+.gm-trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.gm-trail button {
+  background: none;
+  border: 0;
+  padding: 0 6px;
+  color: var(--gm-hue);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.gm-trail button:disabled {
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+}
+.gm-body {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .gm-switch {
+    display: none;
+  }
+  .gm-body {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .gm-hide,
+  .gm-hide-phone {
+    display: block !important;
+  }
+}
+@media (max-width: 899px) {
+  .gm-hide,
+  .gm-hide-phone {
+    display: none;
+  }
+}
+.gm-mapbox {
+  position: relative;
+  border: 1px solid var(--lm-ln);
+  border-radius: 12px;
+  background: var(--lm-sf2);
+  overflow: hidden;
+}
+.gm-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  aspect-ratio: 3 / 4;
+}
+.gm-shape,
+.gm-pin {
+  stroke: var(--gm-base);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+}
+.gm-shape:hover,
+.gm-shape:focus-visible,
+.gm-pin:focus-visible {
+  stroke: var(--lm-ink2);
+  stroke-width: 2;
+  outline: none;
+}
+.gm-shape.sel,
+.gm-pin.sel {
+  stroke: var(--lm-ink2);
+  stroke-width: 2.5;
+}
+.gm-shape.warn {
+  stroke: var(--lm-bad);
+  stroke-width: 2;
+}
+.gm-none {
+  fill: var(--lm-sf2);
+  background: var(--lm-ln);
+}
+.gm-shape.gm-none,
+.gm-pin.gm-none {
+  fill: color-mix(in srgb, var(--lm-faint) 25%, var(--gm-base));
+}
+.gm-s0 { --gm-step: 12%; }
+.gm-s1 { --gm-step: 28%; }
+.gm-s2 { --gm-step: 46%; }
+.gm-s3 { --gm-step: 64%; }
+.gm-s4 { --gm-step: 78%; }
+.gm-s5 { --gm-step: 86%; }
+.gm-s6 { --gm-step: 92%; }
+.gm-s7 { --gm-step: 96%; }
+.gm-s8 { --gm-step: 100%; }
+.gm-s0, .gm-s1, .gm-s2, .gm-s3, .gm-s4, .gm-s5, .gm-s6, .gm-s7, .gm-s8 {
+  fill: color-mix(in srgb, var(--gm-hue) var(--gm-step), var(--gm-base));
+  background: color-mix(in srgb, var(--gm-hue) var(--gm-step), var(--gm-base));
+}
+.gm-zoom {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: grid;
+  gap: 6px;
+}
+.gm-zoom button {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--lm-ln);
+  background: var(--lm-sf);
+  font-size: 20px;
+  cursor: pointer;
+}
+.gm-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 8px 10px;
+}
+.gm-ramp {
+  display: inline-flex;
+}
+.gm-ramp i,
+.gm-key i {
+  display: inline-block;
+  width: 22px;
+  height: 14px;
+}
+.gm-key i {
+  border: 1px solid var(--lm-ln);
+}
+.gm-note,
+.gm-unknown,
+.gm-credit {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.gm-credit {
+  color: var(--lm-faint);
+  margin-top: 8px;
+}
+.gm-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--lm-ln);
+  border-radius: 12px;
+}
+.gm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.gm-table th,
+.gm-table td {
+  padding: 6px 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+.gm-table th:first-child,
+.gm-table td:first-child {
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.gm-table thead button,
+.gm-table tbody th button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: inherit;
+}
+.gm-table tbody tr {
+  border-top: 1px solid var(--lm-ln);
+}
+.gm-table tr.sel {
+  background: var(--lm-sf2);
+}
+.gm-table .warn {
+  color: var(--lm-bad);
+  font-weight: 600;
+}
+.gm-total th,
+.gm-total td {
+  font-weight: 700;
+}
+.gm-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 16px;
+  background: var(--lm-sf);
+  border-top: 1px solid var(--lm-ln);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--lm-ink2) 20%, transparent);
+  z-index: 20;
+}
+@media (min-width: 900px) {
+  .gm-panel {
+    left: auto;
+    right: 16px;
+    bottom: 16px;
+    width: 360px;
+    border-radius: 16px;
+    border: 1px solid var(--lm-ln);
+  }
+}
+.gm-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 44px;
+  background: none;
+  border: 0;
+  font-size: 24px;
+  cursor: pointer;
+}
+.gm-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+.gm-facts dt {
+  color: var(--lm-faint);
+}
+.gm-facts dd {
+  margin: 0;
+  font-weight: 700;
+}
+.gm-top {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}

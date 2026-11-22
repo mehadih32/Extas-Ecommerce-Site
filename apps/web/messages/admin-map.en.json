@@ -145,6 +145,7 @@
       "products.stock": "Stock from the ERP, low sizes, days of stock left.",
       "products.structure": "Put categories and collections in your order, hide a category, and choose which tag a product card shows as its badge.",
       "reports.areas": "Division → district → thana → area: orders, returns, profit, top products per place.",
+      "reports.geoMap": "Bangladesh coloured by orders, sales and returns: drill down, compare, lenses and advice.",
       "reports.couriers": "Which courier is better: success, days, returns, cost per parcel.",
       "reports.customers": "New vs returning, top customers, by district.",
       "reports.delivery": "Courier success, delays, refused parcels, COD ageing.",

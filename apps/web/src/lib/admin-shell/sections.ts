@@ -562,6 +562,9 @@ export const RAW_SECTIONS: readonly ShellSection[] = [
       { id: 'team', pages: [{ href: '/admin/reports/team', perm: 'staff.performance', keys: ['reportsTeam'] }] },
       // S16 · PR 568: Reports → Sales by area — REP-02's area part: district, upazila/thana or inside Dhaka, with returns.
       { id: 'areas', pages: [{ href: '/admin/reports/areas', perm: 'books.read', keys: ['reportsAreas'] }] },
+      // S29 · PR 753 — Reports › Geography map: Bangladesh coloured by orders, sales and returns. No on/off switch (owner's
+      // decision, 16 Nov 2026): the tab is always listed for everyone who holds `reports.read`.
+      { id: 'geoMap', more: true, pages: [{ href: '/admin/reports/geo-map', perm: 'reports.read', keys: ['reportsGeoMap'] }] },
       // S05 · PR 155 follow-up 91 — Orders: Ordered value and Sales by day, by delivery zone and by payment method (CN-019).
       { id: 'orders', guide: 'analytics', pages: [{ href: '/admin/reports/orders', perm: 'books.read', keys: ['reportsOrders'] }] },
       // S28 · PR 714 (CN-048): Reports › Profit — a prototype v5 tab that had no register PR; read-only, from figures the shop already has.
