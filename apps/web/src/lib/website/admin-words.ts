@@ -215,6 +215,16 @@ import adminBlogPipelineEn from '../../../messages/admin-blog-pipeline.en.json';
 import adminBlogPipelineBn from '../../../messages/admin-blog-pipeline.bn.json';
 import adminGeoGuideEn from '../../../messages/admin-geo-guide.en.json';
 import adminGeoGuideBn from '../../../messages/admin-geo-guide.bn.json';
+import adminGeoLensEn from '../../../messages/admin-geo-lens.en.json';
+import adminGeoLensBn from '../../../messages/admin-geo-lens.bn.json';
+import adminGeoLensesEn from '../../../messages/admin-geo-lenses.en.json';
+import adminGeoLensesBn from '../../../messages/admin-geo-lenses.bn.json';
+import adminGeoMapEn from '../../../messages/admin-geo-map.en.json';
+import adminGeoMapBn from '../../../messages/admin-geo-map.bn.json';
+import adminGeoPanelEn from '../../../messages/admin-geo-panel.en.json';
+import adminGeoPanelBn from '../../../messages/admin-geo-panel.bn.json';
+import adminGeoSlicesEn from '../../../messages/admin-geo-slices.en.json';
+import adminGeoSlicesBn from '../../../messages/admin-geo-slices.bn.json';
 import adminHouseAdsEn from '../../../messages/admin-house-ads.en.json';
 import adminHouseAdsBn from '../../../messages/admin-house-ads.bn.json';
 import adminMerchantFeedEn from '../../../messages/admin-merchant-feed.en.json';
@@ -300,6 +310,11 @@ export const ADMIN_WORD_FILES: Readonly<Record<string, { en: unknown; bn: unknow
   'admin-blog': { en: adminBlogEn, bn: adminBlogBn },
   'admin-blog-pipeline': { en: adminBlogPipelineEn, bn: adminBlogPipelineBn },
   'admin-geo-guide': { en: adminGeoGuideEn, bn: adminGeoGuideBn },
+  'admin-geo-lens': { en: adminGeoLensEn, bn: adminGeoLensBn },
+  'admin-geo-lenses': { en: adminGeoLensesEn, bn: adminGeoLensesBn },
+  'admin-geo-map': { en: adminGeoMapEn, bn: adminGeoMapBn },
+  'admin-geo-panel': { en: adminGeoPanelEn, bn: adminGeoPanelBn },
+  'admin-geo-slices': { en: adminGeoSlicesEn, bn: adminGeoSlicesBn },
   'admin-house-ads': { en: adminHouseAdsEn, bn: adminHouseAdsBn },
   'admin-merchant-feed': { en: adminMerchantFeedEn, bn: adminMerchantFeedBn },
   'admin-intel': { en: adminIntelEn, bn: adminIntelBn },
