@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./pure": "./src/pure.ts",
     "./geo-types": "./src/geo-types.ts",
-    "./geo-pure": "./src/geo-pure.ts"
+    "./geo-pure": "./src/geo-pure.ts",
+    "./geo-slices-pure": "./src/geo-slices-pure.ts"
   },
   "scripts": {
     "lint": "eslint .",

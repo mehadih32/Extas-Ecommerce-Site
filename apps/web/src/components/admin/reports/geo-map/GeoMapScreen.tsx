@@ -16,14 +16,13 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { project } from "@extas/delivery/geo-pack";
+import type { CourierLensResponse, LensResult } from "@extas/metrics";
 import {
   shownSlices,
   slicesFromSearch,
   SLICE_DIMENSIONS,
-  type CourierLensResponse,
-  type LensResult,
   type SliceDimension,
-} from "@extas/metrics";
+} from "@extas/metrics/geo-slices-pure";
 import type {
   GeoByArea,
   GeoCompare,
