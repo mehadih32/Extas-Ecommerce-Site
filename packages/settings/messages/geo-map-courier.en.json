@@ -1,0 +1,8 @@
+{
+  "reports": {
+    "geoMapCourier": {
+      "label": "Geography map: courier and coverage numbers",
+      "help": "The numbers the courier lens of Reports > Geography map judges by (the lens itself is switched on with the map's own lens switches). Smallest number of settled parcels before a rate means anything, the courier success rate under which an area is flagged, the share of late deliveries at which it is flagged, and how many places with orders but no courier the gap list names. Advice only: nothing here changes a courier rule, a booking or a mapping."
+    }
+  }
+}
