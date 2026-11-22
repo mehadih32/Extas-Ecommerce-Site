@@ -1,0 +1,8 @@
+{
+  "reports": {
+    "geoMap": {
+      "label": "Geography map (Reports)",
+      "help": "Off as shipped. On: Reports › Geography map shows a map of Bangladesh coloured by district, thana and area (orders, sales, delivered, returned, return rate, top category and top products, two periods side by side). Off: the page and its routes answer \"not on\" and nothing is read. Every number is yours to change: the opening period and figure, how few orders turn an area grey, the colour steps, the return rate that shows as a warning, how many best sellers the panel lists, whether it opens with a compare, whether an area without a shape is a pin, and how long a heavy figure is remembered. The longest report is the existing Costs report limit. Advice only: nothing here changes a budget, a campaign, a price, a charge, a COD rule or a courier."
+    }
+  }
+}
