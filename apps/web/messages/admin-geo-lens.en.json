@@ -1,0 +1,27 @@
+{
+  "geoLens": {
+    "title": "Courier and coverage",
+    "sub": "From your own parcels in the period: how often the courier delivered, how many came late against the delivery band's promise, and the courier that did best there. Advice only: it changes no courier rule, booking or mapping.",
+    "place": "Place",
+    "parcels": "Parcels",
+    "success": "Delivered",
+    "late": "Late",
+    "best": "Best courier",
+    "mostUsed": "Most used",
+    "noRate": "Not enough parcels",
+    "noBest": "No courier has enough parcels yet",
+    "none": "No parcels were delivered or returned here in this period.",
+    "gapsTitle": "Orders with no courier",
+    "gapsSub": "Places that had orders in the period but no courier is mapped to them (or to the place above them).",
+    "gapsNone": "Every place with orders has a courier.",
+    "orders": "orders",
+    "unknownOrders": "{n} orders have no area and are not in the list above.",
+    "flag": {
+      "tooFewParcels": "Few parcels",
+      "lowSuccess": "Low delivery rate",
+      "late": "Often late",
+      "coverageGap": "No courier",
+      "betterCourier": "Another courier does better"
+    }
+  }
+}

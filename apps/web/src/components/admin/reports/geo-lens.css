@@ -1,0 +1,25 @@
+/* S29 · PR 757 — the courier and coverage lens (shares the table look of geo-slices.css). */
+.adm2 .gst-flag {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--warn);
+  color: var(--warn);
+  font-size: 11px;
+  font-weight: 600;
+}
+.adm2 .gst-gaps {
+  margin: 0;
+  padding-inline-start: 18px;
+  overflow-wrap: anywhere;
+}
+.adm2 .gst-total th,
+.adm2 .gst-total td {
+  font-weight: 700;
+  border-top: 1px solid var(--line);
+}
+.adm2 .gst-extra th,
+.adm2 .gst-extra td {
+  color: var(--mute);
+}
