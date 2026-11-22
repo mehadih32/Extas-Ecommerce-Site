@@ -1,0 +1,35 @@
+{
+  "_note": "Key = \"<shape name in the boundary file>|<gazetteer code of the district the shape lies in, or empty>\"; value = the gazetteer code it means. Only spelling or renaming differences are fixed here (Zianagar = Indurkani, Goalandaghat = Goalanda, Kotwali of Jashore = Jashore Sadar); a shape that is not clearly the same place stays in unmatched.json.",
+  "division": { "Rajshani|": "bd.rajshahi" },
+  "district": { "Brahamanbaria|": "bd.chattogram.brahmanbaria", "Nawabganj|": "bd.rajshahi.chapai-nawabganj" },
+  "upazila": {
+    "Anowara|bd.chattogram.chattogram": "bd.chattogram.chattogram.anwara",
+    "Banchharampur|bd.chattogram.brahmanbaria": "bd.chattogram.brahmanbaria.bancharampur",
+    "Burhanuddin|bd.barishal.bhola": "bd.barishal.bhola.borhanuddin",
+    "Comilla Adarsha Sadar|bd.chattogram.cumilla": "bd.chattogram.cumilla.cumilla-adarsha-sadar",
+    "Comilla Sadar Dakshin|bd.chattogram.cumilla": "bd.chattogram.cumilla.cumilla-sadar-dakshin",
+    "Dharampasha|bd.sylhet.sunamganj": "bd.sylhet.sunamganj.dharmapasha",
+    "Goalandaghat|bd.dhaka.rajbari": "bd.dhaka.rajbari.goalanda",
+    "Golabganj|bd.sylhet.sylhet": "bd.sylhet.sylhet.golapganj",
+    "Harinakunda|bd.khulna.jhenaidah": "bd.khulna.jhenaidah.harinakundu",
+    "Kanthalia|bd.barishal.jhalakathi": "bd.barishal.jhalakathi.kathalia",
+    "Kotwali|bd.khulna.jashore": "bd.khulna.jashore.jashore-sadar",
+    "Lakshmichhari|bd.chattogram.khagrachhari": "bd.chattogram.khagrachhari.laxmichhari",
+    "Lohajang|bd.dhaka.munshiganj": "bd.dhaka.munshiganj.louhajang",
+    "Naikhongchhari|bd.chattogram.coxs-bazar": "bd.chattogram.bandarban.naikhongchhari",
+    "Nawabganj Sadar|bd.rajshahi.chapai-nawabganj": "bd.rajshahi.chapai-nawabganj.chapai-nawabganj-sadar",
+    "Panchhari|bd.chattogram.khagrachhari": "bd.chattogram.khagrachhari.panchari",
+    "Raumari|bd.rangpur.kurigram": "bd.rangpur.kurigram.rowmari",
+    "Serajdikhan|bd.dhaka.munshiganj": "bd.dhaka.munshiganj.sirajdikhan",
+    "Sulla|bd.sylhet.sunamganj": "bd.sylhet.sunamganj.shalla",
+    "Tejgaon Ind. Area|bd.dhaka.dhaka": "bd.dhaka.dhaka.tejgaon-i-a",
+    "Tentulia|bd.rangpur.panchagarh": "bd.rangpur.panchagarh.tetulia",
+    "Ullah Para|bd.rajshahi.sirajganj": "bd.rajshahi.sirajganj.ullapara",
+    "Zanjira|bd.dhaka.shariatpur": "bd.dhaka.shariatpur.zajira",
+    "Zianagar|bd.khulna.bagerhat": "bd.barishal.pirojpur.indurkani"
+  },
+  "dhakaThana": {
+    "Chak Bazar|bd.dhaka.dhaka": "bd.dhaka.dhaka.chawkbazar",
+    "Tejgaon Ind. Area|bd.dhaka.dhaka": "bd.dhaka.dhaka.tejgaon-i-a"
+  }
+}

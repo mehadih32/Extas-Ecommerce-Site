@@ -11,7 +11,7 @@
 // The full list goes in through the same importer (`pnpm --filter @extas/delivery gazetteer:import <file.csv>`).
 //
 //   node packages/delivery/scripts/make-sample-gazetteer.mjs     (writes data/gazetteer-sample.csv)
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -220,6 +220,12 @@ const cell = (v) => {
   const s = Array.isArray(v) ? v.join('|') : String(v ?? '');
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
+// PR 750: the map point of a place is the middle of its boundary shape (data/geo/centroids.json, made by make-geo-pack.ts)
+const centroidsPath = join(here, '../data/geo/centroids.json');
+if (existsSync(centroidsPath)) {
+  const centroids = JSON.parse(readFileSync(centroidsPath, 'utf8'));
+  for (const r of rows.values()) if (centroids[r.code] && !r.lat && !r.lng) [r.lat, r.lng] = centroids[r.code];
+}
 const header = ['code', 'level', 'parent', 'nameEn', 'nameBn', 'aliases', 'postcodes', 'cityCorporation', 'lat', 'lng'];
 const lines = [header.join(',')];
 for (const r of rows.values()) lines.push(header.map((h) => cell(r[h] ?? '')).join(','));

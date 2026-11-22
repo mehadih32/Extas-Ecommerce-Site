@@ -59,7 +59,7 @@ describe.skipIf(!HAS_TEST_DB)('gazetteer import on PostgreSQL', () => {
     expect(back).toMatchObject({ restored: 1, updated: 1 });
     const bogura = await t.prisma.geoArea.findUniqueOrThrow({ where: { code: 'bd.rajshahi.bogura' } });
     expect(bogura.aliases).not.toContain('bogoura');
-    expect(bogura.lat).toBeNull();
+    expect(bogura.lat === null ? null : Number(bogura.lat)).toBe(sample.find((r) => r.code === 'bd.rajshahi.bogura')?.lat ?? null); // back to the file's own value
   });
 
   it('never touches a place made some other way, and builds new children of new parents in one run', async () => {
