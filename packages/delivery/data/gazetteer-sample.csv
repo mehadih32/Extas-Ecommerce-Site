@@ -1,602 +1,602 @@
 code,level,parent,nameEn,nameBn,aliases,postcodes,cityCorporation,lat,lng
-bd.barishal,DIVISION,,Barishal,বরিশাল,barisal,,,,
-bd.chattogram,DIVISION,,Chattogram,চট্টগ্রাম,chittagong,,,,
-bd.dhaka,DIVISION,,Dhaka,ঢাকা,dacca,,,,
-bd.khulna,DIVISION,,Khulna,খুলনা,,,,,
-bd.mymensingh,DIVISION,,Mymensingh,ময়মনসিংহ,moymonsingh,,,,
-bd.rajshahi,DIVISION,,Rajshahi,রাজশাহী,,,,,
-bd.rangpur,DIVISION,,Rangpur,রংপুর,,,,,
-bd.sylhet,DIVISION,,Sylhet,সিলেট,,,,,
-bd.khulna.bagerhat,DISTRICT,bd.khulna,Bagerhat,বাগেরহাট,bagherhat,9300,,,
-bd.chattogram.bandarban,DISTRICT,bd.chattogram,Bandarban,বান্দরবান,bandorban,4600,,,
-bd.barishal.barguna,DISTRICT,bd.barishal,Barguna,বরগুনা,,8700,,,
-bd.barishal.barishal,DISTRICT,bd.barishal,Barishal,বরিশাল,barisal|borishal,8200,,,
-bd.barishal.bhola,DISTRICT,bd.barishal,Bhola,ভোলা,,8300,,,
-bd.rajshahi.bogura,DISTRICT,bd.rajshahi,Bogura,বগুড়া,bogra|bagura,5800,,,
-bd.chattogram.brahmanbaria,DISTRICT,bd.chattogram,Brahmanbaria,ব্রাহ্মণবাড়িয়া,bramanbaria|b baria|brahmonbaria,3400,,,
-bd.chattogram.chandpur,DISTRICT,bd.chattogram,Chandpur,চাঁদপুর,,3600,,,
-bd.rajshahi.chapai-nawabganj,DISTRICT,bd.rajshahi,Chapai Nawabganj,চাঁপাইনবাবগঞ্জ,chapainawabganj|chapai nababganj|chapai,6300,,,
-bd.chattogram.chattogram,DISTRICT,bd.chattogram,Chattogram,চট্টগ্রাম,chittagong|ctg,4000,,,
-bd.khulna.chuadanga,DISTRICT,bd.khulna,Chuadanga,চুয়াডাঙ্গা,chuyadanga,7200,,,
-bd.chattogram.coxs-bazar,DISTRICT,bd.chattogram,Cox's Bazar,কক্সবাজার,coxs bazar|coxsbazar,4700,,,
-bd.chattogram.cumilla,DISTRICT,bd.chattogram,Cumilla,কুমিল্লা,comilla|komilla,3500,,,
-bd.dhaka.dhaka,DISTRICT,bd.dhaka,Dhaka,ঢাকা,,1000,,,
-bd.rangpur.dinajpur,DISTRICT,bd.rangpur,Dinajpur,দিনাজপুর,dinazpur,5200,,,
-bd.dhaka.faridpur,DISTRICT,bd.dhaka,Faridpur,ফরিদপুর,,7800,,,
-bd.chattogram.feni,DISTRICT,bd.chattogram,Feni,ফেনী,pheni,3900,,,
-bd.rangpur.gaibandha,DISTRICT,bd.rangpur,Gaibandha,গাইবান্ধা,gaibanda,5700,,,
-bd.dhaka.gazipur,DISTRICT,bd.dhaka,Gazipur,গাজীপুর,gajipur|tongi,1700,,,
-bd.dhaka.gopalganj,DISTRICT,bd.dhaka,Gopalganj,গোপালগঞ্জ,gopalgonj,8100,,,
-bd.sylhet.habiganj,DISTRICT,bd.sylhet,Habiganj,হবিগঞ্জ,hobigonj|habigonj,3300,,,
-bd.mymensingh.jamalpur,DISTRICT,bd.mymensingh,Jamalpur,জামালপুর,,2000,,,
-bd.khulna.jashore,DISTRICT,bd.khulna,Jashore,যশোর,jasore|jessore,7400,,,
-bd.barishal.jhalakathi,DISTRICT,bd.barishal,Jhalakathi,ঝালকাঠি,jhalokathi|jhalakati|jhalokati,8400,,,
-bd.khulna.jhenaidah,DISTRICT,bd.khulna,Jhenaidah,ঝিনাইদহ,jhenidah|jhenida|jhinaidah,7300,,,
-bd.rajshahi.joypurhat,DISTRICT,bd.rajshahi,Joypurhat,জয়পুরহাট,jaipurhat|joypurhut,5900,,,
-bd.chattogram.khagrachhari,DISTRICT,bd.chattogram,Khagrachhari,খাগড়াছড়ি,khagrachari|khagrachori,4400,,,
-bd.khulna.khulna,DISTRICT,bd.khulna,Khulna,খুলনা,,9000,,,
-bd.dhaka.kishoreganj,DISTRICT,bd.dhaka,Kishoreganj,কিশোরগঞ্জ,kishorgonj|kishoregonj,2300,,,
-bd.rangpur.kurigram,DISTRICT,bd.rangpur,Kurigram,কুড়িগ্রাম,,5600,,,
-bd.khulna.kushtia,DISTRICT,bd.khulna,Kushtia,কুষ্টিয়া,kustia,7000,,,
-bd.chattogram.lakshmipur,DISTRICT,bd.chattogram,Lakshmipur,লক্ষ্মীপুর,laksmipur|lokkhipur|laxmipur,3700,,,
-bd.rangpur.lalmonirhat,DISTRICT,bd.rangpur,Lalmonirhat,লালমনিরহাট,,5500,,,
-bd.dhaka.madaripur,DISTRICT,bd.dhaka,Madaripur,মাদারীপুর,,7900,,,
-bd.khulna.magura,DISTRICT,bd.khulna,Magura,মাগুরা,,7600,,,
-bd.dhaka.manikganj,DISTRICT,bd.dhaka,Manikganj,মানিকগঞ্জ,manikgonj,1800,,,
-bd.khulna.meherpur,DISTRICT,bd.khulna,Meherpur,মেহেরপুর,,7100,,,
-bd.sylhet.moulvibazar,DISTRICT,bd.sylhet,Moulvibazar,মৌলভীবাজার,maulvibazar|moulovibazar|moulvi bazar,3200,,,
-bd.dhaka.munshiganj,DISTRICT,bd.dhaka,Munshiganj,মুন্সিগঞ্জ,munshigonj|munsiganj|munsigonj,1500,,,
-bd.mymensingh.mymensingh,DISTRICT,bd.mymensingh,Mymensingh,ময়মনসিংহ,,2200,,,
-bd.rajshahi.naogaon,DISTRICT,bd.rajshahi,Naogaon,নওগাঁ,,6500,,,
-bd.khulna.narail,DISTRICT,bd.khulna,Narail,নড়াইল,,7500,,,
-bd.dhaka.narayanganj,DISTRICT,bd.dhaka,Narayanganj,নারায়ণগঞ্জ,narayangonj|narayangang|n ganj,1400,,,
-bd.dhaka.narsingdi,DISTRICT,bd.dhaka,Narsingdi,নরসিংদী,norshingdi|narshingdi|norsingdi,1600,,,
-bd.rajshahi.natore,DISTRICT,bd.rajshahi,Natore,নাটোর,,6400,,,
-bd.mymensingh.netrokona,DISTRICT,bd.mymensingh,Netrokona,নেত্রকোণা,,2400,,,
-bd.rangpur.nilphamari,DISTRICT,bd.rangpur,Nilphamari,নীলফামারী,nilfamari,5300,,,
-bd.chattogram.noakhali,DISTRICT,bd.chattogram,Noakhali,নোয়াখালী,nowakhali,3800,,,
-bd.rajshahi.pabna,DISTRICT,bd.rajshahi,Pabna,পাবনা,,6600,,,
-bd.rangpur.panchagarh,DISTRICT,bd.rangpur,Panchagarh,পঞ্চগড়,panchagor|ponchogor,5000,,,
-bd.barishal.patuakhali,DISTRICT,bd.barishal,Patuakhali,পটুয়াখালী,patuakali,8600,,,
-bd.barishal.pirojpur,DISTRICT,bd.barishal,Pirojpur,পিরোজপুর,perojpur|firozpur,8500,,,
-bd.dhaka.rajbari,DISTRICT,bd.dhaka,Rajbari,রাজবাড়ী,rajbary,7700,,,
-bd.rajshahi.rajshahi,DISTRICT,bd.rajshahi,Rajshahi,রাজশাহী,rajsahi|razshahi,6000,,,
-bd.chattogram.rangamati,DISTRICT,bd.chattogram,Rangamati,রাঙ্গামাটি,rangamatti,4500,,,
-bd.rangpur.rangpur,DISTRICT,bd.rangpur,Rangpur,রংপুর,,5400,,,
-bd.khulna.satkhira,DISTRICT,bd.khulna,Satkhira,সাতক্ষীরা,shatkhira,9400,,,
-bd.dhaka.shariatpur,DISTRICT,bd.dhaka,Shariatpur,শরীয়তপুর,shoriotpur|sariatpur,8000,,,
-bd.mymensingh.sherpur,DISTRICT,bd.mymensingh,Sherpur,শেরপুর,,2100,,,
-bd.rajshahi.sirajganj,DISTRICT,bd.rajshahi,Sirajganj,সিরাজগঞ্জ,shirajgonj|sirajgonj|serajganj,6700,,,
-bd.sylhet.sunamganj,DISTRICT,bd.sylhet,Sunamganj,সুনামগঞ্জ,sunamgonj|shunamganj,3000,,,
-bd.sylhet.sylhet,DISTRICT,bd.sylhet,Sylhet,সিলেট,,3100,,,
-bd.dhaka.tangail,DISTRICT,bd.dhaka,Tangail,টাঙ্গাইল,tangial,1900,,,
-bd.rangpur.thakurgaon,DISTRICT,bd.rangpur,Thakurgaon,ঠাকুরগাঁও,thakurgao,5100,,,
-bd.dhaka.dhaka.savar,UPAZILA,bd.dhaka.dhaka,Savar,সাভার,shavar|saver|sabar,1340|1342|1343|1344|1345|1346|1347|1348|1349,,,
+bd.barishal,DIVISION,,Barishal,বরিশাল,barisal,,,22.45974,90.25374
+bd.chattogram,DIVISION,,Chattogram,চট্টগ্রাম,chittagong,,,22.70808,91.77397
+bd.dhaka,DIVISION,,Dhaka,ঢাকা,dacca,,,23.82984,90.2523
+bd.khulna,DIVISION,,Khulna,খুলনা,,,,22.87859,89.30492
+bd.mymensingh,DIVISION,,Mymensingh,ময়মনসিংহ,moymonsingh,,,24.84999,90.41054
+bd.rajshahi,DIVISION,,Rajshahi,রাজশাহী,,,,24.57736,89.05751
+bd.rangpur,DIVISION,,Rangpur,রংপুর,,,,25.76726,89.05344
+bd.sylhet,DIVISION,,Sylhet,সিলেট,,,,24.73005,91.6714
+bd.khulna.bagerhat,DISTRICT,bd.khulna,Bagerhat,বাগেরহাট,bagherhat,9300,,22.52198,89.75992
+bd.chattogram.bandarban,DISTRICT,bd.chattogram,Bandarban,বান্দরবান,bandorban,4600,,21.80706,92.36383
+bd.barishal.barguna,DISTRICT,bd.barishal,Barguna,বরগুনা,,8700,,22.14117,90.12072
+bd.barishal.barishal,DISTRICT,bd.barishal,Barishal,বরিশাল,barisal|borishal,8200,,22.80172,90.30741
+bd.barishal.bhola,DISTRICT,bd.barishal,Bhola,ভোলা,,8300,,22.37272,90.70902
+bd.rajshahi.bogura,DISTRICT,bd.rajshahi,Bogura,বগুড়া,bogra|bagura,5800,,24.82446,89.37878
+bd.chattogram.brahmanbaria,DISTRICT,bd.chattogram,Brahmanbaria,ব্রাহ্মণবাড়িয়া,bramanbaria|b baria|brahmonbaria,3400,,23.95297,91.08347
+bd.chattogram.chandpur,DISTRICT,bd.chattogram,Chandpur,চাঁদপুর,,3600,,23.27968,90.77785
+bd.rajshahi.chapai-nawabganj,DISTRICT,bd.rajshahi,Chapai Nawabganj,চাঁপাইনবাবগঞ্জ,chapainawabganj|chapai nababganj|chapai,6300,,24.71562,88.26412
+bd.chattogram.chattogram,DISTRICT,bd.chattogram,Chattogram,চট্টগ্রাম,chittagong|ctg,4000,,22.43669,91.86529
+bd.khulna.chuadanga,DISTRICT,bd.khulna,Chuadanga,চুয়াডাঙ্গা,chuyadanga,7200,,23.60834,88.84795
+bd.chattogram.coxs-bazar,DISTRICT,bd.chattogram,Cox's Bazar,কক্সবাজার,coxs bazar|coxsbazar,4700,,21.47265,92.07103
+bd.chattogram.cumilla,DISTRICT,bd.chattogram,Cumilla,কুমিল্লা,comilla|komilla,3500,,23.43689,91.03396
+bd.dhaka.dhaka,DISTRICT,bd.dhaka,Dhaka,ঢাকা,,1000,,23.78694,90.2508
+bd.rangpur.dinajpur,DISTRICT,bd.rangpur,Dinajpur,দিনাজপুর,dinazpur,5200,,25.6299,88.78685
+bd.dhaka.faridpur,DISTRICT,bd.dhaka,Faridpur,ফরিদপুর,,7800,,23.47893,89.83884
+bd.chattogram.feni,DISTRICT,bd.chattogram,Feni,ফেনী,pheni,3900,,23.00324,91.41265
+bd.rangpur.gaibandha,DISTRICT,bd.rangpur,Gaibandha,গাইবান্ধা,gaibanda,5700,,25.29872,89.50585
+bd.dhaka.gazipur,DISTRICT,bd.dhaka,Gazipur,গাজীপুর,gajipur|tongi,1700,,24.09844,90.44493
+bd.dhaka.gopalganj,DISTRICT,bd.dhaka,Gopalganj,গোপালগঞ্জ,gopalgonj,8100,,23.10553,89.8995
+bd.sylhet.habiganj,DISTRICT,bd.sylhet,Habiganj,হবিগঞ্জ,hobigonj|habigonj,3300,,24.36808,91.43029
+bd.mymensingh.jamalpur,DISTRICT,bd.mymensingh,Jamalpur,জামালপুর,,2000,,24.97318,89.84627
+bd.khulna.jashore,DISTRICT,bd.khulna,Jashore,যশোর,jasore|jessore,7400,,23.08979,89.17465
+bd.barishal.jhalakathi,DISTRICT,bd.barishal,Jhalakathi,ঝালকাঠি,jhalokathi|jhalakati|jhalokati,8400,,22.57279,90.18394
+bd.khulna.jhenaidah,DISTRICT,bd.khulna,Jhenaidah,ঝিনাইদহ,jhenidah|jhenida|jhinaidah,7300,,23.48913,89.08743
+bd.rajshahi.joypurhat,DISTRICT,bd.rajshahi,Joypurhat,জয়পুরহাট,jaipurhat|joypurhut,5900,,25.09273,89.08291
+bd.chattogram.khagrachhari,DISTRICT,bd.chattogram,Khagrachhari,খাগড়াছড়ি,khagrachari|khagrachori,4400,,23.1642,91.95209
+bd.khulna.khulna,DISTRICT,bd.khulna,Khulna,খুলনা,,9000,,22.58557,89.45708
+bd.dhaka.kishoreganj,DISTRICT,bd.dhaka,Kishoreganj,কিশোরগঞ্জ,kishorgonj|kishoregonj,2300,,24.37622,90.94235
+bd.rangpur.kurigram,DISTRICT,bd.rangpur,Kurigram,কুড়িগ্রাম,,5600,,25.79067,89.69527
+bd.khulna.kushtia,DISTRICT,bd.khulna,Kushtia,কুষ্টিয়া,kustia,7000,,23.92292,89.02197
+bd.chattogram.lakshmipur,DISTRICT,bd.chattogram,Lakshmipur,লক্ষ্মীপুর,laksmipur|lokkhipur|laxmipur,3700,,22.90046,90.85567
+bd.rangpur.lalmonirhat,DISTRICT,bd.rangpur,Lalmonirhat,লালমনিরহাট,,5500,,26.05738,89.24086
+bd.dhaka.madaripur,DISTRICT,bd.dhaka,Madaripur,মাদারীপুর,,7900,,23.21818,90.1651
+bd.khulna.magura,DISTRICT,bd.khulna,Magura,মাগুরা,,7600,,23.44316,89.43369
+bd.dhaka.manikganj,DISTRICT,bd.dhaka,Manikganj,মানিকগঞ্জ,manikgonj,1800,,23.84399,89.94961
+bd.khulna.meherpur,DISTRICT,bd.khulna,Meherpur,মেহেরপুর,,7100,,23.79403,88.7071
+bd.sylhet.moulvibazar,DISTRICT,bd.sylhet,Moulvibazar,মৌলভীবাজার,maulvibazar|moulovibazar|moulvi bazar,3200,,24.48042,91.91539
+bd.dhaka.munshiganj,DISTRICT,bd.dhaka,Munshiganj,মুন্সিগঞ্জ,munshigonj|munsiganj|munsigonj,1500,,23.52577,90.41727
+bd.mymensingh.mymensingh,DISTRICT,bd.mymensingh,Mymensingh,ময়মনসিংহ,,2200,,24.69906,90.4286
+bd.rajshahi.naogaon,DISTRICT,bd.rajshahi,Naogaon,নওগাঁ,,6500,,24.89965,88.75159
+bd.khulna.narail,DISTRICT,bd.khulna,Narail,নড়াইল,,7500,,23.13008,89.5801
+bd.dhaka.narayanganj,DISTRICT,bd.dhaka,Narayanganj,নারায়ণগঞ্জ,narayangonj|narayangang|n ganj,1400,,23.72325,90.57809
+bd.dhaka.narsingdi,DISTRICT,bd.dhaka,Narsingdi,নরসিংদী,norshingdi|narshingdi|norsingdi,1600,,24.00241,90.77324
+bd.rajshahi.natore,DISTRICT,bd.rajshahi,Natore,নাটোর,,6400,,24.3803,89.08681
+bd.mymensingh.netrokona,DISTRICT,bd.mymensingh,Netrokona,নেত্রকোণা,,2400,,24.87078,90.84457
+bd.rangpur.nilphamari,DISTRICT,bd.rangpur,Nilphamari,নীলফামারী,nilfamari,5300,,26.02466,88.9295
+bd.chattogram.noakhali,DISTRICT,bd.chattogram,Noakhali,নোয়াখালী,nowakhali,3800,,22.81098,91.12406
+bd.rajshahi.pabna,DISTRICT,bd.rajshahi,Pabna,পাবনা,,6600,,24.05316,89.38535
+bd.rangpur.panchagarh,DISTRICT,bd.rangpur,Panchagarh,পঞ্চগড়,panchagor|ponchogor,5000,,26.28511,88.57547
+bd.barishal.patuakhali,DISTRICT,bd.barishal,Patuakhali,পটুয়াখালী,patuakali,8600,,22.3139,90.40837
+bd.barishal.pirojpur,DISTRICT,bd.barishal,Pirojpur,পিরোজপুর,perojpur|firozpur,8500,,22.53376,89.99319
+bd.dhaka.rajbari,DISTRICT,bd.dhaka,Rajbari,রাজবাড়ী,rajbary,7700,,23.72763,89.56152
+bd.rajshahi.rajshahi,DISTRICT,bd.rajshahi,Rajshahi,রাজশাহী,rajsahi|razshahi,6000,,24.46577,88.65145
+bd.chattogram.rangamati,DISTRICT,bd.chattogram,Rangamati,রাঙ্গামাটি,rangamatti,4500,,22.83002,92.27953
+bd.rangpur.rangpur,DISTRICT,bd.rangpur,Rangpur,রংপুর,,5400,,25.64974,89.23685
+bd.khulna.satkhira,DISTRICT,bd.khulna,Satkhira,সাতক্ষীরা,shatkhira,9400,,22.5129,89.11982
+bd.dhaka.shariatpur,DISTRICT,bd.dhaka,Shariatpur,শরীয়তপুর,shoriotpur|sariatpur,8000,,23.24768,90.40743
+bd.mymensingh.sherpur,DISTRICT,bd.mymensingh,Sherpur,শেরপুর,,2100,,25.08227,90.07447
+bd.rajshahi.sirajganj,DISTRICT,bd.rajshahi,Sirajganj,সিরাজগঞ্জ,shirajgonj|sirajgonj|serajganj,6700,,24.39161,89.59964
+bd.sylhet.sunamganj,DISTRICT,bd.sylhet,Sunamganj,সুনামগঞ্জ,sunamgonj|shunamganj,3000,,24.93857,91.346
+bd.sylhet.sylhet,DISTRICT,bd.sylhet,Sylhet,সিলেট,,3100,,24.9192,91.98733
+bd.dhaka.tangail,DISTRICT,bd.dhaka,Tangail,টাঙ্গাইল,tangial,1900,,24.35633,89.99862
+bd.rangpur.thakurgaon,DISTRICT,bd.rangpur,Thakurgaon,ঠাকুরগাঁও,thakurgao,5100,,25.9906,88.34559
+bd.dhaka.dhaka.savar,UPAZILA,bd.dhaka.dhaka,Savar,সাভার,shavar|saver|sabar,1340|1342|1343|1344|1345|1346|1347|1348|1349,,23.88108,90.28074
 bd.dhaka.dhaka.savar.ashulia,THANA,bd.dhaka.dhaka.savar,Ashulia,আশুলিয়া,asulia|ashuliya|asuliya|ashulia thana|আশুলিয়া থানা|asulia thana,1341,,,
-bd.dhaka.dhaka.dhamrai,UPAZILA,bd.dhaka.dhaka,Dhamrai,ধামরাই,damrai|dhamrae,1350|1351,,,
-bd.dhaka.dhaka.dohar,UPAZILA,bd.dhaka.dhaka,Dohar,দোহার,dohar upazila,1330|1331|1332,,,
-bd.dhaka.dhaka.keraniganj,UPAZILA,bd.dhaka.dhaka,Keraniganj,কেরাণীগঞ্জ,keraniganz|keranigong|keranigonj|কেরানীগঞ্জ,1310|1311|1312,,,
-bd.dhaka.dhaka.nawabganj,UPAZILA,bd.dhaka.dhaka,Nawabganj,নবাবগঞ্জ,nawabganz|nawabgong|nawabgonj|nowabganj dhaka|nawabgonj dhaka,1320|1321|1322|1323,,,
-bd.dhaka.gazipur.gazipur-sadar,UPAZILA,bd.dhaka.gazipur,Gazipur Sadar,গাজীপুর,gazipore|joydebpur,1700|1701|1702|1703|1704|1705|1706|1707|1708|1709,,,
+bd.dhaka.dhaka.dhamrai,UPAZILA,bd.dhaka.dhaka,Dhamrai,ধামরাই,damrai|dhamrae,1350|1351,,23.93711,90.1414
+bd.dhaka.dhaka.dohar,UPAZILA,bd.dhaka.dhaka,Dohar,দোহার,dohar upazila,1330|1331|1332,,23.60091,90.1093
+bd.dhaka.dhaka.keraniganj,UPAZILA,bd.dhaka.dhaka,Keraniganj,কেরাণীগঞ্জ,keraniganz|keranigong|keranigonj|কেরানীগঞ্জ,1310|1311|1312,,23.69354,90.34429
+bd.dhaka.dhaka.nawabganj,UPAZILA,bd.dhaka.dhaka,Nawabganj,নবাবগঞ্জ,nawabganz|nawabgong|nawabgonj|nowabganj dhaka|nawabgonj dhaka,1320|1321|1322|1323,,23.67346,90.16082
+bd.dhaka.gazipur.gazipur-sadar,UPAZILA,bd.dhaka.gazipur,Gazipur Sadar,গাজীপুর,gazipore|joydebpur,1700|1701|1702|1703|1704|1705|1706|1707|1708|1709,,24.01414,90.39618
 bd.dhaka.gazipur.gazipur-sadar.tongi,THANA,bd.dhaka.gazipur.gazipur-sadar,Tongi,টঙ্গী,tongee|tungi|tangi,1710|1711|1712,,,
-bd.dhaka.gazipur.kaliganj,UPAZILA,bd.dhaka.gazipur,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,1720|1721|1722|1723,,,
-bd.dhaka.gazipur.kapasia,UPAZILA,bd.dhaka.gazipur,Kapasia,কাপাসিয়া,kapashia|kapasiya,1730,,,
-bd.dhaka.gazipur.sreepur,UPAZILA,bd.dhaka.gazipur,Sreepur,শ্রীপুর,sripur|shreepur|sreepur gazipur|sreepur kapasia,1740|1741|1742|1743|1744|1745|1746|1747|1748,,,
-bd.dhaka.gazipur.kaliakair,UPAZILA,bd.dhaka.gazipur,Kaliakair,কালিয়াকৈর,kaliakoir|kaliakaar|kaliyakoir,1750|1751,,,
-bd.dhaka.narayanganj.narayanganj-sadar,UPAZILA,bd.dhaka.narayanganj,Narayanganj Sadar,নারায়ণগঞ্জ,,1400,,,
+bd.dhaka.gazipur.kaliganj,UPAZILA,bd.dhaka.gazipur,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,1720|1721|1722|1723,,23.96424,90.55486
+bd.dhaka.gazipur.kapasia,UPAZILA,bd.dhaka.gazipur,Kapasia,কাপাসিয়া,kapashia|kapasiya,1730,,24.14722,90.59989
+bd.dhaka.gazipur.sreepur,UPAZILA,bd.dhaka.gazipur,Sreepur,শ্রীপুর,sripur|shreepur|sreepur gazipur|sreepur kapasia,1740|1741|1742|1743|1744|1745|1746|1747|1748,,24.20518,90.44309
+bd.dhaka.gazipur.kaliakair,UPAZILA,bd.dhaka.gazipur,Kaliakair,কালিয়াকৈর,kaliakoir|kaliakaar|kaliyakoir,1750|1751,,24.10327,90.26455
+bd.dhaka.narayanganj.narayanganj-sadar,UPAZILA,bd.dhaka.narayanganj,Narayanganj Sadar,নারায়ণগঞ্জ,,1400,,23.62754,90.48108
 bd.dhaka.narayanganj.narayanganj-sadar.fatullah,THANA,bd.dhaka.narayanganj.narayanganj-sadar,Fatullah,ফতুল্লা,fatulla|fotulla|fatullah thana,1420|1421,,,
 bd.dhaka.narayanganj.narayanganj-sadar.siddhirganj,THANA,bd.dhaka.narayanganj.narayanganj-sadar,Siddhirganj,সিদ্ধিরগঞ্জ,siddirgonj|sidhirganj|shiddirganj|shiddriganj|siddhirgonj|siddhirganj thana,1430|1431|1432,,,
-bd.dhaka.narayanganj.bandar,UPAZILA,bd.dhaka.narayanganj,Bandar,বন্দর,bondor,1410|1411|1412|1413|1414,,,
-bd.dhaka.narayanganj.sonargaon,UPAZILA,bd.dhaka.narayanganj,Sonargaon,সোনারগাঁও,sonargaw|sonargao,1440|1441|1442,,,
-bd.dhaka.narayanganj.araihazar,UPAZILA,bd.dhaka.narayanganj,Araihazar,আড়াইহাজার,arahazar|aaraihazar|arihajar,1450|1451,,,
-bd.dhaka.narayanganj.rupganj,UPAZILA,bd.dhaka.narayanganj,Rupganj,রূপগঞ্জ,rupgonj|roopganj,1460|1461|1462|1463|1464,,,
+bd.dhaka.narayanganj.bandar,UPAZILA,bd.dhaka.narayanganj,Bandar,বন্দর,bondor,1410|1411|1412|1413|1414,,23.63771,90.53778
+bd.dhaka.narayanganj.sonargaon,UPAZILA,bd.dhaka.narayanganj,Sonargaon,সোনারগাঁও,sonargaw|sonargao,1440|1441|1442,,23.67558,90.59329
+bd.dhaka.narayanganj.araihazar,UPAZILA,bd.dhaka.narayanganj,Araihazar,আড়াইহাজার,arahazar|aaraihazar|arihajar,1450|1451,,23.761,90.66886
+bd.dhaka.narayanganj.rupganj,UPAZILA,bd.dhaka.narayanganj,Rupganj,রূপগঞ্জ,rupgonj|roopganj,1460|1461|1462|1463|1464,,23.81283,90.53879
 bd.dhaka.dhaka.uttara-west,THANA,bd.dhaka.dhaka,Uttara West,,,,DNCC,,
 bd.dhaka.dhaka.uttara-east,THANA,bd.dhaka.dhaka,Uttara East,,,,DNCC,,
-bd.dhaka.dhaka.uttara,THANA,bd.dhaka.dhaka,Uttara,উত্তরা,,,DNCC,,
-bd.dhaka.dhaka.bimanbandar,THANA,bd.dhaka.dhaka,Bimanbandar,,,,DNCC,,
-bd.dhaka.dhaka.gulshan,THANA,bd.dhaka.dhaka,Gulshan,,,,DNCC,,
-bd.dhaka.dhaka.cantonment,THANA,bd.dhaka.dhaka,Cantonment,,,,DNCC,,
-bd.dhaka.dhaka.mirpur,THANA,bd.dhaka.dhaka,Mirpur,মিরপুর,,,DNCC,,
-bd.dhaka.dhaka.tejgaon-i-a,THANA,bd.dhaka.dhaka,Tejgaon I/A,,,,DNCC,,
+bd.dhaka.dhaka.uttara,THANA,bd.dhaka.dhaka,Uttara,উত্তরা,,,DNCC,23.87206,90.39401
+bd.dhaka.dhaka.bimanbandar,THANA,bd.dhaka.dhaka,Bimanbandar,,,,DNCC,23.84754,90.40596
+bd.dhaka.dhaka.gulshan,THANA,bd.dhaka.dhaka,Gulshan,,,,DNCC,23.78961,90.41206
+bd.dhaka.dhaka.cantonment,THANA,bd.dhaka.dhaka,Cantonment,,,,DNCC,23.81449,90.39989
+bd.dhaka.dhaka.mirpur,THANA,bd.dhaka.dhaka,Mirpur,মিরপুর,,,DNCC,23.79418,90.36176
+bd.dhaka.dhaka.tejgaon-i-a,THANA,bd.dhaka.dhaka,Tejgaon I/A,,,,DNCC,23.76463,90.40321
 bd.dhaka.dhaka.gandaria,THANA,bd.dhaka.dhaka,Gandaria,,,,DSCC,,
-bd.khulna.bagerhat.bagerhat-sadar,UPAZILA,bd.khulna.bagerhat,Bagerhat Sadar,বাগেরহাট সদর,,9300,,,
-bd.khulna.bagerhat.chitalmari,UPAZILA,bd.khulna.bagerhat,Chitalmari,চিতলমারী,,9360,,,
-bd.khulna.bagerhat.fakirhat,UPAZILA,bd.khulna.bagerhat,Fakirhat,ফকিরহাট,,9370,,,
-bd.khulna.bagerhat.kachua,UPAZILA,bd.khulna.bagerhat,Kachua,কচুয়া,,3630,,,
-bd.khulna.bagerhat.mollahat,UPAZILA,bd.khulna.bagerhat,Mollahat,মোল্লাহাট,,,,,
-bd.khulna.bagerhat.mongla,UPAZILA,bd.khulna.bagerhat,Mongla,মোংলা,,9351,,,
-bd.khulna.bagerhat.morrelganj,UPAZILA,bd.khulna.bagerhat,Morrelganj,মোড়েলগঞ্জ,morrelganz|morrelgong|morrelgonj,,,,
-bd.khulna.bagerhat.rampal,UPAZILA,bd.khulna.bagerhat,Rampal,রামপাল,,9340,,,
-bd.khulna.bagerhat.sarankhola,UPAZILA,bd.khulna.bagerhat,Sarankhola,শরণখোলা,sarankola,9311,,,
-bd.chattogram.bandarban.alikadam,UPAZILA,bd.chattogram.bandarban,Alikadam,আলীকদম,,4650,,,
-bd.chattogram.bandarban.bandarban-sadar,UPAZILA,bd.chattogram.bandarban,Bandarban Sadar,বান্দরবান সদর,,4600,,,
-bd.chattogram.bandarban.lama,UPAZILA,bd.chattogram.bandarban,Lama,লামা,,4641,,,
-bd.chattogram.bandarban.naikhongchhari,UPAZILA,bd.chattogram.bandarban,Naikhongchhari,নাইক্ষ্যংছড়ি,naikhongchari|naikongchhari,,,,
-bd.chattogram.bandarban.rowangchhari,UPAZILA,bd.chattogram.bandarban,Rowangchhari,রোয়াংছড়ি,rowangchari,4610,,,
-bd.chattogram.bandarban.ruma,UPAZILA,bd.chattogram.bandarban,Ruma,রুমা,,4620,,,
-bd.chattogram.bandarban.thanchi,UPAZILA,bd.chattogram.bandarban,Thanchi,থানচি,,4630,,,
-bd.barishal.barguna.amtali,UPAZILA,bd.barishal.barguna,Amtali,আমতলী,,8710,,,
-bd.barishal.barguna.bamna,UPAZILA,bd.barishal.barguna,Bamna,বামনা,,8730,,,
-bd.barishal.barguna.barguna-sadar,UPAZILA,bd.barishal.barguna,Barguna Sadar,বরগুনা সদর,,,,,
-bd.barishal.barguna.betagi,UPAZILA,bd.barishal.barguna,Betagi,বেতাগী,,8740,,,
-bd.barishal.barguna.patharghata,UPAZILA,bd.barishal.barguna,Patharghata,পাথরঘাটা,pathorghata,,,,
+bd.khulna.bagerhat.bagerhat-sadar,UPAZILA,bd.khulna.bagerhat,Bagerhat Sadar,বাগেরহাট সদর,,9300,,22.67753,89.76324
+bd.khulna.bagerhat.chitalmari,UPAZILA,bd.khulna.bagerhat,Chitalmari,চিতলমারী,,9360,,22.81235,89.86529
+bd.khulna.bagerhat.fakirhat,UPAZILA,bd.khulna.bagerhat,Fakirhat,ফকিরহাট,,9370,,22.74247,89.66574
+bd.khulna.bagerhat.kachua,UPAZILA,bd.khulna.bagerhat,Kachua,কচুয়া,,3630,,22.65229,89.87477
+bd.khulna.bagerhat.mollahat,UPAZILA,bd.khulna.bagerhat,Mollahat,মোল্লাহাট,,,,22.88274,89.77334
+bd.khulna.bagerhat.mongla,UPAZILA,bd.khulna.bagerhat,Mongla,মোংলা,,9351,,22.33133,89.67495
+bd.khulna.bagerhat.morrelganj,UPAZILA,bd.khulna.bagerhat,Morrelganj,মোড়েলগঞ্জ,morrelganz|morrelgong|morrelgonj,,,22.48383,89.83355
+bd.khulna.bagerhat.rampal,UPAZILA,bd.khulna.bagerhat,Rampal,রামপাল,,9340,,22.5914,89.65216
+bd.khulna.bagerhat.sarankhola,UPAZILA,bd.khulna.bagerhat,Sarankhola,শরণখোলা,sarankola,9311,,22.22531,89.81439
+bd.chattogram.bandarban.alikadam,UPAZILA,bd.chattogram.bandarban,Alikadam,আলীকদম,,4650,,21.60008,92.38456
+bd.chattogram.bandarban.bandarban-sadar,UPAZILA,bd.chattogram.bandarban,Bandarban Sadar,বান্দরবান সদর,,4600,,22.17112,92.21819
+bd.chattogram.bandarban.lama,UPAZILA,bd.chattogram.bandarban,Lama,লামা,,4641,,21.81813,92.20762
+bd.chattogram.bandarban.naikhongchhari,UPAZILA,bd.chattogram.bandarban,Naikhongchhari,নাইক্ষ্যংছড়ি,naikhongchari|naikongchhari,,,21.46896,92.22867
+bd.chattogram.bandarban.rowangchhari,UPAZILA,bd.chattogram.bandarban,Rowangchhari,রোয়াংছড়ি,rowangchari,4610,,22.20909,92.33966
+bd.chattogram.bandarban.ruma,UPAZILA,bd.chattogram.bandarban,Ruma,রুমা,,4620,,22.01261,92.42937
+bd.chattogram.bandarban.thanchi,UPAZILA,bd.chattogram.bandarban,Thanchi,থানচি,,4630,,21.63722,92.53096
+bd.barishal.barguna.amtali,UPAZILA,bd.barishal.barguna,Amtali,আমতলী,,8710,,22.07492,90.20276
+bd.barishal.barguna.bamna,UPAZILA,bd.barishal.barguna,Bamna,বামনা,,8730,,22.27248,90.05807
+bd.barishal.barguna.barguna-sadar,UPAZILA,bd.barishal.barguna,Barguna Sadar,বরগুনা সদর,,,,22.1346,90.10899
+bd.barishal.barguna.betagi,UPAZILA,bd.barishal.barguna,Betagi,বেতাগী,,8740,,22.34718,90.1482
+bd.barishal.barguna.patharghata,UPAZILA,bd.barishal.barguna,Patharghata,পাথরঘাটা,pathorghata,,,22.09405,89.96581
 bd.barishal.barguna.taltali,UPAZILA,bd.barishal.barguna,Taltali,তালতলি,,,,,
-bd.barishal.barishal.agailjhara,UPAZILA,bd.barishal.barishal,Agailjhara,আগৈলঝাড়া,agailzhara,8240,,,
-bd.barishal.barishal.babuganj,UPAZILA,bd.barishal.barishal,Babuganj,বাবুগঞ্জ,babuganz|babugong|babugonj,8210,,,
-bd.barishal.barishal.bakerganj,UPAZILA,bd.barishal.barishal,Bakerganj,বাকেরগঞ্জ,bakerganz|bakergong|bakergonj,8281,,,
-bd.barishal.barishal.banaripara,UPAZILA,bd.barishal.barishal,Banaripara,বানারীপাড়া,,8530,,,
-bd.barishal.barishal.barishal-sadar,UPAZILA,bd.barishal.barishal,Barishal Sadar,বরিশাল সদর,barisal sadar,,,,
-bd.barishal.barishal.gournadi,UPAZILA,bd.barishal.barishal,Gournadi,গৌরনদী,,8230,,,
-bd.barishal.barishal.hizla,UPAZILA,bd.barishal.barishal,Hizla,হিজলা,,,,,
-bd.barishal.barishal.mehendiganj,UPAZILA,bd.barishal.barishal,Mehendiganj,মেহেন্দিগঞ্জ,mehendiganz|mehendigong|mehendigonj,8270,,,
-bd.barishal.barishal.muladi,UPAZILA,bd.barishal.barishal,Muladi,মুলাদী,,8250,,,
-bd.barishal.barishal.wazirpur,UPAZILA,bd.barishal.barishal,Wazirpur,উজিরপুর,,8220,,,
-bd.barishal.bhola.bhola-sadar,UPAZILA,bd.barishal.bhola,Bhola Sadar,ভোলা সদর,,8300,,,
-bd.barishal.bhola.borhanuddin,UPAZILA,bd.barishal.bhola,Borhanuddin,বোরহান উদ্দিন,borhan sddin,,,,
-bd.barishal.bhola.charfasson,UPAZILA,bd.barishal.bhola,Charfasson,চরফ্যাশন,charfesson,,,,
-bd.barishal.bhola.daulatkhan,UPAZILA,bd.barishal.bhola,Daulatkhan,দৌলতখান,doulatkan|doulatkhan,,,,
-bd.barishal.bhola.lalmohan,UPAZILA,bd.barishal.bhola,Lalmohan,লালমোহন,,8330,,,
-bd.barishal.bhola.manpura,UPAZILA,bd.barishal.bhola,Manpura,মনপুরা,monpura,,,,
-bd.barishal.bhola.tazumuddin,UPAZILA,bd.barishal.bhola,Tazumuddin,তজুমদ্দিন,,,,,
-bd.rajshahi.bogura.adamdighi,UPAZILA,bd.rajshahi.bogura,Adamdighi,আদমদিঘি,,5890,,,
-bd.rajshahi.bogura.bogura-sadar,UPAZILA,bd.rajshahi.bogura,Bogura Sadar,বগুড়া সদর,bogra sadar,5800,,,
-bd.rajshahi.bogura.dhunat,UPAZILA,bd.rajshahi.bogura,Dhunat,ধুনট,dhunot,,,,
-bd.rajshahi.bogura.dupchanchia,UPAZILA,bd.rajshahi.bogura,Dupchanchia,দুপচাচিঁয়া,,5880,,,
-bd.rajshahi.bogura.gabtali,UPAZILA,bd.rajshahi.bogura,Gabtali,গাবতলী,,5820,,,
-bd.rajshahi.bogura.kahaloo,UPAZILA,bd.rajshahi.bogura,Kahaloo,কাহালু,kahalu,5870,,,
-bd.rajshahi.bogura.nandigram,UPAZILA,bd.rajshahi.bogura,Nandigram,নন্দিগ্রাম,nondigram,,,,
-bd.rajshahi.bogura.sariakandi,UPAZILA,bd.rajshahi.bogura,Sariakandi,সারিয়াকান্দি,shariakandi,,,,
-bd.rajshahi.bogura.shajahanpur,UPAZILA,bd.rajshahi.bogura,Shajahanpur,শাজাহানপুর,sajahanpur|shazahanpur,5800,,,
-bd.rajshahi.bogura.sherpur,UPAZILA,bd.rajshahi.bogura,Sherpur,শেরপুর,serpur,5840,,,
-bd.rajshahi.bogura.shibganj,UPAZILA,bd.rajshahi.bogura,Shibganj,শিবগঞ্জ,shibganz|shibgong|shibgonj,2231,,,
-bd.rajshahi.bogura.sonatola,UPAZILA,bd.rajshahi.bogura,Sonatola,সোনাতলা,sonatala,,,,
-bd.chattogram.brahmanbaria.akhaura,UPAZILA,bd.chattogram.brahmanbaria,Akhaura,আখাউড়া,akaura,3450,,,
-bd.chattogram.brahmanbaria.ashuganj,UPAZILA,bd.chattogram.brahmanbaria,Ashuganj,আশুগঞ্জ,ashuganz|ashugong|ashugonj,3402,,,
-bd.chattogram.brahmanbaria.bancharampur,UPAZILA,bd.chattogram.brahmanbaria,Bancharampur,বাঞ্ছারামপুর,,3420,,,
-bd.chattogram.brahmanbaria.bijoynagar,UPAZILA,bd.chattogram.brahmanbaria,Bijoynagar,বিজয়নগর,bizoynagar,,,,
-bd.chattogram.brahmanbaria.brahmanbaria-sadar,UPAZILA,bd.chattogram.brahmanbaria,Brahmanbaria Sadar,ব্রাহ্মণবাড়িয়া সদর,brahmanbarya sadar,,,,
-bd.chattogram.brahmanbaria.kasba,UPAZILA,bd.chattogram.brahmanbaria,Kasba,কসবা,,,,,
-bd.chattogram.brahmanbaria.nabinagar,UPAZILA,bd.chattogram.brahmanbaria,Nabinagar,নবীনগর,,3410,,,
-bd.chattogram.brahmanbaria.nasirnagar,UPAZILA,bd.chattogram.brahmanbaria,Nasirnagar,নাসিরনগর,,3440,,,
-bd.chattogram.brahmanbaria.sarail,UPAZILA,bd.chattogram.brahmanbaria,Sarail,সরাইল,,3430,,,
-bd.chattogram.chandpur.chandpur-sadar,UPAZILA,bd.chattogram.chandpur,Chandpur Sadar,চাঁদপুর সদর,,3600,,,
-bd.chattogram.chandpur.faridganj,UPAZILA,bd.chattogram.chandpur,Faridganj,ফরিদগঞ্জ,faridgonz|faridgonj,,,,
-bd.chattogram.chandpur.haimchar,UPAZILA,bd.chattogram.chandpur,Haimchar,হাইমচর,,3660,,,
-bd.chattogram.chandpur.hajiganj,UPAZILA,bd.chattogram.chandpur,Hajiganj,হাজীগঞ্জ,hajigong|hajigonj|haziganz,3610,,,
-bd.chattogram.chandpur.kachua,UPAZILA,bd.chattogram.chandpur,Kachua,কচুয়া,,3630,,,
-bd.chattogram.chandpur.matlab-dakshin,UPAZILA,bd.chattogram.chandpur,Matlab Dakshin,মতলব দক্ষিণ,matlab south,,,,
-bd.chattogram.chandpur.matlab-uttar,UPAZILA,bd.chattogram.chandpur,Matlab Uttar,মতলব উত্তর,matlab north,,,,
-bd.chattogram.chandpur.shahrasti,UPAZILA,bd.chattogram.chandpur,Shahrasti,শাহরাস্তি,sahrasti,3620,,,
-bd.rajshahi.chapai-nawabganj.bholahat,UPAZILA,bd.rajshahi.chapai-nawabganj,Bholahat,ভোলাহাট,,6330,,,
-bd.rajshahi.chapai-nawabganj.chapai-nawabganj-sadar,UPAZILA,bd.rajshahi.chapai-nawabganj,Chapai Nawabganj Sadar,চাঁপাইনবাবগঞ্জ সদর,chapainawabganz sadar|chapainawabgong sadar|chapainawabgonj sadar|chapainawabganj sadar,6300,,,
-bd.rajshahi.chapai-nawabganj.gomastapur,UPAZILA,bd.rajshahi.chapai-nawabganj,Gomastapur,গোমস্তাপুর,gomostapur,,,,
-bd.rajshahi.chapai-nawabganj.nachole,UPAZILA,bd.rajshahi.chapai-nawabganj,Nachole,নাচোল,nachol,6310,,,
-bd.rajshahi.chapai-nawabganj.shibganj,UPAZILA,bd.rajshahi.chapai-nawabganj,Shibganj,শিবগঞ্জ,shibganz|shibgong|shibgonj,6340,,,
-bd.chattogram.chattogram.anwara,UPAZILA,bd.chattogram.chattogram,Anwara,আনোয়ারা,,4376,,,
-bd.chattogram.chattogram.banshkhali,UPAZILA,bd.chattogram.chattogram,Banshkhali,বাঁশখালী,banshkali|banskhali,,,,
-bd.chattogram.chattogram.boalkhali,UPAZILA,bd.chattogram.chattogram,Boalkhali,বোয়ালখালী,boalkali,4366,,,
-bd.chattogram.chattogram.chandanaish,UPAZILA,bd.chattogram.chattogram,Chandanaish,চন্দনাইশ,chandanais,4383,,,
-bd.chattogram.chattogram.fatikchhari,UPAZILA,bd.chattogram.chattogram,Fatikchhari,ফটিকছড়ি,fatikchari,,,,
-bd.chattogram.chattogram.hathazari,UPAZILA,bd.chattogram.chattogram,Hathazari,হাটহাজারী,,4330,,,
+bd.barishal.barishal.agailjhara,UPAZILA,bd.barishal.barishal,Agailjhara,আগৈলঝাড়া,agailzhara,8240,,22.96802,90.14075
+bd.barishal.barishal.babuganj,UPAZILA,bd.barishal.barishal,Babuganj,বাবুগঞ্জ,babuganz|babugong|babugonj,8210,,22.82347,90.31458
+bd.barishal.barishal.bakerganj,UPAZILA,bd.barishal.barishal,Bakerganj,বাকেরগঞ্জ,bakerganz|bakergong|bakergonj,8281,,22.55242,90.38256
+bd.barishal.barishal.banaripara,UPAZILA,bd.barishal.barishal,Banaripara,বানারীপাড়া,,8530,,22.81176,90.12839
+bd.barishal.barishal.barishal-sadar,UPAZILA,bd.barishal.barishal,Barishal Sadar,বরিশাল সদর,barisal sadar,,,22.71463,90.38219
+bd.barishal.barishal.gournadi,UPAZILA,bd.barishal.barishal,Gournadi,গৌরনদী,,8230,,22.96624,90.24466
+bd.barishal.barishal.hizla,UPAZILA,bd.barishal.barishal,Hizla,হিজলা,,,,22.96602,90.53337
+bd.barishal.barishal.mehendiganj,UPAZILA,bd.barishal.barishal,Mehendiganj,মেহেন্দিগঞ্জ,mehendiganz|mehendigong|mehendigonj,8270,,22.84039,90.55996
+bd.barishal.barishal.muladi,UPAZILA,bd.barishal.barishal,Muladi,মুলাদী,,8250,,22.9526,90.37591
+bd.barishal.barishal.wazirpur,UPAZILA,bd.barishal.barishal,Wazirpur,উজিরপুর,,8220,,22.86562,90.16587
+bd.barishal.bhola.bhola-sadar,UPAZILA,bd.barishal.bhola,Bhola Sadar,ভোলা সদর,,8300,,22.68368,90.6188
+bd.barishal.bhola.borhanuddin,UPAZILA,bd.barishal.bhola,Borhanuddin,বোরহান উদ্দিন,borhan sddin,,,22.47738,90.73313
+bd.barishal.bhola.charfasson,UPAZILA,bd.barishal.bhola,Charfasson,চরফ্যাশন,charfesson,,,22.13306,90.70715
+bd.barishal.bhola.daulatkhan,UPAZILA,bd.barishal.bhola,Daulatkhan,দৌলতখান,doulatkan|doulatkhan,,,22.5959,90.70202
+bd.barishal.bhola.lalmohan,UPAZILA,bd.barishal.bhola,Lalmohan,লালমোহন,,8330,,22.3148,90.75432
+bd.barishal.bhola.manpura,UPAZILA,bd.barishal.bhola,Manpura,মনপুরা,monpura,,,22.20022,90.95475
+bd.barishal.bhola.tazumuddin,UPAZILA,bd.barishal.bhola,Tazumuddin,তজুমদ্দিন,,,,22.40405,90.81641
+bd.rajshahi.bogura.adamdighi,UPAZILA,bd.rajshahi.bogura,Adamdighi,আদমদিঘি,,5890,,24.79915,89.05954
+bd.rajshahi.bogura.bogura-sadar,UPAZILA,bd.rajshahi.bogura,Bogura Sadar,বগুড়া সদর,bogra sadar,5800,,24.89554,89.35567
+bd.rajshahi.bogura.dhunat,UPAZILA,bd.rajshahi.bogura,Dhunat,ধুনট,dhunot,,,24.68254,89.55031
+bd.rajshahi.bogura.dupchanchia,UPAZILA,bd.rajshahi.bogura,Dupchanchia,দুপচাচিঁয়া,,5880,,24.88369,89.13921
+bd.rajshahi.bogura.gabtali,UPAZILA,bd.rajshahi.bogura,Gabtali,গাবতলী,,5820,,24.88677,89.46503
+bd.rajshahi.bogura.kahaloo,UPAZILA,bd.rajshahi.bogura,Kahaloo,কাহালু,kahalu,5870,,24.83226,89.25049
+bd.rajshahi.bogura.nandigram,UPAZILA,bd.rajshahi.bogura,Nandigram,নন্দিগ্রাম,nondigram,,,24.6813,89.22676
+bd.rajshahi.bogura.sariakandi,UPAZILA,bd.rajshahi.bogura,Sariakandi,সারিয়াকান্দি,shariakandi,,,24.88119,89.61406
+bd.rajshahi.bogura.shajahanpur,UPAZILA,bd.rajshahi.bogura,Shajahanpur,শাজাহানপুর,sajahanpur|shazahanpur,5800,,24.76013,89.37504
+bd.rajshahi.bogura.sherpur,UPAZILA,bd.rajshahi.bogura,Sherpur,শেরপুর,serpur,5840,,24.62912,89.42234
+bd.rajshahi.bogura.shibganj,UPAZILA,bd.rajshahi.bogura,Shibganj,শিবগঞ্জ,shibganz|shibgong|shibgonj,2231,,25.01656,89.30673
+bd.rajshahi.bogura.sonatola,UPAZILA,bd.rajshahi.bogura,Sonatola,সোনাতলা,sonatala,,,24.99705,89.51396
+bd.chattogram.brahmanbaria.akhaura,UPAZILA,bd.chattogram.brahmanbaria,Akhaura,আখাউড়া,akaura,3450,,23.83859,91.19509
+bd.chattogram.brahmanbaria.ashuganj,UPAZILA,bd.chattogram.brahmanbaria,Ashuganj,আশুগঞ্জ,ashuganz|ashugong|ashugonj,3402,,24.01576,91.01837
+bd.chattogram.brahmanbaria.bancharampur,UPAZILA,bd.chattogram.brahmanbaria,Bancharampur,বাঞ্ছারামপুর,,3420,,23.78011,90.80704
+bd.chattogram.brahmanbaria.bijoynagar,UPAZILA,bd.chattogram.brahmanbaria,Bijoynagar,বিজয়নগর,bizoynagar,,,23.99444,91.22824
+bd.chattogram.brahmanbaria.brahmanbaria-sadar,UPAZILA,bd.chattogram.brahmanbaria,Brahmanbaria Sadar,ব্রাহ্মণবাড়িয়া সদর,brahmanbarya sadar,,,23.95056,91.11902
+bd.chattogram.brahmanbaria.kasba,UPAZILA,bd.chattogram.brahmanbaria,Kasba,কসবা,,,,23.76303,91.13031
+bd.chattogram.brahmanbaria.nabinagar,UPAZILA,bd.chattogram.brahmanbaria,Nabinagar,নবীনগর,,3410,,23.86355,90.98037
+bd.chattogram.brahmanbaria.nasirnagar,UPAZILA,bd.chattogram.brahmanbaria,Nasirnagar,নাসিরনগর,,3440,,24.18221,91.18745
+bd.chattogram.brahmanbaria.sarail,UPAZILA,bd.chattogram.brahmanbaria,Sarail,সরাইল,,3430,,24.10323,91.11218
+bd.chattogram.chandpur.chandpur-sadar,UPAZILA,bd.chattogram.chandpur,Chandpur Sadar,চাঁদপুর সদর,,3600,,23.22704,90.69078
+bd.chattogram.chandpur.faridganj,UPAZILA,bd.chattogram.chandpur,Faridganj,ফরিদগঞ্জ,faridgonz|faridgonj,,,23.1462,90.76093
+bd.chattogram.chandpur.haimchar,UPAZILA,bd.chattogram.chandpur,Haimchar,হাইমচর,,3660,,23.07274,90.66179
+bd.chattogram.chandpur.hajiganj,UPAZILA,bd.chattogram.chandpur,Hajiganj,হাজীগঞ্জ,hajigong|hajigonj|haziganz,3610,,23.26299,90.8372
+bd.chattogram.chandpur.kachua,UPAZILA,bd.chattogram.chandpur,Kachua,কচুয়া,,3630,,23.36266,90.88168
+bd.chattogram.chandpur.matlab-dakshin,UPAZILA,bd.chattogram.chandpur,Matlab Dakshin,মতলব দক্ষিণ,matlab south,,,23.35005,90.74755
+bd.chattogram.chandpur.matlab-uttar,UPAZILA,bd.chattogram.chandpur,Matlab Uttar,মতলব উত্তর,matlab north,,,23.41455,90.64203
+bd.chattogram.chandpur.shahrasti,UPAZILA,bd.chattogram.chandpur,Shahrasti,শাহরাস্তি,sahrasti,3620,,23.20869,90.95694
+bd.rajshahi.chapai-nawabganj.bholahat,UPAZILA,bd.rajshahi.chapai-nawabganj,Bholahat,ভোলাহাট,,6330,,24.89632,88.2097
+bd.rajshahi.chapai-nawabganj.chapai-nawabganj-sadar,UPAZILA,bd.rajshahi.chapai-nawabganj,Chapai Nawabganj Sadar,চাঁপাইনবাবগঞ্জ সদর,chapainawabganz sadar|chapainawabgong sadar|chapainawabgonj sadar|chapainawabganj sadar,6300,,24.56488,88.25799
+bd.rajshahi.chapai-nawabganj.gomastapur,UPAZILA,bd.rajshahi.chapai-nawabganj,Gomastapur,গোমস্তাপুর,gomostapur,,,24.85689,88.35501
+bd.rajshahi.chapai-nawabganj.nachole,UPAZILA,bd.rajshahi.chapai-nawabganj,Nachole,নাচোল,nachol,6310,,24.72674,88.39642
+bd.rajshahi.chapai-nawabganj.shibganj,UPAZILA,bd.rajshahi.chapai-nawabganj,Shibganj,শিবগঞ্জ,shibganz|shibgong|shibgonj,6340,,24.70433,88.15481
+bd.chattogram.chattogram.anwara,UPAZILA,bd.chattogram.chattogram,Anwara,আনোয়ারা,,4376,,22.20262,91.88123
+bd.chattogram.chattogram.banshkhali,UPAZILA,bd.chattogram.chattogram,Banshkhali,বাঁশখালী,banshkali|banskhali,,,22.0147,91.94022
+bd.chattogram.chattogram.boalkhali,UPAZILA,bd.chattogram.chattogram,Boalkhali,বোয়ালখালী,boalkali,4366,,22.37696,91.97014
+bd.chattogram.chattogram.chandanaish,UPAZILA,bd.chattogram.chattogram,Chandanaish,চন্দনাইশ,chandanais,4383,,22.21218,92.06351
+bd.chattogram.chattogram.fatikchhari,UPAZILA,bd.chattogram.chattogram,Fatikchhari,ফটিকছড়ি,fatikchari,,,22.75634,91.74719
+bd.chattogram.chattogram.hathazari,UPAZILA,bd.chattogram.chattogram,Hathazari,হাটহাজারী,,4330,,22.52866,91.79706
 bd.chattogram.chattogram.karnaphuli,UPAZILA,bd.chattogram.chattogram,Karnaphuli,কর্ণফুলী,karnafuli,,,,
-bd.chattogram.chattogram.lohagara,UPAZILA,bd.chattogram.chattogram,Lohagara,লোহাগাড়া,,4396,,,
-bd.chattogram.chattogram.mirsharai,UPAZILA,bd.chattogram.chattogram,Mirsharai,মীরসরাই,mirsarai,,,,
-bd.chattogram.chattogram.patiya,UPAZILA,bd.chattogram.chattogram,Patiya,পটিয়া,,4370,,,
-bd.chattogram.chattogram.rangunia,UPAZILA,bd.chattogram.chattogram,Rangunia,রাঙ্গুনিয়া,,4360,,,
-bd.chattogram.chattogram.raozan,UPAZILA,bd.chattogram.chattogram,Raozan,রাউজান,,,,,
-bd.chattogram.chattogram.sandwip,UPAZILA,bd.chattogram.chattogram,Sandwip,সন্দ্বীপ,,4300,,,
-bd.chattogram.chattogram.satkania,UPAZILA,bd.chattogram.chattogram,Satkania,সাতকানিয়া,,4386,,,
-bd.chattogram.chattogram.sitakunda,UPAZILA,bd.chattogram.chattogram,Sitakunda,সীতাকুন্ড,,,,,
-bd.khulna.chuadanga.alamdanga,UPAZILA,bd.khulna.chuadanga,Alamdanga,আলমডাঙ্গা,,7210,,,
-bd.khulna.chuadanga.chuadanga-sadar,UPAZILA,bd.khulna.chuadanga,Chuadanga Sadar,চুয়াডাঙ্গা সদর,,7200,,,
-bd.khulna.chuadanga.damurhuda,UPAZILA,bd.khulna.chuadanga,Damurhuda,দামুড়হুদা,,7220,,,
-bd.khulna.chuadanga.jibannagar,UPAZILA,bd.khulna.chuadanga,Jibannagar,জীবননগর,,7200,,,
-bd.chattogram.coxs-bazar.chakaria,UPAZILA,bd.chattogram.coxs-bazar,Chakaria,চকরিয়া,,,,,
-bd.chattogram.coxs-bazar.coxs-bazar-sadar,UPAZILA,bd.chattogram.coxs-bazar,Cox's Bazar Sadar,কক্সবাজার সদর,coxs bazar sadar|coxsbazar sadar,,,,
+bd.chattogram.chattogram.lohagara,UPAZILA,bd.chattogram.chattogram,Lohagara,লোহাগাড়া,,4396,,21.98622,92.11103
+bd.chattogram.chattogram.mirsharai,UPAZILA,bd.chattogram.chattogram,Mirsharai,মীরসরাই,mirsarai,,,22.81002,91.55019
+bd.chattogram.chattogram.patiya,UPAZILA,bd.chattogram.chattogram,Patiya,পটিয়া,,4370,,22.29202,91.96398
+bd.chattogram.chattogram.rangunia,UPAZILA,bd.chattogram.chattogram,Rangunia,রাঙ্গুনিয়া,,4360,,22.465,92.06657
+bd.chattogram.chattogram.raozan,UPAZILA,bd.chattogram.chattogram,Raozan,রাউজান,,,,22.52076,91.91697
+bd.chattogram.chattogram.sandwip,UPAZILA,bd.chattogram.chattogram,Sandwip,সন্দ্বীপ,,4300,,22.49121,91.49099
+bd.chattogram.chattogram.satkania,UPAZILA,bd.chattogram.chattogram,Satkania,সাতকানিয়া,,4386,,22.10452,92.06048
+bd.chattogram.chattogram.sitakunda,UPAZILA,bd.chattogram.chattogram,Sitakunda,সীতাকুন্ড,,,,22.55883,91.68278
+bd.khulna.chuadanga.alamdanga,UPAZILA,bd.khulna.chuadanga,Alamdanga,আলমডাঙ্গা,,7210,,23.72934,88.90814
+bd.khulna.chuadanga.chuadanga-sadar,UPAZILA,bd.khulna.chuadanga,Chuadanga Sadar,চুয়াডাঙ্গা সদর,,7200,,23.58865,88.8846
+bd.khulna.chuadanga.damurhuda,UPAZILA,bd.khulna.chuadanga,Damurhuda,দামুড়হুদা,,7220,,23.59314,88.7404
+bd.khulna.chuadanga.jibannagar,UPAZILA,bd.khulna.chuadanga,Jibannagar,জীবননগর,,7200,,23.44112,88.84908
+bd.chattogram.coxs-bazar.chakaria,UPAZILA,bd.chattogram.coxs-bazar,Chakaria,চকরিয়া,,,,21.7402,92.05238
+bd.chattogram.coxs-bazar.coxs-bazar-sadar,UPAZILA,bd.chattogram.coxs-bazar,Cox's Bazar Sadar,কক্সবাজার সদর,coxs bazar sadar|coxsbazar sadar,,,21.50558,92.03474
 bd.chattogram.coxs-bazar.eidgaon,UPAZILA,bd.chattogram.coxs-bazar,Eidgaon,ঈদগাঁও,,,,,
-bd.chattogram.coxs-bazar.kutubdia,UPAZILA,bd.chattogram.coxs-bazar,Kutubdia,কুতুবদিয়া,,4720,,,
-bd.chattogram.coxs-bazar.maheshkhali,UPAZILA,bd.chattogram.coxs-bazar,Maheshkhali,মহেশখালী,moheshkali|moheskhali|moheshkhali,4720,,,
-bd.chattogram.coxs-bazar.pekua,UPAZILA,bd.chattogram.coxs-bazar,Pekua,পেকুয়া,,4720,,,
-bd.chattogram.coxs-bazar.ramu,UPAZILA,bd.chattogram.coxs-bazar,Ramu,রামু,,4730,,,
-bd.chattogram.coxs-bazar.teknaf,UPAZILA,bd.chattogram.coxs-bazar,Teknaf,টেকনাফ,,4760,,,
-bd.chattogram.coxs-bazar.ukhiya,UPAZILA,bd.chattogram.coxs-bazar,Ukhiya,উখিয়া,ukiya,,,,
-bd.chattogram.cumilla.barura,UPAZILA,bd.chattogram.cumilla,Barura,বরুড়া,,3560,,,
-bd.chattogram.cumilla.brahmanpara,UPAZILA,bd.chattogram.cumilla,Brahmanpara,ব্রাহ্মণপাড়া,,3526,,,
-bd.chattogram.cumilla.burichang,UPAZILA,bd.chattogram.cumilla,Burichang,বুড়িচং,,3520,,,
-bd.chattogram.cumilla.chandina,UPAZILA,bd.chattogram.cumilla,Chandina,চান্দিনা,,3510,,,
-bd.chattogram.cumilla.chauddagram,UPAZILA,bd.chattogram.cumilla,Chauddagram,চৌদ্দগ্রাম,,,,,
-bd.chattogram.cumilla.cumilla-adarsha-sadar,UPAZILA,bd.chattogram.cumilla,Cumilla Adarsha Sadar,কুমিল্লা সদর,comilla sadar,3500,,,
-bd.chattogram.cumilla.cumilla-sadar-dakshin,UPAZILA,bd.chattogram.cumilla,Cumilla Sadar Dakshin,সদর দক্ষিণ,sadarsouth,3500,,,
-bd.chattogram.cumilla.daudkandi,UPAZILA,bd.chattogram.cumilla,Daudkandi,দাউদকান্দি,,3516,,,
-bd.chattogram.cumilla.debidwar,UPAZILA,bd.chattogram.cumilla,Debidwar,দেবিদ্বার,,,,,
-bd.chattogram.cumilla.homna,UPAZILA,bd.chattogram.cumilla,Homna,হোমনা,,3546,,,
-bd.chattogram.cumilla.laksam,UPAZILA,bd.chattogram.cumilla,Laksam,লাকসাম,,3570,,,
+bd.chattogram.coxs-bazar.kutubdia,UPAZILA,bd.chattogram.coxs-bazar,Kutubdia,কুতুবদিয়া,,4720,,21.83784,91.86245
+bd.chattogram.coxs-bazar.maheshkhali,UPAZILA,bd.chattogram.coxs-bazar,Maheshkhali,মহেশখালী,moheshkali|moheskhali|moheshkhali,4720,,21.60939,91.9218
+bd.chattogram.coxs-bazar.pekua,UPAZILA,bd.chattogram.coxs-bazar,Pekua,পেকুয়া,,4720,,21.81818,91.95273
+bd.chattogram.coxs-bazar.ramu,UPAZILA,bd.chattogram.coxs-bazar,Ramu,রামু,,4730,,21.44075,92.1211
+bd.chattogram.coxs-bazar.teknaf,UPAZILA,bd.chattogram.coxs-bazar,Teknaf,টেকনাফ,,4760,,20.9961,92.22238
+bd.chattogram.coxs-bazar.ukhiya,UPAZILA,bd.chattogram.coxs-bazar,Ukhiya,উখিয়া,ukiya,,,21.22946,92.11589
+bd.chattogram.cumilla.barura,UPAZILA,bd.chattogram.cumilla,Barura,বরুড়া,,3560,,23.35571,91.03941
+bd.chattogram.cumilla.brahmanpara,UPAZILA,bd.chattogram.cumilla,Brahmanpara,ব্রাহ্মণপাড়া,,3526,,23.64524,91.0966
+bd.chattogram.cumilla.burichang,UPAZILA,bd.chattogram.cumilla,Burichang,বুড়িচং,,3520,,23.53371,91.11701
+bd.chattogram.cumilla.chandina,UPAZILA,bd.chattogram.cumilla,Chandina,চান্দিনা,,3510,,23.4459,90.94646
+bd.chattogram.cumilla.chauddagram,UPAZILA,bd.chattogram.cumilla,Chauddagram,চৌদ্দগ্রাম,,,,23.22033,91.28038
+bd.chattogram.cumilla.cumilla-adarsha-sadar,UPAZILA,bd.chattogram.cumilla,Cumilla Adarsha Sadar,কুমিল্লা সদর,comilla sadar,3500,,23.46989,91.1712
+bd.chattogram.cumilla.cumilla-sadar-dakshin,UPAZILA,bd.chattogram.cumilla,Cumilla Sadar Dakshin,সদর দক্ষিণ,sadarsouth,3500,,23.35802,91.18326
+bd.chattogram.cumilla.daudkandi,UPAZILA,bd.chattogram.cumilla,Daudkandi,দাউদকান্দি,,3516,,23.50267,90.77308
+bd.chattogram.cumilla.debidwar,UPAZILA,bd.chattogram.cumilla,Debidwar,দেবিদ্বার,,,,23.57827,90.99785
+bd.chattogram.cumilla.homna,UPAZILA,bd.chattogram.cumilla,Homna,হোমনা,,3546,,23.67915,90.81285
+bd.chattogram.cumilla.laksam,UPAZILA,bd.chattogram.cumilla,Laksam,লাকসাম,,3570,,23.23879,91.10527
 bd.chattogram.cumilla.lalmai,UPAZILA,bd.chattogram.cumilla,Lalmai,লালমাই,,,,,
-bd.chattogram.cumilla.meghna,UPAZILA,bd.chattogram.cumilla,Meghna,মেঘনা,,3515,,,
-bd.chattogram.cumilla.monohorganj,UPAZILA,bd.chattogram.cumilla,Monohorganj,মনোহরগঞ্জ,monohargonz|monohargonj,,,,
-bd.chattogram.cumilla.muradnagar,UPAZILA,bd.chattogram.cumilla,Muradnagar,মুরাদনগর,,3540,,,
-bd.chattogram.cumilla.nangalkot,UPAZILA,bd.chattogram.cumilla,Nangalkot,নাঙ্গলকোট,,,,,
-bd.chattogram.cumilla.titas,UPAZILA,bd.chattogram.cumilla,Titas,তিতাস,,3500,,,
-bd.rangpur.dinajpur.birampur,UPAZILA,bd.rangpur.dinajpur,Birampur,বিরামপুর,,5266,,,
-bd.rangpur.dinajpur.birganj,UPAZILA,bd.rangpur.dinajpur,Birganj,বীরগঞ্জ,birganz|birgong|birgonj,5220,,,
-bd.rangpur.dinajpur.birol,UPAZILA,bd.rangpur.dinajpur,Birol,বিরল,,5210,,,
-bd.rangpur.dinajpur.bochaganj,UPAZILA,bd.rangpur.dinajpur,Bochaganj,বোচাগঞ্জ,bochaganz|bochagong|bochagonj,5216,,,
-bd.rangpur.dinajpur.chirirbandar,UPAZILA,bd.rangpur.dinajpur,Chirirbandar,চিরিরবন্দর,,5240,,,
-bd.rangpur.dinajpur.dinajpur-sadar,UPAZILA,bd.rangpur.dinajpur,Dinajpur Sadar,দিনাজপুর সদর,dinazpur sadar,,,,
-bd.rangpur.dinajpur.ghoraghat,UPAZILA,bd.rangpur.dinajpur,Ghoraghat,ঘোড়াঘাট,,5291,,,
-bd.rangpur.dinajpur.hakimpur,UPAZILA,bd.rangpur.dinajpur,Hakimpur,হাকিমপুর,,5266,,,
-bd.rangpur.dinajpur.kaharole,UPAZILA,bd.rangpur.dinajpur,Kaharole,কাহারোল,kaharol,,,,
-bd.rangpur.dinajpur.khansama,UPAZILA,bd.rangpur.dinajpur,Khansama,খানসামা,,,,,
-bd.rangpur.dinajpur.nawabganj,UPAZILA,bd.rangpur.dinajpur,Nawabganj,নবাবগঞ্জ,nawabganz|nawabgong|nawabgonj,5280,,,
-bd.rangpur.dinajpur.parbatipur,UPAZILA,bd.rangpur.dinajpur,Parbatipur,পার্বতীপুর,,5250,,,
-bd.rangpur.dinajpur.phulbari,UPAZILA,bd.rangpur.dinajpur,Phulbari,ফুলবাড়ী,fulbary|fulbari,,,,
-bd.dhaka.faridpur.alfadanga,UPAZILA,bd.dhaka.faridpur,Alfadanga,আলফাডাঙ্গা,,7870,,,
-bd.dhaka.faridpur.bhanga,UPAZILA,bd.dhaka.faridpur,Bhanga,ভাঙ্গা,,7830,,,
-bd.dhaka.faridpur.boalmari,UPAZILA,bd.dhaka.faridpur,Boalmari,বোয়ালমারী,,7860,,,
-bd.dhaka.faridpur.char-bhadrasan,UPAZILA,bd.dhaka.faridpur,Char Bhadrasan,চরভদ্রাসন,charbhadrasan,7810,,,
-bd.dhaka.faridpur.faridpur-sadar,UPAZILA,bd.dhaka.faridpur,Faridpur Sadar,ফরিদপুর সদর,,7800,,,
-bd.dhaka.faridpur.madhukhali,UPAZILA,bd.dhaka.faridpur,Madhukhali,মধুখালী,madhukali,7850,,,
-bd.dhaka.faridpur.nagarkanda,UPAZILA,bd.dhaka.faridpur,Nagarkanda,নগরকান্দা,,7840,,,
-bd.dhaka.faridpur.sadarpur,UPAZILA,bd.dhaka.faridpur,Sadarpur,সদরপুর,,7820,,,
-bd.dhaka.faridpur.saltha,UPAZILA,bd.dhaka.faridpur,Saltha,সালথা,,7860,,,
-bd.chattogram.feni.chhagalnaiya,UPAZILA,bd.chattogram.feni,Chhagalnaiya,ছাগলনাইয়া,chagalnaiya,,,,
-bd.chattogram.feni.daganbhuiyan,UPAZILA,bd.chattogram.feni,Daganbhuiyan,দাগনভূঞা,,3920,,,
-bd.chattogram.feni.feni-sadar,UPAZILA,bd.chattogram.feni,Feni Sadar,ফেনী সদর,,3900,,,
-bd.chattogram.feni.fulgazi,UPAZILA,bd.chattogram.feni,Fulgazi,ফুলগাজী,,3942,,,
-bd.chattogram.feni.parshuram,UPAZILA,bd.chattogram.feni,Parshuram,পরশুরাম,parsuram,3940,,,
-bd.chattogram.feni.sonagazi,UPAZILA,bd.chattogram.feni,Sonagazi,সোনাগাজী,,3930,,,
-bd.rangpur.gaibandha.fulchhari,UPAZILA,bd.rangpur.gaibandha,Fulchhari,ফুলছড়ি,phulchari,,,,
-bd.rangpur.gaibandha.gaibandha-sadar,UPAZILA,bd.rangpur.gaibandha,Gaibandha Sadar,গাইবান্ধা সদর,,5700,,,
-bd.rangpur.gaibandha.gobindaganj,UPAZILA,bd.rangpur.gaibandha,Gobindaganj,গোবিন্দগঞ্জ,gobindaganz|gobindagong|gobindagonj,5740,,,
-bd.rangpur.gaibandha.palashbari,UPAZILA,bd.rangpur.gaibandha,Palashbari,পলাশবাড়ী,palasbari|palashbary,5730,,,
-bd.rangpur.gaibandha.sadullapur,UPAZILA,bd.rangpur.gaibandha,Sadullapur,সাদুল্লাপুর,,5710,,,
-bd.rangpur.gaibandha.saghata,UPAZILA,bd.rangpur.gaibandha,Saghata,সাঘাটা,,,,,
-bd.rangpur.gaibandha.sundarganj,UPAZILA,bd.rangpur.gaibandha,Sundarganj,সুন্দরগঞ্জ,sundarganz|sundargong|sundargonj,5720,,,
-bd.dhaka.gopalganj.gopalganj-sadar,UPAZILA,bd.dhaka.gopalganj,Gopalganj Sadar,গোপালগঞ্জ সদর,gopalganz sadar|gopalgong sadar|gopalgonj sadar,8100,,,
-bd.dhaka.gopalganj.kashiani,UPAZILA,bd.dhaka.gopalganj,Kashiani,কাশিয়ানী,kasiani,,,,
-bd.dhaka.gopalganj.kotalipara,UPAZILA,bd.dhaka.gopalganj,Kotalipara,কোটালীপাড়া,,8110,,,
-bd.dhaka.gopalganj.muksudpur,UPAZILA,bd.dhaka.gopalganj,Muksudpur,মুকসুদপুর,,,,,
-bd.dhaka.gopalganj.tungipara,UPAZILA,bd.dhaka.gopalganj,Tungipara,টুংগীপাড়া,,8120,,,
-bd.sylhet.habiganj.ajmiriganj,UPAZILA,bd.sylhet.habiganj,Ajmiriganj,আজমিরীগঞ্জ,ajmirigong|ajmirigonj|azmiriganz,,,,
-bd.sylhet.habiganj.bahubal,UPAZILA,bd.sylhet.habiganj,Bahubal,বাহুবল,,3310,,,
-bd.sylhet.habiganj.baniachong,UPAZILA,bd.sylhet.habiganj,Baniachong,বানিয়াচং,,3350,,,
-bd.sylhet.habiganj.chunarughat,UPAZILA,bd.sylhet.habiganj,Chunarughat,চুনারুঘাট,,3320,,,
-bd.sylhet.habiganj.habiganj-sadar,UPAZILA,bd.sylhet.habiganj,Habiganj Sadar,হবিগঞ্জ সদর,habiganz sadar|habigong sadar|habigonj sadar,3300,,,
-bd.sylhet.habiganj.lakhai,UPAZILA,bd.sylhet.habiganj,Lakhai,লাখাই,lakai,3341,,,
-bd.sylhet.habiganj.madhabpur,UPAZILA,bd.sylhet.habiganj,Madhabpur,মাধবপুর,,3330,,,
-bd.sylhet.habiganj.nabiganj,UPAZILA,bd.sylhet.habiganj,Nabiganj,নবীগঞ্জ,nabiganz|nabigong|nabigonj,3370,,,
+bd.chattogram.cumilla.meghna,UPAZILA,bd.chattogram.cumilla,Meghna,মেঘনা,,3515,,23.62477,90.69086
+bd.chattogram.cumilla.monohorganj,UPAZILA,bd.chattogram.cumilla,Monohorganj,মনোহরগঞ্জ,monohargonz|monohargonj,,,23.14023,91.06697
+bd.chattogram.cumilla.muradnagar,UPAZILA,bd.chattogram.cumilla,Muradnagar,মুরাদনগর,,3540,,23.67758,90.94367
+bd.chattogram.cumilla.nangalkot,UPAZILA,bd.chattogram.cumilla,Nangalkot,নাঙ্গলকোট,,,,23.14008,91.20934
+bd.chattogram.cumilla.titas,UPAZILA,bd.chattogram.cumilla,Titas,তিতাস,,3500,,23.58965,90.79697
+bd.rangpur.dinajpur.birampur,UPAZILA,bd.rangpur.dinajpur,Birampur,বিরামপুর,,5266,,25.3791,88.96367
+bd.rangpur.dinajpur.birganj,UPAZILA,bd.rangpur.dinajpur,Birganj,বীরগঞ্জ,birganz|birgong|birgonj,5220,,25.92792,88.62659
+bd.rangpur.dinajpur.birol,UPAZILA,bd.rangpur.dinajpur,Birol,বিরল,,5210,,25.64673,88.54766
+bd.rangpur.dinajpur.bochaganj,UPAZILA,bd.rangpur.dinajpur,Bochaganj,বোচাগঞ্জ,bochaganz|bochagong|bochagonj,5216,,25.78571,88.45348
+bd.rangpur.dinajpur.chirirbandar,UPAZILA,bd.rangpur.dinajpur,Chirirbandar,চিরিরবন্দর,,5240,,25.66543,88.78647
+bd.rangpur.dinajpur.dinajpur-sadar,UPAZILA,bd.rangpur.dinajpur,Dinajpur Sadar,দিনাজপুর সদর,dinazpur sadar,,,25.6081,88.67737
+bd.rangpur.dinajpur.ghoraghat,UPAZILA,bd.rangpur.dinajpur,Ghoraghat,ঘোড়াঘাট,,5291,,25.28435,89.2143
+bd.rangpur.dinajpur.hakimpur,UPAZILA,bd.rangpur.dinajpur,Hakimpur,হাকিমপুর,,5266,,25.29206,89.06201
+bd.rangpur.dinajpur.kaharole,UPAZILA,bd.rangpur.dinajpur,Kaharole,কাহারোল,kaharol,,,25.80092,88.5988
+bd.rangpur.dinajpur.khansama,UPAZILA,bd.rangpur.dinajpur,Khansama,খানসামা,,,,25.86975,88.76524
+bd.rangpur.dinajpur.nawabganj,UPAZILA,bd.rangpur.dinajpur,Nawabganj,নবাবগঞ্জ,nawabganz|nawabgong|nawabgonj,5280,,25.4204,89.09164
+bd.rangpur.dinajpur.parbatipur,UPAZILA,bd.rangpur.dinajpur,Parbatipur,পার্বতীপুর,,5250,,25.61876,88.92562
+bd.rangpur.dinajpur.phulbari,UPAZILA,bd.rangpur.dinajpur,Phulbari,ফুলবাড়ী,fulbary|fulbari,,,25.47014,88.90186
+bd.dhaka.faridpur.alfadanga,UPAZILA,bd.dhaka.faridpur,Alfadanga,আলফাডাঙ্গা,,7870,,23.29679,89.66994
+bd.dhaka.faridpur.bhanga,UPAZILA,bd.dhaka.faridpur,Bhanga,ভাঙ্গা,,7830,,23.38674,90.00981
+bd.dhaka.faridpur.boalmari,UPAZILA,bd.dhaka.faridpur,Boalmari,বোয়ালমারী,,7860,,23.40455,89.69707
+bd.dhaka.faridpur.char-bhadrasan,UPAZILA,bd.dhaka.faridpur,Char Bhadrasan,চরভদ্রাসন,charbhadrasan,7810,,23.59257,89.97804
+bd.dhaka.faridpur.faridpur-sadar,UPAZILA,bd.dhaka.faridpur,Faridpur Sadar,ফরিদপুর সদর,,7800,,23.60481,89.81653
+bd.dhaka.faridpur.madhukhali,UPAZILA,bd.dhaka.faridpur,Madhukhali,মধুখালী,madhukali,7850,,23.54088,89.61204
+bd.dhaka.faridpur.nagarkanda,UPAZILA,bd.dhaka.faridpur,Nagarkanda,নগরকান্দা,,7840,,23.43726,89.89442
+bd.dhaka.faridpur.sadarpur,UPAZILA,bd.dhaka.faridpur,Sadarpur,সদরপুর,,7820,,23.49586,90.05263
+bd.dhaka.faridpur.saltha,UPAZILA,bd.dhaka.faridpur,Saltha,সালথা,,7860,,23.42004,89.7997
+bd.chattogram.feni.chhagalnaiya,UPAZILA,bd.chattogram.feni,Chhagalnaiya,ছাগলনাইয়া,chagalnaiya,,,23.01698,91.507
+bd.chattogram.feni.daganbhuiyan,UPAZILA,bd.chattogram.feni,Daganbhuiyan,দাগনভূঞা,,3920,,22.97056,91.29973
+bd.chattogram.feni.feni-sadar,UPAZILA,bd.chattogram.feni,Feni Sadar,ফেনী সদর,,3900,,22.99003,91.41592
+bd.chattogram.feni.fulgazi,UPAZILA,bd.chattogram.feni,Fulgazi,ফুলগাজী,,3942,,23.118,91.44252
+bd.chattogram.feni.parshuram,UPAZILA,bd.chattogram.feni,Parshuram,পরশুরাম,parsuram,3940,,23.20125,91.43974
+bd.chattogram.feni.sonagazi,UPAZILA,bd.chattogram.feni,Sonagazi,সোনাগাজী,,3930,,22.86552,91.39501
+bd.rangpur.gaibandha.fulchhari,UPAZILA,bd.rangpur.gaibandha,Fulchhari,ফুলছড়ি,phulchari,,,25.25431,89.65394
+bd.rangpur.gaibandha.gaibandha-sadar,UPAZILA,bd.rangpur.gaibandha,Gaibandha Sadar,গাইবান্ধা সদর,,5700,,25.34972,89.5667
+bd.rangpur.gaibandha.gobindaganj,UPAZILA,bd.rangpur.gaibandha,Gobindaganj,গোবিন্দগঞ্জ,gobindaganz|gobindagong|gobindagonj,5740,,25.15716,89.3691
+bd.rangpur.gaibandha.palashbari,UPAZILA,bd.rangpur.gaibandha,Palashbari,পলাশবাড়ী,palasbari|palashbary,5730,,25.2636,89.3967
+bd.rangpur.gaibandha.sadullapur,UPAZILA,bd.rangpur.gaibandha,Sadullapur,সাদুল্লাপুর,,5710,,25.39476,89.42638
+bd.rangpur.gaibandha.saghata,UPAZILA,bd.rangpur.gaibandha,Saghata,সাঘাটা,,,,25.12336,89.56376
+bd.rangpur.gaibandha.sundarganj,UPAZILA,bd.rangpur.gaibandha,Sundarganj,সুন্দরগঞ্জ,sundarganz|sundargong|sundargonj,5720,,25.51,89.56395
+bd.dhaka.gopalganj.gopalganj-sadar,UPAZILA,bd.dhaka.gopalganj,Gopalganj Sadar,গোপালগঞ্জ সদর,gopalganz sadar|gopalgong sadar|gopalgonj sadar,8100,,23.06037,89.84887
+bd.dhaka.gopalganj.kashiani,UPAZILA,bd.dhaka.gopalganj,Kashiani,কাশিয়ানী,kasiani,,,23.19071,89.79632
+bd.dhaka.gopalganj.kotalipara,UPAZILA,bd.dhaka.gopalganj,Kotalipara,কোটালীপাড়া,,8110,,23.01106,90.02067
+bd.dhaka.gopalganj.muksudpur,UPAZILA,bd.dhaka.gopalganj,Muksudpur,মুকসুদপুর,,,,23.26668,89.91436
+bd.dhaka.gopalganj.tungipara,UPAZILA,bd.dhaka.gopalganj,Tungipara,টুংগীপাড়া,,8120,,22.92555,89.90452
+bd.sylhet.habiganj.ajmiriganj,UPAZILA,bd.sylhet.habiganj,Ajmiriganj,আজমিরীগঞ্জ,ajmirigong|ajmirigonj|azmiriganz,,,24.55331,91.28427
+bd.sylhet.habiganj.bahubal,UPAZILA,bd.sylhet.habiganj,Bahubal,বাহুবল,,3310,,24.3606,91.54645
+bd.sylhet.habiganj.baniachong,UPAZILA,bd.sylhet.habiganj,Baniachong,বানিয়াচং,,3350,,24.49474,91.36539
+bd.sylhet.habiganj.chunarughat,UPAZILA,bd.sylhet.habiganj,Chunarughat,চুনারুঘাট,,3320,,24.18162,91.51737
+bd.sylhet.habiganj.habiganj-sadar,UPAZILA,bd.sylhet.habiganj,Habiganj Sadar,হবিগঞ্জ সদর,habiganz sadar|habigong sadar|habigonj sadar,3300,,24.33588,91.41434
+bd.sylhet.habiganj.lakhai,UPAZILA,bd.sylhet.habiganj,Lakhai,লাখাই,lakai,3341,,24.29808,91.2603
+bd.sylhet.habiganj.madhabpur,UPAZILA,bd.sylhet.habiganj,Madhabpur,মাধবপুর,,3330,,24.12047,91.34145
+bd.sylhet.habiganj.nabiganj,UPAZILA,bd.sylhet.habiganj,Nabiganj,নবীগঞ্জ,nabiganz|nabigong|nabigonj,3370,,24.56963,91.54439
 bd.sylhet.habiganj.shayestaganj,UPAZILA,bd.sylhet.habiganj,Shayestaganj,শায়েস্তাগঞ্জ,shayestagonj|shaistaganj,3320,,,
-bd.mymensingh.jamalpur.bakshiganj,UPAZILA,bd.mymensingh.jamalpur,Bakshiganj,বকশীগঞ্জ,bokshiganz|bokshigong|bokshigonj|bokshiganj,,,,
-bd.mymensingh.jamalpur.dewanganj,UPAZILA,bd.mymensingh.jamalpur,Dewanganj,দেওয়ানগঞ্জ,dewangonz|dewangonj,,,,
-bd.mymensingh.jamalpur.islampur,UPAZILA,bd.mymensingh.jamalpur,Islampur,ইসলামপুর,,,,,
-bd.mymensingh.jamalpur.jamalpur-sadar,UPAZILA,bd.mymensingh.jamalpur,Jamalpur Sadar,জামালপুর সদর,,2000,,,
-bd.mymensingh.jamalpur.madarganj,UPAZILA,bd.mymensingh.jamalpur,Madarganj,মাদারগঞ্জ,madarganz|madargong|madargonj,2040,,,
-bd.mymensingh.jamalpur.melandaha,UPAZILA,bd.mymensingh.jamalpur,Melandaha,মেলান্দহ,melandah,2010,,,
-bd.mymensingh.jamalpur.sarishabari,UPAZILA,bd.mymensingh.jamalpur,Sarishabari,সরিষাবাড়ী,sarisabari|sarishabary,,,,
-bd.khulna.jashore.abhaynagar,UPAZILA,bd.khulna.jashore,Abhaynagar,অভয়নগর,,,,,
-bd.khulna.jashore.bagherpara,UPAZILA,bd.khulna.jashore,Bagherpara,বাঘারপাড়া,,7470,,,
-bd.khulna.jashore.chaugachha,UPAZILA,bd.khulna.jashore,Chaugachha,চৌগাছা,chougacha|chougachha,,,,
-bd.khulna.jashore.jashore-sadar,UPAZILA,bd.khulna.jashore,Jashore Sadar,যশোর সদর,jessore sadar,7400,,,
-bd.khulna.jashore.jhikargachha,UPAZILA,bd.khulna.jashore,Jhikargachha,ঝিকরগাছা,jhikargacha,7420,,,
-bd.khulna.jashore.keshabpur,UPAZILA,bd.khulna.jashore,Keshabpur,কেশবপুর,kesabpur,7450,,,
-bd.khulna.jashore.manirampur,UPAZILA,bd.khulna.jashore,Manirampur,মণিরামপুর,,7440,,,
-bd.khulna.jashore.sharsha,UPAZILA,bd.khulna.jashore,Sharsha,শার্শা,sarsha|sharsa,7430,,,
-bd.barishal.jhalakathi.jhalakathi-sadar,UPAZILA,bd.barishal.jhalakathi,Jhalakathi Sadar,ঝালকাঠি সদর,,,,,
-bd.barishal.jhalakathi.kathalia,UPAZILA,bd.barishal.jhalakathi,Kathalia,কাঠালিয়া,,8430,,,
-bd.barishal.jhalakathi.nalchity,UPAZILA,bd.barishal.jhalakathi,Nalchity,নলছিটি,,,,,
-bd.barishal.jhalakathi.rajapur,UPAZILA,bd.barishal.jhalakathi,Rajapur,রাজাপুর,razapur,8410,,,
-bd.khulna.jhenaidah.harinakundu,UPAZILA,bd.khulna.jhenaidah,Harinakundu,হরিণাকুন্ডু,,,,,
-bd.khulna.jhenaidah.jhenaidah-sadar,UPAZILA,bd.khulna.jhenaidah,Jhenaidah Sadar,ঝিনাইদহ সদর,,7300,,,
-bd.khulna.jhenaidah.kaliganj,UPAZILA,bd.khulna.jhenaidah,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,7300,,,
-bd.khulna.jhenaidah.kotchandpur,UPAZILA,bd.khulna.jhenaidah,Kotchandpur,কোটচাঁদপুর,,7330,,,
-bd.khulna.jhenaidah.moheshpur,UPAZILA,bd.khulna.jhenaidah,Moheshpur,মহেশপুর,mohespur,7340,,,
-bd.khulna.jhenaidah.shailkupa,UPAZILA,bd.khulna.jhenaidah,Shailkupa,শৈলকুপা,sailkupa,7320,,,
-bd.rajshahi.joypurhat.akkelpur,UPAZILA,bd.rajshahi.joypurhat,Akkelpur,আক্কেলপুর,,5940,,,
-bd.rajshahi.joypurhat.joypurhat-sadar,UPAZILA,bd.rajshahi.joypurhat,Joypurhat Sadar,জয়পুরহাট সদর,,5900,,,
-bd.rajshahi.joypurhat.kalai,UPAZILA,bd.rajshahi.joypurhat,Kalai,কালাই,,5930,,,
-bd.rajshahi.joypurhat.khetlal,UPAZILA,bd.rajshahi.joypurhat,Khetlal,ক্ষেতলাল,,5920,,,
-bd.rajshahi.joypurhat.panchbibi,UPAZILA,bd.rajshahi.joypurhat,Panchbibi,পাঁচবিবি,,5910,,,
-bd.chattogram.khagrachhari.dighinala,UPAZILA,bd.chattogram.khagrachhari,Dighinala,দিঘীনালা,,4420,,,
+bd.mymensingh.jamalpur.bakshiganj,UPAZILA,bd.mymensingh.jamalpur,Bakshiganj,বকশীগঞ্জ,bokshiganz|bokshigong|bokshigonj|bokshiganj,,,25.2149,89.85267
+bd.mymensingh.jamalpur.dewanganj,UPAZILA,bd.mymensingh.jamalpur,Dewanganj,দেওয়ানগঞ্জ,dewangonz|dewangonj,,,25.26355,89.76592
+bd.mymensingh.jamalpur.islampur,UPAZILA,bd.mymensingh.jamalpur,Islampur,ইসলামপুর,,,,25.07521,89.7613
+bd.mymensingh.jamalpur.jamalpur-sadar,UPAZILA,bd.mymensingh.jamalpur,Jamalpur Sadar,জামালপুর সদর,,2000,,24.84417,90.01246
+bd.mymensingh.jamalpur.madarganj,UPAZILA,bd.mymensingh.jamalpur,Madarganj,মাদারগঞ্জ,madarganz|madargong|madargonj,2040,,24.88191,89.74085
+bd.mymensingh.jamalpur.melandaha,UPAZILA,bd.mymensingh.jamalpur,Melandaha,মেলান্দহ,melandah,2010,,24.95738,89.82471
+bd.mymensingh.jamalpur.sarishabari,UPAZILA,bd.mymensingh.jamalpur,Sarishabari,সরিষাবাড়ী,sarisabari|sarishabary,,,24.7186,89.83042
+bd.khulna.jashore.abhaynagar,UPAZILA,bd.khulna.jashore,Abhaynagar,অভয়নগর,,,,23.01768,89.42039
+bd.khulna.jashore.bagherpara,UPAZILA,bd.khulna.jashore,Bagherpara,বাঘারপাড়া,,7470,,23.24238,89.3355
+bd.khulna.jashore.chaugachha,UPAZILA,bd.khulna.jashore,Chaugachha,চৌগাছা,chougacha|chougachha,,,23.26344,89.02182
+bd.khulna.jashore.jashore-sadar,UPAZILA,bd.khulna.jashore,Jashore Sadar,যশোর সদর,jessore sadar,7400,,23.18192,89.2192
+bd.khulna.jashore.jhikargachha,UPAZILA,bd.khulna.jashore,Jhikargachha,ঝিকরগাছা,jhikargacha,7420,,23.06879,89.05419
+bd.khulna.jashore.keshabpur,UPAZILA,bd.khulna.jashore,Keshabpur,কেশবপুর,kesabpur,7450,,22.88012,89.23175
+bd.khulna.jashore.manirampur,UPAZILA,bd.khulna.jashore,Manirampur,মণিরামপুর,,7440,,23.00624,89.22015
+bd.khulna.jashore.sharsha,UPAZILA,bd.khulna.jashore,Sharsha,শার্শা,sarsha|sharsa,7430,,23.04486,88.94074
+bd.barishal.jhalakathi.jhalakathi-sadar,UPAZILA,bd.barishal.jhalakathi,Jhalakathi Sadar,ঝালকাঠি সদর,,,,22.67967,90.19221
+bd.barishal.jhalakathi.kathalia,UPAZILA,bd.barishal.jhalakathi,Kathalia,কাঠালিয়া,,8430,,22.42031,90.10239
+bd.barishal.jhalakathi.nalchity,UPAZILA,bd.barishal.jhalakathi,Nalchity,নলছিটি,,,,22.60074,90.27356
+bd.barishal.jhalakathi.rajapur,UPAZILA,bd.barishal.jhalakathi,Rajapur,রাজাপুর,razapur,8410,,22.55074,90.13101
+bd.khulna.jhenaidah.harinakundu,UPAZILA,bd.khulna.jhenaidah,Harinakundu,হরিণাকুন্ডু,,,,23.64275,89.07659
+bd.khulna.jhenaidah.jhenaidah-sadar,UPAZILA,bd.khulna.jhenaidah,Jhenaidah Sadar,ঝিনাইদহ সদর,,7300,,23.51647,89.15773
+bd.khulna.jhenaidah.kaliganj,UPAZILA,bd.khulna.jhenaidah,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,7300,,23.36966,89.15177
+bd.khulna.jhenaidah.kotchandpur,UPAZILA,bd.khulna.jhenaidah,Kotchandpur,কোটচাঁদপুর,,7330,,23.4479,88.9987
+bd.khulna.jhenaidah.moheshpur,UPAZILA,bd.khulna.jhenaidah,Moheshpur,মহেশপুর,mohespur,7340,,23.31973,88.85784
+bd.khulna.jhenaidah.shailkupa,UPAZILA,bd.khulna.jhenaidah,Shailkupa,শৈলকুপা,sailkupa,7320,,23.66338,89.24224
+bd.rajshahi.joypurhat.akkelpur,UPAZILA,bd.rajshahi.joypurhat,Akkelpur,আক্কেলপুর,,5940,,24.93396,89.04209
+bd.rajshahi.joypurhat.joypurhat-sadar,UPAZILA,bd.rajshahi.joypurhat,Joypurhat Sadar,জয়পুরহাট সদর,,5900,,25.10555,89.01993
+bd.rajshahi.joypurhat.kalai,UPAZILA,bd.rajshahi.joypurhat,Kalai,কালাই,,5930,,25.07787,89.19771
+bd.rajshahi.joypurhat.khetlal,UPAZILA,bd.rajshahi.joypurhat,Khetlal,ক্ষেতলাল,,5920,,25.02249,89.11806
+bd.rajshahi.joypurhat.panchbibi,UPAZILA,bd.rajshahi.joypurhat,Panchbibi,পাঁচবিবি,,5910,,25.20216,89.07039
+bd.chattogram.khagrachhari.dighinala,UPAZILA,bd.chattogram.khagrachhari,Dighinala,দিঘীনালা,,4420,,23.39937,92.04981
 bd.chattogram.khagrachhari.guimara,UPAZILA,bd.chattogram.khagrachhari,Guimara,গুইমারা,,,,,
-bd.chattogram.khagrachhari.khagrachhari-sadar,UPAZILA,bd.chattogram.khagrachhari,Khagrachhari Sadar,খাগড়াছড়ি সদর,khagrachari sadar,,,,
-bd.chattogram.khagrachhari.laxmichhari,UPAZILA,bd.chattogram.khagrachhari,Laxmichhari,লক্ষীছড়ি,laxmichari,,,,
-bd.chattogram.khagrachhari.mahalchhari,UPAZILA,bd.chattogram.khagrachhari,Mahalchhari,মহালছড়ি,mohalchari,4430,,,
-bd.chattogram.khagrachhari.manikchhari,UPAZILA,bd.chattogram.khagrachhari,Manikchhari,মানিকছড়ি,manikchari,4460,,,
-bd.chattogram.khagrachhari.matiranga,UPAZILA,bd.chattogram.khagrachhari,Matiranga,মাটিরাঙ্গা,,4450,,,
-bd.chattogram.khagrachhari.panchari,UPAZILA,bd.chattogram.khagrachhari,Panchari,পানছড়ি,,4410,,,
-bd.chattogram.khagrachhari.ramgarh,UPAZILA,bd.chattogram.khagrachhari,Ramgarh,রামগড়,,,,,
-bd.khulna.khulna.batiaghata,UPAZILA,bd.khulna.khulna,Batiaghata,বটিয়াঘাটা,botiaghata,,,,
-bd.khulna.khulna.dacope,UPAZILA,bd.khulna.khulna,Dacope,দাকোপ,dakop,,,,
-bd.khulna.khulna.digholia,UPAZILA,bd.khulna.khulna,Digholia,দিঘলিয়া,,,,,
-bd.khulna.khulna.dumuria,UPAZILA,bd.khulna.khulna,Dumuria,ডুমুরিয়া,,9250,,,
-bd.khulna.khulna.koyra,UPAZILA,bd.khulna.khulna,Koyra,কয়রা,,,,,
-bd.khulna.khulna.paikgachha,UPAZILA,bd.khulna.khulna,Paikgachha,পাইকগাছা,paikgasa,,,,
-bd.khulna.khulna.phultala,UPAZILA,bd.khulna.khulna,Phultala,ফুলতলা,fultola,,,,
-bd.khulna.khulna.rupsa,UPAZILA,bd.khulna.khulna,Rupsa,রূপসা,rupsha,,,,
-bd.khulna.khulna.terokhada,UPAZILA,bd.khulna.khulna,Terokhada,তেরখাদা,terokada,9230,,,
-bd.dhaka.kishoreganj.astagram,UPAZILA,bd.dhaka.kishoreganj,Astagram,অষ্টগ্রাম,austagram,,,,
-bd.dhaka.kishoreganj.bajitpur,UPAZILA,bd.dhaka.kishoreganj,Bajitpur,বাজিতপুর,bazitpur,2336,,,
-bd.dhaka.kishoreganj.bhairab,UPAZILA,bd.dhaka.kishoreganj,Bhairab,ভৈরব,,2350,,,
-bd.dhaka.kishoreganj.hossainpur,UPAZILA,bd.dhaka.kishoreganj,Hossainpur,হোসেনপুর,,,,,
-bd.dhaka.kishoreganj.itna,UPAZILA,bd.dhaka.kishoreganj,Itna,ইটনা,,2390,,,
-bd.dhaka.kishoreganj.karimganj,UPAZILA,bd.dhaka.kishoreganj,Karimganj,করিমগঞ্জ,karimgonz|karimgonj,,,,
-bd.dhaka.kishoreganj.katiadi,UPAZILA,bd.dhaka.kishoreganj,Katiadi,কটিয়াদী,,2330,,,
-bd.dhaka.kishoreganj.kishoreganj-sadar,UPAZILA,bd.dhaka.kishoreganj,Kishoreganj Sadar,কিশোরগঞ্জ সদর,kishoreganz sadar|kishoregong sadar|kishoregonj sadar,2300,,,
-bd.dhaka.kishoreganj.kuliarchar,UPAZILA,bd.dhaka.kishoreganj,Kuliarchar,কুলিয়ারচর,,2340,,,
-bd.dhaka.kishoreganj.mithamain,UPAZILA,bd.dhaka.kishoreganj,Mithamain,মিঠামইন,mithamoin,,,,
-bd.dhaka.kishoreganj.nikli,UPAZILA,bd.dhaka.kishoreganj,Nikli,নিকলী,,2360,,,
-bd.dhaka.kishoreganj.pakundia,UPAZILA,bd.dhaka.kishoreganj,Pakundia,পাকুন্দিয়া,,2326,,,
-bd.dhaka.kishoreganj.tarail,UPAZILA,bd.dhaka.kishoreganj,Tarail,তাড়াইল,,2316,,,
-bd.rangpur.kurigram.bhurungamari,UPAZILA,bd.rangpur.kurigram,Bhurungamari,ভুরুঙ্গামারী,,5670,,,
-bd.rangpur.kurigram.char-rajibpur,UPAZILA,bd.rangpur.kurigram,Char Rajibpur,চর রাজিবপুর,charrazibpur|charrajibpur,,,,
-bd.rangpur.kurigram.chilmari,UPAZILA,bd.rangpur.kurigram,Chilmari,চিলমারী,,,,,
-bd.rangpur.kurigram.kurigram-sadar,UPAZILA,bd.rangpur.kurigram,Kurigram Sadar,কুড়িগ্রাম সদর,,5600,,,
-bd.rangpur.kurigram.nageshwari,UPAZILA,bd.rangpur.kurigram,Nageshwari,নাগেশ্বরী,nageswari,,,,
-bd.rangpur.kurigram.phulbari,UPAZILA,bd.rangpur.kurigram,Phulbari,ফুলবাড়ী,phulbary,,,,
-bd.rangpur.kurigram.rajarhat,UPAZILA,bd.rangpur.kurigram,Rajarhat,রাজারহাট,razarhat,5610,,,
-bd.rangpur.kurigram.rowmari,UPAZILA,bd.rangpur.kurigram,Rowmari,রৌমারী,,5640,,,
-bd.rangpur.kurigram.ulipur,UPAZILA,bd.rangpur.kurigram,Ulipur,উলিপুর,,5620,,,
-bd.khulna.kushtia.bheramara,UPAZILA,bd.khulna.kushtia,Bheramara,ভেড়ামারা,,7040,,,
-bd.khulna.kushtia.daulatpur,UPAZILA,bd.khulna.kushtia,Daulatpur,দৌলতপুর,,7050,,,
-bd.khulna.kushtia.khoksa,UPAZILA,bd.khulna.kushtia,Khoksa,খোকসা,,,,,
-bd.khulna.kushtia.kumarkhali,UPAZILA,bd.khulna.kushtia,Kumarkhali,কুমারখালী,kumarkali,7010,,,
-bd.khulna.kushtia.kushtia-sadar,UPAZILA,bd.khulna.kushtia,Kushtia Sadar,কুষ্টিয়া সদর,kustia sadar,7000,,,
-bd.khulna.kushtia.mirpur,UPAZILA,bd.khulna.kushtia,Mirpur,মিরপুর,,7030,,,
-bd.chattogram.lakshmipur.kamalnagar,UPAZILA,bd.chattogram.lakshmipur,Kamalnagar,কমলনগর,,,,,
-bd.chattogram.lakshmipur.lakshmipur-sadar,UPAZILA,bd.chattogram.lakshmipur,Lakshmipur Sadar,লক্ষ্মীপুর সদর,laksmipur sadar,,,,
-bd.chattogram.lakshmipur.raipur,UPAZILA,bd.chattogram.lakshmipur,Raipur,রায়পুর,,3710,,,
-bd.chattogram.lakshmipur.ramganj,UPAZILA,bd.chattogram.lakshmipur,Ramganj,রামগঞ্জ,ramganz|ramgong|ramgonj,3720,,,
-bd.chattogram.lakshmipur.ramgati,UPAZILA,bd.chattogram.lakshmipur,Ramgati,রামগতি,,3732,,,
-bd.rangpur.lalmonirhat.aditmari,UPAZILA,bd.rangpur.lalmonirhat,Aditmari,আদিতমারী,,5510,,,
-bd.rangpur.lalmonirhat.hatibandha,UPAZILA,bd.rangpur.lalmonirhat,Hatibandha,হাতীবান্ধা,,5530,,,
-bd.rangpur.lalmonirhat.kaliganj,UPAZILA,bd.rangpur.lalmonirhat,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,,,,
-bd.rangpur.lalmonirhat.lalmonirhat-sadar,UPAZILA,bd.rangpur.lalmonirhat,Lalmonirhat Sadar,লালমনিরহাট সদর,,5500,,,
-bd.rangpur.lalmonirhat.patgram,UPAZILA,bd.rangpur.lalmonirhat,Patgram,পাটগ্রাম,,5540,,,
+bd.chattogram.khagrachhari.khagrachhari-sadar,UPAZILA,bd.chattogram.khagrachhari,Khagrachhari Sadar,খাগড়াছড়ি সদর,khagrachari sadar,,,23.1286,91.98607
+bd.chattogram.khagrachhari.laxmichhari,UPAZILA,bd.chattogram.khagrachhari,Laxmichhari,লক্ষীছড়ি,laxmichari,,,22.78492,91.92903
+bd.chattogram.khagrachhari.mahalchhari,UPAZILA,bd.chattogram.khagrachhari,Mahalchhari,মহালছড়ি,mohalchari,4430,,22.9515,92.02325
+bd.chattogram.khagrachhari.manikchhari,UPAZILA,bd.chattogram.khagrachhari,Manikchhari,মানিকছড়ি,manikchari,4460,,22.84123,91.81906
+bd.chattogram.khagrachhari.matiranga,UPAZILA,bd.chattogram.khagrachhari,Matiranga,মাটিরাঙ্গা,,4450,,23.10439,91.85477
+bd.chattogram.khagrachhari.panchari,UPAZILA,bd.chattogram.khagrachhari,Panchari,পানছড়ি,,4410,,23.31975,91.91011
+bd.chattogram.khagrachhari.ramgarh,UPAZILA,bd.chattogram.khagrachhari,Ramgarh,রামগড়,,,,22.93498,91.83098
+bd.khulna.khulna.batiaghata,UPAZILA,bd.khulna.khulna,Batiaghata,বটিয়াঘাটা,botiaghata,,,22.71426,89.51623
+bd.khulna.khulna.dacope,UPAZILA,bd.khulna.khulna,Dacope,দাকোপ,dakop,,,22.38893,89.5185
+bd.khulna.khulna.digholia,UPAZILA,bd.khulna.khulna,Digholia,দিঘলিয়া,,,,22.92519,89.5601
+bd.khulna.khulna.dumuria,UPAZILA,bd.khulna.khulna,Dumuria,ডুমুরিয়া,,9250,,22.80536,89.39804
+bd.khulna.khulna.koyra,UPAZILA,bd.khulna.khulna,Koyra,কয়রা,,,,22.33767,89.34664
+bd.khulna.khulna.paikgachha,UPAZILA,bd.khulna.khulna,Paikgachha,পাইকগাছা,paikgasa,,,22.59064,89.34027
+bd.khulna.khulna.phultala,UPAZILA,bd.khulna.khulna,Phultala,ফুলতলা,fultola,,,22.95653,89.4419
+bd.khulna.khulna.rupsa,UPAZILA,bd.khulna.khulna,Rupsa,রূপসা,rupsha,,,22.82027,89.63635
+bd.khulna.khulna.terokhada,UPAZILA,bd.khulna.khulna,Terokhada,তেরখাদা,terokada,9230,,22.91265,89.65431
+bd.dhaka.kishoreganj.astagram,UPAZILA,bd.dhaka.kishoreganj,Astagram,অষ্টগ্রাম,austagram,,,24.32301,91.12148
+bd.dhaka.kishoreganj.bajitpur,UPAZILA,bd.dhaka.kishoreganj,Bajitpur,বাজিতপুর,bazitpur,2336,,24.22453,90.95121
+bd.dhaka.kishoreganj.bhairab,UPAZILA,bd.dhaka.kishoreganj,Bhairab,ভৈরব,,2350,,24.09737,90.98161
+bd.dhaka.kishoreganj.hossainpur,UPAZILA,bd.dhaka.kishoreganj,Hossainpur,হোসেনপুর,,,,24.44878,90.66282
+bd.dhaka.kishoreganj.itna,UPAZILA,bd.dhaka.kishoreganj,Itna,ইটনা,,2390,,24.54912,91.08257
+bd.dhaka.kishoreganj.karimganj,UPAZILA,bd.dhaka.kishoreganj,Karimganj,করিমগঞ্জ,karimgonz|karimgonj,,,24.45128,90.89603
+bd.dhaka.kishoreganj.katiadi,UPAZILA,bd.dhaka.kishoreganj,Katiadi,কটিয়াদী,,2330,,24.2911,90.82396
+bd.dhaka.kishoreganj.kishoreganj-sadar,UPAZILA,bd.dhaka.kishoreganj,Kishoreganj Sadar,কিশোরগঞ্জ সদর,kishoreganz sadar|kishoregong sadar|kishoregonj sadar,2300,,24.42376,90.7833
+bd.dhaka.kishoreganj.kuliarchar,UPAZILA,bd.dhaka.kishoreganj,Kuliarchar,কুলিয়ারচর,,2340,,24.15201,90.88811
+bd.dhaka.kishoreganj.mithamain,UPAZILA,bd.dhaka.kishoreganj,Mithamain,মিঠামইন,mithamoin,,,24.43304,91.11065
+bd.dhaka.kishoreganj.nikli,UPAZILA,bd.dhaka.kishoreganj,Nikli,নিকলী,,2360,,24.33677,90.96315
+bd.dhaka.kishoreganj.pakundia,UPAZILA,bd.dhaka.kishoreganj,Pakundia,পাকুন্দিয়া,,2326,,24.32063,90.69265
+bd.dhaka.kishoreganj.tarail,UPAZILA,bd.dhaka.kishoreganj,Tarail,তাড়াইল,,2316,,24.55027,90.89076
+bd.rangpur.kurigram.bhurungamari,UPAZILA,bd.rangpur.kurigram,Bhurungamari,ভুরুঙ্গামারী,,5670,,26.11613,89.6935
+bd.rangpur.kurigram.char-rajibpur,UPAZILA,bd.rangpur.kurigram,Char Rajibpur,চর রাজিবপুর,charrazibpur|charrajibpur,,,25.44327,89.76396
+bd.rangpur.kurigram.chilmari,UPAZILA,bd.rangpur.kurigram,Chilmari,চিলমারী,,,,25.56626,89.71836
+bd.rangpur.kurigram.kurigram-sadar,UPAZILA,bd.rangpur.kurigram,Kurigram Sadar,কুড়িগ্রাম সদর,,5600,,25.82601,89.69067
+bd.rangpur.kurigram.nageshwari,UPAZILA,bd.rangpur.kurigram,Nageshwari,নাগেশ্বরী,nageswari,,,25.9585,89.74008
+bd.rangpur.kurigram.phulbari,UPAZILA,bd.rangpur.kurigram,Phulbari,ফুলবাড়ী,phulbary,,,25.94807,89.57133
+bd.rangpur.kurigram.rajarhat,UPAZILA,bd.rangpur.kurigram,Rajarhat,রাজারহাট,razarhat,5610,,25.78612,89.5424
+bd.rangpur.kurigram.rowmari,UPAZILA,bd.rangpur.kurigram,Rowmari,রৌমারী,,5640,,25.59147,89.82754
+bd.rangpur.kurigram.ulipur,UPAZILA,bd.rangpur.kurigram,Ulipur,উলিপুর,,5620,,25.68906,89.6689
+bd.khulna.kushtia.bheramara,UPAZILA,bd.khulna.kushtia,Bheramara,ভেড়ামারা,,7040,,24.05682,88.98154
+bd.khulna.kushtia.daulatpur,UPAZILA,bd.khulna.kushtia,Daulatpur,দৌলতপুর,,7050,,24.02718,88.83917
+bd.khulna.kushtia.khoksa,UPAZILA,bd.khulna.kushtia,Khoksa,খোকসা,,,,23.80888,89.29984
+bd.khulna.kushtia.kumarkhali,UPAZILA,bd.khulna.kushtia,Kumarkhali,কুমারখালী,kumarkali,7010,,23.8567,89.20956
+bd.khulna.kushtia.kushtia-sadar,UPAZILA,bd.khulna.kushtia,Kushtia Sadar,কুষ্টিয়া সদর,kustia sadar,7000,,23.82227,89.0896
+bd.khulna.kushtia.mirpur,UPAZILA,bd.khulna.kushtia,Mirpur,মিরপুর,,7030,,23.89605,88.98964
+bd.chattogram.lakshmipur.kamalnagar,UPAZILA,bd.chattogram.lakshmipur,Kamalnagar,কমলনগর,,,,22.76767,90.86533
+bd.chattogram.lakshmipur.lakshmipur-sadar,UPAZILA,bd.chattogram.lakshmipur,Lakshmipur Sadar,লক্ষ্মীপুর সদর,laksmipur sadar,,,22.92389,90.86835
+bd.chattogram.lakshmipur.raipur,UPAZILA,bd.chattogram.lakshmipur,Raipur,রায়পুর,,3710,,23.0003,90.73121
+bd.chattogram.lakshmipur.ramganj,UPAZILA,bd.chattogram.lakshmipur,Ramganj,রামগঞ্জ,ramganz|ramgong|ramgonj,3720,,23.09893,90.87258
+bd.chattogram.lakshmipur.ramgati,UPAZILA,bd.chattogram.lakshmipur,Ramgati,রামগতি,,3732,,22.66539,90.94683
+bd.rangpur.lalmonirhat.aditmari,UPAZILA,bd.rangpur.lalmonirhat,Aditmari,আদিতমারী,,5510,,25.94215,89.36865
+bd.rangpur.lalmonirhat.hatibandha,UPAZILA,bd.rangpur.lalmonirhat,Hatibandha,হাতীবান্ধা,,5530,,26.12153,89.14091
+bd.rangpur.lalmonirhat.kaliganj,UPAZILA,bd.rangpur.lalmonirhat,Kaliganj,কালীগঞ্জ,kaliganz|kaligong|kaligonj,,,25.98562,89.24018
+bd.rangpur.lalmonirhat.lalmonirhat-sadar,UPAZILA,bd.rangpur.lalmonirhat,Lalmonirhat Sadar,লালমনিরহাট সদর,,5500,,25.87474,89.4527
+bd.rangpur.lalmonirhat.patgram,UPAZILA,bd.rangpur.lalmonirhat,Patgram,পাটগ্রাম,,5540,,26.34701,89.02556
 bd.dhaka.madaripur.dasar,UPAZILA,bd.dhaka.madaripur,Dasar,ডাসার,,,,,
-bd.dhaka.madaripur.kalkini,UPAZILA,bd.dhaka.madaripur,Kalkini,কালকিনি,,7920,,,
-bd.dhaka.madaripur.madaripur-sadar,UPAZILA,bd.dhaka.madaripur,Madaripur Sadar,মাদারীপুর সদর,,7900,,,
-bd.dhaka.madaripur.rajoir,UPAZILA,bd.dhaka.madaripur,Rajoir,রাজৈর,razoir,7910,,,
-bd.dhaka.madaripur.shibchar,UPAZILA,bd.dhaka.madaripur,Shibchar,শিবচর,sibchar,7900,,,
-bd.khulna.magura.magura-sadar,UPAZILA,bd.khulna.magura,Magura Sadar,মাগুরা সদর,,7600,,,
-bd.khulna.magura.mohammadpur,UPAZILA,bd.khulna.magura,Mohammadpur,মহম্মদপুর,,7630,,,
-bd.khulna.magura.shalikha,UPAZILA,bd.khulna.magura,Shalikha,শালিখা,salikha|shalika,,,,
-bd.khulna.magura.sreepur,UPAZILA,bd.khulna.magura,Sreepur,শ্রীপুর,sripur,7610,,,
-bd.dhaka.manikganj.daulatpur,UPAZILA,bd.dhaka.manikganj,Daulatpur,দৌলতপুর,doulatpur,,,,
-bd.dhaka.manikganj.ghior,UPAZILA,bd.dhaka.manikganj,Ghior,ঘিওর,gior,,,,
-bd.dhaka.manikganj.harirampur,UPAZILA,bd.dhaka.manikganj,Harirampur,হরিরামপুর,,1850,,,
-bd.dhaka.manikganj.manikganj-sadar,UPAZILA,bd.dhaka.manikganj,Manikganj Sadar,মানিকগঞ্জ সদর,manikganz sadar|manikgong sadar|manikgonj sadar,1800,,,
-bd.dhaka.manikganj.saturia,UPAZILA,bd.dhaka.manikganj,Saturia,সাটুরিয়া,,1810,,,
-bd.dhaka.manikganj.shibalaya,UPAZILA,bd.dhaka.manikganj,Shibalaya,শিবালয়,sibaloy|shibaloy,,,,
-bd.dhaka.manikganj.singair,UPAZILA,bd.dhaka.manikganj,Singair,সিংগাইর,singiar,,,,
-bd.khulna.meherpur.gangni,UPAZILA,bd.khulna.meherpur,Gangni,গাংনী,,7110,,,
-bd.khulna.meherpur.meherpur-sadar,UPAZILA,bd.khulna.meherpur,Meherpur Sadar,মেহেরপুর সদর,,7100,,,
-bd.khulna.meherpur.mujibnagar,UPAZILA,bd.khulna.meherpur,Mujibnagar,মুজিবনগর,muzibnagar,7102,,,
-bd.sylhet.moulvibazar.barlekha,UPAZILA,bd.sylhet.moulvibazar,Barlekha,বড়লেখা,barleka,,,,
-bd.sylhet.moulvibazar.juri,UPAZILA,bd.sylhet.moulvibazar,Juri,জুড়ী,,3251,,,
-bd.sylhet.moulvibazar.kamalganj,UPAZILA,bd.sylhet.moulvibazar,Kamalganj,কমলগঞ্জ,kamolganz|kamolgong|kamolgonj|kamolganj,,,,
-bd.sylhet.moulvibazar.kulaura,UPAZILA,bd.sylhet.moulvibazar,Kulaura,কুলাউড়া,,3230,,,
-bd.sylhet.moulvibazar.moulvibazar-sadar,UPAZILA,bd.sylhet.moulvibazar,Moulvibazar Sadar,মৌলভীবাজার সদর,,,,,
-bd.sylhet.moulvibazar.rajnagar,UPAZILA,bd.sylhet.moulvibazar,Rajnagar,রাজনগর,raznagar,3240,,,
-bd.sylhet.moulvibazar.sreemangal,UPAZILA,bd.sylhet.moulvibazar,Sreemangal,শ্রীমঙ্গল,srimangal,3210,,,
-bd.dhaka.munshiganj.gazaria,UPAZILA,bd.dhaka.munshiganj,Gazaria,গজারিয়া,gajaria,,,,
-bd.dhaka.munshiganj.louhajang,UPAZILA,bd.dhaka.munshiganj,Louhajang,লৌহজং,louhazanz|louhajanj,,,,
-bd.dhaka.munshiganj.munshiganj-sadar,UPAZILA,bd.dhaka.munshiganj,Munshiganj Sadar,মুন্সিগঞ্জ সদর,munshiganz sadar|munshigong sadar|munshigonj sadar,,,,
-bd.dhaka.munshiganj.sirajdikhan,UPAZILA,bd.dhaka.munshiganj,Sirajdikhan,সিরাজদিখান,sirajdikan|sirazdikhan,,,,
-bd.dhaka.munshiganj.sreenagar,UPAZILA,bd.dhaka.munshiganj,Sreenagar,শ্রীনগর,srinagar,1550,,,
-bd.dhaka.munshiganj.tongibari,UPAZILA,bd.dhaka.munshiganj,Tongibari,টংগীবাড়ি,tongibary,,,,
-bd.mymensingh.mymensingh.bhaluka,UPAZILA,bd.mymensingh.mymensingh,Bhaluka,ভালুকা,,,,,
-bd.mymensingh.mymensingh.dhobaura,UPAZILA,bd.mymensingh.mymensingh,Dhobaura,ধোবাউড়া,,,,,
-bd.mymensingh.mymensingh.fulbaria,UPAZILA,bd.mymensingh.mymensingh,Fulbaria,ফুলবাড়ীয়া,fulbarya,2216,,,
-bd.mymensingh.mymensingh.gafargaon,UPAZILA,bd.mymensingh.mymensingh,Gafargaon,গফরগাঁও,,,,,
-bd.mymensingh.mymensingh.gauripur,UPAZILA,bd.mymensingh.mymensingh,Gauripur,গৌরীপুর,gouripur,,,,
-bd.mymensingh.mymensingh.haluaghat,UPAZILA,bd.mymensingh.mymensingh,Haluaghat,হালুয়াঘাট,,2260,,,
-bd.mymensingh.mymensingh.ishwarganj,UPAZILA,bd.mymensingh.mymensingh,Ishwarganj,ঈশ্বরগঞ্জ,iswarganz|iswargong|iswargonj|iswarganj,2280,,,
-bd.mymensingh.mymensingh.muktagachha,UPAZILA,bd.mymensingh.mymensingh,Muktagachha,মুক্তাগাছা,muktagacha,2210,,,
-bd.mymensingh.mymensingh.mymensingh-sadar,UPAZILA,bd.mymensingh.mymensingh,Mymensingh Sadar,ময়মনসিংহ সদর,,,,,
-bd.mymensingh.mymensingh.nandail,UPAZILA,bd.mymensingh.mymensingh,Nandail,নান্দাইল,,2290,,,
-bd.mymensingh.mymensingh.phulpur,UPAZILA,bd.mymensingh.mymensingh,Phulpur,ফুলপুর,,2250,,,
+bd.dhaka.madaripur.kalkini,UPAZILA,bd.dhaka.madaripur,Kalkini,কালকিনি,,7920,,23.07088,90.24815
+bd.dhaka.madaripur.madaripur-sadar,UPAZILA,bd.dhaka.madaripur,Madaripur Sadar,মাদারীপুর সদর,,7900,,23.19377,90.17501
+bd.dhaka.madaripur.rajoir,UPAZILA,bd.dhaka.madaripur,Rajoir,রাজৈর,razoir,7910,,23.20135,90.037
+bd.dhaka.madaripur.shibchar,UPAZILA,bd.dhaka.madaripur,Shibchar,শিবচর,sibchar,7900,,23.37543,90.17422
+bd.khulna.magura.magura-sadar,UPAZILA,bd.khulna.magura,Magura Sadar,মাগুরা সদর,,7600,,23.45187,89.41306
+bd.khulna.magura.mohammadpur,UPAZILA,bd.khulna.magura,Mohammadpur,মহম্মদপুর,,7630,,23.40091,89.55235
+bd.khulna.magura.shalikha,UPAZILA,bd.khulna.magura,Shalikha,শালিখা,salikha|shalika,,,23.34813,89.35853
+bd.khulna.magura.sreepur,UPAZILA,bd.khulna.magura,Sreepur,শ্রীপুর,sripur,7610,,23.59628,89.42442
+bd.dhaka.manikganj.daulatpur,UPAZILA,bd.dhaka.manikganj,Daulatpur,দৌলতপুর,doulatpur,,,23.95576,89.79768
+bd.dhaka.manikganj.ghior,UPAZILA,bd.dhaka.manikganj,Ghior,ঘিওর,gior,,,23.87323,89.90456
+bd.dhaka.manikganj.harirampur,UPAZILA,bd.dhaka.manikganj,Harirampur,হরিরামপুর,,1850,,23.72422,89.94779
+bd.dhaka.manikganj.manikganj-sadar,UPAZILA,bd.dhaka.manikganj,Manikganj Sadar,মানিকগঞ্জ সদর,manikganz sadar|manikgong sadar|manikgonj sadar,1800,,23.83574,90.03048
+bd.dhaka.manikganj.saturia,UPAZILA,bd.dhaka.manikganj,Saturia,সাটুরিয়া,,1810,,23.95745,90.00164
+bd.dhaka.manikganj.shibalaya,UPAZILA,bd.dhaka.manikganj,Shibalaya,শিবালয়,sibaloy|shibaloy,,,23.83829,89.81017
+bd.dhaka.manikganj.singair,UPAZILA,bd.dhaka.manikganj,Singair,সিংগাইর,singiar,,,23.78343,90.1543
+bd.khulna.meherpur.gangni,UPAZILA,bd.khulna.meherpur,Gangni,গাংনী,,7110,,23.85762,88.77095
+bd.khulna.meherpur.meherpur-sadar,UPAZILA,bd.khulna.meherpur,Meherpur Sadar,মেহেরপুর সদর,,7100,,23.76606,88.66114
+bd.khulna.meherpur.mujibnagar,UPAZILA,bd.khulna.meherpur,Mujibnagar,মুজিবনগর,muzibnagar,7102,,23.66832,88.62129
+bd.sylhet.moulvibazar.barlekha,UPAZILA,bd.sylhet.moulvibazar,Barlekha,বড়লেখা,barleka,,,24.70819,92.17561
+bd.sylhet.moulvibazar.juri,UPAZILA,bd.sylhet.moulvibazar,Juri,জুড়ী,,3251,,24.5532,92.14324
+bd.sylhet.moulvibazar.kamalganj,UPAZILA,bd.sylhet.moulvibazar,Kamalganj,কমলগঞ্জ,kamolganz|kamolgong|kamolgonj|kamolganj,,,24.3157,91.85919
+bd.sylhet.moulvibazar.kulaura,UPAZILA,bd.sylhet.moulvibazar,Kulaura,কুলাউড়া,,3230,,24.49028,92.01231
+bd.sylhet.moulvibazar.moulvibazar-sadar,UPAZILA,bd.sylhet.moulvibazar,Moulvibazar Sadar,মৌলভীবাজার সদর,,,,24.4995,91.71229
+bd.sylhet.moulvibazar.rajnagar,UPAZILA,bd.sylhet.moulvibazar,Rajnagar,রাজনগর,raznagar,3240,,24.56532,91.86077
+bd.sylhet.moulvibazar.sreemangal,UPAZILA,bd.sylhet.moulvibazar,Sreemangal,শ্রীমঙ্গল,srimangal,3210,,24.30102,91.69796
+bd.dhaka.munshiganj.gazaria,UPAZILA,bd.dhaka.munshiganj,Gazaria,গজারিয়া,gajaria,,,23.54723,90.62975
+bd.dhaka.munshiganj.louhajang,UPAZILA,bd.dhaka.munshiganj,Louhajang,লৌহজং,louhazanz|louhajanj,,,23.47063,90.34128
+bd.dhaka.munshiganj.munshiganj-sadar,UPAZILA,bd.dhaka.munshiganj,Munshiganj Sadar,মুন্সিগঞ্জ সদর,munshiganz sadar|munshigong sadar|munshigonj sadar,,,23.4865,90.5276
+bd.dhaka.munshiganj.sirajdikhan,UPAZILA,bd.dhaka.munshiganj,Sirajdikhan,সিরাজদিখান,sirajdikan|sirazdikhan,,,23.59777,90.35634
+bd.dhaka.munshiganj.sreenagar,UPAZILA,bd.dhaka.munshiganj,Sreenagar,শ্রীনগর,srinagar,1550,,23.54695,90.26322
+bd.dhaka.munshiganj.tongibari,UPAZILA,bd.dhaka.munshiganj,Tongibari,টংগীবাড়ি,tongibary,,,23.47612,90.45271
+bd.mymensingh.mymensingh.bhaluka,UPAZILA,bd.mymensingh.mymensingh,Bhaluka,ভালুকা,,,,24.38172,90.35352
+bd.mymensingh.mymensingh.dhobaura,UPAZILA,bd.mymensingh.mymensingh,Dhobaura,ধোবাউড়া,,,,25.10115,90.52491
+bd.mymensingh.mymensingh.fulbaria,UPAZILA,bd.mymensingh.mymensingh,Fulbaria,ফুলবাড়ীয়া,fulbarya,2216,,24.58654,90.25458
+bd.mymensingh.mymensingh.gafargaon,UPAZILA,bd.mymensingh.mymensingh,Gafargaon,গফরগাঁও,,,,24.39355,90.54954
+bd.mymensingh.mymensingh.gauripur,UPAZILA,bd.mymensingh.mymensingh,Gauripur,গৌরীপুর,gouripur,,,24.75601,90.58584
+bd.mymensingh.mymensingh.haluaghat,UPAZILA,bd.mymensingh.mymensingh,Haluaghat,হালুয়াঘাট,,2260,,25.08461,90.35131
+bd.mymensingh.mymensingh.ishwarganj,UPAZILA,bd.mymensingh.mymensingh,Ishwarganj,ঈশ্বরগঞ্জ,iswarganz|iswargong|iswargonj|iswarganj,2280,,24.64503,90.59944
+bd.mymensingh.mymensingh.muktagachha,UPAZILA,bd.mymensingh.mymensingh,Muktagachha,মুক্তাগাছা,muktagacha,2210,,24.74295,90.20383
+bd.mymensingh.mymensingh.mymensingh-sadar,UPAZILA,bd.mymensingh.mymensingh,Mymensingh Sadar,ময়মনসিংহ সদর,,,,24.77463,90.36145
+bd.mymensingh.mymensingh.nandail,UPAZILA,bd.mymensingh.mymensingh,Nandail,নান্দাইল,,2290,,24.55018,90.67703
+bd.mymensingh.mymensingh.phulpur,UPAZILA,bd.mymensingh.mymensingh,Phulpur,ফুলপুর,,2250,,24.90853,90.40641
 bd.mymensingh.mymensingh.tarakanda,UPAZILA,bd.mymensingh.mymensingh,Tarakanda,তারাকান্দা,,,,,
-bd.mymensingh.mymensingh.trishal,UPAZILA,bd.mymensingh.mymensingh,Trishal,ত্রিশাল,trisal,2220,,,
-bd.rajshahi.naogaon.atrai,UPAZILA,bd.rajshahi.naogaon,Atrai,আত্রাই,,,,,
-bd.rajshahi.naogaon.badalgachhi,UPAZILA,bd.rajshahi.naogaon,Badalgachhi,বদলগাছী,badalgachi,6570,,,
-bd.rajshahi.naogaon.dhamoirhat,UPAZILA,bd.rajshahi.naogaon,Dhamoirhat,ধামইরহাট,,6580,,,
-bd.rajshahi.naogaon.mahadebpur,UPAZILA,bd.rajshahi.naogaon,Mahadebpur,মহাদেবপুর,mohadevpur,,,,
-bd.rajshahi.naogaon.manda,UPAZILA,bd.rajshahi.naogaon,Manda,মান্দা,,,,,
-bd.rajshahi.naogaon.naogaon-sadar,UPAZILA,bd.rajshahi.naogaon,Naogaon Sadar,নওগাঁ সদর,,,,,
-bd.rajshahi.naogaon.niamatpur,UPAZILA,bd.rajshahi.naogaon,Niamatpur,নিয়ামতপুর,,6520,,,
-bd.rajshahi.naogaon.patnitala,UPAZILA,bd.rajshahi.naogaon,Patnitala,পত্নিতলা,,,,,
-bd.rajshahi.naogaon.porsha,UPAZILA,bd.rajshahi.naogaon,Porsha,পোরশা,porsa,6551,,,
-bd.rajshahi.naogaon.raninagar,UPAZILA,bd.rajshahi.naogaon,Raninagar,রাণীনগর,,6590,,,
-bd.rajshahi.naogaon.sapahar,UPAZILA,bd.rajshahi.naogaon,Sapahar,সাপাহার,,,,,
-bd.khulna.narail.kalia,UPAZILA,bd.khulna.narail,Kalia,কালিয়া,,7520,,,
-bd.khulna.narail.lohagara,UPAZILA,bd.khulna.narail,Lohagara,লোহাগড়া,,7511,,,
-bd.khulna.narail.narail-sadar,UPAZILA,bd.khulna.narail,Narail Sadar,নড়াইল সদর,,7500,,,
-bd.dhaka.narsingdi.belabo,UPAZILA,bd.dhaka.narsingdi,Belabo,বেলাবো,,1640,,,
-bd.dhaka.narsingdi.monohardi,UPAZILA,bd.dhaka.narsingdi,Monohardi,মনোহরদী,,1650,,,
-bd.dhaka.narsingdi.narsingdi-sadar,UPAZILA,bd.dhaka.narsingdi,Narsingdi Sadar,নরসিংদী সদর,,,,,
-bd.dhaka.narsingdi.palash,UPAZILA,bd.dhaka.narsingdi,Palash,পলাশ,palas,1610,,,
-bd.dhaka.narsingdi.raipura,UPAZILA,bd.dhaka.narsingdi,Raipura,রায়পুরা,,1630,,,
-bd.dhaka.narsingdi.shibpur,UPAZILA,bd.dhaka.narsingdi,Shibpur,শিবপুর,sibpur,1620,,,
-bd.rajshahi.natore.bagatipara,UPAZILA,bd.rajshahi.natore,Bagatipara,বাগাতিপাড়া,,,,,
-bd.rajshahi.natore.baraigram,UPAZILA,bd.rajshahi.natore,Baraigram,বড়াইগ্রাম,,6432,,,
-bd.rajshahi.natore.gurudaspur,UPAZILA,bd.rajshahi.natore,Gurudaspur,গুরুদাসপুর,,6440,,,
-bd.rajshahi.natore.lalpur,UPAZILA,bd.rajshahi.natore,Lalpur,লালপুর,,6421,,,
+bd.mymensingh.mymensingh.trishal,UPAZILA,bd.mymensingh.mymensingh,Trishal,ত্রিশাল,trisal,2220,,24.56388,90.40931
+bd.rajshahi.naogaon.atrai,UPAZILA,bd.rajshahi.naogaon,Atrai,আত্রাই,,,,24.62516,88.98789
+bd.rajshahi.naogaon.badalgachhi,UPAZILA,bd.rajshahi.naogaon,Badalgachhi,বদলগাছী,badalgachi,6570,,24.96587,88.94347
+bd.rajshahi.naogaon.dhamoirhat,UPAZILA,bd.rajshahi.naogaon,Dhamoirhat,ধামইরহাট,,6580,,25.13042,88.82297
+bd.rajshahi.naogaon.mahadebpur,UPAZILA,bd.rajshahi.naogaon,Mahadebpur,মহাদেবপুর,mohadevpur,,,24.91992,88.76473
+bd.rajshahi.naogaon.manda,UPAZILA,bd.rajshahi.naogaon,Manda,মান্দা,,,,24.74435,88.71303
+bd.rajshahi.naogaon.naogaon-sadar,UPAZILA,bd.rajshahi.naogaon,Naogaon Sadar,নওগাঁ সদর,,,,24.81104,88.89815
+bd.rajshahi.naogaon.niamatpur,UPAZILA,bd.rajshahi.naogaon,Niamatpur,নিয়ামতপুর,,6520,,24.82847,88.55154
+bd.rajshahi.naogaon.patnitala,UPAZILA,bd.rajshahi.naogaon,Patnitala,পত্নিতলা,,,,25.07539,88.71651
+bd.rajshahi.naogaon.porsha,UPAZILA,bd.rajshahi.naogaon,Porsha,পোরশা,porsa,6551,,24.99224,88.51767
+bd.rajshahi.naogaon.raninagar,UPAZILA,bd.rajshahi.naogaon,Raninagar,রাণীনগর,,6590,,24.7107,89.0218
+bd.rajshahi.naogaon.sapahar,UPAZILA,bd.rajshahi.naogaon,Sapahar,সাপাহার,,,,25.11816,88.53031
+bd.khulna.narail.kalia,UPAZILA,bd.khulna.narail,Kalia,কালিয়া,,7520,,23.02797,89.64397
+bd.khulna.narail.lohagara,UPAZILA,bd.khulna.narail,Lohagara,লোহাগড়া,,7511,,23.20484,89.62344
+bd.khulna.narail.narail-sadar,UPAZILA,bd.khulna.narail,Narail Sadar,নড়াইল সদর,,7500,,23.15457,89.4948
+bd.dhaka.narsingdi.belabo,UPAZILA,bd.dhaka.narsingdi,Belabo,বেলাবো,,1640,,24.09864,90.84932
+bd.dhaka.narsingdi.monohardi,UPAZILA,bd.dhaka.narsingdi,Monohardi,মনোহরদী,,1650,,24.16072,90.73043
+bd.dhaka.narsingdi.narsingdi-sadar,UPAZILA,bd.dhaka.narsingdi,Narsingdi Sadar,নরসিংদী সদর,,,,23.86668,90.70817
+bd.dhaka.narsingdi.palash,UPAZILA,bd.dhaka.narsingdi,Palash,পলাশ,palas,1610,,23.95379,90.64937
+bd.dhaka.narsingdi.raipura,UPAZILA,bd.dhaka.narsingdi,Raipura,রায়পুরা,,1630,,23.96021,90.87206
+bd.dhaka.narsingdi.shibpur,UPAZILA,bd.dhaka.narsingdi,Shibpur,শিবপুর,sibpur,1620,,24.02602,90.74544
+bd.rajshahi.natore.bagatipara,UPAZILA,bd.rajshahi.natore,Bagatipara,বাগাতিপাড়া,,,,24.3122,88.94666
+bd.rajshahi.natore.baraigram,UPAZILA,bd.rajshahi.natore,Baraigram,বড়াইগ্রাম,,6432,,24.27367,89.1476
+bd.rajshahi.natore.gurudaspur,UPAZILA,bd.rajshahi.natore,Gurudaspur,গুরুদাসপুর,,6440,,24.37276,89.20305
+bd.rajshahi.natore.lalpur,UPAZILA,bd.rajshahi.natore,Lalpur,লালপুর,,6421,,24.19832,88.98487
 bd.rajshahi.natore.naldanga,UPAZILA,bd.rajshahi.natore,Naldanga,নলডাঙ্গা,,,,,
-bd.rajshahi.natore.natore-sadar,UPAZILA,bd.rajshahi.natore,Natore Sadar,নাটোর সদর,,6400,,,
-bd.rajshahi.natore.singra,UPAZILA,bd.rajshahi.natore,Singra,সিংড়া,,6450,,,
-bd.mymensingh.netrokona.atpara,UPAZILA,bd.mymensingh.netrokona,Atpara,আটপাড়া,,2470,,,
-bd.mymensingh.netrokona.barhatta,UPAZILA,bd.mymensingh.netrokona,Barhatta,বারহাট্টা,,2440,,,
-bd.mymensingh.netrokona.durgapur,UPAZILA,bd.mymensingh.netrokona,Durgapur,দুর্গাপুর,,3848,,,
-bd.mymensingh.netrokona.kalmakanda,UPAZILA,bd.mymensingh.netrokona,Kalmakanda,কলমাকান্দা,,2430,,,
-bd.mymensingh.netrokona.kendua,UPAZILA,bd.mymensingh.netrokona,Kendua,কেন্দুয়া,,2480,,,
-bd.mymensingh.netrokona.khaliajuri,UPAZILA,bd.mymensingh.netrokona,Khaliajuri,খালিয়াজুরী,khaliazuri,2460,,,
-bd.mymensingh.netrokona.madan,UPAZILA,bd.mymensingh.netrokona,Madan,মদন,,2490,,,
-bd.mymensingh.netrokona.mohanganj,UPAZILA,bd.mymensingh.netrokona,Mohanganj,মোহনগঞ্জ,mohongonz|mohongonj,,,,
-bd.mymensingh.netrokona.netrokona-sadar,UPAZILA,bd.mymensingh.netrokona,Netrokona Sadar,নেত্রকোণা সদর,,2400,,,
-bd.mymensingh.netrokona.purbadhala,UPAZILA,bd.mymensingh.netrokona,Purbadhala,পূর্বধলা,,2410,,,
-bd.rangpur.nilphamari.dimla,UPAZILA,bd.rangpur.nilphamari,Dimla,ডিমলা,,5350,,,
-bd.rangpur.nilphamari.domar,UPAZILA,bd.rangpur.nilphamari,Domar,ডোমার,,5340,,,
-bd.rangpur.nilphamari.jaldhaka,UPAZILA,bd.rangpur.nilphamari,Jaldhaka,জলঢাকা,,5330,,,
-bd.rangpur.nilphamari.kishoreganj,UPAZILA,bd.rangpur.nilphamari,Kishoreganj,কিশোরগঞ্জ,kishorganz|kishorgong|kishorgonj|kishorganj,,,,
-bd.rangpur.nilphamari.nilphamari-sadar,UPAZILA,bd.rangpur.nilphamari,Nilphamari Sadar,নীলফামারী সদর,,5300,,,
-bd.rangpur.nilphamari.saidpur,UPAZILA,bd.rangpur.nilphamari,Saidpur,সৈয়দপুর,syedpur,,,,
-bd.chattogram.noakhali.begumganj,UPAZILA,bd.chattogram.noakhali,Begumganj,বেগমগঞ্জ,begumganz|begumgong|begumgonj,3820,,,
-bd.chattogram.noakhali.chatkhil,UPAZILA,bd.chattogram.noakhali,Chatkhil,চাটখিল,chatkil,3870,,,
-bd.chattogram.noakhali.companiganj,UPAZILA,bd.chattogram.noakhali,Companiganj,কোম্পানীগঞ্জ,companiganz|companigong|companigonj,3850,,,
-bd.chattogram.noakhali.hatiya,UPAZILA,bd.chattogram.noakhali,Hatiya,হাতিয়া,hatia,,,,
-bd.chattogram.noakhali.kabirhat,UPAZILA,bd.chattogram.noakhali,Kabirhat,কবিরহাট,,3807,,,
-bd.chattogram.noakhali.noakhali-sadar,UPAZILA,bd.chattogram.noakhali,Noakhali Sadar,নোয়াখালী সদর,noakali sadar,,,,
-bd.chattogram.noakhali.senbagh,UPAZILA,bd.chattogram.noakhali,Senbagh,সেনবাগ,senbug,,,,
-bd.chattogram.noakhali.sonaimuri,UPAZILA,bd.chattogram.noakhali,Sonaimuri,সোনাইমুড়ী,sonaimori,,,,
-bd.chattogram.noakhali.subarnachar,UPAZILA,bd.chattogram.noakhali,Subarnachar,সুবর্ণচর,,,,,
-bd.rajshahi.pabna.atgharia,UPAZILA,bd.rajshahi.pabna,Atgharia,আটঘরিয়া,atghoria,,,,
-bd.rajshahi.pabna.bera,UPAZILA,bd.rajshahi.pabna,Bera,বেড়া,,6680,,,
-bd.rajshahi.pabna.bhangura,UPAZILA,bd.rajshahi.pabna,Bhangura,ভাঙ্গুড়া,,6640,,,
-bd.rajshahi.pabna.chatmohar,UPAZILA,bd.rajshahi.pabna,Chatmohar,চাটমোহর,,6630,,,
-bd.rajshahi.pabna.faridpur,UPAZILA,bd.rajshahi.pabna,Faridpur,ফরিদপুর,,6650,,,
-bd.rajshahi.pabna.ishwardi,UPAZILA,bd.rajshahi.pabna,Ishwardi,ঈশ্বরদী,isurdi|ishurdi,,,,
-bd.rajshahi.pabna.pabna-sadar,UPAZILA,bd.rajshahi.pabna,Pabna Sadar,পাবনা সদর,,,,,
-bd.rajshahi.pabna.santhia,UPAZILA,bd.rajshahi.pabna,Santhia,সাঁথিয়া,,6670,,,
-bd.rajshahi.pabna.sujanagar,UPAZILA,bd.rajshahi.pabna,Sujanagar,সুজানগর,suzanagar,6660,,,
-bd.rangpur.panchagarh.atwari,UPAZILA,bd.rangpur.panchagarh,Atwari,আটোয়ারী,,,,,
-bd.rangpur.panchagarh.boda,UPAZILA,bd.rangpur.panchagarh,Boda,বোদা,,5010,,,
-bd.rangpur.panchagarh.debiganj,UPAZILA,bd.rangpur.panchagarh,Debiganj,দেবীগঞ্জ,debiganz|debigong|debigonj,5020,,,
-bd.rangpur.panchagarh.panchagarh-sadar,UPAZILA,bd.rangpur.panchagarh,Panchagarh Sadar,পঞ্চগড় সদর,,5000,,,
-bd.rangpur.panchagarh.tetulia,UPAZILA,bd.rangpur.panchagarh,Tetulia,তেতুলিয়া,,5030,,,
-bd.barishal.patuakhali.bauphal,UPAZILA,bd.barishal.patuakhali,Bauphal,বাউফল,,8620,,,
-bd.barishal.patuakhali.dashmina,UPAZILA,bd.barishal.patuakhali,Dashmina,দশমিনা,dasmina,8630,,,
-bd.barishal.patuakhali.dumki,UPAZILA,bd.barishal.patuakhali,Dumki,দুমকি,,8602,,,
-bd.barishal.patuakhali.galachipa,UPAZILA,bd.barishal.patuakhali,Galachipa,গলাচিপা,,8640,,,
-bd.barishal.patuakhali.kalapara,UPAZILA,bd.barishal.patuakhali,Kalapara,কলাপাড়া,,,,,
-bd.barishal.patuakhali.mirzaganj,UPAZILA,bd.barishal.patuakhali,Mirzaganj,মির্জাগঞ্জ,mirzaganz|mirzagong|mirzagonj,,,,
-bd.barishal.patuakhali.patuakhali-sadar,UPAZILA,bd.barishal.patuakhali,Patuakhali Sadar,পটুয়াখালী সদর,patuakali sadar,8600,,,
+bd.rajshahi.natore.natore-sadar,UPAZILA,bd.rajshahi.natore,Natore Sadar,নাটোর সদর,,6400,,24.44319,88.98409
+bd.rajshahi.natore.singra,UPAZILA,bd.rajshahi.natore,Singra,সিংড়া,,6450,,24.5241,89.18602
+bd.mymensingh.netrokona.atpara,UPAZILA,bd.mymensingh.netrokona,Atpara,আটপাড়া,,2470,,24.79138,90.87618
+bd.mymensingh.netrokona.barhatta,UPAZILA,bd.mymensingh.netrokona,Barhatta,বারহাট্টা,,2440,,24.91958,90.8852
+bd.mymensingh.netrokona.durgapur,UPAZILA,bd.mymensingh.netrokona,Durgapur,দুর্গাপুর,,3848,,25.08968,90.68205
+bd.mymensingh.netrokona.kalmakanda,UPAZILA,bd.mymensingh.netrokona,Kalmakanda,কলমাকান্দা,,2430,,25.07699,90.85726
+bd.mymensingh.netrokona.kendua,UPAZILA,bd.mymensingh.netrokona,Kendua,কেন্দুয়া,,2480,,24.6773,90.80278
+bd.mymensingh.netrokona.khaliajuri,UPAZILA,bd.mymensingh.netrokona,Khaliajuri,খালিয়াজুরী,khaliazuri,2460,,24.70231,91.12122
+bd.mymensingh.netrokona.madan,UPAZILA,bd.mymensingh.netrokona,Madan,মদন,,2490,,24.6775,90.96694
+bd.mymensingh.netrokona.mohanganj,UPAZILA,bd.mymensingh.netrokona,Mohanganj,মোহনগঞ্জ,mohongonz|mohongonj,,,24.82681,91.02365
+bd.mymensingh.netrokona.netrokona-sadar,UPAZILA,bd.mymensingh.netrokona,Netrokona Sadar,নেত্রকোণা সদর,,2400,,24.88677,90.73737
+bd.mymensingh.netrokona.purbadhala,UPAZILA,bd.mymensingh.netrokona,Purbadhala,পূর্বধলা,,2410,,24.93377,90.60202
+bd.rangpur.nilphamari.dimla,UPAZILA,bd.rangpur.nilphamari,Dimla,ডিমলা,,5350,,26.17212,88.97248
+bd.rangpur.nilphamari.domar,UPAZILA,bd.rangpur.nilphamari,Domar,ডোমার,,5340,,26.15858,88.82518
+bd.rangpur.nilphamari.jaldhaka,UPAZILA,bd.rangpur.nilphamari,Jaldhaka,জলঢাকা,,5330,,26.02956,88.99334
+bd.rangpur.nilphamari.kishoreganj,UPAZILA,bd.rangpur.nilphamari,Kishoreganj,কিশোরগঞ্জ,kishorganz|kishorgong|kishorgonj|kishorganj,,,25.89606,89.03285
+bd.rangpur.nilphamari.nilphamari-sadar,UPAZILA,bd.rangpur.nilphamari,Nilphamari Sadar,নীলফামারী সদর,,5300,,25.94171,88.85481
+bd.rangpur.nilphamari.saidpur,UPAZILA,bd.rangpur.nilphamari,Saidpur,সৈয়দপুর,syedpur,,,25.80283,88.92207
+bd.chattogram.noakhali.begumganj,UPAZILA,bd.chattogram.noakhali,Begumganj,বেগমগঞ্জ,begumganz|begumgong|begumgonj,3820,,22.93056,91.09517
+bd.chattogram.noakhali.chatkhil,UPAZILA,bd.chattogram.noakhali,Chatkhil,চাটখিল,chatkil,3870,,23.05381,90.96385
+bd.chattogram.noakhali.companiganj,UPAZILA,bd.chattogram.noakhali,Companiganj,কোম্পানীগঞ্জ,companiganz|companigong|companigonj,3850,,22.78248,91.27352
+bd.chattogram.noakhali.hatiya,UPAZILA,bd.chattogram.noakhali,Hatiya,হাতিয়া,hatia,,,22.24306,91.11158
+bd.chattogram.noakhali.kabirhat,UPAZILA,bd.chattogram.noakhali,Kabirhat,কবিরহাট,,3807,,22.81332,91.19993
+bd.chattogram.noakhali.noakhali-sadar,UPAZILA,bd.chattogram.noakhali,Noakhali Sadar,নোয়াখালী সদর,noakali sadar,,,22.80235,91.06062
+bd.chattogram.noakhali.senbagh,UPAZILA,bd.chattogram.noakhali,Senbagh,সেনবাগ,senbug,,,22.99242,91.21212
+bd.chattogram.noakhali.sonaimuri,UPAZILA,bd.chattogram.noakhali,Sonaimuri,সোনাইমুড়ী,sonaimori,,,23.02624,91.0777
+bd.chattogram.noakhali.subarnachar,UPAZILA,bd.chattogram.noakhali,Subarnachar,সুবর্ণচর,,,,22.63696,91.12765
+bd.rajshahi.pabna.atgharia,UPAZILA,bd.rajshahi.pabna,Atgharia,আটঘরিয়া,atghoria,,,24.10833,89.28192
+bd.rajshahi.pabna.bera,UPAZILA,bd.rajshahi.pabna,Bera,বেড়া,,6680,,23.94239,89.65604
+bd.rajshahi.pabna.bhangura,UPAZILA,bd.rajshahi.pabna,Bhangura,ভাঙ্গুড়া,,6640,,24.23905,89.39268
+bd.rajshahi.pabna.chatmohar,UPAZILA,bd.rajshahi.pabna,Chatmohar,চাটমোহর,,6630,,24.22519,89.30202
+bd.rajshahi.pabna.faridpur,UPAZILA,bd.rajshahi.pabna,Faridpur,ফরিদপুর,,6650,,24.1606,89.44881
+bd.rajshahi.pabna.ishwardi,UPAZILA,bd.rajshahi.pabna,Ishwardi,ঈশ্বরদী,isurdi|ishurdi,,,24.0778,89.09721
+bd.rajshahi.pabna.pabna-sadar,UPAZILA,bd.rajshahi.pabna,Pabna Sadar,পাবনা সদর,,,,23.99376,89.28145
+bd.rajshahi.pabna.santhia,UPAZILA,bd.rajshahi.pabna,Santhia,সাঁথিয়া,,6670,,24.04219,89.51676
+bd.rajshahi.pabna.sujanagar,UPAZILA,bd.rajshahi.pabna,Sujanagar,সুজানগর,suzanagar,6660,,23.89672,89.51272
+bd.rangpur.panchagarh.atwari,UPAZILA,bd.rangpur.panchagarh,Atwari,আটোয়ারী,,,,26.24955,88.42643
+bd.rangpur.panchagarh.boda,UPAZILA,bd.rangpur.panchagarh,Boda,বোদা,,5010,,26.23059,88.61265
+bd.rangpur.panchagarh.debiganj,UPAZILA,bd.rangpur.panchagarh,Debiganj,দেবীগঞ্জ,debiganz|debigong|debigonj,5020,,26.13206,88.71944
+bd.rangpur.panchagarh.panchagarh-sadar,UPAZILA,bd.rangpur.panchagarh,Panchagarh Sadar,পঞ্চগড় সদর,,5000,,26.36744,88.58184
+bd.rangpur.panchagarh.tetulia,UPAZILA,bd.rangpur.panchagarh,Tetulia,তেতুলিয়া,,5030,,26.51344,88.42984
+bd.barishal.patuakhali.bauphal,UPAZILA,bd.barishal.patuakhali,Bauphal,বাউফল,,8620,,22.43299,90.53844
+bd.barishal.patuakhali.dashmina,UPAZILA,bd.barishal.patuakhali,Dashmina,দশমিনা,dasmina,8630,,22.28021,90.53787
+bd.barishal.patuakhali.dumki,UPAZILA,bd.barishal.patuakhali,Dumki,দুমকি,,8602,,22.45026,90.37188
+bd.barishal.patuakhali.galachipa,UPAZILA,bd.barishal.patuakhali,Galachipa,গলাচিপা,,8640,,22.2031,90.42298
+bd.barishal.patuakhali.kalapara,UPAZILA,bd.barishal.patuakhali,Kalapara,কলাপাড়া,,,,21.89138,90.19482
+bd.barishal.patuakhali.mirzaganj,UPAZILA,bd.barishal.patuakhali,Mirzaganj,মির্জাগঞ্জ,mirzaganz|mirzagong|mirzagonj,,,22.35685,90.2167
+bd.barishal.patuakhali.patuakhali-sadar,UPAZILA,bd.barishal.patuakhali,Patuakhali Sadar,পটুয়াখালী সদর,patuakali sadar,8600,,22.33582,90.32897
 bd.barishal.patuakhali.rangabali,UPAZILA,bd.barishal.patuakhali,Rangabali,রাঙ্গাবালী,,,,,
-bd.barishal.pirojpur.bhandaria,UPAZILA,bd.barishal.pirojpur,Bhandaria,ভান্ডারিয়া,,8550,,,
-bd.barishal.pirojpur.indurkani,UPAZILA,bd.barishal.pirojpur,Indurkani,জিয়ানগর,zianagar,8502,,,
-bd.barishal.pirojpur.kawkhali,UPAZILA,bd.barishal.pirojpur,Kawkhali,কাউখালী,kawkali,,,,
-bd.barishal.pirojpur.mathbaria,UPAZILA,bd.barishal.pirojpur,Mathbaria,মঠবাড়ীয়া,mathbarya,,,,
-bd.barishal.pirojpur.nazirpur,UPAZILA,bd.barishal.pirojpur,Nazirpur,নাজিরপুর,,8540,,,
-bd.barishal.pirojpur.nesarabad,UPAZILA,bd.barishal.pirojpur,Nesarabad,নেছারাবাদ,,8520,,,
-bd.barishal.pirojpur.pirojpur-sadar,UPAZILA,bd.barishal.pirojpur,Pirojpur Sadar,পিরোজপুর সদর,pirozpur sadar,8500,,,
-bd.dhaka.rajbari.baliakandi,UPAZILA,bd.dhaka.rajbari,Baliakandi,বালিয়াকান্দি,,7730,,,
-bd.dhaka.rajbari.goalanda,UPAZILA,bd.dhaka.rajbari,Goalanda,গোয়ালন্দ,,,,,
-bd.dhaka.rajbari.kalukhali,UPAZILA,bd.dhaka.rajbari,Kalukhali,কালুখালী,kalukali,7720,,,
-bd.dhaka.rajbari.pangsha,UPAZILA,bd.dhaka.rajbari,Pangsha,পাংশা,pangsa,,,,
-bd.dhaka.rajbari.rajbari-sadar,UPAZILA,bd.dhaka.rajbari,Rajbari Sadar,রাজবাড়ী সদর,rajbary sadar|razbari sadar,7700,,,
-bd.rajshahi.rajshahi.bagha,UPAZILA,bd.rajshahi.rajshahi,Bagha,বাঘা,,6281,,,
-bd.rajshahi.rajshahi.bagmara,UPAZILA,bd.rajshahi.rajshahi,Bagmara,বাগমারা,,6250,,,
-bd.rajshahi.rajshahi.charghat,UPAZILA,bd.rajshahi.rajshahi,Charghat,চারঘাট,,6270,,,
-bd.rajshahi.rajshahi.durgapur,UPAZILA,bd.rajshahi.rajshahi,Durgapur,দুর্গাপুর,,6240,,,
-bd.rajshahi.rajshahi.godagari,UPAZILA,bd.rajshahi.rajshahi,Godagari,গোদাগাড়ী,,6290,,,
-bd.rajshahi.rajshahi.mohanpur,UPAZILA,bd.rajshahi.rajshahi,Mohanpur,মোহনপুর,mohonpur,,,,
-bd.rajshahi.rajshahi.paba,UPAZILA,bd.rajshahi.rajshahi,Paba,পবা,,6213,,,
-bd.rajshahi.rajshahi.puthia,UPAZILA,bd.rajshahi.rajshahi,Puthia,পুঠিয়া,,,,,
-bd.rajshahi.rajshahi.tanore,UPAZILA,bd.rajshahi.rajshahi,Tanore,তানোর,,6230,,,
-bd.chattogram.rangamati.baghaichhari,UPAZILA,bd.chattogram.rangamati,Baghaichhari,বাঘাইছড়ি,baghaichari,,,,
-bd.chattogram.rangamati.barkal,UPAZILA,bd.chattogram.rangamati,Barkal,বরকল,,4570,,,
-bd.chattogram.rangamati.belaichhari,UPAZILA,bd.chattogram.rangamati,Belaichhari,বিলাইছড়ি,belaichari,4550,,,
-bd.chattogram.rangamati.juraichhari,UPAZILA,bd.chattogram.rangamati,Juraichhari,জুরাছড়ি,juraichari,,,,
-bd.chattogram.rangamati.kaptai,UPAZILA,bd.chattogram.rangamati,Kaptai,কাপ্তাই,,4530,,,
-bd.chattogram.rangamati.kawkhali,UPAZILA,bd.chattogram.rangamati,Kawkhali,কাউখালী,kawkali,4511,,,
-bd.chattogram.rangamati.langadu,UPAZILA,bd.chattogram.rangamati,Langadu,লংগদু,,4580,,,
-bd.chattogram.rangamati.naniarchar,UPAZILA,bd.chattogram.rangamati,Naniarchar,নানিয়ারচর,,4520,,,
-bd.chattogram.rangamati.rajasthali,UPAZILA,bd.chattogram.rangamati,Rajasthali,রাজস্থলী,razasthali,4540,,,
-bd.chattogram.rangamati.rangamati-sadar,UPAZILA,bd.chattogram.rangamati,Rangamati Sadar,রাঙ্গামাটি সদর,,4500,,,
-bd.rangpur.rangpur.badarganj,UPAZILA,bd.rangpur.rangpur,Badarganj,বদরগঞ্জ,badargonz|badargonj,,,,
-bd.rangpur.rangpur.gangachara,UPAZILA,bd.rangpur.rangpur,Gangachara,গংগাচড়া,,5410,,,
-bd.rangpur.rangpur.kaunia,UPAZILA,bd.rangpur.rangpur,Kaunia,কাউনিয়া,,5440,,,
-bd.rangpur.rangpur.mithapukur,UPAZILA,bd.rangpur.rangpur,Mithapukur,মিঠাপুকুর,,5460,,,
-bd.rangpur.rangpur.pirgachha,UPAZILA,bd.rangpur.rangpur,Pirgachha,পীরগাছা,pirgacha,5450,,,
-bd.rangpur.rangpur.pirganj,UPAZILA,bd.rangpur.rangpur,Pirganj,পীরগঞ্জ,pirgonz|pirgonj,,,,
-bd.rangpur.rangpur.rangpur-sadar,UPAZILA,bd.rangpur.rangpur,Rangpur Sadar,রংপুর সদর,,5400,,,
-bd.rangpur.rangpur.taraganj,UPAZILA,bd.rangpur.rangpur,Taraganj,তারাগঞ্জ,taragonz|taragonj,,,,
-bd.khulna.satkhira.assasuni,UPAZILA,bd.khulna.satkhira,Assasuni,আশাশুনি,,9460,,,
-bd.khulna.satkhira.debhata,UPAZILA,bd.khulna.satkhira,Debhata,দেবহাটা,,9430,,,
-bd.khulna.satkhira.kalaroa,UPAZILA,bd.khulna.satkhira,Kalaroa,কলারোয়া,,,,,
-bd.khulna.satkhira.kaliganj,UPAZILA,bd.khulna.satkhira,Kaliganj,কালিগঞ্জ,kaliganz|kaligong|kaligonj,9440,,,
-bd.khulna.satkhira.satkhira-sadar,UPAZILA,bd.khulna.satkhira,Satkhira Sadar,সাতক্ষীরা সদর,satkira sadar,9400,,,
-bd.khulna.satkhira.shyamnagar,UPAZILA,bd.khulna.satkhira,Shyamnagar,শ্যামনগর,syamnagar,9450,,,
-bd.khulna.satkhira.tala,UPAZILA,bd.khulna.satkhira,Tala,তালা,,9420,,,
-bd.dhaka.shariatpur.bhedarganj,UPAZILA,bd.dhaka.shariatpur,Bhedarganj,ভেদরগঞ্জ,bhedarganz|bhedargong|bhedargonj,8030,,,
-bd.dhaka.shariatpur.damudya,UPAZILA,bd.dhaka.shariatpur,Damudya,ডামুড্যা,,,,,
-bd.dhaka.shariatpur.gosairhat,UPAZILA,bd.dhaka.shariatpur,Gosairhat,গোসাইরহাট,,8050,,,
-bd.dhaka.shariatpur.naria,UPAZILA,bd.dhaka.shariatpur,Naria,নড়িয়া,,8020,,,
-bd.dhaka.shariatpur.shariatpur-sadar,UPAZILA,bd.dhaka.shariatpur,Shariatpur Sadar,শরিয়তপুর সদর,sariatpur sadar,8000,,,
-bd.dhaka.shariatpur.zajira,UPAZILA,bd.dhaka.shariatpur,Zajira,জাজিরা,zazira,8010,,,
-bd.mymensingh.sherpur.jhenaigati,UPAZILA,bd.mymensingh.sherpur,Jhenaigati,ঝিনাইগাতী,,,,,
-bd.mymensingh.sherpur.nakla,UPAZILA,bd.mymensingh.sherpur,Nakla,নকলা,nokla,,,,
-bd.mymensingh.sherpur.nalitabari,UPAZILA,bd.mymensingh.sherpur,Nalitabari,নালিতাবাড়ী,nalitabary,2120,,,
-bd.mymensingh.sherpur.sherpur-sadar,UPAZILA,bd.mymensingh.sherpur,Sherpur Sadar,শেরপুর সদর,serpur sadar,2100,,,
-bd.mymensingh.sherpur.sreebardi,UPAZILA,bd.mymensingh.sherpur,Sreebardi,শ্রীবরদী,sribordi|sreebordi,,,,
-bd.rajshahi.sirajganj.belkuchi,UPAZILA,bd.rajshahi.sirajganj,Belkuchi,বেলকুচি,,6740,,,
-bd.rajshahi.sirajganj.chauhali,UPAZILA,bd.rajshahi.sirajganj,Chauhali,চৌহালি,,,,,
-bd.rajshahi.sirajganj.kamarkhanda,UPAZILA,bd.rajshahi.sirajganj,Kamarkhanda,কামারখন্দ,kamarkand|kamarkhand,6700,,,
-bd.rajshahi.sirajganj.kazipur,UPAZILA,bd.rajshahi.sirajganj,Kazipur,কাজীপুর,,6710,,,
-bd.rajshahi.sirajganj.raiganj,UPAZILA,bd.rajshahi.sirajganj,Raiganj,রায়গঞ্জ,raigonz|raigonj,,,,
-bd.rajshahi.sirajganj.shahjadpur,UPAZILA,bd.rajshahi.sirajganj,Shahjadpur,শাহজাদপুর,sahjadpur|shahzadpur,,,,
-bd.rajshahi.sirajganj.sirajganj-sadar,UPAZILA,bd.rajshahi.sirajganj,Sirajganj Sadar,সিরাজগঞ্জ সদর,sirajgong sadar|sirajgonj sadar|sirazganz sadar,6700,,,
-bd.rajshahi.sirajganj.tarash,UPAZILA,bd.rajshahi.sirajganj,Tarash,তাড়াশ,taras,6780,,,
-bd.rajshahi.sirajganj.ullapara,UPAZILA,bd.rajshahi.sirajganj,Ullapara,উল্লাপাড়া,,6760,,,
-bd.sylhet.sunamganj.bishwamvarpur,UPAZILA,bd.sylhet.sunamganj,Bishwamvarpur,বিশ্বম্ভরপুর,biswambarpur|bishwambarpur,,,,
-bd.sylhet.sunamganj.chhatak,UPAZILA,bd.sylhet.sunamganj,Chhatak,ছাতক,chatak,,,,
-bd.sylhet.sunamganj.derai,UPAZILA,bd.sylhet.sunamganj,Derai,দিরাই,,3040,,,
-bd.sylhet.sunamganj.dharmapasha,UPAZILA,bd.sylhet.sunamganj,Dharmapasha,ধর্মপাশা,dharmapasa,3000,,,
-bd.sylhet.sunamganj.dowarabazar,UPAZILA,bd.sylhet.sunamganj,Dowarabazar,দোয়ারাবাজার,,3070,,,
-bd.sylhet.sunamganj.jagannathpur,UPAZILA,bd.sylhet.sunamganj,Jagannathpur,জগন্নাথপুর,,3060,,,
-bd.sylhet.sunamganj.jamalganj,UPAZILA,bd.sylhet.sunamganj,Jamalganj,জামালগঞ্জ,jamalganz|jamalgong|jamalgonj,3000,,,
+bd.barishal.pirojpur.bhandaria,UPAZILA,bd.barishal.pirojpur,Bhandaria,ভান্ডারিয়া,,8550,,22.45419,90.02148
+bd.barishal.pirojpur.indurkani,UPAZILA,bd.barishal.pirojpur,Indurkani,জিয়ানগর,zianagar,8502,,22.46568,89.9345
+bd.barishal.pirojpur.kawkhali,UPAZILA,bd.barishal.pirojpur,Kawkhali,কাউখালী,kawkali,,,22.60673,90.05847
+bd.barishal.pirojpur.mathbaria,UPAZILA,bd.barishal.pirojpur,Mathbaria,মঠবাড়ীয়া,mathbarya,,,22.28527,89.95067
+bd.barishal.pirojpur.nazirpur,UPAZILA,bd.barishal.pirojpur,Nazirpur,নাজিরপুর,,8540,,22.77031,89.97431
+bd.barishal.pirojpur.nesarabad,UPAZILA,bd.barishal.pirojpur,Nesarabad,নেছারাবাদ,,8520,,22.72256,90.0857
+bd.barishal.pirojpur.pirojpur-sadar,UPAZILA,bd.barishal.pirojpur,Pirojpur Sadar,পিরোজপুর সদর,pirozpur sadar,8500,,22.60862,89.98111
+bd.dhaka.rajbari.baliakandi,UPAZILA,bd.dhaka.rajbari,Baliakandi,বালিয়াকান্দি,,7730,,23.64967,89.55066
+bd.dhaka.rajbari.goalanda,UPAZILA,bd.dhaka.rajbari,Goalanda,গোয়ালন্দ,,,,23.75636,89.76612
+bd.dhaka.rajbari.kalukhali,UPAZILA,bd.dhaka.rajbari,Kalukhali,কালুখালী,kalukali,7720,,23.74103,89.47428
+bd.dhaka.rajbari.pangsha,UPAZILA,bd.dhaka.rajbari,Pangsha,পাংশা,pangsa,,,23.78784,89.38691
+bd.dhaka.rajbari.rajbari-sadar,UPAZILA,bd.dhaka.rajbari,Rajbari Sadar,রাজবাড়ী সদর,rajbary sadar|razbari sadar,7700,,23.71748,89.65417
+bd.rajshahi.rajshahi.bagha,UPAZILA,bd.rajshahi.rajshahi,Bagha,বাঘা,,6281,,24.20042,88.82834
+bd.rajshahi.rajshahi.bagmara,UPAZILA,bd.rajshahi.rajshahi,Bagmara,বাগমারা,,6250,,24.59109,88.81069
+bd.rajshahi.rajshahi.charghat,UPAZILA,bd.rajshahi.rajshahi,Charghat,চারঘাট,,6270,,24.30008,88.77542
+bd.rajshahi.rajshahi.durgapur,UPAZILA,bd.rajshahi.rajshahi,Durgapur,দুর্গাপুর,,6240,,24.46674,88.76006
+bd.rajshahi.rajshahi.godagari,UPAZILA,bd.rajshahi.rajshahi,Godagari,গোদাগাড়ী,,6290,,24.48356,88.41469
+bd.rajshahi.rajshahi.mohanpur,UPAZILA,bd.rajshahi.rajshahi,Mohanpur,মোহনপুর,mohonpur,,,24.55356,88.64031
+bd.rajshahi.rajshahi.paba,UPAZILA,bd.rajshahi.rajshahi,Paba,পবা,,6213,,24.40218,88.60044
+bd.rajshahi.rajshahi.puthia,UPAZILA,bd.rajshahi.rajshahi,Puthia,পুঠিয়া,,,,24.411,88.82736
+bd.rajshahi.rajshahi.tanore,UPAZILA,bd.rajshahi.rajshahi,Tanore,তানোর,,6230,,24.62024,88.53119
+bd.chattogram.rangamati.baghaichhari,UPAZILA,bd.chattogram.rangamati,Baghaichhari,বাঘাইছড়ি,baghaichari,,,23.3731,92.22938
+bd.chattogram.rangamati.barkal,UPAZILA,bd.chattogram.rangamati,Barkal,বরকল,,4570,,22.84542,92.34465
+bd.chattogram.rangamati.belaichhari,UPAZILA,bd.chattogram.rangamati,Belaichhari,বিলাইছড়ি,belaichari,4550,,22.30277,92.48522
+bd.chattogram.rangamati.juraichhari,UPAZILA,bd.chattogram.rangamati,Juraichhari,জুরাছড়ি,juraichari,,,22.6309,92.4225
+bd.chattogram.rangamati.kaptai,UPAZILA,bd.chattogram.rangamati,Kaptai,কাপ্তাই,,4530,,22.45993,92.1934
+bd.chattogram.rangamati.kawkhali,UPAZILA,bd.chattogram.rangamati,Kawkhali,কাউখালী,kawkali,4511,,22.62075,92.00951
+bd.chattogram.rangamati.langadu,UPAZILA,bd.chattogram.rangamati,Langadu,লংগদু,,4580,,22.95049,92.20886
+bd.chattogram.rangamati.naniarchar,UPAZILA,bd.chattogram.rangamati,Naniarchar,নানিয়ারচর,,4520,,22.82172,92.06938
+bd.chattogram.rangamati.rajasthali,UPAZILA,bd.chattogram.rangamati,Rajasthali,রাজস্থলী,razasthali,4540,,22.37854,92.24164
+bd.chattogram.rangamati.rangamati-sadar,UPAZILA,bd.chattogram.rangamati,Rangamati Sadar,রাঙ্গামাটি সদর,,4500,,22.63654,92.19898
+bd.rangpur.rangpur.badarganj,UPAZILA,bd.rangpur.rangpur,Badarganj,বদরগঞ্জ,badargonz|badargonj,,,25.66593,89.05641
+bd.rangpur.rangpur.gangachara,UPAZILA,bd.rangpur.rangpur,Gangachara,গংগাচড়া,,5410,,25.8742,89.19332
+bd.rangpur.rangpur.kaunia,UPAZILA,bd.rangpur.rangpur,Kaunia,কাউনিয়া,,5440,,25.76386,89.39499
+bd.rangpur.rangpur.mithapukur,UPAZILA,bd.rangpur.rangpur,Mithapukur,মিঠাপুকুর,,5460,,25.57132,89.26119
+bd.rangpur.rangpur.pirgachha,UPAZILA,bd.rangpur.rangpur,Pirgachha,পীরগাছা,pirgacha,5450,,25.66517,89.42003
+bd.rangpur.rangpur.pirganj,UPAZILA,bd.rangpur.rangpur,Pirganj,পীরগঞ্জ,pirgonz|pirgonj,,,25.42371,89.27428
+bd.rangpur.rangpur.rangpur-sadar,UPAZILA,bd.rangpur.rangpur,Rangpur Sadar,রংপুর সদর,,5400,,25.74591,89.21241
+bd.rangpur.rangpur.taraganj,UPAZILA,bd.rangpur.rangpur,Taraganj,তারাগঞ্জ,taragonz|taragonj,,,25.78055,89.03336
+bd.khulna.satkhira.assasuni,UPAZILA,bd.khulna.satkhira,Assasuni,আশাশুনি,,9460,,22.51921,89.18739
+bd.khulna.satkhira.debhata,UPAZILA,bd.khulna.satkhira,Debhata,দেবহাটা,,9430,,22.59725,89.01528
+bd.khulna.satkhira.kalaroa,UPAZILA,bd.khulna.satkhira,Kalaroa,কলারোয়া,,,,22.88071,89.03029
+bd.khulna.satkhira.kaliganj,UPAZILA,bd.khulna.satkhira,Kaliganj,কালিগঞ্জ,kaliganz|kaligong|kaligonj,9440,,22.44725,89.06234
+bd.khulna.satkhira.satkhira-sadar,UPAZILA,bd.khulna.satkhira,Satkhira Sadar,সাতক্ষীরা সদর,satkira sadar,9400,,22.72096,89.03859
+bd.khulna.satkhira.shyamnagar,UPAZILA,bd.khulna.satkhira,Shyamnagar,শ্যামনগর,syamnagar,9450,,22.22362,89.16118
+bd.khulna.satkhira.tala,UPAZILA,bd.khulna.satkhira,Tala,তালা,,9420,,22.7401,89.21045
+bd.dhaka.shariatpur.bhedarganj,UPAZILA,bd.dhaka.shariatpur,Bhedarganj,ভেদরগঞ্জ,bhedarganz|bhedargong|bhedargonj,8030,,23.21143,90.50995
+bd.dhaka.shariatpur.damudya,UPAZILA,bd.dhaka.shariatpur,Damudya,ডামুড্যা,,,,23.13678,90.42168
+bd.dhaka.shariatpur.gosairhat,UPAZILA,bd.dhaka.shariatpur,Gosairhat,গোসাইরহাট,,8050,,23.07961,90.44699
+bd.dhaka.shariatpur.naria,UPAZILA,bd.dhaka.shariatpur,Naria,নড়িয়া,,8020,,23.30464,90.42732
+bd.dhaka.shariatpur.shariatpur-sadar,UPAZILA,bd.dhaka.shariatpur,Shariatpur Sadar,শরিয়তপুর সদর,sariatpur sadar,8000,,23.21608,90.31587
+bd.dhaka.shariatpur.zajira,UPAZILA,bd.dhaka.shariatpur,Zajira,জাজিরা,zazira,8010,,23.36551,90.31828
+bd.mymensingh.sherpur.jhenaigati,UPAZILA,bd.mymensingh.sherpur,Jhenaigati,ঝিনাইগাতী,,,,25.18181,90.05301
+bd.mymensingh.sherpur.nakla,UPAZILA,bd.mymensingh.sherpur,Nakla,নকলা,nokla,,,24.95683,90.18365
+bd.mymensingh.sherpur.nalitabari,UPAZILA,bd.mymensingh.sherpur,Nalitabari,নালিতাবাড়ী,nalitabary,2120,,25.11754,90.18354
+bd.mymensingh.sherpur.sherpur-sadar,UPAZILA,bd.mymensingh.sherpur,Sherpur Sadar,শেরপুর সদর,serpur sadar,2100,,24.99292,90.01986
+bd.mymensingh.sherpur.sreebardi,UPAZILA,bd.mymensingh.sherpur,Sreebardi,শ্রীবরদী,sribordi|sreebordi,,,25.16565,89.95491
+bd.rajshahi.sirajganj.belkuchi,UPAZILA,bd.rajshahi.sirajganj,Belkuchi,বেলকুচি,,6740,,24.29527,89.70211
+bd.rajshahi.sirajganj.chauhali,UPAZILA,bd.rajshahi.sirajganj,Chauhali,চৌহালি,,,,24.13628,89.75663
+bd.rajshahi.sirajganj.kamarkhanda,UPAZILA,bd.rajshahi.sirajganj,Kamarkhanda,কামারখন্দ,kamarkand|kamarkhand,6700,,24.37513,89.64341
+bd.rajshahi.sirajganj.kazipur,UPAZILA,bd.rajshahi.sirajganj,Kazipur,কাজীপুর,,6710,,24.67017,89.68724
+bd.rajshahi.sirajganj.raiganj,UPAZILA,bd.rajshahi.sirajganj,Raiganj,রায়গঞ্জ,raigonz|raigonj,,,24.49226,89.51556
+bd.rajshahi.sirajganj.shahjadpur,UPAZILA,bd.rajshahi.sirajganj,Shahjadpur,শাহজাদপুর,sahjadpur|shahzadpur,,,24.16279,89.63007
+bd.rajshahi.sirajganj.sirajganj-sadar,UPAZILA,bd.rajshahi.sirajganj,Sirajganj Sadar,সিরাজগঞ্জ সদর,sirajgong sadar|sirajgonj sadar|sirazganz sadar,6700,,24.49405,89.68849
+bd.rajshahi.sirajganj.tarash,UPAZILA,bd.rajshahi.sirajganj,Tarash,তাড়াশ,taras,6780,,24.44313,89.35815
+bd.rajshahi.sirajganj.ullapara,UPAZILA,bd.rajshahi.sirajganj,Ullapara,উল্লাপাড়া,,6760,,24.3273,89.51806
+bd.sylhet.sunamganj.bishwamvarpur,UPAZILA,bd.sylhet.sunamganj,Bishwamvarpur,বিশ্বম্ভরপুর,biswambarpur|bishwambarpur,,,25.10982,91.31509
+bd.sylhet.sunamganj.chhatak,UPAZILA,bd.sylhet.sunamganj,Chhatak,ছাতক,chatak,,,24.94393,91.61554
+bd.sylhet.sunamganj.derai,UPAZILA,bd.sylhet.sunamganj,Derai,দিরাই,,3040,,24.78754,91.33597
+bd.sylhet.sunamganj.dharmapasha,UPAZILA,bd.sylhet.sunamganj,Dharmapasha,ধর্মপাশা,dharmapasa,3000,,25.01074,91.04066
+bd.sylhet.sunamganj.dowarabazar,UPAZILA,bd.sylhet.sunamganj,Dowarabazar,দোয়ারাবাজার,,3070,,25.07171,91.56248
+bd.sylhet.sunamganj.jagannathpur,UPAZILA,bd.sylhet.sunamganj,Jagannathpur,জগন্নাথপুর,,3060,,24.74693,91.55584
+bd.sylhet.sunamganj.jamalganj,UPAZILA,bd.sylhet.sunamganj,Jamalganj,জামালগঞ্জ,jamalganz|jamalgong|jamalgonj,3000,,24.95419,91.203
 bd.sylhet.sunamganj.madhyanagar,UPAZILA,bd.sylhet.sunamganj,Madhyanagar,মধ্যনগর,,,,,
-bd.sylhet.sunamganj.shalla,UPAZILA,bd.sylhet.sunamganj,Shalla,শাল্লা,salla,,,,
+bd.sylhet.sunamganj.shalla,UPAZILA,bd.sylhet.sunamganj,Shalla,শাল্লা,salla,,,24.68637,91.25694
 bd.sylhet.sunamganj.shantiganj,UPAZILA,bd.sylhet.sunamganj,Shantiganj,দক্ষিণ সুনামগঞ্জ,south sunamganz|south sunamgong|south sunamgonj|south sunamganj,3060,,,
-bd.sylhet.sunamganj.sunamganj-sadar,UPAZILA,bd.sylhet.sunamganj,Sunamganj Sadar,সুনামগঞ্জ সদর,sunamganz sadar|sunamgong sadar|sunamgonj sadar,,,,
-bd.sylhet.sunamganj.tahirpur,UPAZILA,bd.sylhet.sunamganj,Tahirpur,তাহিরপুর,,3030,,,
-bd.sylhet.sylhet.balaganj,UPAZILA,bd.sylhet.sylhet,Balaganj,বালাগঞ্জ,balaganz|balagong|balagonj,3120,,,
-bd.sylhet.sylhet.beanibazar,UPAZILA,bd.sylhet.sylhet,Beanibazar,বিয়ানীবাজার,,3170,,,
-bd.sylhet.sylhet.bishwanath,UPAZILA,bd.sylhet.sylhet,Bishwanath,বিশ্বনাথ,biswanath,3130,,,
-bd.sylhet.sylhet.companiganj,UPAZILA,bd.sylhet.sylhet,Companiganj,কোম্পানীগঞ্জ,companiganz|companigong|companigonj,,,,
-bd.sylhet.sylhet.dakshin-surma,UPAZILA,bd.sylhet.sylhet,Dakshin Surma,দক্ষিণ সুরমা,daksinsurma|dakshinsurma,,,,
-bd.sylhet.sylhet.fenchuganj,UPAZILA,bd.sylhet.sylhet,Fenchuganj,ফেঞ্চুগঞ্জ,fenchuganz|fenchugong|fenchugonj,3116,,,
-bd.sylhet.sylhet.golapganj,UPAZILA,bd.sylhet.sylhet,Golapganj,গোলাপগঞ্জ,golapganz|golapgong|golapgonj,3160,,,
-bd.sylhet.sylhet.gowainghat,UPAZILA,bd.sylhet.sylhet,Gowainghat,গোয়াইনঘাট,,3150,,,
-bd.sylhet.sylhet.jaintiapur,UPAZILA,bd.sylhet.sylhet,Jaintiapur,জৈন্তাপুর,,,,,
-bd.sylhet.sylhet.kanaighat,UPAZILA,bd.sylhet.sylhet,Kanaighat,কানাইঘাট,,3180,,,
+bd.sylhet.sunamganj.sunamganj-sadar,UPAZILA,bd.sylhet.sunamganj,Sunamganj Sadar,সুনামগঞ্জ সদর,sunamganz sadar|sunamgong sadar|sunamgonj sadar,,,25.05084,91.39547
+bd.sylhet.sunamganj.tahirpur,UPAZILA,bd.sylhet.sunamganj,Tahirpur,তাহিরপুর,,3030,,25.12814,91.16331
+bd.sylhet.sylhet.balaganj,UPAZILA,bd.sylhet.sylhet,Balaganj,বালাগঞ্জ,balaganz|balagong|balagonj,3120,,24.69541,91.77336
+bd.sylhet.sylhet.beanibazar,UPAZILA,bd.sylhet.sylhet,Beanibazar,বিয়ানীবাজার,,3170,,24.84892,92.15906
+bd.sylhet.sylhet.bishwanath,UPAZILA,bd.sylhet.sylhet,Bishwanath,বিশ্বনাথ,biswanath,3130,,24.83495,91.72924
+bd.sylhet.sylhet.companiganj,UPAZILA,bd.sylhet.sylhet,Companiganj,কোম্পানীগঞ্জ,companiganz|companigong|companigonj,,,25.07961,91.77336
+bd.sylhet.sylhet.dakshin-surma,UPAZILA,bd.sylhet.sylhet,Dakshin Surma,দক্ষিণ সুরমা,daksinsurma|dakshinsurma,,,24.81611,91.87703
+bd.sylhet.sylhet.fenchuganj,UPAZILA,bd.sylhet.sylhet,Fenchuganj,ফেঞ্চুগঞ্জ,fenchuganz|fenchugong|fenchugonj,3116,,24.69377,91.96175
+bd.sylhet.sylhet.golapganj,UPAZILA,bd.sylhet.sylhet,Golapganj,গোলাপগঞ্জ,golapganz|golapgong|golapgonj,3160,,24.812,92.01704
+bd.sylhet.sylhet.gowainghat,UPAZILA,bd.sylhet.sylhet,Gowainghat,গোয়াইনঘাট,,3150,,25.08313,91.95833
+bd.sylhet.sylhet.jaintiapur,UPAZILA,bd.sylhet.sylhet,Jaintiapur,জৈন্তাপুর,,,,25.05649,92.10141
+bd.sylhet.sylhet.kanaighat,UPAZILA,bd.sylhet.sylhet,Kanaighat,কানাইঘাট,,3180,,24.99354,92.21804
 bd.sylhet.sylhet.osmaninagar,UPAZILA,bd.sylhet.sylhet,Osmaninagar,ওসমানী নগর,,,,,
-bd.sylhet.sylhet.sylhet-sadar,UPAZILA,bd.sylhet.sylhet,Sylhet Sadar,সিলেট সদর,,,,,
-bd.sylhet.sylhet.zakiganj,UPAZILA,bd.sylhet.sylhet,Zakiganj,জকিগঞ্জ,zakiganz|zakigong|zakigonj,,,,
-bd.dhaka.tangail.basail,UPAZILA,bd.dhaka.tangail,Basail,বাসাইল,,,,,
-bd.dhaka.tangail.bhuapur,UPAZILA,bd.dhaka.tangail,Bhuapur,ভুয়াপুর,,1960,,,
-bd.dhaka.tangail.delduar,UPAZILA,bd.dhaka.tangail,Delduar,দেলদুয়ার,,1910,,,
-bd.dhaka.tangail.dhanbari,UPAZILA,bd.dhaka.tangail,Dhanbari,ধনবাড়ী,dhanbary,1997,,,
-bd.dhaka.tangail.ghatail,UPAZILA,bd.dhaka.tangail,Ghatail,ঘাটাইল,,1980,,,
-bd.dhaka.tangail.gopalpur,UPAZILA,bd.dhaka.tangail,Gopalpur,গোপালপুর,,1990,,,
-bd.dhaka.tangail.kalihati,UPAZILA,bd.dhaka.tangail,Kalihati,কালিহাতী,,1970,,,
-bd.dhaka.tangail.madhupur,UPAZILA,bd.dhaka.tangail,Madhupur,মধুপুর,,,,,
-bd.dhaka.tangail.mirzapur,UPAZILA,bd.dhaka.tangail,Mirzapur,মির্জাপুর,,1940,,,
-bd.dhaka.tangail.nagarpur,UPAZILA,bd.dhaka.tangail,Nagarpur,নাগরপুর,,1936,,,
-bd.dhaka.tangail.sakhipur,UPAZILA,bd.dhaka.tangail,Sakhipur,সখিপুর,sakipur,,,,
-bd.dhaka.tangail.tangail-sadar,UPAZILA,bd.dhaka.tangail,Tangail Sadar,টাঙ্গাইল সদর,,1900,,,
-bd.rangpur.thakurgaon.baliadangi,UPAZILA,bd.rangpur.thakurgaon,Baliadangi,বালিয়াডাঙ্গী,,5140,,,
-bd.rangpur.thakurgaon.haripur,UPAZILA,bd.rangpur.thakurgaon,Haripur,হরিপুর,,5130,,,
-bd.rangpur.thakurgaon.pirganj,UPAZILA,bd.rangpur.thakurgaon,Pirganj,পীরগঞ্জ,pirganz|pirgong|pirgonj,5110,,,
-bd.rangpur.thakurgaon.ranisankail,UPAZILA,bd.rangpur.thakurgaon,Ranisankail,রাণীশংকৈল,,,,,
-bd.rangpur.thakurgaon.thakurgaon-sadar,UPAZILA,bd.rangpur.thakurgaon,Thakurgaon Sadar,ঠাকুরগাঁও সদর,,5100,,,
+bd.sylhet.sylhet.sylhet-sadar,UPAZILA,bd.sylhet.sylhet,Sylhet Sadar,সিলেট সদর,,,,24.94126,91.84736
+bd.sylhet.sylhet.zakiganj,UPAZILA,bd.sylhet.sylhet,Zakiganj,জকিগঞ্জ,zakiganz|zakigong|zakigonj,,,24.92605,92.36712
+bd.dhaka.tangail.basail,UPAZILA,bd.dhaka.tangail,Basail,বাসাইল,,,,24.23114,90.03936
+bd.dhaka.tangail.bhuapur,UPAZILA,bd.dhaka.tangail,Bhuapur,ভুয়াপুর,,1960,,24.47668,89.81431
+bd.dhaka.tangail.delduar,UPAZILA,bd.dhaka.tangail,Delduar,দেলদুয়ার,,1910,,24.14195,89.93774
+bd.dhaka.tangail.dhanbari,UPAZILA,bd.dhaka.tangail,Dhanbari,ধনবাড়ী,dhanbary,1997,,24.68666,89.93325
+bd.dhaka.tangail.ghatail,UPAZILA,bd.dhaka.tangail,Ghatail,ঘাটাইল,,1980,,24.47347,90.05165
+bd.dhaka.tangail.gopalpur,UPAZILA,bd.dhaka.tangail,Gopalpur,গোপালপুর,,1990,,24.57203,89.90363
+bd.dhaka.tangail.kalihati,UPAZILA,bd.dhaka.tangail,Kalihati,কালিহাতী,,1970,,24.35999,89.94485
+bd.dhaka.tangail.madhupur,UPAZILA,bd.dhaka.tangail,Madhupur,মধুপুর,,,,24.65016,90.06025
+bd.dhaka.tangail.mirzapur,UPAZILA,bd.dhaka.tangail,Mirzapur,মির্জাপুর,,1940,,24.11589,90.10715
+bd.dhaka.tangail.nagarpur,UPAZILA,bd.dhaka.tangail,Nagarpur,নাগরপুর,,1936,,24.04772,89.87419
+bd.dhaka.tangail.sakhipur,UPAZILA,bd.dhaka.tangail,Sakhipur,সখিপুর,sakipur,,,24.30658,90.17282
+bd.dhaka.tangail.tangail-sadar,UPAZILA,bd.dhaka.tangail,Tangail Sadar,টাঙ্গাইল সদর,,1900,,24.25638,89.86609
+bd.rangpur.thakurgaon.baliadangi,UPAZILA,bd.rangpur.thakurgaon,Baliadangi,বালিয়াডাঙ্গী,,5140,,26.10853,88.26373
+bd.rangpur.thakurgaon.haripur,UPAZILA,bd.rangpur.thakurgaon,Haripur,হরিপুর,,5130,,25.87846,88.1549
+bd.rangpur.thakurgaon.pirganj,UPAZILA,bd.rangpur.thakurgaon,Pirganj,পীরগঞ্জ,pirganz|pirgong|pirgonj,5110,,25.84116,88.3679
+bd.rangpur.thakurgaon.ranisankail,UPAZILA,bd.rangpur.thakurgaon,Ranisankail,রাণীশংকৈল,,,,25.94005,88.24579
+bd.rangpur.thakurgaon.thakurgaon-sadar,UPAZILA,bd.rangpur.thakurgaon,Thakurgaon Sadar,ঠাকুরগাঁও সদর,,5100,,26.07065,88.46445
 bd.barishal.barishal.airport,THANA,bd.barishal.barishal,Airport,বিমানবন্দর,airport thana barisal,8205,,,
 bd.barishal.barishal.bandar,THANA,bd.barishal.barishal,Bandar,বন্দর,barisal bandor|bondor,8200,,,
 bd.barishal.barishal.barishal-kotwali,THANA,bd.barishal.barishal,Barishal Kotwali,বরিশাল কোতোয়ালী,kotwali barisal|barisal kotowali,8200,,,
 bd.barishal.barishal.kawnia,THANA,bd.barishal.barishal,Kawnia,কাউনিয়া,kaunia barisal,8200,,,
 bd.chattogram.chattogram.akbar-shah,THANA,bd.chattogram.chattogram,Akbar Shah,আকবর শাহ,akbarsha|akbarshah,4209,,,
-bd.chattogram.chattogram.bakalia,THANA,bd.chattogram.chattogram,Bakalia,বাকলিয়া,bakoliya,4203,,,
+bd.chattogram.chattogram.bakalia,THANA,bd.chattogram.chattogram,Bakalia,বাকলিয়া,bakoliya,4203,,22.34735,91.85553
 bd.chattogram.chattogram.bandar,THANA,bd.chattogram.chattogram,Bandar,বন্দর,bondor,4100,,,
-bd.chattogram.chattogram.bayezid-bostami,THANA,bd.chattogram.chattogram,Bayezid Bostami,বায়েজিদ বোস্তামী,bayazid|bayejid,4210,,,
-bd.chattogram.chattogram.chandgaon,THANA,bd.chattogram.chattogram,Chandgaon,চান্দগাঁও,chandgoan,4212,,,
+bd.chattogram.chattogram.bayezid-bostami,THANA,bd.chattogram.chattogram,Bayezid Bostami,বায়েজিদ বোস্তামী,bayazid|bayejid,4210,,22.41931,91.80787
+bd.chattogram.chattogram.chandgaon,THANA,bd.chattogram.chattogram,Chandgaon,চান্দগাঁও,chandgoan,4212,,22.38761,91.86488
 bd.chattogram.chattogram.chawkbazar,THANA,bd.chattogram.chattogram,Chawkbazar,চকবাজার,chalkbazar,4203,,,
-bd.chattogram.chattogram.double-mooring,THANA,bd.chattogram.chattogram,Double Mooring,ডবলমুরিং,doublemooring,4100,,,
+bd.chattogram.chattogram.double-mooring,THANA,bd.chattogram.chattogram,Double Mooring,ডবলমুরিং,doublemooring,4100,,22.33043,91.80931
 bd.chattogram.chattogram.epz,THANA,bd.chattogram.chattogram,EPZ,ইপিজেড,cepz|export processing zone,4223,,,
-bd.chattogram.chattogram.halishahar,THANA,bd.chattogram.chattogram,Halishahar,হালিশহর,halisahar,4225,,,
-bd.chattogram.chattogram.khulshi,THANA,bd.chattogram.chattogram,Khulshi,খুলশী,khulshee,4225,,,
-bd.chattogram.chattogram.kotwali,THANA,bd.chattogram.chattogram,Kotwali,কোতোয়ালী,kotowali|kotwali ctg,4000,,,
-bd.chattogram.chattogram.pahartali,THANA,bd.chattogram.chattogram,Pahartali,পাহাড়তলী,pahartoli,4202,,,
-bd.chattogram.chattogram.panchlaish,THANA,bd.chattogram.chattogram,Panchlaish,পাঁচলাইশ,pachlaish,4203,,,
-bd.chattogram.chattogram.patenga,THANA,bd.chattogram.chattogram,Patenga,পতেঙ্গা,potenga,4204,,,
+bd.chattogram.chattogram.halishahar,THANA,bd.chattogram.chattogram,Halishahar,হালিশহর,halisahar,4225,,22.33753,91.77595
+bd.chattogram.chattogram.khulshi,THANA,bd.chattogram.chattogram,Khulshi,খুলশী,khulshee,4225,,22.36608,91.80024
+bd.chattogram.chattogram.kotwali,THANA,bd.chattogram.chattogram,Kotwali,কোতোয়ালী,kotowali|kotwali ctg,4000,,22.34293,91.83252
+bd.chattogram.chattogram.pahartali,THANA,bd.chattogram.chattogram,Pahartali,পাহাড়তলী,pahartoli,4202,,22.35959,91.77281
+bd.chattogram.chattogram.panchlaish,THANA,bd.chattogram.chattogram,Panchlaish,পাঁচলাইশ,pachlaish,4203,,22.3734,91.82875
+bd.chattogram.chattogram.patenga,THANA,bd.chattogram.chattogram,Patenga,পতেঙ্গা,potenga,4204,,22.26296,91.79581
 bd.chattogram.chattogram.sadarghat,THANA,bd.chattogram.chattogram,Sadarghat,সদরঘাট,sadar ghat,4000,,,
 bd.dhaka.gazipur.basan-thana,THANA,bd.dhaka.gazipur,Basan Thana,,,,,,
 bd.dhaka.gazipur.gacha-board-bazar,THANA,bd.dhaka.gazipur,Gacha (Board Bazar),,gacha,,,,
@@ -607,19 +607,19 @@ bd.dhaka.gazipur.pubail-thana,THANA,bd.dhaka.gazipur,Pubail Thana,,,,,,
 bd.dhaka.gazipur.tongi-east-thana,THANA,bd.dhaka.gazipur,Tongi East Thana,,,,,,
 bd.dhaka.gazipur.tongi-west-thana,THANA,bd.dhaka.gazipur,Tongi West Thana,,,,,,
 bd.khulna.khulna.aranghata,THANA,bd.khulna.khulna,Aranghata,আড়ংঘাটা,arongghata,9000,,,
-bd.khulna.khulna.daulatpur,THANA,bd.khulna.khulna,Daulatpur,দৌলতপুর,doulatpur,9202,,,
+bd.khulna.khulna.daulatpur,THANA,bd.khulna.khulna,Daulatpur,দৌলতপুর,doulatpur,9202,,22.87528,89.50918
 bd.khulna.khulna.harintana,THANA,bd.khulna.khulna,Harintana,হরিণটানা,horintana,9000,,,
-bd.khulna.khulna.khalishpur,THANA,bd.khulna.khulna,Khalishpur,খালিশপুর,khalispur,9000,,,
-bd.khulna.khulna.khanjahan-ali,THANA,bd.khulna.khulna,Khanjahan Ali,খানজাহান আলী,khan jahan ali,9203,,,
-bd.khulna.khulna.khulna-sadar,THANA,bd.khulna.khulna,Khulna Sadar,খুলনা সদর,kotwali khulna|khulna kotwali,9100,,,
+bd.khulna.khulna.khalishpur,THANA,bd.khulna.khulna,Khalishpur,খালিশপুর,khalispur,9000,,22.84969,89.53633
+bd.khulna.khulna.khanjahan-ali,THANA,bd.khulna.khulna,Khanjahan Ali,খানজাহান আলী,khan jahan ali,9203,,22.91683,89.49068
+bd.khulna.khulna.khulna-sadar,THANA,bd.khulna.khulna,Khulna Sadar,খুলনা সদর,kotwali khulna|khulna kotwali,9100,,22.80059,89.56873
 bd.khulna.khulna.labanchara,THANA,bd.khulna.khulna,Labanchara,লবণচরা,lobonchora,9000,,,
-bd.khulna.khulna.sonadanga,THANA,bd.khulna.khulna,Sonadanga,সোনাডাঙ্গা,shonadanga,9100,,,
+bd.khulna.khulna.sonadanga,THANA,bd.khulna.khulna,Sonadanga,সোনাডাঙ্গা,shonadanga,9100,,22.81967,89.54246
 bd.mymensingh.mymensingh.mymensingh-kotwali,THANA,bd.mymensingh.mymensingh,Mymensingh Kotwali,ময়মনসিংহ কোতোয়ালী,kotwali mymensingh|kotwali model thana,2200,,,
-bd.rajshahi.rajshahi.boalia,THANA,bd.rajshahi.rajshahi,Boalia,বোয়ালিয়া,boaliya,6100,,,
+bd.rajshahi.rajshahi.boalia,THANA,bd.rajshahi.rajshahi,Boalia,বোয়ালিয়া,boaliya,6100,,24.37788,88.61329
 bd.rajshahi.rajshahi.katakhali,THANA,bd.rajshahi.rajshahi,Katakhali,কাটাখালী,kathakhali,6212,,,
-bd.rajshahi.rajshahi.motihar,THANA,bd.rajshahi.rajshahi,Motihar,মতিহার,matihar,6204,,,
-bd.rajshahi.rajshahi.rajpara,THANA,bd.rajshahi.rajshahi,Rajpara,রাজপাড়া,rajpaara,6000,,,
-bd.rajshahi.rajshahi.shah-makhdum,THANA,bd.rajshahi.rajshahi,Shah Makhdum,শাহ মখদুম,shah mokdum|shahmakhdum,6000,,,
+bd.rajshahi.rajshahi.motihar,THANA,bd.rajshahi.rajshahi,Motihar,মতিহার,matihar,6204,,24.36758,88.64682
+bd.rajshahi.rajshahi.rajpara,THANA,bd.rajshahi.rajshahi,Rajpara,রাজপাড়া,rajpaara,6000,,24.37704,88.56722
+bd.rajshahi.rajshahi.shah-makhdum,THANA,bd.rajshahi.rajshahi,Shah Makhdum,শাহ মখদুম,shah mokdum|shahmakhdum,6000,,24.40294,88.6086
 bd.rangpur.rangpur.hajirhat,THANA,bd.rangpur.rangpur,Hajirhat,হাজিরহাট,hajir hat,5400,,,
 bd.rangpur.rangpur.haragach,THANA,bd.rangpur.rangpur,Haragach,হারাগাছ,haragachh,5440,,,
 bd.rangpur.rangpur.mahiganj,THANA,bd.rangpur.rangpur,Mahiganj,মাহিগঞ্জ,mahigonj,5402,,,
@@ -634,7 +634,7 @@ bd.sylhet.sylhet.sylhet-kotwali,THANA,bd.sylhet.sylhet,Sylhet Kotwali,সিল�
 bd.dhaka.dhaka.100-feet-road-madani-avenue,AREA,bd.dhaka.dhaka,100 Feet Road (Madani Avenue),১০০ ফিট,100 feet road|100 feet|hundred feet|madani avenue,1212,DNCC,,
 bd.dhaka.dhaka.60-feet-mirpur,AREA,bd.dhaka.dhaka,60 Feet (Mirpur),৬০ ফিট,60 feet|shat feet|60 feet road|sixty feet,1216,DNCC,,
 bd.dhaka.dhaka.abdullahpur-uttara,AREA,bd.dhaka.dhaka,Abdullahpur (Uttara),আব্দুল্লাহপুর,abdullahpur|abdullapur,1230,DNCC,,
-bd.dhaka.dhaka.adabor,AREA,bd.dhaka.dhaka,Adabor,আদাবর,adabar|adabor mohammadpur,1207,DNCC,,
+bd.dhaka.dhaka.adabor,AREA,bd.dhaka.dhaka,Adabor,আদাবর,adabar|adabor mohammadpur,1207,DNCC,23.77023,90.35331
 bd.dhaka.dhaka.adarsha-nagar-badda,AREA,bd.dhaka.dhaka,Adarsha Nagar (Badda),আদর্শনগর,adarsha nagar|adorsho nagar|adarshanagar,1212,DNCC,,
 bd.dhaka.dhaka.aftabnagar,AREA,bd.dhaka.dhaka,Aftabnagar,আফতাবনগর,aftab nagar|jahurul islam city|aftabnogor,1212,DNCC,,
 bd.dhaka.dhaka.agargaon,AREA,bd.dhaka.dhaka,Agargaon,আগারগাঁও,agargoan|agargaon taltola|west agargaon,1207,DNCC,,
@@ -656,7 +656,7 @@ bd.dhaka.dhaka.atipara,AREA,bd.dhaka.dhaka,Atipara,আটিপাড়া,ati 
 bd.dhaka.dhaka.azampur,AREA,bd.dhaka.dhaka,Azampur,আজমপুর,ajampur|azompur|east azampur|middle azampur,1230,DNCC,,
 bd.dhaka.dhaka.azimpur,AREA,bd.dhaka.dhaka,Azimpur,আজিমপুর,ajimpur|azimpore|new paltan azimpur,1205,DSCC,,
 bd.dhaka.dhaka.babubazar,AREA,bd.dhaka.dhaka,Babubazar,বাবুবাজার,babu bazar|babubazaar,1100,DSCC,,
-bd.dhaka.dhaka.badda,AREA,bd.dhaka.dhaka,Badda,বাড্ডা,badda thana|bodda,1212,DNCC,,
+bd.dhaka.dhaka.badda,AREA,bd.dhaka.dhaka,Badda,বাড্ডা,badda thana|bodda,1212,DNCC,23.79802,90.44892
 bd.dhaka.dhaka.nawabganj.baghmara,AREA,bd.dhaka.dhaka.nawabganj,Baghmara,বাঘমারা,bagmara,1320,,,
 bd.dhaka.dhaka.savar.ashulia.baipail,AREA,bd.dhaka.dhaka.savar.ashulia,Baipail,বাইপাইল,baipayl|boipail|baipile,1341,,,
 bd.dhaka.dhaka.savar.ashulia.baipail-kacha-bazar,AREA,bd.dhaka.dhaka.savar.ashulia,Baipail Kacha Bazar,বাইপাইল কাঁচা বাজার,baipayl kacha bazar,1341,,,
@@ -677,7 +677,7 @@ bd.dhaka.dhaka.nawabganj.bandura,AREA,bd.dhaka.dhaka.nawabganj,Bandura,বান
 bd.dhaka.dhaka.bangabandhu-avenue,AREA,bd.dhaka.dhaka,Bangabandhu Avenue,বঙ্গবন্ধু এভিনিউ,bongo bondhu avenue|bangabandhu ave,1000,DSCC,,
 bd.dhaka.dhaka.bangabazar,AREA,bd.dhaka.dhaka,Bangabazar,বঙ্গবাজার,bongo bazar|banga bazaar,1000,DSCC,,
 bd.dhaka.dhaka.banglamotor,AREA,bd.dhaka.dhaka,Banglamotor,বাংলামোটর,bangla motor|banglamotor mor,1000,DSCC,,
-bd.dhaka.dhaka.bangshal,AREA,bd.dhaka.dhaka,Bangshal,বংশাল,bongshal|banshal|bangsal,1100,DSCC,,
+bd.dhaka.dhaka.bangshal,AREA,bd.dhaka.dhaka,Bangshal,বংশাল,bongshal|banshal|bangsal,1100,DSCC,23.71815,90.40515
 bd.dhaka.dhaka.savar.bank-colony-savar,AREA,bd.dhaka.dhaka.savar,Bank Colony (Savar),ব্যাংক কলোনী,bank colony,1340,,,
 bd.dhaka.dhaka.baridhara-diplomatic-zone,AREA,bd.dhaka.dhaka,Baridhara Diplomatic Zone,বারিধারা কূটনৈতিক এলাকা,baridhara|baridhara dz|boridhara,1212,DNCC,,
 bd.dhaka.dhaka.baridhara-dohs,AREA,bd.dhaka.dhaka,Baridhara DOHS,বারিধারা ডিওএইচএস,boridhara dohs,1212,DNCC,,
@@ -717,14 +717,14 @@ bd.dhaka.dhaka.chankharpul,AREA,bd.dhaka.dhaka,Chankharpul,চানখাঁর
 bd.dhaka.dhaka.savar.ashulia.charabag-ashulia,AREA,bd.dhaka.dhaka.savar.ashulia,Charabag (Ashulia),চারাবাগ,charabag|chara bagh,1341,,,
 bd.dhaka.dhaka.savar.charigram,AREA,bd.dhaka.dhaka.savar,Charigram,চারিগ্রাম,charigaon,1340,,,
 bd.dhaka.dhaka.dhamrai.chauhat,AREA,bd.dhaka.dhaka.dhamrai,Chauhat,চৌহাট,chowhat,1350,,,
-bd.dhaka.dhaka.chawkbazar,AREA,bd.dhaka.dhaka,Chawkbazar,চকবাজার,chalk bazar|chalkbazar|chowk bazar,1100,DSCC,,
+bd.dhaka.dhaka.chawkbazar,AREA,bd.dhaka.dhaka,Chawkbazar,চকবাজার,chalk bazar|chalkbazar|chowk bazar,1100,DSCC,23.71695,90.39385
 bd.dhaka.dhaka.nawabganj.churain,AREA,bd.dhaka.dhaka.nawabganj,Churain,চুড়াইন,churine,1321,,,
 bd.dhaka.dhaka.savar.crp-savar,AREA,bd.dhaka.dhaka.savar,CRP Savar,সিআরপি সাভার,crp|centre for the rehabilitation of the paralysed,1343,,,
 bd.dhaka.dhaka.dakshingaon,AREA,bd.dhaka.dhaka,Dakshingaon,দক্ষিণগাঁও,dokkhingaon|dakshin gaon,1214,DSCC,,
-bd.dhaka.dhaka.dakshinkhan,AREA,bd.dhaka.dhaka,Dakshinkhan,দক্ষিণখান,dokkhinkhan|dakkhinkhan|doxinkhan|south khan,1230,DNCC,,
-bd.dhaka.dhaka.darussalam,AREA,bd.dhaka.dhaka,Darussalam,দারুসসালাম,darus salam|darussalam mirpur,1216,DNCC,,
+bd.dhaka.dhaka.dakshinkhan,AREA,bd.dhaka.dhaka,Dakshinkhan,দক্ষিণখান,dokkhinkhan|dakkhinkhan|doxinkhan|south khan,1230,DNCC,23.86112,90.42504
+bd.dhaka.dhaka.darussalam,AREA,bd.dhaka.dhaka,Darussalam,দারুসসালাম,darus salam|darussalam mirpur,1216,DNCC,23.7841,90.34515
 bd.dhaka.dhaka.dayaganj,AREA,bd.dhaka.dhaka,Dayaganj,দয়াগঞ্জ,doyagonj|dayagonj,1204,DSCC,,
-bd.dhaka.dhaka.demra,AREA,bd.dhaka.dhaka,Demra,ডেমরা,demra thana|demra bazar,1360,DSCC,,
+bd.dhaka.dhaka.demra,AREA,bd.dhaka.dhaka,Demra,ডেমরা,demra thana|demra bazar,1360,DSCC,23.7245,90.481
 bd.dhaka.dhaka.savar.deogaon-savar,AREA,bd.dhaka.dhaka.savar,Deogaon (Savar),দেওগাঁও,deogaon|deogao,1340,,,
 bd.dhaka.dhaka.dhaka-cantonment,AREA,bd.dhaka.dhaka,Dhaka Cantonment,ঢাকা সেনানিবাস,cantonment|dhaka cantt|senanibas,1206,DNCC,,
 bd.dhaka.dhaka.savar.dhaka-epz-depz,AREA,bd.dhaka.dhaka.savar,Dhaka EPZ (DEPZ),ঢাকা ইপিজেড,dhaka epz|depz|epz savar|epz,1349,,,
@@ -734,7 +734,7 @@ bd.dhaka.dhaka.dhaka-university,AREA,bd.dhaka.dhaka,Dhaka University,ঢাক�
 bd.dhaka.dhaka.dhamrai.dhamrai-bazar,AREA,bd.dhaka.dhaka.dhamrai,Dhamrai Bazar,ধামরাই বাজার,dhamrai bazaar,1350,,,
 bd.dhaka.dhaka.dhamrai.dhamrai-pourashava,AREA,bd.dhaka.dhaka.dhamrai,Dhamrai Pourashava,ধামরাই পৌরসভা,dhamrai municipality,1350,,,
 bd.dhaka.dhaka.savar.ashulia.dhamsona,AREA,bd.dhaka.dhaka.savar.ashulia,Dhamsona,ধামসোনা,dhamshona,1341,,,
-bd.dhaka.dhaka.dhanmondi,AREA,bd.dhaka.dhaka,Dhanmondi,ধানমন্ডি,dhanmondhi|dhanmondi r a|danmondi,1209,DSCC,,
+bd.dhaka.dhaka.dhanmondi,AREA,bd.dhaka.dhaka,Dhanmondi,ধানমন্ডি,dhanmondhi|dhanmondi r a|danmondi,1209,DSCC,23.74517,90.37343
 bd.dhaka.dhaka.dhanmondi-road-1,AREA,bd.dhaka.dhaka,Dhanmondi Road 1,ধানমন্ডি রোড ১,dhanmondi rd 1|dhanmondi 1,1205,DSCC,,
 bd.dhaka.dhaka.dhanmondi-road-10,AREA,bd.dhaka.dhaka,Dhanmondi Road 10,ধানমন্ডি রোড ১০,dhanmondi rd 10|dhanmondi 10a,1209,DSCC,,
 bd.dhaka.dhaka.dhanmondi-road-11,AREA,bd.dhaka.dhaka,Dhanmondi Road 11,ধানমন্ডি রোড ১১,dhanmondi rd 11|dhanmondi 11a,1209,DSCC,,
@@ -784,7 +784,7 @@ bd.dhaka.dhaka.nawabganj.galimpur,AREA,bd.dhaka.dhaka.nawabganj,Galimpur,গা�
 bd.dhaka.dhaka.dhamrai.gangutia,AREA,bd.dhaka.dhaka.dhamrai,Gangutia,গাংগুটিয়া,gangotia,1350,,,
 bd.dhaka.dhaka.gawair,AREA,bd.dhaka.dhaka,Gawair,গাওয়াইর,gaoair|gawair dakshinkhan,1230,DNCC,,
 bd.dhaka.dhaka.savar.genda,AREA,bd.dhaka.dhaka.savar,Genda,গেন্ডা,ganda|gendaa,1340,,,
-bd.dhaka.dhaka.gendaria,AREA,bd.dhaka.dhaka,Gendaria,গেন্ডারিয়া,gandaria|genderia|gendaria dhaka,1204,DSCC,,
+bd.dhaka.dhaka.gendaria,AREA,bd.dhaka.dhaka,Gendaria,গেন্ডারিয়া,gandaria|genderia|gendaria dhaka,1204,DSCC,23.70664,90.42249
 bd.dhaka.dhaka.geneva-camp,AREA,bd.dhaka.dhaka,Geneva Camp,জেনেভা ক্যাম্প,jeneva camp|geneva camp mohammadpur,1207,DNCC,,
 bd.dhaka.dhaka.savar.gohailbari,AREA,bd.dhaka.dhaka.savar,Gohailbari,গোহাইলবাড়ী,gohail bari,1345,,,
 bd.dhaka.dhaka.golapbagh,AREA,bd.dhaka.dhaka,Golapbagh,গোলাপবাগ,golapbag|golap bagh,1203,DSCC,,
@@ -800,7 +800,7 @@ bd.dhaka.dhaka.gulshan-2,AREA,bd.dhaka.dhaka,Gulshan 2,গুলশান ২,gu
 bd.dhaka.dhaka.hajipara-rampura,AREA,bd.dhaka.dhaka,Hajipara (Rampura),হাজীপাড়া,hajipara|haji para|hazipara,1219,DNCC,,
 bd.dhaka.dhaka.hatirjheel,AREA,bd.dhaka.dhaka,Hatirjheel,হাতিরঝিল,hatirjhil|haterjheel|hatir jheel,1217,DNCC,,
 bd.dhaka.dhaka.hatirpool,AREA,bd.dhaka.dhaka,Hatirpool,হাতিরপুল,hatirpul|hatir pool,1205,DSCC,,
-bd.dhaka.dhaka.hazaribagh,AREA,bd.dhaka.dhaka,Hazaribagh,হাজারীবাগ,hazaribag|hajaribagh|hazari bagh,1209,DSCC,,
+bd.dhaka.dhaka.hazaribagh,AREA,bd.dhaka.dhaka,Hazaribagh,হাজারীবাগ,hazaribag|hajaribagh|hazari bagh,1209,DSCC,23.73885,90.35928
 bd.dhaka.dhaka.hazrat-shahjalal-international-airport,AREA,bd.dhaka.dhaka,Hazrat Shahjalal International Airport,হযরত শাহজালাল আন্তর্জাতিক বিমানবন্দর,dhaka airport|hsia|bimanbandar|biman bandar,1229,DNCC,,
 bd.dhaka.dhaka.savar.hemayetpur,AREA,bd.dhaka.dhaka.savar,Hemayetpur,হেমায়েতপুর,hemaetpur|hemaitpur,1340,,,
 bd.dhaka.dhaka.house-building,AREA,bd.dhaka.dhaka,House Building,হাউস বিল্ডিং,housebuilding|house bulding,1230,DNCC,,
@@ -817,7 +817,7 @@ bd.dhaka.dhaka.savar.jahangirnagar-university,AREA,bd.dhaka.dhaka.savar,Jahangir
 bd.dhaka.dhaka.savar.ashulia.jamgora,AREA,bd.dhaka.dhaka.savar.ashulia,Jamgora,জামগড়া,jamgara|jamgorha,1341,,,
 bd.dhaka.dhaka.nawabganj.jantrail,AREA,bd.dhaka.dhaka.nawabganj,Jantrail,যন্ত্রাইল,jontrail,1320,,,
 bd.dhaka.dhaka.jasimuddin,AREA,bd.dhaka.dhaka,Jasimuddin,জসীম উদ্দীন,jashimuddin|jasim uddin|jossimuddin,1230,DNCC,,
-bd.dhaka.dhaka.jatrabari,AREA,bd.dhaka.dhaka,Jatrabari,যাত্রাবাড়ী,jatrabary|jatrabari chowrasta,1204,DSCC,,
+bd.dhaka.dhaka.jatrabari,AREA,bd.dhaka.dhaka,Jatrabari,যাত্রাবাড়ী,jatrabary|jatrabari chowrasta,1204,DSCC,23.71335,90.45149
 bd.dhaka.dhaka.savar.jhawchar,AREA,bd.dhaka.dhaka.savar,Jhawchar,ঝাউচর,jhaochor,1340,,,
 bd.dhaka.dhaka.jhilpar-shahjadpur,AREA,bd.dhaka.dhaka,Jhilpar (Shahjadpur),ঝিলপাড়,jhilpar|jhil par,1212,DNCC,,
 bd.dhaka.dhaka.jigatola,AREA,bd.dhaka.dhaka,Jigatola,জিগাতলা,zigatola|jhigatola|jigatala,1209,DSCC,,
@@ -826,13 +826,13 @@ bd.dhaka.dhaka.nawabganj.joykrishnapur,AREA,bd.dhaka.dhaka.nawabganj,Joykrishnap
 bd.dhaka.dhaka.dohar.joypara,AREA,bd.dhaka.dhaka.dohar,Joypara,জয়পাড়া,joypara bazar|jaypara,1330,,,
 bd.dhaka.dhaka.jurain,AREA,bd.dhaka.dhaka,Jurain,জুরাইন,juraain|jurain dhaka|zurain,1204,DSCC,,
 bd.dhaka.dhaka.kachkura,AREA,bd.dhaka.dhaka,Kachkura,কাচকুড়া,kachkura dakshinkhan|kachkora,1230,DNCC,,
-bd.dhaka.dhaka.kadamtali,AREA,bd.dhaka.dhaka,Kadamtali,কদমতলী,kodomtoli|kadamtoli|kodomtali,1204,DSCC,,
+bd.dhaka.dhaka.kadamtali,AREA,bd.dhaka.dhaka,Kadamtali,কদমতলী,kodomtoli|kadamtoli|kodomtali,1204,DSCC,23.68716,90.44842
 bd.dhaka.dhaka.kaderabad-housing,AREA,bd.dhaka.dhaka,Kaderabad Housing,কাদেরাবাদ হাউজিং,kaderabad|kaderabad h s,1207,DNCC,,
-bd.dhaka.dhaka.kafrul,AREA,bd.dhaka.dhaka,Kafrul,কাফরুল,kafrool|north kafrul|south kafrul|west kafrul,1206,DNCC,,
+bd.dhaka.dhaka.kafrul,AREA,bd.dhaka.dhaka,Kafrul,কাফরুল,kafrool|north kafrul|south kafrul|west kafrul,1206,DNCC,23.79535,90.38481
 bd.dhaka.dhaka.nawabganj.kailail,AREA,bd.dhaka.dhaka.nawabganj,Kailail,কৈলাইল,koilail,1320,,,
 bd.dhaka.dhaka.kakoli,AREA,bd.dhaka.dhaka,Kakoli,কাকলী,kakali|kakoli banani,1213,DNCC,,
 bd.dhaka.dhaka.kakrail,AREA,bd.dhaka.dhaka,Kakrail,কাকরাইল,kakrail mor|kakroil,1000,DSCC,,
-bd.dhaka.dhaka.kalabagan,AREA,bd.dhaka.dhaka,Kalabagan,কলাবাগান,kolabagan|kala bagan,1205,DSCC,,
+bd.dhaka.dhaka.kalabagan,AREA,bd.dhaka.dhaka,Kalabagan,কলাবাগান,kolabagan|kala bagan,1205,DSCC,23.74693,90.386
 bd.dhaka.dhaka.kalachandpur,AREA,bd.dhaka.dhaka,Kalachandpur,কালাচাঁদপুর,kalachadpur|kala chandpur,1212,DNCC,,
 bd.dhaka.dhaka.nawabganj.kalakopa,AREA,bd.dhaka.dhaka.nawabganj,Kalakopa,কলাকোপা,kala kopa,1320,,,
 bd.dhaka.dhaka.dhamrai.kalampur,AREA,bd.dhaka.dhaka.dhamrai,Kalampur,কালামপুর,kalumpur,1350,,,
@@ -841,7 +841,7 @@ bd.dhaka.dhaka.kalyanpur,AREA,bd.dhaka.dhaka,Kalyanpur,কল্যাণপু�
 bd.dhaka.dhaka.kamalapur,AREA,bd.dhaka.dhaka,Kamalapur,কমলাপুর,komolapur|kamlapur,1000,DSCC,,
 bd.dhaka.dhaka.dhamrai.kamalpur-dhamrai,AREA,bd.dhaka.dhaka.dhamrai,Kamalpur (Dhamrai),কামালপুর,kamalpur,1351,,,
 bd.dhaka.dhaka.kamarpara,AREA,bd.dhaka.dhaka,Kamarpara,কামারপাড়া,kamar para|komarpara,1230,DNCC,,
-bd.dhaka.dhaka.kamrangirchar,AREA,bd.dhaka.dhaka,Kamrangirchar,কামরাঙ্গীরচর,kamranggirchar|kamrangichar|kamrangir char,1211,DSCC,,
+bd.dhaka.dhaka.kamrangirchar,AREA,bd.dhaka.dhaka,Kamrangirchar,কামরাঙ্গীরচর,kamranggirchar|kamrangichar|kamrangir char,1211,DSCC,23.71205,90.37149
 bd.dhaka.dhaka.kaptan-bazar,AREA,bd.dhaka.dhaka,Kaptan Bazar,কাপ্তান বাজার,kaptanbazar|captan bazar,1000,DSCC,,
 bd.dhaka.dhaka.karwan-bazar,AREA,bd.dhaka.dhaka,Karwan Bazar,কারওয়ান বাজার,kawran bazar|karwan bazaar|korwan bazar,1215,DNCC,,
 bd.dhaka.dhaka.savar.kashem-cotton-mills,AREA,bd.dhaka.dhaka.savar,Kashem Cotton Mills,কাশেম কটন মিলস,,1346,,,
@@ -853,16 +853,16 @@ bd.dhaka.dhaka.savar.kaundia,AREA,bd.dhaka.dhaka.savar,Kaundia,কাউন্�
 bd.dhaka.dhaka.dhamrai.kawalipara,AREA,bd.dhaka.dhaka.dhamrai,Kawalipara,কাওয়ালীপাড়া,kowalipara,1350,,,
 bd.dhaka.dhaka.kawla,AREA,bd.dhaka.dhaka,Kawla,কাওলা,kaola|kowla,1230,DNCC,,
 bd.dhaka.dhaka.kazipara,AREA,bd.dhaka.dhaka,Kazipara,কাজীপাড়া,kazi para|east kazipara|west kazipara,1216,DNCC,,
-bd.dhaka.dhaka.khilgaon,AREA,bd.dhaka.dhaka,Khilgaon,খিলগাঁও,khilgoan|khilgao|khilgaon chowdhurypara,1219,DSCC,,
+bd.dhaka.dhaka.khilgaon,AREA,bd.dhaka.dhaka,Khilgaon,খিলগাঁও,khilgoan|khilgao|khilgaon chowdhurypara,1219,DSCC,23.75999,90.455
 bd.dhaka.dhaka.khilgaon-railgate,AREA,bd.dhaka.dhaka,Khilgaon Railgate,খিলগাঁও রেলগেট,khilgaon rail gate|railgate khilgaon,1219,DSCC,,
 bd.dhaka.dhaka.khilgaon-taltola,AREA,bd.dhaka.dhaka,Khilgaon Taltola,খিলগাঁও তালতলা,taltola khilgaon|khilgaon taltala,1219,DSCC,,
-bd.dhaka.dhaka.khilkhet,AREA,bd.dhaka.dhaka,Khilkhet,খিলক্ষেত,khilkhat|khilket,1229,DNCC,,
+bd.dhaka.dhaka.khilkhet,AREA,bd.dhaka.dhaka,Khilkhet,খিলক্ষেত,khilkhat|khilket,1229,DNCC,23.83437,90.44741
 bd.dhaka.dhaka.kochukhet,AREA,bd.dhaka.dhaka,Kochukhet,কচুক্ষেত,kochu khet|kachukhet,1206,DNCC,,
 bd.dhaka.dhaka.konapara,AREA,bd.dhaka.dhaka,Konapara,কোনাপাড়া,kona para|konapara demra,1361,DSCC,,
 bd.dhaka.dhaka.dhamrai.konda-dhamrai,AREA,bd.dhaka.dhaka.dhamrai,Konda (Dhamrai),কোন্ডা,konda,1350,,,
 bd.dhaka.dhaka.korail,AREA,bd.dhaka.dhaka,Korail,কড়াইল,korail bosti|koril,1212,DNCC,,
 bd.dhaka.dhaka.kosaibari,AREA,bd.dhaka.dhaka,Kosaibari,কসাইবাড়ী,kosai bari|kashaibari,1230,DNCC,,
-bd.dhaka.dhaka.kotwali,AREA,bd.dhaka.dhaka,Kotwali,কোতোয়ালী,kotwali thana|kotoali|kotwaly,1100,DSCC,,
+bd.dhaka.dhaka.kotwali,AREA,bd.dhaka.dhaka,Kotwali,কোতোয়ালী,kotwali thana|kotoali|kotwaly,1100,DSCC,23.70989,90.40785
 bd.dhaka.dhaka.dhamrai.kulla,AREA,bd.dhaka.dhaka.dhamrai,Kulla,কুল্লা,kullah,1350,,,
 bd.dhaka.dhaka.kunipara,AREA,bd.dhaka.dhaka,Kunipara,কুনিপাড়া,kuni para,1208,DNCC,,
 bd.dhaka.dhaka.kuratoli,AREA,bd.dhaka.dhaka,Kuratoli,কুড়াতলী,kuratuli|kuratoli bazar,1229,DNCC,,
@@ -873,7 +873,7 @@ bd.dhaka.dhaka.dhamrai.kushura,AREA,bd.dhaka.dhaka.dhamrai,Kushura,কুশু�
 bd.dhaka.dhaka.dohar.kusumhati,AREA,bd.dhaka.dhaka.dohar,Kusumhati,কুসুমহাটি,kusum hati,1330,,,
 bd.dhaka.dhaka.kutubkhali,AREA,bd.dhaka.dhaka,Kutubkhali,কুতুবখালী,kutub khali|kutubkhaly,1236,DSCC,,
 bd.dhaka.dhaka.lake-city-concord,AREA,bd.dhaka.dhaka,Lake City Concord,লেক সিটি কনকর্ড,lake city|lakecity concord,1229,DNCC,,
-bd.dhaka.dhaka.lalbagh,AREA,bd.dhaka.dhaka,Lalbagh,লালবাগ,lalbag|lalbagh kella|lal bagh,1211,DSCC,,
+bd.dhaka.dhaka.lalbagh,AREA,bd.dhaka.dhaka,Lalbagh,লালবাগ,lalbag|lalbagh kella|lal bagh,1211,DSCC,23.72127,90.3783
 bd.dhaka.dhaka.lalkuthi,AREA,bd.dhaka.dhaka,Lalkuthi,লালকুঠি,lal kuthi|lalkuti,1216,DNCC,,
 bd.dhaka.dhaka.lalmatia,AREA,bd.dhaka.dhaka,Lalmatia,লালমাটিয়া,lal matia|lalmatiya,1207,DNCC,,
 bd.dhaka.dhaka.laxmibazar,AREA,bd.dhaka.dhaka,Laxmibazar,লক্ষ্মীবাজার,luxmi bazar|lakshmibazar|laxmi bazaar,1100,DSCC,,
@@ -920,13 +920,13 @@ bd.dhaka.dhaka.mohakhali,AREA,bd.dhaka.dhaka,Mohakhali,মহাখালী,moh
 bd.dhaka.dhaka.mohakhali-bus-terminal,AREA,bd.dhaka.dhaka,Mohakhali Bus Terminal,মহাখালী বাস টার্মিনাল,mohakhali terminal,1212,DNCC,,
 bd.dhaka.dhaka.mohakhali-dohs,AREA,bd.dhaka.dhaka,Mohakhali DOHS,মহাখালী ডিওএইচএস,mohakhali d o h s|mohakali dohs,1206,DNCC,,
 bd.dhaka.dhaka.mohammadia-housing,AREA,bd.dhaka.dhaka,Mohammadia Housing,মোহাম্মদিয়া হাউজিং,mohammadia housing society|mohammadia h s,1207,DNCC,,
-bd.dhaka.dhaka.mohammadpur,AREA,bd.dhaka.dhaka,Mohammadpur,মোহাম্মদপুর,mohammadpore|muhammadpur|mohammadpur housing,1207,DNCC,,
+bd.dhaka.dhaka.mohammadpur,AREA,bd.dhaka.dhaka,Mohammadpur,মোহাম্মদপুর,mohammadpore|muhammadpur|mohammadpur housing,1207,DNCC,23.75858,90.35649
 bd.dhaka.dhaka.mohanagar-project,AREA,bd.dhaka.dhaka,Mohanagar Project,মহানগর প্রকল্প,mohanagar prokolpo|mahanagar project,1219,DNCC,,
 bd.dhaka.dhaka.moinartek,AREA,bd.dhaka.dhaka,Moinartek,ময়নারটেক,moinar tek|mainartek,1230,DNCC,,
 bd.dhaka.dhaka.mollartek,AREA,bd.dhaka.dhaka,Mollartek,মোল্লারটেক,mollar tek|mollartak,1230,DNCC,,
 bd.dhaka.dhaka.monipur,AREA,bd.dhaka.dhaka,Monipur,মনিপুর,manipur|east monipur|west monipur|south monipur,1216,DNCC,,
 bd.dhaka.dhaka.monipuripara,AREA,bd.dhaka.dhaka,Monipuripara,মণিপুরীপাড়া,monipuri para|manipuripara,1215,DNCC,,
-bd.dhaka.dhaka.motijheel,AREA,bd.dhaka.dhaka,Motijheel,মতিঝিল,motijhil|motijheel c a,1000,DSCC,,
+bd.dhaka.dhaka.motijheel,AREA,bd.dhaka.dhaka,Motijheel,মতিঝিল,motijhil|motijheel c a,1000,DSCC,23.73466,90.42146
 bd.dhaka.dhaka.mouchak,AREA,bd.dhaka.dhaka,Mouchak,মৌচাক,mouchak mor|mowchak,1217,DSCC,,
 bd.dhaka.dhaka.mugda,AREA,bd.dhaka.dhaka,Mugda,মুগদা,mugdapara|mugda para|mugdha,1214,DSCC,,
 bd.dhaka.dhaka.dohar.mukshudpur,AREA,bd.dhaka.dhaka.dohar,Mukshudpur,মুকসুদপুর,muksudpur,1330,,,
@@ -949,7 +949,7 @@ bd.dhaka.dhaka.dohar.nayabari,AREA,bd.dhaka.dhaka.dohar,Nayabari,নয়াব
 bd.dhaka.dhaka.nayabazar,AREA,bd.dhaka.dhaka,Nayabazar,নয়াবাজার,naya bazar|noya bazar,1100,DSCC,,
 bd.dhaka.dhaka.dhamrai.nayarhat,AREA,bd.dhaka.dhaka.dhamrai,Nayarhat,নয়ারহাট,noyarhat|nayar hat|noyar hat,1350,,,
 bd.dhaka.dhaka.nazira-bazar,AREA,bd.dhaka.dhaka,Nazira Bazar,নাজিরা বাজার,nazirabazar|nazira bazaar,1100,DSCC,,
-bd.dhaka.dhaka.new-market,AREA,bd.dhaka.dhaka,New Market,নিউ মার্কেট,newmarket|new markert,1205,DSCC,,
+bd.dhaka.dhaka.new-market,AREA,bd.dhaka.dhaka,New Market,নিউ মার্কেট,newmarket|new markert,1205,DSCC,23.73546,90.3808
 bd.dhaka.dhaka.niketan,AREA,bd.dhaka.dhaka,Niketan,নিকেতন,niketon|niketan gulshan,1212,DNCC,,
 bd.dhaka.dhaka.nikunja-1,AREA,bd.dhaka.dhaka,Nikunja 1,নিকুঞ্জ ১,nikunjo 1,1229,DNCC,,
 bd.dhaka.dhaka.nikunja-2,AREA,bd.dhaka.dhaka,Nikunja 2,নিকুঞ্জ ২,nikunjo 2,1229,DNCC,,
@@ -966,8 +966,8 @@ bd.dhaka.dhaka.paikpara,AREA,bd.dhaka.dhaka,Paikpara,পাইকপাড়া
 bd.dhaka.dhaka.savar.pakiza-savar,AREA,bd.dhaka.dhaka.savar,Pakiza (Savar),পাকিজা,pakiza|pakija,1340,,,
 bd.dhaka.dhaka.dohar.palamganj,AREA,bd.dhaka.dhaka.dohar,Palamganj,পালামগঞ্জ,palamgonj,1331,,,
 bd.dhaka.dhaka.palashi,AREA,bd.dhaka.dhaka,Palashi,পলাশী,polashi|palashi mor,1205,DSCC,,
-bd.dhaka.dhaka.pallabi,AREA,bd.dhaka.dhaka,Pallabi,পল্লবী,pollobi|palabi|extension pallabi,1216,DNCC,,
-bd.dhaka.dhaka.paltan,AREA,bd.dhaka.dhaka,Paltan,পল্টন,polton|paltan thana,1000,DSCC,,
+bd.dhaka.dhaka.pallabi,AREA,bd.dhaka.dhaka,Pallabi,পল্লবী,pollobi|palabi|extension pallabi,1216,DNCC,23.82539,90.3683
+bd.dhaka.dhaka.paltan,AREA,bd.dhaka.dhaka,Paltan,পল্টন,polton|paltan thana,1000,DSCC,23.73504,90.41385
 bd.dhaka.dhaka.panthapath,AREA,bd.dhaka.dhaka,Panthapath,পান্থপথ,panthopath|pantha path,1205,DSCC,,
 bd.dhaka.dhaka.paribagh,AREA,bd.dhaka.dhaka,Paribagh,পরীবাগ,pari bagh|paribag,1000,DSCC,,
 bd.dhaka.dhaka.savar.pathalia,AREA,bd.dhaka.dhaka.savar,Pathalia,পাথালিয়া,pathaliya,1348,,,
@@ -988,8 +988,8 @@ bd.dhaka.dhaka.rajarbagh,AREA,bd.dhaka.dhaka,Rajarbagh,রাজারবাগ,
 bd.dhaka.dhaka.savar.rajashon,AREA,bd.dhaka.dhaka.savar,Rajashon,রাজাশন,rajason,1340,,,
 bd.dhaka.dhaka.savar.rajfulbaria,AREA,bd.dhaka.dhaka.savar,Rajfulbaria,রাজফুলবাড়ীয়া,rajphulbaria,1347,,,
 bd.dhaka.dhaka.rajlakshmi,AREA,bd.dhaka.dhaka,Rajlakshmi,রাজলক্ষ্মী,rajlokkhi|raj lakshmi|rajlakhi,1230,DNCC,,
-bd.dhaka.dhaka.ramna,AREA,bd.dhaka.dhaka,Ramna,রমনা,romna|ramna thana,1000,DSCC,,
-bd.dhaka.dhaka.rampura,AREA,bd.dhaka.dhaka,Rampura,রামপুরা,rampura tv centre|purbo rampura|east rampura|west rampura,1219,DNCC,,
+bd.dhaka.dhaka.ramna,AREA,bd.dhaka.dhaka,Ramna,রমনা,romna|ramna thana,1000,DSCC,23.74826,90.40593
+bd.dhaka.dhaka.rampura,AREA,bd.dhaka.dhaka,Rampura,রামপুরা,rampura tv centre|purbo rampura|east rampura|west rampura,1219,DNCC,23.76061,90.42088
 bd.dhaka.dhaka.ranavola,AREA,bd.dhaka.dhaka,Ranavola,রানাভোলা,rana vola|ranabhola,1230,DNCC,,
 bd.dhaka.dhaka.rasulpur-kamrangirchar,AREA,bd.dhaka.dhaka,Rasulpur (Kamrangirchar),রসুলপুর,rasulpur|rosulpur|rasulpur char,1211,DSCC,,
 bd.dhaka.dhaka.rayer-bazar,AREA,bd.dhaka.dhaka,Rayer Bazar,রায়েরবাজার,rayerbazar|rayer bazaar|raerbazar,1209,DSCC,,
@@ -999,7 +999,7 @@ bd.dhaka.dhaka.ring-road-shyamoli,AREA,bd.dhaka.dhaka,Ring Road (Shyamoli),র�
 bd.dhaka.dhaka.rosulbagh-mohakhali,AREA,bd.dhaka.dhaka,Rosulbagh (Mohakhali),রসুলবাগ,rosulbagh|rasulbag|rosulbag,1212,DNCC,,
 bd.dhaka.dhaka.dhamrai.rowail,AREA,bd.dhaka.dhaka.dhamrai,Rowail,রোয়াইল,roail,1350,,,
 bd.dhaka.dhaka.rupnagar,AREA,bd.dhaka.dhaka,Rupnagar,রূপনগর,rupnogor|rupnagar r a|rupnagar residential,1216,DNCC,,
-bd.dhaka.dhaka.sabujbagh,AREA,bd.dhaka.dhaka,Sabujbagh,সবুজবাগ,shobujbag|sabujbag|sobujbagh,1214,DSCC,,
+bd.dhaka.dhaka.sabujbagh,AREA,bd.dhaka.dhaka,Sabujbagh,সবুজবাগ,shobujbag|sabujbag|sobujbagh,1214,DSCC,23.73463,90.44208
 bd.dhaka.dhaka.sadarghat,AREA,bd.dhaka.dhaka,Sadarghat,সদরঘাট,shadarghat|sadar ghat,1100,DSCC,,
 bd.dhaka.dhaka.sadek-khan-road,AREA,bd.dhaka.dhaka,Sadek Khan Road,সাদেক খান রোড,sadekkhan road,1207,DNCC,,
 bd.dhaka.dhaka.salimullah-road,AREA,bd.dhaka.dhaka,Salimullah Road,সলিমুল্লাহ রোড,solimullah road|salimullah rd,1207,DNCC,,
@@ -1023,9 +1023,9 @@ bd.dhaka.dhaka.science-laboratory,AREA,bd.dhaka.dhaka,Science Laboratory,সা�
 bd.dhaka.dhaka.segunbagicha,AREA,bd.dhaka.dhaka,Segunbagicha,সেগুনবাগিচা,shegunbagicha|segun bagicha,1000,DSCC,,
 bd.dhaka.dhaka.senpara-parbata,AREA,bd.dhaka.dhaka,Senpara Parbata,সেনপাড়া পর্বতা,senpara|sen para parbata|senpara porbota,1216,DNCC,,
 bd.dhaka.dhaka.shagufta,AREA,bd.dhaka.dhaka,Shagufta,শাগুফতা,shaguftaa|sagufta,1216,DNCC,,
-bd.dhaka.dhaka.shah-ali,AREA,bd.dhaka.dhaka,Shah Ali,শাহ আলী,shahali|shah ali mazar,1216,DNCC,,
+bd.dhaka.dhaka.shah-ali,AREA,bd.dhaka.dhaka,Shah Ali,শাহ আলী,shahali|shah ali mazar,1216,DNCC,23.81163,90.3475
 bd.dhaka.dhaka.shah-alibagh,AREA,bd.dhaka.dhaka,Shah Alibagh,শাহ আলীবাগ,shah ali bag|shahalibagh,1216,DNCC,,
-bd.dhaka.dhaka.shahbagh,AREA,bd.dhaka.dhaka,Shahbagh,শাহবাগ,shahbag|shahabag|shabag,1000,DSCC,,
+bd.dhaka.dhaka.shahbagh,AREA,bd.dhaka.dhaka,Shahbagh,শাহবাগ,shahbag|shahabag|shabag,1000,DSCC,23.73263,90.39926
 bd.dhaka.dhaka.shaheenbagh,AREA,bd.dhaka.dhaka,Shaheenbagh,শাহীনবাগ,shahinbag|shaheen bagh,1208,DNCC,,
 bd.dhaka.dhaka.shahidnagar,AREA,bd.dhaka.dhaka,Shahidnagar,শহীদনগর,shahid nagar|sahidnagar,1211,DSCC,,
 bd.dhaka.dhaka.shahjadpur,AREA,bd.dhaka.dhaka,Shahjadpur,শাহজাদপুর,shahajadpur|sahjadpur,1212,DNCC,,
@@ -1038,7 +1038,7 @@ bd.dhaka.dhaka.shantibagh,AREA,bd.dhaka.dhaka,Shantibagh,শান্তিব�
 bd.dhaka.dhaka.shantinagar,AREA,bd.dhaka.dhaka,Shantinagar,শান্তিনগর,shanti nagar|santinagar,1217,DSCC,,
 bd.dhaka.dhaka.shekhertek,AREA,bd.dhaka.dhaka,Shekhertek,শেখেরটেক,shekher tek|sekhertek,1207,DNCC,,
 bd.dhaka.dhaka.sher-shah-suri-road,AREA,bd.dhaka.dhaka,Sher Shah Suri Road,শের শাহ সুরী রোড,shershah suri road|sher shah road,1207,DNCC,,
-bd.dhaka.dhaka.sher-e-bangla-nagar,AREA,bd.dhaka.dhaka,Sher-e-Bangla Nagar,শেরেবাংলা নগর,sherebangla nagar,1207,DNCC,,
+bd.dhaka.dhaka.sher-e-bangla-nagar,AREA,bd.dhaka.dhaka,Sher-e-Bangla Nagar,শেরেবাংলা নগর,sherebangla nagar,1207,DNCC,23.76993,90.37571
 bd.dhaka.dhaka.shewra,AREA,bd.dhaka.dhaka,Shewra,শেওড়া,sewra|shewra kuril,1229,DNCC,,
 bd.dhaka.dhaka.shewrapara,AREA,bd.dhaka.dhaka,Shewrapara,শেওড়াপাড়া,sewrapara|shewra para|west shewrapara,1216,DNCC,,
 bd.dhaka.dhaka.nawabganj.shikaripara,AREA,bd.dhaka.dhaka.nawabganj,Shikaripara,শিকারীপাড়া,shikari para,1320,,,
@@ -1047,7 +1047,7 @@ bd.dhaka.dhaka.savar.shimultola-savar,AREA,bd.dhaka.dhaka.savar,Shimultola (Sava
 bd.dhaka.dhaka.savar.ashulia.shimultola-jamgora,AREA,bd.dhaka.dhaka.savar.ashulia,Shimultola Jamgora,শিমুলতলা জামগড়া,,1341,,,
 bd.dhaka.dhaka.nawabganj.sholla,AREA,bd.dhaka.dhaka.nawabganj,Sholla,শোল্লা,shola,1320,,,
 bd.dhaka.dhaka.shyamoli,AREA,bd.dhaka.dhaka,Shyamoli,শ্যামলী,shamoli|shyamoly|shamoly,1207,DNCC,,
-bd.dhaka.dhaka.shyampur,AREA,bd.dhaka.dhaka,Shyampur,শ্যামপুর,shampur|syampur|shampore,1204,DSCC,,
+bd.dhaka.dhaka.shyampur,AREA,bd.dhaka.dhaka,Shyampur,শ্যামপুর,shampur|syampur|shampore,1204,DSCC,23.69715,90.42995
 bd.dhaka.dhaka.siddheswari,AREA,bd.dhaka.dhaka,Siddheswari,সিদ্ধেশ্বরী,siddeswari|shiddheshwari|siddheshwary,1217,DSCC,,
 bd.dhaka.dhaka.siddique-bazar,AREA,bd.dhaka.dhaka,Siddique Bazar,সিদ্দিক বাজার,siddik bazar|siddique bazaar,1100,DSCC,,
 bd.dhaka.dhaka.sipahibagh,AREA,bd.dhaka.dhaka,Sipahibagh,সিপাহীবাগ,sipahibag|shipahibagh,1214,DSCC,,
@@ -1062,7 +1062,7 @@ bd.dhaka.dhaka.dhamrai.suapur,AREA,bd.dhaka.dhaka.dhamrai,Suapur,সূয়া
 bd.dhaka.dhaka.sukrabad,AREA,bd.dhaka.dhaka,Sukrabad,শুক্রাবাদ,shukrabad|sukrabaad,1207,DNCC,,
 bd.dhaka.dhaka.dohar.sutarpara,AREA,bd.dhaka.dhaka.dohar,Sutarpara,সুতারপাড়া,sutar para,1330,,,
 bd.dhaka.dhaka.dhamrai.sutipara,AREA,bd.dhaka.dhaka.dhamrai,Sutipara,সূতিপাড়া,shutipara,1350,,,
-bd.dhaka.dhaka.sutrapur,AREA,bd.dhaka.dhaka,Sutrapur,সূত্রাপুর,shutrapur|sutrapore,1100,DSCC,,
+bd.dhaka.dhaka.sutrapur,AREA,bd.dhaka.dhaka,Sutrapur,সূত্রাপুর,shutrapur|sutrapore,1100,DSCC,23.71365,90.41737
 bd.dhaka.dhaka.swamibagh,AREA,bd.dhaka.dhaka,Swamibagh,স্বামীবাগ,shwamibag|swami bagh,1203,DSCC,,
 bd.dhaka.dhaka.tajmahal-road,AREA,bd.dhaka.dhaka,Tajmahal Road,তাজমহল রোড,taj mahal road|tajmohol road,1207,DNCC,,
 bd.dhaka.dhaka.tallabagh,AREA,bd.dhaka.dhaka,Tallabagh,টালবাগ,tallabag|talbagh,1209,DSCC,,
@@ -1071,7 +1071,7 @@ bd.dhaka.dhaka.savar.tannery-hemayetpur-tannery,AREA,bd.dhaka.dhaka.savar,Tanner
 bd.dhaka.dhaka.tantibazar,AREA,bd.dhaka.dhaka,Tantibazar,তাঁতীবাজার,tatibazar|tanti bazar,1100,DSCC,,
 bd.dhaka.dhaka.tb-gate,AREA,bd.dhaka.dhaka,TB Gate,টিবি গেট,tb gate mohakhali,1212,DNCC,,
 bd.dhaka.dhaka.technical-kalyanpur,AREA,bd.dhaka.dhaka,Technical (Kalyanpur),টেকনিক্যাল,technical|technical mor|teknikel,1216,DNCC,,
-bd.dhaka.dhaka.tejgaon,AREA,bd.dhaka.dhaka,Tejgaon,তেজগাঁও,tejgoan|tejgao,1215,DNCC,,
+bd.dhaka.dhaka.tejgaon,AREA,bd.dhaka.dhaka,Tejgaon,তেজগাঁও,tejgoan|tejgao,1215,DNCC,23.76286,90.39172
 bd.dhaka.dhaka.tejgaon-industrial-area,AREA,bd.dhaka.dhaka,Tejgaon Industrial Area,তেজগাঁও শিল্প এলাকা,tejgaon i a|tejgaon industrial|tejgaon shilpa elaka,1208,DNCC,,
 bd.dhaka.dhaka.tejkunipara,AREA,bd.dhaka.dhaka,Tejkunipara,তেজকুনিপাড়া,teskunipara|tejkuni para,1215,DNCC,,
 bd.dhaka.dhaka.dhamrai.teper-bari,AREA,bd.dhaka.dhaka.dhamrai,Teper Bari,তেপের বাড়ী,teperbari,1350,,,
@@ -1080,7 +1080,7 @@ bd.dhaka.dhaka.tikatuli,AREA,bd.dhaka.dhaka,Tikatuli,টিকাটুলি,ti
 bd.dhaka.dhaka.tipu-sultan-road,AREA,bd.dhaka.dhaka,Tipu Sultan Road,টিপু সুলতান রোড,tipu sultan rd,1100,DSCC,,
 bd.dhaka.dhaka.tolarbag,AREA,bd.dhaka.dhaka,Tolarbag,তোলারবাগ,tolar bag|tolarbagh,1216,DNCC,,
 bd.dhaka.dhaka.tt-para,AREA,bd.dhaka.dhaka,TT Para,টিটি পাড়া,ttpara|t t para,1000,DSCC,,
-bd.dhaka.dhaka.turag,AREA,bd.dhaka.dhaka,Turag,তুরাগ,turag thana,1230,DNCC,,
+bd.dhaka.dhaka.turag,AREA,bd.dhaka.dhaka,Turag,তুরাগ,turag thana,1230,DNCC,23.85993,90.36661
 bd.dhaka.dhaka.ulon,AREA,bd.dhaka.dhaka,Ulon,উলন,ulan|ulon road,1219,DNCC,,
 bd.dhaka.dhaka.uttara-sector-1,AREA,bd.dhaka.dhaka,Uttara Sector 1,উত্তরা সেক্টর ১,uttara sec 1|uttara 1|uttora sector 1,1230,DNCC,,
 bd.dhaka.dhaka.uttara-sector-10,AREA,bd.dhaka.dhaka,Uttara Sector 10,উত্তরা সেক্টর ১০,uttara sec 10|uttara 10,1230,DNCC,,
@@ -1100,7 +1100,7 @@ bd.dhaka.dhaka.uttara-sector-6,AREA,bd.dhaka.dhaka,Uttara Sector 6,উত্ত�
 bd.dhaka.dhaka.uttara-sector-7,AREA,bd.dhaka.dhaka,Uttara Sector 7,উত্তরা সেক্টর ৭,uttara sec 7|uttara 7,1230,DNCC,,
 bd.dhaka.dhaka.uttara-sector-8,AREA,bd.dhaka.dhaka,Uttara Sector 8,উত্তরা সেক্টর ৮,uttara sec 8|uttara 8,1230,DNCC,,
 bd.dhaka.dhaka.uttara-sector-9,AREA,bd.dhaka.dhaka,Uttara Sector 9,উত্তরা সেক্টর ৯,uttara sec 9|uttara 9,1230,DNCC,,
-bd.dhaka.dhaka.uttarkhan,AREA,bd.dhaka.dhaka,Uttarkhan,উত্তরখান,uttorkhan|uttar khan|north khan,1230,DNCC,,
+bd.dhaka.dhaka.uttarkhan,AREA,bd.dhaka.dhaka,Uttarkhan,উত্তরখান,uttorkhan|uttar khan|north khan,1230,DNCC,23.87457,90.44477
 bd.dhaka.dhaka.vatara,AREA,bd.dhaka.dhaka,Vatara,ভাটারা,bhatara|bhatora|vatara thana,1212,DNCC,,
 bd.dhaka.dhaka.wari,AREA,bd.dhaka.dhaka,Wari,ওয়ারী,wary|oari|wari dhaka,1203,DSCC,,
 bd.dhaka.dhaka.wireless-gate,AREA,bd.dhaka.dhaka,Wireless Gate,ওয়্যারলেস গেট,wireless|wireless more,1212,DNCC,,

@@ -1,0 +1,93 @@
+{
+  "division": {
+    "shapes": 8,
+    "unmatched": [],
+    "unclaimed": []
+  },
+  "district": {
+    "shapes": 64,
+    "unmatched": [],
+    "unclaimed": []
+  },
+  "upazila": {
+    "shapes": 507,
+    "unmatched": [
+      {
+        "shapeName": "Chittagong Port",
+        "district": "bd.chattogram.chattogram",
+        "reason": "none",
+        "options": []
+      },
+      {
+        "shapeName": "Dakshin Sunamganj",
+        "district": "bd.sylhet.sunamganj",
+        "reason": "none",
+        "options": []
+      }
+    ],
+    "unclaimed": [
+      "bd.barishal.barguna.taltali",
+      "bd.barishal.barishal.airport",
+      "bd.barishal.barishal.bandar",
+      "bd.barishal.barishal.barishal-kotwali",
+      "bd.barishal.barishal.kawnia",
+      "bd.barishal.patuakhali.rangabali",
+      "bd.chattogram.chattogram.akbar-shah",
+      "bd.chattogram.chattogram.bandar",
+      "bd.chattogram.chattogram.chawkbazar",
+      "bd.chattogram.chattogram.epz",
+      "bd.chattogram.chattogram.karnaphuli",
+      "bd.chattogram.chattogram.sadarghat",
+      "bd.chattogram.coxs-bazar.eidgaon",
+      "bd.chattogram.cumilla.lalmai",
+      "bd.chattogram.khagrachhari.guimara",
+      "bd.dhaka.dhaka.gandaria",
+      "bd.dhaka.dhaka.savar.ashulia",
+      "bd.dhaka.dhaka.uttara-east",
+      "bd.dhaka.dhaka.uttara-west",
+      "bd.dhaka.gazipur.basan-thana",
+      "bd.dhaka.gazipur.gacha-board-bazar",
+      "bd.dhaka.gazipur.gacha-thana",
+      "bd.dhaka.gazipur.gazipur-sadar.tongi",
+      "bd.dhaka.gazipur.kashimpur-thana",
+      "bd.dhaka.gazipur.konabari-thana",
+      "bd.dhaka.gazipur.pubail-thana",
+      "bd.dhaka.gazipur.tongi-east-thana",
+      "bd.dhaka.gazipur.tongi-west-thana",
+      "bd.dhaka.madaripur.dasar",
+      "bd.dhaka.narayanganj.narayanganj-sadar.fatullah",
+      "bd.dhaka.narayanganj.narayanganj-sadar.siddhirganj",
+      "bd.khulna.khulna.aranghata",
+      "bd.khulna.khulna.harintana",
+      "bd.khulna.khulna.labanchara",
+      "bd.mymensingh.mymensingh.mymensingh-kotwali",
+      "bd.mymensingh.mymensingh.tarakanda",
+      "bd.rajshahi.natore.naldanga",
+      "bd.rajshahi.rajshahi.katakhali",
+      "bd.rangpur.rangpur.hajirhat",
+      "bd.rangpur.rangpur.haragach",
+      "bd.rangpur.rangpur.mahiganj",
+      "bd.rangpur.rangpur.parshuram",
+      "bd.rangpur.rangpur.rangpur-kotwali",
+      "bd.rangpur.rangpur.tajhat",
+      "bd.sylhet.habiganj.shayestaganj",
+      "bd.sylhet.sunamganj.madhyanagar",
+      "bd.sylhet.sunamganj.shantiganj",
+      "bd.sylhet.sylhet.airport",
+      "bd.sylhet.sylhet.jalalabad",
+      "bd.sylhet.sylhet.moglabazar",
+      "bd.sylhet.sylhet.osmaninagar",
+      "bd.sylhet.sylhet.shahparan",
+      "bd.sylhet.sylhet.sylhet-kotwali"
+    ]
+  },
+  "dhakaThana": {
+    "shapes": 41,
+    "unmatched": [],
+    "unclaimedCityThanas": [
+      "bd.dhaka.dhaka.uttara-west",
+      "bd.dhaka.dhaka.uttara-east",
+      "bd.dhaka.dhaka.gandaria"
+    ]
+  }
+}
