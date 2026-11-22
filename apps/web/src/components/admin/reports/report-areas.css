@@ -158,3 +158,10 @@
   background: var(--lm-ac);
   color: var(--lm-on-hero);
 }
+
+/* S29 · PR 755: the "Open on map" link is a full tap target on a touch screen (44 px tall), not a thin text line. */
+.adm2 .ar-map-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

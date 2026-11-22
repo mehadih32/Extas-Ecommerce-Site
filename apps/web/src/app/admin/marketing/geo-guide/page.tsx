@@ -71,6 +71,9 @@ export default async function GeoGuidePage(props: { searchParams: Promise<{ cate
     <div className="a2-z gg-page" data-testid="geo-guide" data-lm-ready="">
       <PageHead view={view} place={locateKey(KEY)} title={l('title')} sub={l('sub')} />
       <SectionTabs view={view} current={KEY} />
+      <p className="gg-span" data-testid="gg-open-map">
+        <Link href="/admin/reports/geo-map">{l('openMap')}</Link> {l('openMapHint')}
+      </p>
       {set.on ? null : (
         <p className="lm-card gg-off" role="note" data-testid="gg-off">
           {l('off')}

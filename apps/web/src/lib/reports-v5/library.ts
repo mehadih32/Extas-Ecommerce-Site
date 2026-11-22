@@ -115,6 +115,7 @@ export const CARD_IDS = [
   "ads",
   "toparea",
   "badarea",
+  "geomap",
   "confirmtime",
 ] as const;
 
@@ -336,6 +337,23 @@ export function libraryGroups(i: LibInput): LibGroup[] {
               }
             : null,
           href: `${R}/areas`,
+        },
+        {
+          // S29 · PR 755: the same top area, opened on the Geography map (the old cards keep their own page)
+          id: "geomap",
+          q: "geomap",
+          val: i.topArea ? { k: "text", text: i.topArea.name } : NONE,
+          change: null,
+          sub: i.topArea
+            ? {
+                key: "subTopArea",
+                vars: {
+                  $value: i.topArea.valueMinor,
+                  pct: Math.round(i.topArea.share),
+                },
+              }
+            : null,
+          href: `${R}/geo-map`,
         },
       ],
     },
