@@ -1,0 +1,84 @@
+{
+  "geoLenses": {
+    "tabsLabel": "Lens",
+    "tab": {
+      "overview": "Map",
+      "courier": "Courier & coverage",
+      "risk": "Risk",
+      "money": "Money & stock",
+      "demand": "Demand & customers"
+    },
+    "title": {
+      "risk": "Risk",
+      "money": "Money and stock",
+      "demand": "Demand and customers"
+    },
+    "sub": {
+      "risk": "Returns, parcels refused at the door, cancelled orders, high-risk orders, courier claims and support tickets by place. Counts only: nothing here blocks, holds or changes an order.",
+      "money": "What delivery brings in against what the courier charges, profit of the orders whose cost is known, ad spend by district and the styles that sell. Figures only: no charge, budget, price or stock is changed.",
+      "demand": "New against repeat customers, wishlist adds and searches that ended without a sale, and the style to push. Counts only: no name or phone."
+    },
+    "place": "Place",
+    "col": {
+      "delivered": "Delivered",
+      "returned": "Returned",
+      "returnRate": "Return rate",
+      "refusedAtDoor": "Refused at the door",
+      "refusedOurFault": "Refused, our fault",
+      "cancelled": "Cancelled",
+      "highRisk": "High risk",
+      "highRiskShare": "High-risk share",
+      "claims": "Claims",
+      "tickets": "Tickets",
+      "salesMinor": "Sales",
+      "deliveryChargeMinor": "Delivery charged",
+      "courierMinor": "Courier charge",
+      "deliveryGapMinor": "Delivery gap",
+      "freeDeliveryOrders": "Free delivery",
+      "profitMinor": "Profit",
+      "marginPct": "Margin",
+      "adSpendMinor": "Ad spend",
+      "roasPercent": "Ad return",
+      "pieces": "Pieces",
+      "orders": "Orders",
+      "newCustomers": "New customers",
+      "repeatCustomers": "Repeat customers",
+      "repeatShare": "Repeat share",
+      "wishlistNoSale": "Wished, no sale",
+      "searchesNoSale": "Searched, no sale",
+      "demandWithoutSales": "Demand without sales"
+    },
+    "flag": {
+      "returnHotspot": "Return hotspot",
+      "riskArea": "Risk area",
+      "deliveryEatsProfit": "Delivery eats profit",
+      "adsExceedSales": "Ads over sales",
+      "repeatLeaning": "Mostly repeat",
+      "newLeaning": "Mostly new",
+      "demandGap": "Demand without sales"
+    },
+    "total": "Total",
+    "unknown": "No area",
+    "outside": "Outside Dhaka City",
+    "hidden": "Some parts are left out because your role may not see them.",
+    "empty": "No figures for this period and place.",
+    "loading": "Loading…",
+    "failed": "This lens could not be loaded. Try again.",
+    "advisor": {
+      "title": "AI advisor",
+      "sub": "Reads the figures of the lenses that are on and drafts suggestions into the approval queue. Advice only: it changes no budget, campaign, price, charge, COD rule or courier.",
+      "run": "Run advisor",
+      "running": "Running…",
+      "off": "The advisor could not be loaded. Try again.",
+      "aiOff": "AI is switched off, so the advisor cannot run.",
+      "needControl": "Running the advisor needs the AI control permission.",
+      "ready": "Ready. One run drafts a few suggestions for the period shown above.",
+      "result": "{drafted} drafted, {waiting} already waiting, {over} left out over the limit, {nonote} left out without an AI note.",
+      "draftsTitle": "Waiting in the approval queue",
+      "noDrafts": "Nothing is waiting.",
+      "expires": "Expires {date}",
+      "queue": "Open the approval queue",
+      "failed": "The advisor could not run. Try again."
+    }
+  }
+}
