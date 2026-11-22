@@ -128,6 +128,8 @@ export const listQuery = z
     /** PR 140: the payment method and the channel the order came from (filters of the list). */
     payment: z.enum(PAYMENT_METHODS).optional(),
     source: z.enum(LIST_SOURCES).optional(),
+    /** PR 754 (S29, Geography map "Open these orders"): the delivery area — this place and every place under it. */
+    area: z.uuid().optional(),
     /** PR 541 (follow-up 295): the risk band (a key of `risk.bands`) and the section; "risk" sorts the highest score first. */
     risk: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,59}$/).optional(),
     section: z.enum(RISK_SECTIONS).optional(),
@@ -238,7 +240,7 @@ export async function openReviewIds(deps: OrdersDeps, storeId: number): Promise<
 }
 
 /** The list's filters (view, status, search, payment method, channel) as one condition; PR 151's export uses it too. */
-export type ListFilters = Pick<z.output<typeof listQuery>, 'view' | 'status' | 'q' | 'payment' | 'source'> & Partial<Pick<z.output<typeof listQuery>, 'risk' | 'section'>> & {
+export type ListFilters = Pick<z.output<typeof listQuery>, 'view' | 'status' | 'q' | 'payment' | 'source'> & Partial<Pick<z.output<typeof listQuery>, 'risk' | 'section' | 'area'>> & {
   /** PR 660: placed on or after / before these moments (see `placedRange`). */
   placed?: { from?: Date; before?: Date };
 };
@@ -256,6 +258,8 @@ export function listWhere(storeId: number, q: ListFilters, reviews: string[]): P
     ...(q.source === 'SUPPORT' ? { source: { in: [...SUPPORT_SOURCES] } } : q.source ? { source: q.source } : {}),
     ...(q.risk ? { riskBand: q.risk } : {}),
     ...(q.section ? { riskSection: q.section } : {}),
+    // PR 754: the place itself or any place under it (GeoArea.ancestorIds holds every ancestor)
+    ...(q.area ? { OR: [{ areaId: q.area }, { area: { ancestorIds: { has: q.area } } }] } : {}),
     ...(q.placed && (q.placed.from || q.placed.before) ? { placedAt: { ...(q.placed.from ? { gte: q.placed.from } : {}), ...(q.placed.before ? { lt: q.placed.before } : {}) } } : {}),
   };
   return { AND: [listBase(storeId), viewWhere(q.view, reviews), status, filters, search] };
