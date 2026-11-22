@@ -100,6 +100,7 @@ import { blogImageSettings } from './registry-blog-images';
 import { houseAdSettings } from './registry-house-ads';
 import { blogPipelineSettings } from './registry-blog-pipeline';
 import { geoGuideSettings } from './registry-geo-guide';
+import { geoMapSettings } from './registry-geo-map';
 import { adsIntelSettings } from './registry-ads-intel';
 import { courierScoreSettings } from './registry-courier-score';
 import { autoConfirmSettings } from './registry-auto-confirm';
@@ -154,6 +155,8 @@ import { customiseSettings } from './registry-customise';
 import { storeDetailsSettings } from './registry-store-details';
 import { parityE2Settings } from './registry-parity-e2';
 import { parityE5Settings } from './registry-parity-e5';
+import { geoMapCourierSettings } from './registry-geo-map-courier';
+import { geoAdvisorSettings } from './registry-geo-advisor';
 import { parityE3Settings } from './registry-parity-e3';
 import { analyticsSettings } from './registry-analytics';
 import { s28W5bSettings } from './registry-s28-w5b';
@@ -1626,6 +1629,8 @@ export const registry = {
   ...blogPipelineSettings,
   // PR 569 · geography-led ad guidance, advice only, off (registry-geo-guide.ts, version 255).
   ...geoGuideSettings,
+  // S29 · PR 752 · Reports › Geography map, off (registry-geo-map.ts, version 868).
+  ...geoMapSettings,
   // PR 589 · the Google Merchant Center product feed, off (registry-merchant-feed.ts, version 256).
   ...merchantFeedSettings,
   // ---- S12 · CN-031 lane A · PR 246 · seasonal landing pages (registry-seasonal.ts, version 228). ----
@@ -1718,6 +1723,10 @@ export const registry = {
   ...parityE3Settings,
   // ---- PR 846, 851 · the small settings of Settings, lane E5 (registry-parity-e5.ts). ----
   ...parityE5Settings,
+  // ---- S29 · PR 757 · Geography map courier and coverage lens numbers (registry-geo-map-courier.ts, version 805). ----
+  ...geoMapCourierSettings,
+  // ---- S29 · PR 761 · the Geography map advisor's two numbers (registry-geo-advisor.ts, version 761). ----
+  ...geoAdvisorSettings,
 } satisfies RegistryShape;
 
 export type Registry = typeof registry;
