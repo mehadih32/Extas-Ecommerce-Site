@@ -12,11 +12,14 @@
     "./settle": "./src/settle.ts",
     "./phone": "./src/phone.ts",
     "./exempt": "./src/exempt.ts",
-    "./promise": "./src/promise.ts"
+    "./promise": "./src/promise.ts",
+    "./geo": "./src/geo.ts",
+    "./geo-pack": "./src/geo-pack.ts"
   },
   "scripts": {
     "gazetteer:import": "tsx src/cli.ts import",
     "gazetteer:sample": "node scripts/make-sample-gazetteer.mjs",
+    "geo:pack": "tsx scripts/make-geo-pack.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
