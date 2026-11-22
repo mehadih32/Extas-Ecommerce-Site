@@ -40,6 +40,7 @@ export function parseListQuery(page: ListPageId, sp: Search): ListQuery {
     status: pick(one(sp.status), FILTER_STATES),
     payment: pick(one(sp.payment), od.PAYMENT_METHODS),
     source: pick(one(sp.source), od.ORDER_SOURCES),
+    area: one(sp.area) && UUID.test(one(sp.area)!) ? one(sp.area) : undefined,
     // PR 541 (follow-up 295): a band key as the owner's bands write them, a section, the sort
     risk: one(sp.risk) && BAND_KEY.test(one(sp.risk)!) ? one(sp.risk) : undefined,
     section: pick(one(sp.section), RISK_SECTIONS),
@@ -254,6 +255,7 @@ export async function loadOrderList(deps: od.OrdersDeps, who: od.Who, view: Admi
     ...(query.status ? { status: query.status } : {}),
     ...(query.payment ? { payment: query.payment } : {}),
     ...(query.source ? { source: query.source } : {}),
+    ...(query.area ? { area: query.area } : {}),
     ...(query.risk ? { risk: query.risk } : {}),
     ...(query.section ? { section: query.section } : {}),
     ...(query.sort ? { sort: query.sort } : {}),

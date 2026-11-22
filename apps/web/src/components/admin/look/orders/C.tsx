@@ -44,7 +44,7 @@ async function OrdersC(p: OrdersDesignProps) {
   const d = view.dict;
   const page: ListPageId = 'all';
   const data = await loadOrderList(readDeps(a.deps), a.who, view, page, query);
-  const filtered = !!(query.q || query.status || query.payment || query.source || query.risk || query.section || query.from || query.to);
+  const filtered = !!(query.q || query.status || query.payment || query.source || query.area || query.risk || query.section || query.from || query.to);
   const canBulk = BULK_COMMANDS.filter((c) => a.perms.has(BULK_PERM[c]));
   const files = bulkFilesFor(a.perms);
   const shown = formatNumber(data.rows.length, view.locale);

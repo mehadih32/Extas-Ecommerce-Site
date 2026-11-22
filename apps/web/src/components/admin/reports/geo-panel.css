@@ -1,0 +1,249 @@
+/* PR 754 (S29 Geography map): the panel an area click opens, and the two-sided Change colours. Colours are the admin's
+   tokens (--ok, --bad, --lm-*); a number is always written beside a colour. On a phone the panel is a bottom sheet. */
+.adm2 .gp {
+  border: 1px solid var(--lm-ln);
+  border-radius: 14px;
+  background: var(--lm-sf);
+  color: var(--lm-ink);
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.adm2 .gp-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.adm2 .gp-title {
+  min-width: 0;
+}
+.adm2 .gp-name {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.adm2 .gp-parent {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--lm-ink2);
+}
+.adm2 .gp-x {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--lm-ln);
+  background: var(--lm-sf2);
+  color: var(--lm-ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.adm2 .gp-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--lm-ink2);
+}
+.adm2 .gp-warn {
+  border-left: 3px solid var(--warn, var(--lm-faint));
+  padding-left: 8px;
+}
+.adm2 .gp-bad {
+  border-left: 3px solid var(--bad);
+  padding-left: 8px;
+}
+.adm2 .gp-fig {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.adm2 .gp-fig th,
+.adm2 .gp-fig td {
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--lm-ln);
+  text-align: left;
+  vertical-align: top;
+}
+.adm2 .gp-fig thead th {
+  font-size: 13px;
+  color: var(--lm-ink2);
+  font-weight: 600;
+}
+.adm2 .gp-fig tbody th {
+  font-weight: 600;
+}
+.adm2 .gp-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.adm2 .gp-was {
+  color: var(--lm-ink2);
+}
+.adm2 .gp-good {
+  color: var(--ok);
+}
+.adm2 .gp-badn {
+  color: var(--bad);
+}
+.adm2 .gp-pct {
+  color: var(--lm-ink2);
+}
+.adm2 .gp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.adm2 .gp-cat {
+  margin: 0;
+  font-size: 14px;
+}
+.adm2 .gp-k {
+  color: var(--lm-ink2);
+}
+.adm2 .gp-h {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+.adm2 .gp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.adm2 .gp-list li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 14px;
+}
+.adm2 .gp-rank {
+  color: var(--lm-faint);
+  font-variant-numeric: tabular-nums;
+}
+.adm2 .gp-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.adm2 .gp-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+}
+.adm2 .gp-retry {
+  min-height: 44px;
+}
+.adm2 .gp-foot {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--lm-faint);
+}
+
+/* the Change figure: two-sided steps, up is one hue, down the other, flat is neutral (sales or orders; good when up) */
+.adm2 .geo-flat {
+  fill: var(--lm-sf2);
+  background: var(--lm-sf2);
+}
+.adm2 .geo-up-1 { fill: color-mix(in srgb, var(--ok) 18%, var(--lm-sf)); background: color-mix(in srgb, var(--ok) 18%, var(--lm-sf)); }
+.adm2 .geo-up-2 { fill: color-mix(in srgb, var(--ok) 34%, var(--lm-sf)); background: color-mix(in srgb, var(--ok) 34%, var(--lm-sf)); }
+.adm2 .geo-up-3 { fill: color-mix(in srgb, var(--ok) 52%, var(--lm-sf)); background: color-mix(in srgb, var(--ok) 52%, var(--lm-sf)); }
+.adm2 .geo-up-4 { fill: color-mix(in srgb, var(--ok) 72%, var(--lm-sf)); background: color-mix(in srgb, var(--ok) 72%, var(--lm-sf)); }
+.adm2 .geo-up-5 { fill: color-mix(in srgb, var(--ok) 92%, var(--lm-sf)); background: color-mix(in srgb, var(--ok) 92%, var(--lm-sf)); }
+.adm2 .geo-down-1 { fill: color-mix(in srgb, var(--bad) 18%, var(--lm-sf)); background: color-mix(in srgb, var(--bad) 18%, var(--lm-sf)); }
+.adm2 .geo-down-2 { fill: color-mix(in srgb, var(--bad) 34%, var(--lm-sf)); background: color-mix(in srgb, var(--bad) 34%, var(--lm-sf)); }
+.adm2 .geo-down-3 { fill: color-mix(in srgb, var(--bad) 52%, var(--lm-sf)); background: color-mix(in srgb, var(--bad) 52%, var(--lm-sf)); }
+.adm2 .geo-down-4 { fill: color-mix(in srgb, var(--bad) 72%, var(--lm-sf)); background: color-mix(in srgb, var(--bad) 72%, var(--lm-sf)); }
+.adm2 .geo-down-5 { fill: color-mix(in srgb, var(--bad) 92%, var(--lm-sf)); background: color-mix(in srgb, var(--bad) 92%, var(--lm-sf)); }
+
+/* phone: the panel is a sheet that comes up from the bottom (text stays 14 px or more, buttons 44 px) */
+@media (max-width: 700px) {
+  .adm2 .gp {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    max-height: 78vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    box-shadow: var(--lm-sh2);
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (min-width: 701px) {
+  .adm2 .gp {
+    position: sticky;
+    top: 12px;
+  }
+}
+
+/* the Compare control */
+.adm2 .gcb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.adm2 .gcb-k {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--lm-ink2);
+}
+.adm2 .gcb-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.adm2 .gcb-m {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--lm-sf2);
+  color: var(--lm-ink2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.adm2 .gcb-m.on {
+  background: var(--lm-hero-solid);
+  color: var(--lm-on-hero);
+}
+.adm2 .gcb-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+.adm2 .gcb-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--lm-ink2);
+}
+.adm2 .gcb-form input[type="date"] {
+  min-height: 44px;
+  font-size: 14px;
+}
+.adm2 .gcb-r {
+  font-size: 14px;
+  color: var(--lm-ink2);
+}

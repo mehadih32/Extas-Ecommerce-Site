@@ -1,0 +1,52 @@
+{
+  "geoPanel": {
+    "aria": "Area details",
+    "close": "Close",
+    "now": "This period",
+    "before": "Earlier",
+    "change": "Change",
+    "comparedWith": "Compared with {from} to {to}",
+    "fig": {
+      "orders": "Orders",
+      "sales": "Sales",
+      "delivered": "Delivered",
+      "returned": "Returned",
+      "returnRate": "Return rate"
+    },
+    "pts": "pts",
+    "pcs": "{n} pcs",
+    "topCategory": "Top category",
+    "noCategory": "No delivered orders yet",
+    "topProducts": "Top {n} products here",
+    "noProducts": "No delivered orders here in this period.",
+    "loading": "Loading the top products…",
+    "failed": "The top products could not be loaded.",
+    "retry": "Try again",
+    "tooFew": "Fewer than {n} orders here. The numbers are real, but the map keeps this area grey so a small count does not mislead.",
+    "returnWarn": "The return rate is at or above your warning line ({n}%).",
+    "moneyHidden": "Sales are not shown because your role cannot see money figures.",
+    "openOrders": "Open these orders",
+    "openOrdersHint": "Orders placed on these days to this area.",
+    "deeper": "Go deeper: {level}",
+    "level": {
+      "division": "divisions",
+      "district": "districts",
+      "upazila": "thanas and upazilas",
+      "area": "areas"
+    },
+    "counted": "Orders are counted on the day they are placed. Delivered and Returned are counted on their own days, so a return rate can include older orders.",
+    "up": "Up",
+    "down": "Down",
+    "same": "No change",
+    "compare": {
+      "label": "Compare",
+      "off": "Off",
+      "previous": "Previous period",
+      "lastYear": "Same period last year",
+      "custom": "Own days",
+      "from": "Earlier period from",
+      "to": "to",
+      "apply": "Compare"
+    }
+  }
+}

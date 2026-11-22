@@ -127,6 +127,8 @@ export interface ListQuery {
   status?: string;
   payment?: string;
   source?: string;
+  /** PR 754 (Geography map): only orders delivered to this place or any place under it (a GeoArea id). */
+  area?: string;
   /** PR 541 (follow-up 295): the risk band, the section, and the sort ("risk": highest score first). */
   risk?: string;
   section?: string;
@@ -143,7 +145,7 @@ export function listHref(page: ListPageId, cur: ListQuery, change: Partial<ListQ
   const next: ListQuery = { ...cur, cursor: undefined, ...change };
   const sp = new URLSearchParams();
   if (next.view && next.view !== p.views[0]) sp.set('view', next.view);
-  for (const k of ['q', 'status', 'payment', 'source', 'risk', 'section', 'sort', 'from', 'to', 'cursor'] as const) {
+  for (const k of ['q', 'status', 'payment', 'source', 'area', 'risk', 'section', 'sort', 'from', 'to', 'cursor'] as const) {
     const v = next[k];
     if (v) sp.set(k, v);
   }
