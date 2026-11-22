@@ -46,6 +46,15 @@ export * from './vat';
 export * from './vat-report';
 // S16 · PR 568: `salesByArea` — Sales, pieces and returns by district, upazila/thana or area inside Dhaka (areas.ts).
 export * from './areas';
+// S29 · PR 751: `geoByArea` and `geoAreaDetail` — the figures of Reports › Geography map (geo.ts, geo-pure.ts, geo-types.ts).
+export * from './geo';
+// S29 · PR 758: the risk lens of Reports › Geography map and the roll-up the lenses share (geo-lens-base.ts, geo-risk.ts).
+export * from './geo-lens-base';
+export * from './geo-risk';
+// S29 · PR 759: the money and stock lens (geo-money.ts).
+export * from './geo-money';
+// S29 · PR 760: the demand and customers lens (geo-demand.ts).
+export * from './geo-demand';
 // S16 · PR 504: `profitByGroup` — the per-order profit (ad share included) split over lines, by category or style (group-profit.ts).
 export * from './group-profit';
 // S16 · PR 355: `profitByChannel` — the period's delivered orders by ad platform / organic / other channel, with returns,
@@ -67,3 +76,9 @@ export * from './campaign-tags';
 export * from './marketing-report';
 export * from './campaign-sales';
 export * from './campaign-profit';
+// S29 · PR 750–761 (CN-054): the shared types of Reports › Geography map (geo-types.ts), types only.
+export * from './geo-types';
+// S29 · PR 756: the Geography map's slices (channel, payment type, courier, customer type) and their breakdown (geo-slices.ts).
+export * from './geo-slices';
+// S29 · PR 757: the Geography map's courier and coverage lens (geo-courier.ts).
+export * from './geo-courier';
