@@ -156,6 +156,8 @@ import parityE3Bn from '../messages/parity-e3.bn.json';
 import parityE3En from '../messages/parity-e3.en.json';
 import parityE5Bn from '../messages/parity-e5.bn.json';
 import parityE5En from '../messages/parity-e5.en.json';
+import geoAdvisorBn from '../messages/geo-advisor.bn.json';
+import geoAdvisorEn from '../messages/geo-advisor.en.json';
 import practiceBn from '../messages/practice.bn.json';
 import practiceEn from '../messages/practice.en.json';
 // S28 · PR 740–744 (registry v740): the e-mail look, the cookie banner and the home-screen app.
@@ -208,6 +210,10 @@ import blogPipelineBn from '../messages/blog-pipeline.bn.json';
 import blogPipelineEn from '../messages/blog-pipeline.en.json';
 import geoGuideBn from '../messages/geo-guide.bn.json';
 import geoGuideEn from '../messages/geo-guide.en.json';
+import geoMapBn from '../messages/geo-map.bn.json';
+import geoMapEn from '../messages/geo-map.en.json';
+import geoMapCourierBn from '../messages/geo-map-courier.bn.json';
+import geoMapCourierEn from '../messages/geo-map-courier.en.json';
 // S13 · PR 548 (registry v291): Marketing › Market & competitors' change-alerts card.
 import adsIntelBn from '../messages/ads-intel.bn.json';
 import adsIntelEn from '../messages/ads-intel.en.json';
@@ -400,6 +406,9 @@ messages.bn = mergeMessages(messages.bn, blogPipelineBn);
 // S13 · PR 569 (registry v255): geography-led ad guidance.
 messages.en = mergeMessages(messages.en, geoGuideEn);
 messages.bn = mergeMessages(messages.bn, geoGuideBn);
+// S29 · PR 752 (registry v868): Reports › Geography map.
+messages.en = mergeMessages(messages.en, geoMapEn);
+messages.bn = mergeMessages(messages.bn, geoMapBn);
 messages.en = mergeMessages(messages.en, adsIntelEn);
 messages.bn = mergeMessages(messages.bn, adsIntelBn);
 // S13 · PR 589 (registry v256): the Merchant Center feed.
@@ -650,3 +659,9 @@ messages.bn = mergeMessages(messages.bn, parityE3Bn);
 // PR 846, 851 (registry v846-851): the small settings of Settings, lane E5 (registry-parity-e5.ts).
 messages.en = mergeMessages(messages.en, parityE5En);
 messages.bn = mergeMessages(messages.bn, parityE5Bn);
+// S29 · PR 757 (registry v805): the Geography map's courier lens numbers.
+messages.en = mergeMessages(messages.en, geoMapCourierEn);
+messages.bn = mergeMessages(messages.bn, geoMapCourierBn);
+// S29 · PR 761 (registry v761): the Geography map advisor's two numbers (registry-geo-advisor.ts).
+messages.en = mergeMessages(messages.en, geoAdvisorEn);
+messages.bn = mergeMessages(messages.bn, geoAdvisorBn);

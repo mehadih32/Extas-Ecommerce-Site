@@ -158,6 +158,8 @@ export * from './registry-house-ads';
 export * from './registry-blog-pipeline';
 // S13 · PR 569 — geography-led ad guidance, advice only (registry-geo-guide.ts, version 255).
 export * from './registry-geo-guide';
+// S29 · PR 752 — Reports › Geography map, off as shipped (registry-geo-map.ts, version 868).
+export * from './registry-geo-map';
 // S13 · PR 589 — the Google Merchant Center product feed (registry-merchant-feed.ts, version 256; follow-ups 259, 260).
 export * from './registry-merchant-feed';
 // S18 · PR 379 — the quiet bot check (registry-bot-check.ts, version 74).
@@ -318,3 +320,7 @@ export * from './registry-parity-e2';
 export * from './registry-parity-e3';
 // PR 846, 851 — the small settings of Settings, lane E5 (registry-parity-e5.ts).
 export * from './registry-parity-e5';
+// S29 · PR 757 — the Geography map's courier and coverage lens numbers (registry-geo-map-courier.ts, version 805).
+export * from './registry-geo-map-courier';
+// S29 · PR 761 — the Geography map advisor's two numbers (registry-geo-advisor.ts, version 761).
+export * from './registry-geo-advisor';
