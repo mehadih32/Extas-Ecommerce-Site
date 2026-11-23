@@ -1,4 +1,4 @@
-# Smoke test · 2026-11-22 07:28 (Asia/Dhaka)
+# Smoke test · 2026-11-23 07:53 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
@@ -85,11 +85,11 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/money` | phone | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | phone | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | phone | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
-| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | phone | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/4f1f4c2a-c665-5bb9-ab54-d0423062f62a` | phone | 200 | `/admin/orders/4f1f4c2a-c665-5bb9-ab54-d0423062f62a` | ok | — |
 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | phone | 200 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | ok | — |
-| `/admin/orders/93161652-9c76-542d-aa4b-033a15265ac8` | phone | 200 | `/admin/orders/93161652-9c76-542d-aa4b-033a15265ac8` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | phone | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/orders/batch` | phone | 200 | `/admin/orders/batch` | ok | — |
-| `/admin/orders/d42b3c57-16ee-526a-ad95-12360ee8635e` | phone | 200 | `/admin/orders/d42b3c57-16ee-526a-ad95-12360ee8635e` | ok | — |
+| `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | phone | 200 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | ok | — |
 | `/admin/products` | phone | 200 | `/admin/products` | ok | — |
 | `/admin/products/queue` | phone | 200 | `/admin/products/queue` | ok | — |
@@ -353,9 +353,9 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/reports/marketing` | phone | 200 | `/admin/reports/marketing` | ok | — |
 | `/admin/reports/review` | phone | 200 | `/admin/reports/review` | ok | — |
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
-| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | phone | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | phone | 200 | `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | ok | — |
+| `/admin/reports/health/history/01a200ea-e4f0-7252-898f-6742ba446f81` | phone | 200 | `/admin/reports/health/history/01a200ea-e4f0-7252-898f-6742ba446f81` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -438,11 +438,11 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/money` | desktop | 200 | `/admin/money` | ok | — |
 | `/admin/orders` | desktop | 200 | `/admin/orders` | ok | — |
 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | desktop | 200 | `/admin/orders/0bc366b9-ee95-50c0-af70-dbd9fcc82d01` | ok | — |
-| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | desktop | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/4f1f4c2a-c665-5bb9-ab54-d0423062f62a` | desktop | 200 | `/admin/orders/4f1f4c2a-c665-5bb9-ab54-d0423062f62a` | ok | — |
 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | desktop | 200 | `/admin/orders/8f4835da-a3ad-54ff-a8f3-30943f0b9476` | ok | — |
-| `/admin/orders/93161652-9c76-542d-aa4b-033a15265ac8` | desktop | 200 | `/admin/orders/93161652-9c76-542d-aa4b-033a15265ac8` | ok | — |
+| `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | desktop | 200 | `/admin/orders/9ad80ab2-9238-510a-a15b-c1a325b87f70` | ok | — |
 | `/admin/orders/batch` | desktop | 200 | `/admin/orders/batch` | ok | — |
-| `/admin/orders/d42b3c57-16ee-526a-ad95-12360ee8635e` | desktop | 200 | `/admin/orders/d42b3c57-16ee-526a-ad95-12360ee8635e` | ok | — |
+| `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | desktop | 200 | `/admin/orders/fd231207-97c9-5442-acee-0f182a9e669a` | ok | — |
 | `/admin/products` | desktop | 200 | `/admin/products` | ok | — |
 | `/admin/products/queue` | desktop | 200 | `/admin/products/queue` | ok | — |
@@ -706,9 +706,9 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/reports/marketing` | desktop | 200 | `/admin/reports/marketing` | ok | — |
 | `/admin/reports/review` | desktop | 200 | `/admin/reports/review` | ok | — |
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
-| `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | desktop | 200 | `/admin/orders/5872d023-9f52-5a19-ab39-f1319423c57d` | ok | — |
+| `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | desktop | 200 | `/admin/reports/health/history/01a20046-9026-7363-80d3-a7d0770e6013` | ok | — |
+| `/admin/reports/health/history/01a200ea-e4f0-7252-898f-6742ba446f81` | desktop | 200 | `/admin/reports/health/history/01a200ea-e4f0-7252-898f-6742ba446f81` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
