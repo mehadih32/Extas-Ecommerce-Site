@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-24 11:24 (Asia/Dhaka)
+# Smoke test · 2026-11-25 10:24 (Asia/Dhaka)
 
-> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। ঠিক করার কাজ সবার আগে হচ্ছে।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (708টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **FAIL** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS** (708 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -355,7 +355,8 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **FAIL*
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a20628-9a47-7262-88ec-195a7d3980db` | phone | 200 | `/admin/reports/health/history/01a20628-9a47-7262-88ec-195a7d3980db` | ok | — |
+| `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | phone | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
+| `/admin/reports/health/history/01a20c10-650b-70f1-8126-f447a9a1d85f` | phone | 200 | `/admin/reports/health/history/01a20c10-650b-70f1-8126-f447a9a1d85f` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -708,13 +709,10 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **FAIL*
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a20628-9a47-7262-88ec-195a7d3980db` | desktop | 200 | `/admin/reports/health/history/01a20628-9a47-7262-88ec-195a7d3980db` | ok | — |
+| `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | desktop | 200 | `/admin/reports/health/problems/01a19735-6496-70c1-9ccd-6741cd32073a` | ok | — |
+| `/admin/reports/health/history/01a20c10-650b-70f1-8126-f447a9a1d85f` | desktop | 200 | `/admin/reports/health/history/01a20c10-650b-70f1-8126-f447a9a1d85f` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
-
-Other problems:
-
-- check (PR 634): Products › All products draws in the Lumen look (summary tiles) and follows dark mode (CN-036): page.goto: Timeout 30000ms exceeded.
 
 Database (PR 139): ok: 44 tables append-only; the app connects as extas_app.

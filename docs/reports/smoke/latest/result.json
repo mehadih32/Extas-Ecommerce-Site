@@ -1,15 +1,13 @@
 {
-  "at": "2026-11-24 11:24 (Asia/Dhaka)",
+  "at": "2026-11-25 10:24 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
   "sha": "962aa6daa0e0",
   "kind": "nightly",
   "rolledBack": false,
-  "ok": false,
-  "pages": 706,
+  "ok": true,
+  "pages": 708,
   "failed": 0,
-  "problems": [
-    "check (PR 634): Products › All products draws in the Lumen look (summary tiles) and follows dark mode (CN-036): page.goto: Timeout 30000ms exceeded."
-  ],
+  "problems": [],
   "database": {
     "appendOnly": "ok: 44 tables append-only",
     "appRole": "extas_app"
