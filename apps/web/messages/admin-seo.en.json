@@ -749,7 +749,7 @@
     "fixSoon": "Fix soon",
     "see": "See",
     "none": "Nothing to fix here.",
-    "weakTitle": "Pages with the weakest SEO",
+    "weakTitle": "Products with the weakest SEO",
     "weakSub": "Lowest first · tap to improve title, description and photos",
     "smTitle": "Sitemap & Google Search Console",
     "smConsole": "Search Console",
@@ -765,10 +765,34 @@
     "rdTitle": "Redirects: old links → new",
     "rdOld": "Old link",
     "rdNew": "Goes to",
-    "rdVisits": "Visits"
+    "rdVisits": "Visits",
+    "urgent": "Urgent",
+    "fixAlt": "Fill alt text from product names",
+    "fixTemplate": "Fill from template",
+    "fixCollection": "Add collection text",
+    "fixRedirects": "Add suggested redirects",
+    "notFound": "Old links that open an error page (404)"
   },
   "checkAgain": "Check again",
   "moreTitle": "More options",
   "moreSub": "Search engines, titles and descriptions, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console and photo descriptions.",
-  "theShop": "the shop"
+  "theShop": "the shop",
+  "rank": {
+    "title": "Google ranking",
+    "compared": "Compared with 4 weeks ago",
+    "all": "All",
+    "top3": "Top 3",
+    "top10": "Top 10",
+    "rising": "Rising",
+    "falling": "Falling",
+    "colWords": "Search words",
+    "colPos": "Position",
+    "colChange": "Change",
+    "colSearches": "Searches / month",
+    "colClicks": "Clicks",
+    "colPage": "Page",
+    "noConsole": "Search Console is not connected yet, so there are no ranking figures.",
+    "noneHere": "No search words in this view.",
+    "console": "Open organic report"
+  }
 }

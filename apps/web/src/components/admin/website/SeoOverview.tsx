@@ -5,6 +5,7 @@
 // and the way to connect it until it is), the sitemap from the sitemaps the shop made, the redirects from the redirect list.
 import Link from 'next/link';
 import { SendSitemapButton } from './SendSitemapButton';
+import { SeoRanking } from './SeoRanking';
 
 export interface SeoOverviewProps {
   c: (k: string, vars?: Record<string, string | number>) => string;
@@ -13,9 +14,13 @@ export interface SeoOverviewProps {
   score: number | null;
   needFix: number;
   total: number;
-  problems: { id: string; label: string; n: number }[];
+  /** PR 1232: each problem with its tone (Urgent / Fix soon) and the prototype's fix button ("Fill from template" …). */
+  problems: { id: string; label: string; n: number; tone: 'bad' | 'warn'; fix: string; href: string }[];
+  /** PR 1232: the ranking card's words (chips, columns) and the language of its numbers. */
+  rankWords: Record<string, string>;
+  locale: string;
   weakest: { key: string; name: string; href: string; score: number }[];
-  gsc: null | { clicks: number; impressions: number; position: number | null; queries: { query: string; clicks: number; impressions: number; position: number | null }[] };
+  gsc: null | { clicks: number; impressions: number; position: number | null; queries: { query: string; clicks: number; impressions: number; position: number | null; change: number | null; page: string | null }[] };
   consoleOn: boolean;
   sitemap: { madeAt: string; pages: number; address: string | null };
   redirects: { id: string; from: string; to: string; hits: number }[] | null;
@@ -60,42 +65,7 @@ export function SeoOverview(p: SeoOverviewProps) {
         </div>
       </div>
 
-      <section className="a2-card a2-mt12" data-testid="seo-ranking" aria-labelledby="seo-rank-h">
-        <h2 className="a2-h3" id="seo-rank-h">
-          {c('ov.google')}
-        </h2>
-        {p.gsc ? (
-          <table className="a2-table seo-rank">
-            <thead>
-              <tr>
-                <th>{c('ov2.words')}</th>
-                <th>{c('ov2.pos')}</th>
-                <th>{c('ov2.perMonth')}</th>
-                <th>{c('ov.clicks')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {p.gsc.queries.map((r) => (
-                <tr key={r.query}>
-                  <td>
-                    <b>{r.query}</b>
-                  </td>
-                  <td>
-                    <span className={`seo-pos${r.position !== null && r.position <= 3 ? ' t3' : r.position !== null && r.position <= 10 ? ' t10' : ''}`}>{r.position === null ? '—' : `#${num(Math.round(r.position))}`}</span>
-                  </td>
-                  <td>{num(r.impressions)}</td>
-                  <td>{num(r.clicks)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="a2-kn">{c('ov.noConsole')}</p>
-        )}
-        <Link className="a2-btn sm a2-mt6" href="/admin/website/seo/organic">
-          {c('ov.console')}
-        </Link>
-      </section>
+      <SeoRanking words={p.rankWords} rows={p.gsc ? p.gsc.queries : null} connected={p.consoleOn} locale={p.locale} />
 
       <div className="seo-two a2-mt12">
         <section className="a2-card" data-testid="seo-problems" aria-labelledby="seo-prob-h">
@@ -108,12 +78,12 @@ export function SeoOverview(p: SeoOverviewProps) {
                 .filter((x) => x.n > 0)
                 .map((x) => (
                   <li key={x.id}>
-                    <span className="a2-pill warn">{c('ov2.fixSoon')}</span>
+                    <span className={`a2-pill ${x.tone}`}>{c(x.tone === 'bad' ? 'ov2.urgent' : 'ov2.fixSoon')}</span>
                     <span>
                       {x.label} · <b>{num(x.n)}</b>
                     </span>
-                    <Link className="a2-btn sm" href={`/admin/website/seo/health?issue=${x.id}`}>
-                      {c('ov2.see')}
+                    <Link className="a2-btn sm" href={x.href}>
+                      {x.fix}
                     </Link>
                   </li>
                 ))}
