@@ -24,6 +24,7 @@ import enWords from '../../../messages/admin-ad-platforms.en.json';
 import { AdPlatformsError, type AdPlatformsDeps, type AdPlatformsWho } from './ad-platforms';
 import { BRIEF_TEXT_MAX, correctedBrief, draftBrief, type BriefAnswers, type BriefLang, type BriefWords } from './creative-brief-model';
 import { GROWTH_KIND, growthFigures } from './growth-agent';
+import { NOT_PRACTICE_APPROVAL } from '../practice/rows';
 
 const S = MOTHER_STORE_ID;
 export const BRIEF_KIND = 'ad';
@@ -72,7 +73,7 @@ export async function createBrief(deps: BriefDeps, who: AdPlatformsWho, input: u
   const proposalId = ok.data.proposalId ?? null;
   if (proposalId) {
     // only a "refresh the creative" proposal the owner approved, once
-    const p = await deps.db.aiApprovalRequest.findFirst({ where: { id: proposalId, storeId: S, kind: GROWTH_KIND, status: 'APPROVED' }, select: { refId: true, payload: true } });
+    const p = await deps.db.aiApprovalRequest.findFirst({ where: { id: proposalId, storeId: S, kind: GROWTH_KIND, status: 'APPROVED', ...NOT_PRACTICE_APPROVAL }, select: { refId: true, payload: true } });
     if (!p || (p.payload as { type?: string } | null)?.type !== 'refreshCreative') throw new AdPlatformsError('NOT_FOUND', 404, ['proposalId']);
     if (adCampaignId && adCampaignId !== p.refId) throw new AdPlatformsError('INVALID_INPUT', 400, ['adCampaignId']);
     adCampaignId = p.refId;
@@ -183,7 +184,7 @@ export async function briefsOverview(deps: BriefDeps, lang: BriefLang = 'en'): P
   const [products, campaigns, approved, rows] = await Promise.all([
     deps.db.product.findMany({ where: { storeId: S, archivedAt: null }, orderBy: { nameEn: 'asc' }, take: PICK_MAX, select: { id: true, nameEn: true, nameBn: true } }),
     deps.db.adCampaign.findMany({ where: { storeId: S, archivedAt: null }, orderBy: { name: 'asc' }, take: PICK_MAX, select: { id: true, name: true } }),
-    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: 'APPROVED', refType: 'AdCampaign' }, orderBy: { decidedAt: 'desc' }, take: REFRESH_READ, select: { id: true, refId: true, payload: true, decidedAt: true } }),
+    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: 'APPROVED', refType: 'AdCampaign', ...NOT_PRACTICE_APPROVAL }, orderBy: { decidedAt: 'desc' }, take: REFRESH_READ, select: { id: true, refId: true, payload: true, decidedAt: true } }),
     deps.db.creativeBrief.findMany({ where: { storeId: S, ...isAd }, orderBy: { createdAt: 'desc' }, take: RECENT }),
   ]);
   const name = (p: { nameEn: string; nameBn: string | null }) => (lang === 'bn' && p.nameBn) || p.nameEn;
