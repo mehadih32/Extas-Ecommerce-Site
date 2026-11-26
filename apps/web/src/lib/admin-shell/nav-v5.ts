@@ -64,7 +64,8 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
     { proto: 'ranking', real: ['ranking'] },
     { proto: 'combos', real: ['combos'] },
     { proto: 'sets', real: ['sets'] },
-    { proto: 'reviews', real: ['reviews'] },
+    // PR 1230: the prototype's Reviews & questions opens on Questions (m-products.js `rst.tab`), then Reviews and FAQs
+    { proto: 'reviews', real: ['reviews'], order: ['/admin/products/questions', '/admin/products/reviews', '/admin/products/faqs'] },
     { proto: 'sizecharts', real: ['charts'] },
   ],
   customers: [
@@ -94,14 +95,15 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
     { proto: 'tools', real: ['adPlatforms', 'affiliates', 'landing', 'referrals', 'merchantFeed'] },
   ],
   website: [
-    // PR 778: the owner's own first tab (not in the prototype's A.NAV; EXTRA_TABS below), the prototype's six follow unchanged
-    { proto: 'control', real: ['control'] },
+    // PR 1230 (prototype parity): Website opens on the prototype's first tab, Page layouts; the prototype's six come in its
+    // order and the owner's own Control tab (PR 778, not in A.NAV; EXTRA_TABS below) stays in the row after them
     { proto: 'layout', real: ['layouts'] },
     { proto: 'text', real: ['words'] },
     { proto: 'policies', real: ['policies'] },
     { proto: 'blog', real: ['blog'] },
     { proto: 'analytics', real: ['analytics'] },
     { proto: 'seo', real: ['seo'] },
+    { proto: 'control', real: ['control'] },
   ],
   money: [
     { proto: 'overview', real: ['overview'] },
@@ -160,8 +162,8 @@ export const NAV_V5: Readonly<Partial<Record<AdminSectionId, readonly V5Tab[]>>>
 export const AWAITING: readonly string[] = [];
 
 /**
- * Tabs the owner asked for that the prototype's `A.NAV` does not have, as `<real section>.<proto tab>` (all of them first in
- * their section). The prototype's own tabs follow in its order and words; nav-v5.test.ts leaves these out when it compares.
+ * Tabs the owner asked for that the prototype's `A.NAV` does not have, as `<real section>.<proto tab>` (PR 1230: after the
+ * prototype's own tabs, so the section opens where the prototype opens). The prototype's own tabs follow in its order and words; nav-v5.test.ts leaves these out when it compares.
  */
 export const EXTRA_TABS: readonly string[] = ['website.control'];
 

@@ -108,12 +108,18 @@ describe('the menu equals the prototype A.NAV (PR 659)', () => {
     expect(hrefs(landed)).toEqual([...raw, ...extra(() => true)].sort());
   });
 
-  it('the owner asked for one extra first tab: Website opens on Control and its prototype tabs follow it unchanged (PR 778)', () => {
+  it("Website opens on the prototype's Page layouts; the owner's own Control tab (PR 778) follows the prototype's six (PR 1230)", () => {
     const web = landed.find((x) => x.id === 'website')!;
     const main = web.tabs.filter((x) => !x.more).map((x) => x.id);
-    expect(main.slice(0, 7)).toEqual(['control', 'layouts', 'words', 'policies', 'blog', 'analytics', 'seo']);
+    expect(main.slice(0, 7)).toEqual(['layouts', 'words', 'policies', 'blog', 'analytics', 'seo', 'control']);
     expect(label('en', 'shell.tab.website.control')).toBe('Control');
-    expect(sectionHome(sectionById('website')!, OWNER)).toBe('/admin/website/control');
+    expect(sectionHome(sectionById('website')!, OWNER)).toBe('/admin/website/layouts');
+  });
+
+  it('Reviews & questions opens on Questions, as the prototype does (PR 1230)', () => {
+    const reviews = sectionById('products')!.tabs.find((x) => x.id === 'reviews')!;
+    expect(reviews.pages[0]!.href).toBe('/admin/products/questions');
+    expect(reviews.pages.map((p) => p.href).slice(0, 2)).toEqual(['/admin/products/questions', '/admin/products/reviews']);
   });
 
   it('a section opens on its first prototype tab', () => {

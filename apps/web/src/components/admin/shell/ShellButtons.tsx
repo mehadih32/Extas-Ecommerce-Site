@@ -93,40 +93,49 @@ export function MoreTabs({ label, links }: { label: string; links: MoreLink[] })
 
 export interface FitTab extends MoreLink {
   id: string;
+  /** PR 1230: a tab the prototype has no tab for (`more` in the menu): it always sits under "More", never in the row. */
+  extra?: boolean;
 }
 
 /** A laptop's width and up (the shell's own break, shell.css): there the tabs stay in one row and "More" appears only when they cannot fit. */
 const LAPTOP = 900;
+/** The room kept for "More" before it is drawn and measured. */
+const MORE_GUESS = 110;
 
 /**
- * Final round (prototype v5): every tab of the section sits in the row. Below a laptop's width the row scrolls sideways
- * (nothing is hidden). On a laptop or larger screen "More" appears only for the tabs that truly do not fit, the last
- * ones first, and it is measured again when the window or the fonts change.
+ * Final round (prototype v5): every prototype tab of the section sits in the row, in the prototype's order. PR 1230: the
+ * tabs the prototype does not have (Launch queue, Brand & menus, Searches ...) always sit under "More", so they never push
+ * a prototype tab out of the row (Reports › Monthly review at 1366 px). Below a laptop's width the row scrolls sideways
+ * (nothing is hidden). On a laptop or larger screen a prototype tab goes under "More" only when it truly does not fit,
+ * the last ones first, and it is measured again when the window or the fonts change.
  */
 export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string }) {
+  const main = tabs.filter((x) => !x.extra);
+  const extras = tabs.filter((x) => x.extra);
   const nav = useRef<HTMLDivElement>(null);
   const widths = useRef<number[]>([]);
-  const [shown, setShown] = useState(tabs.length);
+  const [shown, setShown] = useState(main.length);
   const [measure, setMeasure] = useState(0);
-  const all = shown === tabs.length;
-  // 1. With every tab drawn, take its width, then decide how many fit.
+  const all = shown === main.length;
+  // 1. With every prototype tab drawn, take its width, then decide how many fit beside "More".
   useLayoutEffect(() => {
     const el = nav.current;
     if (!el) return;
     const row = el.querySelector<HTMLElement>('.a2-tabs-s');
     if (all && row) {
       const items = Array.from(row.children) as HTMLElement[];
-      if (items.length === tabs.length) widths.current = items.map((i) => i.getBoundingClientRect().width);
+      if (items.length === main.length) widths.current = items.map((i) => i.getBoundingClientRect().width);
     }
     const w = widths.current;
-    if (w.length !== tabs.length) return;
+    if (w.length !== main.length) return;
     const room = el.clientWidth;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- measures the tab strip after layout
-    if (window.innerWidth < LAPTOP) return void (shown !== tabs.length && setShown(tabs.length));
+    if (window.innerWidth < LAPTOP) return void (shown !== main.length && setShown(main.length));
     const gap = 2;
+    const drawn = el.querySelector<HTMLElement>('.a2-more');
+    const moreW = drawn ? drawn.getBoundingClientRect().width + gap : MORE_GUESS;
     const total = w.reduce((a, b) => a + b + gap, 0);
-    if (total <= room) return void (shown !== tabs.length && setShown(tabs.length));
-    const moreW = 110;
+    if (total + (extras.length ? moreW : 0) <= room) return void (shown !== main.length && setShown(main.length));
     let used = moreW;
     let n = 0;
     for (const x of w) {
@@ -136,11 +145,11 @@ export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string
     }
     n = Math.max(1, n);
     if (n !== shown) setShown(n);
-  }, [measure, all, shown, tabs.length]);
+  }, [measure, all, shown, main.length, extras.length]);
   // 2. Measure again when the window or the fonts change: show all once, then fit.
   useEffect(() => {
     const again = () => {
-      setShown(tabs.length);
+      setShown(main.length);
       setMeasure((m) => m + 1);
     };
     let last = window.innerWidth;
@@ -153,11 +162,11 @@ export function FitTabs({ tabs, moreLabel }: { tabs: FitTab[]; moreLabel: string
     window.addEventListener('resize', onResize);
     void document.fonts?.ready.then(again);
     return () => window.removeEventListener('resize', onResize);
-  }, [tabs.length]);
-  const row = tabs.slice(0, shown);
-  const more = tabs.slice(shown);
+  }, [main.length]);
+  const row = main.slice(0, shown);
+  const more = [...main.slice(shown), ...extras];
   return (
-    <div className={`a2-tabs-fit${tabs.length >= 10 ? ' a2-tabs-tight' : ''}`} ref={nav}>
+    <div className={`a2-tabs-fit${main.length >= 10 ? ' a2-tabs-tight' : ''}`} ref={nav}>
       <TabsRow>
         {row.map((x) => (
           <Link key={x.id} className={`a2-tab${x.on ? ' on' : ''}`} href={x.href} aria-current={x.on ? 'page' : undefined}>
