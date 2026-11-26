@@ -83,7 +83,7 @@ export default async function AgentsTeamPage() {
   // prototype v5 (m-ai.js renderAgents): four numbers above the cards and, on each card, running or paused with today's and this month's spend
   const [room, queue] = await Promise.all([
     controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID),
-    approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID),
+    approvalsView({ db: access.deps.db, now: access.deps.now, resolver: access.deps.resolver }, MOTHER_STORE_ID),
   ]);
   const money = moneyOf(room.view.currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);

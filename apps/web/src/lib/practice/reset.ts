@@ -8,6 +8,7 @@
 // `extas_purge_practice_history` (migration 0281); no real order's history can be reached, and a practice flag can never
 // be switched on for a real record (trigger). One transaction: it all goes or nothing goes.
 import { Prisma, type PrismaClient } from '@extas/db/client';
+import { removePracticeRows } from './rows';
 
 type Db = PrismaClient;
 type Tx = Prisma.TransactionClient;
@@ -99,6 +100,8 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
         await tx.returnItem.deleteMany({ where: { returnId: { in: rr.map((r) => r.id) } } });
         removed.set('ReturnRecord', (await tx.returnRecord.deleteMany({ where: { id: { in: rr.map((r) => r.id) } } })).count);
       }
+      // PR 1220: the practice display rows (approvals …, practice/rows.ts), owned by their mark; before the orders they name
+      for (const [table, n] of Object.entries(await removePracticeRows(tx, storeId))) removed.set(table, n);
       // order of the roots: money and parcels before orders before people before products and couriers
       for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer', 'CourierAccount'] as const) {
         await removeRows(tx, fks, t, where, 0, removed);
@@ -223,6 +226,8 @@ export async function resetPracticeSales(db: Db, storeId: number): Promise<Reset
         await tx.returnItem.deleteMany({ where: { returnId: { in: rr.map((r) => r.id) } } });
         removed.set('ReturnRecord', (await tx.returnRecord.deleteMany({ where: { id: { in: rr.map((r) => r.id) } } })).count);
       }
+      // PR 1220: the practice display rows name practice orders and people, so they go and are made again with them
+      for (const [table, n] of Object.entries(await removePracticeRows(tx, storeId))) removed.set(table, n);
       for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer'] as const) {
         await removeRows(tx, fks, t, where, 0, removed);
       }

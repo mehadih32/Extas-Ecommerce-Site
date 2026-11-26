@@ -1,0 +1,104 @@
+// S28 · PR 1220 on a real PostgreSQL (skipped without TEST_DATABASE_ADMIN_URL): the practice display rows (practice/rows.ts)
+// are written once with their mark, show only while practice mode is on, acting on them changes nothing but their own state
+// (no row is added anywhere but the audit log, no order or customer moves), and a reset removes them.
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SYSTEM } from '@extas/auth';
+import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
+import type { PrismaClient } from '@extas/db/client';
+import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
+import { approvalsView, decideApproval } from '../admin-ai/approvals';
+import { PRACTICE_ROWS } from './data';
+import { PRACTICE_CHANNEL, practiceRowsMissing, seedPracticeRows } from './rows';
+import { resetPractice } from './reset';
+import { seedPractice } from './seed';
+
+const NOW = new Date('2026-11-13T08:00:00Z');
+const meta = { actorId: null, reason: 'test' };
+
+/** Every table's row count, so a test can prove an action added or removed nothing anywhere. */
+async function tableCounts(db: PrismaClient): Promise<Map<string, number>> {
+  const tables = await db.$queryRaw<{ t: string }[]>`SELECT table_name AS t FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name NOT LIKE '\_%'`;
+  const out = new Map<string, number>();
+  for (const { t } of tables) out.set(t, Number((await db.$queryRawUnsafe<{ n: number }[]>(`SELECT count(*)::int AS n FROM "${t.replace(/"/g, '""')}"`))[0]?.n ?? 0));
+  return out;
+}
+
+/** The tables whose count differs between two snapshots. */
+function changed(a: Map<string, number>, b: Map<string, number>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [t, n] of b) if ((a.get(t) ?? 0) !== n) out[t] = n - (a.get(t) ?? 0);
+  return out;
+}
+
+describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
+  let t: TestDatabase;
+  let S = 0;
+  let resolver: SettingsResolver<typeof registry>;
+
+  beforeAll(async () => {
+    t = await createTestDatabase('practice_rows');
+    [S] = await seedSampleStores(t.prisma);
+    await syncSettings(t.prisma, { registry, messages });
+    resolver = new SettingsResolver(prismaBackend(t.prisma), registry, { checkIntervalMs: 0 });
+    await seedPractice(t.prisma, S, NOW);
+  }, 240_000);
+  afterAll(async () => {
+    await t?.drop();
+  });
+
+  it('writes the prototype’s approvals once, each with the practice mark and the prototype’s kinds', async () => {
+    const db = t.prisma;
+    const rows = await db.aiApprovalRequest.findMany({ where: { storeId: S }, orderBy: { createdAt: 'asc' } });
+    expect(rows.length).toBeGreaterThanOrEqual(PRACTICE_ROWS.approvals.length - 3);
+    expect(rows.every((r) => r.channel === PRACTICE_CHANNEL)).toBe(true);
+    expect(new Set(rows.map((r) => r.kind))).toEqual(new Set(['adBudget', 'orderDecline', 'block', 'reply', 'price', 'blog']));
+    // every placeholder is filled, the amounts are in the store's currency, and the draft and the link are on the card
+    expect(rows.some((r) => /\{[a-z0-9]+\}/i.test(`${r.title} ${r.summary}`))).toBe(false);
+    const q1 = rows.find((r) => r.title.includes('Polo Winter'))!;
+    expect(q1.title).toMatch(/1,500.*2,000/);
+    const reply = rows.find((r) => r.kind === 'reply' && r.status === 'PENDING')!;
+    expect((reply.payload as { ownerView: { draft: string; openHref: string } }).ownerView.openHref).toBe('/admin/support');
+    const decline = rows.find((r) => r.kind === 'orderDecline')!;
+    expect(await db.order.count({ where: { id: decline.refId!, isPractice: true } })).toBe(1);
+    expect(rows.filter((r) => r.status === 'APPROVED')).toHaveLength(1);
+    // a second run adds nothing
+    expect(await seedPracticeRows(db, S, NOW)).toMatchObject({ practiceApprovals: 0 });
+    expect(await practiceRowsMissing(db, S)).toBe(false);
+  });
+
+  it('shows them only while practice mode is on, and never to a caller without the settings (the Telegram buttons)', async () => {
+    const db = t.prisma;
+    await resolver.set('practice.enabled', { on: false }, storeTarget(S), meta);
+    expect((await approvalsView({ db, resolver, now: () => NOW }, S)).pending).toHaveLength(0);
+    await resolver.set('practice.enabled', { on: true }, storeTarget(S), meta);
+    const on = await approvalsView({ db, resolver, now: () => NOW }, S);
+    expect(on.pending.length).toBeGreaterThan(0);
+    expect(on.decided.length).toBe(1);
+    expect((await approvalsView({ db, now: () => NOW }, S)).pending).toHaveLength(0);
+  });
+
+  it('approving or rejecting one changes only its own state: nothing is sent, booked, published or moved', async () => {
+    const db = t.prisma;
+    const pending = await db.aiApprovalRequest.findMany({ where: { storeId: S, channel: PRACTICE_CHANNEL, status: 'PENDING' }, orderBy: { id: 'asc' } });
+    const orders = await db.order.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, status: true, version: true, updatedAt: true } });
+    const customers = await db.customer.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, updatedAt: true } });
+    const before = await tableCounts(db);
+    for (const [i, r] of pending.entries()) await decideApproval({ db, now: () => NOW }, { actor: SYSTEM }, r.id, i % 2 ? 'reject' : 'approve', null);
+    const after = await tableCounts(db);
+    // no table gains or loses a row (at most the audit log notes the decisions)
+    expect(Object.keys(changed(before, after)).filter((k) => k !== 'AuditLog')).toEqual([]);
+    expect(pending.length).toBeGreaterThan(0);
+    expect(await db.order.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, status: true, version: true, updatedAt: true } })).toEqual(orders);
+    expect(await db.customer.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, updatedAt: true } })).toEqual(customers);
+    expect(await db.aiApprovalRequest.count({ where: { storeId: S, channel: PRACTICE_CHANNEL, status: 'PENDING' } })).toBe(0);
+  });
+
+  it('"Reset practice data" removes them, and a real approval stays', async () => {
+    const db = t.prisma;
+    const real = await db.aiApprovalRequest.create({ data: { storeId: S, kind: 'refund', title: 'A real refund', payload: {}, channel: 'admin' } });
+    const r = await resetPractice(db, S);
+    expect(r.removed.AiApprovalRequest).toBeGreaterThan(0);
+    expect(await db.aiApprovalRequest.count({ where: { storeId: S, channel: PRACTICE_CHANNEL } })).toBe(0);
+    expect(await db.aiApprovalRequest.count({ where: { id: real.id } })).toBe(1);
+  });
+});
