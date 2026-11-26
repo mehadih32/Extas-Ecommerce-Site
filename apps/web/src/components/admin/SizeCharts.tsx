@@ -289,6 +289,14 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
   const chosen = charts.find((c) => c.id === chosenId) ?? resolved?.chart ?? null;
 
   const fieldsLine = (c: SizeChartView) => c.fields.map((f) => (lang === 'bn' ? f.labelBn : f.labelEn)).join(sep);
+  // PR 1238 (prototype v5): a card reads "S–XXL · Chest, Length, Shoulder, Sleeve" — the chart's first and last size in the
+  // shop's order, then its first four measurements
+  const cardLine = (c: SizeChartView) => {
+    const ks = c.rows.map((r) => r.size).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const span = ks.length ? (ks.length > 1 ? `${sizeLabel(ks[0]!)}–${sizeLabel(ks[ks.length - 1]!)}` : sizeLabel(ks[0]!)) : '';
+    const pts = c.fields.slice(0, 4).map((f) => (lang === 'bn' ? f.labelBn : f.labelEn)).join(', ');
+    return span ? `${span}${sep}${pts}` : pts;
+  };
   const gtName = (c: SizeChartView) => (lang === 'bn' ? c.garmentType.nameBn : c.garmentType.nameEn);
   const catName = (c: { nameEn: string; nameBn: string | null }) => (lang === 'bn' ? (c.nameBn ?? c.nameEn) : c.nameEn);
 
@@ -738,7 +746,7 @@ export function SizeCharts({ dict, lang, charts: initialCharts, detail, options,
                         return (
                           <div className="ad-card sc-card" key={x.id} data-testid="sizechart-card">
                             <b className="sc-bold">{x.name}</b>
-                            <span className="sc-xs sc-dim sc-block">{fieldsLine(x)}</span>
+                            <span className="sc-xs sc-dim sc-block">{cardLine(x)}</span>
                             <span className="sc-chips sc-mt8">
                               {isDef ? <span className="sc-tag">{tt('badgeDefault')}</span> : null}
                               <span className="sc-tag plain">{tt(x.usedBy === 1 ? 'usedByOne' : 'usedByMany', { n: x.usedBy })}</span>

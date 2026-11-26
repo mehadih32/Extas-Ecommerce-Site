@@ -66,6 +66,22 @@ describe('Size charts — category cards (PR 806)', () => {
     expect(html).toContain('Old polo chart');
     expect(html).toContain(en.bringBack);
   });
+  it('PR 1238: a card reads the size span and the first four measurements, as the prototype ("S–XL · Chest, Length")', () => {
+    const p = props(true);
+    const sized = chart('s', 'Sized polo', {
+      fields: [
+        { key: 'chest', labelEn: 'Chest', labelBn: 'বুক' },
+        { key: 'length', labelEn: 'Length', labelBn: 'লম্বা' },
+      ],
+      rows: [
+        { size: 'xl', values: [44, 29] },
+        { size: 's', values: [38, 27] },
+        { size: 'm', values: [40, 28] },
+      ],
+    });
+    const html = renderToStaticMarkup(<SizeCharts {...p} charts={[sized]} sizes={[{ key: 's', label: 'S' }, { key: 'm', label: 'M' }, { key: 'xl', label: 'XL' }]} />);
+    expect(html).toContain(`S–XL${en.sep}Chest, Length`);
+  });
   it('a viewer sees the cards and Edit, none of the buttons that change a chart', () => {
     const html = renderToStaticMarkup(<SizeCharts {...props(false)} />);
     expect(html).toContain(en.edit);
