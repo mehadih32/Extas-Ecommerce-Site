@@ -151,6 +151,34 @@
       "smsSenders": {
         "title": "SMS senders",
         "sentence": "The sender name and number SMS go out with. Edited under Messages."
+      },
+      "charges": {
+        "title": "Delivery charges",
+        "sentence": "Inside, sub-area and outside charges, set for each delivery zone"
+      },
+      "wallets": {
+        "title": "bKash & Nagad numbers",
+        "sentence": "The numbers customers send bKash and Nagad payments to"
+      },
+      "exchange": {
+        "title": "Exchange",
+        "sentence": "{value} hours after delivery"
+      },
+      "orderEdits": {
+        "title": "Order changes by the customer",
+        "sentence": "Up to {value} times before packing"
+      },
+      "tiers": {
+        "title": "Buy more, save",
+        "sentence": "Take 2, take 3: a lower price for more pieces in the bag"
+      },
+      "orderMsgs": {
+        "title": "Order messages",
+        "sentence": "The SMS and WhatsApp messages each order sends, step by step"
+      },
+      "msgLog": {
+        "title": "Message log",
+        "sentence": "Status, cost and retries of every message"
       }
     },
     "fields": {
@@ -210,6 +238,12 @@
       "stockhold": {
         "checkoutMinutes": "Hold while the customer is in checkout (minutes)",
         "placedHours": "Hold after the order is placed (hours)"
+      },
+      "exchange": {
+        "value": "Exchange allowed for (hours after delivery)"
+      },
+      "orderEdits": {
+        "value": "Times a customer may change an order before packing"
       }
     },
     "opt": {
@@ -674,7 +708,9 @@
       "replaceOff": "No free replacement is offered.",
       "erpcheck": "A piece that comes back is checked within {value} days.",
       "quiet": "Messages are held from {fromHour}:00 to {toHour}:00 and go out after that.",
-      "quietOff": "Messages go out at any hour."
+      "quietOff": "Messages go out at any hour.",
+      "exchange": "You can exchange within {value} hours of delivery.",
+      "orderEdits": "You can change your order up to {value} times before we pack it."
     },
     "try": {
       "title": "Try on last 30 days' orders",

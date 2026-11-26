@@ -220,7 +220,8 @@ export function PopupsHub(props: PopupsHubProps) {
                                 {tt('managedIn')} {tt(`items.${p.key}.managed`)} →
                               </Link>
                             ) : null}
-                            {p.notice ? <span className="po-chip">{tt('writtenBelow')}</span> : null}
+                            {/* PR 1231 (prototype v5): the notice bar and the welcome pop-up read like every other row; their words are
+                                written in Notices below, which their editor says (no extra chip on the row) */}
                             {p.needs && !p.needs.on ? (
                               <Link className="po-chip warn" href={p.needs.href} onClick={(e) => e.stopPropagation()}>
                                 {tt('needs')} {tt(`items.${p.key}.needs`)} →
@@ -241,7 +242,7 @@ export function PopupsHub(props: PopupsHubProps) {
                               aria-label={`${nameOf(p.key)}: ${tt('showThis')}`}
                             />
                           </label>
-                        ) : (
+                        ) : p.notice ? null : (
                           <span className="rh-go">{tt('see')}</span>
                         )}
                       </div>

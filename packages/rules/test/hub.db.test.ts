@@ -9,6 +9,7 @@ import { registry, type Key, type Value } from '@extas/settings';
 import {
   approveOffer,
   bustAll,
+  createRule,
   createOffer,
   getOffer,
   hubHistory,
@@ -100,6 +101,16 @@ describe.skipIf(!HAS_TEST_DB)('Rules hub, pop-ups and Offers 360 on PostgreSQL (
     const peak = s.rows.find((r) => r.id === 'peak')!;
     expect(peak.pill).toBe('off');
     expect(await code(saveHubRow(deps(), as(reader), { id: 'dup', version: 'x', values: { lookbackDays: 3 } }))).toBe('FORBIDDEN');
+  });
+
+  it("PR 1231: a Smart Rule's line is filled with its own values, never a token; the prototype's new rows are listed", async () => {
+    await createRule(deps(), as(writer), { templateId: 'exchange', key: 'hub-fill-exchange' });
+    const s = await hubScreen(deps(), as(reader));
+    const row = s.rows.find((r) => r.type === 'smart' && r.key === 'hub-fill-exchange');
+    if (row?.type !== 'smart') throw new Error('no smart row');
+    expect(row.shortEn).toContain('72');
+    expect(row.shortEn).not.toContain('{');
+    expect(s.rows.map((r) => r.id)).toEqual(expect.arrayContaining(['charges', 'exchange', 'orderEdits', 'msgLog']));
   });
 
   it('PR 676: a saved row goes through the setting; a stale screen, a field outside the row and a bad number are refused', async () => {

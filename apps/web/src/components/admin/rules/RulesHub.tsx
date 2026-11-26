@@ -6,7 +6,7 @@
 import Link from 'next/link';
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { HubGroupId, HubField } from '@extas/rules/pure';
-import { HUB_GROUPS, formatValue, isTryable, type TryResult } from '@extas/rules/pure';
+import { HUB_GROUPS, HUB_OPEN_ROWS, formatValue, isTryable, type TryResult } from '@extas/rules/pure';
 import type { HubRowView, HubScreen, HubSettingRowView, HubSmartRowView, HubLinkRowView } from '@extas/rules';
 import { call } from '../api';
 import { PageHead } from '../shell/ShellHead';
@@ -98,7 +98,8 @@ export function RulesHub(props: RulesHubProps) {
   const titleOf = (r: HubRowView) => (r.type === 'smart' ? (lang === 'bn' && r.nameBn ? r.nameBn : r.nameEn) : tt(`rows.${r.id}.title`));
   // PR 940: a rule that is off says so in one short line ("Off", "Off · ready: 250 orders a day") when the words have one
   const sentenceOf = (r: HubRowView) => {
-    if (r.type === 'smart') return (lang === 'bn' ? r.shortBn : r.shortEn) ?? r.shortEn ?? '';
+    // PR 1231: a Smart Rule's line comes filled with its values; a value that is not set yet reads "not set", never {a token}
+    if (r.type === 'smart') return ((lang === 'bn' ? r.shortBn : r.shortEn) ?? r.shortEn ?? '').replace(/\{[^{}]+\}/g, tt('notSet'));
     if (r.type === 'setting') {
       if (r.pill === 'off') {
         const off = tt(`rows.${r.id}.sentenceOff`, vars(r));
@@ -226,7 +227,8 @@ export function RulesHub(props: RulesHubProps) {
                       </div>
                       <div className="rh-st">
                         {pill(r)}
-                        <span className="rh-go">{r.type === 'setting' ? tt('edit') : tt('open')}</span>
+                        {/* PR 1231: as the prototype, every rule says Edit; only a page of its own (offers, the message log, pop-ups) says Open */}
+                        <span className="rh-go">{r.type === 'link' && HUB_OPEN_ROWS.includes(r.id) ? tt('open') : tt('edit')}</span>
                       </div>
                     </>
                   );
