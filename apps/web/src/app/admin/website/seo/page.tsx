@@ -77,7 +77,15 @@ const pick = (v: Awaited<ReturnType<typeof seoSnapshot>>["values"]) => ({
   "naming.metaDescriptionMaxChars": v["naming.metaDescriptionMaxChars"],
 });
 
-export default async function SeoPage() {
+/** PR 1232: what each problem's fix button says (the prototype's words) and where it leads; the rest say "See". */
+const FIX: Readonly<Record<string, { word: string; href: string; tone?: "bad" }>> = {
+  photoNoAlt: { word: "ov2.fixAlt", href: `${HERE}?open=alt#seo-alt`, tone: "bad" },
+  noDescription: { word: "ov2.fixTemplate", href: `${HERE}?open=titles#seo-titles` },
+  noText: { word: "ov2.fixCollection", href: "/admin/website/seo/categories" },
+};
+
+export default async function SeoPage({ searchParams }: { searchParams: Promise<{ open?: string }> }) {
+  const opened = (await searchParams).open ?? null;
   const deps = adminDeps();
   const [plain, access] = await Promise.all([adminView(deps), pageAccess("seo.read", deps, MOTHER_STORE_ID)]);
   const view = withScreen(plain);
@@ -127,19 +135,27 @@ export default async function SeoPage() {
         score={hScore}
         needFix={health.rows.length}
         total={hTotal}
-        problems={HEALTH_ISSUES.map((i) => ({ id: i, label: c(`ov.issue.${i}`), n: hCounts[i] }))}
+        problems={[
+          ...HEALTH_ISSUES.map((i) => ({ id: i, label: c(`ov.issue.${i}`), n: hCounts[i], tone: FIX[i]?.tone ?? ("warn" as const), fix: c(FIX[i]?.word ?? "ov2.see"), href: FIX[i]?.href ?? `/admin/website/seo/health?issue=${i}` })),
+          // PR 1232 (prototype "Old WordPress links without redirect (404)"): old links that open an error page, with the suggested redirects
+          { id: "notFound", label: c("ov2.notFound"), n: reds?.notFound.openCount ?? 0, tone: "warn" as const, fix: c("ov2.fixRedirects"), href: "/admin/website/seo/redirects" },
+        ]}
+        rankWords={Object.fromEntries(["title", "compared", "all", "top3", "top10", "rising", "falling", "colWords", "colPos", "colChange", "colSearches", "colClicks", "colPage", "noConsole", "noneHere", "console"].map((k) => [k, c(`rank.${k}`)]))}
+        locale={view.locale}
+        // PR 1232: the prototype lists products here (a collection's text has its own problem row)
         weakest={[...health.rows]
+          .filter((r) => r.kind === "product")
           .sort((x, y) => y.issues.length - x.issues.length)
           .slice(0, 8)
           .map((r) => ({ key: `${r.kind}-${r.key}`, name: r.name, href: r.fix, score: Math.max(0, Math.round(((HEALTH_ISSUES.length - r.issues.length) / HEALTH_ISSUES.length) * 100)) }))}
-        gsc={gsc && gsc.status === "ok" ? { clicks: gsc.data.clicks, impressions: gsc.data.impressions, position: gsc.data.position, queries: gsc.data.queries.slice(0, 20) } : null}
+        gsc={gsc && gsc.status === "ok" ? { clicks: gsc.data.clicks, impressions: gsc.data.impressions, position: gsc.data.position, queries: gsc.data.queries.slice(0, 20).map((q) => ({ ...q, change: null, page: null })) } : null}
         consoleOn={engines.some((e) => e.connected)}
         sitemap={{ madeAt: sitemaps.madeAt, pages: sitemaps.files.reduce((a, f) => a + f.urls, 0), address: sitemaps.index }}
         redirects={reds ? reds.redirects.slice(0, 6).map((r) => ({ id: String(r.id), from: r.fromPath, to: r.toPath, hits: r.hits })) : null}
         canWrite={canWrite}
       />
 
-      <details className="a2-card a2-mt12 seo-more" data-testid="seo-more">
+      <details className="a2-card a2-mt12 seo-more" data-testid="seo-more" open={opened === "alt" || opened === "titles"}>
         <summary>
           <b>{c("moreTitle")}</b>
           <span className="a2-kn">{c("moreSub")}</span>
@@ -189,7 +205,7 @@ export default async function SeoPage() {
       <div className="a2-mt12">
         <IndexingCard d={d} value={idx} defaults={snap.defaults["seo.indexing"]} version={snap.versions["seo.indexing"]} canWrite={canWrite} pageTypes={SEO_PAGE_TYPES} />
       </div>
-      <div className="a2-mt12">
+      <div className="a2-mt12" id="seo-titles">
         <TitlesCard
           d={d}
           value={pick(snap.values)}
@@ -239,7 +255,7 @@ export default async function SeoPage() {
       <div className="a2-mt12">
         <SearchEnginesCard d={d} value={snap.values["seo.verification"]} limits={SEO_VERIFICATION_LIMITS} version={snap.versions["seo.verification"]} canWrite={canWrite} engines={engines} site={primarySite} sitemap={primarySitemap} />
       </div>
-      <div className="a2-mt12">
+      <div className="a2-mt12" id="seo-alt">
         <AltTextCard d={d} value={snap.values["seo.altText"]} defaults={snap.defaults["seo.altText"]} limits={SEO_ALT_TEXT_LIMITS} version={snap.versions["seo.altText"]} canWrite={canWrite} missing={altMissing} example={altExample} locale={view.locale} />
       </div>
       <div className="a2-mt12">
