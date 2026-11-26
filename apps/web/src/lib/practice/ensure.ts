@@ -90,7 +90,7 @@ export async function ensurePractice(deps: EnsureDeps, storeId: number, opts: { 
     } else out.pending = true;
   }
   // 1b. PR 1220: a store filled before the display rows existed gets them once (approvals …; practice/rows.ts)
-  if (enabled.on && (auto.on || opts.force) && (await practiceRowsMissing(deps.db, storeId))) {
+  if (enabled.on && (auto.on || opts.force) && (await practiceRowsMissing(deps.db, storeId, now))) {
     if (await takeLease(deps.db, 'rows', storeId, now)) {
       try {
         await seedPracticeRows(deps.db, storeId, now);
