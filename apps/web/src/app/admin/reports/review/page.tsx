@@ -288,6 +288,10 @@ export default async function MonthlyReviewPage({
     },
     { key: "net", a: net(now), z: net(was), strong: true },
   ];
+  const actOf = (key: string) => {
+    const w = c(`act.${key}`);
+    return w.endsWith(`act.${key}`) ? c("go") : w;
+  };
   const quiet = (x: string) => <span className="a2-xs a2-mute">{x}</span>;
   const list = (
     xs: ReviewLine[],
@@ -320,8 +324,9 @@ export default async function MonthlyReviewPage({
             {l.href ? (
               <>
                 {" "}
+                {/* PR 1235 (prototype v5): each next step's button says what it opens ("Open stock →", "Make combos →") */}
                 <Link className="a2-btn sm cr-tap" href={l.href}>
-                  {c("go")}
+                  {actOf(l.key)} →
                 </Link>
               </>
             ) : null}

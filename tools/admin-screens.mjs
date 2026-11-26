@@ -146,8 +146,9 @@ async function shot(ctx, url, file, wait, prep = null) {
         const tx = (e) => (e.innerText || e.getAttribute('aria-label') || e.value || '').replace(/\s+/g, ' ').replace(/^[\u2190-\u21FF\u2300-\u23FF\u2600-\u27BF+]\s*/u, '').trim();
         const uniq = (a) => [...new Set(a.filter(Boolean))];
         // PR 1161: a link drawn as a text button (a2-lnk, "Open →") counts too, as the prototype's `linkbtn` does
+        // PR 1235: so does a report answer's action (rpa-act, "Raise budget →"), the prototype's action button on an insight line
         // PR 1069: a filter chip or a period button drawn as a link (a2-view, cl-chip, rpseg a ...) counts as a button, as the prototype's chips do
-        const btns = [...root.querySelectorAll('button, [role=button], [role=tab], a[class*=btn], a[class*=chip], a[class*=a2-view], .rpseg a, [class*=seg] a, [class*=pill] a, a.a2-lnk, input[type=submit]')].filter(vis);
+        const btns = [...root.querySelectorAll('button, [role=button], [role=tab], a[class*=btn], a[class*=chip], a[class*=a2-view], .rpseg a, [class*=seg] a, [class*=pill] a, a.a2-lnk, a.rpa-act, input[type=submit]')].filter(vis);
         const filled = btns.find((b) => { const c = getComputedStyle(b).backgroundColor; return c && c !== 'rgba(0, 0, 0, 0)' && c !== 'rgb(255, 255, 255)'; });
         return {
           headings: uniq([...root.querySelectorAll('h1, h2, h3')].filter(vis).map(tx)).slice(0, 40),
