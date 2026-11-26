@@ -46,6 +46,9 @@ Google আর অন্য সার্চ ইঞ্জিন দোকানে
     বলে। কার্ডে দেখুন কয়টা পাতা জোড়া বলে, আর কোনটার পাশে "না" লেখা (তার ধরন সার্চ থেকে লুকানো)।
 
 ## প্রতিটা বোতাম আর ঘরের মানে
+- **Google ranking** কার্ড (PR 1232, প্রোটোটাইপের মতো) — নিচে "Compared with 4 weeks ago"। চিপ: **All**, **Top 3**, **Top 10**, **Rising**, **Falling** — প্রতিটায় কয়টা খোঁজার শব্দ; চাপলে টেবিলে শুধু সেগুলো। টেবিলের কলাম **Search words**, **Position**, **Change**, **Searches / month**, **Clicks**, **Page**। Search Console যুক্ত না থাকলে চিপ আর কলাম থাকে কিন্তু সারি থাকে না, নিচে লেখা থাকে কেন; 4 সপ্তাহ আগের অবস্থান না জানা থাকলে **Change** আর **Page**-এ "—", আর **Rising** / **Falling** খালি থাকে। **Open organic report** অর্গানিক রিপোর্ট খোলে।
+- **Problems to fix** — প্রতিটা সমস্যায় **Urgent** বা **Fix soon** পিল আর ঠিক করার বোতাম: ছবির বর্ণনা নেই হলে **Fill alt text from product names** (নিচের **More options**-এ ছবির বর্ণনার কার্ড খুলে দেয়, সেখানে **Write them now**), বিবরণ নেই হলে **Fill from template** (শিরোনাম আর বিবরণের টেমপ্লেটের কার্ড খোলে), পেজের লেখা নেই হলে **Add collection text** (কালেকশন পেজ), আর **Old links that open an error page (404)** থাকলে **Add suggested redirects** (রিডাইরেক্টের পাতা, সেখানে প্রস্তাব থাকে)। বাকিগুলোয় **See**।
+- **Products with the weakest SEO** — শুধু প্রোডাক্ট, সবচেয়ে কম নম্বর আগে (কালেকশনের লেখার সমস্যা ওপরের তালিকায় আলাদা আসে)।
 - **পাতার মাথার লাইন** — "How easily people find … on Google"-এ এখন দোকানের নিজের নাম বসে (সেটিংসের দোকানের নাম থেকে; নাম না থাকলে "the shop")
 - **সার্চ ইঞ্জিন** (Search engines, উপরের ঘর) — খোলা: দোকানের নিজের ঠিকানায় পাতা দেখানো হয়; বন্ধ: কিছুই দেখানো হয় না
 - **দোকানের ঠিকানা** (Shop address) — যে ঠিকানাটা প্রতিটা পাতা নিজের আসল ঠিকানা বলে; না থাকলে প্রিভিউর ঠিকানা
@@ -222,4 +225,4 @@ Google আর অন্য সার্চ ইঞ্জিন দোকানে
 
 **Update (PR 915):** the overview also has the Google ranking card and the Redirects table.
 
-**Update (PR 1051):** the first screen is the prototype's: the SEO score, **Clicks from Google / month**, **Searches in top 10** and **Average position**; **Google ranking** table; **Problems to fix** beside **Pages with the weakest SEO**; **Sitemap & Google Search Console** beside **Redirects: old links → new**, with **Send sitemap again**; **Check again** at the top. Every earlier setting (search engines, titles, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console, photo descriptions) is under **More options**.
+**Update (PR 1051):** the first screen is the prototype's: the SEO score, **Clicks from Google / month**, **Searches in top 10** and **Average position**; **Google ranking** table; **Problems to fix** beside **Products with the weakest SEO**; **Sitemap & Google Search Console** beside **Redirects: old links → new**, with **Send sitemap again**; **Check again** at the top. Every earlier setting (search engines, titles, structured data, sitemaps, robots, AI summary, links, speed, language pairs, Search Console, photo descriptions) is under **More options**.

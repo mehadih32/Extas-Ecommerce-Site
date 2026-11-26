@@ -33,4 +33,7 @@
 .adm2 .seo-kv dt{color:var(--ink2)}.adm2 .seo-kv dd{margin:0;text-align:end;overflow-wrap:anywhere;min-width:0}
 .adm2 .seo-path{overflow-wrap:anywhere;font-family:ui-monospace,monospace;font-size:12px}
 .adm2 .seo-more>summary{cursor:pointer;display:grid;gap:2px;min-height:44px;align-content:center}
+/* PR 1232: the ranking table scrolls inside its card on a phone (six columns, as the prototype), never the page */
+.adm2 .seo-rankw{overflow-x:auto;max-width:100%;margin-top:6px}
+.adm2 .seo-rankw .seo-rank{min-width:560px;width:100%}
 @media (max-width:900px){.adm2 .seo-fig{grid-template-columns:repeat(2,minmax(0,1fr))}.adm2 .seo-score{grid-column:1/-1}.adm2 .seo-two{grid-template-columns:minmax(0,1fr)}}
