@@ -9,6 +9,7 @@ import { MOTHER_STORE_ID, type Prisma, type PrismaClient } from '@extas/db/clien
 import { dayStart, nextDay } from '@extas/metrics';
 import { errorResponse, fail, guardAdmin, isUuid, type AdminDeps } from './admin-auth';
 import { changedKeys } from './people-pure';
+import { isHiddenPracticeStaff } from './practice/rows';
 
 type Db = PrismaClient;
 
@@ -90,7 +91,8 @@ export async function activityView(deps: Pick<AdminDeps, 'db' | 'resolver'>, act
     more = v.more;
   }
   const views = f.kind === 'changes' && !opts.all ? (await viewRows(db, storeId, { ...f, text: '' }, when, 0, cfg.pageSize)).rows : [];
-  const people = (await db.staffUser.findMany({ orderBy: { displayName: 'asc' }, select: { id: true, displayName: true } })).map((p) => ({ id: p.id, name: p.displayName }));
+  // PR 1222: a practice account kept out of view (practice mode off) has no person chip
+  const people = (await db.staffUser.findMany({ orderBy: { displayName: 'asc' }, select: { id: true, displayName: true, email: true, status: true } })).filter((p) => !isHiddenPracticeStaff(p)).map((p) => ({ id: p.id, name: p.displayName }));
   return { kind: f.kind, filters: f, rows, more, pageSize: cfg.pageSize, people, views };
 }
 

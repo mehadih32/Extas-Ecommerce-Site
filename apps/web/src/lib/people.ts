@@ -5,6 +5,7 @@
 import { listRoles, listStaff, permissionCatalogue, requirePermission, type Actor } from '@extas/auth';
 import type { PrismaClient } from '@extas/db/client';
 import { buildTree, type TreeBranch } from './people-pure';
+import { isHiddenPracticeStaff } from './practice/rows';
 
 export * from './people-pure';
 
@@ -33,7 +34,8 @@ export interface PeopleView {
 }
 
 export async function peopleView(db: PrismaClient, actor: Actor): Promise<PeopleView> {
-  const staff = await listStaff(db, actor); // checks `staff.read`
+  // PR 1222: a practice account kept out of view while practice mode is off is left out of the list and the counts
+  const staff = (await listStaff(db, actor)).filter((s) => !isHiddenPracticeStaff(s)); // checks `staff.read`
   const roles = await listRoles(db);
   const people = staff.map((s) => ({
     id: s.id,
