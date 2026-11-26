@@ -12,7 +12,9 @@ import { createHash } from 'node:crypto';
 import { SYSTEM } from '@extas/auth';
 import { registry, storeTarget, POPUP_KEYS, popupEntrySchema, type HubScheduleEntry, type PopupEntry } from '@extas/settings';
 import { scheduleDateProblem, splitDue, withEntry } from './hub-schedule';
-import { allow, found, holds, logChange, nowOf, type RulesDeps, type SettingsReader, type Who } from './context';
+import { allow, found, holds, logChange, nowOf, textContext, type RulesDeps, type SettingsReader, type Who } from './context';
+import { langContext, loadRules, othersByKey } from './core';
+import { render, ruleLookup } from './text';
 import { RulesError } from './errors';
 import { HUB_ROWS, POPUPS, smartGroupOf, type HubField, type HubGroupId, type HubRow, type HubSettingRow, type PopupSpec } from './hub-catalog';
 import { isTryable, tryRow, TRY_DAYS, type TryOrder, type TryResult } from './hub-try';
@@ -170,6 +172,14 @@ export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
   }
   const { rules } = await listRules(deps, who, {});
   const now = nowOf(deps).toISOString();
+  // PR 1231: a Smart Rule's short line is shown filled with its own values ({windowHours} → 72), as the shop shows it; a value
+  // that is not set stays a token and the page writes "not set" there
+  const [stored, tctx] = await Promise.all([loadRules(deps.db, who.storeId), textContext(deps, who.storeId)]);
+  const others = othersByKey(stored.rules);
+  const fill = (id: string, text: string | null, lang: 'en' | 'bn'): string | null => {
+    const rule = stored.rules.find((x) => x.id === id);
+    return text && rule ? render(text, ruleLookup(rule, { others }), langContext(tctx, lang)).text : text;
+  };
   for (const r of rules) {
     if (r.archived || r.broken) continue;
     const future = r.startsAt !== null && r.startsAt > now;
@@ -183,8 +193,8 @@ export async function hubScreen(deps: HubDeps, who: Who): Promise<HubScreen> {
       kind: r.kind,
       nameEn: r.nameEn,
       nameBn: r.nameBn,
-      shortEn: r.short.en,
-      shortBn: r.short.bn,
+      shortEn: fill(r.id, r.short.en, 'en'),
+      shortBn: fill(r.id, r.short.bn, 'bn'),
       pill,
       startsAt: r.startsAt,
       needsOwnerOk: r.needsOwnerOk,

@@ -29,7 +29,9 @@
 ## প্রতিটা বোতাম আর ঘরের মানে
 - **All rules** আর **Delivery · Payment & COD · Checkout & payments · Order flow · Courier · Courier messages · Exchange · Customers · Discounts · Messages** — নিয়মের ভাগ। বাঁ পাশে।
 - **Search rules — e.g. COD, exchange, free delivery** — খোঁজার ঘর।
-- **Edit** — সারির সম্পাদনার ঘর খোলে। **Open** — যে নিয়ম অন্য পাতায় থাকে (অফার, পপ-আপ, কুরিয়ার) সেই পাতা খোলে।
+- **Edit** — প্রোটোটাইপের মতো প্রায় সব সারিতে **Edit**: এখানে ঠিক হওয়া নিয়মের সম্পাদনার ঘর ডানে খোলে, আর যে নিয়ম নিজের পাতায় থাকে (ডেলিভারি চার্জ, অগ্রিম, কুরিয়ার, Smart Rules) সেই পাতা খোলে। **Open** — শুধু যেগুলো একটা আলাদা পাতা: **Offers & discounts**, **Message log** আর **Pop-ups & notices**।
+- নতুন সারি (প্রোটোটাইপের নিয়ম): **Delivery charges** (জোন ধরে চার্জ, চাপলে ডেলিভারি জোনের পাতা), **bKash & Nagad numbers** (চেকআউট সেটিংসের পাতা), **Exchange** — **Exchange allowed for (hours after delivery)**, ডেলিভারির পর কত ঘণ্টা এক্সচেঞ্জ করা যাবে; **Order changes by the customer** — **Times a customer may change an order before packing**; **Buy more, save** (ব্যাগের Take 2 / Take 3 বক্স), **Order messages** (প্রতি অর্ডারের মেসেজের ধাপ) আর **Message log**।
+- Smart Rules-এর সারির লাইনে নিয়মের নিজের সংখ্যা বসানো থাকে (যেমন "Exchange within 72 hours"); কোনো সংখ্যা এখনো ঠিক না থাকলে সেখানে **not set** লেখা থাকে, কখনো বন্ধনীর চিহ্ন নয়।
 - **On · Off · Sample** — অবস্থা। **Sample** মানে নিয়ম চালু আছে কিন্তু দোকানের শুরুর সংখ্যায়; দেখে নিয়ে সেভ করলে সেটা আপনার হয়।
 - **Show all** — নমুনা ছাড়া সব সারি ফিরিয়ে আনে।
 - **Free delivery from (amount)** — কত টাকা থেকে ডেলিভারি ফ্রি। টাকার নিয়ম, তাই মালিকের OK আর PIN।

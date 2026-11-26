@@ -7,6 +7,9 @@
 export const HUB_GROUPS = ['delivery', 'payment', 'checkout', 'flow', 'courier', 'couriermsg', 'exchange', 'customers', 'discounts', 'messages'] as const;
 export type HubGroupId = (typeof HUB_GROUPS)[number];
 
+/** PR 1231: the link rows the prototype opens with "Open" (a page of their own); every other row says "Edit". */
+export const HUB_OPEN_ROWS: readonly string[] = ['offers', 'msgLog', 'popups'];
+
 /** Where Rules › Courier messages are edited (Couriers › Messages, PR 674); the Rules page only links to it. */
 export const COURIER_MESSAGES_HREF = '/admin/couriers';
 
@@ -53,7 +56,8 @@ export interface HubLinkRow {
 export type HubRow = HubSettingRow | HubLinkRow;
 
 export const HUB_ROWS: readonly HubRow[] = [
-  // Delivery
+  // Delivery. PR 1231 (prototype v5 "Delivery charges"): the charges are set per delivery zone and only linked here
+  { type: 'link', id: 'charges', group: 'delivery', href: '/admin/delivery/zones' },
   { type: 'setting', id: 'free', group: 'delivery', key: 'delivery.freeOverMinor', fields: [{ path: '', type: 'money', min: 1, nullable: true }], whenSet: true, money: true },
   { type: 'link', id: 'eid', group: 'delivery', href: '/admin/rules/eid', onKey: 'rules.eid.enabled' },
   {
@@ -72,9 +76,10 @@ export const HUB_ROWS: readonly HubRow[] = [
     onPath: 'enabled',
     money: false,
   },
-  // Payment & COD
-  { type: 'link', id: 'advance', group: 'payment', href: '/admin/orders/risk-rules/checkout', onKey: 'checkout.advance' },
+  // Payment & COD, in the prototype's order (PR 1231: Cash on delivery first, then Advance payment, then the wallet numbers)
   { type: 'link', id: 'cod', group: 'payment', href: '/admin/delivery/settings' },
+  { type: 'link', id: 'advance', group: 'payment', href: '/admin/orders/risk-rules/checkout', onKey: 'checkout.advance' },
+  { type: 'link', id: 'wallets', group: 'payment', href: '/admin/settings/checkout', needs: 'payment.wallet.numbers', onKey: 'payment.wallet.numbers' },
   // Checkout & payments: the reward for paying online is an offer now
   { type: 'link', id: 'prepaid', group: 'checkout', href: '/admin/rules/offers', onKey: 'checkout.prepaidReward.enabled' },
   // PR 833 (prototype "Gift mode"): the gift choice at checkout; its advance rule stays in Checkout settings
@@ -169,7 +174,8 @@ export const HUB_ROWS: readonly HubRow[] = [
   { type: 'link', id: 'courier', group: 'courier', href: '/admin/delivery/couriers', onKey: 'delivery.courier.selection' },
   // Courier messages: edited under Couriers (PR 674), only linked here
   { type: 'link', id: 'couriermsg', group: 'couriermsg', href: COURIER_MESSAGES_HREF },
-  // Exchange
+  // Exchange. PR 1231 (prototype v5 "Exchange"): the hours after delivery a customer may ask for an exchange
+  { type: 'setting', id: 'exchange', group: 'exchange', key: 'policy.exchange.windowHours', fields: [{ path: '', type: 'int', min: 1, max: 8760 }], money: false },
   { type: 'setting', id: 'erpcheck', group: 'exchange', key: 'returns.erpCheck.days', fields: [{ path: '', type: 'choice', options: [7, 10, 15] }], money: false },
   {
     type: 'setting',
@@ -187,9 +193,16 @@ export const HUB_ROWS: readonly HubRow[] = [
   },
   // Customers
   { type: 'link', id: 'grades', group: 'customers', href: '/admin/customers/settings', onKey: 'customers.grades' },
+  // PR 1231 (prototype v5 "Order changes by the customer"): how many times a customer may change an order before packing
+  { type: 'setting', id: 'orderEdits', group: 'customers', key: 'policy.orderEdit.maxEdits', fields: [{ path: '', type: 'int', min: 0, max: 10 }], money: false },
   // Discounts: the smart rules are listed from the database; Offers & discounts is its own page
   { type: 'link', id: 'offers', group: 'discounts', href: '/admin/rules/offers' },
+  // PR 1231 (prototype v5 "Buy more, save"): the bag's Take 2 / Take 3 box, set beside the combos
+  { type: 'link', id: 'tiers', group: 'discounts', href: '/admin/combos/bag-box', needs: 'bag.tiers.enabled', onKey: 'bag.tiers.enabled' },
   // Messages
+  // PR 1231 (prototype v5 "Order messages" and "Message log"): the messages each order sends, and the log of every message
+  { type: 'link', id: 'orderMsgs', group: 'messages', href: '/admin/messages/journey', needs: 'messages.journey' },
+  { type: 'link', id: 'msgLog', group: 'messages', href: '/admin/messages/log' },
   // PR 949 (prototype "WhatsApp templates" and "SMS senders"): they live on the Messages pages and are only linked here
   { type: 'link', id: 'waTpl', group: 'messages', href: '/admin/messages/templates' },
   { type: 'link', id: 'smsSenders', group: 'messages', href: '/admin/messages/channels' },
