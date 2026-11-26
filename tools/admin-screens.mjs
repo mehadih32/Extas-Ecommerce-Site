@@ -28,11 +28,14 @@ const PAIRS0 = [
   ['reports-marketing', '/admin/reports/marketing', '#reports--marketing'],
   ['reports-review', '/admin/reports/review', '#reports--review'],
   ['policies', '/admin/website/policies', '#website--policies'],
-  ['practice', '/admin/settings/practice', '#settings--store'],
+  // PR 1230: Settings › Practice data (CN-049) has no prototype screen (the prototype's sample data is its own; the nearest,
+  // Data & privacy › Start fresh, is the real /admin/settings/start-fresh), so it is shot alone and never compared with Store details
+  ['practice', '/admin/settings/practice', null],
 ];
 // PR 910: the website, finance and settings pages (`--set=d2`) also write real-/proto-<key>.txt (the words on the page)
 const D2 = [
-  ['w-control', '/admin/website/control', '#website--layout'],
+  // PR 1230: Website › Control is the owner's own tab (PR 778), not in the prototype: shot alone (Page layouts is w-layouts)
+  ['w-control', '/admin/website/control', null],
   ['w-layouts', '/admin/website/layouts', '#website--layout'],
   ['w-words', '/admin/website/words', '#website--text'],
   ['w-policies', '/admin/website/policies', '#website--policies'],
@@ -79,7 +82,8 @@ const D3 = [
   ['p-stock', '/admin/stock', '#products--stock'],
   ['p-ranking', '/admin/products/ranking', '#products--ranking'],
   ['p-combos', '/admin/combos', '#products--combos'],
-  ['p-reviews', '/admin/products/reviews', '#products--reviews'],
+  // PR 1230: the prototype's Reviews & questions opens on Questions, and so does the real tab now
+  ['p-reviews', '/admin/products/questions', '#products--reviews'],
   ['p-sizecharts', '/admin/size-charts', '#products--sizecharts'],
   ['u-all', '/admin/customers', '#customers--all'],
   ['u-groups', '/admin/customers/segments', '#customers--groups'],
@@ -183,7 +187,13 @@ for (const [vn, w, h] of VPS) {
     // and hide its "How to try this prototype" card, which is a note about the prototype itself, not part of the admin
     const design = /^home-([A-D])$/.exec(key)?.[1];
     const prep = design ? `(() => { try { localStorage.setItem('extas-proto-tour', 'off'); } catch (e) {} const b = document.querySelector('#hm-design button[data-v="${design}"]'); if (b) b.click(); const x = document.querySelector('#hm-tour-x'); if (x) x.click(); })()` : null;
-    const p = await shot(pc, `${proto}/index.html${pr}`, `${out}/proto-${key}-${vn}.jpg`, 900, prep);
+    // a real page with no prototype screen (null) is shot alone: no proto-* files, so the measure leaves it out
+    const p = pr ? await shot(pc, `${proto}/index.html${pr}`, `${out}/proto-${key}-${vn}.jpg`, 900, prep) : { status: 0, errors: [], none: true };
+    if (!pr) {
+      rows.push({ key, vp: vn, real: r, proto: p });
+      console.log(key, vn, JSON.stringify({ real: { s: r.status, h: r.height, ov: r.overflowPx, f: r.final, e: r.errors.length }, proto: 'none' }));
+      continue;
+    }
     // side by side
     const b64 = (f) => readFileSync(f).toString('base64');
     try {

@@ -20,7 +20,7 @@ export function ShellTabBar({ dict, pathname, from, viewer }: { dict: Dict; path
     <div className="a2-z a2-bar" data-testid="a2-bar" data-section={section.id}>
       {tabs.length > 1 ? (
         <nav className="a2-tabs" aria-label={t(dict, 'shell.tabs.aria', { section: t(dict, `shell.sec.${section.id}`) })} data-testid="a2-tabs">
-          <FitTabs key={`${section.id}-${tab.id}`} moreLabel={t(dict, 'shell.tabs.more')} tabs={tabs.map((x) => ({ id: x.id, href: visiblePages(x, viewer)[0]!.href, label: label(x.id), on: x.id === tab.id }))} />
+          <FitTabs key={`${section.id}-${tab.id}`} moreLabel={t(dict, 'shell.tabs.more')} tabs={tabs.map((x) => ({ id: x.id, href: visiblePages(x, viewer)[0]!.href, label: label(x.id), on: x.id === tab.id, extra: !!x.more }))} />
         </nav>
       ) : null}
       {pages.length > 1 ? (

@@ -292,15 +292,15 @@
     "more": false,
     "pages": [
      {
-      "href": "/admin/products/reviews",
-      "keys": [
-       "productReviews"
-      ]
-     },
-     {
       "href": "/admin/products/questions",
       "keys": [
        "productQuestions"
+      ]
+     },
+     {
+      "href": "/admin/products/reviews",
+      "keys": [
+       "productReviews"
       ]
      },
      {
@@ -1053,18 +1053,6 @@
   "base": "/admin/website",
   "tabs": [
    {
-    "id": "control",
-    "more": false,
-    "pages": [
-     {
-      "href": "/admin/website/control",
-      "keys": [
-       "websiteControl"
-      ]
-     }
-    ]
-   },
-   {
     "id": "layouts",
     "more": false,
     "pages": [
@@ -1232,6 +1220,18 @@
       "href": "/admin/website/seo/organic",
       "keys": [
        "seoOrganic"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "control",
+    "more": false,
+    "pages": [
+     {
+      "href": "/admin/website/control",
+      "keys": [
+       "websiteControl"
       ]
      }
     ]
