@@ -186,7 +186,10 @@ export function CashForecast({ texts, days, tightLine, tightBad, inTotal, outTot
           </div>
           {fixedLine ? <div className="a2-xs a2-mute a2-mt6">{fixedLine}</div> : null}
           <details className="lf-day a2-mt12">
-            <summary className="a2-btn sm ghost">{texts.dayBy}</summary>
+            {/* PR 1233: the prototype draws "Day by day" as a button; the summary says it is one */}
+            <summary className="a2-btn sm ghost" role="button">
+              {texts.dayBy}
+            </summary>
             <p className="a2-xs a2-mute a2-mt6">{startLine}</p>
             <div className="lf-tw">
               <table className="lf-table">
