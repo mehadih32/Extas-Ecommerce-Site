@@ -789,7 +789,7 @@
       "ofBefore": "{n}% of the step before",
       "placedHere": "placed in this period"
     },
-    "live": "Live · {time}",
+    "live": "{time} · here is your shop today",
     "download": "Download these numbers (CSV)",
     "vsYesterday": "vs yesterday",
     "vsBefore": "vs the {n} days before",
@@ -1051,7 +1051,8 @@
       "tOfFinished": "of {n} finished parcels",
       "tAds": "Ad spend · sales per {one}",
       "trendTitle": "Sales trend",
-      "trendSub": "Delivered sales against the period before; hover or tap the chart to see each day",
+      "trendTitleDays": "Sales trend, last {n} days",
+      "trendSub": "Hover or tap the chart to see each day",
       "adsSub": "Delivered sales from each ad channel ÷ ad spend",
       "adsCampaigns": "Campaigns",
       "adsChannel": "Channel",
