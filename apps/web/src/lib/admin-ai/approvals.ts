@@ -26,6 +26,9 @@
 import { audit, type Actor, type RequestContext } from '@extas/auth';
 import { Prisma, type PrismaClient } from '@extas/db/client';
 import { expireProposals as expireGatedProposals, FIX_KIND, GATE_KINDS, SKILL_KIND } from '../admin-health/fixes';
+import { practiceApprovalScope } from '../practice/rows';
+import { practiceOn } from '../practice/shown-on';
+import type { AppResolver } from '../settings';
 import { AiError } from './errors';
 
 /** The schema's own `ApprovalStatus` enum values, mirrored here as a literal union so this file needs no import
@@ -240,10 +243,13 @@ const toRow = (
  * requests and installation-wide ones (`storeId: null` — skill and fix approvals, per the schema's own comment).
  * Freshens both this file's own kinds (`expireStaleApprovals`) and `fixes.ts`'s own (`expireGatedProposals`) before
  * reading, so nothing stale shows as still waiting no matter which module wrote it. */
-export async function approvalsView(deps: ApprovalsDeps, storeId: number): Promise<ApprovalsView> {
+export async function approvalsView(deps: ApprovalsDeps & { resolver?: AppResolver }, storeId: number): Promise<ApprovalsView> {
   const now = deps.now?.() ?? new Date();
   await Promise.all([expireStaleApprovals(deps), expireGatedProposals(deps.db, now)]);
-  const scope = { OR: [{ storeId }, { storeId: null }] };
+  // PR 1220: the practice approvals (practice/rows.ts) show only while practice mode is on; a caller without the settings
+  // (the Telegram buttons) never sees them, so they are never sent anywhere
+  const practice = practiceApprovalScope(deps.resolver ? await practiceOn(deps.resolver, storeId) : false);
+  const scope = { AND: [{ OR: [{ storeId }, { storeId: null }] }, practice] };
   const [pendingRows, decidedRows] = await Promise.all([
     deps.db.aiApprovalRequest.findMany({ where: { ...scope, status: 'PENDING' }, orderBy: { createdAt: 'asc' } }),
     deps.db.aiApprovalRequest.findMany({ where: { ...scope, status: { not: 'PENDING' } }, orderBy: { updatedAt: 'desc' }, take: DECIDED_HISTORY_LIMIT }),

@@ -13,6 +13,7 @@ import type { AdminDeps } from '../admin-auth';
 import { DEMO_PACK } from './data';
 import { practiceId } from './ids';
 import { addPracticePhotos, repairPracticePhotos } from './photos';
+import { practiceRowsMissing, seedPracticeRows } from './rows';
 import { seedPractice, type SeedResult } from './seed';
 import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
 
@@ -85,6 +86,16 @@ export async function ensurePractice(deps: EnsureDeps, storeId: number, opts: { 
         out.seeded = await seedPractice(deps.db, storeId, now);
       } finally {
         await dropLease(deps.db, 'fill', storeId);
+      }
+    } else out.pending = true;
+  }
+  // 1b. PR 1220: a store filled before the display rows existed gets them once (approvals …; practice/rows.ts)
+  if (enabled.on && (auto.on || opts.force) && (await practiceRowsMissing(deps.db, storeId))) {
+    if (await takeLease(deps.db, 'rows', storeId, now)) {
+      try {
+        await seedPracticeRows(deps.db, storeId, now);
+      } finally {
+        await dropLease(deps.db, 'rows', storeId);
       }
     } else out.pending = true;
   }

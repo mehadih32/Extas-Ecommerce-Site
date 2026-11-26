@@ -20,6 +20,8 @@ import { locateKey } from '@/lib/admin-shell/sections';
 import { t, type Dict } from '@/lib/i18n';
 import bn from '../../../../../messages/admin-ai.bn.json';
 import en from '../../../../../messages/admin-ai.en.json';
+import { practiceApprovalScope } from '@/lib/practice/rows';
+import { practiceOn } from '@/lib/practice/shown-on';
 import '../system/sysinfo.css';
 import '../../s28.css';
 
@@ -58,7 +60,8 @@ export default async function SettingsAiPage() {
     );
   const c = (k: string, vars?: Record<string, string | number>) => t(view.dict, `aiControl.short.${k}`, vars);
   const { view: o } = await controlRoomView({ db: access.deps.db, resolver: access.deps.resolver, vault: access.deps.vault }, MOTHER_STORE_ID);
-  const waiting = await access.deps.db.aiApprovalRequest.count({ where: { status: 'PENDING' } });
+  // PR 1220: the practice approvals count only while practice mode is on
+  const waiting = await access.deps.db.aiApprovalRequest.count({ where: { status: 'PENDING', ...practiceApprovalScope(await practiceOn(access.deps.resolver, MOTHER_STORE_ID)) } });
   const money = moneyOf(o.currency, view.locale);
   const amount = (minor: number) => formatMoney(minor, money);
   const n = (x: number) => formatNumber(x, view.locale);

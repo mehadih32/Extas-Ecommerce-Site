@@ -16,6 +16,7 @@ import { completeExtras } from './demo-extras';
 import { isSampleStore, seedSampleBooks, seedSampleExtras } from './sample-books';
 import { pickGrade, practiceLevels } from './grades';
 import { practiceId } from './ids';
+import { seedPracticeRows } from './rows';
 import { PRACTICE_PHONE_PREFIX, type Prisma, type PrismaClient } from '@extas/db/client';
 import {
   ADS_SOURCES,
@@ -372,6 +373,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
     if (rich) Object.assign(done, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
     // PR 1156: the sample store seeded by the live command (no ads then) gets the practice ads once
     if (rich && (await isSampleStore(db, storeId)) && (await db.adSpendDaily.count({ where: { storeId } })) === 0) Object.assign(done, await seedPracticeAds(db, storeId, store.currency, minor, makeRng(SEED), now));
+    // PR 1220: the prototype's non-money display rows (approvals …) when they are not there yet; any store with practice data
+    Object.assign(done, await seedPracticeRows(db, storeId, now));
     return { seeded: false, reason: 'already', counts: done };
   }
 
@@ -935,6 +938,8 @@ export async function seedPractice(db: Db, storeId: number, now: Date = new Date
   if (rich) Object.assign(counts, await seedRichExtras(db, storeId, store.currency, minor, rng, plan, now, !opts.richAnywhere || (await isSampleStore(db, storeId))));
   // PR 1155: the sample store's money world (cashbook, staff pay, cost heads); sample-books.ts does nothing on a working shop
   if (rich) Object.assign(counts, await seedSampleBooks(db, storeId, minor, now), await seedSampleExtras(db, storeId, now));
+  // PR 1220: the prototype's non-money display rows (approvals …); no money, on any store with practice data
+  Object.assign(counts, await seedPracticeRows(db, storeId, now));
 
   return { seeded: true, counts };
 }

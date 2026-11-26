@@ -538,3 +538,42 @@ export const SAMPLE_EXTRAS = {
     { title: 'Eid ul-Fitr (expected)', from: 117, to: 117, type: 'holiday' },
   ] as { title: string; from: number; to: number; type: string }[],
 };
+
+/**
+ * PR 1220 (p102, the owner's ask: the prototype v5's row buttons on the live admin while practice mode is on): the
+ * prototype's NON-money sample rows, written by rows.ts. The texts are the prototype's own (m-ai.js queue). Amounts inside a
+ * text are `{m0}`, `{m1}` … and show in the store's own currency; `{order}`, `{name}`, `{district}`, `{refused}`, `{orders}`,
+ * `{product}` and `{combo}` are filled from the practice rows the seeder finds. Nothing here is a real person or order.
+ */
+export interface PracticeApproval {
+  key: string;
+  kind: string;
+  agent: string;
+  minutesAgo: number;
+  title: string;
+  why: string;
+  impact: string;
+  draft?: string;
+  /** an admin page; `{orderId}` / `{customerId}` are the practice row the card is about */
+  open: string;
+  money?: number[];
+  /** which practice row fills the card: a waiting order, the customer who refused most, any customer, a product */
+  uses?: 'order' | 'refuser' | 'customer' | 'product';
+  /** an already decided card (the "Done" list) */
+  decidedMinutesAgo?: number;
+}
+
+export const PRACTICE_ROWS = {
+  /** AI › Approvals: the prototype's queue (Q1-Q9), the same kinds, agents, words and links. */
+  approvals: [
+    { key: 'Q1', kind: 'adBudget', agent: 'tirondaj', minutesAgo: 40, title: 'Raise “Polo Winter” Facebook budget from {m0} to {m1} a day', why: 'Earned {m2} per {m3} on delivered orders for 14 days; cost per order is falling.', impact: 'About +9 delivered orders a week, ~{m4} more profit after ads. Extra spend {m5} a week.', open: '/admin/marketing/campaigns', money: [1_500, 2_000, 4.6, 1, 6_800, 3_500] },
+    { key: 'Q2', kind: 'adBudget', agent: 'tirondaj', minutesAgo: 95, title: 'Stop “Hoodie TikTok test”', why: 'Only {m0} back per {m1} for 9 days; 4 of 11 orders refused at the door.', impact: 'Saves about {m2} a day. The budget can go to the Polo campaign.', open: '/admin/marketing/campaigns', money: [1.1, 1, 700] },
+    { key: 'Q3', kind: 'orderDecline', agent: 'sawdagor', minutesAgo: 25, title: 'Decline order {order} ({name}, {district})', why: 'Courier score 2.1/10: refused 3 parcels at 2 couriers; phone off at both calls.', impact: 'Avoids a likely return cost of about {m0}. Option: ask the delivery charge first instead.', open: '/admin/orders/{orderId}', money: [160], uses: 'order' },
+    { key: 'Q4', kind: 'orderDecline', agent: 'sawdagor', minutesAgo: 55, title: 'Decline order {order} ({name}, {district})', why: 'Courier score 2.1/10: refused 3 parcels at 2 couriers; phone off at both calls.', impact: 'Avoids a likely return cost of about {m0}. Option: ask the delivery charge first instead.', open: '/admin/orders/{orderId}', money: [260], uses: 'order' },
+    { key: 'Q5', kind: 'block', agent: 'sawdagor', minutesAgo: 130, title: 'Ask {name} for the delivery charge first on every order', why: 'Refused {refused} parcels out of {orders} orders.', impact: 'Nobody is blocked by itself; the customer can still order with the charge paid first.', open: '/admin/customers/{customerId}', uses: 'refuser' },
+    { key: 'Q6', kind: 'reply', agent: 'doot', minutesAgo: 18, title: 'Reply drafted for {name} on Messenger', why: 'Asked if the navy polo comes in XL and when it reaches Sylhet.', impact: 'Waiting 22 minutes. Answered chats buy 3× more often.', draft: 'জি, নেভি পোলো XL সাইজে আছে। সিলেটে 3–5 দিনে পৌঁছাবে, ডেলিভারি চার্জ {m0}। অর্ডার করতে চাইলে নাম, ঠিকানা ও ফোন নম্বর দিন।', open: '/admin/support', money: [130], uses: 'customer' },
+    { key: 'Q7', kind: 'price', agent: 'sawdagor', minutesAgo: 300, title: 'Put {product} in a 2-piece combo at {combo}', why: 'Many views in 30 days but only 2 sold — people look but do not buy.', impact: 'Profit per combo stays above your minimum margin. Stock moves before winter ends.', open: '/admin/combos', uses: 'product' },
+    { key: 'Q8', kind: 'blog', agent: 'doot', minutesAgo: 220, title: 'Publish blog post “How to pick your polo size”', why: '“polo size chart bd” is searched about 1,900 times a month; we are not on page 1.', impact: 'SEO score 86. Links to 4 polo products and the size chart.', draft: 'Polo size guide: measure your chest, compare with our chart, and pick your usual size. Between two sizes? Take the bigger one for a relaxed fit…', open: '/admin/website/blog' },
+    { key: 'Q9', kind: 'reply', agent: 'doot', minutesAgo: 700, decidedMinutesAgo: 600, title: 'Reply to a review about late delivery', why: '3-star review from Rajshahi.', impact: 'Published.', open: '/admin/products/reviews' },
+  ] as PracticeApproval[],
+};
