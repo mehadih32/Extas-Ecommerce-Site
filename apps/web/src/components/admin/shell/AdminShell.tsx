@@ -284,6 +284,9 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
   const badge = (s: ShellSection) => model.badges?.[s.id] ?? 0;
   const unread = (notes ?? []).filter((n) => noteUnread(n, seen)).length;
   const inSettings = active === 'settings' && !!here?.tab;
+  // PR 1237 (prototype v5): Help & manual is the last item of the Settings list, so its page sits inside the same list
+  // (its own tabs, Site manual and the rest, stay above it; the menu keeps Help where it is)
+  const helpFramed = pathname.replace(/\/+$/, '') === '/admin/help';
   // PR 762: the bar is built once, from the address; PR 1101: a page head draws it under the title (HeadTabs)
   const tabBar = inSettings ? null : <ShellTabBar dict={d} pathname={pathname} from={from} viewer={viewer} />;
   const tabsCtx = { bar: tabBar, claim: claimTabs };
@@ -599,7 +602,7 @@ export function AdminShell({ model, children, guideMode }: { model: ShellModel; 
             {/* PR 779 (prototype v5): Settings is one page with a searchable list on the left (two groups) instead of tabs */}
             {/* PR 1101: drawn here only while no page head holds it (the head draws it under the title, HeadTabs) */}
             {inSettings || headTabs > 0 ? null : tabBar}
-            {inSettings ? (
+            {inSettings || helpFramed ? (
               <SettingsFrame dict={d} pathname={pathname} viewer={viewer}>
                 {children}
               </SettingsFrame>
