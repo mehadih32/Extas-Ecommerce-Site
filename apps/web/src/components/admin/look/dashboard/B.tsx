@@ -25,15 +25,14 @@ import { DesignSwitch } from './DesignSwitch';
 
 function Head({ p, views }: { p: DashProps; views: ReactNode }) {
   const { f, head } = p;
-  const waiting = (p.data.queues ?? []).reduce((s, q) => s + q.n, 0) + (p.data.stages?.toBook ?? 0);
   return (
     <>
     <header className="lm-ph" data-testid="dash-head">
       <div className="lm-ph-t">
         <h1>{head.title}</h1>
         <p className="lm-sub">
+          {/* PR 1236 (prototype v5): the same line as every design, "date · time · here is your shop today" (Do now shows what waits) */}
           <span>{head.date}</span> · <span className="lm-live">{f.t('dsh.live', { time: head.time })}</span>
-          {p.data.queues ? <> · {waiting ? f.t('dsh.lm.waiting', { n: f.n(waiting) }) : f.t('dsh.lm.calm')}</> : null}
         </p>
       </div>
       <div className="lm-ph-a">

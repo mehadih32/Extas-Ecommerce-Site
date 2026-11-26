@@ -873,7 +873,8 @@ export function TrendCard({ p, id }: { p: DashProps; id: string }) {
     : -1;
   return (
     <Card
-      title={f.t("dsh.proto.trendTitle")}
+      /* PR 1236 (prototype v5): "Sales trend, last 30 days", the days the chart covers */
+      title={m.chart.days.length > 1 ? f.t("dsh.proto.trendTitleDays", { n: f.n(m.chart.days.length) }) : f.t("dsh.proto.trendTitle")}
       sub={f.t("dsh.proto.trendSub")}
       testId="dash-trend"
     >
