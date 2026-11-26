@@ -585,4 +585,18 @@ export const PRACTICE_ROWS = {
     { key: 'P2', type: 'pause', name: 'Google Shopping · outside Dhaka', minutesAgo: 180, fromDaily: null, toDaily: null, spend: 3_900, roas: 0, delivered: 0, sales: 0 },
     { key: 'P3', type: 'buildAudience', name: 'At-risk customers · WhatsApp “we miss you”', minutesAgo: 90, fromDaily: null, toDaily: null, spend: 0, roas: 380, delivered: 22, sales: 30_800 },
   ] as { key: string; type: 'raiseBudget' | 'pause' | 'buildAudience'; name: string; minutesAgo: number; fromDaily: number | null; toDaily: number | null; spend: number; roas: number; delivered: number; sales: number }[],
+  /** PR 1222 — Settings › Team & roles: the prototype's roles (m-settings.js), each with read-only access only. */
+  roles: [
+    { key: 'order-manager', nameEn: 'Order manager', nameBn: 'অর্ডার ম্যানেজার', permissions: ['orders.read', 'catalogue.read', 'customers.read', 'support.read', 'rules.read', 'reports.read'] },
+    { key: 'customer-care', nameEn: 'Customer care', nameBn: 'কাস্টমার কেয়ার', permissions: ['orders.read', 'catalogue.read', 'customers.read', 'support.read', 'rules.read'] },
+    { key: 'packing', nameEn: 'Packing', nameBn: 'প্যাকিং', permissions: ['orders.read', 'catalogue.read', 'fulfilment.read'] },
+    { key: 'marketing', nameEn: 'Marketing', nameBn: 'মার্কেটিং', permissions: ['catalogue.read', 'customers.read', 'support.read', 'rules.read', 'marketing.campaigns.read', 'website.read', 'reports.read'] },
+  ],
+  /** PR 1222 — the prototype's staff (core.js `D.staff`; the owner is left out, he is the real account). They can never sign in. */
+  staff: [
+    { key: 'rafi', name: 'Rafi', role: 'order-manager', twoFactor: true, lastMinutesAgo: 40 },
+    { key: 'nusrat', name: 'Nusrat', role: 'customer-care', twoFactor: false, lastMinutesAgo: 12 },
+    { key: 'sohel', name: 'Sohel', role: 'packing', twoFactor: false, lastMinutesAgo: 180 },
+    { key: 'tania', name: 'Tania', role: 'marketing', twoFactor: true, lastMinutesAgo: 1_560 },
+  ],
 };

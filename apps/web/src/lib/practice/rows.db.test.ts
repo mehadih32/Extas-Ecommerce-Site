@@ -2,7 +2,7 @@
 // are written once with their mark, show only while practice mode is on, acting on them changes nothing but their own state
 // (no row is added anywhere but the audit log, no order or customer moves), and a reset removes them.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SYSTEM } from '@extas/auth';
+import { defaultSecurityPolicy, hashPassword, loginStaff, PRACTICE_STAFF_DOMAIN, syncAuth, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
 import type { PrismaClient } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
@@ -13,6 +13,7 @@ import { decideGrowthProposal, growthOverview } from '../marketing/growth-agent'
 import { PRACTICE_CHANNEL, practiceRowsMissing, seedPracticeRows } from './rows';
 import { resetPractice } from './reset';
 import { seedPractice } from './seed';
+import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
 
 const NOW = new Date('2026-11-13T08:00:00Z');
 const meta = { actorId: null, reason: 'test' };
@@ -41,6 +42,7 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     t = await createTestDatabase('practice_rows');
     [S] = await seedSampleStores(t.prisma);
     await syncSettings(t.prisma, { registry, messages });
+    await syncAuth(t.prisma);
     resolver = new SettingsResolver(prismaBackend(t.prisma), registry, { checkIntervalMs: 0 });
     await seedPractice(t.prisma, S, NOW);
   }, 240_000);
@@ -118,6 +120,30 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(await db.aiApprovalRequest.count({ where: { storeId: S, channel: PRACTICE_CHANNEL, status: 'PENDING' } })).toBe(0);
   });
 
+  it('PR 1222: the prototype’s staff with their roles; they can never sign in and hide with practice mode', async () => {
+    const db = t.prisma;
+    const staff = await db.staffUser.findMany({ where: { email: { endsWith: `@${PRACTICE_STAFF_DOMAIN}` } }, include: { roleAssignments: { include: { role: { include: { permissions: { include: { permission: true } } } } } } }, orderBy: { displayName: 'asc' } });
+    expect(staff.map((s) => s.displayName)).toEqual(['Nusrat', 'Rafi', 'Sohel', 'Tania']);
+    expect(staff.map((s) => s.roleAssignments[0]?.role.nameEn)).toEqual(['Customer care', 'Order manager', 'Packing', 'Marketing']);
+    // the practice roles hold read-only access only
+    const keys = staff.flatMap((s) => s.roleAssignments.flatMap((a) => a.role.permissions.map((p) => p.permission.key)));
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys.every((k) => k.endsWith('.read'))).toBe(true);
+    // even with a real password set on it, the account is refused
+    const rafi = staff.find((s) => s.displayName === 'Rafi')!;
+    await db.staffUser.update({ where: { id: rafi.id }, data: { passwordHash: await hashPassword('a long password someone set') } });
+    expect((await loginStaff({ db, policy: defaultSecurityPolicy() }, { email: rafi.email, password: 'a long password someone set' })).kind).toBe('invalid');
+    expect(await db.staffSession.count({ where: { staffUserId: rafi.id } })).toBe(0);
+    // practice mode off: archived (out of every list and picker); on: back
+    await syncPracticeVisibility(db, S, false, NOW);
+    expect(await db.staffUser.count({ where: { email: { endsWith: `@${PRACTICE_STAFF_DOMAIN}` }, status: 'ARCHIVED' } })).toBe(4);
+    expect(await db.role.count({ where: { key: { startsWith: 'practice-' }, archivedAt: null } })).toBe(0);
+    expect(await practiceVisibilityDrift(db, S, false)).toBe(0);
+    await syncPracticeVisibility(db, S, true, NOW);
+    expect(await db.staffUser.count({ where: { email: { endsWith: `@${PRACTICE_STAFF_DOMAIN}` }, status: 'ACTIVE' } })).toBe(4);
+    expect(await practiceVisibilityDrift(db, S, true)).toBe(0);
+  });
+
   it('"Reset practice data" removes them, and a real approval stays', async () => {
     const db = t.prisma;
     const real = await db.aiApprovalRequest.create({ data: { storeId: S, kind: 'refund', title: 'A real refund', payload: {}, channel: 'admin' } });
@@ -125,5 +151,9 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(r.removed.AiApprovalRequest).toBeGreaterThan(0);
     expect(await db.aiApprovalRequest.count({ where: { storeId: S, channel: PRACTICE_CHANNEL } })).toBe(0);
     expect(await db.aiApprovalRequest.count({ where: { id: real.id } })).toBe(1);
+    // PR 1222: the practice staff and roles go too; a real account stays
+    expect(await db.staffUser.count({ where: { email: { endsWith: `@${PRACTICE_STAFF_DOMAIN}` } } })).toBe(0);
+    expect(await db.role.count({ where: { key: { startsWith: 'practice-' } } })).toBe(0);
+    expect(r.removed.StaffUser).toBe(4);
   });
 });

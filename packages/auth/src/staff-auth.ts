@@ -44,6 +44,14 @@ export function publicStaff(s: StaffUser): PublicStaff {
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
+/**
+ * PR 1222 (p102): the practice staff of the practice world (apps/web practice/rows.ts) sit on this reserved domain (`.invalid`
+ * never resolves). Such an account can NEVER sign in: the password, the two-step code and an old session cookie are all
+ * refused, whatever password a person sets for it.
+ */
+export const PRACTICE_STAFF_DOMAIN = 'practice.invalid';
+export const isPracticeStaffEmail = (email: string | null | undefined): boolean => !!email && normalizeEmail(email).endsWith(`@${PRACTICE_STAFF_DOMAIN}`);
+
 export type LoginResult =
   | { kind: 'session'; token: string; expiresAt: Date; staff: PublicStaff }
   | { kind: 'two-factor'; challenge: string; expiresAt: Date }
@@ -132,7 +140,7 @@ export async function loginStaff(deps: StaffAuthDeps, input: { email: string; pa
 
   const staff = await db.staffUser.findUnique({ where: { email } });
   const tooLong = [...password].length > policy.passwordMaxLength;
-  if (!staff || staff.status !== 'ACTIVE' || tooLong) {
+  if (!staff || staff.status !== 'ACTIVE' || tooLong || isPracticeStaffEmail(staff.email)) {
     if (!tooLong) await burnPasswordCheck(password);
     await loginEvent(db, { email, staffUserId: staff?.id, success: false, reason: staff ? `status:${staff.status}` : 'unknown' }, ctx, now);
     return { kind: 'invalid' };
@@ -187,7 +195,7 @@ export async function verifyStaffTwoFactor(deps: StaffAuthDeps, input: { challen
   const now = clock(deps);
   if (!isWellFormedToken(input.challenge)) return { kind: 'invalid' };
   const pending = await db.staffSession.findUnique({ where: { tokenHash: pendingHash(input.challenge) }, include: { staffUser: true } });
-  if (!pending || pending.revokedAt || pending.expiresAt <= now || pending.staffUser.status !== 'ACTIVE') return { kind: 'invalid' };
+  if (!pending || pending.revokedAt || pending.expiresAt <= now || pending.staffUser.status !== 'ACTIVE' || isPracticeStaffEmail(pending.staffUser.email)) return { kind: 'invalid' };
   const staff = pending.staffUser;
   const retryAt = await lockedUntil(deps, staff.email, ctx.ip ?? null);
   if (retryAt && retryAt > now) {
@@ -220,7 +228,7 @@ export async function authenticateStaff(deps: StaffAuthDeps, token: string | nul
   const lastUse = (session.lastSeenAt ?? session.createdAt).getTime();
   const tooOld = session.createdAt.getTime() + policy.staffSessionMaxHours * HOUR <= now.getTime();
   const idle = lastUse + policy.staffSessionIdleMinutes * MINUTE <= now.getTime();
-  if (session.expiresAt <= now || tooOld || idle || session.staffUser.status !== 'ACTIVE') {
+  if (session.expiresAt <= now || tooOld || idle || session.staffUser.status !== 'ACTIVE' || isPracticeStaffEmail(session.staffUser.email)) {
     await db.staffSession.update({ where: { id: session.id }, data: { revokedAt: now } });
     return null;
   }
