@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { defaultSecurityPolicy, hashPassword, loginStaff, PRACTICE_STAFF_DOMAIN, syncAuth, SYSTEM } from '@extas/auth';
 import { HAS_TEST_DB, createTestDatabase, seedSampleStores, type TestDatabase } from '@extas/auth/testing';
-import type { PrismaClient } from '@extas/db/client';
+import { PRACTICE_PHONE_PREFIX, type PrismaClient } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { approvalsView, decideApproval } from '../admin-ai/approvals';
 import { PRACTICE_ROWS } from './data';
@@ -72,7 +72,7 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(rows.filter((r) => r.status === 'APPROVED')).toHaveLength(1);
     // a second run adds nothing
     expect(await seedPracticeRows(db, S, NOW)).toMatchObject({ practiceApprovals: 0, practiceProposals: 0 });
-    expect(await practiceRowsMissing(db, S)).toBe(false);
+    expect(await practiceRowsMissing(db, S, NOW)).toBe(false);
   });
 
   it('shows them only while practice mode is on, and never to a caller without the settings (the Telegram buttons)', async () => {
@@ -145,6 +145,20 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     await expect(od.mergeIntoOne({ db, settings: resolver, now: () => NOW }, { actor: SYSTEM, storeId: S }, { mainOrderId: ids[1]!, sources: [{ orderId: ids[0]! }] })).rejects.toMatchObject({ code: 'PRACTICE_NO_MERGE' });
     expect(changed(before, await tableCounts(db))).toEqual({});
     expect(await db.order.count({ where: { id: { in: ids }, status: 'PLACED' } })).toBe(2);
+  });
+
+  it('PR 1224: the prototype’s names lead Incomplete orders and stay recent', async () => {
+    const db = t.prisma;
+    const top = await db.checkoutDraft.findMany({ where: { storeId: S, handledAt: null }, orderBy: { lastActivityAt: 'desc' }, take: 3, select: { name: true, isPractice: true, phone: true } });
+    expect(top.map((d) => d.name)).toEqual(PRACTICE_ROWS.incomplete.map((x) => x.name));
+    expect(top.every((d) => d.isPractice && (d.phone === null || d.phone.startsWith(PRACTICE_PHONE_PREFIX)))).toBe(true);
+    // three days on, the next fill brings them back to the top (and only them)
+    const later = new Date(NOW.getTime() + 3 * 86_400_000);
+    expect(await practiceRowsMissing(db, S, later)).toBe(true);
+    await seedPracticeRows(db, S, later);
+    expect(await practiceRowsMissing(db, S, later)).toBe(false);
+    const again = await db.checkoutDraft.findMany({ where: { storeId: S }, orderBy: { lastActivityAt: 'desc' }, take: 3, select: { name: true } });
+    expect(again.map((d) => d.name)).toEqual(PRACTICE_ROWS.incomplete.map((x) => x.name));
   });
 
   it('PR 1222: the prototype’s staff with their roles; they can never sign in and hide with practice mode', async () => {
