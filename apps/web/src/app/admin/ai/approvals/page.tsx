@@ -72,7 +72,7 @@ export default async function AiApprovalsPage({ searchParams }: { searchParams: 
   const canApproveFixes = access.guard.permissions?.has('health.fixes.approve') ?? false;
 
   const [o, aiOn, offText, digest, room] = await Promise.all([
-    approvalsView({ db: access.deps.db, now: access.deps.now }, MOTHER_STORE_ID),
+    approvalsView({ db: access.deps.db, now: access.deps.now, resolver: access.deps.resolver }, MOTHER_STORE_ID),
     access.deps.resolver.value('ai.enabled'),
     access.deps.resolver.value('ai.offText', { storeId: MOTHER_STORE_ID }),
     access.deps.resolver.value('ai.digest', { storeId: MOTHER_STORE_ID }),
