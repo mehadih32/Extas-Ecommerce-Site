@@ -10,8 +10,10 @@ import { approvalsView, decideApproval } from '../admin-ai/approvals';
 import { PRACTICE_ROWS } from './data';
 import { GROWTH_KIND } from '../marketing/growth-kind';
 import { decideGrowthProposal, growthOverview } from '../marketing/growth-agent';
-import { PRACTICE_CHANNEL, practiceRowsMissing, seedPracticeRows } from './rows';
+import { PRACTICE_CHANNEL, practiceDuplicatePair, practiceRowsMissing, seedPracticeRows } from './rows';
 import { resetPractice } from './reset';
+import * as od from '@extas/orders';
+import { processingTags } from '../admin-orders/processing-tags';
 import { seedPractice } from './seed';
 import { practiceVisibilityDrift, syncPracticeVisibility } from './visibility';
 
@@ -43,6 +45,9 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     [S] = await seedSampleStores(t.prisma);
     await syncSettings(t.prisma, { registry, messages });
     await syncAuth(t.prisma);
+    // a stock location, as a live store has (the practice stock goes on it)
+    const wh = await t.prisma.warehouse.create({ data: { code: 'PRACTICE-ROWS-WH', name: 'Test warehouse' }, select: { id: true } });
+    await t.prisma.inventoryLocation.create({ data: { warehouseId: wh.id, code: 'PRACTICE-ROWS-MAIN', name: 'Test shelf', kind: 'WAREHOUSE' } });
     resolver = new SettingsResolver(prismaBackend(t.prisma), registry, { checkIntervalMs: 0 });
     await seedPractice(t.prisma, S, NOW);
   }, 240_000);
@@ -118,6 +123,28 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(await db.order.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, status: true, version: true, updatedAt: true } })).toEqual(orders);
     expect(await db.customer.findMany({ where: { storeId: S }, orderBy: { id: 'asc' }, select: { id: true, updatedAt: true } })).toEqual(customers);
     expect(await db.aiApprovalRequest.count({ where: { storeId: S, channel: PRACTICE_CHANNEL, status: 'PENDING' } })).toBe(0);
+  });
+
+  it('PR 1223: a stuck pair on one phone shows Merge on Batch and Processing, hides with practice mode, and a merge moves practice orders only', async () => {
+    const db = t.prisma;
+    const ids = await practiceDuplicatePair(db, S);
+    const pair = await db.order.findMany({ where: { id: { in: ids } } });
+    expect(pair.map((o) => [o.status, o.isPractice])).toEqual([['PLACED', true], ['PLACED', true]]);
+    expect(new Set(pair.map((o) => o.phone)).size).toBe(1);
+    expect((await od.openReviewKinds({ db }, S, ids)).get(ids[1]!)).toEqual({ kind: 'duplicate' });
+    const tags = await processingTags(db, S, ids, []);
+    expect(ids.every((id) => tags.get(id)?.includes('merge'))).toBe(true);
+    await syncPracticeVisibility(db, S, false, NOW);
+    expect((await od.openReviewKinds({ db }, S, ids)).size).toBe(0);
+    await syncPracticeVisibility(db, S, true, NOW);
+    expect((await od.openReviewKinds({ db }, S, ids)).size).toBe(1);
+    // Merge (switched on for the test) is refused for practice orders before anything is written, so the reset can always clear them
+    const cfg = await resolver.value('orders.mergeOrders', { storeId: S });
+    await resolver.set('orders.mergeOrders', { ...cfg, enabled: true }, storeTarget(S), meta);
+    const before = await tableCounts(db);
+    await expect(od.mergeIntoOne({ db, settings: resolver, now: () => NOW }, { actor: SYSTEM, storeId: S }, { mainOrderId: ids[1]!, sources: [{ orderId: ids[0]! }] })).rejects.toMatchObject({ code: 'PRACTICE_NO_MERGE' });
+    expect(changed(before, await tableCounts(db))).toEqual({});
+    expect(await db.order.count({ where: { id: { in: ids }, status: 'PLACED' } })).toBe(2);
   });
 
   it('PR 1222: the prototype’s staff with their roles; they can never sign in and hide with practice mode', async () => {

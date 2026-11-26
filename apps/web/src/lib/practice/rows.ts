@@ -165,8 +165,52 @@ export async function seedPracticeRows(db: Db, storeId: number, now: Date = new 
     practiceApprovals: await seedApprovals(db, storeId, store.currency, now),
     practiceProposals: await seedProposals(db, storeId, store.currency, now),
     ...(await seedStaff(db, storeId, now)),
+    practiceDuplicateReview: await seedDuplicate(db, storeId, now),
   };
 }
+
+// ---- PR 1223: a stuck pair of open orders on one phone (Orders › Batch "Merge" on the stuck row, Processing "Merge needed")
+// Two waiting practice orders are used (no order is added, so the counts stay the prototype's). Both are flagged practice like every practice order (hidden while off, never pushed, booked or messaged); the open
+// duplicate review on the newer one has no flag of its own, so it is practice-owned by its order and follows the switch:
+// while off it is set aside (AUTO_RESOLVED with the note PRACTICE_HIDDEN), while on it is open again. Merge on a practice order
+// is refused before anything is written (@extas/orders PRACTICE_NO_MERGE): its history could never be removed by the reset.
+
+/** The note on a practice review set aside while practice mode is off. */
+export const PRACTICE_HIDDEN = 'practice:hidden'; // hardcode-ok: a marker, not a text the shop shows
+const DUPLICATE_SECTION = 'duplicate'; // hardcode-ok: @extas/orders DUPLICATE_SECTION, the review kind the batch reads as "Merge"
+
+async function seedDuplicate(db: Db, storeId: number, now: Date): Promise<number> {
+  const alertId = practiceId(`dup-alert:${storeId}`);
+  if (await db.fraudAlert.count({ where: { id: alertId } })) return 0;
+  // two waiting practice orders: a pair already on one phone when there is one, else the oldest and the newest waiting order,
+  // the newer moved onto the older one's customer (a practice-only change; no order is added, so the counts stay the prototype's)
+  const waiting = await db.order.findMany({ where: { storeId, isPractice: true, status: 'PLACED', archivedAt: null }, orderBy: [{ placedAt: 'asc' }, { id: 'asc' }], select: { id: true, phone: true, customerId: true, customerName: true, placedAt: true } });
+  if (waiting.length < 2) return 0;
+  const byPhone = new Map<string, typeof waiting>();
+  for (const o of waiting) if (o.phone) (byPhone.get(o.phone) ?? byPhone.set(o.phone, []).get(o.phone)!).push(o);
+  const same = [...byPhone.values()].find((g) => g.length >= 2);
+  let [older, newer] = same ? [same[0]!, same[same.length - 1]!] : [waiting[0]!, waiting[waiting.length - 1]!];
+  if (!same) {
+    await db.order.updateMany({ where: { id: newer.id, isPractice: true }, data: { phone: older.phone, customerId: older.customerId, customerName: older.customerName } });
+    newer = { ...newer, phone: older.phone, customerId: older.customerId, customerName: older.customerName };
+  }
+  await db.fraudAlert.createMany({
+    data: [{ id: alertId, storeId, orderId: newer.id, matchedOrderIds: [older.id], proposedAction: 'HOLD', status: 'OPEN', summary: { section: DUPLICATE_SECTION, because: ['samePhone'], practice: true }, createdAt: newer.placedAt > now ? now : newer.placedAt }],
+    skipDuplicates: true,
+  });
+  return 1;
+}
+
+/** The two orders of the practice duplicate pair (the review's order and its match), or none. */
+export async function practiceDuplicatePair(db: Db, storeId: number): Promise<string[]> {
+  const a = await db.fraudAlert.findUnique({ where: { id: practiceId(`dup-alert:${storeId}`) }, select: { orderId: true, matchedOrderIds: true } });
+  return a ? [...a.matchedOrderIds, a.orderId] : [];
+}
+
+/** The reviews that hang on practice orders (FraudAlert has no foreign key to its order). */
+const practiceAlertsWhere = async (db: Db | Tx, storeId?: number): Promise<Prisma.FraudAlertWhereInput> => ({
+  orderId: { in: (await db.order.findMany({ where: { ...(storeId === undefined ? {} : { storeId }), isPractice: true }, select: { id: true } })).map((o) => o.id) },
+});
 
 // ---- PR 1222: the practice staff and their roles (Settings › Team & roles, Settings › Activity) ----------------------------
 // Staff and roles belong to the whole installation, so they are practice-owned by their mark: the e-mail on the reserved
@@ -217,20 +261,25 @@ async function seedStaff(db: Db, storeId: number, now: Date): Promise<{ practice
 
 /** How many practice staff or roles are not in the state practice mode asks for (0 = nothing to do). */
 export async function practiceRowsDrift(db: Db, on: boolean): Promise<number> {
-  const [staff, roles] = await Promise.all([
+  const alerts = await practiceAlertsWhere(db);
+  const [staff, roles, reviews] = await Promise.all([
     db.staffUser.count({ where: { ...practiceStaffWhere, status: on ? 'ARCHIVED' : { not: 'ARCHIVED' } } }),
     db.role.count({ where: { ...practiceRoleWhere, archivedAt: on ? { not: null } : null } }),
+    db.fraudAlert.count({ where: { ...alerts, ...(on ? { status: 'AUTO_RESOLVED', decisionReason: PRACTICE_HIDDEN } : { status: 'OPEN' }) } }),
   ]);
-  return staff + roles;
+  return staff + roles + reviews;
 }
 
 /** Brings the practice staff and roles to the state of the switch: archived while off, active while on. Ends any session. */
 export async function syncPracticeRows(db: Db, on: boolean, now: Date = new Date()): Promise<void> {
+  const alerts = await practiceAlertsWhere(db);
   if (on) {
+    await db.fraudAlert.updateMany({ where: { ...alerts, status: 'AUTO_RESOLVED', decisionReason: PRACTICE_HIDDEN }, data: { status: 'OPEN', decisionReason: null } });
     await db.staffUser.updateMany({ where: { ...practiceStaffWhere, status: 'ARCHIVED' }, data: { status: 'ACTIVE', archivedAt: null } });
     await db.role.updateMany({ where: { ...practiceRoleWhere, archivedAt: { not: null } }, data: { archivedAt: null } });
     return;
   }
+  await db.fraudAlert.updateMany({ where: { ...alerts, status: 'OPEN' }, data: { status: 'AUTO_RESOLVED', decisionReason: PRACTICE_HIDDEN } });
   await db.staffUser.updateMany({ where: { ...practiceStaffWhere, status: { not: 'ARCHIVED' } }, data: { status: 'ARCHIVED', archivedAt: now } });
   await db.role.updateMany({ where: { ...practiceRoleWhere, archivedAt: null }, data: { archivedAt: now } });
   await db.staffSession.updateMany({ where: { revokedAt: null, staffUser: practiceStaffWhere }, data: { revokedAt: now } });
@@ -241,13 +290,14 @@ export const isHiddenPracticeStaff = (s: { email: string; status: string }) => i
 
 /** Are practice display rows missing on a store that holds the practice world (cheap counts)? */
 export async function practiceRowsMissing(db: Db, storeId: number): Promise<boolean> {
-  const [orders, approvals, proposals, staff] = await Promise.all([
+  const [orders, approvals, proposals, staff, pair] = await Promise.all([
     db.order.count({ where: { storeId, isPractice: true } }),
     db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: { not: GROWTH_KIND } } }),
     db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: GROWTH_KIND } }),
     db.staffUser.count({ where: practiceStaffWhere }),
+    db.fraudAlert.count({ where: { id: practiceId(`dup-alert:${storeId}`) } }),
   ]);
-  return orders > 0 && (approvals === 0 || proposals === 0 || staff === 0);
+  return orders > 0 && (approvals === 0 || proposals === 0 || staff === 0 || pair === 0);
 }
 
 /**
@@ -305,5 +355,8 @@ export async function removePracticeRows(tx: Tx, storeId: number): Promise<Recor
   const out: Record<string, number> = {};
   const n = (await tx.aiApprovalRequest.deleteMany({ where: { storeId, channel: PRACTICE_CHANNEL } })).count;
   if (n) out.AiApprovalRequest = n;
+  // PR 1223: the reviews on practice orders (no foreign key to the order), before the orders go
+  const a = (await tx.fraudAlert.deleteMany({ where: { storeId, ...(await practiceAlertsWhere(tx, storeId)) } })).count;
+  if (a) out.FraudAlert = a;
   return out;
 }

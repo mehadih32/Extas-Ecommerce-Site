@@ -498,6 +498,7 @@
       "PIN_LOCKED": "Too many wrong PIN tries. Wait a while and try again.",
       "PIN_NOT_SET": "The owner has not set the PIN yet.",
       "MERGE_OFF": "Merging orders is switched off in Rules.",
+      "PRACTICE_NO_MERGE": "Practice orders are not merged, so the practice reset can always clear them. Merge works the same way on a real order.",
       "ADDRESS_DIFFERS": "The addresses are different. Choose to go on with this order's address, or stop."
     },
     "cmd": {

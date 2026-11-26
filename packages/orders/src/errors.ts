@@ -126,6 +126,12 @@ export type OrdersErrorCode =
   | 'ALREADY_DECIDED'
   /** S28 · PR 665: merging orders is switched off (Rules › Order flow). */
   | 'MERGE_OFF'
+  /**
+   * PR 1223 (p102): a practice order is never merged. A merge writes history rows that can never be removed (the merge record,
+   * stock movements), and "Reset practice data" must be able to remove every practice order; so the Merge of a practice order
+   * stops here, before anything is written.
+   */
+  | 'PRACTICE_NO_MERGE'
   /** S28 · PR 665: the addresses differ and a person has not said go on (`data.addresses`). */
   | 'ADDRESS_DIFFERS';
 
@@ -199,6 +205,7 @@ export class OrdersError extends Error {
       case 'ADJUST_TOO_MUCH':
       case 'NOTHING_TO_ADJUST':
       case 'MERGE_OFF':
+      case 'PRACTICE_NO_MERGE':
         return 422;
       case 'ERP_UNAVAILABLE':
         return 503;
