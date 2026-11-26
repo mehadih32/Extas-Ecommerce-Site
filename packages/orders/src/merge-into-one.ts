@@ -202,6 +202,8 @@ export async function foldInto(deps: OrdersDeps, storeId: number, d: MergeIntoIn
   const cfg = await setting(deps, storeId, 'orders.mergeOrders');
   if (!cfg.enabled) throw new OrdersError('MERGE_OFF', 'merging orders is switched off in Rules', ['enabled']);
   const sourceIds = d.sources.map((s) => s.orderId);
+  // PR 1223: a practice order is never merged (its history could not be removed by the practice reset); nothing is written
+  if (await deps.db.order.count({ where: { storeId, id: { in: [d.mainOrderId, ...sourceIds] }, isPractice: true } })) throw new OrdersError('PRACTICE_NO_MERGE', 'practice orders are not merged', ['sources']);
   if (new Set(sourceIds).size !== sourceIds.length || sourceIds.includes(d.mainOrderId)) throw new OrdersError('NOT_MERGEABLE', 'pick the kept order once and each other order once', ['sources']);
   const ids = [d.mainOrderId, ...sourceIds].sort();
   const now = deps.now ? deps.now() : new Date();
@@ -349,7 +351,7 @@ export async function autoMergeOnOrder(deps: OrdersDeps, ref: { storeId: number;
   try {
     return await foldInto(deps, ref.storeId, { mainOrderId: mate.id, sources: [{ orderId: o.id }] }, by, true);
   } catch (e) {
-    if (e instanceof OrdersError && ['NOT_MERGEABLE', 'OUT_OF_STOCK', 'COD_LIMIT', 'NOT_FOUND', 'MERGE_OFF'].includes(e.code)) return null;
+    if (e instanceof OrdersError && ['NOT_MERGEABLE', 'OUT_OF_STOCK', 'COD_LIMIT', 'NOT_FOUND', 'MERGE_OFF', 'PRACTICE_NO_MERGE'].includes(e.code)) return null;
     throw e;
   }
 }
