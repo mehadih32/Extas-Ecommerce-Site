@@ -301,9 +301,10 @@ export default async function ClaimsPage({ searchParams }: { searchParams: Searc
                           <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'SETTLED' }} label={t(d, 'courierReport.claims.settle')} field={{ name: 'settledMinor', label: t(d, 'courierReport.claims.paid'), money: true }} tone="pri" testId="claim-settled" />
                           <StepButton dict={d} url={`${API}/${r.id}/move`} body={{ to: 'REJECTED' }} label={t(d, 'courierReport.claims.reject')} field={{ name: 'note', label: t(d, 'courierReport.claims.why') }} testId="claim-rejected" />
                         </div>
-                      ) : canMove && r.status === 'OPEN' && r.practice ? (
-                        // PR 1203 (prototype v5): a practice claim shows its "Mark sent" step too, greyed (practice rows never move)
-                        <button type="button" className="a2-btn" disabled title={co('practiceStep')} aria-label={`${t(d, 'courierReport.claims.send')} · ${co('practiceStep')}`}>
+                      ) : r.status === 'OPEN' && (held?.has('delivery.claims') ?? false) && (r.practice || !claimsSwitch.enabled) ? (
+                        // PR 1203 (prototype v5): a practice claim shows its "Mark sent" step too, greyed (practice rows never move);
+                        // PR 1234: so does every open claim while courier claims are switched off (the switch is in Delivery settings)
+                        <button type="button" className="a2-btn" disabled title={co(r.practice ? 'practiceStep' : 'offStep')} aria-label={`${t(d, 'courierReport.claims.send')} · ${co(r.practice ? 'practiceStep' : 'offStep')}`}>
                           {t(d, 'courierReport.claims.send')}
                         </button>
                       ) : null}
