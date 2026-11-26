@@ -185,9 +185,9 @@
     "answerPh": "Write a short, true answer the customer can read on the product page",
     "answeredAt": "Answered {date}",
     "act": {
-      "answerPublish": "Answer and publish",
+      "answerPublish": "Answer & publish",
       "answerSave": "Save answer",
-      "update": "Save the new answer",
+      "update": "Edit answer",
       "publish": "Publish",
       "hide": "Hide",
       "restore": "Back to the queue",
