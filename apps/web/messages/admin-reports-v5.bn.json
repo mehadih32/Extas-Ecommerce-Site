@@ -489,7 +489,14 @@
       "comparedWith": "দিন ধরে তুলনা {month} মাসের সাথে",
       "pdfShort": "পিডিএফ",
       "everyMonth": "প্রতি মাসে",
-      "allReports": "সব রিপোর্ট"
+      "allReports": "সব রিপোর্ট",
+      "act": {
+        "restock": "স্টক খুলুন",
+        "unsoldNext": "কম্বো বানান",
+        "checkPrices": "দাম দেখুন",
+        "adsNext": "অ্যাকাউন্ট ও টুল",
+        "costsNext": "লাভ-ক্ষতি"
+      }
     },
     "orders": {
       "metaTitle": "বিক্রির রিপোর্ট",

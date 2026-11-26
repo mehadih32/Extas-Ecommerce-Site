@@ -489,7 +489,14 @@
       "comparedWith": "Compared per day with {month}",
       "pdfShort": "PDF",
       "everyMonth": "Every month",
-      "allReports": "All reports"
+      "allReports": "All reports",
+      "act": {
+        "restock": "Open stock",
+        "unsoldNext": "Make combos",
+        "checkPrices": "Check prices",
+        "adsNext": "Accounts & tools",
+        "costsNext": "Profit & loss"
+      }
     },
     "orders": {
       "metaTitle": "Sales report",
