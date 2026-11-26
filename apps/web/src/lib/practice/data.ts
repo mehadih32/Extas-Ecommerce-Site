@@ -599,4 +599,10 @@ export const PRACTICE_ROWS = {
     { key: 'sohel', name: 'Sohel', role: 'packing', twoFactor: false, lastMinutesAgo: 180 },
     { key: 'tania', name: 'Tania', role: 'marketing', twoFactor: true, lastMinutesAgo: 1_560 },
   ],
+  /** PR 1224 — Orders › Incomplete orders: the prototype's first names on the list (m-incomplete.js), newest first; they go on the newest practice incomplete orders. */
+  incomplete: [
+    { name: 'Hasib Khan', minutesAgo: 14, lastStep: 'payment' },
+    { name: 'Asif Islam', minutesAgo: 38, lastStep: 'address' },
+    { name: 'Fahim Chowdhury', minutesAgo: 75, lastStep: 'review' },
+  ],
 };

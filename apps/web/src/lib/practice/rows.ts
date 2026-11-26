@@ -166,6 +166,7 @@ export async function seedPracticeRows(db: Db, storeId: number, now: Date = new 
     practiceProposals: await seedProposals(db, storeId, store.currency, now),
     ...(await seedStaff(db, storeId, now)),
     practiceDuplicateReview: await seedDuplicate(db, storeId, now),
+    practiceNamedIncomplete: await seedIncomplete(db, storeId, now),
   };
 }
 
@@ -211,6 +212,41 @@ export async function practiceDuplicatePair(db: Db, storeId: number): Promise<st
 const practiceAlertsWhere = async (db: Db | Tx, storeId?: number): Promise<Prisma.FraudAlertWhereInput> => ({
   orderId: { in: (await db.order.findMany({ where: { ...(storeId === undefined ? {} : { storeId }), isPractice: true }, select: { id: true } })).map((o) => o.id) },
 });
+
+// ---- PR 1224: the prototype's names on the newest practice incomplete orders, on top of Orders › Incomplete orders (no row
+// is added, so the counts stay the prototype's; flagged practice like every practice incomplete order: hidden while off,
+// removed by the reset). They are kept recent: when the newest is older than
+// INCOMPLETE_FRESH_DAYS, the next fill moves their last activity back to the prototype's minutes (a practice-only change).
+
+const INCOMPLETE_FRESH_DAYS = 2; // hardcode-ok: how long the sample names stay "just now" before they are freshened
+const namedVisitor = (i: number) => `practice-named-${i}`; // hardcode-ok: the mark on a named practice incomplete order
+
+async function seedIncomplete(db: Db, storeId: number, now: Date): Promise<number> {
+  const marks = PRACTICE_ROWS.incomplete.map((_, i) => namedVisitor(i));
+  const named = new Map((await db.checkoutDraft.findMany({ where: { storeId, isPractice: true, visitorId: { in: marks } }, select: { id: true, visitorId: true } })).map((d) => [d.visitorId, d.id]));
+  const free = await db.checkoutDraft.findMany({ where: { storeId, isPractice: true, handledAt: null, visitorId: { notIn: marks } }, orderBy: [{ lastActivityAt: 'desc' }, { id: 'asc' }], take: marks.length, select: { id: true } });
+  let n = 0;
+  for (const [i, x] of PRACTICE_ROWS.incomplete.entries()) {
+    const at = new Date(now.getTime() - x.minutesAgo * MINUTE);
+    const had = named.get(namedVisitor(i));
+    if (had) {
+      await db.checkoutDraft.updateMany({ where: { id: had, isPractice: true, handledAt: null, lastActivityAt: { lt: new Date(now.getTime() - INCOMPLETE_FRESH_DAYS * 1440 * MINUTE) } }, data: { lastActivityAt: at } });
+      continue;
+    }
+    const take = free.shift();
+    if (!take) break;
+    await db.checkoutDraft.updateMany({ where: { id: take.id, isPractice: true }, data: { visitorId: namedVisitor(i), name: x.name, lastStep: x.lastStep, lastActivityAt: at } });
+    n += 1;
+  }
+  return n;
+}
+
+/** Are the named incomplete orders missing or grown old (one small count)? */
+async function incompleteStale(db: Db, storeId: number, now: Date): Promise<boolean> {
+  // a name the owner already handled counts as in place (it is never moved again)
+  const fresh = await db.checkoutDraft.count({ where: { storeId, isPractice: true, visitorId: { in: PRACTICE_ROWS.incomplete.map((_, i) => namedVisitor(i)) }, OR: [{ lastActivityAt: { gte: new Date(now.getTime() - INCOMPLETE_FRESH_DAYS * 1440 * MINUTE) } }, { handledAt: { not: null } }] } });
+  return fresh === 0;
+}
 
 // ---- PR 1222: the practice staff and their roles (Settings › Team & roles, Settings › Activity) ----------------------------
 // Staff and roles belong to the whole installation, so they are practice-owned by their mark: the e-mail on the reserved
@@ -289,7 +325,7 @@ export async function syncPracticeRows(db: Db, on: boolean, now: Date = new Date
 export const isHiddenPracticeStaff = (s: { email: string; status: string }) => isPracticeStaffEmail(s.email) && s.status === 'ARCHIVED';
 
 /** Are practice display rows missing on a store that holds the practice world (cheap counts)? */
-export async function practiceRowsMissing(db: Db, storeId: number): Promise<boolean> {
+export async function practiceRowsMissing(db: Db, storeId: number, now: Date = new Date()): Promise<boolean> {
   const [orders, approvals, proposals, staff, pair] = await Promise.all([
     db.order.count({ where: { storeId, isPractice: true } }),
     db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: { not: GROWTH_KIND } } }),
@@ -297,7 +333,7 @@ export async function practiceRowsMissing(db: Db, storeId: number): Promise<bool
     db.staffUser.count({ where: practiceStaffWhere }),
     db.fraudAlert.count({ where: { id: practiceId(`dup-alert:${storeId}`) } }),
   ]);
-  return orders > 0 && (approvals === 0 || proposals === 0 || staff === 0 || pair === 0);
+  return orders > 0 && (approvals === 0 || proposals === 0 || staff === 0 || pair === 0 || (await incompleteStale(db, storeId, now)));
 }
 
 /**
