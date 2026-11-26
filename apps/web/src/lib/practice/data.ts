@@ -576,4 +576,13 @@ export const PRACTICE_ROWS = {
     { key: 'Q8', kind: 'blog', agent: 'doot', minutesAgo: 220, title: 'Publish blog post “How to pick your polo size”', why: '“polo size chart bd” is searched about 1,900 times a month; we are not on page 1.', impact: 'SEO score 86. Links to 4 polo products and the size chart.', draft: 'Polo size guide: measure your chest, compare with our chart, and pick your usual size. Between two sizes? Take the bigger one for a relaxed fit…', open: '/admin/website/blog' },
     { key: 'Q9', kind: 'reply', agent: 'doot', minutesAgo: 700, decidedMinutesAgo: 600, title: 'Reply to a review about late delivery', why: '3-star review from Rajshahi.', impact: 'Published.', open: '/admin/products/reviews' },
   ] as PracticeApproval[],
+  /**
+   * PR 1221 — Marketing › Plan: the prototype's three AI proposals (m-marketing.js `mk.proposals`) as the growth agent's own
+   * rows: a daily budget raise, a pause and an audience. Budgets and figures in whole units of the store's currency.
+   */
+  proposals: [
+    { key: 'P1', type: 'raiseBudget', name: 'Instagram retargeting', minutesAgo: 260, fromDaily: 400, toDaily: 600, spend: 8_400, roas: 520, delivered: 31, sales: 43_700 },
+    { key: 'P2', type: 'pause', name: 'Google Shopping · outside Dhaka', minutesAgo: 180, fromDaily: null, toDaily: null, spend: 3_900, roas: 0, delivered: 0, sales: 0 },
+    { key: 'P3', type: 'buildAudience', name: 'At-risk customers · WhatsApp “we miss you”', minutesAgo: 90, fromDaily: null, toDaily: null, spend: 0, roas: 380, delivered: 22, sales: 30_800 },
+  ] as { key: string; type: 'raiseBudget' | 'pause' | 'buildAudience'; name: string; minutesAgo: number; fromDaily: number | null; toDaily: number | null; spend: number; roas: number; delivered: number; sales: number }[],
 };

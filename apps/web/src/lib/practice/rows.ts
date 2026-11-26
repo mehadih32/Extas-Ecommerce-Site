@@ -11,6 +11,7 @@
 //  - Removed by "Reset practice data" and the sales rebuild (`removePracticeRows`, reset.ts); a second seed adds nothing.
 //  - Deterministic: ids come from the row's own key, times are counted back from `now`.
 import type { Prisma, PrismaClient } from '@extas/db/client';
+import { GROWTH_AGENT, GROWTH_KIND } from '../marketing/growth-kind';
 import { PRACTICE_ROWS, type PracticeApproval } from './data';
 import { practiceId } from './ids';
 
@@ -27,6 +28,14 @@ export const NOT_PRACTICE_APPROVAL: Prisma.AiApprovalRequestWhereInput = { OR: [
 /** The extra `where` of an approvals list: nothing while practice mode is on, else "not a practice approval". */
 export function practiceApprovalScope(practiceOn: boolean): Prisma.AiApprovalRequestWhereInput {
   return practiceOn ? {} : NOT_PRACTICE_APPROVAL;
+}
+
+/**
+ * PR 1221: the AI › Approvals queue's scope. As `practiceApprovalScope`, and the practice growth proposals stay on Marketing ›
+ * Plan only (the prototype's queue does not list them; a real growth proposal still shows in both, as before).
+ */
+export function practiceQueueScope(practiceOn: boolean): Prisma.AiApprovalRequestWhereInput {
+  return practiceOn ? { OR: [NOT_PRACTICE_APPROVAL, { kind: { not: GROWTH_KIND } }] } : NOT_PRACTICE_APPROVAL;
 }
 
 /** An amount of a sample text in the store's currency, whole units (৳1,500). */
@@ -53,7 +62,7 @@ const districtOf = (address: string | null): string => (address ?? '').split(','
 
 /** The prototype's approvals waiting (and one decided), once per store. Cards about an order or a customer use practice ones. */
 async function seedApprovals(db: Db, storeId: number, currency: string, now: Date): Promise<number> {
-  if ((await db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL } })) > 0) return 0;
+  if ((await db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: { not: GROWTH_KIND } } })) > 0) return 0;
   const [orders, refuser, anyone, product] = await Promise.all([
     db.order.findMany({ where: { storeId, isPractice: true, status: 'PLACED', archivedAt: null }, orderBy: [{ placedAt: 'desc' }, { id: 'asc' }], take: 2, select: { id: true, number: true, customerName: true, shippingAddressText: true } }),
     db.customer.findFirst({ where: { storeId, isPractice: true, returnedCount: { gt: 0 } }, orderBy: [{ returnedCount: 'desc' }, { id: 'asc' }], select: { id: true, name: true, orderCount: true, returnedCount: true } }),
@@ -111,17 +120,60 @@ async function seedApprovals(db: Db, storeId: number, currency: string, now: Dat
   return (await db.aiApprovalRequest.createMany({ data: rows, skipDuplicates: true })).count;
 }
 
+/**
+ * PR 1221 — Marketing › Plan: the prototype's AI proposals as the growth agent's own rows (its kind, agent and payload), so the
+ * plan page shows them with its own words and its Approve / No. Deciding one never reaches an ad account (growth-agent.ts
+ * `decidePracticeProposal`). The campaign they name is a practice name only, never a real campaign.
+ */
+async function seedProposals(db: Db, storeId: number, currency: string, now: Date): Promise<number> {
+  if ((await db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: GROWTH_KIND } })) > 0) return 0;
+  const digits = new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  const minor = (n: number) => Math.round(n * 10 ** digits);
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const from = day(new Date(now.getTime() - 14 * 1440 * MINUTE)); // hardcode-ok: the prototype's two sample weeks
+  const rows: Prisma.AiApprovalRequestCreateManyInput[] = PRACTICE_ROWS.proposals.map((p) => {
+    const refId = practiceId(`proposal-ref:${storeId}:${p.key}`);
+    const at = new Date(now.getTime() - p.minutesAgo * MINUTE);
+    const payload = {
+      type: p.type,
+      refType: 'AdCampaign',
+      refId,
+      spendMinor: minor(p.spend),
+      delivered: p.delivered,
+      deliveredSalesMinor: minor(p.sales),
+      roasPercent: p.roas,
+      beforeRoasPercent: null,
+      fromDailyMinor: p.fromDaily === null ? null : minor(p.fromDaily),
+      toDailyMinor: p.toDaily === null ? null : minor(p.toDaily),
+      from,
+      to: day(now),
+      currency,
+      practiceName: p.name,
+      practice: true,
+    };
+    return { id: practiceId(`proposal:${storeId}:${p.key}`), storeId, agentKey: GROWTH_AGENT, kind: GROWTH_KIND, title: p.name, payload: payload as Prisma.InputJsonValue, status: 'PENDING', channel: PRACTICE_CHANNEL, refType: 'AdCampaign', refId, createdAt: at, updatedAt: at };
+  });
+  return (await db.aiApprovalRequest.createMany({ data: rows, skipDuplicates: true })).count;
+}
+
 /** Writes the practice display rows that are not there yet. Idempotent; touches nothing outside the practice world. */
 export async function seedPracticeRows(db: Db, storeId: number, now: Date = new Date()): Promise<Record<string, number>> {
   const store = await db.store.findUnique({ where: { id: storeId }, select: { currency: true } });
   if (!store) return {};
-  return { practiceApprovals: await seedApprovals(db, storeId, store.currency, now) };
+  return {
+    practiceApprovals: await seedApprovals(db, storeId, store.currency, now),
+    practiceProposals: await seedProposals(db, storeId, store.currency, now),
+  };
 }
 
 /** Are practice display rows missing on a store that holds the practice world (cheap: two counts)? */
 export async function practiceRowsMissing(db: Db, storeId: number): Promise<boolean> {
-  const [orders, approvals] = await Promise.all([db.order.count({ where: { storeId, isPractice: true } }), db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL } })]);
-  return orders > 0 && approvals === 0;
+  const [orders, approvals, proposals] = await Promise.all([
+    db.order.count({ where: { storeId, isPractice: true } }),
+    db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: { not: GROWTH_KIND } } }),
+    db.aiApprovalRequest.count({ where: { storeId, channel: PRACTICE_CHANNEL, kind: GROWTH_KIND } }),
+  ]);
+  return orders > 0 && (approvals === 0 || proposals === 0);
 }
 
 /** Removes the practice display rows (inside the reset's transaction). Returns what it removed, by table. */

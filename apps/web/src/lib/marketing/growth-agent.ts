@@ -26,12 +26,13 @@ import { body, errorResponse, fail, guardAdmin, json, type AdminDeps } from '../
 import { moneyOf } from '@/components/admin/products/model';
 import { AdPlatformsError, type AdPlatformsDeps, type AdPlatformsWho } from './ad-platforms';
 import { applyApprovedChange, isPaused, type ControlDeps } from './campaign-control';
+import { PRACTICE_CHANNEL, practiceApprovalScope } from '../practice/rows';
+import { practiceOn } from '../practice/shown-on';
 import { flagged, growthProposals, proposalKey, PROPOSAL_TYPES, type Proposal, type ProposalType } from './growth-model';
+import { GROWTH_AGENT, GROWTH_KIND } from './growth-kind';
 
+export { GROWTH_AGENT, GROWTH_KIND };
 const S = MOTHER_STORE_ID;
-export const GROWTH_KIND = 'ads.growth.proposal';
-/** The agent's key (Blueprint C10: Tirondaj, the ads specialist). */
-export const GROWTH_AGENT = 'tirondaj';
 const HOUR_MS = 3_600_000; // hardcode-ok: milliseconds in an hour
 const DAY_MS = 86_400_000; // hardcode-ok: milliseconds in a day
 /** The newest decided proposals the page lists. */
@@ -139,6 +140,7 @@ export async function decideGrowthProposal(deps: GrowthDeps, who: AdPlatformsWho
   if (row.status !== 'PENDING') throw new AdPlatformsError('DECIDED', 409);
   const p = row.payload as unknown as Stored;
   const now = deps.now ? deps.now() : new Date();
+  if (row.channel === PRACTICE_CHANNEL) return decidePracticeProposal(deps, who, row.id, p, ok.data.decision, now);
   const expired = !!row.expiresAt && row.expiresAt <= now;
   const approve = ok.data.decision === 'approve' && !expired;
   const change: CampaignChange | null = !approve ? null : p.type === 'pause' ? { kind: 'pause' } : (p.type === 'lowerBudget' || p.type === 'raiseBudget') && p.toDailyMinor ? { kind: 'budget', dailyBudgetMinor: p.toDailyMinor } : null;
@@ -164,6 +166,20 @@ export async function decideGrowthProposal(deps: GrowthDeps, who: AdPlatformsWho
   }
   await deps.db.aiApprovalRequest.update({ where: { id: row.id }, data: { payload: { ...p, outcome, adChangeRequestId } as unknown as Prisma.InputJsonValue } });
   return { id: row.id, status: outcome };
+}
+
+/**
+ * PR 1221: a practice proposal (practice/rows.ts, Marketing › Plan while practice mode is on) is decided by its own state only:
+ * approved reads "PRACTICE", nothing is sent to an ad account, no campaign or change request is touched, the controls need not be on.
+ */
+async function decidePracticeProposal(deps: GrowthDeps, who: AdPlatformsWho, id: string, p: Stored, decision: 'approve' | 'reject', now: Date): Promise<{ id: string; status: GrowthOutcome }> {
+  const status = decision === 'approve' ? 'APPROVED' : 'REJECTED';
+  const claimed = await deps.db.aiApprovalRequest.updateMany({ where: { id, status: 'PENDING', channel: PRACTICE_CHANNEL }, data: { status, decidedById: who.actor.staffUserId ?? null, decidedAt: now } });
+  if (claimed.count !== 1) throw new AdPlatformsError('DECIDED', 409);
+  const outcome: GrowthOutcome = status === 'APPROVED' ? 'PRACTICE' : 'REJECTED';
+  await deps.db.aiApprovalRequest.update({ where: { id }, data: { payload: { ...p, outcome } as unknown as Prisma.InputJsonValue } });
+  await audit(deps.db, who.actor, { storeId: S, action: 'marketing.growth.decide', entityType: 'AiApprovalRequest', entityId: id, after: { decision: status, type: p.type, practice: true } }, who.ctx);
+  return { id, status: outcome };
 }
 
 export interface ProposalView extends Proposal {
@@ -196,9 +212,11 @@ export interface GrowthOverview {
 export async function growthOverview(deps: Pick<GrowthDeps, 'db' | 'resolver' | 'now'>, lang: 'bn' | 'en' = 'en'): Promise<GrowthOverview> {
   await expireOld(deps);
   const f = await growthFigures(deps);
+  // PR 1221: the practice proposals show only while practice mode is on
+  const practice = practiceApprovalScope(await practiceOn(deps.resolver, S));
   const [waitingRows, recentRows] = await Promise.all([
-    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: 'PENDING' }, orderBy: { createdAt: 'asc' } }),
-    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: { not: 'PENDING' } }, orderBy: { updatedAt: 'desc' }, take: RECENT }),
+    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: 'PENDING', ...practice }, orderBy: { createdAt: 'asc' } }),
+    deps.db.aiApprovalRequest.findMany({ where: { storeId: S, kind: GROWTH_KIND, status: { not: 'PENDING' }, ...practice }, orderBy: { updatedAt: 'desc' }, take: RECENT }),
   ]);
   const items = [
     ...f.now.campaigns.map((r) => ({ refType: 'AdCampaign', refId: r.key })),
@@ -212,7 +230,7 @@ export async function growthOverview(deps: Pick<GrowthDeps, 'db' | 'resolver' | 
   const view = (r: (typeof waitingRows)[number]): ProposalView => {
     const p = r.payload as unknown as Stored;
     const type = PROPOSAL_TYPES.includes(p.type) ? p.type : 'pause';
-    return { ...p, type, id: r.id, name: names.get(p.refId) ?? null, status: r.status, outcome: p.outcome ?? null, note: r.decisionNote, createdAt: r.createdAt.toISOString(), expiresAt: r.expiresAt ? r.expiresAt.toISOString() : null };
+    return { ...p, type, id: r.id, name: names.get(p.refId) ?? (r.channel === PRACTICE_CHANNEL ? ((p as { practiceName?: string }).practiceName ?? null) : null), status: r.status, outcome: p.outcome ?? null, note: r.decisionNote, createdAt: r.createdAt.toISOString(), expiresAt: r.expiresAt ? r.expiresAt.toISOString() : null };
   };
   return {
     card: { key: 'growth', value: f.settings, version: versionOf(f.settings) },

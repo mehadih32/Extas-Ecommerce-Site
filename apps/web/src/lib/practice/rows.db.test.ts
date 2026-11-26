@@ -8,6 +8,8 @@ import type { PrismaClient } from '@extas/db/client';
 import { messages, prismaBackend, registry, SettingsResolver, storeTarget, syncSettings } from '@extas/settings';
 import { approvalsView, decideApproval } from '../admin-ai/approvals';
 import { PRACTICE_ROWS } from './data';
+import { GROWTH_KIND } from '../marketing/growth-kind';
+import { decideGrowthProposal, growthOverview } from '../marketing/growth-agent';
 import { PRACTICE_CHANNEL, practiceRowsMissing, seedPracticeRows } from './rows';
 import { resetPractice } from './reset';
 import { seedPractice } from './seed';
@@ -48,7 +50,7 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
 
   it('writes the prototype’s approvals once, each with the practice mark and the prototype’s kinds', async () => {
     const db = t.prisma;
-    const rows = await db.aiApprovalRequest.findMany({ where: { storeId: S }, orderBy: { createdAt: 'asc' } });
+    const rows = await db.aiApprovalRequest.findMany({ where: { storeId: S, kind: { not: GROWTH_KIND } }, orderBy: { createdAt: 'asc' } });
     expect(rows.length).toBeGreaterThanOrEqual(PRACTICE_ROWS.approvals.length - 3);
     expect(rows.every((r) => r.channel === PRACTICE_CHANNEL)).toBe(true);
     expect(new Set(rows.map((r) => r.kind))).toEqual(new Set(['adBudget', 'orderDecline', 'block', 'reply', 'price', 'blog']));
@@ -62,7 +64,7 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(await db.order.count({ where: { id: decline.refId!, isPractice: true } })).toBe(1);
     expect(rows.filter((r) => r.status === 'APPROVED')).toHaveLength(1);
     // a second run adds nothing
-    expect(await seedPracticeRows(db, S, NOW)).toMatchObject({ practiceApprovals: 0 });
+    expect(await seedPracticeRows(db, S, NOW)).toMatchObject({ practiceApprovals: 0, practiceProposals: 0 });
     expect(await practiceRowsMissing(db, S)).toBe(false);
   });
 
@@ -75,6 +77,29 @@ describe.skipIf(!HAS_TEST_DB)('practice display rows (PR 1220)', () => {
     expect(on.pending.length).toBeGreaterThan(0);
     expect(on.decided.length).toBe(1);
     expect((await approvalsView({ db, now: () => NOW }, S)).pending).toHaveLength(0);
+    // the practice growth proposals stay on Marketing › Plan, as in the prototype's queue
+    expect(on.pending.some((r) => r.kind === GROWTH_KIND)).toBe(false);
+  });
+
+  it('PR 1221: Marketing › Plan shows the prototype’s proposals only while practice mode is on; Approve never reaches an ad account', async () => {
+    const db = t.prisma;
+    const deps = { db, resolver, now: () => NOW } as unknown as Parameters<typeof decideGrowthProposal>[0];
+    await resolver.set('practice.enabled', { on: false }, storeTarget(S), meta);
+    expect((await growthOverview(deps)).waiting).toHaveLength(0);
+    await resolver.set('practice.enabled', { on: true }, storeTarget(S), meta);
+    const o = await growthOverview(deps);
+    expect(o.waiting.map((x) => x.type)).toEqual(PRACTICE_ROWS.proposals.map((p) => p.type));
+    expect(o.waiting.map((x) => x.name)).toEqual(PRACTICE_ROWS.proposals.map((p) => p.name));
+    const who = { actor: SYSTEM, ctx: {} } as unknown as Parameters<typeof decideGrowthProposal>[1];
+    const before = await tableCounts(db);
+    // the ad controls are off as shipped: a real budget raise would be refused; the practice one is decided by its state alone
+    expect(await decideGrowthProposal(deps, who, { action: 'decide', id: o.waiting[0]!.id, decision: 'approve', confirm: true })).toMatchObject({ status: 'PRACTICE' });
+    expect(await decideGrowthProposal(deps, who, { action: 'decide', id: o.waiting[1]!.id, decision: 'reject', confirm: true })).toMatchObject({ status: 'REJECTED' });
+    expect(Object.keys(changed(before, await tableCounts(db))).filter((k) => k !== 'AuditLog')).toEqual([]);
+    expect(await db.adChangeRequest.count()).toBe(0);
+    const after = await growthOverview(deps);
+    expect(after.waiting).toHaveLength(1);
+    expect(after.recent.map((x) => x.outcome).sort()).toEqual(['PRACTICE', 'REJECTED']);
   });
 
   it('approving or rejecting one changes only its own state: nothing is sent, booked, published or moved', async () => {
