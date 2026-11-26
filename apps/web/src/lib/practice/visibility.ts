@@ -9,8 +9,9 @@
 import type { PrismaClient } from '@extas/db/client';
 import { emitCacheEvent } from '@extas/cache';
 import { DEMO_PACK, PRACTICE_SLUG } from './data';
+import { practiceRowsDrift, syncPracticeRows } from './rows';
 
-type Db = Pick<PrismaClient, 'product' | 'combo' | 'blogPost' | 'category'>;
+type Db = PrismaClient;
 
 export interface VisibilityResult {
   /** Products made live now. */
@@ -28,7 +29,8 @@ export async function practiceVisibilityDrift(db: Db, storeId: number, on: boole
     db.combo.count({ where: { storeId, slug: own, archivedAt: null, status: on ? ('DRAFT' as const) : ('RUNNING' as const) } }),
     db.blogPost.count({ where: { storeId, slug: own, archivedAt: null, status: on ? ('UNPUBLISHED' as const) : ('PUBLISHED' as const) } }),
   ]);
-  return p + c + b;
+  // PR 1222: the practice staff and roles (archived while off)
+  return p + c + b + (await practiceRowsDrift(db, on));
 }
 
 /** The categories the practice products sit in follow the switch: shown while on; hidden again while off when no real product is in them. */
@@ -57,6 +59,7 @@ export async function syncPracticeVisibility(db: Db, storeId: number, on: boolea
     await db.blogPost.updateMany({ where: { storeId, slug: own, archivedAt: null, status: 'PUBLISHED' }, data: { status: 'UNPUBLISHED' } });
   }
   await syncCategories(db, storeId, on);
+  await syncPracticeRows(db, on, now);
   emitCacheEvent({ kind: 'all', storeId });
   return r;
 }

@@ -8,7 +8,7 @@
 // `extas_purge_practice_history` (migration 0281); no real order's history can be reached, and a practice flag can never
 // be switched on for a real record (trigger). One transaction: it all goes or nothing goes.
 import { Prisma, type PrismaClient } from '@extas/db/client';
-import { removePracticeRows } from './rows';
+import { removePracticeRows, removePracticeStaff } from './rows';
 
 type Db = PrismaClient;
 type Tx = Prisma.TransactionClient;
@@ -106,6 +106,8 @@ export async function resetPractice(db: Db, storeId: number, opts: { removeDemo?
       for (const t of ['CourierClaim', 'CourierSettlement', 'Payment', 'Shipment', 'CheckoutDraft', 'Order', 'Customer', 'CourierAccount'] as const) {
         await removeRows(tx, fks, t, where, 0, removed);
       }
+      // PR 1222: the practice staff and roles (after the orders whose history named them)
+      for (const [table, n] of Object.entries(await removePracticeStaff(tx))) removed.set(table, n);
       // 3. demo products only when the owner ticked the box (never a product he uploaded)
       let removedDemo = 0;
       if (opts.removeDemo && (await hasDemoColumn(tx))) {
