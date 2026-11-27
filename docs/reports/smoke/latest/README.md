@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-27 09:41 (Asia/Dhaka)
+# Smoke test · 2026-11-27 14:57 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **PASS** (706 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -103,7 +103,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/settings/store` | phone | 200 | `/admin/settings/store` | ok | — |
 | `/admin/stock` | phone | 200 | `/admin/stock` | ok | — |
 | `/admin/support` | phone | 200 | `/admin/support` | ok | — |
-| `/admin/website/control` | phone | 200 | `/admin/website/control` | ok | — |
+| `/admin/website/layouts` | phone | 200 | `/admin/website/layouts` | ok | — |
 | `/admin?home=1` | phone | 200 | `/admin` | ok | [picture](admin-home-1-phone.jpg) |
 | `/admin/products?design=B` | phone | 200 | `/admin/products` | ok | — |
 | `/admin/products?design=C` | phone | 200 | `/admin/products` | ok | — |
@@ -251,7 +251,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/marketing/studio/reels` | phone | 200 | `/admin/marketing/studio/reels` | ok | — |
 | `/admin/marketing/studio/export` | phone | 200 | `/admin/marketing/studio/export` | ok | — |
 | `/admin/marketing/studio/overlay` | phone | 200 | `/admin/marketing/studio/overlay` | ok | — |
-| `/admin/website/layouts` | phone | 200 | `/admin/website/layouts` | ok | — |
+| `/admin/website/control` | phone | 200 | `/admin/website/control` | ok | — |
 | `/admin/website/brand-menus` | phone | 200 | `/admin/website/brand-menus` | ok | — |
 | `/admin/website/page-settings` | phone | 200 | `/admin/website/page-settings` | ok | — |
 | `/admin/website/page-settings?screen=cookie` | phone | 200 | `/admin/website/page-settings` | ok | — |
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | phone | 200 | `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | ok | — |
+| `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | phone | 200 | `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -456,7 +456,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/settings/store` | desktop | 200 | `/admin/settings/store` | ok | — |
 | `/admin/stock` | desktop | 200 | `/admin/stock` | ok | — |
 | `/admin/support` | desktop | 200 | `/admin/support` | ok | — |
-| `/admin/website/control` | desktop | 200 | `/admin/website/control` | ok | — |
+| `/admin/website/layouts` | desktop | 200 | `/admin/website/layouts` | ok | — |
 | `/admin?home=1` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-desktop.jpg) |
 | `/admin/products?design=B` | desktop | 200 | `/admin/products` | ok | — |
 | `/admin/products?design=C` | desktop | 200 | `/admin/products` | ok | — |
@@ -604,7 +604,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/marketing/studio/reels` | desktop | 200 | `/admin/marketing/studio/reels` | ok | — |
 | `/admin/marketing/studio/export` | desktop | 200 | `/admin/marketing/studio/export` | ok | — |
 | `/admin/marketing/studio/overlay` | desktop | 200 | `/admin/marketing/studio/overlay` | ok | — |
-| `/admin/website/layouts` | desktop | 200 | `/admin/website/layouts` | ok | — |
+| `/admin/website/control` | desktop | 200 | `/admin/website/control` | ok | — |
 | `/admin/website/brand-menus` | desktop | 200 | `/admin/website/brand-menus` | ok | — |
 | `/admin/website/page-settings` | desktop | 200 | `/admin/website/page-settings` | ok | — |
 | `/admin/website/page-settings?screen=cookie` | desktop | 200 | `/admin/website/page-settings` | ok | — |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | desktop | 200 | `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | ok | — |
+| `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | desktop | 200 | `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
