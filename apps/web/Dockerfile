@@ -75,6 +75,8 @@ FROM deps AS migrate
 COPY packages/ packages/
 # PR 880: the practice-data seed command (apps/web/src/lib/practice/live-cli.ts, workflow practice-seed) runs from this image
 COPY apps/web/src/lib/practice apps/web/src/lib/practice
+# PR 1225: the practice rows (PR 1221) import the growth agent's kind names
+COPY apps/web/src/lib/marketing/growth-kind.ts apps/web/src/lib/marketing/growth-kind.ts
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA NODE_ENV=production PRISMA_HIDE_UPDATE_MESSAGE=1
 USER node
