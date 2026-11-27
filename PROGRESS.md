@@ -1,5 +1,12 @@
 # PROGRESS
 
+## 22 Nov 2026 - Geography map (S29) live: PR 750-761 in `batch-2026-11-22-geo` (rebased on `origin/main` e04d135f)
+
+The owner-approved Geography map work from `claude/geo-all` (079be4bf) is rebuilt on today's main, one commit per register
+PR (750-761), then this Status commit. No on/off switch (owner's decision, 16 Nov 2026): Reports > Geography map is listed
+for everyone with `reports.read`; money figures still need `books.read`; the AI advisor follows the global AI control and
+only drafts advice. Counters: S29 12/12, total 1013/1036 active, 9 parked, 1 cancelled. Next step: none (project closed).
+
 ## 27 Nov 2026 - Batch 2026-11-27-1 (branch `batch-2026-11-27-1`, from `origin/main` 37be9300): the two p102 lanes joined
 
 Lanes a (PR 1220-1224, practice sample rows) and b (PR 1230-1238, shared nav and page words) cherry-picked in order, one commit per register PR, the lane-b Status commit folded into this one; register, README, stage pages and Bengali lines merged and recounted (1046 PRs, 1024 active, S28 376/376, total 1001/1024). Last round, for the record: PR 1208 deployed 22 Nov 04:42 (962aa6da, OK, health 200, smoke 706 page views), and the screens measure at 1366 and 390 px averaged words 88% and buttons 81% against prototype v5. Next: local gates, CI, rebase merge, deploy, practice seed rebuild with turn_on, re-measure (measure3).
@@ -129,6 +136,18 @@ Settings list in the prototype's order with the other real pages under "More set
 ## 16 Nov 2026 — Final round, lane D12 (branch `claude/final-d12`, from `origin/main` c9b8644f): PR 1020 Keys & connections, PR 1021 Team & roles
 
 Settings › Keys & connections and Settings › Team & roles now follow the prototype (v5) at laptop and phone widths. Keys: warning, three cards, seven groups, prototype names, masked key (migration 0390 keeps the last 4 characters), other services under "More options". Team & roles: one page (invite, staff table with side panel, role tree with Special permissions, Staff limits, end-of-day handover); the old Roles and Staff controls addresses redirect to it; role and access changes need the owner PIN. Not done: a real-browser side-by-side with the prototype and a full type check (the box ran out of memory); the left-list items "Roles" and "Staff controls" are for lane D10 to remove.
+
+## 16 Nov 2026 — Geography map (S29) joined: PR 750–761 on ONE local branch `claude/geo-all`, no on/off switch (NOT pushed, no pull request)
+
+The three lanes (`claude/geo-1`: 750–753, `claude/geo-2`: 754–757, `claude/geo-3`: 758–761) are joined in register order, one commit per PR. Counters are now S29 12/12, total 828/851 active, 9 parked (S26 and PR 649–651); they count only once the branch is pushed and merged. **Owner decision of 16 Nov 2026: no switches.** `reports.geoMap` lost `on`, `slices`, `lenses` and `ai`; `reports.geoMapCourier` and `reports.geoAdvisor` stay as plain numbers. The map and all lenses are there for everyone with `reports.read` (Sales and money only with `books.read`); the Reports tab, the nav entry, the "Open on map" links, the help rows and the Reports index card are always shown. The AI advisor is advice only and has one gate, the global `ai.enabled`. No column is dropped; a stored value with the old keys is read without them. Finished in this join: the G2 parts (click panel, compare, slices bar, lens table, advisor box) are on the screen; the courier lens's findings feed the advisor; the "Run advisor" button; the lens and slices routes; Bengali guides. Next step when the owner says: push `claude/geo-all` and open one pull request; the README, register and `docs/stages` counters will then need a rebase over whatever moved in `main` since `c9b8644f`.
+
+
+## 16 Nov 2026 — Geography map (S29) lane G1: PR 750–753 coded, LOCAL ONLY (branch `claude/geo-1`, from `origin/main` c9b8644f, NOT pushed, no pull request)
+
+Owner order: build S29 completely in the backend, commit locally, push later when the owner says. Status of the stage stays **parked** in the register and the README counters (nothing counts until it is pushed). PR 750 boundary pack (geoBoundaries, CC0 and CC BY 3.0 IGO, credit in every file; `packages/delivery/data/geo/`), PR 751 `geoByArea`, PR 752 setting `reports.geoMap` + API + access, PR 753 the screen and drill-down. Shared types: `packages/metrics/src/geo-types.ts`. Database tests are written but could not run here (no PostgreSQL); the pure tests ran.
+## 16 Nov 2026 — Geography map (S29) lane G3: PR 758–761 coded, LOCAL ONLY (branch `claude/geo-3`, from `claude/geo-1`'s shared types commit, NOT pushed, no pull request)
+
+Owner order: build S29 completely in the backend, commit locally, push later when the owner says. The stage stays **parked** in the register and the README counters. Lane G3 is the three lenses and the AI advisor of Reports › Geography map: PR 758 risk, 759 money and stock, 760 demand and customers, 761 AI advisor (advice only). The lenses share `packages/metrics/src/geo-lens-base.ts`; the route is `GET /api/admin/reports/geo-map/lens`; the setting is `reports.geoMap` (lane G1, PR 752), read defensively by `apps/web/src/lib/geo-map/setting.ts` until the two lanes meet. PR 761 (the AI advisor, advice only) is done: `advisor-model.ts`, `advisor.ts`, `advisor-api.ts`, the route `/api/admin/reports/geo-map/advisor`, the setting `reports.geoAdvisor`, the approval kind `geo.advice`. Next: rebase locally onto `claude/geo-1` when it is done (the typed `reports.geoMap` read replaces `setting.ts`'s defensive one; the courier lens of lane G2 feeds the advisor's courier and coverage hints). Database tests are written but could not run here (no PostgreSQL); the pure tests ran.
 
 ## 16 Nov 2026 — Batch 2026-11-16-1 (branch `batch-2026-11-16-1`, from `origin/main` f0ae9575): admin parity round 3, PR 765–868 in one, linear history
 
