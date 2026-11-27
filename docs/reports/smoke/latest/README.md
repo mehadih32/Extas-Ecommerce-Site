@@ -1,4 +1,4 @@
-# Smoke test · 2026-11-26 09:41 (Asia/Dhaka)
+# Smoke test · 2026-11-27 09:41 (Asia/Dhaka)
 
 > **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
@@ -355,7 +355,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a210ff-b789-7e03-848c-585a21a088d6` | phone | 200 | `/admin/reports/health/history/01a210ff-b789-7e03-848c-585a21a088d6` | ok | — |
+| `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | phone | 200 | `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -708,7 +708,7 @@ Site: https://extas.com.bd · commit `962aa6daa0e0` · nightly · result **PASS*
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a210ff-b789-7e03-848c-585a21a088d6` | desktop | 200 | `/admin/reports/health/history/01a210ff-b789-7e03-848c-585a21a088d6` | ok | — |
+| `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | desktop | 200 | `/admin/reports/health/history/01a215fe-45a2-7121-94c0-f18cfc884e08` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
