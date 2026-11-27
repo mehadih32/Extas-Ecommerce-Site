@@ -175,3 +175,4 @@ One line per deploy, newest last, appended by `deploy.yml`. Time: Asia/Dhaka.
 | 2026-11-22 04:42 | `962aa6daa0e0` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-27 15:13 | `e04d135f9c81` | deploy | OK | ok | OK, smoke OK | — |
 | 2026-11-27 19:25 | `7b43f2bb9344` | deploy | OK | ok | OK, smoke OK | — |
+| 2026-11-27 23:39 | `5bf53e7b2efd` | deploy | FAILED, ROLLED BACK | ok | OK, smoke FAILED | The new version went live, but the smoke test found a problem (check (PR 657): Products design B (Focus view): the "Ready to publish" hero draws, read-only (CN-025, CN-044): page.goto: Timeout 30000ms exceeded.), so the previous version was put back automatically. The fix comes before any new work. |

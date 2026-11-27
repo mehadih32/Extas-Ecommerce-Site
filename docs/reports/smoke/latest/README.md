@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-27 19:11 (Asia/Dhaka)
+# Smoke test · 2026-11-27 23:24 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (708টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** 0টা পাতায় সমস্যা পাওয়া গেছে। সাইট নিজে থেকে আগের ভালো ভার্সনে ফিরে যাচ্ছে; ঠিক করার কাজ সবার আগে হচ্ছে।
 
-Site: https://extas.com.bd · commit `7b43f2bb9344` · after deploy · result **PASS** (708 page views, 0 failed)
+Site: https://extas.com.bd · commit `5bf53e7b2efd` · after deploy · result **FAIL** (708 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -356,7 +356,7 @@ Site: https://extas.com.bd · commit `7b43f2bb9344` · after deploy · result **
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | phone | 200 | `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | ok | — |
+| `/admin/reports/health/history/01a21d2e-420b-7b32-9d3f-a01f237588e7` | phone | 200 | `/admin/reports/health/history/01a21d2e-420b-7b32-9d3f-a01f237588e7` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -710,9 +710,13 @@ Site: https://extas.com.bd · commit `7b43f2bb9344` · after deploy · result **
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | desktop | 200 | `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | ok | — |
+| `/admin/reports/health/history/01a21d2e-420b-7b32-9d3f-a01f237588e7` | desktop | 200 | `/admin/reports/health/history/01a21d2e-420b-7b32-9d3f-a01f237588e7` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
+
+Other problems:
+
+- check (PR 657): Products design B (Focus view): the "Ready to publish" hero draws, read-only (CN-025, CN-044): page.goto: Timeout 30000ms exceeded.
 
 Database (PR 139): ok: 44 tables append-only; the app connects as extas_app.

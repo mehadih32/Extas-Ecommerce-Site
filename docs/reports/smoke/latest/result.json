@@ -1,13 +1,15 @@
 {
-  "at": "2026-11-27 19:11 (Asia/Dhaka)",
+  "at": "2026-11-27 23:24 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
-  "sha": "7b43f2bb9344",
+  "sha": "5bf53e7b2efd",
   "kind": "after deploy",
   "rolledBack": true,
-  "ok": true,
+  "ok": false,
   "pages": 708,
   "failed": 0,
-  "problems": [],
+  "problems": [
+    "check (PR 657): Products design B (Focus view): the \"Ready to publish\" hero draws, read-only (CN-025, CN-044): page.goto: Timeout 30000ms exceeded."
+  ],
   "database": {
     "appendOnly": "ok: 44 tables append-only",
     "appRole": "extas_app"
