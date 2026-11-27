@@ -1,8 +1,8 @@
-# Smoke test · 2026-11-27 14:57 (Asia/Dhaka)
+# Smoke test · 2026-11-27 19:11 (Asia/Dhaka)
 
-> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (706টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
+> **বাংলায়:** সব পাতা ঠিকমতো খুলেছে (708টা পাতা, ফোন আর কম্পিউটারে)। কোনো সমস্যা নেই।
 
-Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **PASS** (706 page views, 0 failed)
+Site: https://extas.com.bd · commit `7b43f2bb9344` · after deploy · result **PASS** (708 page views, 0 failed)
 
 | Page | Screen | Answer | Landed on | Result | Screenshot |
 |---|---|:-:|---|---|---|
@@ -232,6 +232,7 @@ Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **
 | `/admin/money/vat` | phone | 200 | `/admin/money/vat` | ok | — |
 | `/admin/reports/team` | phone | 200 | `/admin/reports/team` | ok | — |
 | `/admin/reports/areas` | phone | 200 | `/admin/reports/areas` | ok | — |
+| `/admin/reports/geo-map` | phone | 200 | `/admin/reports/geo-map` | ok | — |
 | `/admin/reports/customers` | phone | 200 | `/admin/reports/customers` | ok | — |
 | `/admin/money/profit/groups` | phone | 200 | `/admin/money/profit/groups` | ok | — |
 | `/admin/money/profit/channels` | phone | 200 | `/admin/money/profit/channels` | ok | — |
@@ -355,7 +356,7 @@ Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **
 | `/admin/website/policies` | phone | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | phone | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | phone | 200 | `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | ok | — |
+| `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | phone | 200 | `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | phone | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | phone | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | phone | 200 | `/admin` | ok | [picture](admin-home-1-design-B-phone.jpg) |
@@ -585,6 +586,7 @@ Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **
 | `/admin/money/vat` | desktop | 200 | `/admin/money/vat` | ok | — |
 | `/admin/reports/team` | desktop | 200 | `/admin/reports/team` | ok | — |
 | `/admin/reports/areas` | desktop | 200 | `/admin/reports/areas` | ok | — |
+| `/admin/reports/geo-map` | desktop | 200 | `/admin/reports/geo-map` | ok | — |
 | `/admin/reports/customers` | desktop | 200 | `/admin/reports/customers` | ok | — |
 | `/admin/money/profit/groups` | desktop | 200 | `/admin/money/profit/groups` | ok | — |
 | `/admin/money/profit/channels` | desktop | 200 | `/admin/money/profit/channels` | ok | — |
@@ -708,7 +710,7 @@ Site: https://extas.com.bd · commit `e04d135f9c81` · after deploy · result **
 | `/admin/website/policies` | desktop | 200 | `/admin/website/policies` | ok | — |
 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | desktop | 200 | `/admin/orders/e9d66eec-9711-51c1-a802-2b57ae027d5e` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
-| `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | desktop | 200 | `/admin/reports/health/history/01a21b24-ea8f-74b3-b0d8-0d4a68cfd1d9` | ok | — |
+| `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | desktop | 200 | `/admin/reports/health/history/01a21c47-ce8a-7d40-850b-5055f283d99a` | ok | — |
 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252?tab=wallet` | desktop | 200 | `/admin/customers/c6c35173-6283-5176-ae56-0d8eaa87f252` | ok | — |
 | `/admin/combos?tab=report` | desktop | 200 | `/admin/combos` | ok | — |
 | `/admin?home=1&design=B` | desktop | 200 | `/admin` | ok | [picture](admin-home-1-design-B-desktop.jpg) |
