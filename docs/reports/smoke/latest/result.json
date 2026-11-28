@@ -1,13 +1,15 @@
 {
-  "at": "2026-11-27 23:42 (Asia/Dhaka)",
+  "at": "2026-11-28 09:24 (Asia/Dhaka)",
   "base": "https://extas.com.bd",
   "sha": "5bf53e7b2efd",
-  "kind": "after deploy",
-  "rolledBack": true,
-  "ok": true,
+  "kind": "nightly",
+  "rolledBack": false,
+  "ok": false,
   "pages": 708,
   "failed": 0,
-  "problems": [],
+  "problems": [
+    "check (PR 656): Orders design C (Command view): the five-queue flow strip draws, read-only (CN-025, CN-044): page.goto: Timeout 30000ms exceeded."
+  ],
   "database": {
     "appendOnly": "ok: 44 tables append-only",
     "appRole": "extas_app"
